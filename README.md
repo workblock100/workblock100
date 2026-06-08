@@ -11,6 +11,7 @@ I build **custom MCP servers, Python automations, web scrapers, and AI chatbots*
 ### 🛒 Ready-made products (instant download)
 - **[MCP Server Starter Kit](https://workblocker.gumroad.com/l/qoqdkt)** — connect any API to Claude/ChatGPT, deploy in minutes · **$29**
 - **[AI Lead-Gen Automation Pack for n8n](https://workblocker.gumroad.com/l/lokury)** — 3 workflows: scrape → AI-qualify → email leads on autopilot · **$49**
+- **[AI Content & Social Media Automation Pack for n8n](https://workblocker.gumroad.com/l/jfago)** — turn 1 input into a tweet, X thread & LinkedIn post + a daily AI digest · **$39**
 
 ### Real, open-source proof (read the code)
 - [`whoop-mcp`](https://github.com/workblock100/whoop-mcp) — self-hosted MCP server exposing Whoop wearable data to Claude as callable tools (OAuth 2.0, FastMCP, Docker)
