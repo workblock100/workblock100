@@ -1,23 +1,21 @@
-# Hi, I'm Elijah 👋
+# Hi, I'm Elijah 👋 — AI Integration & Automation Engineer
 
-### AI Integration & Automation Engineer
+I build **custom MCP servers, Python automations, web scrapers, and AI chatbots** — working software, shipped fast, fixed price.
 
-I build working AI tools, integrations, and automations — fast. I connect LLMs like **Claude** and **ChatGPT** to real apps, APIs, and workflows: **MCP servers, chatbots, web scrapers, and Python automations.**
+### What I can build for you
+- 🔌 **Custom MCP servers** — connect your APIs, databases & tools to Claude or ChatGPT as native, callable tools
+- 🕸️ **Web scrapers & data pipelines** — clean, structured data from any site, on demand or on a schedule
+- 🤖 **AI chatbots** — Discord, Telegram, or your website
+- ⚙️ **Python + API workflow automation** — kill repetitive manual work
 
----
+### Real, open-source proof (read the code)
+- [`whoop-mcp`](https://github.com/workblock100/whoop-mcp) — self-hosted MCP server exposing Whoop wearable data to Claude as callable tools (OAuth 2.0, FastMCP, Docker)
+- [`edge-tts-mcp`](https://github.com/workblock100/edge-tts-mcp) — free neural text-to-speech as an MCP connector, with audio that plays inline in Claude
+- [`voiceit`](https://github.com/workblock100/voiceit) — system-wide macOS hotkey TTS with a live word-synced karaoke overlay (ElevenLabs)
 
-#### 🛠️ Selected projects
+### 💼 Hire me
+Fixed-price packages from **$85**, fast turnaround, and a working sample before you pay.
+- **Upwork (services & profile):** https://www.upwork.com/freelancers/~01818ac5bd67ef7935
+- **Email:** workblock100@gmail.com
 
-| Project | What it is |
-|---|---|
-| **[whoop-mcp](https://github.com/workblock100/whoop-mcp)** | Self-hosted **MCP server** exposing WHOOP recovery / sleep / strain data to Claude as 11 callable tools. Python · FastMCP · OAuth 2.0 · Fly.io |
-| **[edge-tts-mcp](https://github.com/workblock100/edge-tts-mcp)** | **MCP server** giving Claude free neural text-to-speech, with audio that plays inline in the chat. Python · FastMCP · MCP App UI |
-| **[voiceit](https://github.com/workblock100/voiceit)** | System-wide **macOS hotkey TTS** that reads any selected text aloud with a live word-synced karaoke overlay. Python · Tkinter · pynput · ElevenLabs |
-
----
-
-#### ⚙️ Tech I work with
-
-`Python` · `Claude & OpenAI APIs` · `Model Context Protocol (MCP)` · `Automation` · `Web Scraping` · `Chatbots` · `Chrome Extensions`
-
-📫 **Open to freelance AI-integration & automation work.**
+<sub>Tech: Python · MCP / FastMCP · Claude & OpenAI APIs · REST · Playwright / BeautifulSoup · Docker</sub>
