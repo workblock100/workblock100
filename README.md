@@ -8,14 +8,18 @@ I build **custom MCP servers, Python automations, web scrapers, and AI chatbots*
 - 🤖 **AI chatbots** — Discord, Telegram, or your website
 - ⚙️ **Python + API workflow automation** — kill repetitive manual work
 
+### 🛒 Ready-made products (instant download)
+- **[MCP Server Starter Kit](https://workblocker.gumroad.com/l/qoqdkt)** — connect any API to Claude/ChatGPT, deploy in minutes · **$29**
+- **[AI Lead-Gen Automation Pack for n8n](https://workblocker.gumroad.com/l/lokury)** — 3 workflows: scrape → AI-qualify → email leads on autopilot · **$49**
+
 ### Real, open-source proof (read the code)
 - [`whoop-mcp`](https://github.com/workblock100/whoop-mcp) — self-hosted MCP server exposing Whoop wearable data to Claude as callable tools (OAuth 2.0, FastMCP, Docker)
 - [`edge-tts-mcp`](https://github.com/workblock100/edge-tts-mcp) — free neural text-to-speech as an MCP connector, with audio that plays inline in Claude
 - [`voiceit`](https://github.com/workblock100/voiceit) — system-wide macOS hotkey TTS with a live word-synced karaoke overlay (ElevenLabs)
 
 ### 💼 Hire me
-Fixed-price packages from **$85**, fast turnaround, and a working sample before you pay.
-- **Upwork (services & profile):** https://www.upwork.com/freelancers/~01818ac5bd67ef7935
+Fixed-price custom builds from **$85**, fast turnaround, and a working sample before you pay.
+- **Upwork:** https://www.upwork.com/freelancers/~01818ac5bd67ef7935
 - **Email:** workblock100@gmail.com
 
 <sub>Tech: Python · MCP / FastMCP · Claude & OpenAI APIs · REST · Playwright / BeautifulSoup · Docker</sub>
