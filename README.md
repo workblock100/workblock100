@@ -8,10 +8,13 @@ I build **custom MCP servers, Python automations, web scrapers, and AI chatbots*
 - 🤖 **AI chatbots** — Discord, Telegram, or your website
 - ⚙️ **Python + API workflow automation** — kill repetitive manual work
 
-### 🛒 Ready-made products (instant download)
-- **[MCP Server Starter Kit](https://workblocker.gumroad.com/l/qoqdkt)** — connect any API to Claude/ChatGPT, deploy in minutes · **$29**
-- **[AI Lead-Gen Automation Pack for n8n](https://workblocker.gumroad.com/l/lokury)** — 3 workflows: scrape → AI-qualify → email leads on autopilot · **$49**
-- **[AI Content & Social Media Automation Pack for n8n](https://workblocker.gumroad.com/l/jfago)** — turn 1 input into a tweet, X thread & LinkedIn post + a daily AI digest · **$39**
+### 🛒 Ready-made products (instant download) → [workblocker.gumroad.com](https://workblocker.gumroad.com)
+- **[MCP Server Starter Kit](https://workblocker.gumroad.com/l/qoqdkt)** — build your own MCP server, deploy in minutes · **$29**
+- **[MCP Pro Pack](https://workblocker.gumroad.com/l/zteud)** — 4 ready-made MCP servers (Slack, Sheets, Postgres, Web Scraper) · **$39**
+- **[AI Lead-Gen Automation Pack](https://workblocker.gumroad.com/l/lokury)** — n8n: scrape → AI-qualify → email leads · **$49**
+- **[AI Customer Support Pack](https://workblocker.gumroad.com/l/xzkmhz)** — n8n: AI triage, auto-replies & routing · **$39**
+- **[AI Content & Social Pack](https://workblocker.gumroad.com/l/jfago)** — n8n: repurpose content + a daily AI digest · **$39**
+- **[Claude Skills Pack](https://workblocker.gumroad.com/l/xsviom)** — 6 drop-in Claude skills that replace manual work · **$19**
 
 ### Real, open-source proof (read the code)
 - [`whoop-mcp`](https://github.com/workblock100/whoop-mcp) — self-hosted MCP server exposing Whoop wearable data to Claude as callable tools (OAuth 2.0, FastMCP, Docker)
