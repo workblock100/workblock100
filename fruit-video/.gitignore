@@ -1,0 +1,3 @@
+build/*
+!build/timeline.js
+!build/audio.m4a
