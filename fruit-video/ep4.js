@@ -323,7 +323,7 @@ const SCENES = {
         acc: ['glasses', 'mustache', 'cannula'], browColor: '#f0f0f0', browW: 12, arms: talking ? { l: [1.3, -1.3 + .3 * Math.sin(lt * 5)], r: 'rest' } : { l: 'rest', r: 'rest' } });
       drawBedFront(760, 1150, '#9fb4ff', bedTop(by, KINDS.blue, 1.3));
       const panic = lt < s1.s + .2, onPhone = lt > rg.s + .4 && lt < hg.e;
-      drawChar(straw({ x: 510, look: [-.7, 0], expr: lt > b1.s ? 'chill' : lt > c4.s ? 'dead' : 'chill', hold: { r: 'coffee' }, arms: { l: lt > s1.s && lt < s1.e + .2 ? 'point' : 'rest', r: 'hold' } }));
+      drawChar(straw({ x: 510, look: [-.7, 0], expr: lt > b1.s ? 'chill' : lt > c4.s ? 'dead' : 'chill', hold: { r: 'coffee' }, arms: { l: lt > s1.s && lt < s1.e + .2 ? 'point' : 'rest', r: 'rest' } }));
       drawChar(clem({ x: 200, look: panic ? [.9, -.2] : [.8, 0], expr: panic ? 'panic' : lt > c4.s ? 'dead' : lt > c2.s && lt < c3.s ? 'sad' : 'shock', sparkle: false, shake: panic ? 3 : 0,
         hold: onPhone ? { r: 'cell' } : {}, arms: panic ? { l: 'flail', r: 'flail' } : onPhone ? { l: 'rest', r: 'phone' } : { l: 'down', r: 'down' }, acc: [...CLEM_ACC, 'sweat'] }));
     },
