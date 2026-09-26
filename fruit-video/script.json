@@ -1,0 +1,845 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 1: The 3-11",
+ "voices": {
+  "narr": {
+   "name": "NARRATOR",
+   "voice": "bm_george",
+   "lang": "en-gb",
+   "speed": 1.07,
+   "semis": 0,
+   "color": "#e8e8e8"
+  },
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55"
+  },
+  "cherry": {
+   "name": "DAY NURSE CHERRY",
+   "voice": "af_bella",
+   "lang": "en-us",
+   "speed": 1.25,
+   "semis": 1,
+   "color": "#c2003a"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "lang": "en-us",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a"
+  },
+  "blue": {
+   "name": "MR. BLUEBERRY",
+   "voice": "am_santa",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#5b6cff"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a"
+  },
+  "prune": {
+   "name": "MR. PRUNE",
+   "voice": "am_fenrir",
+   "lang": "en-us",
+   "speed": 1.08,
+   "semis": -2,
+   "color": "#9b59b6"
+  },
+  "gfruit": {
+   "name": "GRAPEFRUIT",
+   "voice": "bm_lewis",
+   "lang": "en-gb",
+   "speed": 0.95,
+   "semis": -3,
+   "color": "#ff7b5c"
+  },
+  "pill1": {
+   "name": "SIMVASTATIN",
+   "voice": "af_sky",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 6,
+   "color": "#ff9f1c"
+  },
+  "pill2": {
+   "name": "ATORVASTATIN",
+   "voice": "am_puck",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 7,
+   "color": "#ff9f1c"
+  },
+  "grape": {
+   "name": "MRS. GRAPE",
+   "voice": "bf_alice",
+   "lang": "en-gb",
+   "speed": 1.05,
+   "semis": 1,
+   "color": "#8e44ad"
+  },
+  "raisin": {
+   "name": "MRS. GRAPE (NOW A RAISIN)",
+   "voice": "bf_alice",
+   "lang": "en-gb",
+   "speed": 0.95,
+   "semis": -4,
+   "color": "#7a4a2a"
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "lang": "en-us",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f"
+  },
+  "apple": {
+   "name": "DR. APPLE (VOICEMAIL)",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#e63946",
+   "fx": "phone"
+  },
+  "apple2": {
+   "name": "DR. APPLE",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#e63946",
+   "fx": "phone"
+  },
+  "pine": {
+   "name": "PINEAPPLE (FAMILY)",
+   "voice": "af_nova",
+   "lang": "en-us",
+   "speed": 1.18,
+   "semis": 0,
+   "color": "#f4a300"
+  },
+  "coco": {
+   "name": "NEW ADMIT: COCONUT",
+   "voice": "am_liam",
+   "lang": "en-us",
+   "speed": 1.08,
+   "semis": -1,
+   "color": "#8d5a3b"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 1.6,
+   "beats": [
+    {
+     "id": "jingle",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "theme",
+       0.0,
+       0.9
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Fruit Bowl Rehab and Nursing.",
+     "text": "Fruit Bowl Rehab & Nursing."
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "Where the fruit is ripe... and the staffing... is not.",
+     "text": "Where the fruit is ripe... and the staffing... is not.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "handoff",
+   "clock": "2:59 PM",
+   "label": "NURSES' STATION",
+   "head": 0.3,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "c1",
+     "who": "cherry",
+     "say": "Okay, report! Everybody's fine. Nobody needs anything.",
+     "text": "Okay, report! Everybody's fine. Nobody needs anything."
+    },
+    {
+     "id": "c2",
+     "who": "cherry",
+     "say": "Byeee!",
+     "text": "Byeee!",
+     "gap": 0.05,
+     "sfx": [
+      [
+       "zip",
+       0.35,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "lights",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "callbells",
+       0.1,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Why is every single call light on?",
+     "text": "Why is every single call light on?"
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "The cherry has cherry-picked. As is tradition.",
+     "text": "The Cherry has cherry-picked. As is tradition."
+    }
+   ]
+  },
+  {
+   "id": "ratio",
+   "clock": "3:05 PM",
+   "label": "NURSES' STATION",
+   "head": 0.25,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Bad news. Two aides called out.",
+     "text": "Bad news. Two aides called out."
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "And the good news?",
+     "text": "And the good news?"
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "There is no good news. You have forty residents.",
+     "text": "There is no good news. You have 40 residents."
+    },
+    {
+     "id": "twitch",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "sting",
+       0.0,
+       0.9
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "In the wild, a strawberry can survive an entire shift without eating, sitting, or peeing.",
+     "text": "In the wild, a strawberry can survive an entire shift without eating, sitting, or peeing."
+    }
+   ]
+  },
+  {
+   "id": "blue",
+   "clock": "3:30 PM",
+   "label": "ROOM 12",
+   "head": 0.5,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Oh my God, he's blue! His sats are eighty-seven!",
+     "text": "OH MY GOD, HE'S BLUE! His sats are 87%!",
+     "sfx": [
+      [
+       "alarm",
+       -0.5,
+       0.35
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "blue",
+     "say": "Relax, sweetheart. I've been blue since nineteen fifty-three.",
+     "text": "Relax, sweetheart. I've been blue since 1953."
+    },
+    {
+     "id": "stamp",
+     "pause": 0.9,
+     "sfx": [
+      [
+       "stamp",
+       0.15,
+       0.9
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Always. Check. The baseline.",
+     "text": "Always. Check. The baseline."
+    }
+   ]
+  },
+  {
+   "id": "cran",
+   "clock": "4:15 PM",
+   "label": "ROOM 7",
+   "head": 0.3,
+   "tail": 1.0,
+   "beats": [
+    {
+     "id": "c1",
+     "who": "cran",
+     "say": "Let me out! I'm late for my shift at the factory! It's nineteen sixty-two!",
+     "text": "LET ME OUT! I'm late for my shift at the factory! It's 1962!"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Okay. Somebody get me a urine sample.",
+     "text": "Okay. Somebody get me a urine sample."
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Ironically... the cranberry has a U T I.",
+     "text": "Ironically... the Cranberry has a UTI.",
+     "sfx": [
+      [
+       "ding1",
+       "end",
+       0.6
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "prune",
+   "clock": "5:00 PM",
+   "label": "ROOM 3",
+   "head": 0.3,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Mister Prune. Your last bowel movement was... six days ago?",
+     "text": "Mr. Prune. Your last BM was... 6 days ago?"
+    },
+    {
+     "id": "p1",
+     "who": "prune",
+     "say": "Six days. And I'm a PRUNE. Do you know how embarrassing that is?",
+     "text": "Six days. And I'm a PRUNE. Do you know how embarrassing that is?"
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Here. Drink some prune juice.",
+     "text": "Here. Drink some prune juice."
+    },
+    {
+     "id": "stare",
+     "pause": 0.6
+    },
+    {
+     "id": "p2",
+     "who": "prune",
+     "say": "That's my cousin Gary.",
+     "text": "...That's my cousin Gary.",
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.9
+      ]
+     ]
+    },
+    {
+     "id": "hold",
+     "pause": 0.9
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Rest in peace, Gary.",
+     "text": "Rest in peace, Gary."
+    }
+   ]
+  },
+  {
+   "id": "gfruit",
+   "clock": "6:00 PM",
+   "label": "MED ROOM",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 1.4,
+     "sfx": [
+      [
+       "drone",
+       0.0,
+       0.8
+      ],
+      [
+       "boom",
+       1.0,
+       0.9
+      ]
+     ]
+    },
+    {
+     "id": "g1",
+     "who": "gfruit",
+     "say": "Did somebody say... statins?",
+     "text": "Did somebody say... statins?"
+    },
+    {
+     "id": "p1",
+     "who": "pill1",
+     "say": "It's the grapefruit!",
+     "text": "IT'S THE GRAPEFRUIT!!",
+     "gap": 0.02
+    },
+    {
+     "id": "p2",
+     "who": "pill2",
+     "say": "Statins, run!",
+     "text": "STATINS, RUN!!",
+     "sfx": [
+      [
+       "scramble",
+       0.1,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "The grapefruit. Natural enemy of the statin. Nobody invited him.",
+     "text": "The Grapefruit. Natural enemy of the statin. Nobody invited him."
+    }
+   ]
+  },
+  {
+   "id": "raisin",
+   "clock": "7:30 PM",
+   "label": "ROOM 9",
+   "head": 0.3,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Mrs. Grape, you have to drink something.",
+     "text": "Mrs. Grape, you have to drink something."
+    },
+    {
+     "id": "g1",
+     "who": "grape",
+     "say": "No thank you, dear. I had a sip on Tuesday.",
+     "text": "No thank you, dear. I had a sip on Tuesday."
+    },
+    {
+     "id": "later",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "whoosh",
+       0.0,
+       0.7
+      ],
+      [
+       "tick",
+       0.2,
+       0.6
+      ],
+      [
+       "shrivel",
+       0.7,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "r1",
+     "who": "raisin",
+     "say": "Could I get some water?",
+     "text": "...could I get some water?"
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Nursing diagnosis: deficient fluid volume. Street name: raisin.",
+     "text": "Nursing diagnosis: Deficient Fluid Volume. Street name: raisin."
+    }
+   ]
+  },
+  {
+   "id": "banana",
+   "clock": "8:30 PM",
+   "label": "ROOM 4",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "slip",
+     "pause": 1.8,
+     "sfx": [
+      [
+       "slide",
+       0.45,
+       0.8
+      ],
+      [
+       "thud",
+       1.15,
+       1.0
+      ],
+      [
+       "bedalarm",
+       1.2,
+       0.35
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "banana",
+     "say": "I'm fine! I slipped on my own peel!",
+     "text": "I'M FINE! I slipped on my own peel!"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "That's your third fall this week.",
+     "text": "That's your THIRD fall this week."
+    },
+    {
+     "id": "b2",
+     "who": "banana",
+     "say": "Fourth. I didn't tell you about Tuesday.",
+     "text": "Fourth. I didn't tell you about Tuesday."
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "And now, the incident report. Forty-five minutes. Seventeen pages.",
+     "text": "And now, the incident report. 45 minutes. 17 pages.",
+     "sfx": [
+      [
+       "paper",
+       "end",
+       1.0
+      ]
+     ]
+    },
+    {
+     "id": "hold",
+     "pause": 0.6
+    }
+   ]
+  },
+  {
+   "id": "doctor",
+   "clock": "9:15 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "ring",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "ringback",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "apple",
+     "say": "Hi! You've reached Doctor Apple. I'm away. An apple a day, you know how it is.",
+     "text": "Hi! You've reached Dr. Apple. I'm away. An apple a day, you know how it is.",
+     "sfx": [
+      [
+       "vmbeep",
+       "end",
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "beat",
+     "pause": 0.5
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "He will call back at three A M... to ask why you called.",
+     "text": "He will call back at 3 AM... to ask why you called."
+    }
+   ]
+  },
+  {
+   "id": "pine",
+   "clock": "9:45 PM",
+   "label": "HALLWAY",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "stomp",
+     "pause": 0.7,
+     "sfx": [
+      [
+       "stomps",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "p1",
+     "who": "pine",
+     "say": "Excuse me! I've been here five minutes and nobody has turned my mother!",
+     "text": "EXCUSE ME! I've been here FIVE MINUTES and nobody has turned my mother!"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Ma'am, I have forty residents.",
+     "text": "Ma'am, I have 40 residents."
+    },
+    {
+     "id": "p2",
+     "who": "pine",
+     "say": "I want to speak to your manager.",
+     "text": "I want to speak to your MANAGER."
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Observe the crown. A rare formation known as... the Can I Speak To Your Manager.",
+     "text": "Observe the crown. A rare formation known as... the \"Can I Speak To Your Manager.\""
+    }
+   ]
+  },
+  {
+   "id": "coco",
+   "clock": "10:55 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.3,
+   "beats": [
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Ten fifty-five P M. Five minutes to freedom.",
+     "text": "10:55 PM. Five minutes to freedom."
+    },
+    {
+     "id": "roll",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "siren",
+       0.0,
+       0.45
+      ],
+      [
+       "wheels",
+       0.2,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "coco",
+     "say": "Hi! New admission! No med list, no paperwork... just vibes.",
+     "text": "Hi! New admission! No med list. No paperwork... just vibes."
+    },
+    {
+     "id": "scream",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "scratch",
+       0.0,
+       0.8
+      ],
+      [
+       "ringing",
+       0.25,
+       0.35
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "jam",
+   "clock": "11:00 PM",
+   "label": "THE EXIT",
+   "head": 0.2,
+   "tail": 0.6,
+   "beats": [
+    {
+     "id": "walk",
+     "pause": 2.0,
+     "sfx": [
+      [
+       "choir",
+       0.0,
+       0.55
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Hey. So... night shift called out.",
+     "text": "Hey. So... night shift called out.",
+     "sfx": [
+      [
+       "scratch",
+       -0.25,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Can you stay till seven?",
+     "text": "Can you stay till 7?"
+    },
+    {
+     "id": "melt",
+     "pause": 2.4,
+     "sfx": [
+      [
+       "squelch",
+       0.5,
+       0.9
+      ],
+      [
+       "trombone",
+       0.9,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "And that... is how strawberry jam is made.",
+     "text": "And that... is how strawberry jam is made."
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "",
+   "head": 0.0,
+   "tail": 0.0,
+   "beats": [
+    {
+     "id": "card",
+     "pause": 5.0,
+     "sfx": [
+      [
+       "theme",
+       0.1,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "post",
+   "clock": "3:00 AM",
+   "label": "YOUR BEDROOM",
+   "head": 0.3,
+   "tail": 1.2,
+   "beats": [
+    {
+     "id": "ringing",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "ringtone",
+       0.1,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "apple2",
+     "say": "Hey, it's Doctor Apple. Why'd you call?",
+     "text": "Hey, it's Dr. Apple. Why'd you call?",
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.9
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

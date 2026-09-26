@@ -1,0 +1,15 @@
+build/*
+!build/timeline.js
+!build/audio.m4a
+!build/ep2/
+build/ep2/*
+!build/ep2/timeline.js
+!build/ep2/audio.m4a
+!build/ep3/
+build/ep3/*
+!build/ep3/timeline.js
+!build/ep3/audio.m4a
+!build/ep4/
+build/ep4/*
+!build/ep4/timeline.js
+!build/ep4/audio.m4a
