@@ -1,7 +1,8 @@
 // Renders SHIFT HAPPENS to MP4 (or preview stills) with headless Chromium + ffmpeg.
 //   node render.js preview 3.5 12 40.2   -> build/preview/t_<sec>.png
+//   node render.js audit [step]          -> layout audit: lists anything covered or cut off
 //   node render.js video [out.mp4]       -> full 1080x1920 30fps H.264 + AAC
-// Env: FFMPEG=/path/to/ffmpeg (defaults to `ffmpeg` on PATH), WORKERS=4, CHROMIUM=/path/to/chrome
+// Env: EP=1|2 (episode), FFMPEG=/path/to/ffmpeg (defaults to `ffmpeg` on PATH), WORKERS=4, CHROMIUM=/path/to/chrome
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -11,6 +12,8 @@ let playwright;
 try { playwright = require('playwright'); } catch { playwright = require(path.join(execSync('npm root -g').toString().trim(), 'playwright')); }
 
 const ROOT = __dirname;
+const EPNUM = parseInt(process.env.EP || '1', 10);
+const BUILD = path.join(ROOT, 'build', EPNUM === 1 ? '' : `ep${EPNUM}`);
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.ttf': 'font/ttf', '.wav': 'audio/wav', '.json': 'application/json' };
 
 function serve() {
@@ -29,7 +32,7 @@ async function openPage(browser, port) {
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
   page.on('pageerror', e => console.error('PAGE ERROR', e.message));
   page.on('console', m => { if (m.type() === 'error') console.error('console:', m.text()); });
-  await page.goto(`http://127.0.0.1:${port}/index.html?capture`);
+  await page.goto(`http://127.0.0.1:${port}/index.html?capture&ep=${EPNUM}`);
   await page.evaluate(([f, q]) => { window.FMT = f; window.Q = q; }, [process.env.FMT || 'image/jpeg', parseFloat(process.env.Q || '0.93')]);
   const duration = await page.evaluate(() => window.READY);
   return { page, duration };
@@ -45,7 +48,7 @@ async function main() {
   try {
     if (mode === 'preview') {
       const { page } = await openPage(browser, port);
-      const dir = path.join(ROOT, 'build', 'preview');
+      const dir = path.join(BUILD, 'preview');
       fs.mkdirSync(dir, { recursive: true });
       for (const a of args) {
         const t = parseFloat(a);
@@ -55,7 +58,23 @@ async function main() {
       console.log('wrote', args.length, 'previews to', dir);
       return;
     }
-    const out = path.resolve(args[0] || path.join(ROOT, 'build', 'shift-happens.mp4'));
+    if (mode === 'audit') {
+      const { page, duration } = await openPage(browser, port);
+      const step = parseFloat(args[0] || '0.1');
+      const rows = await page.evaluate(([d, st]) => window.audit(0, d, st), [duration, step]);
+      // collapse consecutive hits of the same problem into time ranges
+      const groups = new Map();
+      for (const [t, scene, msg] of rows) {
+        const k = scene + ' | ' + msg.replace(/\(\d+%\)|\[.*\]/g, '').trim();
+        const g = groups.get(k) || { scene, msg, from: t, to: t, n: 0 };
+        g.to = t; g.n++; groups.set(k, g);
+      }
+      const list = [...groups.values()].sort((a, b) => a.from - b.from);
+      for (const g of list) console.log(`${g.from.toFixed(2)}-${g.to.toFixed(2)}s  ${g.scene.padEnd(9)} ${g.msg}  (x${g.n})`);
+      console.log(`${rows.length} issue-frames, ${list.length} distinct issues, ${Math.round(duration / step)} frames checked`);
+      return;
+    }
+    const out = path.resolve(args[0] || path.join(BUILD, 'shift-happens.mp4'));
     const workers = parseInt(process.env.WORKERS || '4', 10);
     const pages = [];
     for (let i = 0; i < workers; i++) pages.push(await openPage(browser, port));
@@ -63,7 +82,7 @@ async function main() {
     const first = parseInt(process.env.FROM || '0', 10);
     const total = parseInt(process.env.FRAMES || '0', 10) || Math.ceil(pages[0].duration * fps) - first;
     const ff = spawn(process.env.FFMPEG || 'ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', (process.env.FMT || '').includes('png') ? 'png' : 'mjpeg', '-i', '-',
-      '-ss', String(first / fps), '-i', path.join(ROOT, 'build', 'audio.wav'), '-c:v', 'libx264', '-preset', 'slow', '-tune', 'animation', '-crf', process.env.CRF || '25', '-pix_fmt', 'yuv420p',
+      '-ss', String(first / fps), '-i', path.join(BUILD, 'audio.wav'), '-c:v', 'libx264', '-preset', 'slow', '-tune', 'animation', '-crf', process.env.CRF || '25', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
     const CH = 15;
     const chunks = [];

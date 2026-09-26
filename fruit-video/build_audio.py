@@ -4,7 +4,8 @@ Reads script.json, voices every line with Kokoro TTS, synthesizes all SFX and
 music with numpy, mixes to build/audio.wav, and writes build/timeline.json,
 which the animation (index.html) uses for scene timing, captions and lip sync.
 
-Usage: python3 build_audio.py --model PATH/kokoro-v1.0.onnx --voices PATH/voices-v1.0.bin
+Usage: python3 build_audio.py --model PATH/kokoro-v1.0.onnx --voices PATH/voices-v1.0.bin \
+           [--script script_ep2.json --out build/ep2 --var TIMELINE_EP2]
 """
 import argparse
 import hashlib
@@ -20,7 +21,7 @@ SR = 48000
 FPS = 30
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD = os.path.join(HERE, "build")
-CACHE = os.path.join(BUILD, "tts_cache")
+CACHE = os.path.join(HERE, "build", "tts_cache")
 DEFAULT_GAP = 0.2
 
 rng = np.random.default_rng(7)
@@ -372,6 +373,173 @@ def sfx_theme():
     return norm(out, 0.85)
 
 
+def sfx_rewind():
+    d = 0.7
+    t = tarr(d)
+    f = 500 + 1900 * t / d + 260 * np.sin(2 * np.pi * 31 * t)
+    x = lp(osc("saw", f, d), 5000) * 0.35 + bp(noise(d), 2000, 7000) * 0.5
+    return norm(x * ar(d, 0.03, 0.12), 0.6)
+
+
+def sfx_static():
+    d = 0.2
+    return norm(bp(noise(d), 900, 6500) * expdecay(d, 0.07), 0.55)
+
+
+def sfx_car():
+    d = 2.0
+    t = tarr(d)
+    f = 48 + 8 * np.sin(2 * np.pi * 3 * t) + 10 * np.clip(1 - t, 0, 1)
+    x = lp(osc("saw", f, d) + 0.6 * osc("square", f * 0.5, d), 420) + 0.5 * lp(noise(d), 300)
+    return norm(x * ar(d, 0.5, 0.6), 0.7)
+
+
+def sfx_squeal():
+    d = 0.55
+    t = tarr(d)
+    x = osc("sine", 1750 + 90 * np.sin(2 * np.pi * 23 * t), d) * 0.5 + bp(noise(d), 1400, 3200) * 0.6
+    return norm(x * ar(d, 0.02, 0.25), 0.5)
+
+
+def sfx_doorclose():
+    out = np.zeros(int(0.6 * SR))
+    place(out, sfx_thud(), 0.0, 0.9)
+    place(out, hp(noise(0.03), 3000) * expdecay(0.03, 0.008), 0.06, 0.6)
+    return norm(out, 0.85)
+
+
+def sfx_rattle():
+    out = np.zeros(int(0.9 * SR))
+    for k in range(9):
+        f = rng.uniform(2300, 3600)
+        place(out, osc("sine", f, 0.12) * expdecay(0.12, 0.025), k * 0.085 + rng.uniform(0, 0.02), rng.uniform(0.4, 0.9))
+    return norm(out, 0.55)
+
+
+def sfx_pop():
+    d = 0.16
+    x = osc("sine", np.linspace(900, 160, int(d * SR)), d) * expdecay(d, 0.03) + 0.7 * bp(noise(d), 400, 3000) * expdecay(d, 0.012)
+    return norm(x, 0.85)
+
+
+def sfx_boing():
+    d = 0.6
+    t = tarr(d)
+    f = 180 + 220 * (1 - np.exp(-t * 9)) + 60 * np.sin(2 * np.pi * 14 * t) * np.exp(-t * 3)
+    return norm(osc("sine", f, d) * ar(d, 0.01, 0.3), 0.55)
+
+
+def sfx_pachime():
+    out = np.zeros(int(1.6 * SR))
+    for k, n in enumerate([67, 76, 72]):
+        place(out, chime(midi(n), 0.9), k * 0.32, 0.8)
+    return norm(out, 0.6)
+
+
+def sfx_klaxon():
+    out = np.zeros(int(1.4 * SR))
+    for k in range(2):
+        d = 0.55
+        f = np.linspace(280, 560, int(d * SR))
+        x = lp(osc("square", f, d) + 0.5 * osc("saw", f * 1.01, d), 2200) * ar(d, 0.02, 0.1)
+        place(out, x, k * 0.65)
+    return norm(out, 0.55)
+
+
+def sfx_fridge():
+    out = np.zeros(int(1.0 * SR))
+    place(out, lp(noise(0.12), 700) * expdecay(0.12, 0.04), 0.0, 1.0)
+    hum = (osc("sine", 60, 0.9) + 0.4 * osc("sine", 120, 0.9)) * ar(0.9, 0.2, 0.3)
+    place(out, hum, 0.08, 0.35)
+    return norm(out, 0.6)
+
+
+def sfx_slam():
+    out = np.zeros(int(0.6 * SR))
+    place(out, sfx_thud(), 0.0, 1.0)
+    place(out, lp(noise(0.25), 1500) * expdecay(0.25, 0.05), 0.0, 0.7)
+    return norm(out, 0.95)
+
+
+def sfx_fanfare():
+    out = np.zeros(int(1.3 * SR))
+    for k, n in enumerate([67, 72, 76]):
+        place(out, brass_chord([n, n - 12], 0.13, 2600), k * 0.13, 0.7)
+    place(out, brass_chord([60, 67, 72, 76, 79], 0.75, 2400), 0.4, 0.9)
+    return norm(out, 0.75)
+
+
+def sfx_whooshes():
+    out = np.zeros(int(1.3 * SR))
+    for k in range(5):
+        d = 0.28
+        e = np.sin(np.pi * np.linspace(0, 1, int(d * SR))) ** 2
+        place(out, bp(noise(d), 700 + k * 150, 5000) * e, k * 0.17, 0.6)
+    return norm(out, 0.55)
+
+
+def sfx_flips():
+    out = np.zeros(int(0.6 * SR))
+    for k in range(3):
+        place(out, bp(noise(0.05), 1800, 4500) * expdecay(0.05, 0.01), k * 0.13, 0.9)
+    return norm(out, 0.6)
+
+
+def sfx_pumps():
+    out = np.zeros(int(1.4 * SR))
+    t, gap = 0.0, 0.2
+    for k in range(10):
+        squish = lp(noise(0.08), 1200) * expdecay(0.08, 0.025) + 0.3 * osc("sine", np.linspace(500, 250, int(0.08 * SR)), 0.08) * expdecay(0.08, 0.03)
+        place(out, squish, t, 0.8)
+        t += gap
+        gap = max(0.07, gap * 0.82)
+    return norm(out, 0.6)
+
+
+def sfx_scribble():
+    d = 0.7
+    t = tarr(d)
+    x = bp(noise(d), 2500, 7000) * (0.5 + 0.5 * np.sign(np.sin(2 * np.pi * 17 * t)))
+    return norm(x * ar(d, 0.02, 0.1), 0.35)
+
+
+def sfx_stab():
+    out = np.zeros(int(1.2 * SR))
+    place(out, brass_chord([43, 50, 55, 58, 62], 0.5, 1800), 0.0, 1.0)
+    place(out, sfx_boom(), 0.0, 0.7)
+    return norm(out, 0.9)
+
+
+def sfx_wobble():
+    d = 0.9
+    t = tarr(d)
+    return norm(osc("sine", 300 * (1 + 0.35 * np.sin(2 * np.pi * 7 * t)), d) * ar(d, 0.03, 0.3), 0.4)
+
+
+def sfx_slowwhoosh():
+    d = 1.6
+    e = np.sin(np.pi * np.linspace(0, 1, int(d * SR))) ** 1.5
+    return norm(bp(noise(d), 150, 1200) * e, 0.6)
+
+
+def sfx_poofs():
+    out = np.zeros(int(1.6 * SR))
+    for k in range(5):
+        d = 0.22
+        x = lp(noise(d), 1800) * ar(d, 0.005, 0.15) + 0.4 * osc("sine", np.linspace(300, 700, int(d * SR)), d) * expdecay(d, 0.05)
+        place(out, x, k * 0.24, 0.8)
+    return norm(out, 0.6)
+
+
+def sfx_bell():
+    out = np.zeros(int(1.4 * SR))
+    for k in range(3):
+        f = midi(93)
+        x = sum(osc("sine", f * m, 0.9) * g for m, g in ((1, 1), (2.76, 0.4), (5.4, 0.2))) * expdecay(0.9, 0.25)
+        place(out, x, k * 0.14, 0.7)
+    return norm(out, 0.6)
+
+
 SFX = {k[4:]: v for k, v in globals().items() if k.startswith("sfx_")}
 
 
@@ -424,13 +592,20 @@ def semis_resample(x, semis):
 
 
 def tts(kokoro, v, say):
-    key = hashlib.sha1(json.dumps([v["voice"], v["lang"], v["speed"], v.get("semis", 0), v.get("fx"), say]).encode()).hexdigest()[:16]
+    key = hashlib.sha1(json.dumps([v["voice"], v["lang"], v["speed"], v.get("semis", 0), v.get("fx"), say]
+                                  + ([v["chorus"]] if v.get("chorus") else [])).encode()).hexdigest()[:16]
     path = os.path.join(CACHE, key + ".wav")
     if os.path.exists(path):
         x, _ = sf.read(path)
         return x
-    samples, sr = kokoro.create(say, voice=v["voice"], speed=v["speed"], lang=v["lang"])
-    x = signal.resample_poly(np.asarray(samples, dtype=float), SR // 1000, sr // 1000)
+    parts = []
+    for i, name in enumerate(v.get("chorus") or [v["voice"]]):
+        detune = 1 + 0.03 * (i % 3 - 1) if v.get("chorus") else 1
+        samples, sr = kokoro.create(say, voice=name, speed=v["speed"] * detune, lang=v["lang"])
+        parts.append(signal.resample_poly(np.asarray(samples, dtype=float), SR // 1000, sr // 1000))
+    x = np.zeros(max(len(p) for p in parts))
+    for p in parts:
+        x[:len(p)] += p / np.max(np.abs(p))
     x = semis_resample(x, v.get("semis", 0))
     # trim silence
     a = np.abs(x)
@@ -438,6 +613,8 @@ def tts(kokoro, v, say):
     x = x[max(0, idx[0] - 800): idx[-1] + 2400]
     if v.get("fx") == "phone":
         x = np.tanh(phone_band(x) * 3.0) * 0.6
+    elif v.get("fx") == "muffled":
+        x = lp(x, 900, 4)
     x = norm(x, 0.85)
     sf.write(path, x, SR)
     return x
@@ -475,14 +652,25 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--voices", required=True)
+    ap.add_argument("--script", default="script.json")
+    ap.add_argument("--out", default="build")
+    ap.add_argument("--var", default="TIMELINE")
     args = ap.parse_args()
+    global BUILD
+    BUILD = os.path.join(HERE, args.out)
     os.makedirs(CACHE, exist_ok=True)
+    os.makedirs(BUILD, exist_ok=True)
 
     from kokoro_onnx import Kokoro
     kokoro = Kokoro(args.model, args.voices)
 
-    script = json.load(open(os.path.join(HERE, "script.json")))
+    script = json.load(open(os.path.join(HERE, args.script)))
     voices = script["voices"]
+    ref = script.get("clips_from")  # earlier episode used for "previously on" clips
+    if ref:
+        ref_tl = json.load(open(os.path.join(HERE, ref["timeline"])))
+        ref_audio, _ = sf.read(os.path.join(HERE, ref["audio"]))
+        ref_audio = ref_audio.mean(axis=1) if ref_audio.ndim > 1 else ref_audio
 
     scenes_out, lines_out, cues = [], [], []
     voice_clips = []
@@ -492,9 +680,31 @@ def main():
         beats = {}
         for b in sc["beats"]:
             gap = b.get("gap", DEFAULT_GAP)
+            src = None
             if "pause" in b:
                 s, e = cursor, cursor + b["pause"]
                 gap = b.get("gap", 0.0)
+            elif "clip" in b:
+                c = b["clip"]
+                ln = next(l for l in ref_tl["lines"] if l["scene"] == c["scene"] and l["id"] == c["line"])
+                w0 = c.get("from_word", 0)
+                a0, a1 = ln["s"] + ln["words"][w0][1] - c.get("pad_before", 0.0), ln["e"] + c.get("pad_after", 0.0)
+                seg_ = ref_audio[int(a0 * SR):int(a1 * SR)].copy()
+                seg_ *= ar(len(seg_) / SR, 0.03, min(0.35, c.get("pad_after", 0.0) + 0.05))
+                tail_at = int((ln["e"] - a0) * SR)
+                seg_[tail_at:] *= 0.55  # the stings/trombone after the line sit under the dialogue level
+                seg_ = bp(seg_, 140, 6000) + 0.004 * noise(len(seg_) / SR)  # worn-tape flashback
+                s, e = cursor, cursor + len(seg_) / SR
+                src = a0
+                voice_clips.append((T + s, seg_))
+                off = ln["s"] + ln["words"][w0][1] - a0
+                lines_out.append({
+                    "scene": sc["id"], "id": b["id"], "who": "clip:" + ln["who"], "name": ln["name"], "color": ln["color"],
+                    "s": round(T + s + off, 3), "e": round(T + s + off + ln["e"] - ln["s"] - ln["words"][w0][1], 3),
+                    "text": " ".join(w[0] for w in ln["words"][w0:]),
+                    "words": [[w[0], round(w[1] - ln["words"][w0][1], 3), round(w[2] - ln["words"][w0][1], 3)] for w in ln["words"][w0:]],
+                    "mouth": ln["mouth"],
+                })
             else:
                 v = voices[b["who"]]
                 clip = tts(kokoro, v, b["say"])
@@ -506,6 +716,8 @@ def main():
                     "words": word_times(b["text"], e - s), "mouth": mouth_env(clip),
                 })
             beats[b["id"]] = {"s": round(s, 3), "e": round(e, 3)}
+            if src is not None:
+                beats[b["id"]]["src"] = round(src, 3)
             for name, off, gain in b.get("sfx", []):
                 at = e if off == "end" else s + off
                 cues.append((T + at, name, gain))
@@ -513,7 +725,7 @@ def main():
         dur = cursor + sc.get("tail", 0.4)
         scenes_out.append({"id": sc["id"], "start": round(T, 3), "dur": round(dur, 3), "clock": sc["clock"],
                            "label": sc["label"], "beats": beats})
-        if sc["id"] not in ("title", "end"):
+        if sc["id"] not in script.get("no_whoosh", ["title", "end"]):
             cues.append((T, "whoosh", 0.35))
         T += dur
 
@@ -523,17 +735,19 @@ def main():
         place(mix, clip, at, 0.95)
 
     # music bed with ducking, only through the main story
-    start = next(s["start"] for s in scenes_out if s["id"] == "handoff")
-    stop = next(s["start"] + s["dur"] for s in scenes_out if s["id"] == "coco")
+    music = script.get("music", {"from": "handoff", "to": "coco", "mute": ["enter", "scream", "twitch"]})
+    start = next(s["start"] for s in scenes_out if s["id"] == music["from"])
+    stop = next(s["start"] + s["dur"] for s in scenes_out if s["id"] == music["to"])
     bed = music_bed(stop - start)
     gain = np.full(len(bed), 0.16)
     for ln in lines_out:
         a, b = int((ln["s"] - start - 0.1) * SR), int((ln["e"] - start + 0.2) * SR)
         if b > 0 and a < len(gain):
             gain[max(a, 0):min(b, len(gain))] = 0.06
-    for sc in scenes_out:  # drop the bed for dramatic moments
-        for bid in ("enter", "scream", "twitch"):
-            if bid in sc["beats"]:
+    for sc in scenes_out:  # drop the bed for dramatic moments ("beat" or "scene:beat")
+        for m in music["mute"]:
+            sid, _, bid = m.rpartition(":")
+            if (not sid or sid == sc["id"]) and bid in sc["beats"]:
                 a = int((sc["start"] + sc["beats"][bid]["s"] - start) * SR)
                 b = int((sc["start"] + sc["beats"][bid]["e"] - start) * SR)
                 gain[max(a, 0):max(0, min(b, len(gain)))] = 0.0
@@ -558,7 +772,7 @@ def main():
     with open(os.path.join(BUILD, "timeline.json"), "w") as f:
         json.dump(timeline, f)
     with open(os.path.join(BUILD, "timeline.js"), "w") as f:
-        f.write("window.TIMELINE=" + json.dumps(timeline) + ";\n")
+        f.write(f"window.{args.var}=" + json.dumps(timeline) + ";\n")
     print(f"duration {total:.2f}s, {len(lines_out)} lines, {len(cues)} cues")
     for s in scenes_out:
         print(f"  {s['id']:<8} {s['start']:7.2f}  +{s['dur']:.2f}")
