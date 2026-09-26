@@ -10,7 +10,6 @@ const cherry = o => Object.assign({ kind: 'cherry', id: 'cherry', who: 'cherry',
 const fig = o => Object.assign({ kind: 'fig', id: 'fig', who: 'sched', s: 1.2, center: true, noLegs: true, noBob: true, expr: 'smug',
   acc: ['suit', 'rose', 'fedora'], suitColor: '#18181e', lapelColor: '#0b0b0e', tieColor: '#101014' }, o);
 const pine = o => Object.assign({ kind: 'pine', id: 'pine', who: 'pine', s: 1.3, y: G, acc: ['sunglassesHead'], hold: { r: 'purse' } }, o);
-const NIGHT = 'brightness(.86) saturate(.92)';
 const EP3_LABEL = 'EPISODE 3: THE HOLIDAY SCHEDULE';
 
 // scene-local start time of each word of a line
@@ -762,9 +761,10 @@ const SCENES = {
       confetti(lt, pp.s);
       const blow = seg(lt, pp.s + .15, pp.s + .5) * (1 - seg(lt, pp.s + .75, pp.s + 1.1));
       const hornUp = lt > pp.s + .05 && lt < pp.s + 1.15;
-      drawChar(straw({ x: 360, filter: NIGHT, acc: [...STRAW_ACC, 'partyhat'], look: ringing ? [.9, .3] : onPhone ? [.5, 0] : [.3, -.3],
+      drawChar(straw({ x: 360, acc: [...STRAW_ACC, 'partyhat'], look: ringing ? [.9, .3] : onPhone ? [.5, 0] : [.3, -.3],
         expr: lt > a2.s ? 'angry' : lt > s2.s ? 'dead' : onPhone ? 'sour' : ringing ? 'shock' : lt > s1.s ? 'dead' : lt > co.s ? 'neutral' : 'dead',
         hold: onPhone ? { r: 'handset' } : { r: 'horn' }, hornBlow: blow, arms: onPhone || hornUp ? { l: 'rest', r: 'phone' } : { l: 'rest', r: 'rest' } }));
+      ctx.fillStyle = 'rgba(14,18,54,.14)'; ctx.fillRect(-PAD, -PAD, W + PAD * 2, STAGE_H + PAD * 2);
     },
     over(lt) {
       const co = B('count'), pp = B('pop'), rg = B('ring'), a1 = B('a1'), s2 = B('s2');
@@ -775,6 +775,8 @@ const SCENES = {
       stamp2(seg(lt, s2.e + .18, s2.e + .48), [['RESPONSE TIME', 58, -52], ['5 WEEKS', 116, 42]]);
       dateCard(lt, [['DEC', 25], ['DEC', 27], ['DEC', 29], ['DEC', 30], ['DEC', 31]], "NEW YEAR'S EVE", '#1b1f4a');
     },
+    panelClock: lt => lt >= B('pop').s ? '12:00 AM' : '11:59 PM',
+    panelLabel: lt => lt >= B('pop').s ? "NEW YEAR'S DAY" : "NEW YEAR'S EVE",
   },
 
   next: {
@@ -784,12 +786,13 @@ const SCENES = {
       station3({ clock: '12:05', board: 'sched27', bulletin: 'nye', deco: 'nye', night: true, keyBoard: true });
       const into = seg(lt, jr.s, jr.s + .7);
       jamJar(540, G, .72, { lid: into < .6 ? 0 : easeOut(seg(into, .6, 1)) * .7 + (into >= 1 ? .3 : 0), eyes: into >= 1 ? 'dead' : null, level: into >= 1 ? 1 : .4, sub: 'employee of the month' });
-      drawChar(lemon({ x: 860, filter: NIGHT, hold: {}, look: [-.8, lt < l1.e ? -.5 : 0], expr: lt > l2.s ? 'chill' : 'happy', arms: lt < l1.e ? { l: 'rest', r: 'cheer' } : lt > l2.s ? { l: 'shrug', r: 'shrug' } : { l: 'rest', r: 'rest' } }));
+      drawChar(lemon({ x: 860, hold: {}, look: [-.8, lt < l1.e ? -.5 : 0], expr: lt > l2.s ? 'chill' : 'happy', arms: lt < l1.e ? { l: 'rest', r: 'cheer' } : lt > l2.s ? { l: 'shrug', r: 'shrug' } : { l: 'rest', r: 'rest' } }));
       if (into < 1) {
         const inJ = into > 0;
-        drawChar(straw({ x: lerp(220, 540, easeIO(into)), y: G - Math.sin(into * PI) * 320 + into * 40, s: SC * (1 - .55 * into), transit: inJ, rot: into * .5, filter: NIGHT,
+        drawChar(straw({ x: lerp(220, 540, easeIO(into)), y: G - Math.sin(into * PI) * 320 + into * 40, s: SC * (1 - .55 * into), transit: inJ, rot: into * .5,
           acc: [...STRAW_ACC, 'partyhat'], expr: lt > s1.s ? 'dead' : 'shock', look: lt < l1.e ? [.7, -.6] : [.8, 0], arms: inJ ? { l: 'up', r: 'up' } : { l: 'down', r: 'down' } }));
       }
+      ctx.fillStyle = 'rgba(14,18,54,.14)'; ctx.fillRect(-PAD, -PAD, W + PAD * 2, STAGE_H + PAD * 2);
     },
     over() {},
   },
