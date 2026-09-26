@@ -8,8 +8,9 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 1: The 3-11 | [`shift-happens.mp4`](shift-happens.mp4) | 2:44 |
 | 2: Survey Says | [`shift-happens-ep2.mp4`](shift-happens-ep2.mp4) | 2:22 |
 | 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:17 |
+| 4: The New Grad | [`shift-happens-ep4.mp4`](shift-happens-ep4.mp4) | 2:09 |
 
-Open `index.html?ep=3` (or `ep=1`, `ep=2`) through any local web server to play an episode live in the browser.
+Open `index.html?ep=4` (or `ep=1` to `ep=3`) through any local web server to play an episode live in the browser.
 
 ## Episode 2: Survey Says
 
@@ -29,6 +30,15 @@ nobody can refuse. The company thanks its holiday heroes with one pen, to share.
 Thanksgiving Mrs. Cranberry meets the cranberry sauce (cousin Doris); on Christmas the Administrator says
 "nice and quiet" and every call light comes on; on New Year's Eve Dr. Apple returns a page from Thanksgiving.
 At 12:05 AM, next year's schedule is posted.
+
+## Episode 4: The New Grad
+
+Clementine arrives: licensed six days ago, passed her boards at 85 questions, price tag still on her stethoscope.
+Orientation is three days of videos, then forty residents ("We don't eat our young. We just give them the heaviest
+assignment."). She daydreams of NCLEX Land, where every nurse has one patient and Dr. Apple is already there.
+Strawberry teaches her three rules (never say the Q word, always check the baseline, never lend your pen), her first
+med pass takes four hours, she says "Sure!" to everyone, and she pages Dr. Apple because the blueberry is blue.
+Then night shift calls out, and that is how marmalade is made.
 
 ## The cast
 
@@ -52,22 +62,23 @@ At 12:05 AM, next year's schedule is posted.
 | Nifedipine ER | Capsule (Ep. 2) | Almost crushed. Says thank you |
 | Fig | The Scheduler (Ep. 3) | Makes you an offer you can't refuse. Texts "hey :)" at 3 AM |
 | Doris | Cranberry sauce (Ep. 3) | Mrs. Cranberry's cousin. She was jellied |
+| Clementine | New grad (Ep. 4) | Passed at 85 questions. Says "Sure!" to everyone. Becomes marmalade |
 
 ## Layout audit
 
 `node render.js audit` renders every frame and checks it against the layout rules: no card, banner, caption,
 prop or foreground set piece may cover a face, a head or a key sign; nothing important may be cut off at the
-frame edge; no text may be squished. Episodes 2 and 3 pass with zero issues at 20 frames per second.
+frame edge; no text may be squished. Episodes 2 to 4 pass with zero issues at 20 frames per second.
 
 ## How it's made
 
 Everything is generated from code, with no stock assets:
 
-- `script.json`, `script_ep2.json`, `script_ep3.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep4.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes `build/audio.wav`, and writes `build/timeline.js` with timings and lip-sync envelopes.
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 and 3; `ep1.js`, `ep2.js` and `ep3.js` are the episodes.
+  Episodes 2 to 4; `ep1.js` to `ep4.js` are the episodes.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
@@ -79,6 +90,8 @@ python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
   --script script_ep2.json --out build/ep2 --var TIMELINE_EP2
 python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
   --script script_ep3.json --out build/ep3 --var TIMELINE_EP3
+python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
+  --script script_ep4.json --out build/ep4 --var TIMELINE_EP4
 EP=2 node render.js audit 0.05                                        # layout check, every 1/20 s
 EP=2 FMT=image/png CRF=27 FFMPEG=/path/to/ffmpeg node render.js video shift-happens-ep2.mp4
 EP=2 node render.js preview 12.5 40 88                                # stills in build/ep2/preview

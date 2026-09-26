@@ -680,6 +680,59 @@ def sfx_auld():
     return norm(out, 0.55)
 
 
+def sfx_birds():
+    out = np.zeros(int(1.8 * SR))
+    for k in range(11):
+        d = rng.uniform(0.05, 0.09)
+        tt = tarr(d)
+        f0 = rng.uniform(2600, 3600)
+        f = f0 + rng.uniform(600, 1400) * tt / d + 180 * np.sin(2 * np.pi * 45 * tt)
+        place(out, osc("sine", f, d) * ar(d, 0.005, 0.02), rng.uniform(0, 1.5) if k > 2 else k * 0.12, rng.uniform(0.4, 0.9))
+    return norm(out, 0.4)
+
+
+def sfx_harp():
+    """Dream-sequence glissando up a C major scale."""
+    notes = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84]
+    out = np.zeros(int(2.2 * SR))
+    for k, n in enumerate(notes):
+        place(out, pluck(midi(n), 1.2) * 0.6, k * 0.055)
+        place(out, pluck(midi(n) * 2, 0.6) * 0.15, k * 0.055)
+    return norm(out, 0.6)
+
+
+def sfx_sparkle():
+    out = np.zeros(int(1.0 * SR))
+    for k in range(9):
+        f = rng.uniform(2400, 5200)
+        d = 0.35
+        place(out, osc("sine", f, d) * expdecay(d, 0.08) * ar(d, 0.002, 0.05), k * 0.06 + rng.uniform(0, 0.03), rng.uniform(0.4, 1.0))
+    return norm(out, 0.45)
+
+
+def sfx_timelapse():
+    """A clock ticking faster and faster (hours passing in seconds)."""
+    out = np.zeros(int(6.4 * SR))
+    t, gap = 0.0, 0.28
+    while t < 5.6:
+        c = hp(noise(0.012), 3000) * expdecay(0.012, 0.003)
+        place(out, c, t, 0.9)
+        t += gap
+        gap = max(0.035, gap * 0.93)
+    d = 5.6
+    place(out, bp(noise(d), 300, 3000) * np.linspace(0, 1, int(d * SR)) ** 2 * 0.25, 0.0)
+    return norm(out, 0.6)
+
+
+def sfx_hangup():
+    out = np.zeros(int(1.0 * SR))
+    place(out, lp(noise(0.03), 1500) * expdecay(0.03, 0.008), 0.0, 1.0)
+    d = 0.8
+    tone = (osc("sine", 350, d) + osc("sine", 440, d)) * ar(d, 0.02, 0.1)
+    place(out, phone_band(tone) * 0.5, 0.15)
+    return norm(out, 0.55)
+
+
 SFX = {k[4:]: v for k, v in globals().items() if k.startswith("sfx_")}
 
 
@@ -708,6 +761,25 @@ def bed_mob(duration):
         i += 1
     out = out[: int(duration * SR)]
     return norm(out * ar(duration, 0.6, 0.8), 0.5)
+
+
+def bed_dreamy(duration):
+    """Soft harp arpeggios over a pastel pad: the NCLEX Land underscore."""
+    chords = [[60, 64, 67, 71], [53, 57, 60, 64]]  # Cmaj7, Fmaj7
+    bar = 2.0
+    out = np.zeros(int(duration * SR) + SR)
+    t, i = 0.0, 0
+    while t < duration:
+        notes = chords[i % 2]
+        pad = sum(osc("sine", midi(n) * (1 + det), bar) for n in notes for det in (-0.002, 0.002))
+        place(out, pad * ar(bar, 0.6, 0.6) * 0.05, t)
+        arp = notes + [notes[0] + 12, notes[2] + 12, notes[1] + 12, notes[3]]
+        for k, n in enumerate(arp):
+            place(out, pluck(midi(n + 12), 0.8) * 0.2, t + k * bar / len(arp))
+        t += bar
+        i += 1
+    out = out[: int(duration * SR)]
+    return norm(out * ar(duration, 0.4, 0.5), 0.5)
 
 
 BEDS = {k[4:]: v for k, v in globals().items() if k.startswith("bed_")}
@@ -932,16 +1004,22 @@ def main():
                 b = int((sc["start"] + sc["beats"][bid]["e"] - start) * SR)
                 gain[max(a, 0):max(0, min(b, len(gain)))] = 0.0
     beds = script.get("beds", {})  # scenes that get their own underscore instead of the bed
+
+    def bed_of(sc):  # "name", or {"name": ..., "until": beat} to end the underscore at that beat
+        spec = beds[sc["id"]]
+        name, until = (spec, None) if isinstance(spec, str) else (spec["name"], spec.get("until"))
+        return name, (sc["beats"][until]["s"] if until else sc["dur"])
     for sc in scenes_out:
         if sc["id"] in beds:
-            a, b = int((sc["start"] - start) * SR), int((sc["start"] + sc["dur"] - start) * SR)
+            a, b = int((sc["start"] - start) * SR), int((sc["start"] + bed_of(sc)[1] - start) * SR)
             gain[max(a, 0):max(0, min(b, len(gain)))] = 0.0
     gain = np.convolve(gain, np.ones(2400) / 2400, mode="same")
     fade = ar(len(bed) / SR, 0.6, 1.0)
     place(mix, bed * gain * fade, start)
     for sc in scenes_out:
         if sc["id"] in beds:
-            under = BEDS[beds[sc["id"]]](sc["dur"])
+            name, length = bed_of(sc)
+            under = BEDS[name](length)
             g = np.full(len(under), 0.22)
             for ln in lines_out:
                 a, b = int((ln["s"] - sc["start"] - 0.1) * SR), int((ln["e"] - sc["start"] + 0.2) * SR)

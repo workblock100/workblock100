@@ -13,21 +13,7 @@ const pine = o => Object.assign({ kind: 'pine', id: 'pine', who: 'pine', s: 1.3,
 const EP3_LABEL = 'EPISODE 3: THE HOLIDAY SCHEDULE';
 
 // scene-local start time of each word of a line
-function wordTimes(lineId) {
-  const l = TL.lines.find(l => l.scene === CUR.id && l.id === lineId);
-  return l ? l.words.map(w => l.s - CUR.start + w[1]) : [];
-}
-function labelWidth(str) { ctx.save(); ctx.font = '900 36px Nunito'; ctx.letterSpacing = '2px'; const w = ctx.measureText(str).width; ctx.restore(); return w + 90; }
-
 // ------------------------------------------------------------------ station, holiday edition
-function stationClock(clock) {
-  const [hh, mm] = clock.split(':').map(Number);
-  const ma = mm / 60 * TAU, ha = ((hh % 12) / 12 + mm / 720) * TAU;
-  ctx.strokeStyle = INK; ctx.lineCap = 'round';
-  ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(540, 244); ctx.lineTo(540 + Math.sin(ha) * 26, 244 - Math.cos(ha) * 26); ctx.stroke();
-  ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(540, 244); ctx.lineTo(540 + Math.sin(ma) * 40, 244 - Math.cos(ma) * 40); ctx.stroke();
-  ctx.fillStyle = '#e8193a'; ell(540, 244, 6, 6); ctx.fill();
-}
 function bulletin3(mode) {
   paper2(150, 300, 176, 216, -.04, '#fff');
   text('EMPLOYEE OF', 0, -80, { size: 20, fill: INK }); text('THE MONTH', 0, -58, { size: 20, fill: INK });
@@ -58,35 +44,8 @@ function bulletin3(mode) {
     ctx.restore();
   }
 }
-function memorial(x, y, name, rot) {
-  paper2(x, y, 170, 180, rot, '#2b2233');
-  ctx.strokeStyle = '#fff6c2'; ctx.lineWidth = 4; ell(0, -44, 32, 8); ctx.stroke();
-  ctx.fillStyle = '#5a2a6a'; ell(0, -8, 36, 40); ctx.fill();
-  ctx.fillStyle = '#fff'; ell(-12, -14, 8, 9); ctx.fill(); ell(12, -14, 8, 9); ctx.fill();
-  ctx.fillStyle = INK; ell(-12, -12, 4, 4); ctx.fill(); ell(12, -12, 4, 4); ctx.fill();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 2, 12, .3, PI - .3); ctx.stroke();
-  text('R.I.P. ' + name, 0, 60, { size: 22, font: 'Bangers', weight: 400, fill: '#fff6c2', spacing: 2 });
-  ctx.restore();
-}
-// Paper pennant string with one letter per flag, from x0 to x1 at y (sags a little).
-function pennants(x0, y, x1, str, cols, size = 30) {
-  const chars = [...str], n = chars.length, step = (x1 - x0) / n;
-  ctx.strokeStyle = '#6b4a2a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x0 - 10, y); ctx.quadraticCurveTo((x0 + x1) / 2, y + 22, x1 + 10, y); ctx.stroke();
-  chars.forEach((c, i) => {
-    if (c === ' ') return;
-    const cx = x0 + step * (i + .5), u = (cx - x0) / (x1 - x0), yy = y + 44 * u * (1 - u) + 2;
-    ctx.save(); ctx.translate(cx, yy); ctx.rotate(Math.sin(T * 1.6 + i) * .04);
-    ctx.fillStyle = cols[i % cols.length]; ctx.strokeStyle = INK; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(-step * .46, 0); ctx.lineTo(step * .46, 0); ctx.lineTo(0, size * 1.7); ctx.closePath(); ctx.fill(); ctx.stroke();
-    text(c, 0, size * .55, { size, font: 'Bangers', weight: 400, fill: '#fff', lw: 5, stroke: INK });
-    ctx.restore();
-  });
-}
-
 const HOLIDAYS = ['THANKSGIVING', 'CHRISTMAS EVE', 'CHRISTMAS', "NEW YEAR'S EVE", "NEW YEAR'S DAY"];
 const HOLIDAYS27 = ["NEW YEAR'S DAY", 'EASTER', 'MEMORIAL DAY', 'JULY 4TH', 'LABOR DAY', 'THANKSGIVING', 'CHRISTMAS'];
-const BX0 = 622, BY0 = 182, BX1 = 1026, BY1 = 508;
-function boardFace(col = '#fdfdfd') { ctx.fillStyle = col; ctx.fillRect(BX0, BY0, BX1 - BX0, BY1 - BY0); }
 function boardSchedule(year, rows) {
   boardFace();
   ctx.fillStyle = '#d62828'; ctx.fillRect(BX0, BY0, BX1 - BX0, 52);
@@ -108,24 +67,6 @@ function newBurst(x, y, r) {
   ctx.restore();
 }
 // 40 call lights; lit 0..40 switch on in a fixed shuffled order, xmas alternates red and green.
-const ORDER = Array.from({ length: 40 }, (_, i) => i).sort((a, b) => hash(a * 3.3) - hash(b * 3.3));
-function callPanel(lit, xmas) {
-  boardFace('#262c35');
-  ctx.fillStyle = '#39414d'; ctx.fillRect(BX0, BY0, BX1 - BX0, 46);
-  text('CALL LIGHTS', 824, BY0 + 24, { size: 26, fill: '#c9d6e6', spacing: 2 });
-  const on = new Set(ORDER.slice(0, Math.round(lit)));
-  for (let i = 0; i < 40; i++) {
-    const c = i % 8, r = Math.floor(i / 8), x = BX0 + 27 + c * 50, y = BY0 + 78 + r * 54;
-    const lamp = on.has(i), blink = lamp && Math.sin(T * 9 + i * 1.7) > -.35;
-    const col = xmas ? (i % 2 ? '#2bd45a' : '#ff2d3d') : '#ff2d3d', dim = xmas ? (i % 2 ? '#173d22' : '#4a1d22') : '#4a1d22';
-    if (blink) { const g = ctx.createRadialGradient(x, y, 3, x, y, 40); g.addColorStop(0, col + '99'); g.addColorStop(1, col + '00'); ctx.fillStyle = g; ctx.fillRect(x - 40, y - 40, 80, 80); }
-    ctx.fillStyle = blink ? col : dim; ell(x, y, 16, 16); ctx.fill();
-    if (blink) { ctx.fillStyle = 'rgba(255,255,255,.6)'; ell(x - 5, y - 5, 5, 4); ctx.fill(); }
-  }
-}
-function staffNumbers() {
-  [[290, '1'], [370, '40'], [450, '1:40']].forEach(([y, v]) => text(v, 930, y + 2, { size: 58, font: 'Bangers', weight: 400, fill: '#d62828', spacing: 2 }));
-}
 function garland() {
   const pins = [30, 256, 472, 540, 608, 824, 1050];
   for (let i = 0; i < pins.length - 1; i++) {
@@ -178,21 +119,6 @@ function balloons(x, y) {
     ctx.fillStyle = 'rgba(255,255,255,.4)'; ell(bx - 14, by - 18, 9, 14, -.4); ctx.fill();
   });
 }
-function deskPhone(x, y, ring, lifted) {
-  const sh = ring ? Math.sin(T * 60) * 3 : 0;
-  ctx.save(); ctx.translate(x + sh, y);
-  if (ring) { ctx.strokeStyle = 'rgba(255,230,120,.9)'; ctx.lineWidth = 4; for (let i = 1; i <= 3; i++) { const q = (T * 2 + i / 3) % 1; ctx.globalAlpha = 1 - q; ctx.beginPath(); ctx.arc(0, -40, 50 + q * 60, -PI * .85, -PI * .15); ctx.stroke(); } ctx.globalAlpha = 1; }
-  ctx.fillStyle = '#e9e1d0'; ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-60, -40, 120, 40, 10); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#cfc6b3'; for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) { ell(10 + i * 14, -28 + j * 13, 4, 4); ctx.fill(); }
-  if (!lifted) { ctx.fillStyle = '#e9e1d0'; ctx.strokeStyle = INK; rr(-64, -60, 70, 22, 10); ctx.fill(); ctx.stroke(); }
-  ctx.restore();
-}
-function nightShade() {
-  ctx.fillStyle = 'rgba(14,18,54,.42)'; ctx.fillRect(-PAD, -PAD, W + PAD * 2, STAGE_H + PAD * 2);
-  const g = ctx.createRadialGradient(540, 930, 60, 540, 930, 620); g.addColorStop(0, 'rgba(255,214,150,.22)'); g.addColorStop(1, 'rgba(255,214,150,0)');
-  ctx.fillStyle = g; ctx.fillRect(-PAD, 300, W + PAD * 2, 1300);
-}
-// o: clock, board ('sched' | 'calls' | 'staff' | 'sched27'), lit, bulletin ('oct' | 'xmas' | 'nye'), deco ('xmas' | 'nye'), frantic, night, keyBoard, keyClock
 function station3(o) {
   bgStation2();
   if (o.night) nightShade();
@@ -455,34 +381,12 @@ function dateCard(lt, pages, name, bg) {
   }
   ctx.restore();
 }
-function flash(p) { if (p <= 0 || p >= 1) return; reg('overlay', [0, 0, W, STAGE_H], { id: 'flash', full: true }); ctx.fillStyle = `rgba(255,255,255,${1 - p})`; ctx.fillRect(0, 0, W, STAGE_H); }
-function confetti(lt, t0, n = 70) {
-  const k = lt - t0; if (k < 0) return;
-  const cols = ['#ffe135', '#ff3b55', '#5b6cff', '#2ecc71', '#ff9f1c', '#fff'];
-  for (let i = 0; i < n; i++) {
-    const x = hash(i) * W + Math.sin(k * 2 + i) * 40, y = -40 + k * (260 + hash(i + 9) * 240) - hash(i + 4) * 300;
-    if (y < -30 || y > STAGE_H) continue;
-    ctx.save(); ctx.translate(x, y); ctx.rotate(k * 6 + i); ctx.fillStyle = cols[i % 6]; ctx.fillRect(-9, -4, 18, 8); ctx.restore();
-  }
-}
 function slamNum(p, str, cx = 740, cy = (OV + OV_B) / 2) {
   if (p <= 0) return;
   const s = lerp(1.7, 1, easeOut(clamp(p * 1.6)));
   ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s);
   regLocal('overlay', -110, -118, 110, 118, { id: 'count' });
   text(str, 0, 8, { size: 230, font: 'Bangers', weight: 400, fill: '#ffe135', lw: 20, stroke: '#1d0a2a', alpha: clamp(p * 4) * (1 - seg(p, .8, 1)) });
-  ctx.restore();
-}
-function callCard(p, name, sub, col) {
-  if (p <= 0) return;
-  const x = 90, y = OV + 20, w = 900, h = 150;
-  reg('overlay', [x, y, x + w, y + h], { id: 'call' });
-  ctx.save(); ctx.globalAlpha = clamp(p * 1.4);
-  ctx.fillStyle = 'rgba(245,245,250,.97)'; rr(x, y, w, h, 34); ctx.fill();
-  ctx.fillStyle = col; rr(x + 30, y + 24, 102, 102, 24); ctx.fill();
-  REG.suppress++; drawChar({ kind: 'apple', x: x + 81, y: y + 82, s: .3, center: true, noLegs: true, noArms: true, expr: 'happy', t: T, acc: ['sunglasses'] }); REG.suppress--;
-  text(name, x + 160, y + 52, { size: 34, fill: '#111', align: 'left' });
-  text(sub, x + 160, y + 100, { size: 28, fill: '#444', align: 'left', weight: 700, maxW: 700 });
   ctx.restore();
 }
 function penReveal(lt, up, rot) {
