@@ -540,11 +540,181 @@ def sfx_bell():
     return norm(out, 0.6)
 
 
+def sleigh_hit(d=0.12):
+    x = np.zeros(int(d * SR))
+    for f in (2900, 4100, 5300, 6700, 7900):
+        x += osc("sine", f * rng.uniform(0.97, 1.03), d) * rng.uniform(0.3, 1.0)
+    return x * expdecay(d, 0.03) + 0.6 * bp(noise(d), 5000, 11000) * expdecay(d, 0.02)
+
+
+def sleigh_pattern(d, step):
+    out = np.zeros(int(d * SR))
+    for k, t in enumerate(np.arange(0, d - 0.15, step)):
+        place(out, sleigh_hit(), t + rng.uniform(0, 0.01), 0.55 + 0.45 * (k % 2 == 0))
+    return out
+
+
+def sfx_sleighbells():
+    out = sleigh_pattern(1.8, 0.1)
+    for k in range(18):  # shake-off at the end
+        place(out, sleigh_hit(0.06), 1.4 + rng.uniform(0, 0.3), 0.35)
+    return norm(out, 0.55)
+
+
+def sfx_theme3():
+    """The title fanfare with sleigh bells on it."""
+    out = sfx_theme()
+    bells = sleigh_pattern(len(out) / SR, 60 / 132 / 2)
+    return norm(out + 0.35 * norm(bells, 1.0), 0.85)
+
+
+def sfx_fight():
+    d = 1.9
+    out = lp(noise(d), 180) * ar(d, 0.15, 0.4) * 0.6
+    for k in range(14):
+        place(out, sfx_thud(), rng.uniform(0.0, 1.6), rng.uniform(0.3, 0.6))
+    for k in range(7):
+        place(out, sfx_pop(), rng.uniform(0.1, 1.6), rng.uniform(0.3, 0.6))
+    for t in (0.35, 0.9, 1.4):
+        place(out, sfx_boing(), t, 0.4)
+    place(out, sfx_scramble(), 0.1, 0.4)
+    return norm(out, 0.85)
+
+
+def sfx_creak():
+    d = 0.9
+    t = tarr(d)
+    f = 150 - 40 * t / d + 25 * lp(noise(d), 12) * 8
+    x = osc("saw", f, d) * (0.6 + 0.4 * np.abs(lp(noise(d), 30) * 6).clip(0, 1))
+    return norm(bp(x, 500, 3200) * ar(d, 0.08, 0.2), 0.45)
+
+
+def sfx_chair():
+    out = np.zeros(int(0.6 * SR))
+    for k in range(3):
+        d = 0.12
+        tt = tarr(d)
+        f = np.linspace(1100, 1450, len(tt)) * (1 + 0.02 * np.sin(2 * np.pi * 40 * tt))
+        place(out, osc("sine", f, d) * ar(d, 0.01, 0.05), k * 0.15, 0.8 - k * 0.15)
+    return norm(out, 0.35)
+
+
+def sfx_paperslide():
+    d = 0.6
+    e = np.sin(np.pi * np.linspace(0, 1, int(d * SR))) ** 2
+    out = np.zeros(int(0.8 * SR))
+    place(out, bp(noise(d), 1200, 6000) * e, 0.0)
+    place(out, lp(noise(0.05), 900) * expdecay(0.05, 0.015), 0.58, 0.8)
+    return norm(out, 0.5)
+
+
+def sfx_drumroll():
+    out = np.zeros(int(2.2 * SR))
+    n = int(1.2 * 28)
+    for k in range(n):
+        hit = bp(noise(0.03), 1500, 6000) * expdecay(0.03, 0.01)
+        place(out, hit, k / 28 + rng.uniform(0, 0.004), 0.3 + 0.7 * k / n)
+    place(out, hp(noise(0.9), 4000) * expdecay(0.9, 0.3), 1.22, 0.9)
+    place(out, sfx_thud(), 1.22, 0.7)
+    return norm(out, 0.7)
+
+
+def sfx_shutter():
+    out = np.zeros(int(0.7 * SR))
+    place(out, hp(noise(0.012), 2500) * expdecay(0.012, 0.003), 0.0, 1.0)
+    place(out, hp(noise(0.02), 1500) * expdecay(0.02, 0.006), 0.07, 0.8)
+    d = 0.35
+    place(out, osc("sine", np.linspace(3000, 7000, int(d * SR)), d) * ar(d, 0.05, 0.1), 0.12, 0.12)
+    return norm(out, 0.7)
+
+
+def sfx_partyhorn():
+    d = 0.9
+    t = tarr(d)
+    f = 420 * (1 - 0.28 * (t / d) ** 2)
+    x = osc("saw", f, d) * (0.65 + 0.35 * np.sign(np.sin(2 * np.pi * 38 * t)))
+    x = lp(x, 3500) * ar(d, 0.02, 0.25)
+    x[: int(0.3 * SR)] += bp(noise(0.3), 3000, 8000) * (rng.random(int(0.3 * SR)) > 0.97) * 0.8
+    return norm(x, 0.6)
+
+
+def sfx_textding():
+    out = np.zeros(int(0.6 * SR))
+    for k, n in enumerate((86, 93)):
+        d = 0.3
+        x = (osc("sine", midi(n), d) + 0.25 * osc("sine", midi(n) * 3, d) * expdecay(d, 0.03)) * expdecay(d, 0.09)
+        place(out, x * ar(d, 0.003, 0.05), k * 0.09)
+    return norm(out, 0.55)
+
+
+def sfx_flipcal():
+    out = np.zeros(int(1.2 * SR))
+    t = 0.0
+    for k in range(12):
+        place(out, bp(noise(0.04), 1800, 5000) * expdecay(0.04, 0.012), t, 0.9)
+        t += 0.1 * 0.85 ** k + 0.02
+    place(out, lp(noise(0.08), 900) * expdecay(0.08, 0.02), t + 0.05, 0.9)
+    return norm(out, 0.6)
+
+
+def music_box(notes, bpm):
+    """notes: (midi, start_beat, len_beats); a plucked music-box timbre."""
+    b = 60 / bpm
+    end = max(s + l for _, s, l in notes) * b + 1.0
+    out = np.zeros(int(end * SR))
+    for n, s, l in notes:
+        d = max(0.5, l * b + 0.4)
+        f = midi(n)
+        x = osc("sine", f, d) + 0.3 * osc("sine", f * 4.2, d) * expdecay(d, 0.05) + 0.15 * osc("sine", f * 2, d)
+        place(out, x * expdecay(d, 0.35) * ar(d, 0.002, 0.08), s * b)
+    return out
+
+
+def sfx_auld():
+    """'Auld Lang Syne' (traditional, public domain), first phrase, on a music box."""
+    m = [(72, 0, 1), (77, 1, 1.5), (77, 2.5, 0.5), (77, 3, 1), (81, 4, 1), (79, 5, 1.5), (77, 6.5, 0.5), (79, 7, 1), (81, 8, 1)]
+    bass = [(53, 1, 3), (48, 5, 3)]
+    out = music_box(m, 120)
+    b = music_box([(n, s, l) for n, s, l in bass], 120)
+    out[: len(b)] += 0.5 * b[: len(out)]
+    return norm(out, 0.55)
+
+
 SFX = {k[4:]: v for k, v in globals().items() if k.startswith("sfx_")}
 
 
+# ---------------------------------------------------------------- scene beds (replace the music bed in one scene)
+def pluck(f, d):
+    t = tarr(d)
+    x = sum(np.sin(2 * np.pi * k * f * t) * np.exp(-t * (18 + 7 * k)) / k for k in range(1, 7))
+    return x * ar(d, 0.002, 0.02)
+
+
+def bed_mob(duration):
+    """Mandolin tremolo over a slow accordion minor progression: the staffing office underscore."""
+    bar = 2.4
+    chords = [(57, [45, 52, 57, 60, 64]), (62, [50, 57, 62, 65, 69]), (56, [52, 56, 59, 62, 64]), (57, [45, 52, 57, 60, 64])]
+    tops = [76, 77, 71, 69]
+    out = np.zeros(int(duration * SR) + SR)
+    t, i = 0.0, 0
+    while t < duration:
+        root, notes = chords[i % 4]
+        top = tops[i % 4]
+        pad = sum(osc("saw", midi(n) * (1 + det), bar) for n in notes[:3] for det in (-0.003, 0.003))
+        place(out, lp(pad, 900) * ar(bar, 0.4, 0.4) * 0.05, t)
+        for k in range(int(bar * 12)):
+            place(out, pluck(midi(top), 0.12) * 0.25 + pluck(midi(top - 12), 0.12) * 0.1, t + k / 12)
+        t += bar
+        i += 1
+    out = out[: int(duration * SR)]
+    return norm(out * ar(duration, 0.6, 0.8), 0.5)
+
+
+BEDS = {k[4:]: v for k, v in globals().items() if k.startswith("bed_")}
+
+
 # ---------------------------------------------------------------- music bed
-def music_bed(duration):
+def music_bed(duration, bells=False):
     bpm = 116
     beat = 60 / bpm
     out = np.zeros(int(duration * SR) + SR)
@@ -576,6 +746,9 @@ def music_bed(duration):
                 d = 0.25
                 x = osc("sine", midi(n), d) * expdecay(d, 0.1) + 0.2 * osc("sine", midi(n) * 2.76, d) * expdecay(d, 0.03)
                 place(out, x * 0.12, t + (2 + k * 0.5) * beat)
+        if bells:  # holiday episodes: sleigh bells on the eighths
+            for s in np.arange(0, 4, 0.5):
+                place(out, sleigh_hit(0.08), t + s * beat, 0.05 if s % 1 else 0.08)
         t += 4 * beat
         bar += 1
     return out[: int(duration * SR)]
@@ -731,6 +904,13 @@ def main():
 
     total = T
     mix = np.zeros(int((total + 1) * SR))
+    if script.get("level_lines"):  # match every line's loudness while it is voiced, not its peak
+        def active_rms(x):
+            fr = x[: len(x) // 960 * 960].reshape(-1, 960)
+            r = np.sqrt(np.mean(fr ** 2, axis=1))
+            return np.sqrt(np.mean(r[r > 0.1 * r.max()] ** 2))
+        target = np.median([active_rms(c) for _, c in voice_clips])
+        voice_clips = [(at, c * min(2.0, target / active_rms(c))) for at, c in voice_clips]
     for at, clip in voice_clips:
         place(mix, clip, at, 0.95)
 
@@ -738,7 +918,7 @@ def main():
     music = script.get("music", {"from": "handoff", "to": "coco", "mute": ["enter", "scream", "twitch"]})
     start = next(s["start"] for s in scenes_out if s["id"] == music["from"])
     stop = next(s["start"] + s["dur"] for s in scenes_out if s["id"] == music["to"])
-    bed = music_bed(stop - start)
+    bed = music_bed(stop - start, music.get("bells", False))
     gain = np.full(len(bed), 0.16)
     for ln in lines_out:
         a, b = int((ln["s"] - start - 0.1) * SR), int((ln["e"] - start + 0.2) * SR)
@@ -751,9 +931,23 @@ def main():
                 a = int((sc["start"] + sc["beats"][bid]["s"] - start) * SR)
                 b = int((sc["start"] + sc["beats"][bid]["e"] - start) * SR)
                 gain[max(a, 0):max(0, min(b, len(gain)))] = 0.0
+    beds = script.get("beds", {})  # scenes that get their own underscore instead of the bed
+    for sc in scenes_out:
+        if sc["id"] in beds:
+            a, b = int((sc["start"] - start) * SR), int((sc["start"] + sc["dur"] - start) * SR)
+            gain[max(a, 0):max(0, min(b, len(gain)))] = 0.0
     gain = np.convolve(gain, np.ones(2400) / 2400, mode="same")
     fade = ar(len(bed) / SR, 0.6, 1.0)
     place(mix, bed * gain * fade, start)
+    for sc in scenes_out:
+        if sc["id"] in beds:
+            under = BEDS[beds[sc["id"]]](sc["dur"])
+            g = np.full(len(under), 0.22)
+            for ln in lines_out:
+                a, b = int((ln["s"] - sc["start"] - 0.1) * SR), int((ln["e"] - sc["start"] + 0.2) * SR)
+                if b > 0 and a < len(g):
+                    g[max(a, 0):min(b, len(g))] = 0.09
+            place(mix, under * np.convolve(g, np.ones(2400) / 2400, mode="same"), sc["start"])
 
     for at, name, g in cues:
         clip = SFX[name]()

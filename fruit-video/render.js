@@ -1,6 +1,6 @@
 // Renders SHIFT HAPPENS to MP4 (or preview stills) with headless Chromium + ffmpeg.
 //   node render.js preview 3.5 12 40.2   -> build/preview/t_<sec>.png
-//   node render.js audit [step]          -> layout audit: lists anything covered or cut off
+//   node render.js audit [step] [from] [to] -> layout audit: lists anything covered or cut off
 //   node render.js video [out.mp4]       -> full 1080x1920 30fps H.264 + AAC
 // Env: EP=1|2 (episode), FFMPEG=/path/to/ffmpeg (defaults to `ffmpeg` on PATH), WORKERS=4, CHROMIUM=/path/to/chrome
 const http = require('http');
@@ -60,8 +60,8 @@ async function main() {
     }
     if (mode === 'audit') {
       const { page, duration } = await openPage(browser, port);
-      const step = parseFloat(args[0] || '0.1');
-      const rows = await page.evaluate(([d, st]) => window.audit(0, d, st), [duration, step]);
+      const step = parseFloat(args[0] || '0.1'), from = parseFloat(args[1] || '0'), to = Math.min(duration, parseFloat(args[2] || String(duration)));
+      const rows = await page.evaluate(([a, b, st]) => window.audit(a, b, st), [from, to, step]);
       // collapse consecutive hits of the same problem into time ranges
       const groups = new Map();
       for (const [t, scene, msg] of rows) {
@@ -71,7 +71,7 @@ async function main() {
       }
       const list = [...groups.values()].sort((a, b) => a.from - b.from);
       for (const g of list) console.log(`${g.from.toFixed(2)}-${g.to.toFixed(2)}s  ${g.scene.padEnd(9)} ${g.msg}  (x${g.n})`);
-      console.log(`${rows.length} issue-frames, ${list.length} distinct issues, ${Math.round(duration / step)} frames checked`);
+      console.log(`${rows.length} issue-frames, ${list.length} distinct issues, ${Math.round((to - from) / step)} frames checked`);
       return;
     }
     const out = path.resolve(args[0] || path.join(BUILD, 'shift-happens.mp4'));

@@ -7,8 +7,9 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 |---|---|---|
 | 1: The 3-11 | [`shift-happens.mp4`](shift-happens.mp4) | 2:44 |
 | 2: Survey Says | [`shift-happens-ep2.mp4`](shift-happens-ep2.mp4) | 2:22 |
+| 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:16 |
 
-Open `index.html?ep=2` through any local web server to play an episode live in the browser.
+Open `index.html?ep=3` (or `ep=1`, `ep=2`) through any local web server to play an episode live in the browser.
 
 ## Episode 2: Survey Says
 
@@ -19,6 +20,15 @@ Then the surveyor leaves, the Kiwis vanish, the pizza goes back, and the survey 
 F-761, Grapefruit in the med fridge.
 
 Episode 2 moves every caption, clock and title into a panel under the picture, so text never sits on the action.
+
+## Episode 3: The Holiday Schedule
+
+October 1st: the holiday schedule goes up, and Strawberry is on every holiday. "It's the rotation."
+Cherry put her request in on January 1st at 12:01 AM. The Scheduler (a Fig in a fedora) makes an offer
+nobody can refuse. The company thanks its holiday heroes with one pen, to share. Then a montage: at
+Thanksgiving Mrs. Cranberry meets the cranberry sauce (cousin Doris); on Christmas the Administrator says
+"nice and quiet" and every call light comes on; on New Year's Eve Dr. Apple returns a page from Thanksgiving.
+At 12:05 AM, next year's schedule is posted.
 
 ## The cast
 
@@ -40,21 +50,24 @@ Episode 2 moves every caption, clock and title into a panel under the picture, s
 | Melon | The Administrator (Ep. 2) | Leaves the office once a year, with pizza |
 | Kiwis x5 | Agency nurses (Ep. 2) | Appear when the State does. Vanish at 4:45 |
 | Nifedipine ER | Capsule (Ep. 2) | Almost crushed. Says thank you |
+| Fig | The Scheduler (Ep. 3) | Makes you an offer you can't refuse. Texts "hey :)" at 3 AM |
+| Doris | Cranberry sauce (Ep. 3) | Mrs. Cranberry's cousin. She was jellied |
 
 ## Layout audit
 
 `node render.js audit` renders every frame and checks it against the layout rules: no card, banner, caption,
 prop or foreground set piece may cover a face, a head or a key sign; nothing important may be cut off at the
-frame edge; no text may be squished. Episode 2 passes with zero issues at 20 frames per second.
+frame edge; no text may be squished. Episodes 2 and 3 pass with zero issues at 20 frames per second.
 
 ## How it's made
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` / `script_ep2.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json`, `script_ep2.json`, `script_ep3.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes `build/audio.wav`, and writes `build/timeline.js` with timings and lip-sync envelopes.
-- `engine.js` draws every character, set and overlay on a canvas; `ep1.js` and `ep2.js` are the episodes.
+- `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
+  Episodes 2 and 3; `ep1.js`, `ep2.js` and `ep3.js` are the episodes.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
@@ -64,6 +77,8 @@ pip install kokoro-onnx soundfile scipy numpy
 python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin
 python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
   --script script_ep2.json --out build/ep2 --var TIMELINE_EP2
+python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
+  --script script_ep3.json --out build/ep3 --var TIMELINE_EP3
 EP=2 node render.js audit 0.05                                        # layout check, every 1/20 s
 EP=2 FMT=image/png CRF=27 FFMPEG=/path/to/ffmpeg node render.js video shift-happens-ep2.mp4
 EP=2 node render.js preview 12.5 40 88                                # stills in build/ep2/preview
