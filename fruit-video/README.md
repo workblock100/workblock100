@@ -7,7 +7,7 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 |---|---|---|
 | 1: The 3-11 | [`shift-happens.mp4`](shift-happens.mp4) | 2:44 |
 | 2: Survey Says | [`shift-happens-ep2.mp4`](shift-happens-ep2.mp4) | 2:22 |
-| 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:16 |
+| 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:17 |
 
 Open `index.html?ep=3` (or `ep=1`, `ep=2`) through any local web server to play an episode live in the browser.
 
