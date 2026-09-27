@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Until I Die</title>
+<style>
+  @font-face { font-family: 'New Rocker'; font-weight: 400; src: url(fonts/new-rocker-latin-400-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Syncopate'; font-weight: 700; src: url(fonts/syncopate-latin-700-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Syncopate'; font-weight: 400; src: url(fonts/syncopate-latin-400-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Share Tech Mono'; font-weight: 400; src: url(fonts/share-tech-mono-latin-400-normal.woff2) format('woff2'); }
+  :root { --ink: #05030a; --text: #e8e2f4; --muted: #9a90b0; --accent: #b347ff; }
+  html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); font: 14px/1.4 system-ui, -apple-system, sans-serif; }
+  #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  canvas { width: min(100vw, 177.78vh); height: auto; aspect-ratio: 16 / 9; display: block; background: #000; }
+  #ui { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; background: linear-gradient(transparent, rgba(0,0,0,.85)); }
+  #ui button, #ui label { background: rgba(255,255,255,.08); color: var(--text); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer; }
+  #ui label input { display: none; }
+  #scrub { flex: 1 1 200px; accent-color: var(--accent); }
+  #time, #sect { font-family: 'Share Tech Mono', monospace; color: var(--muted); min-width: 90px; }
+  body.render #ui { display: none; }
+  body.render canvas { width: 1920px; height: 1080px; }
+  body.render #stage { position: static; display: block; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c" width="1920" height="1080"></canvas></div>
+<div id="ui">
+  <button id="play" type="button">Play</button>
+  <input id="scrub" type="range" min="0" max="148" step="0.01" value="0" aria-label="Seek">
+  <span id="time">0:00 / 2:28</span>
+  <span id="sect"></span>
+  <label>Load song file<input id="file" type="file" accept="audio/*"></label>
+  <button id="full" type="button">Fullscreen</button>
+</div>
+<script src="src/core.js"></script>
+<script src="src/kid.js"></script>
+<script src="src/props.js"></script>
+<script src="src/scenes-chorus.js"></script>
+<script src="src/scenes-verse1.js"></script>
+<script src="src/scenes-verse2.js"></script>
+<script src="src/timeline.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>
