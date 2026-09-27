@@ -29,7 +29,7 @@ const CRF = opt('crf', '18');
 const STILLS = opt('stills', null);
 
 function serve() {
-  const types = { '.html': 'text/html', '.js': 'text/javascript', '.woff2': 'font/woff2', '.css': 'text/css' };
+  const types = { '.html': 'text/html', '.js': 'text/javascript', '.woff2': 'font/woff2', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png' };
   const srv = http.createServer((req, res) => {
     const p = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
     if (!p.startsWith(ROOT) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }

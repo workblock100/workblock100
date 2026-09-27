@@ -7,9 +7,13 @@ It is not on *Legends Never Die*, *Fighting Demons*, or *The Party Never Ends*.
 Unofficial, made for personal use. **No audio and no lyrics are included.** The video is cut to the
 song's structure so you can put your copy of the track underneath it.
 
-The lead is an original character, not a likeness of Juice WRLD: shaggy dark hair with a violet streak
-and a fringe over one eye, a plum bomber jacket over a black tee, a silver crescent-moon pendant, gray
-cargo pants, white high-tops. Crowd figures are plain hooded silhouettes.
+The lead is an original character, not a likeness of Juice WRLD: tousled black hair falling over one eye
+with a violet streak, a plum bomber jacket over a black tee, a silver crescent-moon pendant, gray cargo
+pants, white high-tops.
+
+Each shot is a painted anime-style still (made with Canva's image generator, one image per shot) that the
+engine animates: camera moves, rain, fog, particles, flickering light, local warps (water, heat, wind in
+the hair), glitches and beat-synced hits. The art is not committed; see **Art** below.
 
 ## Use it
 
@@ -65,19 +69,25 @@ node tools/render.cjs --from 60 --to 90    # just a range
 Options: `--fps 30`, `--workers 4`, `--crf 18`, `--out`, `--frames`. Frames are cached as JPEGs in
 `out/frames`, so an interrupted render resumes. Delete that folder after changing the timing.
 
+## Art
+
+`art/manifest.tsv` lists every still: its file name, its Canva media id, and the shot it belongs to.
+Put the full-size images in `art/` under those names (`art/01_intro.jpg` and so on). Any image that is
+missing falls back to its small preview in `art/thumbs/`, and if that is missing too the shot shows its
+file name. Neither folder is committed.
+
 ## How it's built
 
-Everything is drawn procedurally on a Canvas 2D context. There are no image assets.
-Each frame is a pure function of time, so the renderer splits the video across several
-headless Chromium workers and stitches the frames with ffmpeg.
+Each frame is a pure function of time: the still for the active shot is drawn under a moving camera
+and the effects are layered on top on a Canvas 2D context. The renderer splits the video across
+several headless Chromium workers and stitches the frames with ffmpeg.
 
 | File | What it holds |
 |---|---|
 | `src/core.js` | math, seeded randomness, noise, color, glow sprites, camera |
-| `src/kid.js` | the rig (side and front views), poses, and the plain hooded figure for crowds |
-| `src/lead.js` | the detailed Kid: face, hair, jacket, pendant, hands, cel shading and scene lighting |
-| `src/props.js` | rain, lightning, clouds, city, moon, car, boat, demons, sigil, heartbeat, maze |
-| `src/scenes-*.js` | one function per shot (`scenes-perform.js` holds the performance inserts) |
+| `src/props.js` | rain, splashes, lightning timing, stars and other small drawing helpers |
+| `src/stills.js` | art loading, the camera over a still, and the effects: rain, fog, particles, warps, glitch, grading |
+| `src/scenes-stills.js` | one function per shot, plus the end card |
 | `src/timeline.js` | section times and shot order |
 | `src/main.js` | transitions, bloom, grain, vignette, the player |
 

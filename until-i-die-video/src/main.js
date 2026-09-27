@@ -17,8 +17,8 @@ function initRenderer() {
   const g = R.vignette.getContext('2d');
   const vg = g.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 1.05);
   vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(0.6, 'rgba(0,0,0,0.28)');
-  vg.addColorStop(1, 'rgba(0,0,0,0.82)');
+  vg.addColorStop(0.65, 'rgba(0,0,0,0.16)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.6)');
   g.fillStyle = vg;
   g.fillRect(0, 0, W, H);
   R.ready = true;
@@ -38,7 +38,6 @@ function renderShot(canvas, shot, t) {
   g.fillStyle = '#000';
   g.fillRect(0, 0, W, H);
   const fn = SCENES[shot.scene];
-  LEAD_T = t;
   g.save();
   if (fn) fn(g, shotInfo(shot, t));
   else { g.fillStyle = '#300'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; g.font = '40px monospace'; g.fillText('missing scene ' + shot.scene, 80, 120); }
@@ -163,7 +162,7 @@ function post(ctx, t, act) {
   // Bloom: threshold-ish at quarter res, two blur radii, added back.
   const bs = R.bloomS.getContext('2d'), bt = R.bloomT.getContext('2d');
   bs.globalCompositeOperation = 'source-over';
-  bs.filter = 'brightness(0.72) contrast(3.1)';
+  bs.filter = 'brightness(0.7) contrast(3.4)';
   bs.drawImage(ctx.canvas, 0, 0, W / 4, H / 4);
   bs.filter = 'none';
   ctx.save();
@@ -172,13 +171,13 @@ function post(ctx, t, act) {
   bt.filter = 'blur(3px)';
   bt.drawImage(R.bloomS, 0, 0);
   bt.filter = 'none';
-  ctx.globalAlpha = 0.42;
+  ctx.globalAlpha = 0.2;
   ctx.drawImage(R.bloomT, 0, 0, W, H);
   bt.clearRect(0, 0, W / 4, H / 4);
   bt.filter = 'blur(12px)';
   bt.drawImage(R.bloomS, 0, 0);
   bt.filter = 'none';
-  ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = 0.26;
   ctx.drawImage(R.bloomT, 0, 0, W, H);
   // Anamorphic streaks: smear the bright pass sideways, tint it blue, add it back.
   bt.clearRect(0, 0, W / 4, H / 4);
@@ -193,20 +192,20 @@ function post(ctx, t, act) {
   bt.fillStyle = '#7f9dff';
   bt.fillRect(0, 0, W / 4, H / 4);
   bt.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 0.32;
+  ctx.globalAlpha = 0.14;
   ctx.drawImage(R.bloomT, 0, 0, W, H);
   ctx.restore();
-  // Lift the blacks slightly toward violet (filmic), then vignette.
+  // A faint violet lift in the blacks, then vignette.
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  ctx.fillStyle = 'rgba(28,14,48,0.22)';
+  ctx.fillStyle = 'rgba(28,14,48,0.07)';
   ctx.fillRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over';
   ctx.drawImage(R.vignette, 0, 0);
   // Grain (changes every other frame to stay gentle on the encoder).
   const fr = Math.floor(t * FPS / 2);
   ctx.globalCompositeOperation = 'overlay';
-  drawStatic(ctx, 0, 0, W, H, fr, 0.07, 1.5);
+  drawStatic(ctx, 0, 0, W, H, fr, 0.03, 1.5);
   ctx.restore();
 }
 
@@ -231,7 +230,7 @@ function renderFrame(ctx, t) {
   const fontsReady = Promise.all([
     "400 100px 'New Rocker'", "700 100px 'Syncopate'", "400 100px 'Syncopate'", "400 100px 'Share Tech Mono'",
   ].map(f => document.fonts.load(f))).catch(() => {});
-  window.__ready = fontsReady.then(() => { initRenderer(); return true; });
+  window.__ready = Promise.all([fontsReady, loadArt()]).then(() => { initRenderer(); return true; });
   window.renderAt = (t, q = 0.93) => { renderFrame(ctx, t); return canvas.toDataURL('image/jpeg', q); };
   window.shotList = () => SHOTS.map(s => ({ scene: s.scene, start: +s.start.toFixed(2), end: +s.end.toFixed(2), section: s.section }));
 

@@ -27,39 +27,39 @@ function buildSections() {
 
 // Shot order inside each section. Each section is 8 equal slots (about 3.3 s each).
 // Entry: 'scene' (one slot) or ['scene', params, slots]. Slots must add up to 8.
-// Performance inserts take the back half of a slot so each concept shot still starts on its line.
+// Performance inserts take the back half of a slot so each story shot still starts on its line.
 const CHORUS_SHOTS = [
-  'voidWalk',
-  ['blindEye', {}, 0.55], ['perform', {}, 0.45],
-  'shards',
-  ['memories', {}, 0.55], ['perform', { close: 1 }, 0.45],
-  'stormWindow',
-  ['stage', {}, 0.55], ['perform', {}, 0.45],
-  ['headParty', {}, 2],
+  's_walk',
+  ['s_eye', {}, 0.55], ['s_perform', {}, 0.45],
+  's_shards',
+  ['s_photos', {}, 0.55], ['s_closeup', {}, 0.45],
+  's_window',
+  ['s_stage', {}, 0.55], ['s_perform', { close: 1 }, 0.45],
+  ['s_headparty', {}, 2],
 ];
 const CHORUS3_SHOTS = [
-  'voidWalk',
-  ['blindEye', {}, 0.55], ['perform', {}, 0.45],
-  'shards',
-  ['memories', {}, 0.55], ['perform', { close: 1 }, 0.45],
-  'stormWindow',
-  ['stage', {}, 0.55], ['perform', {}, 0.45],
-  'headParty',
-  'ascend',
+  's_walk',
+  ['s_eye', {}, 0.55], ['s_perform', {}, 0.45],
+  's_shards',
+  ['s_photos', {}, 0.55], ['s_closeup', {}, 0.45],
+  's_window',
+  ['s_stage', {}, 0.55], ['s_perform', { close: 1 }, 0.45],
+  's_headparty',
+  's_ascend',
 ];
 const VERSE1_SHOTS = [
-  'mirrorSelf', 'hellDrive',
-  ['shockwave', {}, 0.55], ['perform', { close: 1 }, 0.45],
-  'returnWorld', ['ocean', { storm: 0 }], ['ocean', { storm: 1 }],
-  ['demons', { mode: 'banish' }, 0.6], ['perform', {}, 0.4],
-  'truth',
+  's_mirror', 's_drive',
+  ['s_shockwave', {}, 0.55], ['s_closeup', {}, 0.45],
+  's_city', 's_boat', 's_storm',
+  ['s_demons', {}, 0.6], ['s_perform', { close: 1 }, 0.4],
+  's_light',
 ];
 const VERSE2_SHOTS = [
-  'underwater',
-  ['nightRoof', {}, 0.55], ['perform', { close: 1 }, 0.45],
-  ['road', { mode: 'walk' }], ['road', { mode: 'crawl' }], 'coffin',
-  ['maze', {}, 0.55], ['perform', {}, 0.45],
-  ['demons', { mode: 'circle' }], 'diamonds',
+  's_underwater',
+  ['s_rooftop', {}, 0.55], ['s_closeup', {}, 0.45],
+  's_highway', 's_crawl', 's_coffin',
+  ['s_maze', {}, 0.55], ['s_perform', {}, 0.45],
+  's_circle', 's_diamonds',
 ];
 
 function buildShots() {
@@ -81,7 +81,7 @@ function buildShots() {
     });
     if (Math.abs(at - 8) > 1e-6) throw new Error(`section ${s.id} has ${at} slots, expected 8`);
   };
-  shots.push({ scene: 'titleRain', params: {}, v: 0, start: sec.intro.start, end: sec.intro.end, section: 'intro', tt: 'fade', tin: 0 });
+  shots.push({ scene: 's_intro', params: {}, v: 0, start: sec.intro.start, end: sec.intro.end, section: 'intro', tt: 'fade', tin: 0 });
   addSection(sec.chorus1, CHORUS_SHOTS, 0, 'flash');
   addSection(sec.verse1, VERSE1_SHOTS, 0, 'glitch');
   addSection(sec.chorus2, CHORUS_SHOTS, 1, 'flash');
