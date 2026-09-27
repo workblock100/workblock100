@@ -70,7 +70,7 @@ SCENES.titleRain = (g, I) => {
   const kx = lx - 10, kh = 330;
   g.fillStyle = 'rgba(0,0,0,0.55)'; g.beginPath(); g.ellipse(kx, groundY + 4, 78, 11, 0, 0, TAU); g.fill();
   g.save(); g.globalAlpha = 0.16; g.translate(0, groundY * 2 + 6); g.scale(1, -1); drawKid(g, kx, groundY, kh, kid, {}); g.restore();
-  drawKid(g, kx, groundY, kh, kid, { rim: { c: lampC, a: 0.9 * on, dx: 0, dy: -0.006 }, aura: { c: [120, 80, 220], a: 0.35, blur: 20 } });
+  drawKid(g, kx, groundY, kh, kid, { tint: lampC, lit: 0.12 + 0.5 * on, rim: { c: lampC, a: 0.9 * on, dx: 0, dy: -0.006 }, aura: { c: [120, 80, 220], a: 0.35, blur: 20 } });
   g.restore();
 
   // Title card (screen space).
@@ -159,7 +159,7 @@ SCENES.voidWalk = (g, I) => {
   glow(g, orbX, orbY, 260, P.a, 0.35);
   g.restore();
   g.save(); g.globalAlpha = 0.2; g.translate(0, gy * 2); g.scale(1, -1); drawKid(g, kx, gy, kh, pose, {}); g.restore();
-  drawKid(g, kx, gy, kh, pose, { rim: { c: P.hi, a: 0.85, dx: 0.008, dy: -0.004 }, aura: { c: P.a, a: 0.25, blur: 18 } });
+  drawKid(g, kx, gy, kh, pose, { tint: P.hi, lit: 0.5, rim: { c: P.hi, a: 0.85, dx: 0.008, dy: -0.004 }, aura: { c: P.a, a: 0.25, blur: 18 } });
   g.save(); g.globalCompositeOperation = 'lighter';
   glow(g, orbX, orbY, 70, P.a, 0.9);
   glow(g, orbX, orbY, 18, PAL.white, 1, 1);
@@ -247,7 +247,7 @@ SCENES.blindEye = (g, I) => {
   g.restore();
   // Tiny Kid below, looking up.
   const pose = poseFront({ armL: 0.1, armR: 0.1, tilt: -0.1, back: true });
-  drawKid(g, cx, H * 0.95, 170, pose, { rim: { c: P.hi, a: 0.9, dx: 0, dy: -0.01 }, aura: { c: P.a, a: 0.3, blur: 12 } });
+  drawKid(g, cx, H * 0.95, 170, pose, { tint: P.hi, lit: 0.35, rim: { c: P.hi, a: 0.9, dx: 0, dy: -0.01 }, aura: { c: P.a, a: 0.3, blur: 12 } });
   g.restore();
 };
 
@@ -262,7 +262,7 @@ SCENES.shards = (g, I) => {
   fillBG(g, [[0, [2, 1, 4]], [0.5, P.bg], [1, [2, 1, 3]]]);
   g.save(); g.globalCompositeOperation = 'lighter'; glow(g, cx, H * 0.55, 700, P.a, 0.22); g.restore();
   const pose = poseFront({ armL: 0.12, armR: 0.12, elL: -2.3, elR: -2.3, tilt: 0.12, legL: 0.03, legR: 0.03 });
-  drawKid(g, cx, gy, kh, pose, { rim: { c: P.hi, a: 0.6, dx: 0, dy: -0.005 }, aura: { c: P.a, a: 0.28, blur: 20 } });
+  drawKid(g, cx, gy, kh, pose, { tint: P.hi, lit: 0.55, rim: { c: P.hi, a: 0.6, dx: 0, dy: -0.005 }, aura: { c: P.a, a: 0.28, blur: 20 } });
   // Orbiting shards that close in around him.
   const n = 16;
   for (let i = 0; i < n; i++) {
@@ -463,7 +463,7 @@ SCENES.stormWindow = (g, I) => {
   glow(g, wx, wy, 900, [60, 70, 150], 0.12);
   g.restore();
   const pose = poseFront({ armL: 0.1, armR: 1.15, elL: 0.12, elR: 1.1, tilt: 0.1, legL: 0.04, legR: 0.05, back: true });
-  drawKid(g, wx + 110, H * 0.99, 540, pose, { rim: { c: mixc([150, 170, 255], PAL.white, fl), a: 0.55 + 0.45 * fl, dx: 0, dy: -0.004 }, aura: { c: [110, 130, 230], a: 0.45 + 0.3 * fl, blur: 16 } });
+  drawKid(g, wx + 110, H * 0.99, 540, pose, { tint: [150, 170, 255], lit: 0.28 + 0.5 * fl, rim: { c: mixc([150, 170, 255], PAL.white, fl), a: 0.55 + 0.45 * fl, dx: 0, dy: -0.004 }, aura: { c: [110, 130, 230], a: 0.45 + 0.3 * fl, blur: 16 } });
   g.restore();
   if (fl > 0.02) { g.fillStyle = rgba([200, 205, 255], 0.12 * fl); g.fillRect(0, 0, W, H); }
 };
@@ -515,7 +515,7 @@ SCENES.stage = (g, I) => {
   const step = k => { const x = t * 1.6 + k * 0.37; const i = Math.floor(x); return lerp(hash(i, 9 + k), hash(i + 1, 9 + k), sstep(0.75, 1, fract(x))); };
   const armL = 0.2 + 1.1 * step(0), armR = 0.2 + 1.1 * step(1);
   const pose = poseFront({ armL, armR, elL: -0.2 - 0.4 * step(2), elR: -0.2 - 0.4 * step(3), tilt: 0.25 * Math.sin(t * 0.7), legL: 0.05, legR: 0.05 });
-  const res = drawKid(g, cx, gy, kh, pose, { rim: { c: P.hi, a: 0.9, dx: 0, dy: -0.006 }, aura: { c: P.a, a: 0.25, blur: 16 }, pendant: { c: P.a } });
+  const res = drawKid(g, cx, gy, kh, pose, { tint: P.hi, lit: 0.9, rim: { c: P.hi, a: 0.9, dx: 0, dy: -0.006 }, aura: { c: P.a, a: 0.25, blur: 16 }, pendant: { c: P.a } });
   const J = res.J;
   const toW = p => [cx + p[0], res.py + p[1]];
   const strings = [toW(J.AL.hand), toW(J.AR.hand), toW(J.head)];
@@ -597,7 +597,7 @@ SCENES.headParty = (g, I) => {
     const ghost = k > 0;
     drawKid(g, fx - k * 48, fy + Math.sin(t * 2.2 - k * 0.2) * 8, 360, pose, ghost
       ? { fill: P.a, alpha: 0.12 * (5 - k) / 5 }
-      : { rim: { c: PAL.white, a: 0.9, dx: 0.006, dy: -0.006 }, aura: { c: P.b, a: 0.5, blur: 18 } });
+      : { tint: [255, 245, 255], lit: 0.62, rim: { c: PAL.white, a: 0.9, dx: 0.006, dy: -0.006 }, aura: { c: P.b, a: 0.5, blur: 18 } });
   }
   g.restore();
   neonStroke(g, gg => { const pts = HEAD_PROFILE.map(([x, y]) => [hx + x * hs, hy + y * hs]); curveThrough(gg, pts, false); gg.closePath(); }, P.a, 4, 0.95);
@@ -642,7 +642,7 @@ SCENES.ascend = (g, I) => {
     glow(g, W * 0.5 + hashs(i, 2) * 60 + Math.sin(t * 3 + i) * 8, ky + 120 + ph * 420, 6 + 8 * (1 - ph), [PAL.gold, PAL.white, P.b][i % 3], (1 - ph) * 0.8, 1);
   }
   g.restore();
-  drawKid(g, W * 0.5, ky, 320, pose, { rim: { c: PAL.white, a: 0.95, dx: 0.004, dy: -0.008 }, aura: { c: PAL.gold, a: 0.55, blur: 24 } });
+  drawKid(g, W * 0.5, ky, 320, pose, { tint: [255, 232, 196], lit: 0.62, rim: { c: PAL.white, a: 0.95, dx: 0.004, dy: -0.008 }, aura: { c: PAL.gold, a: 0.55, blur: 24 } });
   g.restore();
 };
 

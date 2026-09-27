@@ -38,6 +38,7 @@ function renderShot(canvas, shot, t) {
   g.fillStyle = '#000';
   g.fillRect(0, 0, W, H);
   const fn = SCENES[shot.scene];
+  LEAD_T = t;
   g.save();
   if (fn) fn(g, shotInfo(shot, t));
   else { g.fillStyle = '#300'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; g.font = '40px monospace'; g.fillText('missing scene ' + shot.scene, 80, 120); }
@@ -178,6 +179,21 @@ function post(ctx, t, act) {
   bt.drawImage(R.bloomS, 0, 0);
   bt.filter = 'none';
   ctx.globalAlpha = 0.5;
+  ctx.drawImage(R.bloomT, 0, 0, W, H);
+  // Anamorphic streaks: smear the bright pass sideways, tint it blue, add it back.
+  bt.clearRect(0, 0, W / 4, H / 4);
+  bt.globalCompositeOperation = 'lighter';
+  for (let k = 1; k <= 6; k++) {
+    bt.globalAlpha = 0.34 / k;
+    bt.drawImage(R.bloomS, k * 14, 0);
+    bt.drawImage(R.bloomS, -k * 14, 0);
+  }
+  bt.globalAlpha = 1;
+  bt.globalCompositeOperation = 'multiply';
+  bt.fillStyle = '#7f9dff';
+  bt.fillRect(0, 0, W / 4, H / 4);
+  bt.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 0.32;
   ctx.drawImage(R.bloomT, 0, 0, W, H);
   ctx.restore();
   // Lift the blacks slightly toward violet (filmic), then vignette.

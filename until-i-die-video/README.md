@@ -7,7 +7,9 @@ It is not on *Legends Never Die*, *Fighting Demons*, or *The Party Never Ends*.
 Unofficial, made for personal use. **No audio and no lyrics are included.** The video is cut to the
 song's structure so you can put your copy of the track underneath it.
 
-The main character is an original faceless figure in a hoodie. He is not a likeness of the artist.
+The lead is an original character, not a likeness of Juice WRLD: shaggy dark hair with a violet streak
+and a fringe over one eye, a plum bomber jacket over a black tee, a silver crescent-moon pendant, gray
+cargo pants, white high-tops. Crowd figures are plain hooded silhouettes.
 
 ## Use it
 
@@ -37,7 +39,8 @@ re-render. Every shot re-times itself from those seven numbers.
 
 ## Shot list
 
-Each section is split into 8 equal slots.
+Each section is split into 8 equal slots. Short performance shots (him close to camera under neon, hand
+over his heart or arms loose) are cut into the back half of a few slots, so each story shot still starts on its line.
 
 | Section | Shots |
 |---|---|
@@ -71,9 +74,10 @@ headless Chromium workers and stitches the frames with ffmpeg.
 | File | What it holds |
 |---|---|
 | `src/core.js` | math, seeded randomness, noise, color, glow sprites, camera |
-| `src/kid.js` | the character rig (side and front views) and poses |
+| `src/kid.js` | the rig (side and front views), poses, and the plain hooded figure for crowds |
+| `src/lead.js` | the detailed Kid: face, hair, jacket, pendant, hands, cel shading and scene lighting |
 | `src/props.js` | rain, lightning, clouds, city, moon, car, boat, demons, sigil, heartbeat, maze |
-| `src/scenes-*.js` | one function per shot |
+| `src/scenes-*.js` | one function per shot (`scenes-perform.js` holds the performance inserts) |
 | `src/timeline.js` | section times and shot order |
 | `src/main.js` | transitions, bloom, grain, vignette, the player |
 

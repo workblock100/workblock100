@@ -281,7 +281,10 @@ function kidDetails(ctx, J, h, pose, c, a) {
 
 // ---------- public draw ----------
 // x, y: ground point under the pelvis (or pelvis position if pose.fixed). h: height in px.
-// style: { fill, rim:{c,a,dx,dy}, aura:{c,a,blur}, eyes:{c,a}, alpha, light:{c} , pendant:{c,a} }
+// style: { rim:{c,a,dx,dy}, aura:{c,a,blur}, eyes:{c,a}, alpha, light:{c}, fill, pendant:{c,a},
+//          lit (0..1 how much base color shows), tint (key light color), generic (plain hooded figure) }
+// By default this draws the detailed Kid (lead.js). style.generic draws the plain hooded silhouette,
+// used for crowds. style.fill or style.light draw the Kid as a flat silhouette (reflections, ghosts).
 function drawKid(ctx, x, y, h, pose, style = {}) {
   const view = pose.view || 'side';
   const J = view === 'side' ? sideJoints(pose, h) : frontJoints(pose, h);
@@ -289,15 +292,19 @@ function drawKid(ctx, x, y, h, pose, style = {}) {
   if (!pose.fixed) {
     let low;
     if (view === 'side') {
-      low = Math.max(J.B.ankle[1], J.F.ankle[1]) + 0.045 * h;
-      if (pose.groundHands) low = Math.max(low, J.AB.hand[1] + 0.03 * h, J.AF.hand[1] + 0.03 * h, J.B.knee[1] + 0.05 * h, J.F.knee[1] + 0.05 * h);
+      low = Math.max(J.B.ankle[1], J.F.ankle[1]) + 0.05 * h;
+      if (pose.groundHands) low = Math.max(low, J.AB.hand[1] + 0.05 * h, J.AF.hand[1] + 0.05 * h, J.B.knee[1] + 0.055 * h, J.F.knee[1] + 0.055 * h);
     } else {
-      low = Math.max(J.L.ankle[1], J.R.ankle[1]) + 0.05 * h;
+      low = Math.max(J.L.ankle[1], J.R.ankle[1]) + 0.065 * h;
     }
     py = y - low;
   }
-  const shapes = view === 'side' ? sideShapes : frontShapes;
-  const fillC = style.light ? rgba(style.light.c, 1) : rgba(style.fill || PAL.ink, 1);
+  const generic = !!style.generic;
+  const draw = (col) => {
+    if (generic) return (view === 'side' ? sideShapes : frontShapes)(ctx, J, h, col || rgba(style.fill || PAL.ink, 1));
+    if (col) return (view === 'side' ? leadSide : leadFront)(ctx, J, h, pose, null, col);
+    return (view === 'side' ? leadSide : leadFront)(ctx, J, h, pose, leadShade(style), null);
+  };
   ctx.save();
   if (style.alpha !== undefined) ctx.globalAlpha = style.alpha;
   const baseAlpha = ctx.globalAlpha;
@@ -309,7 +316,7 @@ function drawKid(ctx, x, y, h, pose, style = {}) {
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = baseAlpha * style.aura.a;
     ctx.filter = `blur(${style.aura.blur || h * 0.04}px)`;
-    shapes(ctx, J, h, rgba(style.aura.c, 1));
+    draw(rgba(style.aura.c, 1));
     ctx.restore();
   }
   if (style.rim) {
@@ -317,46 +324,27 @@ function drawKid(ctx, x, y, h, pose, style = {}) {
     ctx.save();
     ctx.globalAlpha = baseAlpha * (r.a === undefined ? 1 : r.a);
     ctx.translate((r.dx || 0) * h, (r.dy || 0) * h);
-    shapes(ctx, J, h, rgba(r.c, 1));
+    draw(rgba(r.c, 1));
     ctx.restore();
   }
-  shapes(ctx, J, h, fillC);
-  if (style.rim && !style.light && style.detail !== false) kidDetails(ctx, J, h, pose, style.rim.c, 0.55 * (style.rim.a === undefined ? 1 : style.rim.a));
-  // Hood drawstrings + pendant, only visible from the front.
-  if (view === 'front' && !pose.back) {
-    const n = J.neck;
-    const dc = style.rim ? style.rim.c : [120, 110, 140];
-    ctx.strokeStyle = rgba(dc, 0.55);
-    ctx.lineWidth = Math.max(1, h * 0.006);
-    ctx.beginPath();
-    ctx.moveTo(n[0] - 0.025 * h, n[1] - 0.005 * h); ctx.lineTo(n[0] - 0.03 * h, n[1] + 0.07 * h);
-    ctx.moveTo(n[0] + 0.025 * h, n[1] - 0.005 * h); ctx.lineTo(n[0] + 0.028 * h, n[1] + 0.065 * h);
-    ctx.stroke();
-    if (style.pendant) {
-      const pc = [n[0], n[1] + 0.1 * h];
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      glow(ctx, pc[0], pc[1], h * 0.06, style.pendant.c, 0.8 * (style.pendant.a || 1));
-      ctx.fillStyle = rgba(mixc(style.pendant.c, PAL.white, 0.6), 1);
-      ctx.beginPath();
-      const r = h * 0.012;
-      ctx.moveTo(pc[0], pc[1] - r * 1.4); ctx.lineTo(pc[0] + r, pc[1]); ctx.lineTo(pc[0], pc[1] + r * 1.4); ctx.lineTo(pc[0] - r, pc[1]);
-      ctx.fill();
-      ctx.restore();
-    }
+  if (style.light) draw(rgba(style.light.c, 1));
+  else if (style.fill || generic) draw(generic ? null : rgba(style.fill, 1));
+  else draw(null);
+  if (generic && style.rim && style.detail !== false) kidDetails(ctx, J, h, pose, style.rim.c, 0.55 * (style.rim.a === undefined ? 1 : style.rim.a));
+  if (style.pendant && view === 'front' && !pose.back) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    glow(ctx, J.neck[0], J.neck[1] + 0.08 * h, h * 0.05, style.pendant.c, 0.7 * (style.pendant.a || 1));
+    ctx.restore();
   }
   if (style.eyes) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     const e = style.eyes;
     if (view === 'front') {
-      const c = J.head;
-      for (const s of [-1, 1]) {
-        glow(ctx, c[0] + s * 0.032 * h, c[1] + 0.012 * h, h * 0.035, e.c, e.a || 1, 1);
-      }
+      for (const s of [-1, 1]) glow(ctx, J.head[0] + s * 0.022 * h, J.head[1] - 0.003 * h, h * 0.03, e.c, e.a || 1, 1);
     } else {
-      const c = J.head, f = J.f;
-      glow(ctx, c[0] + f * 0.05 * h, c[1] + 0.01 * h, h * 0.03, e.c, e.a || 1, 1);
+      glow(ctx, J.head[0] + J.f * 0.042 * h, J.head[1] - 0.006 * h, h * 0.026, e.c, e.a || 1, 1);
     }
     ctx.restore();
   }

@@ -75,7 +75,7 @@ SCENES.mirrorSelf = (g, I) => {
   }
   // The real Kid, in profile, not turning.
   const ps = poseStand(Math.sin(t * 1.6));
-  drawKid(g, W * 0.34, gy, kh, ps, { rim: { c: [140, 170, 255], a: 0.8, dx: 0.008, dy: -0.004 }, aura: { c: [60, 80, 200], a: 0.3, blur: 18 } });
+  drawKid(g, W * 0.34, gy, kh, ps, { tint: [150, 170, 255], lit: 0.45, rim: { c: [140, 170, 255], a: 0.8, dx: 0.008, dy: -0.004 }, aura: { c: [60, 80, 200], a: 0.3, blur: 18 } });
   g.restore();
 };
 
@@ -200,7 +200,7 @@ SCENES.shockwave = (g, I) => {
       bump += Math.exp(-Math.pow((d - R) / 90, 2)) * 1;
     }
     const pose = poseFront({ armL: 0.05, armR: 0.28, elR: -1.9, tilt: 0.25, back: false });
-    drawKid(g, c.x + bump * 6, c.y, c.s * (1 + bump * 0.05), pose, { fill: [8, 5, 14], detail: false });
+    drawKid(g, c.x + bump * 6, c.y, c.s * (1 + bump * 0.05), pose, { generic: true, fill: [8, 5, 14], detail: false });
     g.save(); g.globalCompositeOperation = 'lighter';
     glow(g, c.x + c.s * 0.06, c.y - c.s * 0.82, c.s * 0.14, [150, 200, 255], 0.6);
     g.restore();
@@ -225,7 +225,7 @@ SCENES.shockwave = (g, I) => {
   const k = hit;
   const pose = poseFront({ armL: 0.55 + 0.25 * k, armR: 0.55 + 0.25 * k, elL: 0.25, elR: 0.25, legL: 0.14, legR: 0.14, tilt: 0 });
   g.save(); g.globalCompositeOperation = 'lighter'; glow(g, kx, gy - kh * 0.55, 360, PAL.violet, 0.3 + 0.5 * k); g.restore();
-  drawKid(g, kx, gy, kh, pose, { rim: { c: [210, 180, 255], a: 0.9, dx: 0, dy: -0.006 }, aura: { c: PAL.violet, a: 0.4 + 0.4 * k, blur: 22 } });
+  drawKid(g, kx, gy, kh, pose, { tint: [215, 195, 255], lit: 0.5 + 0.3 * k, rim: { c: [210, 180, 255], a: 0.9, dx: 0, dy: -0.006 }, aura: { c: PAL.violet, a: 0.4 + 0.4 * k, blur: 22 } });
   g.restore();
 };
 
@@ -272,7 +272,7 @@ SCENES.returnWorld = (g, I) => {
   const pose = poseWalk(lt * 0.8);
   pose.shF = 0.9; pose.elF = 0.9; pose.tilt = 0.02;
   const kx = W * 0.4 + lt * 10;
-  const res = drawKid(g, kx, gy, kh, pose, { rim: { c: [255, 190, 140], a: 0.9, dx: 0.008, dy: -0.004 }, aura: { c: [255, 120, 110], a: 0.25, blur: 16 } });
+  const res = drawKid(g, kx, gy, kh, pose, { tint: [255, 196, 160], lit: 0.66, rim: { c: [255, 190, 140], a: 0.9, dx: 0.008, dy: -0.004 }, aura: { c: [255, 120, 110], a: 0.25, blur: 16 } });
   const hand = [kx + res.J.AF.hand[0], res.py + res.J.AF.hand[1]];
   const beat = 1 + 0.08 * Math.pow(Math.max(0, Math.sin(t * 5)), 8);
   g.save(); g.globalCompositeOperation = 'lighter';
@@ -346,7 +346,7 @@ SCENES.ocean = (g, I) => {
       const bs = 150;
       drawBoat(g, bx, boatY - 4, bs, boatAng, { lamp: st ? 0.6 + 0.4 * Math.abs(Math.sin(t * 7)) : 1 });
       g.save(); g.translate(bx, boatY - 4); g.rotate(boatAng);
-      drawKid(g, -bs * 0.25, -bs * 0.05, 92, poseStand(Math.sin(t * 1.5)), { rim: { c: st ? [200, 210, 255] : [230, 220, 255], a: 0.8, dx: 0.01, dy: -0.006 } });
+      drawKid(g, -bs * 0.25, -bs * 0.05, 92, poseStand(Math.sin(t * 1.5)), { tint: [210, 210, 255], lit: 0.45, rim: { c: st ? [200, 210, 255] : [230, 220, 255], a: 0.8, dx: 0.01, dy: -0.006 } });
       g.restore();
     }
   }
@@ -412,7 +412,7 @@ SCENES.demons = (g, I) => {
       }
     }
     const pose = poseCompel(raise);
-    const res = drawKid(g, kx, gy, 440, pose, { rim: { c: PAL.cyan, a: 0.5 + 0.5 * raise, dx: 0.008, dy: -0.004 }, aura: { c: PAL.cyan, a: 0.2 + 0.4 * raise, blur: 18 } });
+    const res = drawKid(g, kx, gy, 440, pose, { tint: [170, 240, 255], lit: 0.4 + 0.25 * raise, rim: { c: PAL.cyan, a: 0.5 + 0.5 * raise, dx: 0.008, dy: -0.004 }, aura: { c: PAL.cyan, a: 0.2 + 0.4 * raise, blur: 18 } });
     const hand = [kx + res.J.AF.hand[0], res.py + res.J.AF.hand[1]];
     const sr = 60 + 120 * easeOutBack(clamp((p - 0.4) / 0.2));
     drawSigil(g, hand[0] + 70, hand[1], sr, t, PAL.cyan, raise * (1 - gone * 0.7));
@@ -433,7 +433,7 @@ SCENES.demons = (g, I) => {
       if (it.kid) {
         const pose = poseFront({ armL: 0.06, armR: 0.06, tilt: 0.25 * Math.sin(t * 0.8), legL: 0.03, legR: 0.03 });
         g.save(); g.globalCompositeOperation = 'lighter'; glow(g, cx, gy - 200, 330, [255, 60, 80], 0.35); g.restore();
-        drawKid(g, cx, gy + 6, 400, pose, { rim: { c: [255, 150, 160], a: 1, dx: 0, dy: -0.006 }, aura: { c: [255, 70, 90], a: 0.6, blur: 18 } });
+        drawKid(g, cx, gy + 6, 400, pose, { tint: [255, 150, 160], lit: 0.55, rim: { c: [255, 150, 160], a: 1, dx: 0, dy: -0.006 }, aura: { c: [255, 70, 90], a: 0.6, blur: 18 } });
         continue;
       }
       const s = (280 + hash(it.i, 4) * 100) * (0.85 + 0.2 * it.depth);
@@ -496,6 +496,6 @@ SCENES.truth = (g, I) => {
   // The Kid, dark, facing the light; he reaches back.
   const kp = poseStand(Math.sin(t * 1.6));
   kp.shF = lerp(0.1, 1.05, sstep(0.45, 0.8, p)); kp.elF = lerp(0.35, 0.1, sstep(0.45, 0.8, p)); kp.tilt = -0.05;
-  drawKid(g, W * 0.36, gy, 470, kp, { rim: { c: [210, 225, 255], a: 1, dx: 0.01, dy: -0.004 } });
+  drawKid(g, W * 0.36, gy, 470, kp, { tint: [215, 228, 255], lit: 0.42, rim: { c: [210, 225, 255], a: 1, dx: 0.01, dy: -0.004 } });
   g.restore();
 };

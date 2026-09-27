@@ -41,7 +41,7 @@ SCENES.underwater = (g, I) => {
   const pose = poseSink(t);
   pose.rot = -0.35 + Math.sin(t * 0.5) * 0.15;
   const kx = W * 0.5 + Math.sin(t * 0.6) * 20;
-  drawKid(g, kx, ky, 400, pose, { fill: [2, 10, 22], rim: { c: [120, 230, 255], a: 0.8, dx: 0, dy: -0.01 }, aura: { c: [40, 170, 220], a: 0.35, blur: 20 } });
+  drawKid(g, kx, ky, 400, pose, { tint: [100, 200, 235], lit: 0.45, rim: { c: [120, 230, 255], a: 0.8, dx: 0, dy: -0.01 }, aura: { c: [40, 170, 220], a: 0.35, blur: 20 } });
   // Bubbles rising off him.
   g.save();
   for (let i = 0; i < 40; i++) {
@@ -107,7 +107,7 @@ SCENES.nightRoof = (g, I) => {
   const pose = poseSit();
   pose.tilt = 0.3 + Math.sin(t * 0.6) * 0.06;
   const kh = 360;
-  const res = drawKid(g, ledgeX - 30, ledgeY - 0.035 * kh, kh, pose, { rim: { c: [200, 190, 255], a: 0.9, dx: 0.01, dy: -0.006 }, aura: { c: [110, 90, 220], a: 0.25, blur: 14 } });
+  const res = drawKid(g, ledgeX - 30, ledgeY - 0.035 * kh, kh, pose, { tint: [205, 195, 255], lit: 0.5, rim: { c: [200, 190, 255], a: 0.9, dx: 0.01, dy: -0.006 }, aura: { c: [110, 90, 220], a: 0.25, blur: 14 } });
   // Thoughts rising like lanterns toward the moon.
   const hx = ledgeX - 30 + res.J.head[0], hy = res.py + res.J.head[1];
   g.save(); g.globalCompositeOperation = 'lighter';
@@ -176,7 +176,7 @@ SCENES.road = (g, I) => {
     const ph = lt * 0.9;
     const s = Math.sin(TAU * ph);
     const pose = poseFront({ armL: 0.08 + 0.05 * s, armR: 0.08 - 0.05 * s, liftL: Math.max(0, s) * 0.35, liftR: Math.max(0, -s) * 0.35, tilt: 0.15, back: true });
-    drawKid(g, W / 2 + Math.sin(t * 0.8) * 10, H * 0.94 - Math.abs(s) * 6, 400, pose, { rim: { c: [255, 170, 190], a: 0.8, dx: 0, dy: -0.006 }, aura: { c: [255, 90, 140], a: 0.2, blur: 14 } });
+    drawKid(g, W / 2 + Math.sin(t * 0.8) * 10, H * 0.94 - Math.abs(s) * 6, 400, pose, { tint: [255, 175, 195], lit: 0.42, rim: { c: [255, 170, 190], a: 0.8, dx: 0, dy: -0.006 }, aura: { c: [255, 90, 140], a: 0.2, blur: 14 } });
   } else {
     const hz = H * 0.6, gy = H * 0.84;
     camera(g, { zoom: 1.03, t });
@@ -196,7 +196,7 @@ SCENES.road = (g, I) => {
     const slow = lt * 0.45 - 0.12 * Math.sin(lt * 1.3);
     const pose = poseCrawl(slow);
     const kx = W * 0.36 + lt * 8;
-    drawKid(g, kx, gy, 420, pose, { rim: { c: [255, 170, 190], a: 0.85, dx: 0.006, dy: -0.008 }, aura: { c: [255, 90, 140], a: 0.2, blur: 14 } });
+    drawKid(g, kx, gy, 420, pose, { tint: [255, 175, 195], lit: 0.5, rim: { c: [255, 170, 190], a: 0.85, dx: 0.006, dy: -0.008 }, aura: { c: [255, 90, 140], a: 0.2, blur: 14 } });
     // Dust under his hands.
     g.save(); g.globalCompositeOperation = 'lighter';
     for (let i = 0; i < 24; i++) {
@@ -299,7 +299,7 @@ SCENES.coffin = (g, I) => {
     const pose = poseFront({ armL: 0.32, armR: 0.32, elL: 0.35, elR: 0.35, legL: 0.07, legR: 0.07, tilt: -0.05 });
     const kx = cx, ky = H * 0.9 + (1 - rise) * 70;
     g.save(); g.globalCompositeOperation = 'lighter'; glow(g, kx, ky - 260, 420, PAL.gold, 0.35 * rise); g.restore();
-    const res = drawKid(g, kx, ky, 520, pose, { alpha: rise, rim: { c: [255, 225, 170], a: 1, dx: 0, dy: -0.006 }, aura: { c: PAL.gold, a: 0.35, blur: 20 }, pendant: { c: PAL.ice } });
+    const res = drawKid(g, kx, ky, 520, pose, { alpha: rise, tint: [255, 228, 180], lit: 0.9, rim: { c: [255, 225, 170], a: 1, dx: 0, dy: -0.006 }, aura: { c: PAL.gold, a: 0.35, blur: 20 }, pendant: { c: PAL.ice } });
     // Glints across the fit.
     const J = res.J;
     const spots = [J.head, J.neck, J.AL.hand, J.AR.hand, J.L.ankle, J.R.ankle, [0, -0.12 * 520]];
@@ -369,34 +369,16 @@ SCENES.diamonds = (g, I) => {
   const { lt, t, dur } = I;
   const p = clamp(lt / dur);
   const headX = W * 0.28, headY = H * 0.5;
-  const ex = headX + 0.36 * 760, ey = headY - 0.02 * 760;
+  const ex = headX + 0.46 * 760, ey = headY + 0.22 * 760;
   g.save();
   camera(g, { zoom: 1.0 + p * 0.08, x: -p * 60, t, shake: 0.2 + p * 0.5, seed: 91 });
   fillBG(g, [[0, [1, 3, 10]], [0.6, [4, 14, 34]], [1, [1, 2, 8]]]);
   g.save(); g.globalCompositeOperation = 'lighter';
   glow(g, ex + 300, ey, 900, [60, 140, 255], 0.25 + 0.25 * p);
   g.restore();
-  // Close-up: a hooded profile, face lit from inside.
-  const fx0 = headX, fy0 = headY, fs = 760;
-  const face = HEAD_PROFILE.map(([x, y]) => [fx0 + x * fs, fy0 + y * fs]);
-  g.fillStyle = '#02050c';
-  g.beginPath(); curveThroughPath(g, face); g.fill();
-  // Hood shell around the back and over the brow, draping to the shoulders.
-  g.fillStyle = '#04070f';
-  g.beginPath();
-  g.moveTo(fx0 + 0.3 * fs, fy0 - 0.42 * fs);
-  g.bezierCurveTo(fx0 + 0.1 * fs, fy0 - 0.78 * fs, fx0 - 0.5 * fs, fy0 - 0.8 * fs, fx0 - 0.62 * fs, fy0 - 0.25 * fs);
-  g.bezierCurveTo(fx0 - 0.75 * fs, fy0 + 0.25 * fs, fx0 - 0.7 * fs, fy0 + 0.6 * fs, fx0 - 0.9 * fs, fy0 + 1.2 * fs);
-  g.lineTo(fx0 + 0.25 * fs, fy0 + 1.2 * fs);
-  g.bezierCurveTo(fx0 + 0.15 * fs, fy0 + 0.75 * fs, fx0 - 0.1 * fs, fy0 + 0.35 * fs, fx0 - 0.12 * fs, fy0 + 0.05 * fs);
-  g.bezierCurveTo(fx0 - 0.14 * fs, fy0 - 0.3 * fs, fx0 + 0.05 * fs, fy0 - 0.45 * fs, fx0 + 0.3 * fs, fy0 - 0.42 * fs);
-  g.fill();
-  neonStroke(g, gg => {
-    gg.moveTo(fx0 + 0.3 * fs, fy0 - 0.42 * fs);
-    gg.bezierCurveTo(fx0 + 0.1 * fs, fy0 - 0.78 * fs, fx0 - 0.5 * fs, fy0 - 0.8 * fs, fx0 - 0.62 * fs, fy0 - 0.25 * fs);
-  }, PAL.ice, 1.6, 0.55);
-  // Rim light along the face line.
-  neonStroke(g, gg => { const pts = face.slice(8, 17); curveThrough(gg, pts, false); }, PAL.ice, 2, 0.8);
+  // Close-up: his head in profile, lit from inside.
+  const fs = 760;
+  drawKidHead(g, headX, headY, fs * 1.1, { facing: 1, tilt: -0.05, face: { eyes: 0.15, mouth: 0.35 + 0.25 * p } }, { tint: PAL.ice, lit: 0.55, rim: { c: PAL.ice, a: 0.85, dx: 0.004, dy: -0.003 } });
   // Glow from the face.
   g.save(); g.globalCompositeOperation = 'lighter';
   glow(g, ex, ey, 170 + 130 * p, PAL.ice, 0.55 + 0.4 * p);

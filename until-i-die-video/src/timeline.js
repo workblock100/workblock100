@@ -25,33 +25,61 @@ function buildSections() {
   return ids.map((id, i) => ({ id, start: SECTION_STARTS[id], end: i + 1 < ids.length ? SECTION_STARTS[ids[i + 1]] : VIDEO_LEN }));
 }
 
-// Visual order inside each section. Each entry fills one of 8 equal slots unless it spans more.
-const CHORUS_SHOTS = ['voidWalk', 'blindEye', 'shards', 'memories', 'stormWindow', 'stage', 'headParty', 'headParty'];
-const CHORUS3_SHOTS = ['voidWalk', 'blindEye', 'shards', 'memories', 'stormWindow', 'stage', 'headParty', 'ascend'];
-const VERSE1_SHOTS = ['mirrorSelf', 'hellDrive', 'shockwave', 'returnWorld', ['ocean', { storm: 0 }], ['ocean', { storm: 1 }], ['demons', { mode: 'banish' }], 'truth'];
-const VERSE2_SHOTS = ['underwater', 'nightRoof', ['road', { mode: 'walk' }], ['road', { mode: 'crawl' }], 'coffin', 'maze', ['demons', { mode: 'circle' }], 'diamonds'];
+// Shot order inside each section. Each section is 8 equal slots (about 3.3 s each).
+// Entry: 'scene' (one slot) or ['scene', params, slots]. Slots must add up to 8.
+// Performance inserts take the back half of a slot so each concept shot still starts on its line.
+const CHORUS_SHOTS = [
+  'voidWalk',
+  ['blindEye', {}, 0.55], ['perform', {}, 0.45],
+  'shards',
+  ['memories', {}, 0.55], ['perform', { close: 1 }, 0.45],
+  'stormWindow',
+  ['stage', {}, 0.55], ['perform', {}, 0.45],
+  ['headParty', {}, 2],
+];
+const CHORUS3_SHOTS = [
+  'voidWalk',
+  ['blindEye', {}, 0.55], ['perform', {}, 0.45],
+  'shards',
+  ['memories', {}, 0.55], ['perform', { close: 1 }, 0.45],
+  'stormWindow',
+  ['stage', {}, 0.55], ['perform', {}, 0.45],
+  'headParty',
+  'ascend',
+];
+const VERSE1_SHOTS = [
+  'mirrorSelf', 'hellDrive',
+  ['shockwave', {}, 0.55], ['perform', { close: 1 }, 0.45],
+  'returnWorld', ['ocean', { storm: 0 }], ['ocean', { storm: 1 }],
+  ['demons', { mode: 'banish' }, 0.6], ['perform', {}, 0.4],
+  'truth',
+];
+const VERSE2_SHOTS = [
+  'underwater',
+  ['nightRoof', {}, 0.55], ['perform', { close: 1 }, 0.45],
+  ['road', { mode: 'walk' }], ['road', { mode: 'crawl' }], 'coffin',
+  ['maze', {}, 0.55], ['perform', {}, 0.45],
+  ['demons', { mode: 'circle' }], 'diamonds',
+];
 
 function buildShots() {
   const sec = {};
   for (const s of buildSections()) sec[s.id] = s;
   const shots = [];
   const addSection = (s, list, v, firstTrans) => {
-    const d = (s.end - s.start) / list.length;
-    let i = 0;
-    while (i < list.length) {
-      const entry = list[i];
-      const [scene, params] = Array.isArray(entry) ? entry : [entry, {}];
-      let j = i + 1;
-      // Merge consecutive identical entries into one longer shot.
-      while (j < list.length && !Array.isArray(list[j]) && list[j] === scene && !Array.isArray(entry)) j++;
+    const d = (s.end - s.start) / 8;
+    let at = 0;
+    list.forEach((entry, i) => {
+      const [scene, params = {}, slots = 1] = Array.isArray(entry) ? entry : [entry];
       shots.push({
         scene, params, v,
-        start: s.start + i * d, end: s.start + j * d,
+        start: s.start + at * d, end: s.start + (at + slots) * d,
         section: s.id,
         tt: i === 0 ? firstTrans : 'cut', tin: i === 0 ? 0.9 : 0,
       });
-      i = j;
-    }
+      at += slots;
+    });
+    if (Math.abs(at - 8) > 1e-6) throw new Error(`section ${s.id} has ${at} slots, expected 8`);
   };
   shots.push({ scene: 'titleRain', params: {}, v: 0, start: sec.intro.start, end: sec.intro.end, section: 'intro', tt: 'fade', tin: 0 });
   addSection(sec.chorus1, CHORUS_SHOTS, 0, 'flash');

@@ -529,7 +529,9 @@ function drawCarRear(ctx, x, y, s, t, o = {}) {
     ctx.save();
     ctx.clip(win);
     ctx.fillStyle = '#050206';
-    ctx.beginPath(); ctx.ellipse(-s * 0.12, -s * 0.5, s * 0.07, s * 0.08, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-s * 0.12, -s * 0.5, s * 0.055, s * 0.065, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-s * 0.12, -s * 0.535, s * 0.075, s * 0.055, 0, Math.PI, TAU); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-s * 0.195, -s * 0.53); ctx.quadraticCurveTo(-s * 0.2, -s * 0.47, -s * 0.18, -s * 0.44); ctx.lineTo(-s * 0.06, -s * 0.44); ctx.quadraticCurveTo(-s * 0.04, -s * 0.47, -s * 0.045, -s * 0.53); ctx.closePath(); ctx.fill();
     ctx.fillRect(-s * 0.22, -s * 0.46, s * 0.2, s * 0.05);
     ctx.restore();
   }
