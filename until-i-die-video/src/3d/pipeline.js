@@ -22,7 +22,7 @@ const BlendShader = {
       vec4 c;
       if (uType < 1.5) c = uW < 0.5 ? a : b;
       else if (uType < 2.5) c = mix(a, b, uW);
-      else if (uType < 3.5) { c = mix(a, b, smoothstep(0.35, 0.65, uW)); float f = sin(3.14159 * uW); c.rgb += vec3(1.0, 0.93, 1.0) * f * f * 1.6; }
+      else if (uType < 3.5) { c = mix(a, b, smoothstep(0.35, 0.65, uW)); float f = sin(3.14159 * uW); c.rgb = mix(c.rgb, c.rgb * 1.6 + vec3(0.55, 0.5, 0.6), f * f * 0.85); }
       else if (uType < 4.5) {
         float k = sin(3.14159 * uW); float fr = floor(uTime * 30.0);
         float row = floor(vUv.y * 36.0 + h(fr) * 9.0);

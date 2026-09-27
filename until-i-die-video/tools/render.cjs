@@ -106,7 +106,10 @@ async function main() {
     '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
     '-movflags', '+faststart', OUT,
   ], { stdio: ['ignore', 'inherit', 'inherit'] });
-  await new Promise((res, rej) => ff.on('close', c => (c === 0 ? res() : rej(new Error('ffmpeg exit ' + c)))));
+  await new Promise((res, rej) => {
+    ff.on('error', e => rej(new Error(`could not run ${ffmpeg} (${e.code}); put ffmpeg on PATH or set FFMPEG=/path/to/ffmpeg. Frames are in ${FRAMES}.`)));
+    ff.on('close', c => (c === 0 ? res() : rej(new Error('ffmpeg exit ' + c))));
+  });
   console.log('wrote', OUT);
 }
 
