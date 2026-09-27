@@ -29,7 +29,7 @@ const CRF = opt('crf', '18');
 const STILLS = opt('stills', null);
 
 function serve() {
-  const types = { '.html': 'text/html', '.js': 'text/javascript', '.woff2': 'font/woff2', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png' };
+  const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.woff2': 'font/woff2', '.css': 'text/css', '.jpg': 'image/jpeg', '.png': 'image/png' };
   const srv = http.createServer((req, res) => {
     const p = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
     if (!p.startsWith(ROOT) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
@@ -40,7 +40,7 @@ function serve() {
 }
 
 async function openPage(chromium, url) {
-  const browser = await chromium.launch({ args: ['--disable-gpu', '--force-color-profile=srgb', '--disable-lcd-text'] });
+  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--force-color-profile=srgb', '--disable-lcd-text', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
   page.on('pageerror', e => console.error('[page error]', e.message));
   page.on('console', m => { if (m.type() === 'error') console.error('[console]', m.text()); });

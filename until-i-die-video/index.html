@@ -22,6 +22,9 @@
   body.render canvas { width: 1920px; height: 1080px; }
   body.render #stage { position: static; display: block; }
 </style>
+<script type="importmap">
+{ "imports": { "three": "./node_modules/three/build/three.module.js", "three/addons/": "./node_modules/three/examples/jsm/" } }
+</script>
 </head>
 <body>
 <div id="stage"><canvas id="c" width="1920" height="1080"></canvas></div>
@@ -33,11 +36,6 @@
   <label>Load song file<input id="file" type="file" accept="audio/*"></label>
   <button id="full" type="button">Fullscreen</button>
 </div>
-<script src="src/core.js"></script>
-<script src="src/props.js"></script>
-<script src="src/stills.js"></script>
-<script src="src/scenes-stills.js"></script>
-<script src="src/timeline.js"></script>
-<script src="src/main.js"></script>
+<script type="module" src="src/3d/main.js"></script>
 </body>
 </html>
