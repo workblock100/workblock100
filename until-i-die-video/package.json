@@ -1,0 +1,8 @@
+{
+  "name": "until-i-die-video",
+  "private": true,
+  "description": "Animated fan music video, rendered in the browser with three.js",
+  "dependencies": {
+    "three": "0.186.1"
+  }
+}
