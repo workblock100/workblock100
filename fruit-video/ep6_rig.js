@@ -54,7 +54,8 @@
     for (const side of [-1, 1]) {
       const key = side < 0 ? 'l' : 'r', pose = arms[key] || 'rest';
       if (pose === 'none') continue;
-      const S = shoulder(k, side), l1 = P.arm?.[0] || k.arm1 || 56, l2 = P.arm?.[1] || k.arm2 || 52;
+      const S = P.shoulder == null ? shoulder(k, side) : [side*k.rx*P.shoulder, k.ry*(o.kind==='straw'?-.10:.10)];
+      const l1 = P.arm?.[0] || k.arm1 || 56, l2 = P.arm?.[1] || k.arm2 || 52;
       let q = targetFor(o, k, side, pose, S);
       // Built-in acting poses adapt to each fruit's anatomy; explicit grip
       // targets do NOT get silently fixed, because misplaced props must fail QC.
@@ -78,7 +79,8 @@
           regLocal('prop',hand[0]+a,hand[1]+b,hand[0]+c,hand[1]+d,
             { id:prop, owner:o.id||o.kind, nearFace:e.nearFace, transit:o.transit });
         }
-        grips.push({ label:(o.id||o.kind)+'.'+key, prop, hand, anchor:[hand[0],hand[1]] });
+        if (!(o.grip && o.grip[key])) violations.push((o.id||o.kind)+'.'+key+': held prop lacks explicit handle grip');
+        grips.push({ label:(o.id||o.kind)+'.'+key, prop, hand, anchor:[hand[0],hand[1]], authored:o.grip?.[key] });
       }
       ctx.fillStyle = '#fbfaf5'; ctx.strokeStyle = '#20202a'; ctx.lineWidth = 3.5;
       ell(hand[0], hand[1], 16, 16); ctx.fill(); ctx.stroke();
@@ -96,7 +98,7 @@
   }
   function drawLegs(o,k,t) {
     const P=profiles[o.kind]||{}, len=k.leg||90, hipY=k.ry*(k.shape==='straw'?.7:.8);
-    const Hx=k.hip||k.rx*.32;
+    const Hx=P.hip!=null?k.rx*P.hip:k.hip||k.rx*.32;
     for(const side of [-1,1]){
       const key=side<0?'l':'r';
       const phase=o.walk==null?0:o.walk+(side===1?0:Math.PI);
@@ -123,8 +125,12 @@
       if(Math.abs(Math.hypot(j.point[0]-j.elbow[0],j.point[1]-j.elbow[1])-j.l2)>1)
         errors.push(j.label+': lower segment changed length');
     }
-    for(const g of grips) if(Math.hypot(g.hand[0]-g.anchor[0],g.hand[1]-g.anchor[1])>.1)
-      errors.push(g.label+': hand detached from '+g.prop);
+    for(const g of grips) {
+      if(Math.hypot(g.hand[0]-g.anchor[0],g.hand[1]-g.anchor[1])>.1)
+        errors.push(g.label+': hand detached from '+g.prop);
+      if(g.authored && Math.hypot(g.hand[0]-g.authored[0],g.hand[1]-g.authored[1])>2)
+        errors.push(g.label+': contact missed authored grip for '+g.prop);
+    }
     return errors;
   }
   window.EP6_RIG={beginFrame,drawArms,drawLegs,validateFrame};
