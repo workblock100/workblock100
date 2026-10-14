@@ -27,7 +27,7 @@
           arms:{l:'rest',r:'point'},grip:{r:[145,-67]}});
         Pear(806,1055,{s:1.12,noLegs:true,center:true,noShadow:true,expr:at(lt,'p2')?'hopeful':'chill',
           arms:{l:'rest',r:'offer'}});
-        A.blanketFront(560,1062,383,141);
+        A.blanketFront(560,1138,383,102);
         A.confetti(lt,B('flash').s,540,250);
       },
       over(lt){
@@ -69,7 +69,7 @@
         A.bgRoom();
         Pear(773,970,{s:1.25,noLegs:true,center:true,noShadow:true,
           expr:after(lt,'p3')?'happy':'chill',look:[-.8,0],arms:{l:'rest',r:'rest'}});
-        A.blanketFront(545,1011,411,177);
+        A.blanketFront(545,1098,411,106);
         Straw(270,1390,{s:1.18,look:[.85,-.45],expr:at(lt,'s3')?'sour':lt>B('p3').s?'happy':'chill',
           arms:{l:'rest',r:after(lt,'s1')?'offer':'rest'}});
         if(lt>B('penalty').s){
