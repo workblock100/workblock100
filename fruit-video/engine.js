@@ -129,6 +129,14 @@ const KINDS = {
 for (const k of Object.values(KINDS)) k.er = k.er || k.rx * .2;
 
 const PATHS = {};
+// Extension points for art that belongs to a single episode (Episode 5 onward): register a function here
+// instead of growing the switches below. A name with no entry behaves exactly as it always did.
+//   EXT.shape[name](path, kind)        outline of a new body shape
+//   EXT.tex[name](o, kind, t)          surface texture, drawn clipped to the body
+//   EXT.top[kind](o, kind, t, layer)   stems, crowns, rays ('back' or 'front')
+//   EXT.prop[name](side, o, t)         held prop, drawn around the hand
+//   EXT.acc[name](o, kind, t, layer)   accessory ('back', 'mid' or 'front')
+const EXT = { shape: {}, tex: {}, top: {}, prop: {}, acc: {} };
 function bodyPath(k) {
   const { rx, ry } = k, p = new Path2D();
   switch (k.shape) {
@@ -194,7 +202,8 @@ function bodyPath(k) {
       break;
     }
     default:
-      p.ellipse(0, 0, rx, ry, 0, 0, TAU);
+      if (EXT.shape[k.shape]) EXT.shape[k.shape](p, k);
+      else p.ellipse(0, 0, rx, ry, 0, 0, TAU);
   }
   p.closePath();
   return p;
@@ -252,6 +261,7 @@ function headTop(o, k) {
   if (acc.includes('fedora')) top = Math.max(top, k.ry * .66 + 72);
   if (acc.includes('santa')) top = Math.max(top, k.ry * .8 + 146 * k.rx / 110);
   if (acc.includes('halo')) top = Math.max(top, k.ry + 50);
+  if (o.topExtra) top += o.topExtra;
   return top;
 }
 function drawChar(o) {
@@ -352,6 +362,7 @@ function srand(i) { return hash(i * 3.17 + 1.3); }
 
 function drawTexture(o, k, t) {
   const { rx, ry } = k;
+  if (EXT.tex[k.tex]) { EXT.tex[k.tex](o, k, t); return; }
   if (k.tex === 'net') {
     ctx.strokeStyle = 'rgba(250,236,205,.85)'; ctx.lineWidth = 3.2; ctx.lineCap = 'round';
     const pt = (i, j) => [i * 30 + (j % 2 ? 15 : 0) + (srand(i * 7 + j * 13) - .5) * 12, j * 26 + (srand(i * 11 + j * 5) - .5) * 10];
@@ -474,6 +485,7 @@ function leaf(x, y, ang, len, w, fill, stroke = '#143d12') {
 
 function drawTop(o, k, t, layer) {
   const { rx, ry } = k;
+  if (EXT.top[o.kind]) { EXT.top[o.kind](o, k, t, layer); return; }
   switch (k.shape) {
     case 'straw':
       if (layer === 'front') {
@@ -702,6 +714,7 @@ const PROP_BOX = {
 };
 function drawProp(name, x, y, side, o, t) {
   ctx.save(); ctx.translate(x, y);
+  if (EXT.prop[name]) { EXT.prop[name](side, o, t); ctx.restore(); return; }
   switch (name) {
     case 'clipboard':
       ctx.rotate(side * -.08);
@@ -879,6 +892,7 @@ function drawAcc(o, k, t, layer) {
   const fx = k.shape === 'banana' ? k.face : 0;
   for (const a of acc) {
     ctx.save(); ctx.translate(fx, 0);
+    if (EXT.acc[a]) { EXT.acc[a](o, k, t, layer); ctx.restore(); continue; }
     switch (a + ':' + layer) {
       case 'glasses:front': case 'readers:front': {
         const dy = a === 'readers' ? er * .7 : 0;

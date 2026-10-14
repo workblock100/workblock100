@@ -9,8 +9,14 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 2: Survey Says | [`shift-happens-ep2.mp4`](shift-happens-ep2.mp4) | 2:22 |
 | 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:17 |
 | 4: The New Grad | [`shift-happens-ep4.mp4`](shift-happens-ep4.mp4) | 2:09 |
+| 5: Full Moon | [`shift-happens-ep5.mp4`](shift-happens-ep5.mp4) | 2:59 |
 
-Open `index.html?ep=4` (or `ep=1` to `ep=3`) through any local web server to play an episode live in the browser.
+To play an episode live in the browser, start a local server in this directory and open
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 4 for earlier episodes):
+
+```bash
+python3 -m http.server 8000
+```
 
 ## Episode 2: Survey Says
 
@@ -40,6 +46,14 @@ Strawberry teaches her three rules (never say the Q word, always check the basel
 med pass takes four hours, she says "Sure!" to everyone, and she pages Dr. Apple because the blueberry is blue.
 Then night shift calls out, and that is how marmalade is made.
 
+## Episode 5: Full Moon
+
+The Moon takes the night shift personally: every problem gets blamed on him, so he starts keeping score.
+Strawberry's break lasts four seconds, Mr. Pear has the only protected break in the building, and CNA Mango
+leads a quest for the one blood pressure cuff that works. A runaway laundry cart, a dying computer on wheels,
+and a changed Wi-Fi password bring the score to seven. The real cause is staffing; the Moon is not even full
+until tomorrow. Night Nurse Dragonfruit arrives rested, and the Sun claims sundowning in the post-credits scene.
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -63,22 +77,28 @@ Then night shift calls out, and that is how marmalade is made.
 | Fig | The Scheduler (Ep. 3) | Makes you an offer you can't refuse. Texts "hey :)" at 3 AM |
 | Doris | Cranberry sauce (Ep. 3) | Mrs. Cranberry's cousin. She was jellied |
 | Clementine | New grad (Ep. 4) | Passed at 85 questions. Says "Sure!" to everyone. Becomes marmalade |
+| Moon | Night-shift narrator (Ep. 5) | Keeps score whenever someone blames him for a problem |
+| Sun | Day-shift counterpart (Ep. 5) | Takes credit for a quiet day, then claims sundowning |
+| Mango | CNA (Ep. 5) | Knows the legend of the good blood pressure cuff |
+| Mr. Pear | Resident (Ep. 5) | Still honors the paid-break clause in his old contract |
+| Dragonfruit | Night nurse (Ep. 5) | Arrives rested just in time for the actual full moon |
 
 ## Layout audit
 
 `node render.js audit` renders every frame and checks it against the layout rules: no card, banner, caption,
 prop or foreground set piece may cover a face, a head or a key sign; nothing important may be cut off at the
-frame edge; no text may be squished. Episodes 2 to 4 pass with zero issues at 20 frames per second.
+frame edge; no text may be squished. Episodes 2 to 5 pass with zero issues at 20 frames per second.
 
 ## How it's made
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep4.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep5.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
-- `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes `build/audio.wav`, and writes `build/timeline.js` with timings and lip-sync envelopes.
+- `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 4; `ep1.js` to `ep4.js` are the episodes.
+  Episodes 2 to 5; `ep1.js` to `ep5.js` are the episodes. Episode 5's new art and sets live in
+  `ep5_art.js` and `ep5_sets.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
@@ -92,9 +112,15 @@ python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
   --script script_ep3.json --out build/ep3 --var TIMELINE_EP3
 python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
   --script script_ep4.json --out build/ep4 --var TIMELINE_EP4
+python3 build_audio.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin \
+  --script script_ep5.json --out build/ep5 --var TIMELINE_EP5
+ffmpeg -y -i build/ep5/audio.wav -c:a aac -b:a 192k build/ep5/audio.m4a   # browser playback
 EP=2 node render.js audit 0.05                                        # layout check, every 1/20 s
 EP=2 FMT=image/png CRF=27 FFMPEG=/path/to/ffmpeg node render.js video shift-happens-ep2.mp4
 EP=2 node render.js preview 12.5 40 88                                # stills in build/ep2/preview
+EP=5 node render.js audit 0.05                                        # Episode 5 layout check
+EP=5 FMT=image/png CRF=27 node render.js video shift-happens-ep5.mp4
+EP=5 node render.js preview 12.5 40 88                                # stills in build/ep5/preview
 ```
 
 Fonts from Google Fonts: Bangers and Nunito (SIL OFL), Luckiest Guy (Apache 2.0). Licenses are in `fonts/`.

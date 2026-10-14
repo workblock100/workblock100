@@ -13,3 +13,7 @@ build/ep3/*
 build/ep4/*
 !build/ep4/timeline.js
 !build/ep4/audio.m4a
+!build/ep5/
+build/ep5/*
+!build/ep5/timeline.js
+!build/ep5/audio.m4a

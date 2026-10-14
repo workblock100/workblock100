@@ -733,6 +733,196 @@ def sfx_hangup():
     return norm(out, 0.55)
 
 
+# ---- Episode 5 sound effects
+def sfx_theme_moon():
+    """Title fanfare for Episode 5: minor-key brass stabs, a timpani roll and a glassy celesta twinkle."""
+    out = np.zeros(int(3.6 * SR))
+    for notes, s, d in (([45, 52, 57, 60], 0.0, 0.4), ([45, 52, 57, 60], 0.5, 0.2), ([50, 57, 62, 65], 0.9, 0.4), ([52, 56, 59, 64], 1.3, 0.4)):
+        place(out, brass_chord(notes, d, 1700) * 0.55, s)
+        place(out, sfx_thud() * 0.7, s)
+    for k in range(22):  # timpani roll into the last chord
+        place(out, osc("sine", np.linspace(95, 70, int(0.1 * SR)), 0.1) * expdecay(0.1, 0.03), 1.0 + k * 0.035, 0.12 + 0.45 * k / 22)
+    long = brass_chord([45, 52, 57, 60, 69], 1.7, 1500)
+    long *= 1 + 0.18 * np.sin(2 * np.pi * 5.5 * tarr(1.7))
+    place(out, long * 0.6, 1.8)
+    place(out, sfx_thud() * 0.9, 1.8)
+    for k, n in enumerate((93, 96, 100, 96, 105)):
+        place(out, osc("sine", midi(n), 0.5) * expdecay(0.5, 0.12) * ar(0.5, 0.003, 0.05), 1.9 + k * 0.17, 0.18)
+    place(out, hp(noise(1.5), 5000) * expdecay(1.5, 0.4), 1.8, 0.2)
+    return norm(out, 0.85)
+
+
+def sfx_howl():
+    d = 2.8
+    t = tarr(d)
+    f = np.interp(t, [0, 0.7, 1.9, 2.8], [260, 540, 520, 300])
+    f = f * (1 + 0.018 * np.sin(2 * np.pi * 5.6 * t) * np.clip((t - 0.5) / 0.6, 0, 1))
+    src = osc("saw", f, d) + 0.5 * osc("saw", f * 2.003, d)
+    y = bp(src, 380, 720) + 0.55 * bp(src, 850, 1250) + 0.08 * bp(noise(d), 900, 3200)
+    return norm(y * ar(d, 0.18, 0.9), 0.65)
+
+
+def sfx_moonrise():
+    d = 3.2
+    t = tarr(d)
+    out = np.zeros(len(t))
+    for n in (57, 64, 69, 72, 76):
+        f = midi(n) * (1 + 0.5 * (t / d) ** 1.5)
+        out += osc("sine", f, d) + 0.3 * osc("sine", f * 2.005, d)
+    out *= 0.2 * ar(d, 1.2, 1.0)
+    shimmer = bp(noise(d), 4000, 9000) * (0.5 + 0.5 * np.sin(2 * np.pi * 7 * t)) * ar(d, 1.0, 0.8) * 0.12
+    return norm(out + shimmer, 0.55)
+
+
+def sfx_crickets():
+    d = 3.0
+    out = np.zeros(int(d * SR))
+    for c in range(5):
+        f = rng.uniform(4300, 5100)
+        period = rng.uniform(0.42, 0.6)
+        t0 = rng.uniform(0, period)
+        while t0 < d - 0.3:
+            for p in range(3):
+                place(out, osc("sine", f, 0.035) * ar(0.035, 0.008, 0.012), t0 + p * 0.05, 0.5)
+            t0 += period
+    return norm(out, 0.3)
+
+
+def sfx_pa_chime():
+    out = np.zeros(int(1.5 * SR))
+    place(out, chime(midi(76), 0.9), 0.0)
+    place(out, chime(midi(72), 1.0), 0.42)
+    return norm(bp(out, 350, 3600, 2), 0.6)
+
+
+def sfx_door_chirp():
+    d = 0.7
+    t = tarr(d)
+    f = 1550 + 420 * np.sign(np.sin(2 * np.pi * 3.2 * t))
+    x = lp(osc("square", f, d), 3600) * (0.55 + 0.45 * np.sign(np.sin(2 * np.pi * 6.4 * t)))
+    return norm(x * ar(d, 0.01, 0.15), 0.4)
+
+
+def sfx_door_alarm():
+    d = 1.9
+    t = tarr(d)
+    f = 1550 + 420 * np.sign(np.sin(2 * np.pi * 3.2 * t))
+    x = lp(osc("square", f, d), 3600) * (0.55 + 0.45 * np.sign(np.sin(2 * np.pi * 6.4 * t)))
+    return norm(x * ar(d, 0.02, 0.25), 0.5)
+
+
+def sfx_rumble():
+    d = 2.6
+    t = tarr(d)
+    out = 7.0 * lp(noise(d), 130, 3) * (0.35 + 0.65 * (t / d)) * (1 + 0.4 * np.sin(2 * np.pi * 11 * t))
+    for k in range(18):
+        place(out, lp(noise(0.12), 500) * expdecay(0.12, 0.03) * 4.0, rng.uniform(0.4, d - 0.3), rng.uniform(0.3, 0.8))
+    ticks = lp(hp(noise(d), 2500) * (rng.random(len(t)) > 0.9985), 6000) * np.linspace(0.1, 1, len(t))
+    out += 1.2 * ticks
+    return norm(out, 0.9)
+
+
+def sfx_cuffpump():
+    out = np.zeros(int(2.4 * SR))
+    for k in range(6):
+        sq = lp(noise(0.1), 1400) * expdecay(0.1, 0.03) + 0.4 * osc("sine", np.linspace(320, 160, int(0.1 * SR)), 0.1) * expdecay(0.1, 0.04)
+        place(out, sq, 0.1 + k * 0.17, 0.9)
+    d = 1.1
+    place(out, bp(noise(d), 2500, 9000) * np.linspace(1, 0, int(d * SR)) ** 1.5, 1.2, 0.5)
+    return norm(out, 0.7)
+
+
+def sfx_err():
+    out = np.zeros(int(0.9 * SR))
+    for k, f in enumerate((294, 196)):
+        d = 0.3
+        x = lp(osc("square", f, d) + 0.5 * osc("saw", f * 1.5, d), 1800) * ar(d, 0.01, 0.05)
+        place(out, x, k * 0.34)
+    return norm(out, 0.6)
+
+
+def sfx_moo():
+    d = 1.7
+    t = tarr(d)
+    f = np.interp(t, [0, 0.25, 0.7, 1.7], [150, 175, 150, 92]) * (1 + 0.012 * np.sin(2 * np.pi * 6 * t))
+    src = osc("saw", f, d)
+    y = bp(src, 350, 600) + 0.7 * bp(src, 800, 1200) + 0.25 * bp(src, 1600, 2400)
+    return norm(y * ar(d, 0.06, 0.5), 0.7)
+
+
+def sfx_typing():
+    d = 2.6
+    out = np.zeros(int(d * SR))
+    t = 0.05
+    while t < d - 0.1:
+        g = rng.uniform(0.5, 1.0)
+        place(out, hp(noise(0.014), 2200) * expdecay(0.014, 0.004), t, g)
+        place(out, 0.4 * lp(noise(0.02), 900) * expdecay(0.02, 0.006), t, g)
+        t += rng.uniform(0.05, 0.14)
+    return norm(out, 0.5)
+
+
+def sfx_gong():
+    d = 3.4
+    t = tarr(d)
+    out = np.zeros(len(t))
+    for r, tau, g in ((1.0, 1.4, 1.0), (1.47, 1.1, 0.7), (2.09, 0.9, 0.55), (2.56, 0.7, 0.4), (3.2, 0.55, 0.3), (4.1, 0.4, 0.2)):
+        out += g * np.sin(2 * np.pi * 150 * r * t + 3 * np.sin(2 * np.pi * 2.1 * t)) * np.exp(-t / tau)
+    out += 0.5 * bp(noise(d), 300, 2500) * np.exp(-t / 0.12)
+    return norm(out, 0.8)
+
+
+def sfx_tally():
+    out = np.zeros(int(0.6 * SR))
+    for k in range(2):
+        d = 0.09
+        place(out, bp(noise(d), 1800, 6500) * np.sin(np.pi * np.linspace(0, 1, int(d * SR))) ** 1.5, k * 0.11, 0.8)
+    place(out, osc("sine", 880, 0.18) * expdecay(0.18, 0.06) * ar(0.18, 0.004, 0.05), 0.24, 0.7)
+    place(out, osc("sine", 1320, 0.22) * expdecay(0.22, 0.08) * ar(0.22, 0.004, 0.06), 0.30, 0.5)
+    return norm(out, 0.5)
+
+
+def sfx_slidedoor():
+    out = np.zeros(int(1.9 * SR))
+    d = 0.9
+    env = np.sin(np.pi * np.linspace(0, 1, int(d * SR))) ** 1.2
+    place(out, bp(noise(d), 250, 2200) * env * 0.6 + 0.2 * osc("sine", np.linspace(180, 260, int(d * SR)), d) * env, 0.0)
+    place(out, chime(midi(84), 0.9), 0.95, 0.7)
+    return norm(out, 0.6)
+
+
+def sfx_pastatic():
+    d = 1.0
+    t = tarr(d)
+    gate = np.repeat(rng.random(len(t) // 480 + 1) > 0.25, 480)[: len(t)]
+    x = bp(noise(d), 500, 5500) * gate * (1 - 0.5 * t / d)
+    x += 0.5 * hp(noise(d), 4000) * (rng.random(len(t)) > 0.995)
+    return norm(x * ar(d, 0.01, 0.2), 0.55)
+
+
+def sfx_sit():
+    out = np.zeros(int(0.7 * SR))
+    place(out, lp(noise(0.15), 700) * expdecay(0.15, 0.05), 0.0, 0.8)
+    place(out, osc("sine", np.linspace(120, 60, int(0.2 * SR)), 0.2) * expdecay(0.2, 0.07), 0.0, 0.7)
+    place(out, sfx_chair() * 0.6, 0.05)
+    return norm(out, 0.6)
+
+
+def sfx_blip():
+    d = 0.22
+    return norm(osc("sine", np.linspace(520, 980, int(d * SR)), d) * ar(d, 0.005, 0.08), 0.45)
+
+
+def sfx_crash():
+    out = np.zeros(int(1.4 * SR))
+    place(out, sfx_thud(), 0.0, 1.0)
+    for k in range(16):
+        f1 = rng.uniform(500, 3500)
+        place(out, bp(noise(0.12), f1 * 0.7, f1 * 1.4) * expdecay(0.12, rng.uniform(0.02, 0.05)), rng.uniform(0.0, 0.9), rng.uniform(0.3, 0.9))
+    place(out, lp(noise(0.5), 1200) * expdecay(0.5, 0.15), 0.0, 0.6)
+    return norm(out, 0.9)
+
+
 SFX = {k[4:]: v for k, v in globals().items() if k.startswith("sfx_")}
 
 
@@ -780,6 +970,107 @@ def bed_dreamy(duration):
         i += 1
     out = out[: int(duration * SR)]
     return norm(out * ar(duration, 0.4, 0.5), 0.5)
+
+
+def bed_temple(duration):
+    """Tiptoe suspense: a chromatic pizzicato bass, a heartbeat and a slow wavering pad (the Good Cuff underscore)."""
+    beat = 60 / 88
+    out = np.zeros(int(duration * SR) + SR)
+    walk = [33, 34, 33, 32, 33, 34, 35, 34]
+    i, t = 0, 0.0
+    while t < duration:
+        place(out, pluck(midi(walk[i % len(walk)] + 12), 0.5) * 0.8, t)
+        place(out, osc("sine", np.linspace(90, 50, int(0.18 * SR)), 0.18) * expdecay(0.18, 0.06), t + beat * 0.5, 0.35)
+        t += beat
+        i += 1
+    for k in range(int(duration / 2.4) + 1):
+        pad = sum(osc("saw", midi(n) * (1 + det), 2.4) for n in (45, 52, 57) for det in (-0.004, 0.004))
+        pad = lp(pad, 520) * (0.7 + 0.3 * np.sin(2 * np.pi * 0.7 * tarr(2.4)))
+        place(out, pad * ar(2.4, 0.5, 0.5) * 0.04, k * 2.4)
+    return norm(out[: int(duration * SR)] * ar(duration, 0.4, 0.5), 0.5)
+
+
+def bed_gallop(duration):
+    """Galloping D-minor chase: pizzicato eighths, brass stabs on 2 and 4, snare and timpani (the laundry-cart chase)."""
+    beat = 60 / 168
+    out = np.zeros(int(duration * SR) + SR)
+    roots = [38, 38, 41, 38, 38, 38, 43, 40]
+    t, bar = 0.0, 0
+    while t < duration:
+        r = roots[bar % len(roots)]
+        for e in range(8):
+            if e % 4 == 2:
+                continue
+            place(out, pluck(midi(r + (12 if e % 4 == 3 else 0)), 0.22) * (0.8 if e % 4 == 0 else 0.55), t + e * beat / 2)
+        for s in (1, 3):
+            place(out, brass_chord([r + 12, r + 19, r + 24, r + 27], 0.16, 1900) * 0.3, t + s * beat)
+            place(out, bp(noise(0.1), 1500, 6000) * expdecay(0.1, 0.03), t + s * beat, 0.35)
+        for s in (0, 2):
+            place(out, osc("sine", np.linspace(110, 48, int(0.16 * SR)), 0.16) * expdecay(0.16, 0.05), t + s * beat, 0.6)
+        t += 4 * beat
+        bar += 1
+    return norm(out[: int(duration * SR)] * ar(duration, 0.1, 0.3), 0.55)
+
+
+def bed_tender(duration):
+    """Slow pads with a sparse celesta: the Moon gets his answer."""
+    out = np.zeros(int(duration * SR) + SR)
+    chords = [[57, 60, 64], [60, 64, 67], [53, 57, 60], [52, 56, 59]]
+    bar = 3.2
+    for i in range(int(duration / bar) + 1):
+        ch = chords[i % 4]
+        pad = sum(osc("sine", midi(n) * (1 + det), bar) for n in ch for det in (-0.002, 0.002))
+        place(out, pad * ar(bar, 0.9, 0.9) * 0.07, i * bar)
+        for k, n in enumerate((ch[0] + 24, ch[2] + 12, ch[1] + 24)):
+            place(out, celesta(midi(n), 0.9) * 0.22, i * bar + 0.5 + k * 0.8)
+    return norm(out[: int(duration * SR)] * ar(duration, 0.5, 0.8), 0.5)
+
+
+def celesta(f, d):
+    t = tarr(d)
+    return (np.sin(2 * np.pi * f * t) + 0.35 * np.sin(2 * np.pi * f * 2.76 * t) * np.exp(-t * 14)
+            + 0.12 * np.sin(2 * np.pi * f * 5.4 * t) * np.exp(-t * 30)) * np.exp(-t * 4.2) * ar(d, 0.002, 0.05)
+
+
+def theremin(f0, f1, d, vib=5.5):
+    t = tarr(d)
+    f = np.interp(t, [0, d * 0.35, d], [f0, f1, f1]) * (1 + 0.012 * np.sin(2 * np.pi * vib * t) * np.clip(t / 0.4, 0, 1))
+    return osc("sine", f, d) * ar(d, 0.08, 0.2)
+
+
+def music_bed_moon(duration):
+    """Original waltz for Episode 5: plucked oom-pah-pah in A minor, a sly celesta tune and a theremin wail."""
+    beat = 60 / 138
+    bar = 3 * beat
+    out = np.zeros(int(duration * SR) + 2 * SR)
+    prog = [(45, 0), (45, 0), (50, 0), (50, 0), (52, 1), (52, 1), (45, 0), (52, 1)]
+    for b in range(int(duration / bar) + 2):
+        t = b * bar
+        root, major = prog[b % 8]
+        third = 4 if major else 3
+        place(out, pluck(midi(root - 12), 0.45) * 0.7, t)
+        for s in (1, 2):
+            d = 0.14
+            ch = sum(osc("tri", midi(root + 12 + iv), d) + 0.3 * osc("saw", midi(root + 12 + iv), d) for iv in (0, third, 7))
+            place(out, lp(ch, 2400) * expdecay(d, 0.045) * ar(d, 0.003, 0.02) * 0.16, t + s * beat)
+            place(out, hp(noise(0.02), 6000) * expdecay(0.02, 0.006), t + s * beat, 0.16)
+        place(out, osc("sine", np.linspace(120, 55, int(0.14 * SR)), 0.14) * expdecay(0.14, 0.05), t, 0.4)
+        place(out, hp(noise(0.02), 6500) * expdecay(0.02, 0.006), t + 2.5 * beat, 0.07)
+    tune = [(69, 0, 1), (72, 1, 1), (76, 2, 1), (81, 3, 2), (76, 5, 1), (74, 6, 1), (77, 7, 1), (81, 8, 1), (79, 9, 2), (77, 11, 1),
+            (76, 12, 1), (80, 13, 1), (83, 14, 1), (84, 15, 1), (83, 16, 1), (80, 17, 1), (81, 18, 1), (76, 19, 1), (72, 20, 1),
+            (71, 21, 1), (68, 22, 1), (64, 23, 1)]
+    cycle = 24 * beat
+    c = 0
+    while c * cycle < duration:
+        for n, s, l in tune:
+            at = c * cycle + s * beat
+            if at < duration:
+                place(out, celesta(midi(n), 0.7) * 0.2, at)
+        if c % 2 == 1:
+            place(out, theremin(midi(76), midi(81), 3 * beat * 2) * 0.1, c * cycle + 3 * beat)
+            place(out, theremin(midi(83), midi(88), 3 * beat * 1.5) * 0.08, c * cycle + 15 * beat)
+        c += 1
+    return norm(out[: int(duration * SR)], 0.8) * 1.7
 
 
 BEDS = {k[4:]: v for k, v in globals().items() if k.startswith("bed_")}
@@ -860,6 +1151,20 @@ def tts(kokoro, v, say):
         x = np.tanh(phone_band(x) * 3.0) * 0.6
     elif v.get("fx") == "muffled":
         x = lp(x, 900, 4)
+    elif v.get("fx") == "moon":  # a big quiet room: a few soft echoes and a little extra weight
+        x = np.concatenate([x, np.zeros(int(0.3 * SR))])
+        soft = lp(x, 4200)
+        y = x.copy()
+        for dly, g in ((0.09, 0.30), (0.19, 0.18), (0.31, 0.10)):
+            n = int(dly * SR)
+            y[n:] += soft[:-n] * g
+        x = lp(y + 0.30 * lp(x, 260, 2), 8000)
+    elif v.get("fx") == "pa":  # tinny ceiling speaker with a slap of room echo
+        x = np.concatenate([x, np.zeros(int(0.25 * SR))])
+        y = np.tanh(bp(x, 380, 3400, 3) * 2.2) * 0.7
+        n = int(0.11 * SR)
+        y[n:] += y[:-n] * 0.25
+        x = y + 0.004 * noise(len(y) / SR)
     x = norm(x, 0.85)
     sf.write(path, x, SR)
     return x
@@ -976,6 +1281,7 @@ def main():
 
     total = T
     mix = np.zeros(int((total + 1) * SR))
+    stems = {k: np.zeros_like(mix) for k in ('voice', 'music', 'sfx')}  # kept apart so the mix can be checked (STEMS=1 writes them)
     if script.get("level_lines"):  # match every line's loudness while it is voiced, not its peak
         def active_rms(x):
             fr = x[: len(x) // 960 * 960].reshape(-1, 960)
@@ -985,12 +1291,16 @@ def main():
         voice_clips = [(at, c * min(2.0, target / active_rms(c))) for at, c in voice_clips]
     for at, clip in voice_clips:
         place(mix, clip, at, 0.95)
+        place(stems['voice'], clip, at, 0.95)
 
     # music bed with ducking, only through the main story
     music = script.get("music", {"from": "handoff", "to": "coco", "mute": ["enter", "scream", "twitch"]})
     start = next(s["start"] for s in scenes_out if s["id"] == music["from"])
     stop = next(s["start"] + s["dur"] for s in scenes_out if s["id"] == music["to"])
-    bed = music_bed(stop - start, music.get("bells", False))
+    if music.get("bed") == "moon":
+        bed = music_bed_moon(stop - start)
+    else:
+        bed = music_bed(stop - start, music.get("bells", False))
     gain = np.full(len(bed), 0.16)
     for ln in lines_out:
         a, b = int((ln["s"] - start - 0.1) * SR), int((ln["e"] - start + 0.2) * SR)
@@ -1016,6 +1326,7 @@ def main():
     gain = np.convolve(gain, np.ones(2400) / 2400, mode="same")
     fade = ar(len(bed) / SR, 0.6, 1.0)
     place(mix, bed * gain * fade, start)
+    place(stems['music'], bed * gain * fade, start)
     for sc in scenes_out:
         if sc["id"] in beds:
             name, length = bed_of(sc)
@@ -1026,17 +1337,23 @@ def main():
                 if b > 0 and a < len(g):
                     g[max(a, 0):min(b, len(g))] = 0.09
             place(mix, under * np.convolve(g, np.ones(2400) / 2400, mode="same"), sc["start"])
+            place(stems['music'], under * np.convolve(g, np.ones(2400) / 2400, mode="same"), sc["start"])
 
     for at, name, g in cues:
         clip = SFX[name]()
         place(mix, clip, at, g * 0.6)
+        place(stems['sfx'], clip, at, g * 0.6)
 
     # bring dialogue to about -15 dBFS RMS, then soft-limit the peaks
     speech = np.zeros(len(mix), bool)
     for ln in lines_out:
         speech[int(ln["s"] * SR):int(ln["e"] * SR)] = True
     rms = np.sqrt(np.mean(mix[speech] ** 2))
-    mix = np.tanh(mix * (10 ** (-15 / 20) / rms)) * 0.97
+    k = 10 ** (-15 / 20) / rms
+    mix = np.tanh(mix * k) * 0.97
+    if os.environ.get("STEMS"):
+        for name, st in stems.items():
+            sf.write(os.path.join(BUILD, f"stem_{name}.wav"), st * k, SR, subtype="PCM_16")
     stereo = np.stack([mix, mix], axis=1)
     sf.write(os.path.join(BUILD, "audio.wav"), stereo, SR, subtype="PCM_16")
 
