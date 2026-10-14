@@ -63,6 +63,41 @@
     text('FRUIT BOWL REHAB — STAFF ENGAGEMENT INITIATIVE',540,724,{size:26});
     ctx.fillStyle='rgba(17,43,59,.18)';ell(540,1380,465,45);ctx.fill();
   };
+  // Standalone product demonstration set, with no duplicate leaderboard behind it.
+  A.bgDemo=()=>{
+    wallGrid('#e3ebee','#92abb7');
+    const sky=ctx.createLinearGradient(0,0,0,800);
+    sky.addColorStop(0,'#122e4e');sky.addColorStop(1,'#305875');
+    panel(42,63,996,630,sky,'#375d7b',29);
+    ctx.fillStyle='#f6dc87';rr(105,414,870,10,5);ctx.fill();
+    ctx.fillStyle='rgba(105,238,235,.15)';rr(102,530,876,75,15);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=3;
+    for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(132+i*154,455);ctx.lineTo(132+i*154,675);ctx.stroke();}
+    text('FRUIT BOWL INNOVATION LAB',540,645,{size:32,fill:'#eaf3f7'});
+    // The existing scene will lay a single scoreboard in the clear center.
+    ctx.fillStyle='#d5e8e7';rr(54,752,973,72,14);ctx.fill();
+    text('AUTOMATION DEMONSTRATION  /  NO STAFF REQUIRED',540,788,{size:28,fill:'#225069'});
+    ctx.fillStyle='rgba(9,43,67,.12)';ell(540,1385,465,45);ctx.fill();
+  };
+  // Bed-front occlusion: the resident is tucked into the mattress, not floating above it.
+  A.blanketFront=(x=570,y=1030,w=380,h=158)=>{
+    ctx.save();
+    ctx.fillStyle='rgba(39,65,74,.18)';rr(x+5,y+14,w,h,24);ctx.fill();
+    const folds=ctx.createLinearGradient(x,y,x,y+h);
+    folds.addColorStop(0,'#d7e9e7');folds.addColorStop(.6,'#adcacc');folds.addColorStop(1,'#90b2bc');
+    ctx.fillStyle=folds;ctx.strokeStyle='#536f81';ctx.lineWidth=6;
+    ctx.beginPath();ctx.moveTo(x,y+33);
+    ctx.quadraticCurveTo(x+w*.22,y-8,x+w*.45,y+26);
+    ctx.quadraticCurveTo(x+w*.72,y+46,x+w,y+18);
+    ctx.lineTo(x+w,y+h-15);ctx.quadraticCurveTo(x+w*.5,y+h+15,x,y+h-10);ctx.closePath();
+    ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.60)';ctx.lineWidth=6;
+    ctx.beginPath();ctx.moveTo(x+22,y+50);ctx.quadraticCurveTo(x+w*.5,y+16,x+w-20,y+47);ctx.stroke();
+    ctx.strokeStyle='rgba(61,99,117,.22)';ctx.lineWidth=3;
+    for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(x+33+i*90,y+88);
+       ctx.quadraticCurveTo(x+64+i*90,y+96,x+75+i*90,y+122);ctx.stroke();}
+    ctx.restore();
+  };
   A.bgHallway=()=>{
     wallGrid('#e3edee','#b0b2b8');
     for(let i=0;i<3;i++){
