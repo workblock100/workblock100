@@ -1,7 +1,7 @@
 # SHIFT HAPPENS — Episode 6 production package
 
 **Title:** FIVE SECONDS  
-**Status (October 14, 2026):** Script, scene animation, art, isolated rig, and silent preview timeline committed to the existing **draft** branch. **No voiced Episode 6 MP4 has been rendered, watched, listened to, or released.** The approximate preview currently runs about **2:37**; voice-synthesized timing will differ.
+**Status (October 14, 2026):** Episode 6 is rendered as a **2:08** (128.23-second) voiced H.264/AAC 1080×1920 30 fps MP4 on the existing **draft** branch. FFmpeg successfully decoded the entire file; audio mean/peak approximately −17.1/−1.0 dBFS; source preflight and a complete 30 fps layout/rig audit reported **zero issues across 3,847 frames**. Multiple actual video frames were visually reviewed, leading to a new independent demo set and lower blanket so Pear's lip sync remains visible. Full real-time auditory/phone UI inspection by a human has not yet occurred. **Not released or shared to TikTok or coworkers.**
 
 ## Logline and comic mechanism
 
@@ -11,7 +11,7 @@ This is a **metric-measurement comedy**, not another shift meltdown, survey, hol
 
 ## Shot list / silent preview timeline
 
-These are approximate cue windows from `build/ep6/timeline.js`, **not final voiced timestamps**.
+The cue windows below are **original storyboard approximations**; the voiced build is 128.23 seconds, and actual scene boundaries are in `build/ep6/timeline.js`.
 
 | Preview time | Sequence | Story / staging | Key performance, props and audio |
 | --- | --- | --- | --- |
@@ -36,7 +36,7 @@ Voice assignments are in `script_ep6.json`, built through the existing Kokoro mo
 - **Mr. Pear:** `am_fenrir` — understated, dry, gentle.
 - **Leaderboard:** `af_sarah` — cheerful PA voice, with warmer vulnerability in the system-error scene.
 
-The complete **spoken lines and intended on-screen captions** are stored per beat as `say` and `text`. Caption word timing is derived from the finished TTS audio by `build_audio.py`; the currently checked-in silent-preview timing file uses estimated timing and deliberately zeroes mouth movement. It must be regenerated before final release. Pronunciation check: **Kumquat**, **compliance**, and **unscored**.
+The complete **spoken lines and intended on-screen captions** are stored per beat as `say` and `text`. Caption word timing is derived from the finished TTS audio by `build_audio.py`; the checked-in `build/ep6/timeline.js` has been regenerated with the finished Kokoro voice waveform and mouth envelopes. Pronunciation check: **Kumquat**, **compliance**, and **unscored**.
 
 ## Music and sound
 
@@ -61,7 +61,7 @@ Use original generated tones/sounds from `build_audio.py`: the gong/fanfare for 
 6. Render 1080×1920 at 30 fps H.264/AAC, validate streams with `ffprobe`, and decode every frame with `ffmpeg -v error -i ... -f null -`.
 7. View the final export at actual phone size with platform overlays and verify title/caption safe regions. Record any failures before calling the episode finished.
 
-### Known limitations of the current draft
+### Completed export / remaining limitations
 
 - The remote rendering computer connection was unavailable in this chat; the working container could not access GitHub directly or retrieve the Kokoro model. Consequently the final voices, AAC track, MP4, rendered shot images, frame-by-frame audit and phone-size visual/audio sign-off are **not yet done**.
 - A JavaScript-only mocked Canvas smoke test sampled **630 time points at 0.25-second intervals** through all nine scenes with **zero IK/explicit-grip violations and zero JavaScript exceptions** after anchor corrections. It **cannot validate aesthetic quality or real overlap metrics**.
