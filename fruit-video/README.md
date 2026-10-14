@@ -144,6 +144,7 @@ Fonts from Google Fonts: Bangers and Nunito (SIL OFL), Luckiest Guy (Apache 2.0)
 ## Episode 6 build and release gate
 
 ```bash
+node ep6_preflight.js  # JS syntax, scene/audio-cue registration, preview-timeline sanity
 python3 build_audio.py --model /path/to/kokoro-v1.0.onnx --voices /path/to/voices-v1.0.bin --script script_ep6.json --out build/ep6 --var TIMELINE_EP6
 ffmpeg -y -i build/ep6/audio.wav -c:a aac -b:a 192k build/ep6/audio.m4a
 EP=6 node render.js preview 1 10 30 60 90
