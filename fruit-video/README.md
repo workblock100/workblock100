@@ -10,9 +10,10 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:17 |
 | 4: The New Grad | [`shift-happens-ep4.mp4`](shift-happens-ep4.mp4) | 2:09 |
 | 5: Full Moon | [`shift-happens-ep5.mp4`](shift-happens-ep5.mp4) | 2:59 |
+| 6: Five Seconds | **In production — not yet rendered** | TBD (voice-timed) |
 
 To play an episode live in the browser, start a local server in this directory and open
-`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 4 for earlier episodes):
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 6 for other episodes):
 
 ```bash
 python3 -m http.server 8000
@@ -54,6 +55,19 @@ leads a quest for the one blood pressure cuff that works. A runaway laundry cart
 and a changed Wi-Fi password bring the score to seven. The real cause is staffing; the Moon is not even full
 until tomorrow. Night Nurse Dragonfruit arrives rested, and the Sun claims sundowning in the post-credits scene.
 
+## Episode 6: Five Seconds (production in progress)
+
+Kumquat, corporate's Vice President of Speed, rolls out a call-light leaderboard. A resident's
+needs don't count; only the first touch of the button counts. Staff become athletes, a mechanical
+glove wins the KPI, and Mr. Pear exposes what the scoreboard can't measure. Strawberry and Mango
+replace the metric with a simpler rule: answer the bell **and finish helping**. The wall is named
+Employee of the Month. This episode has an all-new corporate arena, racing hallway, room-eight
+conversation, overheated server room, podium tag, and episode-only IK arm/leg rig.
+
+**Status:** Script and procedural animation sources implemented; exported voiced MP4 and visual,
+audio, clinical and platform QC are **not completed**. `build/ep6/timeline.js` is an approximate
+silent-preview timing guide until Kokoro regenerates it. See [EP6_PRODUCTION.md](EP6_PRODUCTION.md).
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -82,22 +96,23 @@ until tomorrow. Night Nurse Dragonfruit arrives rested, and the Sun claims sundo
 | Mango | CNA (Ep. 5) | Knows the legend of the good blood pressure cuff |
 | Mr. Pear | Resident (Ep. 5) | Still honors the paid-break clause in his old contract |
 | Dragonfruit | Night nurse (Ep. 5) | Arrives rested just in time for the actual full moon |
+| Kumquat | Corporate KPI consultant (Ep. 6) | Can measure a button, cannot measure actual help |
 
 ## Layout audit
 
 `node render.js audit` renders every frame and checks it against the layout rules: no card, banner, caption,
 prop or foreground set piece may cover a face, a head or a key sign; nothing important may be cut off at the
-frame edge; no text may be squished. Episodes 2 to 5 pass with zero issues at 20 frames per second.
+frame edge; no text may be squished. Episodes 2 to 5 previously passed at 20 frames per second. Episode 6 is not yet audited in-browser; its rig adds joint-length/reach and hand-grip checks.
 
 ## How it's made
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep5.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep6.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 5; `ep1.js` to `ep5.js` are the episodes. Episode 5's new art and sets live in
+  Episodes 2 to 5; `ep1.js` to `ep6.js` are the episodes. Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
@@ -124,3 +139,20 @@ EP=5 node render.js preview 12.5 40 88                                # stills i
 ```
 
 Fonts from Google Fonts: Bangers and Nunito (SIL OFL), Luckiest Guy (Apache 2.0). Licenses are in `fonts/`.
+
+
+## Episode 6 build and release gate
+
+```bash
+python3 build_audio.py --model /path/to/kokoro-v1.0.onnx --voices /path/to/voices-v1.0.bin --script script_ep6.json --out build/ep6 --var TIMELINE_EP6
+ffmpeg -y -i build/ep6/audio.wav -c:a aac -b:a 192k build/ep6/audio.m4a
+EP=6 node render.js preview 1 10 30 60 90
+EP=6 node render.js audit 0.0333333333
+EP=6 FMT=image/png CRF=20 node render.js video shift-happens-ep6.mp4
+ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json shift-happens-ep6.mp4
+ffmpeg -v error -i shift-happens-ep6.mp4 -f null -
+```
+
+A clean terminal audit is **not** a visual sign-off: check every shot at full speed and at phone size,
+inspect hand-to-button/clipboard contacts and listen to the entire encoded export. Do not distribute,
+publish or merge Episode 6 without explicit owner approval.
