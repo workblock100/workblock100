@@ -72,6 +72,8 @@ async function main() {
       const list = [...groups.values()].sort((a, b) => a.from - b.from);
       for (const g of list) console.log(`${g.from.toFixed(2)}-${g.to.toFixed(2)}s  ${g.scene.padEnd(9)} ${g.msg}  (x${g.n})`);
       console.log(`${rows.length} issue-frames, ${list.length} distinct issues, ${Math.round((to - from) / step)} frames checked`);
+      // New episode's anatomical audit must fail loudly; older exports keep legacy behavior.
+      if (EPNUM === 6 && rows.length) process.exitCode = 1;
       return;
     }
     const out = path.resolve(args[0] || path.join(BUILD, 'shift-happens.mp4'));
