@@ -10,7 +10,7 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:17 |
 | 4: The New Grad | [`shift-happens-ep4.mp4`](shift-happens-ep4.mp4) | 2:09 |
 | 5: Full Moon | [`shift-happens-ep5.mp4`](shift-happens-ep5.mp4) | 2:59 |
-| 6: Five Seconds | [`shift-happens-ep6.mp4`](shift-happens-ep6.mp4) | 2:08 |
+| 6: Five Seconds | [`shift-happens-ep6.mp4`](shift-happens-ep6.mp4) | 2:09 |
 
 To play an episode live in the browser, start a local server in this directory and open
 `http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 6 for other episodes):
@@ -64,7 +64,7 @@ replace the metric with a simpler rule: answer the bell **and finish helping**. 
 Employee of the Month. This episode has an all-new corporate arena, racing hallway, room-eight
 conversation, overheated server room, podium tag, and episode-only IK arm/leg rig.
 
-**Status:** Voiced 1080×1920 / 30 fps H.264/AAC MP4 rendered and end-to-end decode checked (128.23 seconds). The 30 fps layout and rig audit reported zero issues across 3,847 sampled frames. Visual still-frame review was performed and led to an independent demonstration lab and lower bed blanket to leave Pear's speaking mouth visible. Frame-accurate perceptual and full listening sign-off by a human is still pending. `build/ep6/timeline.js` is now the actual Kokoro-produced lip-sync timeline. See [EP6_PRODUCTION.md](EP6_PRODUCTION.md).
+**Status:** Voiced 1080×1920 / 30 fps H.264/AAC MP4 rendered and end-to-end decode checked (128.56 seconds). The 30 fps layout and rig audit reports zero issues. Visual review of the compressed export includes all nine sequences and led to an independent demonstration lab and lower bed blanket so Pear's speaking mouth stays visible. An automated speech-to-text check covers all scripted dialogue; full human listening and an in-app TikTok safe-zone preview remain pending. `build/ep6/timeline.js` is the Kokoro-produced lip-sync timeline. See [EP6_PRODUCTION.md](EP6_PRODUCTION.md).
 
 ## The cast
 
@@ -98,9 +98,9 @@ conversation, overheated server room, podium tag, and episode-only IK arm/leg ri
 
 ## Layout audit
 
-`node render.js audit` renders every frame and checks it against the layout rules: no card, banner, caption,
-prop or foreground set piece may cover a face, a head or a key sign; nothing important may be cut off at the
-frame edge; no text may be squished. Episodes 2 to 5 previously passed at 20 frames per second. Episode 6 is not yet audited in-browser; its rig adds joint-length/reach and hand-grip checks.
+`node render.js audit` checks layout boxes and Episode 6's joint lengths, reach and hand contacts. Episodes 2 to 5
+previously passed at 20 frames per second. Episode 6 passes a full 30 frames per second audit with zero reported
+layout or rig issues; see [EP6_PRODUCTION.md](EP6_PRODUCTION.md) for the current QA record and remaining release checks.
 
 ## How it's made
 

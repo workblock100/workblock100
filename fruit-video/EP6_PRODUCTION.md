@@ -1,7 +1,7 @@
 # SHIFT HAPPENS — Episode 6 production package
 
 **Title:** FIVE SECONDS  
-**Status (October 14, 2026):** Episode 6 is rendered as a **2:08** (128.23-second) voiced H.264/AAC 1080×1920 30 fps MP4 on the existing **draft** branch. FFmpeg successfully decoded the entire file; audio mean/peak approximately −17.1/−1.0 dBFS; source preflight and a complete 30 fps layout/rig audit reported **zero issues across 3,847 frames**. Multiple actual video frames were visually reviewed, leading to a new independent demo set and lower blanket so Pear's lip sync remains visible. Full real-time auditory/phone UI inspection by a human has not yet occurred. **Not released or shared to TikTok or coworkers.**
+**Status (October 14, 2026):** Episode 6 is rendered as a **2:09** (128.57-second) voiced H.264/AAC 1080×1920 30 fps MP4 on the existing **draft** branch. FFmpeg decodes the entire file. Source preflight and a 30 fps layout/rig audit report **zero issues across 3,857 frames**. Audio measures −17.1 dBFS mean and −1.1 dBFS peak. Representative frames from all nine sequences were visually reviewed in the encoded export. Whisper `small.en` transcribed the dialogue in order; it caught the revised “The patent is pending” line, while a couple of short conjunctions still need human listening. Full real-time human listening and a device-specific TikTok safe-zone preview remain outstanding. **Not released or shared to TikTok or coworkers.**
 
 ## Logline and comic mechanism
 
@@ -9,21 +9,21 @@ Corporate measures the time from a call bell to a finger touching the button, no
 
 This is a **metric-measurement comedy**, not another shift meltdown, survey, holiday, new-grad orientation, or supernatural-blame episode. Residents and direct-care staff are sympathetic; the institutional incentive is the butt of the joke.
 
-## Shot list / silent preview timeline
+## Shot list / actual voiced timeline
 
-The cue windows below are **original storyboard approximations**; the voiced build is 128.23 seconds, and actual scene boundaries are in `build/ep6/timeline.js`.
+These are the actual voiced scene boundaries from `build/ep6/timeline.js` (128.56 seconds total).
 
 | Preview time | Sequence | Story / staging | Key performance, props and audio |
 | --- | --- | --- | --- |
-| 00:00–00:10 | COLD: New record | Huge red timer over a resident room. Confetti explodes around Strawberry's button touch before anyone helps Pear with his blanket. | Contact pose: Strawberry right hand to wall button; Pear looks disappointed. Fanfare → trombone; freeze reaction. |
-| 00:10–00:33 | THE ROLLOUT | Corporate classroom where a mammoth leaderboard dwarfs the staff. Kumquat, Vice President of Speed, explains "the button" is all the system measures. | Kumquat's lanyard/tie, Strawberry's gripped KPI clipboard, Melon's approving nod; timer glows. |
-| 00:33–00:55 | THE FIVE-SECOND GAMES | Rehabilitation hallway becomes a finish line; every lamp is a race. Strawberry gets silver for 4.9 s. Mango gets 1.2 s without having entered the room. | More deliberate poses, stronger shoulder/elbow silhouette and grip contacts; gong, scoreboard tick, medal confetti. |
-| 00:55–01:18 | ROOM 8 | Pear tells Strawberry he was a history teacher. She listens. The giant statistic calls the time "unscored interaction." | Quiet staging and close reactions; sparse tender underscore; scoreboard red intrusion interrupts the warmth. |
-| 01:18–01:36 | ZERO-SECOND SOLUTION | Kumquat unveils a literal spring-mounted glove to keep a button constantly answered. Zero seconds wins compliance. | Original prop/set piece with physically touching glove, escalating spring coils, celebratory confetti. |
-| 01:36–01:57 | SYSTEM ERROR | The machine overheats and cries for help. Kumquat discovers what it means to be left unanswered. | Cool dark server racks, red HELP display, panic acting, hard musical drop for confession. |
-| 01:57–02:19 | THE REAL SCORE | Strawberry and Mango write "Answer the bell. Finish helping." Melon complains the numbers went down. Mr. Pear exposes the broken metric. | Bright return to resident room; visible marker-writing reveal; sincere beat without preaching. |
-| 02:19–02:28 | CREDITS | Nurses, consultant and resident together. Show retains its signature fruit charm. | Logo, ensemble poses; 3–11 line; no baked player progress bar. |
-| 02:28–02:37 | TAG | An award stands against a literal wall. "Employee of the Month: the wall." Pear: "At least the wall stays when you talk to it." | Hero podium and gold wall medal. End on reaction, not extended hold. |
+| 00:00–00:09.5 | COLD: New record | Huge red timer over a resident room. Confetti explodes around Strawberry's button touch before anyone helps Pear with his blanket. | Contact pose: Strawberry right hand to wall button; Pear looks disappointed. Fanfare → trombone; freeze reaction. |
+| 00:09.5–00:26.9 | THE ROLLOUT | Corporate classroom where a mammoth leaderboard dwarfs the staff. Kumquat, Vice President of Speed, explains "the button" is all the system measures. | Kumquat's lanyard/tie, Strawberry's gripped KPI clipboard, Melon's approving nod; timer glows. |
+| 00:26.9–00:45.2 | THE FIVE-SECOND GAMES | Rehabilitation hallway becomes a finish line; every lamp is a race. Strawberry gets silver for 4.9 s. Mango gets 1.2 s without having entered the room. | More deliberate poses, stronger shoulder/elbow silhouette and grip contacts; gong, scoreboard tick, medal confetti. |
+| 00:45.2–01:03.3 | ROOM 8 | Pear tells Strawberry he was a history teacher. She listens. The giant statistic calls the time "unscored interaction." | Quiet staging and close reactions; sparse tender underscore; scoreboard red intrusion interrupts the warmth. |
+| 01:03.3–01:19.4 | ZERO-SECOND SOLUTION | Kumquat unveils a literal spring-mounted glove to keep a button constantly answered. Zero seconds wins compliance. | Original prop/set piece with physically touching glove, escalating spring coils, celebratory confetti. |
+| 01:19.4–01:36.6 | SYSTEM ERROR | The machine overheats and cries for help. Kumquat discovers what it means to be left unanswered. | Cool dark server racks, red HELP display, panic acting, hard musical drop for confession. |
+| 01:36.6–01:53.2 | THE REAL SCORE | Strawberry and Mango write "Answer the bell. Finish helping." Melon complains the numbers went down. Mr. Pear exposes the broken metric. | Bright return to resident room; visible marker-writing reveal; sincere beat without preaching. |
+| 01:53.2–02:00.8 | CREDITS | Nurses, consultant and resident together. Show retains its signature fruit charm. | Logo, ensemble poses; 3–11 line; no baked player progress bar. |
+| 02:00.8–02:08.6 | TAG | An award stands against a literal wall. "Employee of the Month: the wall." Pear: "At least the wall stays when you talk to it." | Hero podium and gold wall medal. End on reaction, not extended hold. |
 
 ## Character voice and dialogue direction
 
@@ -36,11 +36,11 @@ Voice assignments are in `script_ep6.json`, built through the existing Kokoro mo
 - **Mr. Pear:** `am_fenrir` — understated, dry, gentle.
 - **Leaderboard:** `af_sarah` — cheerful PA voice, with warmer vulnerability in the system-error scene.
 
-The complete **spoken lines and intended on-screen captions** are stored per beat as `say` and `text`. Caption word timing is derived from the finished TTS audio by `build_audio.py`; the checked-in `build/ep6/timeline.js` has been regenerated with the finished Kokoro voice waveform and mouth envelopes. Pronunciation check: **Kumquat**, **compliance**, and **unscored**.
+The complete **spoken lines and intended on-screen captions** are stored per beat as `say` and `text`. Caption word timing is derived from the finished TTS audio by `build_audio.py`; the checked-in `build/ep6/timeline.js` has been regenerated with the finished Kokoro voice waveform and mouth envelopes. Pronunciation and transcription checks include **Kumquat**, **compliance**, **unscored**, and the revised line **"The patent is pending."**
 
 ## Music and sound
 
-Use original generated tones/sounds from `build_audio.py`: the gong/fanfare for the sports parody, the fast gallop underscore in the race, a quieter tender bed when Pear is heard, and sparse suspense in the overheating server scene. Duck music below every line. Do **not** reuse the Moon's theme. Listen for intelligibility of "zero point eight" and "one point two"; if Kokoro stumbles, update spoken phonetics without changing captions.
+Use original generated tones/sounds from `build_audio.py`: the gong/fanfare for the sports parody, the fast gallop underscore in the race, a quieter tender bed when Pear is heard, and sparse suspense in the overheating server scene. Duck music below every line. Do **not** reuse the Moon's theme. The full-export Whisper check recognizes the scripted number lines and the revised patent line; a human still needs to listen for performance, mix, and caption-to-voice timing.
 
 ## Episode-specific rig and visual changes
 
@@ -51,21 +51,25 @@ Use original generated tones/sounds from `build_audio.py`: the gong/fanfare for 
 - **Phone export:** Episode 6's caption panel omits fake video progress and clock controls. Keep all required dialogue readable above social-app controls; confirm inside actual TikTok UI safe regions, especially the last subtitle line, rather than trusting pixel coordinates alone.
 - **New design vocabulary:** Corporate blue digital signage and gold stopwatch graphics contrasted with quiet sage resident-room interiors. The giant scoreboard visibly invades ever larger spaces. The server racks and the wall podium are new locations, not recycled Moon hall backgrounds.
 
-### Must-pass automated checks
+### QA record and release gates
 
-1. `node --check` new JavaScript files plus `python3 -m json.tool script_ep6.json >/dev/null`.
-2. `EP=6 node render.js preview 0.2 4 12 35 55 66 82 102 118 140 152`.
-3. `EP=6 node render.js audit 0.0333333333`, capturing **all** reported warnings (the old audit can return success even with layout errors). `checkFrame` now combines existing box errors with `EP6_RIG.validateFrame()` (segment-length, reach and grip-attachment checks).
-4. Inspect all shots at start/middle/end, plus extreme poses and 0.1-second transition scrubs; inspect glove/button and left/right arms especially.
-5. After building voices, play the **entire** episode and confirm scene timing, lip sync, SFX, caption line wraps, speech clarity, and character continuity.
-6. Render 1080×1920 at 30 fps H.264/AAC, validate streams with `ffprobe`, and decode every frame with `ffmpeg -v error -i ... -f null -`.
-7. View the final export at actual phone size with platform overlays and verify title/caption safe regions. Record any failures before calling the episode finished.
+- [x] `node ep6_preflight.js`: JavaScript syntax, scene/voice/SFX registration, timeline, and episode-only rig wiring pass.
+- [x] Full 30 fps layout and IK audit: **3,857 frames, zero reported issues**.
+- [x] Encoded export review: representative frames from all nine sequences; button/clipboard/spring-glove contacts, Pear's visible mouth, captions, and sign-off/tag were checked.
+- [x] `ffprobe`: H.264 1080×1920 video at 30 fps and stereo 48 kHz AAC; duration **128.57 seconds**.
+- [x] `ffmpeg -v error -i shift-happens-ep6.mp4 -f null -`: full-file decode completed with no errors. Audio measured −17.1 dBFS mean / −1.1 dBFS peak.
+- [x] Whisper `small.en` transcript screen: the final mixed export covers the dialogue in order and recognizes “The patent is pending.” This is an automated text check, not an evaluation of voice performance or mix.
+- [ ] Human full-speed listening pass for acting, intelligibility, sound balance, and lip-sync feel. The transcript check heard two brief conjunctions differently from the script; review those lines by ear.
+- [ ] Device-specific TikTok preview and overlay-safe check before posting. TikTok says its in-feed safe-zone dimensions vary with format and caption length and that preview may differ slightly by device; use the current in-app preview for the chosen post type ([TikTok safe-zone guidance](https://ads.tiktok.com/resources/help/article/tiktok-auction-in-feed-ads?lang=en-GB)).
 
-### Completed export / remaining limitations
+Re-run the automated checks from `fruit-video/`:
 
-- The remote rendering computer connection was unavailable in this chat; the working container could not access GitHub directly or retrieve the Kokoro model. Consequently the final voices, AAC track, MP4, rendered shot images, frame-by-frame audit and phone-size visual/audio sign-off are **not yet done**.
-- A JavaScript-only mocked Canvas smoke test sampled **630 time points at 0.25-second intervals** through all nine scenes with **zero IK/explicit-grip violations and zero JavaScript exceptions** after anchor corrections. It **cannot validate aesthetic quality or real overlap metrics**.
-- The storyboard times above are provisional. Re-render the timeline from real speech before deciding whether to tighten pauses or cut a short teaser.
+```bash
+node ep6_preflight.js
+EP=6 node render.js audit 0.0333333333
+ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate,sample_rate,channels -of json shift-happens-ep6.mp4
+ffmpeg -v error -i shift-happens-ep6.mp4 -f null -
+```
 
 ## Thumbnail / social package
 
