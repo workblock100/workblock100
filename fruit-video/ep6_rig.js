@@ -55,7 +55,13 @@
       const key = side < 0 ? 'l' : 'r', pose = arms[key] || 'rest';
       if (pose === 'none') continue;
       const S = shoulder(k, side), l1 = P.arm?.[0] || k.arm1 || 56, l2 = P.arm?.[1] || k.arm2 || 52;
-      const q = targetFor(o, k, side, pose, S);
+      let q = targetFor(o, k, side, pose, S);
+      // Built-in acting poses adapt to each fruit's anatomy; explicit grip
+      // targets do NOT get silently fixed, because misplaced props must fail QC.
+      if (!(o.grip && o.grip[key])) {
+        const dx=q[0]-S[0],dy=q[1]-S[1],d=Math.hypot(dx,dy),reach=l1+l2-6;
+        if(d>reach)q=[S[0]+dx*reach/d,S[1]+dy*reach/d];
+      }
       const { elbow, hand } = IK(S, S, q, l1, l2, -side, (o.id || o.kind) + '.' + key);
       ctx.save();
       ctx.strokeStyle = '#26212e'; ctx.lineWidth = 15; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
