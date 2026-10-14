@@ -1,0 +1,651 @@
+{
+  "title": "SHIFT HAPPENS",
+  "episode": "Episode 6: Five Seconds",
+  "level_lines": true,
+  "music": {
+    "from": "launch",
+    "to": "score",
+    "mute": [
+      "listening:stay",
+      "machine:confess"
+    ],
+    "bed": "default"
+  },
+  "beds": {
+    "race": {
+      "name": "gallop",
+      "until": "reset"
+    },
+    "listening": {
+      "name": "tender",
+      "until": "penalty"
+    },
+    "machine": {
+      "name": "temple",
+      "until": "confess"
+    }
+  },
+  "no_whoosh": [
+    "cold",
+    "end",
+    "tag"
+  ],
+  "voices": {
+    "straw": {
+      "name": "NURSE STRAWBERRY",
+      "voice": "af_heart",
+      "lang": "en-us",
+      "speed": 1.1,
+      "semis": 0,
+      "color": "#ff3b55"
+    },
+    "mango": {
+      "name": "CNA MANGO",
+      "voice": "af_bella",
+      "lang": "en-us",
+      "speed": 1.14,
+      "semis": -3,
+      "color": "#ff9f1c"
+    },
+    "kum": {
+      "name": "KUMQUAT, CORPORATE",
+      "voice": "am_puck",
+      "lang": "en-us",
+      "speed": 1.17,
+      "semis": 1,
+      "color": "#e8a86a"
+    },
+    "melon": {
+      "name": "ADMINISTRATOR MELON",
+      "voice": "am_echo",
+      "lang": "en-us",
+      "speed": 1.05,
+      "semis": -2,
+      "color": "#d9b979"
+    },
+    "pear": {
+      "name": "MR. PEAR",
+      "voice": "am_fenrir",
+      "lang": "en-us",
+      "speed": 0.95,
+      "semis": -1,
+      "color": "#c9d22a"
+    },
+    "pa": {
+      "name": "THE LEADERBOARD",
+      "voice": "af_sarah",
+      "lang": "en-us",
+      "speed": 1.12,
+      "semis": 0,
+      "color": "#8fe7f4"
+    }
+  },
+  "scenes": [
+    {
+      "id": "cold",
+      "clock": "7:02 PM",
+      "label": "NEW RECORD",
+      "head": 0.2,
+      "tail": 0.2,
+      "beats": [
+        {
+          "id": "flash",
+          "pause": 1.15,
+          "sfx": [
+            [
+              "fanfare",
+              0,
+              0.85
+            ],
+            [
+              "ding1",
+              0.2,
+              0.7
+            ]
+          ]
+        },
+        {
+          "id": "p1",
+          "who": "pa",
+          "say": "New record! Zero point eight seconds!",
+          "text": "New record! Zero point eight seconds!"
+        },
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "I... just touched the button.",
+          "text": "I... just touched the button."
+        },
+        {
+          "id": "p2",
+          "who": "pear",
+          "say": "Beautiful. Could somebody help with my blanket?",
+          "text": "Beautiful. Could somebody help with my blanket?"
+        },
+        {
+          "id": "freeze",
+          "pause": 0.8,
+          "sfx": [
+            [
+              "trombone",
+              0.1,
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "launch",
+      "clock": "7:05 PM",
+      "label": "THE ROLLOUT",
+      "head": 0.2,
+      "tail": 0.45,
+      "beats": [
+        {
+          "id": "k1",
+          "who": "kum",
+          "say": "Good evening, team! I'm Kumquat. Vice President of Speed.",
+          "text": "Good evening, team! I'm Kumquat. Vice President of Speed."
+        },
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "Of nursing?",
+          "text": "Of nursing?"
+        },
+        {
+          "id": "k2",
+          "who": "kum",
+          "say": "Of speed. Different department.",
+          "text": "Of speed. Different department."
+        },
+        {
+          "id": "m1",
+          "who": "melon",
+          "say": "Corporate wants every call light answered in five seconds.",
+          "text": "Corporate wants every call light answered in five seconds."
+        },
+        {
+          "id": "g1",
+          "who": "mango",
+          "say": "And the resident helped?",
+          "text": "And the resident helped?"
+        },
+        {
+          "id": "k3",
+          "who": "kum",
+          "say": "We didn't buy that software.",
+          "text": "We didn't buy that software."
+        },
+        {
+          "id": "s2",
+          "who": "straw",
+          "say": "So what exactly are we measuring?",
+          "text": "So what exactly are we measuring?"
+        },
+        {
+          "id": "k4",
+          "who": "kum",
+          "say": "The button. Oh, we measure that button beautifully.",
+          "text": "The button. Oh, we measure that button beautifully."
+        },
+        {
+          "id": "demo",
+          "pause": 1,
+          "sfx": [
+            [
+              "ding1",
+              0.12,
+              0.7
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "race",
+      "clock": "7:13 PM",
+      "label": "THE FIVE-SECOND GAMES",
+      "head": 0.2,
+      "tail": 0.45,
+      "beats": [
+        {
+          "id": "start",
+          "pause": 1,
+          "sfx": [
+            [
+              "gong",
+              0,
+              0.6
+            ],
+            [
+              "fanfare",
+              0.2,
+              0.45
+            ]
+          ]
+        },
+        {
+          "id": "pa1",
+          "who": "pa",
+          "say": "Nurse Strawberry: four point nine seconds. Silver medal.",
+          "text": "Nurse Strawberry: four point nine seconds. Silver medal."
+        },
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "I was changing a pillowcase.",
+          "text": "I was changing a pillowcase."
+        },
+        {
+          "id": "k1",
+          "who": "kum",
+          "say": "Excuses don't fit on the dashboard.",
+          "text": "Excuses don't fit on the dashboard."
+        },
+        {
+          "id": "g1",
+          "who": "mango",
+          "say": "The button in room four is already lit.",
+          "text": "The button in room four is already lit."
+        },
+        {
+          "id": "press",
+          "pause": 0.8,
+          "sfx": [
+            [
+              "ding1",
+              0.13,
+              0.65
+            ]
+          ]
+        },
+        {
+          "id": "pa2",
+          "who": "pa",
+          "say": "CNA Mango: one point two seconds!",
+          "text": "CNA Mango: one point two seconds!"
+        },
+        {
+          "id": "g2",
+          "who": "mango",
+          "say": "I haven't even walked into the room.",
+          "text": "I haven't even walked into the room."
+        },
+        {
+          "id": "k2",
+          "who": "kum",
+          "say": "Exactly. World-class efficiency.",
+          "text": "Exactly. World-class efficiency."
+        },
+        {
+          "id": "reset",
+          "pause": 0.65,
+          "sfx": [
+            [
+              "trombone",
+              0,
+              0.4
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "listening",
+      "clock": "8:01 PM",
+      "label": "ROOM 8 — MR. PEAR",
+      "head": 0.2,
+      "tail": 0.65,
+      "beats": [
+        {
+          "id": "p1",
+          "who": "pear",
+          "say": "You know, I used to be a teacher.",
+          "text": "You know, I used to be a teacher."
+        },
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "Really? What did you teach?",
+          "text": "Really? What did you teach?"
+        },
+        {
+          "id": "p2",
+          "who": "pear",
+          "say": "History. My students never listened either.",
+          "text": "History. My students never listened either."
+        },
+        {
+          "id": "s2",
+          "who": "straw",
+          "say": "I'm listening.",
+          "text": "I'm listening."
+        },
+        {
+          "id": "stay",
+          "pause": 1.75
+        },
+        {
+          "id": "p3",
+          "who": "pear",
+          "say": "Thank you for staying a minute.",
+          "text": "Thank you for staying a minute."
+        },
+        {
+          "id": "penalty",
+          "pause": 1,
+          "sfx": [
+            [
+              "err",
+              0.18,
+              0.6
+            ]
+          ]
+        },
+        {
+          "id": "pa1",
+          "who": "pa",
+          "say": "Warning! Four minutes of unscored interaction.",
+          "text": "Warning! Four minutes of unscored interaction."
+        },
+        {
+          "id": "s3",
+          "who": "straw",
+          "say": "That was the care.",
+          "text": "That was the care."
+        },
+        {
+          "id": "k1",
+          "who": "kum",
+          "say": "Respectfully, care is a terrible metric.",
+          "text": "Respectfully, care is a terrible metric."
+        }
+      ]
+    },
+    {
+      "id": "solution",
+      "clock": "8:09 PM",
+      "label": "THE ZERO-SECOND SOLUTION",
+      "head": 0.2,
+      "tail": 0.45,
+      "beats": [
+        {
+          "id": "m1",
+          "who": "melon",
+          "say": "Our score went down. Fix it.",
+          "text": "Our score went down. Fix it."
+        },
+        {
+          "id": "k1",
+          "who": "kum",
+          "say": "Observe my innovation: an automatic button-answering hand!",
+          "text": "Observe my innovation: an automatic button-answering hand!"
+        },
+        {
+          "id": "reveal",
+          "pause": 1.45,
+          "sfx": [
+            [
+              "fanfare",
+              0.1,
+              0.7
+            ],
+            [
+              "pumps",
+              0.35,
+              0.5
+            ]
+          ]
+        },
+        {
+          "id": "pa1",
+          "who": "pa",
+          "say": "Zero seconds! Perfect compliance!",
+          "text": "Zero seconds! Perfect compliance!"
+        },
+        {
+          "id": "g1",
+          "who": "mango",
+          "say": "It's a glove on a spring.",
+          "text": "It's a glove on a spring."
+        },
+        {
+          "id": "k2",
+          "who": "kum",
+          "say": "Patent pending.",
+          "text": "Patent pending."
+        },
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "And what happens when somebody actually needs us?",
+          "text": "And what happens when somebody actually needs us?"
+        },
+        {
+          "id": "k3",
+          "who": "kum",
+          "say": "Next slide.",
+          "text": "Next slide."
+        }
+      ]
+    },
+    {
+      "id": "machine",
+      "clock": "8:11 PM",
+      "label": "SYSTEM ERROR",
+      "head": 0.2,
+      "tail": 0.45,
+      "beats": [
+        {
+          "id": "shake",
+          "pause": 1,
+          "sfx": [
+            [
+              "err",
+              0.12,
+              0.7
+            ]
+          ]
+        },
+        {
+          "id": "pa1",
+          "who": "pa",
+          "say": "Help. Help. Can somebody help?",
+          "text": "Help. Help. Can somebody help?"
+        },
+        {
+          "id": "k1",
+          "who": "kum",
+          "say": "The dashboard's overheated! Somebody touch its reset button!",
+          "text": "The dashboard's overheated! Somebody touch its reset button!"
+        },
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "What's wrong with it?",
+          "text": "What's wrong with it?"
+        },
+        {
+          "id": "k2",
+          "who": "kum",
+          "say": "It's worked all evening. Nobody's checked on it.",
+          "text": "It's worked all evening. Nobody's checked on it."
+        },
+        {
+          "id": "p1",
+          "who": "pear",
+          "say": "Sounds familiar.",
+          "text": "Sounds familiar."
+        },
+        {
+          "id": "confess",
+          "pause": 1.1
+        },
+        {
+          "id": "s2",
+          "who": "straw",
+          "say": "Alright, Dashboard. What do you need?",
+          "text": "Alright, Dashboard. What do you need?"
+        },
+        {
+          "id": "pa2",
+          "who": "pa",
+          "say": "A break. And a less stupid job.",
+          "text": "A break. And a less stupid job."
+        },
+        {
+          "id": "silence",
+          "pause": 0.7,
+          "sfx": [
+            [
+              "trombone",
+              0,
+              0.5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "score",
+      "clock": "8:15 PM",
+      "label": "THE REAL SCORE",
+      "head": 0.2,
+      "tail": 0.45,
+      "beats": [
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "New rule. We answer the bell, and we finish helping.",
+          "text": "New rule. We answer the bell, and we finish helping."
+        },
+        {
+          "id": "g1",
+          "who": "mango",
+          "say": "I'm putting that on the board.",
+          "text": "I'm putting that on the board."
+        },
+        {
+          "id": "write",
+          "pause": 1.15,
+          "sfx": [
+            [
+              "scribble",
+              0.15,
+              0.6
+            ]
+          ]
+        },
+        {
+          "id": "m1",
+          "who": "melon",
+          "say": "Why are the response numbers getting worse?",
+          "text": "Why are the response numbers getting worse?"
+        },
+        {
+          "id": "p1",
+          "who": "pear",
+          "say": "They aren't. Your scoreboard was wrong.",
+          "text": "They aren't. Your scoreboard was wrong."
+        },
+        {
+          "id": "k1",
+          "who": "kum",
+          "say": "Then what do I put in tomorrow's PowerPoint?",
+          "text": "Then what do I put in tomorrow's PowerPoint?"
+        },
+        {
+          "id": "s2",
+          "who": "straw",
+          "say": "Try a picture of somebody doing the job.",
+          "text": "Try a picture of somebody doing the job."
+        },
+        {
+          "id": "look",
+          "pause": 1
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "clock": "11:00 PM",
+      "label": "CREDITS",
+      "head": 0.2,
+      "tail": 0.4,
+      "beats": [
+        {
+          "id": "title",
+          "pause": 2.5,
+          "sfx": [
+            [
+              "sting",
+              0.05,
+              0.55
+            ]
+          ]
+        },
+        {
+          "id": "g1",
+          "who": "mango",
+          "say": "So who won the trophy?",
+          "text": "So who won the trophy?"
+        },
+        {
+          "id": "s1",
+          "who": "straw",
+          "say": "Don't ask.",
+          "text": "Don't ask."
+        },
+        {
+          "id": "credits",
+          "pause": 2.2
+        }
+      ]
+    },
+    {
+      "id": "tag",
+      "clock": "11:01 PM",
+      "label": "EMPLOYEE OF THE MONTH",
+      "head": 0.2,
+      "tail": 0.35,
+      "beats": [
+        {
+          "id": "medal",
+          "pause": 1,
+          "sfx": [
+            [
+              "fanfare",
+              0,
+              0.6
+            ]
+          ]
+        },
+        {
+          "id": "pa1",
+          "who": "pa",
+          "say": "Congratulations. Employee of the month: the wall.",
+          "text": "Congratulations. Employee of the month: the wall."
+        },
+        {
+          "id": "p1",
+          "who": "pear",
+          "say": "At least the wall stays when you talk to it.",
+          "text": "At least the wall stays when you talk to it."
+        },
+        {
+          "id": "final",
+          "pause": 0.8,
+          "sfx": [
+            [
+              "trombone",
+              0,
+              0.4
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
