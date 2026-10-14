@@ -10,7 +10,7 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:17 |
 | 4: The New Grad | [`shift-happens-ep4.mp4`](shift-happens-ep4.mp4) | 2:09 |
 | 5: Full Moon | [`shift-happens-ep5.mp4`](shift-happens-ep5.mp4) | 2:59 |
-| 6: Five Seconds | **In production — not yet rendered** | TBD (voice-timed) |
+| 6: Five Seconds | [`shift-happens-ep6.mp4`](shift-happens-ep6.mp4) | 2:08 |
 
 To play an episode live in the browser, start a local server in this directory and open
 `http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 6 for other episodes):
@@ -55,7 +55,7 @@ leads a quest for the one blood pressure cuff that works. A runaway laundry cart
 and a changed Wi-Fi password bring the score to seven. The real cause is staffing; the Moon is not even full
 until tomorrow. Night Nurse Dragonfruit arrives rested, and the Sun claims sundowning in the post-credits scene.
 
-## Episode 6: Five Seconds (production in progress)
+## Episode 6: Five Seconds
 
 Kumquat, corporate's Vice President of Speed, rolls out a call-light leaderboard. A resident's
 needs don't count; only the first touch of the button counts. Staff become athletes, a mechanical
@@ -64,9 +64,7 @@ replace the metric with a simpler rule: answer the bell **and finish helping**. 
 Employee of the Month. This episode has an all-new corporate arena, racing hallway, room-eight
 conversation, overheated server room, podium tag, and episode-only IK arm/leg rig.
 
-**Status:** Script and procedural animation sources implemented; exported voiced MP4 and visual,
-audio, clinical and platform QC are **not completed**. `build/ep6/timeline.js` is an approximate
-silent-preview timing guide until Kokoro regenerates it. See [EP6_PRODUCTION.md](EP6_PRODUCTION.md).
+**Status:** Voiced 1080×1920 / 30 fps H.264/AAC MP4 rendered and end-to-end decode checked (128.23 seconds). The 30 fps layout and rig audit reported zero issues across 3,847 sampled frames. Visual still-frame review was performed and led to an independent demonstration lab and lower bed blanket to leave Pear's speaking mouth visible. Frame-accurate perceptual and full listening sign-off by a human is still pending. `build/ep6/timeline.js` is now the actual Kokoro-produced lip-sync timeline. See [EP6_PRODUCTION.md](EP6_PRODUCTION.md).
 
 ## The cast
 
