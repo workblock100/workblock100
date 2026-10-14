@@ -304,6 +304,7 @@ function drawChar(o) {
 }
 
 function drawLegs(o, k, t) {
+  if (EP && EP.num === 6 && window.EP6_RIG?.drawLegs(o, k, t)) return;
   const hipY = k.shape === 'straw' ? k.ry * .7 : k.shape === 'banana' ? k.ry * .78 : k.shape === 'star' ? k.ry * .74 : k.ry * .8;
   const hx = k.hip || k.rx * .32, L = k.leg || 90;
   const cx = k.shape === 'banana' ? k.rx * .12 : 0;
@@ -674,6 +675,7 @@ function shoulder(k, side) {
 }
 
 function drawArms(o, k, t) {
+  if (EP && EP.num === 6 && window.EP6_RIG?.drawArms(o, k, t)) return;
   const arms = o.arms || {};
   for (const side of [-1, 1]) {
     const key = side < 0 ? 'l' : 'r';
@@ -2206,6 +2208,7 @@ function renderAt(t) {
   const lt = T - CUR.start;
   const S = EP.SCENES[CUR.id];
   REG.items = []; REG.errors = []; REG.order = 0; REG.phase = 'world';
+  if (EP.num === 6) window.EP6_RIG?.beginFrame();
   ctx = mainCtx;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1; ctx.filter = 'none';
@@ -2271,6 +2274,13 @@ function drawPanel(S, lt) {
   rr(W - 104, iy - 17, 60, 34, 17); ctx.fillStyle = '#ff3b55'; ctx.fill();
   text('EP.' + EP.num, W - 74, iy + 1, { size: 20, fill: '#fff' });
   drawPanelCaption(T);
+  // Episode 6's dedicated social export has no fake player/progress controls.
+  if (EP.num === 6) {
+    text('FRUIT BOWL REHAB & NURSING   /   3–11 SHIFT', W / 2, H - 49,
+      { size: 22, weight: 800, fill: '#9e93ae' });
+    reg('panel', [0, y0, W, H], { id: 'panel' });
+    return;
+  }
   // episode progress
   const p = T / TL.duration;
   text(EP.title, 44, H - 70, { size: 22, weight: 800, fill: '#8f86a0', align: 'left' });
@@ -2363,6 +2373,7 @@ function checkFrame() {
       if (a.box[0] < x0 + m - .5 || a.box[1] < y0 + m - .5 || a.box[2] > x1 - m + .5 || a.box[3] > y1 - m + .5) V.push(`${name(a)} cut off at frame edge [${a.box.map(Math.round)}]`);
     }
   }
+  if (EP.num === 6) V.push(...(window.EP6_RIG?.validateFrame() || []));
   return V.concat(REG.errors);
 }
 function audit(start, end, step) {
