@@ -64,7 +64,7 @@ Use original generated tones/sounds from `build_audio.py`: the gong/fanfare for 
 ### Known limitations of the current draft
 
 - The remote rendering computer connection was unavailable in this chat; the working container could not access GitHub directly or retrieve the Kokoro model. Consequently the final voices, AAC track, MP4, rendered shot images, frame-by-frame audit and phone-size visual/audio sign-off are **not yet done**.
-- A JavaScript-only mocked Canvas smoke test verified registration and selected frames but **cannot validate aesthetic quality or real overlap metrics**. Fixes were made to character-specific rig reach after this test.
+- A JavaScript-only mocked Canvas smoke test sampled **630 time points at 0.25-second intervals** through all nine scenes with **zero IK/explicit-grip violations and zero JavaScript exceptions** after anchor corrections. It **cannot validate aesthetic quality or real overlap metrics**.
 - The storyboard times above are provisional. Re-render the timeline from real speech before deciding whether to tighten pauses or cut a short teaser.
 
 ## Thumbnail / social package
