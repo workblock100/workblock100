@@ -211,7 +211,7 @@ const SC = {
     else if (sh === 'cuS') faceZoom(c.straw, lerp(1.78, 1.96, k), 80);
     else if (sh === 'cuM') faceZoom(c.mango, lerp(1.9, 2.1, k), 80);
     else if (sh === 'two') zoomTo((c.straw.x + c.mango.x) / 2 - 14, 975, lerp(1.1, 1.16, k));
-    else if (sh === 'pa') zoomTo(540, 992, lerp(1.17, 1.27, easeIO(k)));
+    else if (sh === 'pa') zoomTo(540, 992, lerp(1.10, 1.19, easeIO(k)));
     else if (sh === 'blast') {
       const all = b('all'), bump = [.1, .4, .7, 1.0].reduce((q, d) => q + Math.max(0, 1 - (lt - all.s - d) / .2) * (lt >= all.s + d ? 1 : 0), 0);
       zoomTo(540, 985, 1.04 + .03 * bump + .02 * k); CAM.shake = 7 * (1 - .4 * k);

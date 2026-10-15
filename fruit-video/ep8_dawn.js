@@ -123,8 +123,8 @@ const SCENE = {
     else if (sh === 'two') {
       const fs = faceC({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }), k = seg(lt, b('s4').s - .4, b('set').s + .25), kk = seg(lt, b('s6').s - .1, b('s6').e + .4);
       const late = lt > b('set').s + .5;
-      if (!late) zoomTo(445, lerp(fs[1] - 30, fs[1] - 20, k) + 120 / 1.4, lerp(1.33, 1.42, k));
-      else zoomTo(445, lerp(960, 945, kk), lerp(1.25, 1.36, kk));
+      if (!late) zoomTo(462, lerp(fs[1] - 30, fs[1] - 20, k) + 120 / 1.4, lerp(1.22, 1.30, k));   // wide enough that Strawberry's clipboard and Goji's hand and Z are both inside
+      else zoomTo(469, lerp(960, 945, kk), lerp(1.25, 1.36, kk));
     }
     else if (sh === 'wideSet') { const k = seg(lt, b('set').s + .25, b('m4').s); zoomTo(lerp(470, 520, k), lerp(980, 1010, k), lerp(1.3, 1.0, easeIO(k))); }
   },

@@ -232,10 +232,10 @@ window.__EP8_SCENES.break = {
     const fzS = (z, up = 80) => faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s, noLegs: c.straw.noLegs, lift: c.straw.lift }, z / c.straw.s, up);
     const fzM = (z, up = 80) => faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s, noLegs: c.mango.noLegs, lift: (c.mango.lift || 0) }, z / c.mango.s, up);
     if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(lerp(535, 525, k), lerp(1045, 1035, k), lerp(1.2, 1.28, k)); }
-    else if (sh === 'cuS1') fzS(2.7, 90);
+    else if (sh === 'cuS1') fzS(2.3, 90);
     else if (sh === 'cuM1') fzM(2.6, 90);
-    else if (sh === 'cuS2') { const k = seg(lt, b('s2').s - .05, plopT()); fzS(lerp(2.6, 2.75, k), 90); }
-    else if (sh === 'hold') { const k = seg(lt, plopT() - .06, b('s4').s); zoomTo(lerp(546, 540, k), lerp(1062, 1050, k), lerp(1.16, 1.25, k)); }
+    else if (sh === 'cuS2') { const k = seg(lt, b('s2').s - .05, plopT()); fzS(lerp(2.25, 2.4, k), 90); }
+    else if (sh === 'hold') { const k = seg(lt, plopT() - .06, b('s4').s); zoomTo(lerp(552, 546, k), lerp(1062, 1050, k), lerp(1.12, 1.17, k)); }
     else if (sh === 'cuS4') { const k = seg(lt, b('s4').s - .05, b('m3').s); fzS(lerp(2.5, 2.62, k), 95); }
     else if (sh === 'cuM3') fzM(2.6, 90);
     else if (sh === 'cuS5') { const k = seg(lt, b('s5').s - .05, b('dab').s); fzS(lerp(2.55, 2.85, easeIO(k)), 95); }
@@ -290,7 +290,7 @@ window.__EP8_SCENES.break = {
     if (sh !== 'card') {
       const c = cast(lt), [fx, fy] = faceC({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s, noLegs: c.straw.noLegs, lift: 0 }), [sx, sy] = toScr(fx, fy);
       sfxWord(lt, plopT() + .02, 'FWUMP', clamp(sx - 220, 230, 850), clamp(sy - 390, 330, 700), { fill: '#ffe135', size: 110, rot: -.1 });
-      sfxWord(lt, t('ring') + .05, 'BRRRING!', 640, 400, { fill: '#ff6a78', size: 124, hold: .75, rot: .05 });
+      sfxWord(lt, t('ring') + .05, 'BRRRING!', 640, 400, { fill: '#ff6a78', size: 124, hold: .5, rot: .05 });   // gone before the cut to the close-up
     } else {
       sfxWord(lt, t('dab') + .5, 'BINGO!', 540, 1450, { fill: '#ff7ac8', size: 200, hold: 1.0, rot: -.06 });
     }

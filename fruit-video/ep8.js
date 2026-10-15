@@ -90,8 +90,8 @@ SCENES.title = {
     V2.opts.reflect = false;
     const fy = 1700, s0 = easeBack(seg(lt, 1.0, 1.5)), m0 = easeBack(seg(lt, 1.2, 1.7));
     ctx.fillStyle = V2.grad(0, fy - 30, 0, H, [[0, 'rgba(18,12,48,0)'], [.1, 'rgba(18,12,48,.92)'], [1, 'rgba(6,4,20,1)']]); ctx.fillRect(0, fy - 30, W, H - fy + 30);
-    if (s0 > 0) drawChar(straw({ x: 220, y: fy, s: 1.2 * s0, expr: 'dead', look: [.5, -.2], lid: .55, hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: 'rest', r: 'hold' }, transit: lt < 1.8 }));
-    if (m0 > 0) drawChar(mango({ x: 860, y: fy, s: 1.2 * m0, expr: 'happy', look: [-.5, -.1], arms: { l: 'cheer', r: 'cheer' }, t: lt + 1, transit: lt < 1.9 }));
+    if (s0 > 0) drawChar(straw({ x: 252, y: fy, s: 1.2 * s0, expr: 'dead', look: [.5, -.2], lid: .55, hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: 'rest', r: 'hold' }, transit: lt < 1.8 }));
+    if (m0 > 0) drawChar(mango({ x: 828, y: fy, s: 1.2 * m0, expr: 'happy', look: [-.5, -.1], arms: { l: 'cheer', r: 'cheer' }, t: lt + 1, transit: lt < 1.9 }));
     // the logo slams on the downbeat
     const k = seg(lt, hit, hit + .4);
     if (k > 0) {

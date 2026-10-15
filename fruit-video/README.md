@@ -105,8 +105,8 @@ post-credits card is an ID badge that says TEMP and the words The Agency Nurse.
 Episode 8 renders through the same v2 renderer and the same hard layout gate as Episodes 6 and 7, with new pieces on top: a sixteen-hour
 sky and clock face for the title (afternoon, sunset, night and dawn on one dial); a whiteboard that rewrites itself and strikes a name
 through; a phone call in a picture-in-picture ring; a full-screen mandation form with a stamp and a signature that writes itself; a
-RESIDENTS 40 / NURSES 1 counter that slams onto the screen; a break countdown that stops at 0:40 and a PERSONAL BEST badge; the bingo card payoff as a stamped full-screen insert; a Moon that sets
-behind the window sill with a sky that runs from night to gold and light rays that reach the bed; and a sunrise end card.
+RESIDENTS 40 / NURSES 1 counter that slams onto the screen; a break countdown that stops at 0:40 and a PERSONAL BEST badge; the bingo card payoff as a daubed full-screen insert; a Moon that sets
+behind the rooftops with a sky that runs from night to gold and light rays that reach the bed; and a sunrise end card.
 
 ## The cast
 
