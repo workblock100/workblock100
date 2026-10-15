@@ -12,9 +12,10 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 5: Full Moon | [`shift-happens-ep5.mp4`](shift-happens-ep5.mp4) | 2:59 |
 | 6: Alarm Fatigue | [`shift-happens-ep6.mp4`](shift-happens-ep6.mp4) | 3:04 |
 | 7: The Actual Full Moon | [`shift-happens-ep7.mp4`](shift-happens-ep7.mp4) | 2:56 |
+| 8: The Double Shift | [`shift-happens-ep8.mp4`](shift-happens-ep8.mp4) | 2:06 |
 
 To play an episode live in the browser, start a local server in this directory and open
-`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 7 for other episodes):
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 8 for other episodes):
 
 ```bash
 python3 -m http.server 8000
@@ -88,6 +89,25 @@ a bingo card that is a prop, a HUD counter and a full-screen insert, daubed squa
 phone calls; a ball-wipe transition; a dolly zoom when the word is said; a whiteboard that writes itself; a seven-segment
 sign; the Moon as a lit character in a window; and two-line captions that split evenly instead of leaving a lone word.
 
+## Episode 8: The Double Shift
+
+Episode 7 ended on a clock and the words The Double Shift. At 10:52 PM, eight minutes before the end of the 3-11, the Charge
+Nurse tells Strawberry to sit down: the night nurse has called out. Dragonfruit, on the phone from under a blanket, explains that
+last night was quiet and she is not going back there, which resets the hours-since-the-Q-word sign from a hundred miles away.
+Strawberry is now the three to seven ("That is not math." "It is staffing."), a Staffing Notice offers two boxes (I volunteer, I was
+told) and a red MANDATORY stamp, and Mango stays too, because of time and a half. At 2:47 AM the hall has forty residents, one nurse
+and an overhead page announcing that breaks are available, which means nobody. At 3:34 AM Strawberry gets forty seconds of break, a
+personal best, and uses them to daub the one square left on Mango's Episode 7 bingo card: BREAK, the middle, a bingo. At 6:40 AM, in
+Room 14, the Moon (also on a double: eclipses are four minutes, on a good one) sets while the sky turns to sunrise. At 7:00 AM
+Strawberry tells the day nurse the night was quiet. The sign resets, every call light goes off, and she is back at three. "Yes." The
+post-credits card is an ID badge that says TEMP and the words The Agency Nurse.
+
+Episode 8 renders through the same v2 renderer and the same hard layout gate as Episodes 6 and 7, with new pieces on top: a sixteen-hour
+sky and clock face for the title (afternoon, sunset, night and dawn on one dial); a whiteboard that rewrites itself and strikes a name
+through; a phone call in a picture-in-picture ring; a full-screen mandation form with a stamp and a signature that writes itself; a
+RESIDENTS 40 / NURSES 1 counter that slams onto the screen; a break countdown that stops at 0:40 and a PERSONAL BEST badge; the bingo card payoff as a stamped full-screen insert; a Moon that sets
+behind the window sill with a sky that runs from night to gold and light rays that reach the bed; and a sunrise end card.
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -120,25 +140,26 @@ sign; the Moon as a lit character in a window; and two-line captions that split 
 | Pomegranate | Fire Marshal (Ep. 6) | Arrives at 7:05 with a flashlight, a helmet and a mustache. Asks who is in charge |
 | Papaya | Activities Director (Ep. 7) | Calls bingo like a game-show host, in a sun visor, with a microphone she does not need |
 | Goji | Resident, Room 14 (Ep. 7) | Is the wolf. Has not had water since lunch. It is a UTI |
+| Mr. Lime | Day nurse (Ep. 8; a resident who hears chirps in Ep. 6) | Arrives at 7:00 with a 7-3 mug and asks how the night was |
 
 ## Layout audit
 
 `node render.js audit` checks every on-screen box (faces, hands, props, captions, HUD, cards) for anything covered, cut off
-or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 and 7 are checked at 30 frames per second and the command
-exits non-zero on any issue, so it works as a release gate (`EP=7 node render.js audit 0.0333333333`).
+or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 8 are checked at 30 frames per second and the command
+exits non-zero on any issue, so it works as a release gate (`EP=8 node render.js audit 0.0333333333`).
 
 ## How it's made
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep7.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep8.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
-  Episodes 6 and 7 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py`, `build_music7.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`.
+  Episodes 6 to 8 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py`, `build_music7.py`, `build_music8.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8.
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 5; `ep1.js` to `ep7.js` are the episodes. Episode 5's new art and sets live in
+  Episodes 2 to 5; `ep1.js` to `ep8.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`). Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
-  Episodes 6 and 7 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
+  Episodes 6 to 8 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
   with two-bone arms and real hands) that Episodes 1 to 5 never touch. Episode 7's art, sets and inserts are `ep7_art.js`, `ep7_sets.js` and `ep7_ins.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
@@ -197,3 +218,18 @@ EP=7 node render.js preview 3.2 60 110 140 170                              # st
 `script_ep7.json` holds the scenes, lines, voices and sound cues; `build_music7.py` is the score and reuses the instruments in
 `build_music6.py`; `ep7.js` has the scenes, `ep7_sets.js` the sets (parking lot, station, activity room, Room 14), `ep7_art.js`
 the new fruit, props and the bingo card, and `ep7_ins.js` the inserts (balls, cage, thermometer, pitcher, phone, report, clock).
+
+## Episode 8 build and release gate
+
+```bash
+python3 build_audio8.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin   # voices, stereo mix, score, lip-sync -> build/ep8/audio.wav, timeline.js
+EP=8 node render.js events 15                                               # footsteps from the animation -> build/ep8/events.json (then run build_audio8.py again)
+EP=8 node render.js audit 0.0333333333                                      # hard gate: exits non-zero on any layout issue
+ffmpeg -y -i build/ep8/audio.wav -c:a aac -b:a 192k build/ep8/audio.m4a     # browser playback and CI
+EP=8 FMT=image/png CRF=21 node render.js video shift-happens-ep8.mp4
+```
+
+`script_ep8.json` holds the scenes, lines, voices and sound cues; `build_audio8.py` reuses Episode 7's sound effects and beds, and
+`build_music8.py` is the score (it reuses the instruments in `build_music6.py` and `build_music7.py`); `ep8.js` has the title, the
+station, the 7 AM report and the end card, and `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js` the three night scenes, all on the
+Episode 6 and 7 sets and art kits.

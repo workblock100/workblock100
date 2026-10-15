@@ -27,4 +27,9 @@ build/ep7/*
 !build/ep7/timeline.js
 !build/ep7/audio.m4a
 !build/ep7/events.json
+!build/ep8/
+build/ep8/*
+!build/ep8/timeline.js
+!build/ep8/audio.m4a
+!build/ep8/events.json
 __pycache__/
