@@ -9,7 +9,7 @@ What is new here:
   - foley placed by the animation: build/ep6/events.json is written by `node render.js events` from the footfalls and contacts in the scenes
   - the master is measured and normalized to about -16 LUFS with a true-peak safe limiter
 
-Usage: python3 build_audio6.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--script script_ep6.json --out build/ep6 --var TIMELINE_EP6]
+Usage: python3 build_audio6.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--script script_ep6.json --out build/ep6 --var TIMELINE_EP6 --music build_music6]
 """
 import argparse
 import hashlib
@@ -512,6 +512,7 @@ def main():
     ap.add_argument("--out", default="build/ep6")
     ap.add_argument("--var", default="TIMELINE_EP6")
     ap.add_argument("--events", default="")
+    ap.add_argument("--music", default="build_music6", help="module that provides score(script, scenes, lines, N)")
     args = ap.parse_args()
     global BUILD
     BUILD = os.path.join(HERE, args.out)
@@ -625,7 +626,8 @@ def main():
     # music: scene beds from build_music6
     music = np.zeros_like(dry)
     try:
-        import build_music6 as BM
+        import importlib
+        BM = importlib.import_module(args.music)
         music = BM.score(script, scenes_out, lines_out, N)
     except ImportError:
         pass

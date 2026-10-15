@@ -1,0 +1,62 @@
+name: Render Shift Happens episode
+# Manual only. Renders a committed episode (Episode 6 or 7) from its committed audio and timeline (build/epN/audio.m4a,
+# timeline.js), runs the strict 30 fps layout audit, and uploads the MP4 and the QA record as a workflow artifact.
+# It never commits or pushes.
+on:
+  workflow_dispatch:
+    inputs:
+      episode:
+        description: Episode to render
+        type: choice
+        options: ['7', '6']
+        default: '7'
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      EP: ${{ inputs.episode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install rendering dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg chromium
+          cd fruit-video
+          npm install --no-save playwright
+      - name: Layout audit, every frame at 30 fps (hard gate)
+        working-directory: fruit-video
+        env:
+          CHROMIUM: /usr/bin/chromium
+        run: |
+          mkdir -p build/ep$EP
+          node render.js audit 0.0333333333 | tee build/ep$EP/layout_audit.log
+          test ${PIPESTATUS[0]} -eq 0
+      - name: Render H.264/AAC MP4 from the committed audio
+        working-directory: fruit-video
+        env:
+          CHROMIUM: /usr/bin/chromium
+          WORKERS: '4'
+          FMT: 'image/png'
+          CRF: '21'
+          AUDIO: build/ep${{ inputs.episode }}/audio.m4a
+        run: |
+          node render.js video shift-happens-ep$EP.mp4
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json shift-happens-ep$EP.mp4 | tee build/ep$EP/ffprobe.json
+          ffmpeg -v error -i shift-happens-ep$EP.mp4 -f null -
+      - name: Save the movie and the QA record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shift-happens-ep${{ inputs.episode }}-review
+          path: |
+            fruit-video/shift-happens-ep${{ inputs.episode }}.mp4
+            fruit-video/build/ep${{ inputs.episode }}/ffprobe.json
+            fruit-video/build/ep${{ inputs.episode }}/layout_audit.log
+          if-no-files-found: warn
+          retention-days: 30

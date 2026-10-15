@@ -912,6 +912,8 @@ SCENES.post = {
   },
 };
 
+// shared helpers for later v2 episodes (Episode 7 reuses the placement, camera and hallway helpers below)
+window.H6 = { pathDist, person, still, runner, move, zoomTo, faceC, faceZoom, faceOf, drawBg, drawCast, inB, aft, bef, lerpA, localOf, pointAt, localToScreen, smokeHaze, hallDoors, bgDome, flick, HALL, KINDS6, grad2, confetti, CROWD };
 window.__EP6_SCENES = SCENES;
 EPISODES[6] = { num: 6, v2: true, title: 'Episode 6: Alarm Fatigue', TL: window.TIMELINE_EP6, SCENES, layout: 'v2', audio: 'build/ep6/audio.m4a' };
 })();

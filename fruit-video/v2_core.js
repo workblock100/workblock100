@@ -276,6 +276,12 @@ const V2 = (() => {
       lines[lines.length - 1].push([w, ww]); lw += ww + space;
     }
     if (lines.length > 2) REG.errors.push(`caption needs ${lines.length} lines: "${chunk.map(w => w[0]).join(' ')}"`);
+    if (EP.balanceCaps && lines.length === 2) {   // Episode 7 onward: split two-line captions evenly instead of leaving a lone word on the second line
+      const all = lines[0].concat(lines[1]), wd = a => a.reduce((q, [, ww]) => q + ww, 0) + space * (a.length - 1);
+      let best = null;
+      for (let i = 1; i < all.length; i++) { const x = all.slice(0, i), y = all.slice(i), m = Math.max(wd(x), wd(y)); if (wd(x) <= maxW && wd(y) <= maxW && (!best || m < best.m)) best = { x, y, m }; }
+      if (best) { lines[0] = best.x; lines[1] = best.y; }
+    }
     const fade = seg(lt, chunk[0][1] - .04, chunk[0][1] + .08);
     const baseY = 1536 - (lines.length - 1) * 38;
     // speaker chip
