@@ -325,7 +325,7 @@ SCENES.bingo = {
       items.push({ id: 'straw', o, z: p[1], draw: sharp => (sharp ? drawChar : drawBg)(o) }); }
     { const p = BRT.mango(lt), q = V2.at(...p), chasing = lt >= 30.9 && lt < 32.9, back = lt >= 32.9 && lt < 33.8;
       const o = mango(Object.assign(q, { stride: 46, look: [-.6, 0], expr: inB(lt, 'g1') ? 'angry' : inB(lt, 'g2') ? 'happy' : inB(lt, 'g3') ? 'happy' : lt >= b('ba1').s ? 'shock' : lt >= b('pi2').s && lt < b('s5').s ? 'sour' : 'neutral',
-        hold: { l: 'card7' }, grip: { l: [-100, -20] }, cardMarks: A7.marks(CUR.start + lt), cardNow: lt, arms: { l: 'hold', r: chasing ? 'flail' : inB(lt, 'g3') ? 'cheer' : 'rest' } }));
+        hold: { l: 'card7' }, grip: { l: [-100, -8] }, cardMarks: A7.marks(CUR.start + lt), cardNow: lt, arms: { l: 'hold', r: chasing ? 'flail' : inB(lt, 'g3') ? 'cheer' : 'rest' } }));
       if (chasing) { o.gaitW = lt * 360; o.axis = 'x'; o.dir = 1; o.transit = true; o.vx = 700; }
       if (back) { o.gaitW = pathDist(BRT.mango, lt); o.axis = 'x'; o.dir = -1; o.transit = true; }
       items.push({ id: 'mango', o, z: p[1], draw: sharp => (sharp ? drawChar : drawBg)(o) }); }
@@ -698,10 +698,10 @@ SCENES.end = {
   blur: lt => 1,
   over(lt) {
     const k = easeBack(seg(lt, 0, .45));
-    ctx.save(); ctx.translate(540, 0); ctx.scale(k, k);
+    if (k > .06) { ctx.save(); ctx.translate(540, 0); ctx.scale(k, k);
     text('SHIFT HAPPENS', 0, 330, { size: 92, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 18, stroke: '#150f22', spacing: 4, shadow: 20 });
     text('THE ACTUAL FULL MOON', 0, 450, { size: 112, font: 'Bangers', weight: 400, fill: '#d8e6ff', lw: 18, stroke: '#150f22', spacing: 4, shadow: 24 });
-    ctx.restore();
+    ctx.restore(); }
     const lines = [['For every nurse who has ever blamed the moon.', 42, '#ffffff', .8], ['It was a UTI. It is almost always a UTI.', 42, '#ffe135', 1.9], ['Never say the Q word.', 44, '#ffd1e6', 3.0]];
     lines.forEach(([s2, size, c, at], i) => text(s2, 540, 584 + i * 76, { size, fill: c, alpha: seg(lt, at, at + .3), weight: 900, lw: 9, maxW: 1000 }));
     const tk = easeBack(seg(lt, 4.2, 4.6));
