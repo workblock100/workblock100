@@ -121,6 +121,38 @@ EXT.acc.nightcap = (o, k, t, layer) => {
   ctx.fillStyle = '#fff'; ell(54 + sw, -118, 14, 14); ctx.fill(); ctx.stroke();
   ctx.restore();
 };
+EXT.acc.gaitbelt7 = (o, k, t, layer) => {   // the same belt as Episodes 5 and 6, worn at the waist so an open mouth (down to about .8 ry) is never behind it
+  if (layer !== 'front') return;
+  ctx.save(); bodyClip(o, k);
+  const y0 = k.ry * .7, h = 26, x0 = -k.rx * 1.2, w = k.rx * 2.4;
+  ctx.fillStyle = '#f2f1ea'; ctx.fillRect(x0, y0, w, h);
+  ctx.fillStyle = '#2a6fdb'; ctx.fillRect(x0, y0 + 4, w, 4); ctx.fillRect(x0, y0 + h - 8, w, 4);
+  ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.strokeRect(x0, y0, w, h);
+  ctx.fillStyle = '#c9d2dc'; rr(-34, y0 - 4, 38, h + 8, 6); ctx.fill(); ctx.stroke();
+  ctx.restore();
+};
+EXT.acc.badge7 = (o, k, t, layer) => {   // the ID badge from the engine, hung lower on the chest so a wide-open eye never touches its corner
+  if (layer !== 'front') return;
+  ctx.save(); ctx.translate(k.rx * .58, k.ry * .26); ctx.rotate(.08);
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-22, -14, 44, 56, 5); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e8193a'; ctx.fillRect(-16, -8, 32, 22);
+  const bt = o.badgeText || 'NURSE';
+  text(bt, 0, 28, { size: bt.length > 6 ? 8 : 10, fill: INK, maxW: 40 });
+  ctx.restore();
+};
+EXT.acc.keys7 = (o, k, t, layer) => {   // the key ring, hung from the waist belt
+  if (layer !== 'front') return;
+  ctx.save(); ctx.translate(-k.rx * .68, k.ry * .76); ctx.rotate(Math.sin(t * 2.4 + 1) * .07);
+  const cols = ['#d4af37', '#c0c6cf', '#d4af37', '#b87333', '#c0c6cf', '#d4af37', '#c0c6cf'];
+  for (let i = 0; i < 7; i++) {
+    ctx.save(); ctx.rotate(-1.2 + i * .4); ctx.translate(0, 12);
+    ctx.fillStyle = cols[i]; ctx.strokeStyle = INK; ctx.lineWidth = 2.5; rr(-4, 0, 8, 32 + (i % 3) * 6, 3); ctx.fill(); ctx.stroke();
+    ell(0, 36 + (i % 3) * 6, 8, 8); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.strokeStyle = '#8a8f98'; ctx.lineWidth = 5; ell(0, 0, 15, 15); ctx.stroke();
+  ctx.restore();
+};
 EXT.acc.peeled = (o, k, t, layer) => {   // Mr. Banana, mid-escape: cream fruit down to the hip, three strips of peel streaming behind
   if (layer !== 'mid') return;
   const open = o.peelOpen ?? 1, N = 30, cxOf = u => k.rx * .5 * Math.sin(PI * u) - k.rx * .1, hwOf = u => (k.rx * .78 * Math.pow(Math.sin(PI * u), .5) + 7) * .62;
@@ -169,7 +201,9 @@ EXT.prop.card7 = (side, o, t) => {   // a bingo card gripped by its lower edge, 
 // ------------------------------------------------------------------ constructors
 A.papaya = o => Object.assign({ kind: 'papaya', id: 'papaya', who: 'papa', s: SC, y: G, acc: ['visor', 'lanyard'], expr: 'happy', seed: 61 }, o);
 A.goji = o => Object.assign({ kind: 'goji', id: 'goji', who: 'goji', s: SC, y: G, acc: ['wolfears', 'gown'], expr: 'neutral', browColor: '#f2f2f2', browW: 11, seed: 67 }, o);
-A.straw = A6.straw; A.mango = A6.mango; A.pear = A6.pear;
+A.pear = A6.pear;
+A.mango = o => A6.mango(Object.assign({ acc: ['badge7', 'gaitbelt7', 'keys7'] }, o));
+A.straw = o => { const r = A6.straw(o); r.y += 8.9 * (r.s || 1); return r; };   // soles on the floor point: the contact shadow and the reflection now touch her shoes
 A.lemon = o => Object.assign({ kind: 'lemon', id: 'lemon', who: 'lemon', s: SC, y: G, acc: ['readers', 'lanyard'], expr: 'neutral' }, o);
 A.cran = o => Object.assign({ kind: 'cran', id: 'cran', who: 'cran', s: SC, y: G, acc: ['curlers', 'glasses'], expr: 'happy' }, o);
 A.banana = o => Object.assign({ kind: 'banana', id: 'banana', who: 'banana', s: SC, y: G, acc: [], expr: 'happy' }, o);
@@ -323,6 +357,8 @@ A.drawCard = (x, y, w, h, marks = [], o = {}) => {
     const i = r * 5 + c, cx0 = gx + c * cw, cy0 = gy + r * ch, free = i === 12;
     ctx.fillStyle = free ? V2.grad(cx0, cy0, cx0 + cw, cy0 + ch, [[0, '#ffe08a'], [1, '#ffb83a']]) : '#ffffff'; rr(cx0 + 2, cy0 + 2, cw - 4, ch - 4, mini ? 2 : 12); ctx.fill();
     ctx.strokeStyle = 'rgba(60,50,80,.5)'; ctx.lineWidth = mini ? 1 : 2.4; rr(cx0 + 2, cy0 + 2, cw - 4, ch - 4, mini ? 2 : 12); ctx.stroke();
+    const hot = o.hi && o.hi.includes(i), pulse = .5 + .5 * Math.sin((o.t ?? T) * 7);
+    if (hot && !mini) { ctx.fillStyle = `rgba(255,224,70,${.16 + .14 * pulse})`; rr(cx0 - 6, cy0 - 6, cw + 12, ch + 12, 18); ctx.fill(); V2.glow(cx0 + cw / 2, cy0 + ch / 2, cw * 1.1, '255,224,90', .22 + .16 * pulse, 'screen', .3); }
     if (!mini) {
       const lab = CARD[i], parts = lab.length > 9 && lab.includes(' ') ? [lab.split(' ')[0], lab.split(' ').slice(1).join(' ')] : [lab];
       ctx.fillStyle = free ? '#7a3a00' : '#2a2448';
@@ -332,9 +368,7 @@ A.drawCard = (x, y, w, h, marks = [], o = {}) => {
     } else if (free) { ctx.fillStyle = '#b0610a'; ell(cx0 + cw / 2, cy0 + ch / 2, cw * .22, ch * .22); ctx.fill(); }
     const m = set.get(i);
     if (m) blot(cx0 + cw / 2, cy0 + ch / 2, Math.min(cw, ch) * (mini ? .36 : .42), i * 1.7, m.age);
-    if (o.hi && o.hi.includes(i)) {
-      const pulse = .5 + .5 * Math.sin((o.t ?? T) * 7);
-      if (!mini) { ctx.fillStyle = `rgba(255,224,70,${.16 + .14 * pulse})`; rr(cx0 - 6, cy0 - 6, cw + 12, ch + 12, 18); ctx.fill(); V2.glow(cx0 + cw / 2, cy0 + ch / 2, cw * 1.1, '255,224,90', .35 + .25 * pulse, 'screen', .3); }
+    if (hot) {
       ctx.strokeStyle = `rgba(255,214,40,${.8 + .2 * pulse})`; ctx.lineWidth = mini ? 2.4 : 9; rr(cx0 - 3, cy0 - 3, cw + 6, ch + 6, mini ? 3 : 16); ctx.stroke();
     }
   }
@@ -449,11 +483,12 @@ A.ruleCard = (p, o = {}) => {
   ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12; ctx.fillStyle = 'rgba(12,10,28,.95)'; rr(-w / 2, -h / 2, w, h, 40); ctx.fill(); ctx.shadowColor = 'transparent';
   ctx.strokeStyle = '#ff3b55'; ctx.lineWidth = 8; rr(-w / 2, -h / 2, w, h, 40); ctx.stroke();
   text('RULE #1', 0, -h / 2 + 76, { size: 104, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 12, stroke: '#150f22', spacing: 4 });
-  text('NEVER SAY THE', -190, 28, { size: 40, fill: '#c9d2f0', weight: 900, spacing: 3 });
-  ctx.font = '400 150px Bangers'; ctx.letterSpacing = '4px'; const qw = ctx.measureText('QUIET').width; ctx.letterSpacing = '0px';
-  text('QUIET', 210, 54, { size: 150, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 0, spacing: 4 });
-  if (slash > 0) { ctx.strokeStyle = '#ff3b55'; ctx.lineWidth = 16; ctx.lineCap = 'round'; ctx.beginPath(); ctx.ellipse(210, 54, qw / 2 + 36, 86, 0, 0, TAU * slash); ctx.stroke();
-    const sl = clamp((slash - .5) * 2); if (sl > 0) { ctx.beginPath(); ctx.moveTo(210 - qw / 2 - 12, 54 + 70); ctx.lineTo(210 - qw / 2 - 12 + (qw + 24) * sl, 54 + 70 - 140 * sl); ctx.stroke(); } }
+  const qx = 176, qy = 52, qs = 132;
+  text('NEVER SAY THE', -218, 26, { size: 40, fill: '#c9d2f0', weight: 900, spacing: 3 });
+  ctx.font = `400 ${qs}px Bangers`; ctx.letterSpacing = '4px'; const qw = ctx.measureText('QUIET').width; ctx.letterSpacing = '0px';
+  text('QUIET', qx, qy, { size: qs, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 0, spacing: 4 });
+  if (slash > 0) { ctx.strokeStyle = '#ff3b55'; ctx.lineWidth = 16; ctx.lineCap = 'round'; ctx.beginPath(); ctx.ellipse(qx, qy, qw / 2 + 30, 76, 0, 0, TAU * slash); ctx.stroke();
+    const sl = clamp((slash - .5) * 2); if (sl > 0) { ctx.beginPath(); ctx.moveTo(qx - qw / 2 - 10, qy + 62); ctx.lineTo(qx - qw / 2 - 10 + (qw + 20) * sl, qy + 62 - 124 * sl); ctx.stroke(); } }
   ctx.restore();
 };
 

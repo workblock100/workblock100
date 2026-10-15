@@ -165,10 +165,10 @@ SCENES.title = {
 const STAFF = { straw: [-175, 1000], mango: [175, 1000], lemon: [0, 1060] };
 // each line on the whiteboard: p is how much of it has been written, check how much of its tick
 const boardLines = (p2, c2, p3, p4) => [
-  { t: '3 TO 11', x: .05, y: .2, size: .14, color: '#2a5ac8', rot: -.02, p: 1 },
-  { t: 'STAFFING: FULL', x: .05, y: .42, size: .12, color: '#1f9a52', rot: -.01, p: p2, check: c2 },
-  { t: 'MOON: NOT A FACTOR', x: .05, y: .62, size: .095, color: '#2a5ac8', p: p3 },
-  { t: 'CNAs: 2 CALLED OUT', x: .05, y: .82, size: .095, color: '#d62a3a', p: p4 },
+  { t: '3 TO 11', x: .05, y: .16, size: .12, color: '#2a5ac8', rot: -.02, p: 1 },
+  { t: 'STAFFING: FULL', x: .05, y: .34, size: .105, color: '#1f9a52', rot: -.01, p: p2, check: c2 },
+  { t: 'MOON: NOT A FACTOR', x: .05, y: .51, size: .092, color: '#2a5ac8', p: p3 },
+  { t: 'CNAs: 2 CALLED OUT', x: .05, y: .68, size: .092, color: '#d62a3a', p: p4 },
 ];
 const boardDay = lt => boardLines(seg(lt, B('l1').s + .9, B('l1').s + 1.7), seg(lt, B('l1').s + 1.75, B('l1').s + 2.15), seg(lt, B('l2').s + .9, B('l2').s + 2.7), seg(lt, B('l4').s + .3, B('l4').e - .2));
 const boardDone = boardLines(1, 1, 1, 1);
@@ -369,7 +369,7 @@ SCENES.bingo = {
     const pa = seg(lt, t('pi1').s - .15, t('pi1').s + .15) * (1 - seg(lt, t('pi3').e + .1, t('pi3').e + .4));
     if (pa > 0) {
       const sp = inB(lt, 'pi1') || inB(lt, 'pi2') || inB(lt, 'pi3');
-      A7.pip(890, 380, 118, { appear: pa, ring: '#7be0a0', label: 'MRS. PINEAPPLE', ping: sp, id: 'pine' }, r => {
+      A7.pip(890, 404, 118, { appear: pa, ring: '#7be0a0', label: 'MRS. PINEAPPLE', ping: sp, id: 'pine' }, r => {
         ctx.fillStyle = V2.grad(0, -r, 0, r, [[0, '#2a3a6a'], [1, '#101a3a']]); ctx.fillRect(-r, -r, 2 * r, 2 * r);
         drawChar(pine({ x: 0, y: 36, s: .78, center: true, noLegs: true, noArms: true, noShadow: true, noReflect: true, look: [0, .1], expr: inB(lt, 'pi3') ? 'sour' : 'neutral', id: 'pine-pip' }));
       });
@@ -380,8 +380,9 @@ SCENES.bingo = {
       reg('overlay', [890 - 114, 690 - 100, 890 + 114, 690 + 90], { id: 'sock-bubble' });
       ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.strokeStyle = '#15111a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(0, 0, 108, 78, 0, 0, TAU); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(-14, -74); ctx.lineTo(8, -100); ctx.lineTo(26, -70); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.fillRect(-8, -76, 30, 8);
-      A7.icon(4, -34, 0, 46, lt);
-      if (lt >= t('pi3').s) text('LEFT', 46, 6, { size: 46, font: 'Bangers', weight: 400, fill: '#e8193a', spacing: 3 });
+      const lk = easeOut(seg(lt, t('pi3').s, t('pi3').s + .2));
+      A7.icon(4, lerp(-34, -60, lk), 0, lerp(46, 40, lk), lt);
+      if (lk > 0) { ctx.save(); ctx.globalAlpha *= lk; text('LEFT', 46, 6, { size: 46, font: 'Bangers', weight: 400, fill: '#e8193a', spacing: 3 }); ctx.restore(); }
       ctx.restore();
     }
   },
@@ -494,7 +495,7 @@ SCENES.howl = {
     A7.cardHud(CUR.start + lt, { appear: seg(lt, 0, .3) });
     if (lt >= t('howl').s + .1 && lt < t('howl').e + .4) { sfxWord(lt, t('howl').s + .15, 'AWOOOO!', 650, 385, { fill: '#cfe0ff', size: 150, hold: 1.8, rot: -.06 }); }
     const pa = seg(lt, t('a1').s - .15, t('a1').s + .1) * (1 - seg(lt, t('a3').e, t('a3').e + .3)), sh = SCENES.howl.shot(lt);
-    if (pa > 0 && sh !== 'cuA' && sh !== 'dial') A7.pip(905, 372, 112, { appear: pa, ring: '#7be0a0', label: 'DR. APPLE', ping: true, id: 'apple' }, r => {
+    if (pa > 0 && sh !== 'cuA' && sh !== 'dial') A7.pip(905, 398, 112, { appear: pa, ring: '#7be0a0', label: 'DR. APPLE', ping: true, id: 'apple' }, r => {
       ctx.fillStyle = V2.grad(0, -r, 0, r, [[0, '#2a2a5a'], [1, '#10103a']]); ctx.fillRect(-r, -r, 2 * r, 2 * r);
       drawChar(apple({ x: 0, y: 46, s: .82, center: true, noLegs: true, noArms: true, noShadow: true, noReflect: true, look: [0, .1], expr: 'dead', lid: .8, id: 'apple-pip', who: 'apple' }));
     });
@@ -532,7 +533,7 @@ SCENES.quiet = {
     const sq = V2.at(...QS.straw), mq = V2.at(...QS.mango), sip = seg(lt, 1.6, 2.1) * (1 - seg(lt, 2.4, 2.7));
     const eyesCam = lt >= b('freeze').s && lt < b('g1').s;
     const straw0 = straw(Object.assign(sq, { t: fr, noBob: fr != null, look: eyesCam ? [0, 0] : [.55, .1], expr: lt < b('s1').s ? 'chill' : inB(lt, 's1') ? 'chill' : eyesCam ? 'shock' : inB(lt, 's2') ? 'dead' : after ? (inB(lt, 's3') ? 'dead' : inB(lt, 's4') ? 'dead' : 'dead') : 'dead',
-      hold: { l: 'clipboard6', r: 'coffee' }, grip: { l: [-100, 30], r: [62, 36] }, clipText: lt < b('freeze').s ? 'CHARTS' : '', arms: { l: 'hold', r: sip > 0 ? [1.95, 1.7] : 'hold' }, lid: lt < b('s1').s ? .5 : undefined }));
+      hold: { l: 'clipboard6', r: 'coffee' }, grip: { l: [-100, 30], r: [62, 36] }, clipText: 'CHARTS', arms: { l: 'hold', r: sip > 0 ? [1.95, 1.7] : 'hold' }, lid: lt < b('s1').s ? .5 : undefined }));
     const mango0 = mango(Object.assign(mq, { t: fr, noBob: fr != null, look: eyesCam ? [0, 0] : [-.5, .1], expr: lt < b('s1').s ? 'happy' : eyesCam ? 'shock' : inB(lt, 'g1') ? 'sour' : inB(lt, 'g2') ? 'hopeful' : inB(lt, 'g3') ? 'happy' : inB(lt, 'g4') || lt >= b('s4').s ? 'sad' : 'neutral',
       hold: { l: 'card7' }, grip: { l: [-92, -6] }, cardMarks: A7.marks(CUR.start + lt), cardNow: lt, arms: { l: 'hold', r: inB(lt, 'g2') ? 'cheer' : 'rest' } }));
     return { straw: straw0, mango: mango0 };
@@ -540,7 +541,7 @@ SCENES.quiet = {
   cam(lt) {
     const sh = SCENES.quiet.shot(lt), b = id => B(id), c = SCENES.quiet.cast(lt), c0 = b('chaos').s;
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    const wq = V2.p2(320, 465, 1900);
+    const wq = V2.p2(450, 465, 1900);
     if (sh === 'calm') { const k = seg(lt, 0, b('s1').s); zoomTo(lerp(540, 530, k), lerp(980, 1000, k), lerp(1, 1.08, k)); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 2.0, 80);
     else if (sh === 'cuM') faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80);
@@ -569,7 +570,7 @@ SCENES.quiet = {
     V2.dof(blurPx, () => S7.stationBack({ noLabel: sh !== 'calm', night: true, t: lt + 7, hours: hrs, qFlash: flash, qFlicker: lt >= b('freeze').s && lt < b('freeze').e ? (hash(Math.floor(lt * 20)) > .35 ? 1 : .2) : 1, board: boardDone, lampsOn, min: lt >= b('clock').s ? 59 + seg(lt, b('clock').s + .3, b('clock').e - .1) : 31, hr: 10, lamps,
       moon: { s: .62, expr: mExpr, look: [-.2, .5], o: { suppress: !['calm', 'dolly', 'moon'].includes(sh) }, char: { acc: inB(lt, 'm1') ? ['sweat'] : [] } } }));
     S7.stationCounter({ night: true });
-    if (sh === 'moon') { const wq = V2.p2(320, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
+    if (sh === 'moon') { const wq = V2.p2(450, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
     if (sh !== 'moon' && sh !== 'panel' && sh !== 'clock') {
       const sp = c.straw, mp = c.mango, subj = sh === 'cuS' ? 'straw' : sh === 'cuM' ? 'mango' : null;
       if (sh === 'desk') { SCENES.quiet.deskShot(lt); } else { (subj && subj !== 'straw' ? nbr : drawChar)(sp); (subj && subj !== 'mango' ? nbr : drawChar)(mp); }
@@ -589,7 +590,7 @@ SCENES.quiet = {
       drawChar(runner(straw, sP, lt, { arms: { l: 'run', r: 'run' }, expr: 'angry', look: [0, .2], transit: true }, 360));
     } else if (sh === 'wheel') {
       const P = lt2 => [lerp(-50, 40, seg(lt2, t0, t0 + 1.1)) + 30 * Math.sin(lt2 * 11), lerp(3600, 900, easeIn(seg(lt2, t0, t0 + 1.1)))], p = P(lt), q = V2.at(...p), roll = (lt * 40) % TAU;
-      const sP = lt2 => [-40, lerp(4600, 1500, easeIn(seg(lt2, t0 + .1, t0 + 1.1)))];
+      const sP = lt2 => [-235, lerp(4600, 1500, easeIn(seg(lt2, t0 + .1, t0 + 1.1)))];
       drawChar(runner(straw, sP, lt, { arms: { l: 'run', r: 'run' }, expr: 'panic', look: [0, .3], transit: true }, 360));
       S7.wheelchairBack(q.x, q.y, q.s);
       drawChar(cran({ x: q.x, y: q.y - 118 * q.s, s: q.s, noLegs: true, noShadow: true, noReflect: true, expr: 'happy', look: [0, .2], arms: { l: 'cheer', r: 'cheer' }, transit: true, vx: 800 }));
@@ -616,7 +617,7 @@ SCENES.quiet = {
     A7.cardHud(CUR.start + lt, { appear: 1 });
     // each square, named as it falls
     if (lt >= c0 && lt < b('chaos').e && sh !== 'card') {
-      for (const d of A7.dabs()) { const a = CUR.start + lt - d.t; if (a < 0 || a > .5 || d.i < 7) continue; const k = seg(a, 0, .12), f = 1 - seg(a, .3, .5); ctx.save(); ctx.globalAlpha *= f; ctx.translate(540, (sh === 'hall' ? 380 : 1320) + (d.i % 3) * 14); ctx.scale(lerp(1.15, 1, easeOut(k)), lerp(1.15, 1, easeOut(k))); ctx.rotate(((d.i * 7) % 5 - 2) * .03);
+      for (const d of A7.dabs()) { const a = CUR.start + lt - d.t; if (a < 0 || a > .4 || d.i < 7) continue; const k = seg(a, 0, .12), f = 1 - seg(a, .22, .4); ctx.save(); ctx.globalAlpha *= f; ctx.translate(540, (sh === 'hall' ? 380 : 1320) + (d.i % 3) * 14); ctx.scale(lerp(1.15, 1, easeOut(k)), lerp(1.15, 1, easeOut(k))); ctx.rotate(((d.i * 7) % 5 - 2) * .03);
         text(A7.CARD[d.i] + '!', 0, 0, { size: 96, font: 'Bangers', weight: 400, fill: '#ff7ac8', lw: 14, stroke: '#150f22', spacing: 3, shadow: 12 }); ctx.restore(); }
     }
     if (lt >= b('freeze').s && lt < b('freeze').e + .5) { const a = seg(lt, b('freeze').s, b('freeze').s + .2) * (1 - seg(lt, b('freeze').e + .1, b('freeze').e + .5)); if (a > 0) { ctx.save(); ctx.globalAlpha *= a; ctx.translate(540, 1338); ctx.scale(lerp(1.15, 1, easeOut(seg(lt, b('freeze').s, b('freeze').s + .2))), lerp(1.15, 1, easeOut(seg(lt, b('freeze').s, b('freeze').s + .2)))); text('Q WORD', 0, 0, { size: 132, font: 'Bangers', weight: 400, fill: '#ff3c5a', lw: 16, stroke: '#150f22', spacing: 4, shadow: 16 }); ctx.restore(); } }
@@ -630,23 +631,23 @@ SCENES.report = {
     const order = [['wide', b('d1').s - .1], ['cuD', b('s1').s - .05], ['cuS', b('stamp').s], ['report', b('stamp').e], ['cuD', b('flick2').s], ['two', b('s2').s - .05], ['cuS', b('m2').s - .1], ['moon', 1e9]];
     return order.find(([, e]) => lt < e)[0];
   },
-  dpath: route([[0, 760, 1000], [.25, 760, 1000], [1.7, 40, 1000, 'out']]),
+  dpath: route([[0, 760, 1000], [.25, 760, 1000], [1.7, 90, 1000, 'out']]),
   cast(lt) {
     const b = id => B(id), dp = SCENES.report.dpath(lt), walking = lt > .25 && lt < 1.75;
     const d = drag(Object.assign(V2.at(...dp), { stride: 40, look: [-.7, 0], expr: inB(lt, 'd1') ? 'happy' : inB(lt, 'd2') ? 'happy' : lt >= b('flick2').s && lt < b('s2').s ? (lt > b('flick2').s + .5 ? 'shock' : 'happy') : lt >= b('s2').s ? 'panic' : 'chill',
       hold: { l: 'lunchbox' }, grip: { l: [-82, 92] }, arms: { l: 'hold', r: inB(lt, 'd1') || inB(lt, 'd2') ? 'wave' : 'rest' }, acc: ['sleepmask', 'badge'], badgeText: 'NIGHTS' }));
     if (walking) { d.gaitW = pathDist(SCENES.report.dpath, lt); d.axis = 'x'; d.dir = -1; d.transit = lt < 1.7; }
-    const s0 = straw(Object.assign(V2.at(-170, 1000), { look: [.6, .1], expr: inB(lt, 's1') ? 'dead' : inB(lt, 's2') ? 'smug' : lt >= b('flick2').s ? 'smug' : 'chill', hold: { l: 'clipboard6' }, grip: { l: [-96, 30] }, clipText: lt >= b('stamp').e ? 'QUIET' : '', arms: { l: 'hold', r: inB(lt, 's2') ? 'thumb' : 'rest' }, lid: lt < b('s1').s ? .45 : undefined }));
+    const s0 = straw(Object.assign(V2.at(-170, 1000), { look: [.6, .1], expr: inB(lt, 's1') ? 'dead' : inB(lt, 's2') ? 'smug' : lt >= b('flick2').s ? 'smug' : 'chill', hold: { l: 'clipboard6' }, grip: { l: [-110, 30] }, clipText: lt >= b('stamp').e ? 'QUIET' : 'CHARTS', arms: { l: 'hold', r: inB(lt, 's2') ? 'thumb' : 'rest' }, lid: lt < b('s1').s ? .45 : undefined }));
     return { drag: d, straw: s0 };
   },
   cam(lt) {
     const sh = SCENES.report.shot(lt), c = SCENES.report.cast(lt), b = id => B(id);
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    const wq = V2.p2(320, 465, 1900);
-    if (sh === 'wide') { const k = seg(lt, 0, b('d1').s); zoomTo(540, lerp(990, 975, k), lerp(1, 1.06, k)); }
-    else if (sh === 'cuD') { const k = seg(lt, b('flick2').s, b('flick2').e); const kk = lt >= b('flick2').s ? lerp(1.7, 2.5, easeIO(k)) : 1.7; faceZoom({ kind: 'dragon', x: c.drag.x, y: c.drag.y, s: c.drag.s }, kk, 80); }
-    else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 1.85, 80);
-    else if (sh === 'two') zoomTo(470, 1010, 1.25);
+    const wq = V2.p2(450, 465, 1900);
+    if (sh === 'wide') { const k = seg(lt, 0, b('d1').s); zoomTo(505, lerp(990, 975, k), lerp(1, 1.06, k)); }
+    else if (sh === 'cuD') { const k = seg(lt, b('flick2').s, b('flick2').e); const kk = lt >= b('flick2').s ? lerp(1.5, 2.5, easeIO(k)) : 1.5; faceZoom({ kind: 'dragon', x: c.drag.x, y: c.drag.y, s: c.drag.s }, kk, 80); }
+    else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 1.7, 80);
+    else if (sh === 'two') zoomTo(500, 1010, 1.12);
     else if (sh === 'moon') { const k = seg(lt, b('m2').s, b('m2').e); zoomTo(wq[0], wq[1] + 20, lerp(2.65, 2.95, k)); }
   },
   draw(lt) {
@@ -661,7 +662,7 @@ SCENES.report = {
       moon: { s: .62, expr: mExpr, look: [-.1, .4], o: { suppress: !['wide', 'moon'].includes(sh) }, char: { acc: sh === 'moon' && lt > b('m2').s + .5 ? ['sweat'] : [] } } }));
     S7.stationCounter({ night: true });
     if (sh !== 'moon') { (subj && subj !== 'straw' ? nbr : drawChar)(c.straw); (subj && subj !== 'drag' ? nbr : drawChar)(c.drag); }
-    else { const wq = V2.p2(320, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
+    else { const wq = V2.p2(450, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
     V2.addLight({ x: 400, y: 1000, r: 800, color: '255,200,120', a: .35 * lampsOn });
     V2.dust(60, 600, 1020, 1400, lt, { n: 26, alpha: .3, color: '200,215,255' });
   },
@@ -679,18 +680,18 @@ SCENES.end = {
     ctx.fillStyle = grad2(0, 0, 0, H, '#0a0c26', '#1d1252'); ctx.fillRect(-100, -100, W + 200, H + 200);
     A7.stars(lt, 1200, { n: 100, a: 1 });
     const mp = 1 + .02 * Math.sin(lt * 1.4);
-    A7.rays(540, 990, 280, 1400, lt, { n: 14, color: '220,232,255', a: .08, spin: .03 });
-    A7.moon(540, 990, 1.4 * mp, { t: lt, char: { expr: lt < 4.5 ? 'happy' : 'smug', look: [0, .15], who: null } });
+    A7.rays(540, 990, 262, 1400, lt, { n: 14, color: '220,232,255', a: .08, spin: .03 });
+    A7.moon(540, 990, 1.28 * mp, { t: lt, char: { expr: lt < 4.5 ? 'happy' : 'smug', look: [0, .15], who: null } });
     confetti(lt, .7);
-    const fy = 1500; ctx.fillStyle = V2.grad(0, fy - 20, 0, H, [[0, 'rgba(26,18,70,.0)'], [.08, 'rgba(34,24,88,.9)'], [1, 'rgba(8,6,24,1)']]); ctx.fillRect(0, fy - 20, W, H - fy + 20);
+    const fy = 1540; ctx.fillStyle = V2.grad(0, fy - 20, 0, H, [[0, 'rgba(26,18,70,.0)'], [.08, 'rgba(34,24,88,.9)'], [1, 'rgba(8,6,24,1)']]); ctx.fillRect(0, fy - 20, W, H - fy + 20);
     ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.radial(540, fy + 6, 10, 560, [[0, 'rgba(170,160,255,.34)'], [1, 'rgba(170,160,255,0)']]); ctx.beginPath(); ctx.ellipse(540, fy + 6, 560, 70, 0, 0, TAU); ctx.fill(); ctx.restore();
     V2.setLight({ key: [-.4, -.8], keyColor: '#e8ecff', keyA: .26, rim: '#9fc4ff', rimA: .6, shadow: '#0a0a24', shadowA: .45, amb: '#8a90ff', ambA: .1 });
     V2.opts.reflect = true;
-    const row = [['straw', { x: 180, s: .82, acc: ['steth', 'badge', 'bandage'], expr: 'happy', lashes: true }], ['mango', { x: 360, s: .82, acc: ['badge', 'gaitbelt', 'keys'], badgeText: 'CNA', expr: 'happy' }], ['papaya', { x: 540, s: .86, acc: ['visor', 'lanyard'], expr: 'happy' }],
+    const row = [['straw', { x: 180, s: .82, acc: ['steth', 'badge', 'bandage'], expr: 'happy', lashes: true }], ['mango', { x: 360, s: .82, acc: ['badge7', 'gaitbelt7', 'keys7'], badgeText: 'CNA', expr: 'happy' }], ['papaya', { x: 540, s: .86, acc: ['visor', 'lanyard'], expr: 'happy' }],
       ['goji', { x: 720, s: .82, acc: ['wolfears', 'gown'], expr: 'happy', browColor: '#f2f2f2', browW: 11 }], ['dragon', { x: 900, s: .8, acc: ['sleepmask', 'badge'], badgeText: 'NIGHTS', expr: 'chill' }]];
     REG.suppress++;
     row.forEach(([kind, extra], i) => { const hop = Math.abs(Math.sin(lt * 4.2 + i)) * 14, pop = easeBack(seg(lt, .6 + i * .12, .95 + i * .12));
-      if (pop > 0) drawChar(Object.assign({ kind, id: kind, y: fy - hop, arms: { l: 'cheer', r: 'wave' }, t: lt + i, transit: lt < 2.4 }, extra, { s: extra.s * pop })); });
+      if (pop > 0) drawChar(Object.assign({ kind, id: kind, y: fy - hop + (kind === 'straw' ? 8.9 * extra.s * pop : 0), arms: { l: 'cheer', r: 'wave' }, t: lt + i, transit: lt < 2.4 }, extra, { s: extra.s * pop })); });
     REG.suppress--;
   },
   fx: lt => ({ bloom: .7, vignette: .5, grain: .05, fade: lt < .25 ? 1 - lt / .25 : 0 }),
