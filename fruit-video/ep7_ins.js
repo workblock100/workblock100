@@ -88,6 +88,7 @@ A.insBall = (lt, n, o = {}) => {
 A.insThermo = (lt, o = {}) => {
   A6.bokeh(lt, ['120,180,255', '255,170,120', '160,255,200'], ['#0f1430', '#1b2350']);
   const cx = 540, cy = 760, k = easeOut(clamp(lt / .3)), rise = seg(lt, .05, .5), v = lerp(96.4, 99.8, easeOut(rise));
+  if (rise >= 1) { A6.ring(cx + 190, cy + 20, ((lt - .5) * 1.4) % 1, 'pulse', { r0: 40, r1: 360, lw: 8, alpha: .7 }); A6.ring(cx + 190, cy + 20, ((lt - .65) * 1.4) % 1, 'pulse', { r0: 40, r1: 300, lw: 6, alpha: .5 }); }
   ctx.save(); ctx.translate(cx, cy + (1 - k) * 160); ctx.rotate(-.07); ctx.globalAlpha *= clamp(lt * 5);
   reg('overlay', [cx - 470, cy - 150, cx + 470, cy + 150], { id: 'thermo-insert' });
   ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 36; ctx.shadowOffsetY = 16;
@@ -95,12 +96,11 @@ A.insThermo = (lt, o = {}) => {
   ctx.fillStyle = V2.grad(-440, 0, -300, 0, [[0, '#9aa4b4'], [1, '#c9d0dc']]); ctx.beginPath(); ctx.moveTo(-300, -40); ctx.lineTo(-450, -16); ctx.quadraticCurveTo(-470, 0, -450, 16); ctx.lineTo(-300, 40); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#2a4a3a'; rr(-250, -64, 360, 128, 22); ctx.fill(); ctx.strokeStyle = 'rgba(25,16,30,.85)'; ctx.lineWidth = 4; ctx.stroke();
   ctx.fillStyle = V2.grad(-250, -64, -250, 64, [[0, '#b6d6a2'], [1, '#8fb87a']]); rr(-244, -58, 348, 116, 18); ctx.fill();
-  const blink = rise >= 1 ? (Math.sin(lt * 14) > -.2 ? 1 : .25) : 1;
+  const blink = rise >= 1 ? (Math.sin(lt * 10) > -.2 ? 1 : .6) : 1;
   ctx.globalAlpha *= blink; text(v.toFixed(1), -90, 8, { size: 132, font: 'Bangers', weight: 400, fill: '#15301a', spacing: 4 }); ctx.globalAlpha /= blink;
   text('F', 66, 18, { size: 54, font: 'Bangers', weight: 400, fill: '#15301a' }); text('o', 52, -22, { size: 30, font: 'Bangers', weight: 400, fill: '#15301a' });
   ctx.fillStyle = '#4a8af0'; ctx.strokeStyle = 'rgba(25,16,30,.85)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(250, 0, 44, 0, TAU); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.4)'; ell(238, -14, 16, 8, -.5); ctx.fill();
   ctx.restore();
-  if (rise >= 1) { A6.ring(cx + 190, cy + 20, ((lt - .5) * 1.4) % 1, 'pulse', { r0: 40, r1: 360, lw: 8, alpha: .7 }); A6.ring(cx + 190, cy + 20, ((lt - .65) * 1.4) % 1, 'pulse', { r0: 40, r1: 300, lw: 6, alpha: .5 }); }
   // a verdict tag under it
   const tk = easeBack(seg(lt, .7, 1.0));
   if (tk > 0) { ctx.save(); ctx.translate(540, 1060); ctx.scale(tk, tk); reg('overlay', [540 - 330 * tk, 1060 - 64 * tk, 540 + 330 * tk, 1060 + 64 * tk], { id: 'thermo-tag' }); ctx.fillStyle = 'rgba(10,8,22,.92)'; rr(-330, -64, 660, 128, 64); ctx.fill(); ctx.strokeStyle = '#7be0a0'; ctx.lineWidth = 5; ctx.stroke();
@@ -145,7 +145,7 @@ A.insDial = (lt, o = {}) => {
   ctx.fillStyle = V2.grad(0, -400, 0, 400, [[0, '#1c2a4a'], [1, '#0e1530']]); rr(-236, -402, 472, 804, 44); ctx.fill();
   text('CALLING', 0, -330, { size: 38, fill: '#9fe8c0', weight: 900, spacing: 6 });
   ctx.fillStyle = '#e63946'; ctx.beginPath(); ctx.arc(0, -190, 90, 0, TAU); ctx.fill(); ctx.strokeStyle = '#15111a'; ctx.lineWidth = 5; ctx.stroke(); text('A', 0, -180, { size: 110, font: 'Bangers', weight: 400, fill: '#fff' });
-  text('DR. APPLE', 0, -50, { size: 62, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 }); text('ON CALL', 0, -4, { size: 30, fill: '#ffb0b8', weight: 900, spacing: 5 });
+  text('DR. APPLE', 0, -50, { size: 62, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 }); text('ON CALL', 0, 8, { size: 30, fill: '#ffb0b8', weight: 900, spacing: 5 });
   text('555 ' + (n > 3 ? digits.slice(3, n) : ''), 0, 70, { size: 52, fill: '#d8e8ff', weight: 900, spacing: 3, alpha: n > 0 ? 1 : .3 });
   for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) { const lab = '123456789*0#'[r * 3 + c], on = digits.slice(Math.max(0, n - 1), n) === lab && lt < n * .105 + .08, px = (c - 1) * 130, py = 150 + r * 62; ctx.fillStyle = on ? '#7be0a0' : 'rgba(255,255,255,.12)'; rr(px - 52, py - 22, 104, 46, 14); ctx.fill(); text(lab, px, py + 2, { size: 30, fill: on ? '#10301a' : '#cfd8f0', weight: 900 }); }
   ctx.restore();
@@ -160,7 +160,7 @@ A.insCard = (absT, lt, o = {}) => {
   reg('overlay', [540 - 412 * sc, 800 - 512 * sc, 540 + 412 * sc, 800 + 512 * sc], { id: 'card-insert', transit: k < 1 });
   const r = A.drawCard(-400, -500, 800, 1000, A.marks(absT), { hi: o.hi || [], t: absT });
   if (o.circle) {   // Straw rings the square in red marker, so nothing sits on top of the words
-    const [i, pk] = o.circle, c = i % 5, rw = Math.floor(i / 5), cx = r.gx + (c + .5) * r.cw, cy = r.gy + (rw + .5) * r.ch, p = easeOut(clamp(pk ?? 1)), rx = r.cw * .45, ry = r.ch * .46, n = 64, sweep = TAU * 1.12 * p;
+    const [i, pk] = o.circle, c = i % 5, rw = Math.floor(i / 5), cx = r.gx + (c + .5) * r.cw, cy = r.gy + (rw + .5) * r.ch, p = easeOut(clamp(pk ?? 1)), rx = r.cw * .41, ry = r.ch * .41, n = 64, sweep = TAU * 1.12 * p;
     ctx.save(); ctx.strokeStyle = '#ff3b55'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
     for (let j = 0; j <= n; j++) { const u = j / n * sweep, wob = 1 + .045 * Math.sin(u * 3 + 1) + .02 * u / TAU, x = cx + Math.cos(u - 1.9) * rx * wob, y = cy + Math.sin(u - 1.9) * ry * wob; j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
     ctx.stroke(); ctx.restore();
@@ -179,7 +179,7 @@ A.insReport = (lt, o = {}) => {
   ctx.fillStyle = '#fffef8'; rr(-304, -470, 608, 960, 10); ctx.fill();
   text('SHIFT REPORT', 0, -400, { size: 70, font: 'Bangers', weight: 400, fill: '#2a2448', spacing: 4 }); text('3 TO 11', 0, -340, { size: 40, fill: '#6a6488', weight: 900, spacing: 6 });
   ctx.strokeStyle = '#8fa7c9'; ctx.lineWidth = 3; for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.moveTo(-262, -270 + i * 52); ctx.lineTo(262, -270 + i * 52); ctx.stroke(); }
-  for (const [lab, y] of [['ALARMS', -250], ['FALLS', -198], ['CALLS', -146], ['EVENTS', -60]]) { text(lab, -262, y + 28, { size: 26, fill: '#2a2448', weight: 900, align: 'left', spacing: 2 }); }
+  for (const [lab, y] of [['ALARMS', -250], ['FALLS', -198], ['CALLS', -146], ['EVENTS', -60]]) { text(lab, -262, y + 28 - (lab === 'EVENTS' ? 12 : 0), { size: 26, fill: '#2a2448', weight: 900, align: 'left', spacing: 2 }); }
   ctx.strokeStyle = '#2a2448'; ctx.lineWidth = 5; rr(-262, -20, 524, 240, 14); ctx.stroke();
   // the stamp comes down at .45 s
   const sk = seg(lt, 0, .1), hit = lt >= .1, y = lerp(-420, 70, easeIn(sk));

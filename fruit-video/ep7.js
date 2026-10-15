@@ -12,7 +12,7 @@ const { papaya, goji, lemon, cran, banana, pine, apple, drag, straw, mango, pear
 const still = (X, Z) => () => [X, Z];
 // scene-relative time of a spoken word, from the recorded line's word timings
 const wordT = (id, word) => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id), w = l.words.find(x => x[0].toLowerCase().replace(/[^a-z]/g, '').includes(word)); return l.s - CUR.start + w[1]; };
-const MOON = [800, 430], MOON_S = .9;   // where the Moon hangs in the lot sky (scene coordinates)
+const MOON = [800, 405], MOON_S = .9;   // where the Moon hangs in the lot sky (scene coordinates)
 
 
 // a route through keyed positions [t, X, Z, ease]: linear travel between keys (so a walker never stops mid-route), 'io' or 'out' to ease a leg
@@ -43,6 +43,8 @@ function sfxWord(lt, t0, str, x, y, o = {}) {
 
 // a neighbor of the subject in a close-up: out of focus, behind the shot, never audited
 const nbr = o => V2.dof(6, () => drawBg(o));
+// a soft contact shadow under a chair, so its legs stand on the floor like everything else
+const chairShadow = (X, Z) => { const [px, py] = V2.p2(X, 0, Z), k = S6.kz(Z); ctx.save(); ctx.fillStyle = 'rgba(14,10,34,.26)'; ctx.beginPath(); ctx.ellipse(px, py + 3 * k, 70 * k, 15 * k, 0, 0, TAU); ctx.fill(); ctx.restore(); };
 
 const SCENES = {};
 
@@ -93,7 +95,7 @@ SCENES.lot = {
     // the cast
     const walking = lt > .3 && lt < 2.75, sip = seg(lt, B('s2').s - .2, B('s2').s + .4) * (1 - seg(lt, B('s2').e - .2, B('s2').e + .3));
     const sp = person(straw, SCENES.lot.strawPath, lt, { stride: 42, look: lt < t('m1').s ? [-.7, -.1] : [.55, -.55], expr: lt < t('m1').s ? 'chill' : inB(lt, 's1') ? 'dead' : inB(lt, 's2') ? 'sour' : inB(lt, 's3') ? 'shock' : inB(lt, 's4') ? 'sour' : inB(lt, 's5') ? 'dead' : 'dead',
-      hold: { r: 'coffee' }, grip: { r: [62, 36] }, arms: { l: walking ? [.28 + .35 * Math.sin(pathDist(SCENES.lot.strawPath, lt) / 84 * PI), .25] : 'rest', r: sip > 0 ? [1.95, 1.7] : 'hold' }, lid: lt >= t('m1').s && lt < t('s2').e ? .5 : undefined });
+      hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: walking ? [.28 + .35 * Math.sin(pathDist(SCENES.lot.strawPath, lt) / 84 * PI), .25] : 'rest', r: sip > 0 ? [1.95, 1.7] : 'hold' }, lid: lt >= t('m1').s && lt < t('s2').e ? .5 : undefined });
     if (lt >= t('run').s - .1) {
       const mp = person(mango, SCENES.lot.mangoPath, lt, { stride: 46, look: [-.8, 0], expr: lt < t('g1').s ? 'happy' : inB(lt, 'g3') ? 'happy' : inB(lt, 'g4') ? 'happy' : 'happy', transit: lt < t('run').e,
         hold: { l: 'card7' }, grip: { l: lt < t('g1').s ? [-96, 40] : [-100, -30] }, arms: { l: 'hold', r: lt < t('run').e ? 'run' : inB(lt, 'g3') ? 'shrug' : 'rest' }, cardMarks: [], cardNow: lt });
@@ -268,7 +270,7 @@ SCENES.bingo = {
     const sh = SCENES.bingo.shot(lt), cast = SCENES.bingo.cast(lt), by = id => cast.find(c => c.id === id).o;
     V2.setCam(['wide', 'wideEnd', 'chase'].includes(sh) ? { f: 1400, cy: 900, hy: 330 } : { f: 1400, cy: 360, hy: 860 });   // the room shots look down on it from high up, so the back rows show clear over the front
     const fz = (id, z, up = 80) => { const o = by(id); faceZoom({ kind: o.kind, x: o.x, y: o.y - (o.seatUp || 0), s: o.s, noLegs: o.noLegs }, z / o.s * (o.zk || 1), up); };
-    if (sh === 'wide') { const k = seg(lt, 0, 6); zoomTo(540, lerp(1070, 1060, k), lerp(1, 1.03, k)); }
+    if (sh === 'wide') { const k = seg(lt, 0, 6); zoomTo(540, lerp(1070, 1060, k), lerp(.97, 1.0, k)); }
     else if (sh === 'cuP') { const k = seg(lt, B('p1').s + 1.0, B('cage1').s); fz('papa', lerp(1.9, 2.1, k), 70); }
     else if (sh === 'cranUp') fz('cran', 1.9, 120);
     else if (sh === 'cuC') fz('cran', 2.0, 80);
@@ -280,7 +282,7 @@ SCENES.bingo = {
     else if (sh === 'phone') fz('straw', 1.5, 100);
     else if (sh === 'leave') fz('pear', 1.5, 90);
     else if (sh === 'chase') { const k = seg(lt, B('ba1').e + .3, B('g2').s); zoomTo(lerp(520, 565, easeIO(k)), 1190, 1.0); }
-    else if (sh === 'wideEnd') { const k = seg(lt, B('p6').s - .1, B('p6').s + 2.0); zoomTo(lerp(540, 560, easeIO(k)), lerp(1090, 1100, k), lerp(1.0, 1.04, easeIO(k))); }
+    else if (sh === 'wideEnd') { const k = seg(lt, B('p6').s - .1, B('p6').s + 2.0); zoomTo(lerp(540, 560, easeIO(k)), lerp(1090, 1100, k), lerp(.97, 1.01, easeIO(k))); }
   },
   // the cast for this frame: every person with their depth and a draw function (drawn sharp for the subject, as a background neighbor otherwise)
   cast(lt) {
@@ -295,9 +297,9 @@ SCENES.bingo = {
     { const q = V2.at(...CALLER), talk = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'].some(i => inB(lt, i)), o = papaya(Object.assign(q, { s: q.s * .98, look: [.1, .15], expr: inB(lt, 'p6') ? 'hopeful' : 'happy', hold: { r: 'mic7' }, grip: { r: [46, 78] }, arms: { l: talk ? 'wave' : 'rest', r: 'hold' }, noReflect: true }));
       items.push({ id: 'papa', o, z: CALLER[1], draw: sharp => { (sharp ? drawChar : drawBg)(o); } }); }
     // the caller's table and the cage on it
-    items.push({ id: 'ctable', o: { x: 0, y: 0 }, z: CTABLE[1] - 1, draw: () => { S6.table3(CTABLE[0], CTABLE[1], { w: 150, d: 60, h: 140, color: '#d8c0a0' }); const [cx, cy] = V2.p2(CTABLE[0] - 40, 140, CTABLE[1] - 20), k = S6.kz(CTABLE[1]); ctx.save(); A7.drawCage(cx, cy - 78 * k, 78 * k, lt * (inB(lt, 'cage1') ? 1 : .15), { balls: 14 }); ctx.restore(); } });
+    items.push({ id: 'ctable', o: { x: 0, y: 0 }, z: CTABLE[1] - 1, draw: () => { S6.table3(-50, CTABLE[1], { w: 230, d: 60, h: 140, color: '#d8c0a0' }); const [cx, cy] = V2.p2(-175, 140, CTABLE[1] - 20), k = S6.kz(CTABLE[1]); ctx.save(); A7.drawCage(cx, cy - 78 * k, 78 * k, lt * (inB(lt, 'cage1') ? 1 : .15), { balls: 14 }); ctx.restore(); } });
     // residents
-    const res = (name, ctor, extra, id = name) => { const r = seatedBase(ctor, name, extra); items.push({ id, o: r.o, z: SEAT[name][1] + 70, draw: sharp => { S6.chair3(SEAT[name][0], SEAT[name][1] + 70, { color: r.chair, w: 46, d: 40, seat: 100, back: 240 }); drawBg(r.o); }, bg: true }); };   // set dressing: always the unaudited background, always behind the named characters
+    const res = (name, ctor, extra, id = name) => { const r = seatedBase(ctor, name, extra); items.push({ id, o: r.o, z: SEAT[name][1] + 70, draw: sharp => { chairShadow(SEAT[name][0], SEAT[name][1] + 70); S6.chair3(SEAT[name][0], SEAT[name][1] + 70, { color: r.chair, w: 46, d: 40, seat: 100, back: 240 }); drawBg(r.o); }, bg: true }); };   // set dressing: always the unaudited background, always behind the named characters
     res('star', (o) => Object.assign({ kind: 'star', id: 'star', s: SC, y: G, acc: ['glasses'], expr: 'happy' }, o), { who: null });
     res('prune', (o) => Object.assign({ kind: 'prune', id: 'prune', s: SC, y: G, expr: 'sour' }, o), { who: null });
     res('coco', (o) => Object.assign({ kind: 'coco', id: 'coco', s: SC, y: G, expr: 'happy' }, o), { who: null });
@@ -310,12 +312,12 @@ SCENES.bingo = {
     { const p = BRT.pear(lt), standing = lt >= 11.9, q = V2.at(p[0], p[1]), seated = !standing, rise = seg(lt, 11.9, 12.25), walking = lt > 16.4;
       const o = pear(Object.assign(q, standing ? { s: q.s, lift: Math.sin(rise * PI) * 18 } : { y: q.y - 100 * q.s, s: q.s * .98, noLegs: true, noShadow: true }, { look: lt < 11.9 ? [.7, 0] : inB(lt, 's2') ? [.9, 0] : [.8, 0], expr: lt < b('x1').s ? 'neutral' : inB(lt, 'pe1') ? 'happy' : inB(lt, 'pe2') ? 'smug' : lt > b('s3').s ? 'happy' : 'neutral', hold: { l: 'briefcase' }, arms: { l: 'hold', r: 'rest' } }));
       if (walking) { o.gaitW = pathDist(BRT.pear, lt) - pathDist(BRT.pear, 16.4); o.axis = 'z'; o.dir = -1; o.transit = true; o.noFoley = false; }
-      if (lt < 19.9) items.push({ id: 'pear', o, z: p[1] + (seated ? 70 : 0), draw: sharp => { if (seated) S6.chair3(SEAT.pear[0], SEAT.pear[1] + 70, { color: '#8a5a34', w: 46, d: 40, seat: 100, back: 240 }); (sharp ? drawChar : drawBg)(o); } }); }
+      if (lt < 19.9) items.push({ id: 'pear', o, z: p[1] + (seated ? 70 : 0), draw: sharp => { if (seated) { chairShadow(SEAT.pear[0], SEAT.pear[1] + 70); S6.chair3(SEAT.pear[0], SEAT.pear[1] + 70, { color: '#8a5a34', w: 46, d: 40, seat: 100, back: 240 }); } (sharp ? drawChar : drawBg)(o); } }); }
     // Mr. Banana: sits, peels, bolts across the room
     { const p = BRT.banana(lt), run = lt >= 30.55, q = V2.at(p[0], p[1]), pk = seg(lt, b('ba1').s - .1, b('ba1').s + .3), air = run ? Math.max(0, Math.sin(seg(lt, 30.55, 30.95) * PI)) * 90 * q.s : 0;
       const o = banana(Object.assign(q, run ? { s: q.s, lift: air } : { y: q.y - 100 * q.s, s: q.s * .98, noLegs: true, noShadow: true }, { look: run ? [.6, 0] : [.75, 0], expr: lt < b('p5').e ? 'happy' : 'happy', acc: lt >= b('ba1').s - .15 ? ['peeled'] : [], peelOpen: easeOut(pk), arms: run ? { l: 'run', r: 'run' } : { l: 'rest', r: 'rest' }, vx: run ? 700 : 0 }));
       if (run && lt > 30.95) { o.gaitW = pathDist(BRT.banana, lt) * 1.0; o.axis = Math.abs(p[1] - BRT.banana(lt - .05)[1]) > Math.abs(p[0] - BRT.banana(lt - .05)[0]) * 1.2 ? 'z' : 'x'; o.dir = o.axis === 'z' ? -1 : 1; o.transit = true; }
-      items.push({ id: 'banana', o, z: p[1] + (run ? 0 : 70), draw: sharp => { if (!run) S6.chair3(SEAT.banana[0], SEAT.banana[1] + 70, { color: '#8a5a34', w: 46, d: 40, seat: 100, back: 240 }); if (lt < 33.4 || lt > 34) (sharp ? drawChar : drawBg)(o); } }); }
+      items.push({ id: 'banana', o, z: p[1] + (run ? 0 : 70), draw: sharp => { if (!run) { chairShadow(SEAT.banana[0], SEAT.banana[1] + 70); S6.chair3(SEAT.banana[0], SEAT.banana[1] + 70, { color: '#8a5a34', w: 46, d: 40, seat: 100, back: 240 }); } if (lt < 33.4 || lt > 34) (sharp ? drawChar : drawBg)(o); } }); }
     // Strawberry and Mango
     { const p = BRT.straw(lt), q = V2.at(...p), calling = lt >= b('ring').s - .1 && lt < b('d3').s + .2, onPhone = lt >= b('pi1').s - .15 && lt < b('d3').s + .1, walk = lt > 4.6 && lt < 5.4 || lt > 8.7 && lt < 11.2;
       const o = straw(Object.assign(q, { stride: 38, look: lt < b('c2').e ? [.6, .1] : lt < b('x1').s ? [-.5, 0] : [-.9, 0], expr: inB(lt, 's1') ? 'chill' : inB(lt, 's2') ? 'sour' : inB(lt, 's3') ? 'dead' : inB(lt, 's4') ? 'sour' : inB(lt, 's5') ? 'dead' : inB(lt, 's6') ? 'sour' : inB(lt, 'p6') ? 'dead' : 'chill',
@@ -391,8 +393,8 @@ SCENES.bingo = {
 
 // ============================================================================ room 14, 7:48 PM
 const HROUTE = {
-  straw: route([[0, -900, 1000], [10.0, -900, 1000], [11.7, -318, 1200, 'out']]),
-  mango: route([[0, -900, 1000], [10.4, -900, 1000], [12.1, -168, 1300, 'out']]),
+  straw: route([[0, -900, 1000], [10.0, -900, 1000], [11.7, -335, 1200, 'out']]),
+  mango: route([[0, -900, 1000], [10.4, -900, 1000], [12.1, -100, 1300, 'out']]),
 };
 const GOJI_AT = [250, 1700];
 SCENES.howl = {
@@ -474,7 +476,7 @@ SCENES.howl = {
     A6.bokeh(lt, ['255,200,120', '120,180,255'], ['#141838', '#262b58']);
     V2.setLight({ key: [-.5, -.5], keyColor: '#ffd9a0', keyA: .3, rim: '#8fb8ff', rimA: .45, shadow: '#0c0a24', shadowA: .45, amb: '#ffe0b0', ambA: .06 });
     // the bedroom: a wood headboard, a pillow behind his head, a lamp's warm pool on the left, the clock on the nightstand on the right
-    ctx.fillStyle = V2.grad(0, 620, 0, 1500, [[0, '#262858'], [1, '#14163a']]); ctx.fillRect(0, 620, W, 900);
+    ctx.fillStyle = V2.grad(0, 520, 0, 700, [[0, 'rgba(38,40,88,0)'], [1, '#262858']]); ctx.fillRect(0, 520, W, 180); ctx.fillStyle = V2.grad(0, 700, 0, 1500, [[0, '#262858'], [1, '#14163a']]); ctx.fillRect(0, 700, W, 800);
     ctx.fillStyle = '#7a5434'; ctx.strokeStyle = '#15111a'; ctx.lineWidth = 5; rr(90, 700, 700, 760, 40); ctx.fill(); ctx.stroke();
     ctx.fillStyle = V2.grad(0, 840, 0, 1300, [[0, '#f4f4fc'], [1, '#cfd0e4']]); rr(170, 860, 540, 330, 120); ctx.fill(); ctx.stroke();
     V2.glow(120, 760, 560, '255,190,110', .45, 'screen', .4);
@@ -482,10 +484,10 @@ SCENES.howl = {
     ctx.save(); ctx.translate(930, 1040); ctx.fillStyle = '#e8e2d4'; ctx.strokeStyle = '#15111a'; ctx.lineWidth = 5; rr(-84, -66, 168, 132, 24); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#10161a'; rr(-66, -46, 132, 80, 12); ctx.fill();
     text(lt >= t('a3').s + 1.0 ? '3:00' : '8:01', 0, -6, { size: 62, font: 'Bangers', weight: 400, fill: '#ff5a4a', spacing: 2 }); ctx.restore();
     V2.glow(930, 1040, 160, '255,80,60', .3, 'screen', .3);
-    drawChar(apple({ x: 450, y: 1306, s: 1.7, noLegs: true, noShadow: true, noReflect: true, hold: { r: 'cell' }, arms: { l: 'rest', r: 'phone' }, expr: inB(lt, 'a1') ? 'dead' : inB(lt, 'a2') ? 'sour' : inB(lt, 'a3') ? 'dead' : 'dead', look: [0, .1], lid: lt > t('a3').s + 2.0 ? 1 : .85, who: 'apple' }));
+    drawChar(apple({ x: 450, y: 1270, s: 1.7, noLegs: true, noShadow: true, noReflect: true, hold: { r: 'cell' }, arms: { l: 'rest', r: 'phone' }, expr: inB(lt, 'a1') ? 'dead' : inB(lt, 'a2') ? 'sour' : inB(lt, 'a3') ? 'dead' : 'dead', look: [0, .1], lid: lt > t('a3').s + 2.0 ? 1 : .85, who: 'apple' }));
     // the quilt over his lap
     ctx.save(); ctx.fillStyle = V2.grad(0, 1270, 0, 1430, [[0, '#5a78c8'], [1, '#34488a']]); ctx.strokeStyle = '#15111a'; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(-20, 1284); ctx.quadraticCurveTo(300, 1236, 540, 1270); ctx.quadraticCurveTo(800, 1240, 1100, 1284); ctx.lineTo(1100, 1500); ctx.lineTo(-20, 1500); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-20, 1302); ctx.quadraticCurveTo(300, 1254, 540, 1288); ctx.quadraticCurveTo(800, 1258, 1100, 1302); ctx.lineTo(1100, 1500); ctx.lineTo(-20, 1500); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.clip(); ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 6; for (let i = -2; i < 12; i++) { ctx.beginPath(); ctx.moveTo(i * 120, 1230); ctx.lineTo(i * 120 - 90, 1500); ctx.stroke(); } ctx.restore();
   },
   fx: lt => ({ bloom: .65, vignette: .55, grain: .06, contrast: .2, sat: .1, tint: [['#3a54c8', .2, 'soft-light'], ['#0a1030', .12, 'multiply']] }),
@@ -533,17 +535,17 @@ SCENES.quiet = {
     const sq = V2.at(...QS.straw), mq = V2.at(...QS.mango), sip = seg(lt, 1.6, 2.1) * (1 - seg(lt, 2.4, 2.7));
     const eyesCam = lt >= b('freeze').s && lt < b('g1').s;
     const straw0 = straw(Object.assign(sq, { t: fr, noBob: fr != null, look: eyesCam ? [0, 0] : [.55, .1], expr: lt < b('s1').s ? 'chill' : inB(lt, 's1') ? 'chill' : eyesCam ? 'shock' : inB(lt, 's2') ? 'dead' : after ? (inB(lt, 's3') ? 'dead' : inB(lt, 's4') ? 'dead' : 'dead') : 'dead',
-      hold: { l: 'clipboard6', r: 'coffee' }, grip: { l: [-100, 30], r: [62, 36] }, clipText: 'CHARTS', arms: { l: 'hold', r: sip > 0 ? [1.95, 1.7] : 'hold' }, lid: lt < b('s1').s ? .5 : undefined }));
+      hold: { l: 'clipboard6', r: 'mug7' }, grip: { l: [-100, 30], r: [78, 48] }, clipText: 'CHARTS', arms: { l: 'hold', r: sip > 0 ? [1.95, 1.7] : 'hold' }, lid: lt < b('s1').s ? .5 : undefined }));
     const mango0 = mango(Object.assign(mq, { t: fr, noBob: fr != null, look: eyesCam ? [0, 0] : [-.5, .1], expr: lt < b('s1').s ? 'happy' : eyesCam ? 'shock' : inB(lt, 'g1') ? 'sour' : inB(lt, 'g2') ? 'hopeful' : inB(lt, 'g3') ? 'happy' : inB(lt, 'g4') || lt >= b('s4').s ? 'sad' : 'neutral',
-      hold: { l: 'card7' }, grip: { l: [-92, -6] }, cardMarks: A7.marks(CUR.start + lt), cardNow: lt, arms: { l: 'hold', r: inB(lt, 'g2') ? 'cheer' : 'rest' } }));
+      hold: { l: 'card7' }, grip: { l: [-92, 4] }, cardMarks: A7.marks(CUR.start + lt), cardNow: lt, arms: { l: 'hold', r: inB(lt, 'g2') ? 'cheer' : 'rest' } }));
     return { straw: straw0, mango: mango0 };
   },
   cam(lt) {
     const sh = SCENES.quiet.shot(lt), b = id => B(id), c = SCENES.quiet.cast(lt), c0 = b('chaos').s;
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    const wq = V2.p2(385, 465, 1900);
+    const wq = V2.p2(390, 465, 1900);
     if (sh === 'calm') { const k = seg(lt, 0, b('s1').s); zoomTo(lerp(540, 530, k), lerp(980, 1000, k), lerp(1, 1.08, k)); }
-    else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 2.0, 80);
+    else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 1.8, 80);
     else if (sh === 'cuM') faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80);
     else if (sh === 'dolly') { const k = easeIO(seg(lt, b('freeze').s, b('freeze').e)), cz = -1300 * k, Zs = 1000; V2.setCam({ f: 1400 * (Zs - cz) / Zs, cz, cy: 360, hy: 860 }); zoomTo(540, 1000, 1.0); }
     else if (sh === 'moon') { const k = seg(lt, b('m1').s, b('m1').e); zoomTo(wq[0], wq[1] + 20, lerp(2.65, 2.85, k)); }
@@ -570,7 +572,7 @@ SCENES.quiet = {
     V2.dof(blurPx, () => S7.stationBack({ noLabel: sh !== 'calm', night: true, t: lt + 7, hours: hrs, qFlash: flash, qFlicker: lt >= b('freeze').s && lt < b('freeze').e ? (hash(Math.floor(lt * 20)) > .35 ? 1 : .2) : 1, board: boardDone, lampsOn, min: lt >= b('clock').s ? 59 + seg(lt, b('clock').s + .3, b('clock').e - .1) : 31, hr: 10, lamps,
       moon: { s: .62, expr: mExpr, look: [-.2, .5], o: { suppress: !['calm', 'dolly', 'moon'].includes(sh) }, char: { acc: inB(lt, 'm1') ? ['sweat'] : [] } } }));
     S7.stationCounter({ night: true });
-    if (sh === 'moon') { const wq = V2.p2(385, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
+    if (sh === 'moon') { const wq = V2.p2(390, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
     if (sh !== 'moon' && sh !== 'panel' && sh !== 'clock') {
       const sp = c.straw, mp = c.mango, subj = sh === 'cuS' ? 'straw' : sh === 'cuM' ? 'mango' : null;
       if (sh === 'desk') { SCENES.quiet.deskShot(lt); } else { (subj && subj !== 'straw' ? nbr : drawChar)(sp); (subj && subj !== 'mango' ? nbr : drawChar)(mp); }
@@ -612,15 +614,16 @@ SCENES.quiet = {
     return { bloom: .7, vignette: .55, grain: .06, contrast: .2, sat: chaos ? .22 : .1, aberr: sh === 'dolly' ? 3 : chaos ? 2.5 : 0, tint: [['#3a54c8', .2, 'soft-light'], ['#0a1030', .12, 'multiply']], fade: dark * (hash(Math.floor(lt * 20)) > .3 ? 1 : .3) + (lt >= b('chaos').e - .1 && lt < b('chaos').e + .02 ? .5 : 0), fadeColor: '0,0,12' };
   },
   blur: lt => { const sh = SCENES.quiet.shot(lt); return sh === 'wheel' || sh === 'banana' || sh === 'hall' ? 6 : 1; },
+  clock: lt => lt >= B('clock').s + .75 ? '11:00 PM' : CUR.clock,   // the time pill follows the clock insert when it jumps to eleven
   over(lt) {
     const b = id => B(id), c0 = b('chaos').s, sh = SCENES.quiet.shot(lt);
     A7.cardHud(CUR.start + lt, { appear: 1 });
     // each square, named as it falls
     if (lt >= c0 && lt < b('chaos').e && sh !== 'card') {
-      for (const d of A7.dabs()) { const a = CUR.start + lt - d.t; if (a < 0 || a > .4 || d.i < 7) continue; const k = seg(a, 0, .12), f = 1 - seg(a, .22, .4); ctx.save(); ctx.globalAlpha *= f; ctx.translate(540, (sh === 'hall' ? 380 : 1320) + (d.i % 3) * 14); ctx.scale(lerp(1.15, 1, easeOut(k)), lerp(1.15, 1, easeOut(k))); ctx.rotate(((d.i * 7) % 5 - 2) * .03);
+      for (const d of A7.dabs()) { const a = CUR.start + lt - d.t; if (a < 0 || a > .4 || d.i < 7) continue; const k = seg(a, 0, .12), f = 1 - seg(a, .22, .4); ctx.save(); ctx.globalAlpha *= f; ctx.translate(540, (sh === 'hall' ? 380 : sh === 'desk' ? 315 : 1320) + (d.i % 3) * 14); ctx.scale(lerp(1.15, 1, easeOut(k)), lerp(1.15, 1, easeOut(k))); ctx.rotate(((d.i * 7) % 5 - 2) * .03);
         text(A7.CARD[d.i] + '!', 0, 0, { size: 96, font: 'Bangers', weight: 400, fill: '#ff7ac8', lw: 14, stroke: '#150f22', spacing: 3, shadow: 12 }); ctx.restore(); }
     }
-    if (lt >= b('freeze').s && lt < b('freeze').e + .5) { const a = seg(lt, b('freeze').s, b('freeze').s + .2) * (1 - seg(lt, b('freeze').e + .1, b('freeze').e + .5)); if (a > 0) { ctx.save(); ctx.globalAlpha *= a; ctx.translate(540, 1338); ctx.scale(lerp(1.15, 1, easeOut(seg(lt, b('freeze').s, b('freeze').s + .2))), lerp(1.15, 1, easeOut(seg(lt, b('freeze').s, b('freeze').s + .2)))); text('Q WORD', 0, 0, { size: 132, font: 'Bangers', weight: 400, fill: '#ff3c5a', lw: 16, stroke: '#150f22', spacing: 4, shadow: 16 }); ctx.restore(); } }
+    if (lt >= b('freeze').s && lt < b('freeze').e + .5) { const a = seg(lt, b('freeze').s, b('freeze').s + .2) * (1 - seg(lt, b('freeze').e + .1, b('freeze').e + .5)); if (a > 0) { ctx.save(); ctx.globalAlpha *= a; ctx.translate(540, 1500); ctx.scale(lerp(1.15, 1, easeOut(seg(lt, b('freeze').s, b('freeze').s + .2))), lerp(1.15, 1, easeOut(seg(lt, b('freeze').s, b('freeze').s + .2)))); text('Q WORD', 0, 0, { size: 132, font: 'Bangers', weight: 400, fill: '#ff3c5a', lw: 16, stroke: '#150f22', spacing: 4, shadow: 16 }); ctx.restore(); } }
   },
 };
 
@@ -635,7 +638,7 @@ SCENES.report = {
   cast(lt) {
     const b = id => B(id), dp = SCENES.report.dpath(lt), walking = lt > .25 && lt < 1.75;
     const d = drag(Object.assign(V2.at(...dp), { stride: 40, look: [-.7, 0], expr: inB(lt, 'd1') ? 'happy' : inB(lt, 'd2') ? 'happy' : lt >= b('flick2').s && lt < b('s2').s ? (lt > b('flick2').s + .5 ? 'shock' : 'happy') : lt >= b('s2').s ? 'panic' : 'chill',
-      hold: { l: 'lunchbox' }, grip: { l: [-82, 92] }, arms: { l: 'hold', r: inB(lt, 'd1') || inB(lt, 'd2') ? 'wave' : 'rest' }, acc: ['sleepmask', 'badge'], badgeText: 'NIGHTS' }));
+      hold: { l: 'lunchbox' }, grip: { l: [-82, 92] }, arms: { l: 'hold', r: inB(lt, 'd1') || inB(lt, 'd2') ? 'wave' : 'rest' }, acc: ['sleepmask', 'badge7'], badgeText: 'NIGHTS' }));
     if (walking) { d.gaitW = pathDist(SCENES.report.dpath, lt); d.axis = 'x'; d.dir = -1; d.transit = lt < 1.7; }
     const s0 = straw(Object.assign(V2.at(-170, 1000), { look: [.6, .1], expr: inB(lt, 's1') ? 'dead' : inB(lt, 's2') ? 'smug' : lt >= b('flick2').s ? 'smug' : 'chill', hold: { l: 'clipboard6' }, grip: { l: [-110, 30] }, clipText: lt >= b('stamp').e ? 'QUIET' : 'CHARTS', arms: { l: 'hold', r: inB(lt, 's2') ? 'thumb' : 'rest' }, lid: lt < b('s1').s ? .45 : undefined }));
     return { drag: d, straw: s0 };
@@ -643,11 +646,11 @@ SCENES.report = {
   cam(lt) {
     const sh = SCENES.report.shot(lt), c = SCENES.report.cast(lt), b = id => B(id);
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    const wq = V2.p2(385, 465, 1900);
+    const wq = V2.p2(390, 465, 1900);
     if (sh === 'wide') { const k = seg(lt, 0, b('d1').s); zoomTo(505, lerp(990, 975, k), lerp(1, 1.06, k)); }
     else if (sh === 'cuD') { const k = seg(lt, b('flick2').s, b('flick2').e); const kk = lt >= b('flick2').s ? lerp(1.5, 2.5, easeIO(k)) : 1.5; faceZoom({ kind: 'dragon', x: c.drag.x, y: c.drag.y, s: c.drag.s }, kk, 80); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 1.7, 80);
-    else if (sh === 'two') zoomTo(500, 1010, 1.12);
+    else if (sh === 'two') zoomTo(446, 1010, 1.12);
     else if (sh === 'moon') { const k = seg(lt, b('m2').s, b('m2').e); zoomTo(wq[0], wq[1] + 20, lerp(2.65, 2.95, k)); }
   },
   draw(lt) {
@@ -662,7 +665,7 @@ SCENES.report = {
       moon: { s: .62, expr: mExpr, look: [-.1, .4], o: { suppress: !['wide', 'moon'].includes(sh) }, char: { acc: sh === 'moon' && lt > b('m2').s + .5 ? ['sweat'] : [] } } }));
     S7.stationCounter({ night: true });
     if (sh !== 'moon') { (subj && subj !== 'straw' ? nbr : drawChar)(c.straw); (subj && subj !== 'drag' ? nbr : drawChar)(c.drag); }
-    else { const wq = V2.p2(385, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
+    else { const wq = V2.p2(390, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
     V2.addLight({ x: 400, y: 1000, r: 800, color: '255,200,120', a: .35 * lampsOn });
     V2.dust(60, 600, 1020, 1400, lt, { n: 26, alpha: .3, color: '200,215,255' });
   },
@@ -688,10 +691,10 @@ SCENES.end = {
     V2.setLight({ key: [-.4, -.8], keyColor: '#e8ecff', keyA: .26, rim: '#9fc4ff', rimA: .6, shadow: '#0a0a24', shadowA: .45, amb: '#8a90ff', ambA: .1 });
     V2.opts.reflect = true;
     const row = [['straw', { x: 180, s: .82, acc: ['steth', 'badge', 'bandage'], expr: 'happy', lashes: true }], ['mango', { x: 360, s: .82, acc: ['badge7', 'gaitbelt7', 'keys7'], badgeText: 'CNA', expr: 'happy' }], ['papaya', { x: 540, s: .86, acc: ['visor', 'lanyard'], expr: 'happy' }],
-      ['goji', { x: 720, s: .82, acc: ['wolfears', 'gown'], expr: 'happy', browColor: '#f2f2f2', browW: 11 }], ['dragon', { x: 900, s: .8, acc: ['sleepmask', 'badge'], badgeText: 'NIGHTS', expr: 'chill' }]];
+      ['goji', { x: 720, s: .82, acc: ['wolfears', 'gown'], expr: 'happy', browColor: '#f2f2f2', browW: 11 }], ['dragon', { x: 900, s: .8, acc: ['sleepmask', 'badge7'], badgeText: 'NIGHTS', expr: 'chill' }]];
     REG.suppress++;
     row.forEach(([kind, extra], i) => { const hop = Math.abs(Math.sin(lt * 4.2 + i)) * 14, pop = easeBack(seg(lt, .6 + i * .12, .95 + i * .12));
-      if (pop > 0) drawChar(Object.assign({ kind, id: kind, y: fy - hop + (kind === 'straw' ? 8.9 * extra.s * pop : 0), arms: { l: 'cheer', r: 'wave' }, t: lt + i, transit: lt < 2.4 }, extra, { s: extra.s * pop })); });
+      if (pop > 0) drawChar(Object.assign({ kind, id: kind, y: fy - hop, lift: kind === 'straw' ? -11.8 * extra.s * pop : 0, arms: { l: 'cheer', r: 'wave' }, t: lt + i, transit: lt < 2.4 }, extra, { s: extra.s * pop })); });
     REG.suppress--;
   },
   fx: lt => ({ bloom: .7, vignette: .5, grain: .05, fade: lt < .25 ? 1 - lt / .25 : 0 }),
@@ -710,14 +713,17 @@ SCENES.end = {
       reg('overlay', [540 - 440 * tk, 1710 - 80 * tk, 540 + 440 * tk, 1710 + 80 * tk], { id: 'teaser' });
       ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8; ctx.fillStyle = 'rgba(14,10,36,.92)'; rr(-440, -80, 880, 160, 80); ctx.fill(); ctx.shadowColor = 'transparent';
       ctx.strokeStyle = 'rgba(255,214,150,.9)'; ctx.lineWidth = 4; rr(-440, -80, 880, 160, 80); ctx.stroke();
+      ctx.font = '900 30px Nunito'; ctx.letterSpacing = '6px'; const w1 = ctx.measureText('NEXT TIME').width; ctx.letterSpacing = '0px';
+      ctx.font = '400 56px Bangers'; ctx.letterSpacing = '2px'; const w2 = ctx.measureText('The Double Shift').width; ctx.letterSpacing = '0px';
+      const cx0 = -(108 + 40 + Math.max(w1, w2)) / 2 + 54, tx0 = cx0 + 54 + 40;   // clock centre and the left edge of the words, centred as one group
       // a wall clock showing a quarter past eleven, with a second hand sweeping
-      ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = '#2a2530'; ctx.lineWidth = 5; ell(-340, 0, 54, 54); ctx.fill(); ctx.stroke();
-      for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; ctx.lineWidth = i % 3 ? 2 : 4; ctx.beginPath(); ctx.moveTo(-340 + Math.sin(a) * 42, -Math.cos(a) * 42); ctx.lineTo(-340 + Math.sin(a) * 49, -Math.cos(a) * 49); ctx.stroke(); }
-      ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-340, 0); ctx.lineTo(-340 + Math.sin(.5 * TAU / 4 * 3 / 3 + 3.14) * 0, 0); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-340, 0); ctx.lineTo(-340 + Math.sin(TAU * 11.25 / 12) * 26, -Math.cos(TAU * 11.25 / 12) * 26); ctx.stroke(); ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-340, 0); ctx.lineTo(-340 + Math.sin(TAU * .25) * 36, -Math.cos(TAU * .25) * 36); ctx.stroke();
-      const sa = (lt * 6) % 60 / 60 * TAU; ctx.strokeStyle = '#e8193a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-340, 0); ctx.lineTo(-340 + Math.sin(sa) * 44, -Math.cos(sa) * 44); ctx.stroke();
-      text('NEXT TIME', -250, -34, { size: 30, fill: '#ffd1e6', weight: 900, align: 'left', spacing: 6 });
-      text('The Double Shift', -250, 22, { size: 56, font: 'Bangers', weight: 400, fill: '#ffffff', align: 'left', lw: 10, stroke: '#150f22', spacing: 2 });
+      ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = '#2a2530'; ctx.lineWidth = 5; ell(cx0, 0, 54, 54); ctx.fill(); ctx.stroke();
+      for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; ctx.lineWidth = i % 3 ? 2 : 4; ctx.beginPath(); ctx.moveTo(cx0 + Math.sin(a) * 42, -Math.cos(a) * 42); ctx.lineTo(cx0 + Math.sin(a) * 49, -Math.cos(a) * 49); ctx.stroke(); }
+      ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx0, 0); ctx.lineTo(cx0 + Math.sin(.5 * TAU / 4 * 3 / 3 + 3.14) * 0, 0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx0, 0); ctx.lineTo(cx0 + Math.sin(TAU * 11.25 / 12) * 26, -Math.cos(TAU * 11.25 / 12) * 26); ctx.stroke(); ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(cx0, 0); ctx.lineTo(cx0 + Math.sin(TAU * .25) * 36, -Math.cos(TAU * .25) * 36); ctx.stroke();
+      const sa = (lt * 6) % 60 / 60 * TAU; ctx.strokeStyle = '#e8193a'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cx0, 0); ctx.lineTo(cx0 + Math.sin(sa) * 44, -Math.cos(sa) * 44); ctx.stroke();
+      text('NEXT TIME', tx0, -34, { size: 30, fill: '#ffd1e6', weight: 900, align: 'left', spacing: 6 });
+      text('The Double Shift', tx0, 22, { size: 56, font: 'Bangers', weight: 400, fill: '#ffffff', align: 'left', lw: 10, stroke: '#150f22', spacing: 2 });
       ctx.restore();
     }
   },

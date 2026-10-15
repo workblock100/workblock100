@@ -133,16 +133,37 @@ EXT.acc.gaitbelt7 = (o, k, t, layer) => {   // the same belt as Episodes 5 and 6
 };
 EXT.acc.badge7 = (o, k, t, layer) => {   // the ID badge from the engine, hung lower on the chest so a wide-open eye never touches its corner
   if (layer !== 'front') return;
-  ctx.save(); ctx.translate(k.rx * .58, k.ry * .26); ctx.rotate(.08);
+  ctx.save(); ctx.translate(k.rx * .64, k.ry * .33); ctx.rotate(.08); ctx.scale(.9, .9);
   ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-22, -14, 44, 56, 5); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#e8193a'; ctx.fillRect(-16, -8, 32, 22);
   const bt = o.badgeText || 'NURSE';
   text(bt, 0, 28, { size: bt.length > 6 ? 8 : 10, fill: INK, maxW: 40 });
   ctx.restore();
 };
+EXT.acc.lanyard7 = (o, k, t, layer) => {   // the engine's lanyard, hung from the shoulders to well below the mouth
+  if (layer !== 'front') return;
+  ctx.strokeStyle = '#2a6fdb'; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(-k.rx * .7, k.ry * .14); ctx.quadraticCurveTo(-k.rx * .2, k.ry * .8, 0, k.ry * .86); ctx.quadraticCurveTo(k.rx * .2, k.ry * .8, k.rx * .7, k.ry * .14); ctx.stroke();
+  ctx.strokeStyle = '#c0c6cf'; ctx.lineWidth = 3;
+  for (let i = 0; i < 4; i++) { ctx.save(); ctx.translate(0, k.ry * .88); ctx.rotate(-.5 + i * .33 + Math.sin(t * 3) * .1); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 28); ctx.stroke(); ctx.fillStyle = '#d7dde5'; rr(-6, 22, 12, 16, 3); ctx.fill(); ctx.restore(); }
+};
+EXT.acc.bandage7 = (o, k, t, layer) => {   // the forehead bandage, set higher so its lower end stays clear of the eyebrow tip
+  if (layer !== 'front') return;
+  ctx.save(); ctx.translate(k.rx * .34, -k.ry * .82); ctx.rotate(.6);
+  ctx.fillStyle = '#f2c79a'; ctx.strokeStyle = '#a0764a'; ctx.lineWidth = 2.5; rr(-26, -9, 52, 18, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e0ae7c'; ctx.fillRect(-9, -7, 18, 14);
+  ctx.restore();
+};
+EXT.acc.unionpin7 = (o, k, t, layer) => {   // Mr. Pear's local 9 pin, a little lower on the cheek so it clears his eye and mouth
+  if (layer !== 'front') return;
+  ctx.save(); ctx.translate(-k.rx * .46, k.ry * .44);
+  ctx.fillStyle = '#e63946'; ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ell(0, 0, 15, 15); ctx.fill(); ctx.stroke();
+  text('9', 0, 1, { size: 17, font: 'Bangers', weight: 400, fill: '#fff' });
+  ctx.restore();
+};
 EXT.acc.keys7 = (o, k, t, layer) => {   // the key ring, hung from the waist belt
   if (layer !== 'front') return;
-  ctx.save(); ctx.translate(-k.rx * .68, k.ry * .76); ctx.rotate(Math.sin(t * 2.4 + 1) * .07);
+  ctx.save(); ctx.translate(k.rx * .68, k.ry * .76); ctx.scale(-1, 1); ctx.rotate(Math.sin(t * 2.4 + 1) * .07);   // on the hip away from the other nurses, so no glove ever lands on it
   const cols = ['#d4af37', '#c0c6cf', '#d4af37', '#b87333', '#c0c6cf', '#d4af37', '#c0c6cf'];
   for (let i = 0; i < 7; i++) {
     ctx.save(); ctx.rotate(-1.2 + i * .4); ctx.translate(0, 12);
@@ -178,7 +199,14 @@ EXT.acc.peeled = (o, k, t, layer) => {   // Mr. Banana, mid-escape: cream fruit 
 };
 
 // ------------------------------------------------------------------ props
-Object.assign(PROP_BOX, { mic7: Object.assign([-16, -62, 16, 10], { nearFace: true }), dauber: [-18, -62, 18, 22], card7: Object.assign([-6, -128, 98, 10], { mirror: true }), thermo7: [-26, -90, 26, 18] });
+Object.assign(PROP_BOX, { mug7: Object.assign([-30, -66, 42, 6], { nearFace: true }), mic7: Object.assign([-16, -62, 16, 10], { nearFace: true }), dauber: [-18, -62, 18, 22], card7: Object.assign([-6, -128, 98, 10], { mirror: true }), thermo7: [-26, -90, 26, 18] });
+EXT.prop.mug7 = (side, o, t) => {   // the 3-11 coffee mug, handle outward, a little steam rising clear of the face
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 3.5; rr(-26, -54, 52, 56, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(28, -26, 11, -PI / 2, PI / 2); ctx.stroke();
+  ctx.fillStyle = '#5a3210'; ell(0, -50, 22, 5); ctx.fill();
+  text('3-11', 0, -24, { size: 13, fill: '#d62828' });
+  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; for (const dx of [-2, 12]) { ctx.beginPath(); ctx.moveTo(dx, -60); ctx.quadraticCurveTo(dx + 6 * Math.sin(t * 3 + dx), -70, dx, -80); ctx.stroke(); }
+};
 EXT.prop.mic7 = (side, o, t) => {   // the engine's microphone, registered as held near the face
   ctx.fillStyle = '#2b2b33'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-7, -30, 14, 38, 5); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#9aa3ad'; ell(0, -44, 15, 17); ctx.fill(); ctx.stroke();
@@ -193,23 +221,23 @@ EXT.prop.dauber = (side, o, t) => {   // a bingo dauber: fat bottle, foam tip, a
   ctx.restore();
 };
 EXT.prop.card7 = (side, o, t) => {   // a bingo card gripped by its lower edge, rising away from the body so the hand never covers the grid
-  ctx.save(); ctx.rotate(side * -.08); ctx.scale(side, 1);
-  A.drawCard(-4, -126, 98, 128, o.cardMarks || [], { mini: true, now: o.cardNow, frame: 'rgba(25,16,30,.9)' });
+  ctx.save(); ctx.rotate(side * -.08);
+  A.drawCard(side < 0 ? -94 : -4, -126, 98, 128, o.cardMarks || [], { mini: true, now: o.cardNow, frame: 'rgba(25,16,30,.9)' });
   ctx.restore();
 };
 
 // ------------------------------------------------------------------ constructors
-A.papaya = o => Object.assign({ kind: 'papaya', id: 'papaya', who: 'papa', s: SC, y: G, acc: ['visor', 'lanyard'], expr: 'happy', seed: 61 }, o);
+A.papaya = o => Object.assign({ kind: 'papaya', id: 'papaya', who: 'papa', s: SC, y: G, acc: ['visor', 'lanyard7'], expr: 'happy', seed: 61 }, o);
 A.goji = o => Object.assign({ kind: 'goji', id: 'goji', who: 'goji', s: SC, y: G, acc: ['wolfears', 'gown'], expr: 'neutral', browColor: '#f2f2f2', browW: 11, seed: 67 }, o);
-A.pear = A6.pear;
+A.pear = o => { const r = A6.pear(o); r.acc = (r.acc || []).map(a => a === 'unionpin' ? 'unionpin7' : a); return r; };
 A.mango = o => A6.mango(Object.assign({ acc: ['badge7', 'gaitbelt7', 'keys7'] }, o));
-A.straw = o => { const r = A6.straw(o); r.y += 8.9 * (r.s || 1); return r; };   // soles on the floor point: the contact shadow and the reflection now touch her shoes
-A.lemon = o => Object.assign({ kind: 'lemon', id: 'lemon', who: 'lemon', s: SC, y: G, acc: ['readers', 'lanyard'], expr: 'neutral' }, o);
+A.straw = o => { const r = A6.straw(o); r.lift = (r.lift || 0) - 11.8 * (r.s || 1); r.acc = (r.acc || []).map(a => a === 'bandage' ? 'bandage7' : a); return r; };   // the body sinks against its own shadow and reflection: her soles now meet them, as everyone else's do
+A.lemon = o => Object.assign({ kind: 'lemon', id: 'lemon', who: 'lemon', s: SC, y: G, acc: ['readers', 'lanyard7'], expr: 'neutral' }, o);
 A.cran = o => Object.assign({ kind: 'cran', id: 'cran', who: 'cran', s: SC, y: G, acc: ['curlers', 'glasses'], expr: 'happy' }, o);
 A.banana = o => Object.assign({ kind: 'banana', id: 'banana', who: 'banana', s: SC, y: G, acc: [], expr: 'happy' }, o);
 A.pine = o => Object.assign({ kind: 'pine', id: 'pine', who: 'pinephone', s: SC, y: G, acc: ['chain'], expr: 'neutral' }, o);
 A.apple = o => Object.assign({ kind: 'apple', id: 'apple', who: 'apple', s: SC, y: G, acc: ['nightcap'], expr: 'dead', lid: .8 }, o);
-A.drag = o => Object.assign({ kind: 'dragon', id: 'drag', who: 'drag', s: SC, y: G, acc: ['sleepmask', 'badge'], badgeText: 'NIGHTS', expr: 'chill' }, o);
+A.drag = o => Object.assign({ kind: 'dragon', id: 'drag', who: 'drag', s: SC, y: G, acc: ['sleepmask', 'badge7'], badgeText: 'NIGHTS', expr: 'chill' }, o);
 
 // ------------------------------------------------------------------ the Moon, at full
 // a lit disc with a face: the flat light makes it glow from within instead of being modeled by the room's key
@@ -223,7 +251,7 @@ A.moon = (x, y, s = 1, o = {}) => {
   if (o.suppress) REG.suppress--;
   Object.assign(V2.LIGHT, keep);
 };
-function lerpC(a, b, k) { return V2.rgba(V2.mix(a, b, k), 1); }
+function lerpC(a, b, k) { return '#' + V2.mix(a, b, k).map(v => Math.round(v).toString(16).padStart(2, '0')).join(''); }
 A.lerpC = lerpC;
 // the glow around the Moon: a hot core, a wide bloom and the 22 degree ring that ice crystals make in thin cloud
 A.halo = (x, y, r, o = {}) => {
@@ -349,8 +377,8 @@ A.drawCard = (x, y, w, h, marks = [], o = {}) => {
   // B I N G O
   HDR.forEach(([ch2, c], i) => {
     const cx = gx + (i + .5) * cw, cy = y + titleH + hdrH / 2;
-    ctx.fillStyle = c; ctx.beginPath(); ctx.arc(cx, cy, Math.min(cw, hdrH) * .42, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(25,16,30,.8)'; ctx.lineWidth = mini ? 1.6 : 4; ctx.stroke();
-    text(ch2, cx, cy + (mini ? 1 : 3), { size: Math.round(Math.min(cw, hdrH) * .6), font: 'Bangers', weight: 400, fill: '#fff', lw: mini ? 0 : 6, stroke: 'rgba(25,16,30,.7)' });
+    ctx.fillStyle = c; ctx.beginPath(); ctx.arc(cx, cy, Math.min(cw, hdrH) * .36, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(25,16,30,.8)'; ctx.lineWidth = mini ? 1.6 : 4; ctx.stroke();
+    text(ch2, cx, cy + (mini ? 1 : 3), { size: Math.round(Math.min(cw, hdrH) * .52), font: 'Bangers', weight: 400, fill: '#fff', lw: mini ? 0 : 6, stroke: 'rgba(25,16,30,.7)' });
   });
   // cells
   for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
@@ -483,9 +511,11 @@ A.ruleCard = (p, o = {}) => {
   ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12; ctx.fillStyle = 'rgba(12,10,28,.95)'; rr(-w / 2, -h / 2, w, h, 40); ctx.fill(); ctx.shadowColor = 'transparent';
   ctx.strokeStyle = '#ff3b55'; ctx.lineWidth = 8; rr(-w / 2, -h / 2, w, h, 40); ctx.stroke();
   text('RULE #1', 0, -h / 2 + 76, { size: 104, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 12, stroke: '#150f22', spacing: 4 });
-  const qx = 176, qy = 52, qs = 132;
-  text('NEVER SAY THE', -218, 26, { size: 40, fill: '#c9d2f0', weight: 900, spacing: 3 });
+  const qy = 52, qs = 132, gap = 34;
+  ctx.font = '900 40px Nunito'; ctx.letterSpacing = '3px'; const tw = ctx.measureText('NEVER SAY THE').width; ctx.letterSpacing = '0px';
   ctx.font = `400 ${qs}px Bangers`; ctx.letterSpacing = '4px'; const qw = ctx.measureText('QUIET').width; ctx.letterSpacing = '0px';
+  const ringW = qw + 60 + 16, x0 = -(tw + gap + ringW) / 2, tx = x0 + tw / 2, qx = x0 + tw + gap + ringW / 2;   // one line, centred as a whole: words, gap, circled word
+  text('NEVER SAY THE', tx, 26, { size: 40, fill: '#c9d2f0', weight: 900, spacing: 3 });
   text('QUIET', qx, qy, { size: qs, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 0, spacing: 4 });
   if (slash > 0) { ctx.strokeStyle = '#ff3b55'; ctx.lineWidth = 16; ctx.lineCap = 'round'; ctx.beginPath(); ctx.ellipse(qx, qy, qw / 2 + 30, 76, 0, 0, TAU * slash); ctx.stroke();
     const sl = clamp((slash - .5) * 2); if (sl > 0) { ctx.beginPath(); ctx.moveTo(qx - qw / 2 - 10, qy + 62); ctx.lineTo(qx - qw / 2 - 10 + (qw + 20) * sl, qy + 62 - 124 * sl); ctx.stroke(); } }

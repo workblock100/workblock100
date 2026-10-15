@@ -115,7 +115,7 @@ const S7 = (() => {
     const { x0, x1, y0, y1 } = rect, f = [p2(x0, y0, zb), p2(x1, y0, zb), p2(x1, y1, zb), p2(x0, y1, zb)], k = kz(zb), flash = o.flash ?? 0;
     poly(f, '#15131c', 'rgba(255,255,255,.22)', 3);
     const cx = (f[0][0] + f[1][0]) / 2, w = f[1][0] - f[0][0], h = f[0][1] - f[2][1], top = f[2][1];
-    ctx.save(); ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.font = `900 ${h * .16}px Nunito`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${h * .02}px`; ctx.fillText(o.title ?? 'HOURS SINCE THE Q WORD', cx, top + h * .17); ctx.letterSpacing = '0px'; ctx.restore();
+    ctx.save(); ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.font = `900 ${h * .185}px Nunito`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${h * .018}px`; ctx.fillText(o.title ?? 'HOURS SINCE THE Q WORD', cx, top + h * .18); ctx.letterSpacing = '0px'; ctx.restore();
     const v = Math.max(0, Math.round(hours)), dg = [Math.floor(v / 10) % 10, v % 10], dw = w * .15, dh = h * .46, gap = dw * .5, tx = cx - (2 * dw + gap) / 2, ty = top + h * .34;
     const flicker = o.flicker ?? 1;
     dg.forEach((d, i) => digit7(tx + i * (dw + gap), ty, dw, dh, v < 10 && i === 0 ? null : d, flicker));
@@ -155,7 +155,7 @@ const S7 = (() => {
     const night = !!o.night, pal = night ? NIGHT : DAYC, zb = 1900, hw = 760, ch = 900, t = o.t ?? 0;
     shell({ zb, hw, ch, wall: pal.wall, wain: pal.wain, floorA: pal.floorA, floorB: pal.floorB, ceil: pal.ceil, fog: pal.fog, fogAmt: night ? .3 : .26, tile: 120, rail: 110 });
     // the window, right: afternoon sky, or night with stars; the Moon (night) is painted inside the glass so the frame crops it
-    const win = winPane(zb, { x0: 205, x1: 565, y0: 230, y1: 700 }, f => {
+    const win = winPane(zb, { x0: 220, x1: 560, y0: 230, y1: 700 }, f => {
       const [bx, by] = f[0], [tx2, ty] = f[2], cx = (f[0][0] + f[1][0]) / 2, cy = (ty + by) / 2;
       if (night) { A7.stars(t, ty + (by - ty) * .95, { n: 110, seed: 5, a: .9 }); A7.clouds(t, ty + 30, by - 60, { n: 3, tint: '120,130,190', belly: '40,50,110', a: .3, speed: 4, seed: 7, scale: .4 }); }
       else { A7.clouds(t, ty + 20, by - 60, { n: 3, a: .9, speed: 6, seed: 3, scale: .5 }); }
@@ -163,13 +163,13 @@ const S7 = (() => {
     }, { sky: night ? [[0, '#070a24'], [.6, '#16204e'], [1, '#2c3a82']] : [[0, '#6fb4f2'], [1, '#cfe9fb']], curtains: night ? '#3a3f78' : '#d98a5c' });
     // the whiteboard and the sign above it, centre
     const wb = whiteboard(zb, { x0: -290, x1: 130, y0: 330, y1: 690 }, o.board || [], {});   // clear of the window, so the Moon is never behind it
-    const sg = qSign(zb, { x0: -290, x1: 130, y0: 720, y1: 860 }, o.hours ?? 41, { flash: o.qFlash ?? 0, flicker: o.qFlicker ?? 1, title: o.qTitle });
+    const sg = qSign(zb, { x0: -290, x1: 130, y0: 734, y1: 862 }, o.hours ?? 41, { flash: o.qFlash ?? 0, flicker: o.qFlicker ?? 1, title: o.qTitle });
     // the call-light board and a clock, left
     { const pts = [p2(-700, 330, zb), p2(-450, 330, zb), p2(-450, 740, zb), p2(-700, 740, zb)]; poly(pts, '#20242c', 'rgba(255,255,255,.18)', 2.4);
       const lamps = o.lamps || [];
       for (let r = 0; r < 7; r++) for (let c = 0; c < 4; c++) { const i = r * 4 + c, L = lamps[i], [lx, ly] = p2(-676 + c * 56, 690 - r * 54, zb), kk = kz(zb); ctx.fillStyle = L ? `rgb(${L[0]})` : '#3a3f48'; ctx.beginPath(); ctx.ellipse(lx + 12 * kk, ly, 13 * kk, 17 * kk, 0, 0, TAU); ctx.fill(); if (L) V2.glow(lx + 12 * kk, ly, 80 * kk, L[0], .8 * (L[1] ?? 1), 'screen', .5); }
-      if (!o.noLabel) text('CALL LIGHTS', ...p2(-575, 775, zb), { size: 20 * kz(zb), fill: '#cdd5e0', weight: 900, spacing: 2 }); }   // close-ups crop the panel at the frame edge, and the word with it
-    wallClock(-346, 800, zb, 0, o.min ?? 5, o.hr ?? 3, 44);   // clear of the sign's left end, and still inside the frame in the close-up on the sign
+      if (!o.noLabel) text('CALL LIGHTS', ...p2(-575, 775, zb), { size: 26 * kz(zb), fill: night ? '#cfd8ee' : '#3a4556', weight: 900, spacing: 2 }); }   // close-ups crop the panel at the frame edge, and the word with it
+    wallClock(-362, 800, zb, 0, o.min ?? 5, o.hr ?? 3, 42);   // clear of the sign's left end, and still inside the frame in the close-up on the sign
     for (const z of [300, 900, 1500]) { ceilingLamp(-300, z, ch, o.lampsOn ?? 1, night ? '255,226,170' : '255,248,226'); ceilingLamp(300, z, ch, o.lampsOn ?? 1, night ? '255,226,170' : '255,248,226'); }
     plant3(690, 1500, 1.0);
     return { zb, win, wb, sg };
@@ -206,7 +206,7 @@ const S7 = (() => {
     ctx.fillStyle = '#cfd4da'; rr(-8, -84, 22, 6, 3); ctx.fill();
     // roof sign
     ctx.fillStyle = '#fff6c0'; ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-34, -178, 72, 28, 6); ctx.fill(); ctx.stroke();
-    text('TAXI', 2, -164, { size: 22, font: 'Bangers', weight: 400, fill: '#15111a', spacing: 3 });
+    ctx.save(); ctx.translate(2, -164); ctx.scale(dir, 1); text('TAXI', 0, 0, { size: 22, font: 'Bangers', weight: 400, fill: '#15111a', spacing: 3 }); ctx.restore();
     // lights and bumpers
     ctx.fillStyle = '#fffbe0'; ell(190, -62, 10, 14); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#e8283c'; ell(-188, -62, 6, 12); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#2a2830'; rr(-200, -30, 400, 14, 6); ctx.fill();
@@ -218,6 +218,7 @@ const S7 = (() => {
   // ---------------------------------------------------------------- a wheelchair, three-quarter view. back() sits behind the occupant, front() in front of them
   function wheelchairBack(x, y, s, o = {}) {
     ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+    ctx.fillStyle = 'rgba(12,8,32,.3)'; ctx.beginPath(); ctx.ellipse(0, 6, 138, 18, 0, 0, TAU); ctx.fill();
     ctx.strokeStyle = '#1d1a22'; ctx.lineWidth = 9; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(-70, -26); ctx.lineTo(-70, -210); ctx.lineTo(-96, -226); ctx.moveTo(70, -26); ctx.lineTo(70, -210); ctx.lineTo(96, -226); ctx.stroke();
     ctx.fillStyle = '#2a2a34'; rr(-76, -204, 152, 30, 10); ctx.fill();
