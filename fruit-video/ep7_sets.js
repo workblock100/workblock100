@@ -162,14 +162,14 @@ const S7 = (() => {
       if (o.moon) { const m = o.moon, ww = f[1][0] - f[0][0]; A7.moon(cx + (m.dx ?? 0) * ww, cy + (m.dy ?? 0) * ww, (m.s ?? .8) * ww / 295, Object.assign({ t, alpha: 1 }, m.o || {}, { char: Object.assign({ expr: m.expr ?? 'neutral', look: m.look ?? [-.5, .4] }, m.char || {}) })); }
     }, { sky: night ? [[0, '#070a24'], [.6, '#16204e'], [1, '#2c3a82']] : [[0, '#6fb4f2'], [1, '#cfe9fb']], curtains: night ? '#3a3f78' : '#d98a5c' });
     // the whiteboard and the sign above it, centre
-    const wb = whiteboard(zb, { x0: -170, x1: 250, y0: 330, y1: 690 }, o.board || [], {});
-    const sg = qSign(zb, { x0: -170, x1: 250, y0: 720, y1: 860 }, o.hours ?? 41, { flash: o.qFlash ?? 0, flicker: o.qFlicker ?? 1, title: o.qTitle });
+    const wb = whiteboard(zb, { x0: -290, x1: 130, y0: 330, y1: 690 }, o.board || [], {});   // clear of the window, so the Moon is never behind it
+    const sg = qSign(zb, { x0: -290, x1: 130, y0: 720, y1: 860 }, o.hours ?? 41, { flash: o.qFlash ?? 0, flicker: o.qFlicker ?? 1, title: o.qTitle });
     // the call-light board and a clock, left
     { const pts = [p2(-700, 330, zb), p2(-450, 330, zb), p2(-450, 740, zb), p2(-700, 740, zb)]; poly(pts, '#20242c', 'rgba(255,255,255,.18)', 2.4);
       const lamps = o.lamps || [];
       for (let r = 0; r < 7; r++) for (let c = 0; c < 4; c++) { const i = r * 4 + c, L = lamps[i], [lx, ly] = p2(-676 + c * 56, 690 - r * 54, zb), kk = kz(zb); ctx.fillStyle = L ? `rgb(${L[0]})` : '#3a3f48'; ctx.beginPath(); ctx.ellipse(lx + 12 * kk, ly, 13 * kk, 17 * kk, 0, 0, TAU); ctx.fill(); if (L) V2.glow(lx + 12 * kk, ly, 80 * kk, L[0], .8 * (L[1] ?? 1), 'screen', .5); }
-      text('CALL LIGHTS', ...p2(-575, 775, zb), { size: 20 * kz(zb), fill: '#cdd5e0', weight: 900, spacing: 2 }); }
-    wallClock(-190 - 0, 800, zb, 0, o.min ?? 5, o.hr ?? 3, 50);
+      if (!o.noLabel) text('CALL LIGHTS', ...p2(-575, 775, zb), { size: 20 * kz(zb), fill: '#cdd5e0', weight: 900, spacing: 2 }); }   // close-ups crop the panel at the frame edge, and the word with it
+    wallClock(-310, 800, zb, 0, o.min ?? 5, o.hr ?? 3, 50);
     for (const z of [300, 900, 1500]) { ceilingLamp(-300, z, ch, o.lampsOn ?? 1, night ? '255,226,170' : '255,248,226'); ceilingLamp(300, z, ch, o.lampsOn ?? 1, night ? '255,226,170' : '255,248,226'); }
     plant3(690, 1500, 1.0);
     return { zb, win, wb, sg };
@@ -262,7 +262,7 @@ const S7 = (() => {
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(60,40,70,.6)';
     for (const [xa, xb, yy] of [[-860, 0, 700], [0, 860, 700]]) { const a = p2(xa, yy, zb), b = p2(xb, yy, zb), mid = [(a[0] + b[0]) / 2, a[1] + 40 * kz(zb)]; ctx.beginPath(); ctx.moveTo(...a); ctx.quadraticCurveTo(mid[0], mid[1] + 40 * kz(zb), ...b); ctx.stroke();
       for (let i = 1; i < 14; i++) { const u = i / 14, x = (1 - u) * (1 - u) * a[0] + 2 * (1 - u) * u * mid[0] + u * u * b[0], y = (1 - u) * (1 - u) * a[1] + 2 * (1 - u) * u * (mid[1] + 40 * kz(zb)) + u * u * b[1]; ctx.fillStyle = ['#ff5a6a', '#ffc928', '#3fc47a', '#4a8af0', '#b06af0'][i % 5]; ctx.beginPath(); ctx.moveTo(x - 16 * kz(zb), y); ctx.lineTo(x + 16 * kz(zb), y); ctx.lineTo(x, y + 36 * kz(zb)); ctx.closePath(); ctx.fill(); ctx.stroke(); } }
-    { const [bx, by] = p2(-210, 660, zb), kk = kz(zb); ctx.save(); ctx.translate(bx, by); ctx.rotate(-.015); text('BINGO NIGHT', 0, 0, { size: 104 * kk, font: 'Bangers', weight: 400, fill: '#ffe135', lw: 12 * kk, stroke: '#2a1a4a', spacing: 6 * kk, shadow: 10 }); ctx.restore(); }
+    if (!o.noBanner) { const [bx, by] = p2(-210, 660, zb), kk = kz(zb); ctx.save(); ctx.translate(bx, by); ctx.rotate(-.015); text('BINGO NIGHT', 0, 0, { size: 104 * kk, font: 'Bangers', weight: 400, fill: '#ffe135', lw: 12 * kk, stroke: '#2a1a4a', spacing: 6 * kk, shadow: 10 }); ctx.restore(); }
     // glass doors out to the lot, left: sky, the lot, and whatever is parked in it
     const doors = { x0: -820, x1: -430, y0: 0, y1: 470 };
     const df = [p2(doors.x0, doors.y0, zb), p2(doors.x1, doors.y0, zb), p2(doors.x1, doors.y1, zb), p2(doors.x0, doors.y1, zb)];

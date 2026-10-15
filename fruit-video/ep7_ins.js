@@ -160,7 +160,7 @@ A.insCard = (absT, lt, o = {}) => {
   reg('overlay', [540 - 412 * sc, 800 - 512 * sc, 540 + 412 * sc, 800 + 512 * sc], { id: 'card-insert', transit: k < 1 });
   const r = A.drawCard(-400, -500, 800, 1000, A.marks(absT), { hi: o.hi || [], t: absT });
   if (o.circle) {   // Straw rings the square in red marker, so nothing sits on top of the words
-    const [i, pk] = o.circle, c = i % 5, rw = Math.floor(i / 5), cx = r.gx + (c + .5) * r.cw, cy = r.gy + (rw + .5) * r.ch, p = easeOut(clamp(pk ?? 1)), rx = r.cw * .54, ry = r.ch * .55, n = 64, sweep = TAU * 1.12 * p;
+    const [i, pk] = o.circle, c = i % 5, rw = Math.floor(i / 5), cx = r.gx + (c + .5) * r.cw, cy = r.gy + (rw + .5) * r.ch, p = easeOut(clamp(pk ?? 1)), rx = r.cw * .45, ry = r.ch * .46, n = 64, sweep = TAU * 1.12 * p;
     ctx.save(); ctx.strokeStyle = '#ff3b55'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
     for (let j = 0; j <= n; j++) { const u = j / n * sweep, wob = 1 + .045 * Math.sin(u * 3 + 1) + .02 * u / TAU, x = cx + Math.cos(u - 1.9) * rx * wob, y = cy + Math.sin(u - 1.9) * ry * wob; j ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
     ctx.stroke(); ctx.restore();
