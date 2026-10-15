@@ -8,8 +8,9 @@ EP = EPISODES[+(params.get('ep') || 1)];
 TL = EP.TL;
 document.title = `Shift Happens: ${EP.title}`;
 window.renderAt = renderAt;
+window.renderMB = EP.v2 ? V2.renderSampled : renderAt;   // a single frame with motion blur applied, for previews
 window.audit = audit;
-window.captureFrames = (start, n) => {
+window.captureFrames = EP.v2 ? V2.captureFrames : (start, n) => {
   const out = [];
   for (let i = 0; i < n; i++) { renderAt((start + i) / FPS); out.push(canvas.toDataURL(window.FMT || 'image/jpeg', window.Q || .93)); }
   return out;

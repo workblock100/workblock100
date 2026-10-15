@@ -10,7 +10,7 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 3: The Holiday Schedule | [`shift-happens-ep3.mp4`](shift-happens-ep3.mp4) | 2:17 |
 | 4: The New Grad | [`shift-happens-ep4.mp4`](shift-happens-ep4.mp4) | 2:09 |
 | 5: Full Moon | [`shift-happens-ep5.mp4`](shift-happens-ep5.mp4) | 2:59 |
-| 6: Five Seconds | [`shift-happens-ep6.mp4`](shift-happens-ep6.mp4) | 2:09 |
+| 6: Alarm Fatigue | [`shift-happens-ep6.mp4`](shift-happens-ep6.mp4) | 3:04 |
 
 To play an episode live in the browser, start a local server in this directory and open
 `http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 6 for other episodes):
@@ -55,16 +55,19 @@ leads a quest for the one blood pressure cuff that works. A runaway laundry cart
 and a changed Wi-Fi password bring the score to seven. The real cause is staffing; the Moon is not even full
 until tomorrow. Night Nurse Dragonfruit arrives rested, and the Sun claims sundowning in the post-credits scene.
 
-## Episode 6: Five Seconds
+## Episode 6: Alarm Fatigue
 
-Kumquat, corporate's Vice President of Speed, rolls out a call-light leaderboard. A resident's
-needs don't count; only the first touch of the button counts. Staff become athletes, a mechanical
-glove wins the KPI, and Mr. Pear exposes what the scoreboard can't measure. Strawberry and Mango
-replace the metric with a simpler rule: answer the bell **and finish helping**. The wall is named
-Employee of the Month. This episode has an all-new corporate arena, racing hallway, room-eight
-conversation, overheated server room, podium tag, and episode-only IK arm/leg rig.
+Thirty-one alarms are going off and four of them matter. Nurse Strawberry can tell them apart by pitch (the chair
+alarm is joyful, the IV pump is always the tubing) and CNA Mango has just found the silence button. The overhead page
+announces the alarms are forty percent quieter, not fewer. At 6:30 PM the unit goes silent, and then one chirp starts
+coming from nowhere: a hunt through the rooms, a laundry cart and a human stack on the ceiling ends with a 9-volt battery
+pulled out of a smoke detector. At 7:00 PM the microwave dings and every nurse in the building stampedes to answer it.
+At 7:05 the Fire Marshal (a Pomegranate in a very large helmet) arrives to ask who is in charge. The post-credits scene
+is a parking lot, a full moon coming up, and the number thirty-three.
 
-**Status:** Voiced 1080×1920 / 30 fps H.264/AAC MP4 rendered and end-to-end decode checked (128.56 seconds). The 30 fps layout and rig audit reports zero issues. Visual review of the compressed export includes all nine sequences and led to an independent demonstration lab and lower bed blanket so Pear's speaking mouth stays visible. An automated speech-to-text check covers all scripted dialogue; full human listening and an in-app TikTok safe-zone preview remain pending. `build/ep6/timeline.js` is the Kokoro-produced lip-sync timeline. See [EP6_PRODUCTION.md](EP6_PRODUCTION.md).
+Episode 6 is built on a new opt-in renderer (`v2_core.js`, `v2_char.js`) and is the first episode held to a hard layout gate:
+true one-point-perspective sets, per-scene lighting and bloom, motion blur, shaded two-bone arms with real hands, and a
+score and stereo sound design written for the picture. Episodes 1 to 5 render exactly as before.
 
 ## The cast
 
@@ -94,13 +97,14 @@ conversation, overheated server room, podium tag, and episode-only IK arm/leg ri
 | Mango | CNA (Ep. 5) | Knows the legend of the good blood pressure cuff |
 | Mr. Pear | Resident (Ep. 5) | Still honors the paid-break clause in his old contract |
 | Dragonfruit | Night nurse (Ep. 5) | Arrives rested just in time for the actual full moon |
-| Kumquat | Corporate KPI consultant (Ep. 6) | Can measure a button, cannot measure actual help |
+| Lime | Resident (Ep. 6) | Hears a chirp. It is their own hearing aid |
+| Pomegranate | Fire Marshal (Ep. 6) | Arrives at 7:05 with a flashlight, a helmet and a mustache. Asks who is in charge |
 
 ## Layout audit
 
-`node render.js audit` checks layout boxes and Episode 6's joint lengths, reach and hand contacts. Episodes 2 to 5
-previously passed at 20 frames per second. Episode 6 passes a full 30 frames per second audit with zero reported
-layout or rig issues; see [EP6_PRODUCTION.md](EP6_PRODUCTION.md) for the current QA record and remaining release checks.
+`node render.js audit` checks every on-screen box (faces, hands, props, captions, HUD, cards) for anything covered, cut off
+or colliding. Episodes 2 to 5 passed at 20 frames per second. Episode 6 is checked at 30 frames per second and the command
+exits non-zero on any issue, so it works as a release gate (`EP=6 node render.js audit 0.0333333333`).
 
 ## How it's made
 
@@ -109,9 +113,12 @@ Everything is generated from code, with no stock assets:
 - `script.json` and `script_ep2.json` to `script_ep6.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
+  Episode 6 uses `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice.
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
   Episodes 2 to 5; `ep1.js` to `ep6.js` are the episodes. Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
+  Episode 6 draws through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
+  with two-bone arms and real hands) that Episodes 1 to 5 never touch.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
@@ -142,16 +149,15 @@ Fonts from Google Fonts: Bangers and Nunito (SIL OFL), Luckiest Guy (Apache 2.0)
 ## Episode 6 build and release gate
 
 ```bash
-node ep6_preflight.js  # JS syntax, scene/audio-cue registration, preview-timeline sanity
-python3 build_audio.py --model /path/to/kokoro-v1.0.onnx --voices /path/to/voices-v1.0.bin --script script_ep6.json --out build/ep6 --var TIMELINE_EP6
-ffmpeg -y -i build/ep6/audio.wav -c:a aac -b:a 192k build/ep6/audio.m4a
-EP=6 node render.js preview 1 10 30 60 90
-EP=6 node render.js audit 0.0333333333
-EP=6 FMT=image/png CRF=20 node render.js video shift-happens-ep6.mp4
-ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json shift-happens-ep6.mp4
-ffmpeg -v error -i shift-happens-ep6.mp4 -f null -
+pip install kokoro-onnx soundfile scipy numpy
+python3 build_audio6.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin   # voices, stereo mix, score, lip-sync -> build/ep6/audio.wav, timeline.js
+EP=6 node render.js events                                                  # footsteps from the animation -> build/ep6/events.json (then run build_audio6.py again)
+EP=6 node render.js audit 0.0333333333                                      # hard gate: exits non-zero on any layout issue
+ffmpeg -y -i build/ep6/audio.wav -c:a aac -b:a 192k build/ep6/audio.m4a     # browser playback and CI
+EP=6 FMT=image/png CRF=21 node render.js video shift-happens-ep6.mp4
+EP=6 node render.js preview 3.2 55.4 120 150 175                            # stills in build/ep6/preview
 ```
 
-A clean terminal audit is **not** a visual sign-off: check every shot at full speed and at phone size,
-inspect hand-to-button/clipboard contacts and listen to the entire encoded export. Do not distribute,
-publish or merge Episode 6 without explicit owner approval.
+`script_ep6.json` holds the scenes, lines, voices and sound cues; `build_music6.py` is the score (every instrument is a few
+lines of numpy); `ep6.js` has the scenes, `ep6_sets.js` and `ep6_rooms.js` the perspective sets, `ep6_art.js` the new fruit and
+props, and `ep6_ins.js` the macro inserts and UI cards.

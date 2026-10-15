@@ -265,6 +265,7 @@ function headTop(o, k) {
   return top;
 }
 function drawChar(o) {
+  if (EP && EP.v2) return V2C.drawChar(o);   // Episode 6 onward: the v2 renderer (v2_char.js)
   const k = KINDS[o.kind], s = o.s || 1, t = o.t ?? T;
   if (o.who && o.talk == null) o.talk = talk(o.who);
   const seed = o.seed ?? (o.kind.charCodeAt(0) * 13 + o.kind.length * 7);
@@ -304,7 +305,6 @@ function drawChar(o) {
 }
 
 function drawLegs(o, k, t) {
-  if (EP && EP.num === 6 && window.EP6_RIG?.drawLegs(o, k, t)) return;
   const hipY = k.shape === 'straw' ? k.ry * .7 : k.shape === 'banana' ? k.ry * .78 : k.shape === 'star' ? k.ry * .74 : k.ry * .8;
   const hx = k.hip || k.rx * .32, L = k.leg || 90;
   const cx = k.shape === 'banana' ? k.rx * .12 : 0;
@@ -675,7 +675,6 @@ function shoulder(k, side) {
 }
 
 function drawArms(o, k, t) {
-  if (EP && EP.num === 6 && window.EP6_RIG?.drawArms(o, k, t)) return;
   const arms = o.arms || {};
   for (const side of [-1, 1]) {
     const key = side < 0 ? 'l' : 'r';
@@ -2208,11 +2207,11 @@ function renderAt(t) {
   const lt = T - CUR.start;
   const S = EP.SCENES[CUR.id];
   REG.items = []; REG.errors = []; REG.order = 0; REG.phase = 'world';
-  if (EP.num === 6) window.EP6_RIG?.beginFrame();
   ctx = mainCtx;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = 1; ctx.filter = 'none';
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  if (EP.v2) return V2.renderFrame(S, lt);   // Episode 6 onward: the v2 pipeline (v2_core.js)
   if (EP.layout === 'panel') return renderPanelFrame(S, lt);
   // classic layout (Episode 1): full-frame stage, captions over the picture
   STAGE = [0, 0, W, H];
@@ -2274,13 +2273,6 @@ function drawPanel(S, lt) {
   rr(W - 104, iy - 17, 60, 34, 17); ctx.fillStyle = '#ff3b55'; ctx.fill();
   text('EP.' + EP.num, W - 74, iy + 1, { size: 20, fill: '#fff' });
   drawPanelCaption(T);
-  // Episode 6's dedicated social export has no fake player/progress controls.
-  if (EP.num === 6) {
-    text('FRUIT BOWL REHAB & NURSING   /   3–11 SHIFT', W / 2, H - 49,
-      { size: 22, weight: 800, fill: '#9e93ae' });
-    reg('panel', [0, y0, W, H], { id: 'panel' });
-    return;
-  }
   // episode progress
   const p = T / TL.duration;
   text(EP.title, 44, H - 70, { size: 22, weight: 800, fill: '#8f86a0', align: 'left' });
@@ -2345,7 +2337,8 @@ function renderEpisodeFrame(num, t, target) {
 
 // ------------------------------------------------------------------ audit
 function checkFrame() {
-  const V = [], items = REG.items;
+  // Episode 6 (v2 renderer): a box that is entirely outside the frame is simply not on screen (a neighbor beyond the edge of a close-up), not a layout fault
+  const V = [], items = EP.v2 ? REG.items.filter(i => !(i.box[2] <= 0 || i.box[0] >= W || i.box[3] <= 0 || i.box[1] >= H)) : REG.items;
   const area = b => Math.max(0, b[2] - b[0]) * Math.max(0, b[3] - b[1]);
   const inter = (a, b) => { const w = Math.min(a[2], b[2]) - Math.max(a[0], b[0]), h = Math.min(a[3], b[3]) - Math.max(a[1], b[1]); return w > 0 && h > 0 ? w * h : 0; };
   const shrink = (b, f) => { const w = b[2] - b[0], h = b[3] - b[1]; return [b[0] + w * f, b[1] + h * f, b[2] - w * f, b[3] - h * f]; };
@@ -2373,7 +2366,7 @@ function checkFrame() {
       if (a.box[0] < x0 + m - .5 || a.box[1] < y0 + m - .5 || a.box[2] > x1 - m + .5 || a.box[3] > y1 - m + .5) V.push(`${name(a)} cut off at frame edge [${a.box.map(Math.round)}]`);
     }
   }
-  if (EP.num === 6) V.push(...(window.EP6_RIG?.validateFrame() || []));
+  if (EP.v2) V.push(...V2.validate());
   return V.concat(REG.errors);
 }
 function audit(start, end, step) {

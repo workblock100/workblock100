@@ -21,3 +21,5 @@ build/ep5/*
 build/ep6/*
 !build/ep6/timeline.js
 !build/ep6/audio.m4a
+!build/ep6/events.json
+__pycache__/
