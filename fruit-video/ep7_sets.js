@@ -155,7 +155,7 @@ const S7 = (() => {
     const night = !!o.night, pal = night ? NIGHT : DAYC, zb = 1900, hw = 760, ch = 900, t = o.t ?? 0;
     shell({ zb, hw, ch, wall: pal.wall, wain: pal.wain, floorA: pal.floorA, floorB: pal.floorB, ceil: pal.ceil, fog: pal.fog, fogAmt: night ? .3 : .26, tile: 120, rail: 110 });
     // the window, right: afternoon sky, or night with stars; the Moon (night) is painted inside the glass so the frame crops it
-    const win = winPane(zb, { x0: 250, x1: 650, y0: 230, y1: 700 }, f => {
+    const win = winPane(zb, { x0: 205, x1: 565, y0: 230, y1: 700 }, f => {
       const [bx, by] = f[0], [tx2, ty] = f[2], cx = (f[0][0] + f[1][0]) / 2, cy = (ty + by) / 2;
       if (night) { A7.stars(t, ty + (by - ty) * .95, { n: 110, seed: 5, a: .9 }); A7.clouds(t, ty + 30, by - 60, { n: 3, tint: '120,130,190', belly: '40,50,110', a: .3, speed: 4, seed: 7, scale: .4 }); }
       else { A7.clouds(t, ty + 20, by - 60, { n: 3, a: .9, speed: 6, seed: 3, scale: .5 }); }

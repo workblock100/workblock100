@@ -250,7 +250,7 @@ const CALLER = [10, 2150], CTABLE = [10, 2020], PEEL = [235, 1190];
 const CALLS = [['p2', 7], ['p3', 22], ['p4', 45], ['p5', 52]];
 const BRT = {
   straw: route([[0, -200, 1000], [4.6, -200, 1000], [5.5, 20, 1260, 'io'], [8.7, 20, 1260], [11.3, -300, 1450, 'io']]),
-  mango: route([[0, 215, 1000], [19.0, 215, 1000], [21.0, -45, 1060, 'io'], [30.9, -45, 1060], [32.9, 700, 960], [33.8, -45, 1060]]),
+  mango: route([[0, 215, 1000], [19.0, 215, 1000], [21.0, -45, 1060, 'io'], [30.9, -45, 1060], [32.9, 700, 960], [33.8, -22, 1060]]),
   pear: route([[0, SEAT.pear[0], SEAT.pear[1]], [12.0, SEAT.pear[0], SEAT.pear[1]], [12.5, -440, 1560, 'io'], [16.4, -440, 1560], [19.4, -620, 2240]]),
   banana: route([[0, SEAT.banana[0], SEAT.banana[1]], [30.55, SEAT.banana[0], SEAT.banana[1]], [31.5, -90, 1160], [32.3, 300, 940], [33.3, 900, 900]]),
 };
@@ -541,7 +541,7 @@ SCENES.quiet = {
   cam(lt) {
     const sh = SCENES.quiet.shot(lt), b = id => B(id), c = SCENES.quiet.cast(lt), c0 = b('chaos').s;
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    const wq = V2.p2(450, 465, 1900);
+    const wq = V2.p2(385, 465, 1900);
     if (sh === 'calm') { const k = seg(lt, 0, b('s1').s); zoomTo(lerp(540, 530, k), lerp(980, 1000, k), lerp(1, 1.08, k)); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 2.0, 80);
     else if (sh === 'cuM') faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80);
@@ -570,7 +570,7 @@ SCENES.quiet = {
     V2.dof(blurPx, () => S7.stationBack({ noLabel: sh !== 'calm', night: true, t: lt + 7, hours: hrs, qFlash: flash, qFlicker: lt >= b('freeze').s && lt < b('freeze').e ? (hash(Math.floor(lt * 20)) > .35 ? 1 : .2) : 1, board: boardDone, lampsOn, min: lt >= b('clock').s ? 59 + seg(lt, b('clock').s + .3, b('clock').e - .1) : 31, hr: 10, lamps,
       moon: { s: .62, expr: mExpr, look: [-.2, .5], o: { suppress: !['calm', 'dolly', 'moon'].includes(sh) }, char: { acc: inB(lt, 'm1') ? ['sweat'] : [] } } }));
     S7.stationCounter({ night: true });
-    if (sh === 'moon') { const wq = V2.p2(450, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
+    if (sh === 'moon') { const wq = V2.p2(385, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
     if (sh !== 'moon' && sh !== 'panel' && sh !== 'clock') {
       const sp = c.straw, mp = c.mango, subj = sh === 'cuS' ? 'straw' : sh === 'cuM' ? 'mango' : null;
       if (sh === 'desk') { SCENES.quiet.deskShot(lt); } else { (subj && subj !== 'straw' ? nbr : drawChar)(sp); (subj && subj !== 'mango' ? nbr : drawChar)(mp); }
@@ -643,7 +643,7 @@ SCENES.report = {
   cam(lt) {
     const sh = SCENES.report.shot(lt), c = SCENES.report.cast(lt), b = id => B(id);
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    const wq = V2.p2(450, 465, 1900);
+    const wq = V2.p2(385, 465, 1900);
     if (sh === 'wide') { const k = seg(lt, 0, b('d1').s); zoomTo(505, lerp(990, 975, k), lerp(1, 1.06, k)); }
     else if (sh === 'cuD') { const k = seg(lt, b('flick2').s, b('flick2').e); const kk = lt >= b('flick2').s ? lerp(1.5, 2.5, easeIO(k)) : 1.5; faceZoom({ kind: 'dragon', x: c.drag.x, y: c.drag.y, s: c.drag.s }, kk, 80); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 1.7, 80);
@@ -662,7 +662,7 @@ SCENES.report = {
       moon: { s: .62, expr: mExpr, look: [-.1, .4], o: { suppress: !['wide', 'moon'].includes(sh) }, char: { acc: sh === 'moon' && lt > b('m2').s + .5 ? ['sweat'] : [] } } }));
     S7.stationCounter({ night: true });
     if (sh !== 'moon') { (subj && subj !== 'straw' ? nbr : drawChar)(c.straw); (subj && subj !== 'drag' ? nbr : drawChar)(c.drag); }
-    else { const wq = V2.p2(450, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
+    else { const wq = V2.p2(385, 465, 1900); V2.glow(wq[0], wq[1], 520, '190,210,255', .18, 'screen', .4); }
     V2.addLight({ x: 400, y: 1000, r: 800, color: '255,200,120', a: .35 * lampsOn });
     V2.dust(60, 600, 1020, 1400, lt, { n: 26, alpha: .3, color: '200,215,255' });
   },
