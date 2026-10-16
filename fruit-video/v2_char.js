@@ -433,6 +433,7 @@ const V2C = (() => {
     if (o.rot || lean) ctx.rotate((o.rot || 0) + lean);
     if (o.shake) ctx.translate(o.shake * vnoise(t * 50 + seed), o.shake * vnoise(t * 47 + seed + 9));
     const sq = o.squash || 0, emph = o.who ? 1 + .03 * (o.talk || 0) : 1, breathe = 1 + .006 * Math.sin(t * 2.2 + seed);
+    if (o.plant && sq && !o.center) ctx.translate(0, (legLen + k.ry * .9) * sq * .35);   // opt-in: the squash is about the body centre, which lifts the shoes; this keeps the soles where the shadow is
     ctx.scale((o.flip ? -1 : 1) * (1 + sq * .35) * (o.sx || 1), (1 - sq * .35) * (o.sy || 1) * emph * breathe);
     FLIP = !!o.flip;
     if (REG.on && !REG.suppress) {

@@ -170,17 +170,18 @@ function uiNotif(w, h, o = {}) {
   V2.glow(w * .75, h * .16, 260, '255,120,200', .25, 'screen', 0);
   text('Friday, October 16', w / 2, 92, { size: 30, fill: 'rgba(255,255,255,.75)', weight: 800 });
   text('11:01', w / 2, 196, { size: 150, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 });
-  const top = 330 + (1 - ex) * 6, ch = lerp(150, 590, ex), slide = o.slide ?? 1;
+  const top = 330 + (1 - ex) * 6, ch = lerp(244, 590, ex), slide = o.slide ?? 1;   // 244 px holds the header and all three lines of the message
   ctx.save(); ctx.translate(0, (1 - easeOut(slide)) * -380);
   ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12; ctx.fillStyle = 'rgba(255,255,255,.96)'; rr(28, top, w - 56, ch, 38); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.save(); rr(28, top, w - 56, ch, 38); ctx.clip();   // nothing may hang below the card while it grows
   A9.appIcon(88, top + 62, 70);
-  text('SHIFTGO', 138, top + 52, { size: 30, fill: '#2a1a5a', align: 'left', spacing: 2 }); text('now', w - 62, top + 52, { size: 24, fill: '#7a7490', align: 'right', weight: 800 });
+  text('SHIFTGO', 138, top + 52, { size: 30, fill: '#2a1a5a', align: 'left', spacing: 2 }); text('now', w - 62, top + 52, { size: 24, fill: '#5f5878', align: 'right', weight: 800 });
   wrap('Fruit Bowl Rehab & Nursing is hiring per diem nurses on SHIFTGO', 25).forEach((ln, i) => text(ln, 62, top + 118 + i * 38, { size: 30, fill: '#1d1838', align: 'left', weight: 800 }));
   if (ex > .35) {
     const a = clamp((ex - .35) / .4);
     ctx.save(); ctx.globalAlpha *= a;
     text('$118/hr', w / 2, top + 296, { size: 150, font: 'Bangers', weight: 400, fill: '#6c4bff', lw: 0, spacing: 2 });
-    text('PER DIEM, TONIGHT', w / 2, top + 372, { size: 26, fill: '#7a7490', spacing: 4 });
+    text('PER DIEM, TONIGHT', w / 2, top + 372, { size: 27, fill: '#4f4870', spacing: 4 });
     const bp = 1 - (o.press ?? 0) * .08 + (o.pulse ?? 0) * .05;
     ctx.save(); ctx.translate(w / 2, top + 470); ctx.scale(bp, bp);
     ctx.fillStyle = V2.grad(-210, 0, 210, 0, [[0, '#6c4bff'], [1, '#ff4fa3']]); rr(-216, -52, 432, 104, 52); ctx.fill();
@@ -188,6 +189,7 @@ function uiNotif(w, h, o = {}) {
     text('SIGN UP', 0, 4, { size: 66, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 }); ctx.restore();
     ctx.restore();
   }
+  ctx.restore();   // the card's clip
   ctx.restore();
   if (o.toast > 0) {   // WELCOME TO SHIFTGO
     const k = easeBack(clamp(o.toast)), ty = 150;
@@ -498,7 +500,7 @@ SC_LOT.car = lt => {
   const yaw = -PI / 2 + h, dir = [Math.sin(yaw), Math.cos(yaw)];
   return { x: base[0] + dir[0] * d, z: base[1] + dir[1] * d, yaw, v: a * u, burn: 0 };
 };
-SC_LOT.sPath = lt => { const t0 = B('car').s; return route([[0, 0, 2092], [t0, 0, 2092], [t0 + .5, 60, 1770], [t0 + 1.05, 205, 1160], [t0 + 1.4, 175, 1150, 'out'], [t0 + 1.9, STOP[0], STOP[1], 'out']])(lt); };
+SC_LOT.sPath = lt => { const t0 = B('car').s; return route([[0, 0, 2092], [t0, 0, 2092], [t0 + .5, 230, 1770], [t0 + 1.05, 240, 1160], [t0 + 1.4, 215, 1150, 'out'], [t0 + 1.9, STOP[0], STOP[1], 'out']])(lt); };
 SC_LOT.moonPos = lt => { const m = B('mo1').s; const r = ez(lt, B('car').s + 1.3, m); return [lerp(980, 860, r), lerp(840, 410, easeOut(seg(lt, B('car').s + 1.3, m)))]; };
 SC_LOT.shot = lt => {
   const b = B, c = b('car'), m1 = b('mo1');
@@ -514,7 +516,7 @@ SC_LOT.cast = lt => {
     arms: { l: run ? (lt > t0 + 1.2 ? 'reach' : 'run') : 'rest', r: run ? (lt > t0 + 1.2 ? 'reach' : 'run') : 'rest' }, acc: ['steth', 'badge7', 'bandage7'].concat(bent && lt < b('ph').s ? ['sweat'] : []),
     transit: lt < t0 + .4 }, 280);
   if (!run) { S.gaitW = undefined; S.axis = undefined; S.dir = undefined; S.vx = 0; }
-  if (bent && lt < b('ph').s) { const br = Math.sin(lt * 11); S.squash = .5 + .1 * br; S.rot = .1; S.grip = { l: [-70, 84], r: [70, 84] }; S.arms = { l: 'hold', r: 'hold' }; S.look = [0, .5]; }
+  if (bent && lt < b('ph').s) { const br = Math.sin(lt * 11); S.squash = .5 + .1 * br; S.plant = true; S.rot = .1; S.grip = { l: [-70, 84], r: [70, 84] }; S.arms = { l: 'hold', r: 'hold' }; S.look = [0, .5]; }
   if (lt >= b('ph').s && lt < b('tap').s + .8) { S.hold = {}; }
   if (lt >= b('tap').s + .85) { S.hold = { r: 'cell' }; S.grip = { r: [96, 70] }; S.arms = { l: 'rest', r: 'hold' }; S.look = [0, -.15]; }
   return { S, cp, sh };
@@ -531,8 +533,8 @@ SC_LOT.cam = function (lt) {
   } else {
     const c = SC_LOT.cast(lt);
     if (sh === 'moonW') { zoomTo(540, 1060, 1.0); }
-    else if (sh === 'cuSq') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, 2.0, 80);
-    else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, 2.0 + .1 * seg(lt, b('s5').s, b('s5').e), 80);
+    else if (sh === 'cuSq') camFace({ kind: 'straw', x: c.S.x, y: c.S.y + (KINDS.straw.leg + KINDS.straw.ry * .9) * .5 * .35 * c.S.s, s: c.S.s }, 2.0, 80);   // planted: the face sits lower by what the squash would have lifted the shoes
+    else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, 2.0 + .1 * seg(lt, b('s5').s, b('s5').e), 140);   // 60 px higher than the other close-ups: the speaker chip must not sit on her shoes
     else if (sh === 'pull') {
       const k = ez(lt, b('tap').s + .85, b('tap').e + .1), cx = STOP[0];
       V2.setCam({ f: 1400, cy: 360, hy: 860, cx: lerp(cx * .6, cx, k) });
@@ -584,9 +586,11 @@ SC_LOT.draw = function (lt) {
     const jingle = lt >= t0 && lt < t0 + 1.8 ? Math.sin(lt * 26) * .55 * seg(lt, t0 + .3, t0 + .5) : .2 * Math.sin(lt * 8);
     const flyBack = seg(lt, t0 + 1.35, t0 + 1.9);
     drawChar(persimmon({ x: px, y: py, s: .62 * k, center: true, noLegs: true, noShadow: true, noReflect: true, id: 'persimmon', acc: ['sunglasses', 'perdiem', 'airpods'], expr: lt >= t0 + .9 ? 'smug' : 'chill', lid: .25, look: [-.6, 0],
-      sway: .16 + .06 * Math.sin(lt * 17) + .18 * clamp(cp.v / 1500), vx: -cp.v * 1.4, arms: { l: 'hold', r: 'hold' }, grip: { l: [-150, 44], r: [196, -34 - 20 * Math.sin(lt * 3)] }, hold: { r: 'keyring9' }, keySwing: jingle, transit: lt > t0 + 1.3,
+      sway: .16 + .06 * Math.sin(lt * 17) + .18 * clamp(cp.v / 1500), vx: -cp.v * 1.4, arms: { l: 'hold', r: 'hold' }, grip: { l: [-150, 44], r: [196, -34 - 20 * Math.sin(lt * 3)] }, hold: { r: 'keyring9' }, keySwing: jingle, keyGlint: lt >= t0 && lt < t0 + 1.9 ? Math.max(0, Math.sin(lt * 13)) : 0, transit: lt > t0 + 1.3,
       shadowA: 0 }));
   };
+  const sFar = S && SC_LOT.sPath(lt)[1] > cp.z + 60;   // she is farther from the camera than the car until she runs up behind it: then the car hides her legs
+  if (sFar && lt >= t0 - .02) drawChar(S);
   const rearPos = car3d(cp.x, cp.z, cp.yaw, { color: '#d9263a', lights: 1, brake: lt < t0 + 1.35 ? .25 + .75 * seg(lt, t0 + 1.0, t0 + 1.3) : .9 * (1 - seg(lt, t0 + 1.4, t0 + 2.0)), t: lt, k: V2.proj(cp.x, 0, cp.z)[2], driver, wheelSpin: lt * 30 * (cp.v > 0 || cp.burn > 0 ? 1 : .05) });
   groundBeam(cp.x, cp.z, cp.yaw, 640, 250, 1);
   // exhaust, tire smoke on the burnout and the launch
@@ -594,8 +598,7 @@ SC_LOT.draw = function (lt) {
     V2.smoke(ex, ey, lt, 0, { n: 10, rate: 3.5, life: 2.2, rise: 70, spread: 40, size: 28, alpha: .22, color: '120,120,140', seed: 4 });
     if (lt >= t0 + 1.2) { const [sx, sy] = rearPos.PJ(0, 36, -170); V2.smoke(sx, sy, lt, t0 + 1.2, { n: 26, rate: 16, life: 2.2, rise: 130, spread: 130, size: 62, alpha: .62, color: '210,212,226', seed: 9 }); } }
   // Strawberry and the key ring's glint
-  if (S && lt >= t0 - .02) drawChar(S);   // the lot is empty until the doors burst open
-  if (lt >= t0 && lt < t0 + 1.9) { const [gx, gy] = rearPos.PJ(150, 280, 10); glint(gx, gy, 30 * V2.proj(cp.x, 0, cp.z)[2], Math.max(0, Math.sin(lt * 13))); }
+  if (S && !sFar && lt >= t0 - .02) drawChar(S);   // the lot is empty until the doors burst open
   // the lamp light on top
   V2.addLight({ x: 700, y: 900, r: 900, color: '255,226,170', a: .22 });
 };

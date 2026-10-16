@@ -53,7 +53,7 @@ EXT.top.persimmon = (o, k, t, layer) => {   // the calyx: four leafy lobes laid 
 // ------------------------------------------------------------------ costume
 EXT.acc.perdiem = (o, k, t, layer) => {   // a clip-on PER DIEM badge on a short reel cord, hung low and to the side, well clear of the mouth
   if (layer !== 'front') return;
-  ctx.save(); ctx.translate(-k.rx * .46, k.ry * .34); ctx.rotate(.05 * Math.sin(t * 2.1));
+  ctx.save(); ctx.translate(-k.rx * .57, k.ry * .34); ctx.rotate(.05 * Math.sin(t * 2.1));   // the card's right edge is 10 px clear of the left end of an open mouth
   ctx.strokeStyle = '#2a2530'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 12); ctx.stroke();
   ctx.fillStyle = '#c0c6cf'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; rr(-9, -7, 18, 12, 4); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.lineWidth = 3; rr(-30, 12, 60, 58, 6); ctx.fill(); ctx.stroke();
@@ -117,6 +117,11 @@ EXT.prop.keyring9 = (side, o, t) => {   // the facility's key ring: far too many
   ctx.strokeStyle = '#8a8f98'; ctx.lineWidth = 5.4; ell(0, 6, 17, 17); ctx.stroke();
   ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.save(); ctx.translate(0, 8); ctx.rotate(.1); rr(-26, 22, 52, 34, 5); ctx.fill(); ctx.stroke();
   text('MED RM', 0, 34, { size: 10, fill: '#d62828', weight: 900, spacing: 1 }); text('ALL KEYS', 0, 46, { size: 9, fill: INK, weight: 900 }); ctx.restore();
+  if (o.keyGlint > 0) {   // a glint that rides on the keys themselves (o.keyGlint is its strength, 0 to 1)
+    const r = 28; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(-38, 56);   // on the tip of a key, off the tag so ALL KEYS stays readable
+    ctx.fillStyle = `rgba(255,250,220,${o.keyGlint})`;
+    ctx.beginPath(); ctx.moveTo(0, -r); ctx.quadraticCurveTo(r * .12, -r * .12, r, 0); ctx.quadraticCurveTo(r * .12, r * .12, 0, r); ctx.quadraticCurveTo(-r * .12, r * .12, -r, 0); ctx.quadraticCurveTo(-r * .12, -r * .12, 0, -r); ctx.fill(); ctx.restore();
+  }
   ctx.restore();
 };
 

@@ -30,8 +30,9 @@ function sfxWord(lt, t0, str, x, y, o = {}) {
 const pk = (lt, list) => list.find(([e]) => lt < e)[1];   // the first entry whose end time is still ahead
 
 // ------------------------------------------------------------------ layout: two panels and the divider band between them
-const TOP = [250, 784], BAND = [784, 898], BOT = [898, 1390];
-const CAM_T = { f: 1400, cy: 360, hy: 419 }, CAM_B = { f: 1400, cy: 330, hy: 906 };
+// the stack runs from the foot of the place label (y 242) to the top of the two-line speaker chip (y about 1386): 20 px of air above, 14 px below
+const TOP = [262, 740], BAND = [740, 872], BOT = [872, 1372];
+const CAM_T = { f: 1400, cy: 360, hy: 419 }, CAM_B = { f: 1400, cy: 330, hy: 888 };
 const PHASE = lt => lt < B('lapse1').e ? 0 : lt < B('lapse2').e ? 1 : 2;
 
 // ------------------------------------------------------------------ the clock and the money
@@ -71,10 +72,10 @@ function callBoard(x, y, tt, hot) {
   text('NURSE CALL', 22, 29, { size: 21, fill: '#c9d2e6', align: 'left', spacing: 2 });
   ctx.fillStyle = n >= 28 ? '#ff3b55' : '#2b303a'; rr(w - 112, 14, 96, 28, 8); ctx.fill();
   text(n + ' / 28', w - 64, 29, { size: 21, fill: '#fff', spacing: 1 });
-  for (let m = 0; m < 28; m++) {
-    const r = Math.floor(m / 7), c = m % 7, cx = 28 + c * 48.2, cy = 78 + r * 42, on = RANK[m] < n, kind = DKIND[(m + RANK[m]) % 6], rgb = A6.ALARM[kind].rgb, pulse = on ? .7 + .3 * Math.sin(tt * 12 + m * 1.7) : 0;
-    ctx.fillStyle = '#0c0e12'; ell(cx, cy, 17, 17); ctx.fill();
-    ctx.fillStyle = on ? `rgba(${rgb},${.55 + .45 * pulse})` : '#3a3f48'; ell(cx, cy, 13.5, 13.5); ctx.fill();
+  for (let m = 0; m < 28; m++) {   // four rows of seven on a 38 px pitch: 9 px under the header strip, 9 px above the frame, rims 6 px apart
+    const r = Math.floor(m / 7), c = m % 7, cx = 28 + c * 48.2, cy = 74 + r * 38, on = RANK[m] < n, kind = DKIND[(m + RANK[m]) % 6], rgb = A6.ALARM[kind].rgb, pulse = on ? .7 + .3 * Math.sin(tt * 12 + m * 1.7) : 0;
+    ctx.fillStyle = '#0c0e12'; ell(cx, cy, 16, 16); ctx.fill();
+    ctx.fillStyle = on ? `rgba(${rgb},${.55 + .45 * pulse})` : '#3a3f48'; ell(cx, cy, 12.7, 12.7); ctx.fill();
     if (on) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(cx - 4, cy - 4.5, 4, 3); ctx.fill(); V2.glow(cx, cy, 34, rgb, .5 * pulse, 'screen', .3); }
   }
   if (hot > 0) { ctx.strokeStyle = `rgba(255,59,85,${.5 + .5 * Math.sin(tt * 20)})`; ctx.lineWidth = 5; rr(-3, -3, w + 6, h + 6, 18); ctx.stroke(); }
@@ -297,7 +298,7 @@ function topCast(lt, tt) {
 function topDraw(lt, tt, kOpen) {
   const b = id => B(id), c = topCast(lt, tt), ph = PHASE(lt), wreck = strawState(lt, tt).wreck;
   // the call-light board, hung on the right wall's end of the frame
-  const bx = 704, by = 266;
+  const bx = 704, by = TOP[0] + 16;
   // carts: Strawberry's med cart rides ahead of her until she stops, then it stays where it stopped
   const medX = tt < 3.3 ? c.sX + 175 : SP(3.3)[0] + 175, medZ = tt < 3.3 ? c.sZ : SP(3.3)[1];
   const nPap = Math.round(2 + 12 * clamp(seg(tt, 0, 25) ** 1.2));
@@ -327,7 +328,7 @@ function lunchChips(lt) {
   const rows = [['4:00', 'LUNCH', wordT('s3', 'four', b('s3').s + .4), '#ff9f1c', 'fork'], ['5:00', 'BREAK', wordT('s3', 'five', b('s3').s + 1.3), '#50a5ff', 'cup'], ['6:00', 'LUNCH 2', wordT('s3', 'six', b('s3').s + 2.5), '#ff9f1c', 'fork']];
   rows.forEach(([tm, lab, at, col, icon], i) => {
     const p = easeBack(seg(lt, at - .08, at + .2)); if (p <= .02) return;
-    const x = 28 + i * 222, y = 312, w = 214, h = 60;
+    const x = 48 + i * 212, y = 322, w = 200, h = 56;   // 48 px in from the edge like the pills above, 12 px between chips, 32 px clear of the call board, 14 px under the HALL tag
     ctx.save(); ctx.globalAlpha *= clamp(p * 2) * out; ctx.translate(x + w / 2, y + h / 2); ctx.scale(p, p); ctx.translate(-w / 2, -h / 2);
     ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 5; ctx.fillStyle = 'rgba(12,10,26,.92)'; rr(0, 0, w, h, 29); ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.strokeStyle = col; ctx.lineWidth = 4; rr(0, 0, w, h, 29); ctx.stroke();
@@ -335,22 +336,20 @@ function lunchChips(lt) {
     if (icon === 'fork') { ctx.beginPath(); ctx.moveTo(-8, -14); ctx.lineTo(-8, 14); ctx.moveTo(-14, -14); ctx.lineTo(-14, -3); ctx.moveTo(-2, -14); ctx.lineTo(-2, -3); ctx.moveTo(-14, -3); ctx.quadraticCurveTo(-8, 4, -2, -3); ctx.moveTo(10, -14); ctx.quadraticCurveTo(18, -4, 10, 4); ctx.lineTo(10, 14); ctx.stroke(); }
     else { ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.moveTo(-13, -8); ctx.lineTo(11, -8); ctx.lineTo(8, 12); ctx.lineTo(-10, 12); ctx.closePath(); ctx.stroke(); ctx.beginPath(); ctx.arc(13, 2, 6, -1.4, 1.4); ctx.stroke(); ctx.strokeStyle = col; ctx.beginPath(); ctx.moveTo(-6, -13); ctx.quadraticCurveTo(-2, -19, -6, -24); ctx.moveTo(4, -13); ctx.quadraticCurveTo(8, -19, 4, -24); ctx.stroke(); }
     ctx.restore();
-    text(tm, 62, h / 2 - 10, { size: 32, font: 'Bangers', weight: 400, fill: '#fff', align: 'left', spacing: 1 });
-    text(lab, 62, h / 2 + 16, { size: 15, fill: col, align: 'left', spacing: 2, weight: 900 });
+    text(tm, 62, h / 2 - 10, { size: 30, font: 'Bangers', weight: 400, fill: '#fff', align: 'left', spacing: 1 });
+    text(lab, 62, h / 2 + 15, { size: 18, fill: col, align: 'left', spacing: 2, weight: 900 });
     ctx.restore();
   });
 }
 
 // ------------------------------------------------------------------ BOTTOM PANEL: Persimmon's break
 const ZB = 1700, HW = 640, CH = 520;
-const PC = { x: 420, y: 1155 };   // Persimmon's body centre (screen) in the recliner
+const PC = { x: 420, y: 1137 };   // Persimmon's body centre (screen) in the recliner
 function spaRoom(lt, tt, ph) {
   V2.setCam(CAM_B);
   S6.shell({ zb: ZB, hw: HW, ch: CH, wall: '#cfc3e6', wain: '#8e74b8', floorA: '#dcbf98', floorB: '#bc9d74', ceil: '#e8e0f2', fog: '#a496c6', fogAmt: .25, tile: 130, bright: 1, rail: 96 });
   // the break room door with the DO NOT DISTURB hanger, then the twelve doors of her twelve residents
   S6.onZ(ZB, -604, -486, 0, 330, '#a8744f', 'rgba(25,16,30,.7)', 2.4); S6.onZ(ZB, -586, -504, 40, 150, '#96623e', 'rgba(25,16,30,.35)', 1.4); S6.onZ(ZB, -586, -504, 190, 300, '#96623e', 'rgba(25,16,30,.35)', 1.4);
-  S6.onZ(ZB, -590, -500, 340, 380, '#f6eee0', 'rgba(25,16,30,.5)', 1.4);
-  { const [px, py] = V2.p2(-545, 360, ZB); text('BREAK', px, py + 1, { size: 12, fill: '#6a4a8a', maxW: 66, spacing: 1 }); }
   for (let j = 0; j < 12; j++) {
     const X = -400 + j * 82, z = ZB - 2;
     S6.onZ(z, X - 30, X + 30, 0, 232, ['#6d8f88', '#9d6b74', '#8e6f55', '#a8744f'][(j * 3) % 4], 'rgba(25,16,30,.65)', 2);
@@ -372,14 +371,14 @@ function spaRoom(lt, tt, ph) {
   // the hanger on the break door's knob
   { const hk = Math.sin(tt * 2.1) * .03, [hx, hy] = V2.p2(-492, 168, ZB - 8), kk = S6.kz(ZB); ctx.save(); ctx.translate(hx, hy); ctx.rotate(hk); ctx.scale(kk, kk);
     ctx.fillStyle = '#d9a441'; ell(0, 0, 8, 8); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.stroke();
-    ctx.fillStyle = '#e8193a'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-34, 4, 68, 106, 10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e8193a'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-50, 4, 100, 106, 10); ctx.fill(); ctx.stroke();   // wide enough for DISTURB with 8 px on each side
     ctx.fillStyle = '#fff'; ell(0, 24, 9, 9); ctx.fill(); ctx.fillStyle = '#e8193a'; ell(0, 24, 4.2, 4.2); ctx.fill();
     text('DO NOT', 0, 50, { size: 17, fill: '#fff', weight: 900, spacing: 1 }); text('DISTURB', 0, 72, { size: 16, fill: '#fff', weight: 900, spacing: 1 });
     ctx.fillStyle = '#fff'; ctx.font = '900 14px Nunito'; text('zzz', 0, 95, { size: 15, fill: '#ffd1e6', weight: 900 });
     ctx.restore(); }
   // a plant on the far right, and the soft light of the room
   const bph = [0, .5, 1][ph];
-  V2.glow(220, 1040, 520, '200,160,255', .16 + .1 * bph, 'screen', .3);
+  V2.glow(220, PC.y - 115, 520, '200,160,255', .16 + .1 * bph, 'screen', .3);
   lapseFx(lt, BOT[0], BOT[1]);
 }
 const sipAmount = lt => seg(lt, 7.46, 7.78) * (1 - seg(lt, 8.1, 8.4));
@@ -413,10 +412,11 @@ function recliner(part, tt) {
 function persObj(lt, tt) {
   const b = id => B(id), ph = PHASE(lt), sip = sipAmount(lt), spkP = ['p1', 'p2', 'p3', 'p4', 'p5'].some(id => inB(lt, id));
   const lift = seg(lt, b('p5').s + .12, b('p5').s + .36), away = seg(lt, b('p5').s + .36, b('p5').s + .74), peek = lt >= b('p5').s + .3;
-  const acc = ['perdiem', 'airpods'];
-  if (ph >= 1 && lt >= b('lapse1').s + .8) acc.push('robe9');
+  const spa = ph >= 1 && lt >= b('lapse1').s + .8;   // robe, clay and turban arrive with the first time-lapse; the clay goes on first so the badge stays on top of it
+  const acc = [...(spa ? ['clay9'] : []), 'perdiem', 'airpods'];
+  if (spa) acc.push('robe9');
   acc.push('cuke9');
-  if (ph >= 1 && lt >= b('lapse1').s + .8) { acc.push('clay9', 'turban9'); }
+  if (spa) acc.push('turban9');
   const o = A9.persimmon({ who: 'persphone', id: 'persimmon', x: PC.x, y: PC.y + 90, s: 1, noLegs: true, noShadow: true, noReflect: true, acc, t: tt,
     expr: peek ? 'smug' : 'chill', look: [0, 0], lid: peek ? .06 : .3, cukes: peek ? [lt < b('p5').s + .36 ? 1 : 0, 1] : [1, 1],
     rot: -.035 + .012 * Math.sin(tt * 1.7) + (peek ? .05 * easeOut(away) : 0), sway: .02 });
@@ -454,13 +454,13 @@ function bottomDraw(lt, tt, kOpen) {
   cupAt(PC.x + 205 + 56, ty + 2, easeBack(seg(lt, b('lapse1').e - .5, b('lapse1').e - .1)));
   cupAt(PC.x + 205 + 112, ty - 1, easeBack(seg(lt, b('lapse2').e - .5, b('lapse2').e - .1)));
   // the candle, flickering
-  { const cx = tx + 74 + 0, cy = ty - 4; ctx.save(); ctx.translate(cx, cy); ctx.strokeStyle = INK; ctx.lineWidth = 3.4; ctx.fillStyle = '#fdf1d8'; rr(-14, -44, 28, 44, 6); ctx.fill(); ctx.stroke();
+  { const cx = tx + 88, cy = ty - 4; ctx.save(); ctx.translate(cx, cy); ctx.strokeStyle = INK; ctx.lineWidth = 3.4; ctx.fillStyle = '#fdf1d8'; rr(-14, -44, 28, 44, 6); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#f2c7d6'; rr(-14, -44, 28, 10, 5); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#333'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(0, -44); ctx.lineTo(0, -52); ctx.stroke();
     const f = flick; ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.moveTo(0, -72 - 7 * f); ctx.quadraticCurveTo(11, -58, 0, -50); ctx.quadraticCurveTo(-11, -58, 0, -72 - 7 * f); ctx.fill();
     ctx.fillStyle = '#fff3b0'; ctx.beginPath(); ctx.moveTo(0, -64 - 4 * f); ctx.quadraticCurveTo(5, -57, 0, -52); ctx.quadraticCurveTo(-5, -57, 0, -64 - 4 * f); ctx.fill(); ctx.restore();
     V2.glow(cx, cy - 56, 150 + 30 * f, '255,190,110', .5 * f, 'screen', .8); V2.addLight({ x: cx, y: cy - 56, r: 650, color: '255,190,110', a: .5 * f }); }
   // the speaker on the floor at the far right, with notes drifting up from it
-  { const sx = 972, sy = PC.y + 176; ctx.save(); ctx.translate(sx, sy); ctx.strokeStyle = INK; ctx.lineWidth = 4;
+  { const sx = 972, sy = PC.y + 148; ctx.save(); ctx.translate(sx, sy); ctx.strokeStyle = INK; ctx.lineWidth = 4;
     ctx.fillStyle = 'rgba(0,0,0,.25)'; ell(0, 2, 50, 10); ctx.fill();
     ctx.fillStyle = '#3a3a48'; rr(-38, -132, 76, 128, 14); ctx.fill(); ctx.stroke();
     const beat = 1 + .06 * Math.max(0, Math.sin(tt * 9));
@@ -477,7 +477,7 @@ function bottomDraw(lt, tt, kOpen) {
   drawChar(o);
   recliner('front', tt);
   { const talking = ['p1', 'p2', 'p3', 'p4', 'p5'].some(id => inB(lt, id)), ring = talking ? 1 : 0;   // the badge call coming in on her earbuds
-    if (ring) { const cx = PC.x - 150, cy = PC.y - 108; ctx.save(); ctx.translate(cx, cy); ctx.scale(.85, .85);
+    if (ring) { const cx = PC.x + 152, cy = PC.y - 112; ctx.save();   /* beside her right ear bud, clear of the glove that lifts the slice on the left */ ctx.translate(cx, cy); ctx.scale(.85, .85);
       for (let i = 0; i < 3; i++) { const q = ((tt * 2 - i * .33) % 1 + 1) % 1; ctx.strokeStyle = `rgba(127,224,160,${.8 * (1 - q)})`; ctx.lineWidth = 4 * (1 - q) + 1; ctx.beginPath(); ctx.arc(0, 0, 24 + q * 30, 0, TAU); ctx.stroke(); }
       ctx.fillStyle = '#2fbf71'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; ell(0, 0, 24, 24); ctx.fill(); ctx.stroke();
       ctx.save(); ctx.rotate(-.75); ctx.strokeStyle = '#fff'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, 4, 11, PI * 1.12, PI * 1.88); ctx.stroke(); ctx.restore(); ctx.restore(); } }
@@ -506,7 +506,7 @@ function wheel(cx, cy, w, h, pos, o) {
 function meter(x0, y0, w, h, who, lt, id) {
   const agency = who === 'agency', moving = (lt > B('lapse1').s && lt < B('lapse1').e) || (lt > B('lapse2').s && lt < B('lapse2').e), isEnd = lt >= B('end').s;
   const cents = centsAt(lt, who), pos = wheelPos(cents), flash = isEnd && agency ? (Math.sin((lt - B('end').s) * 24) > -.1 ? 1 : .25) : 0;
-  const spin = moving ? (agency ? 1 : .5) : 0, pop = easeBack(seg(lt, .25, .7));
+  const spin = moving ? (agency ? 1 : .5) : 0, pk0 = seg(lt, .25, .7), pop = easeOut(pk0) * (1 + .03 * Math.sin(pk0 * PI));   // a 3% overshoot at most: the two boxes may not touch each other or the frame edge
   const gold = '#ffd23a', pink = '#ff7a9a', acc = agency ? gold : pink;
   const cx = x0 + w / 2, cy = y0 + h / 2, sc = pop;
   if (sc <= .02) return;
@@ -516,22 +516,26 @@ function meter(x0, y0, w, h, who, lt, id) {
   ctx.fillStyle = V2.grad(0, y0, 0, y0 + h, [[0, '#2a2142'], [1, '#120e22']]); rr(x0, y0, w, h, 24); ctx.fill(); ctx.shadowColor = 'transparent';
   if (flash > 0) { ctx.fillStyle = `rgba(255,214,58,${.55 * flash})`; rr(x0, y0, w, h, 24); ctx.fill(); }
   ctx.strokeStyle = acc; ctx.lineWidth = agency ? 5 : 4; rr(x0, y0, w, h, 24); ctx.stroke();
-  // header: who, and the hourly rate
-  ctx.fillStyle = agency ? '#ffe9a0' : '#ffd1e6';
+  // header: who, and the hourly rate (the band is 132 px tall, the box 92: 17 px of clear band above and below it)
   const hot = flash > .5;
-  text(agency ? 'PERSIMMON' : 'STRAWBERRY', x0 + 22, y0 + 24, { size: 24, fill: hot ? '#1a1230' : agency ? '#ffe9a0' : '#ffd1e6', align: 'left', spacing: 2 });
-  ctx.fillStyle = hot ? '#1a1230' : acc; rr(x0 + w - 148, y0 + 10, 130, 30, 15); ctx.fill();
-  text(agency ? '$118/HR' : '$34/HR', x0 + w - 83, y0 + 26, { size: 22, fill: hot ? '#ffd23a' : '#1a1230', spacing: 1 });
+  text(agency ? 'PERSIMMON' : 'STRAWBERRY', x0 + 22, y0 + 21, { size: 22, fill: hot ? '#1a1230' : agency ? '#ffe9a0' : '#ffd1e6', align: 'left', spacing: 2 });
+  ctx.fillStyle = hot ? '#1a1230' : acc; rr(x0 + w - 148, y0 + 8, 130, 26, 13); ctx.fill();
+  text(agency ? '$118/HR' : '$34/HR', x0 + w - 83, y0 + 22, { size: 20, fill: hot ? '#ffd23a' : '#1a1230', spacing: 1 });
   // the digits: $ + three dollar wheels, a point, two cent wheels
-  const ww = 42, hh = 50, gx = 4, total = 22 + 3 * (ww + gx) + 16 + 2 * (ww + gx), sx = x0 + (w - total) / 2, cyd = y0 + 72;
+  const ww = 42, hh = 46, gx = 4, total = 22 + 3 * (ww + gx) + 16 + 2 * (ww + gx), sx = x0 + (w - total) / 2, cyd = y0 + 62;
   let x = sx;
-  text('$', x + 10, cyd + 2, { size: 50, font: 'Bangers', weight: 400, fill: acc, lw: 5, stroke: '#0a0814' }); x += 22 + gx;
+  text('$', x + 10, cyd + 2, { size: 46, font: 'Bangers', weight: 400, fill: acc, lw: 5, stroke: '#0a0814' }); x += 22 + gx;
   const order = [4, 3, 2];
   for (const i of order) { wheel(x + ww / 2, cyd, ww, hh, pos[i], { fill: acc, fast: spin }); x += ww + gx; }
-  ctx.fillStyle = acc; ell(x + 7, cyd + 19, 5.5, 5.5); ctx.fill(); x += 16;
+  ctx.fillStyle = acc; ell(x + 7, cyd + 17, 5, 5); ctx.fill(); x += 16;
   for (const i of [1, 0]) { wheel(x + ww / 2, cyd, ww, hh, pos[i], { fill: acc, fast: spin }); x += ww + gx; }
-  if (agency) { for (let i = 0; i < 5; i++) { const u = ((lt * (moving ? 2.4 : .7) + i * .21) % 1), sx2 = x0 + 30 + (w - 60) * hash(i + Math.floor(lt * (moving ? 6 : 1.4)) * 3), sy2 = y0 + 14 + (h - 28) * hash(i + 9 + Math.floor(lt * (moving ? 6 : 1.4))); sparkle(sx2, sy2, moving ? 13 : 9, Math.sin(u * PI) * (moving ? 1 : .8)); } }
-  else if (!moving) { text('creeping...', x0 + w - 22, y0 + h - 12, { size: 13, fill: 'rgba(255,209,230,.55)', align: 'right', weight: 800 }); }
+  if (agency) {   // glints only in the three clear spots: the gap in the header and the two margins beside the digits
+    const zones = [[x0 + 196, y0 + 9, x0 + 330, y0 + 33], [x0 + 20, y0 + 42, x0 + 102, y0 + 84], [x0 + 392, y0 + 42, x0 + 474, y0 + 84]];
+    for (let i = 0; i < 5; i++) {
+      const u = ((lt * (moving ? 2.4 : .7) + i * .21) % 1), sd = i + Math.floor(lt * (moving ? 6 : 1.4)) * 3, z = zones[i % 3], r = i % 3 === 0 ? 8 : moving ? 13 : 9;
+      sparkle(lerp(z[0] + r, z[2] - r, hash(sd)), lerp(z[1] + r, z[3] - r, hash(sd + 9)), r, Math.sin(u * PI) * (moving ? 1 : .8));
+    }
+  } else if (!moving) { text('creeping...', x0 + 275, y0 + 21, { size: 19, fill: 'rgba(255,209,230,.85)', weight: 800 }); }
   ctx.restore();
   return [x0, y0, x0 + w, y0 + h];
 }
@@ -569,8 +573,8 @@ const SC = {
     if (kOpen < 1) { ctx.fillStyle = `rgba(255,255,255,${.9 * (1 - kOpen)})`; ctx.fillRect(0, TOP[1] - topH - 4, W, 8); ctx.fillRect(0, BOT[0] + botH - 4, W, 8); }
     lapseFx(lt, BAND[0], BAND[1]);
     // panel tags, in the corners clear of every face
-    const tag = (str, x, y, col) => { ctx.save(); ctx.font = '900 22px Nunito'; ctx.letterSpacing = '2px'; const w = ctx.measureText(str).width + 30; ctx.letterSpacing = '0px'; ctx.fillStyle = 'rgba(10,8,22,.78)'; rr(x, y, w, 36, 18); ctx.fill(); ctx.fillStyle = col; ell(x + 18, y + 18, 6, 6); ctx.fill(); text(str, x + 32, y + 19, { size: 20, fill: '#fff', align: 'left', spacing: 2 }); ctx.restore(); };
-    if (kOpen > .9) { tag('HALL  STRAWBERRY', 30, 262, '#ff3b55'); tag('BREAK  PERSIMMON', 770, BOT[1] - 50, '#7fe0a0'); }
+    const tag = (str, x, y, col, right) => { ctx.save(); ctx.font = '900 22px Nunito'; ctx.letterSpacing = '2px'; const w = ctx.measureText(str).width + 30; ctx.letterSpacing = '0px'; if (right) x = W - x - w; ctx.fillStyle = 'rgba(10,8,22,.78)'; rr(x, y, w, 36, 18); ctx.fill(); ctx.fillStyle = col; ell(x + 18, y + 18, 6, 6); ctx.fill(); text(str, x + 32, y + 19, { size: 20, fill: '#fff', align: 'left', spacing: 2 }); ctx.restore(); };
+    if (kOpen > .9) { tag('HALL  STRAWBERRY', 48, TOP[0] + 12, '#ff3b55'); tag('BREAK  PERSIMMON', 48, BOT[1] - 48, '#7fe0a0', true); }   // 48 px in from the edge, the same as the pills above, 12 px inside each panel
   },
   fx: lt => {
     const ph = PHASE(lt), lap = Math.max(Math.sin(clamp(seg(lt, B('lapse1').s, B('lapse1').e)) * PI), Math.sin(clamp(seg(lt, B('lapse2').s, B('lapse2').e)) * PI));
@@ -579,13 +583,14 @@ const SC = {
   blur: lt => (inB(lt, 'lapse1') || inB(lt, 'lapse2')) ? 4 : (lt < 3.5 ? 2 : 1),
   over(lt) {
     const b = id => B(id);
-    meter(30, 790, 492, 102, 'agency', lt, 'meter-agency');
-    meter(558, 790, 492, 102, 'staff', lt, 'meter-staff');
-    sfxWord(lt, b('open').s + .1, 'DING!', 330, 314, { fill: '#ffffff', size: 88, rot: .06 });
+    const my = (BAND[0] + BAND[1]) / 2 - 46;   // 92 px tall, centred in the band
+    meter(30, my, 492, 92, 'agency', lt, 'meter-agency');
+    meter(558, my, 492, 92, 'staff', lt, 'meter-staff');
+    sfxWord(lt, b('open').s + .1, 'DING!', 430, 314, { fill: '#ffffff', size: 88, rot: .06, hold: .32 });   // clear of the HALL tag, and gone before BWEEP! pops
     sfxWord(lt, b('open').s + .55, 'BWEEP!', 580, 314, { fill: A6.ALARM.bed.hex, size: 80, rot: -.05, hold: .38 });
     sfxWord(lt, b('end').s + .1, 'WAH WAH', 500, 314, { fill: '#cfe9ff', size: 84, rot: -.04, hold: .75 });
-    sfxWord(lt, 6.5, 'SKRRT!', 380, 336, { fill: '#ffffff', size: 80, rot: -.05, hold: .55 });
-    sfxWord(lt, 7.62, 'SLURP', 800, 1010, { fill: '#9be8ff', size: 84, rot: .08, hold: .6 });
+    sfxWord(lt, 6.5, 'SKRRT!', 410, 336, { fill: '#ffffff', size: 80, rot: -.05, hold: .55 });
+    sfxWord(lt, 7.62, 'SLURP', 800, PC.y - 145, { fill: '#9be8ff', size: 84, rot: .08, hold: .6 });
     sfxWord(lt, b('lapse1').s + .15, 'TICK TICK', 500, 314, { fill: '#ffd23a', size: 92, rot: -.04, hold: .9 });
     sfxWord(lt, b('lapse2').s + .15, 'TICK TICK', 500, 314, { fill: '#ffd23a', size: 92, rot: -.04, hold: .8 });
   },
