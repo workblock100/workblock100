@@ -34,7 +34,7 @@ const toScr = (x, y) => [W / 2 + (x - CAM.x) * CAM.z, H / 2 + (y - CAM.y) * CAM.
 const sk = (lt, a, b) => easeIO(seg(lt, a, b));
 const lerpA2 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
 // the 3D dolly: a slow push from the entrance while the doors open, held through the welcome, then pulled back for the dialogue and the final stare
-const czAt = lt => { const d = B('door'), st = B('sting'); return lt >= B('a2').s - .06 ? (lt >= st.s ? lerp(-470, -445, seg(lt, st.s, st.e)) : -470) : lt < d.s ? lerp(-510, -480, seg(lt, 0, d.s)) : lt < d.s + 1.5 ? lerp(-480, -450, sk(lt, d.s + .2, d.s + 1.5)) : lerp(-450, -380, sk(lt, d.s + 1.5, d.s + 3)); };
+const czAt = lt => { const d = B('door'), st = B('sting'); return lt >= B('a2').s - .06 ? (-470) : lt < d.s ? lerp(-510, -480, seg(lt, 0, d.s)) : lt < d.s + 1.5 ? lerp(-480, -465, sk(lt, d.s + .2, d.s + 1.5)) : lerp(-465, -380, sk(lt, d.s + 1.5, d.s + 3)); };
 const a3x = a2 => B('a3').s;
 
 // ---- new props and accessories ----------------------------------------------------------------------------------------------------------------------
@@ -78,9 +78,9 @@ function drawPizzaBox() {
   text('PIZZA', 20, -26, { size: 24, font: 'Bangers', weight: 400, fill: '#d6202e', spacing: 2, maxW: 70 });
   ctx.restore();
 }
-Object.assign(PROP_BOX, { pen9: [-18, -110, 18, 14], basket9: [-38, -8, 38, 122], passcard9: [-36, -76, 36, 6], pizzabox9: [-86, -46, 86, 12] });
+Object.assign(PROP_BOX, { pen9: [-18, -110, 18, 14], basket9: [-38, -8, 38, 122], passcard9: [-36, -76, 36, 6], pizzabox9: [-62, -34, 62, 9] });
 EXT.prop.basket9 = (side, o, t) => { ctx.save(); ctx.rotate(.04 * Math.sin(t * 2.4)); ctx.scale(.62, .62); ctx.translate(0, 186); drawBasket(t); ctx.restore(); };
-EXT.prop.pizzabox9 = (side, o, t) => { ctx.save(); ctx.scale(.9, .9); ctx.translate(0, -8); drawPizzaBox(); ctx.restore(); };
+EXT.prop.pizzabox9 = (side, o, t) => { ctx.save(); ctx.globalAlpha *= side < 0 ? (o.pzL ?? 1) : (o.pzR ?? 1); ctx.scale(.72, .72); ctx.translate(0, -8); drawPizzaBox(); ctx.restore(); };   // pzL and pzR dissolve the box from one hand to the other
 EXT.prop.pen9 = (side, o, t) => {   // the staff's one pen, held up like a trophy: a big blue ballpoint with a silver clip and a twinkle
   ctx.save(); ctx.rotate(side * .2); ctx.lineJoin = 'round';
   ctx.fillStyle = '#2a6fdb'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-9, -92, 18, 88, 6); ctx.fill(); ctx.stroke();
@@ -263,7 +263,7 @@ function burst(lt, t0, side, n = 70) {
 }
 
 // ---- the scene -----------------------------------------------------------------------------------------------------------------------------------------
-const MK = { lemon: [-516, 1180], admin: [-215, 930], straw: [312, 1090], mango: [562, 1250], pers: [112, 930] };
+const MK = { lemon: [-466, 1180], admin: [-215, 930], straw: [335, 1090], mango: [570, 1250], pers: [112, 930] };
 const persPath = lt => { const d = B('door'), a2 = B('a2'); return route([[0, 0, 1748], [d.s + .45, 0, 1748], [a2.s - .55, MK.pers[0] * .85, 1000], [a2.s - .1, MK.pers[0], MK.pers[1], 'out']])(lt); };
 const strawPath = route([[0, 560, 800], [1.0, 420, 1010], [1.5, MK.straw[0], MK.straw[1], 'out']]);
 const mangoPath = route([[0, 800, 950], [.25, 800, 950], [1.25, 640, 1210], [1.65, MK.mango[0], MK.mango[1], 'out']]);
@@ -305,10 +305,10 @@ SCENES.arrival = {
     const shake = Math.sin(lt * 21);
     if (lt >= d.s + 1.3 && lt < a1.e + .1) { ad.arms = { l: [2.35 + .12 * shake, .55 + .3 * shake], r: [2.35 - .12 * shake, .55 - .3 * shake] }; ad.hand = { l: 'wave', r: 'wave' }; }   // jazz hands
     else if (lt >= a2.s - .2 && lt < hL + .3) {                 // the handoff: the right hand brings the basket and then the pass, the left hand carries the pizza box until it is offered
-      const pa = Math.max(reachA(tB, hB), reachA(tP, hP));
-      if (lt < hB) ad.hold.r = 'basket9'; else if (lt >= tP - .22 && lt < hP) ad.hold.r = 'passcard9';
-      handTo(ad, 1, M[0], M[1], pa, [120, 74]);
-      if (lt < hL) { ad.hold.l = 'pizzabox9'; handTo(ad, -1, M[0] + 36, M[1] + 34, reachA(tL, hL), [-192, 100]); }
+      const pa = Math.max(reachA(tB, hB), reachA(tP, hP), reachA(tL, hL)), MM = lt >= hP ? [M[0] + 12, M[1] + 34] : M;
+      if (lt < hB) ad.hold.r = 'basket9'; else if (lt >= tP - .22 && lt < hP) ad.hold.r = 'passcard9'; else if (lt >= hP && lt < hL) { ad.hold.r = 'pizzabox9'; ad.pzR = sk(lt, hP, hP + .14); }
+      handTo(ad, 1, MM[0], MM[1], pa, [148, 92]);
+      if (lt < hP + .14) { ad.hold.l = 'pizzabox9'; ad.grip.l = [-176, 100]; ad.arms.l = 'hold'; ad.pzL = 1 - sk(lt, hP, hP + .14); }   // the pizza box rides at his left side until it moves to the hand that offers it
     } else if (inB(lt, 'p1') || inB(lt, 's2') || lt >= hL + .3 && lt < a3x(a2)) ad.arms = { l: 'hips', r: 'hips' };
     else if (inB(lt, 'a3')) ad.arms = { l: 'hips', r: 'point' };
     else if (inB(lt, 'a4')) ad.arms = { l: 'shrug', r: 'shrug' };
@@ -319,10 +319,10 @@ SCENES.arrival = {
     const sip = Math.max(sipAt(tP + .05, tP + .95), sipAt(p2t.s + .15, p2t.e - .15));
     const shadeK = sk(lt, p1.s + .12, p1.s + .42), pushing = sk(lt, p1.s - .02, p1.s + .14) * (1 - sk(lt, p1.s + .44, p1.s + .66));
     const pr = person(persimmon, persPath, lt, { look: lerpA2([0, .04], [0, 0], look2cam), expr: lt >= p1.s ? 'chill' : 'neutral', lid: .3, acc: ['perdiem9', 'airpods', 'shades9'], shadeK, badgeSwing: walking ? .12 : 0, passA: lt >= hP + .3 ? sk(lt, hP + .3, hP + .6) : 0,
-      hold: { r: 'icedcup' }, grip: { r: [lerp(108, 135, sip), lerp(72, -64, sip)] }, arms: { l: 'rest', r: 'hold' }, stride: 36, transit: lt < d.s + 1.0 });
+      hold: { r: 'icedcup' }, grip: { r: [lerp(100, 135, sip), lerp(72, -64, sip)] }, arms: { l: 'rest', r: 'hold' }, stride: 36, transit: lt < d.s + 1.0 });
     const REST = [-118, 62], RESTP = [-150, 100], recv = (ti, hi) => sk(lt, ti - .06, ti + .14) * (1 - sk(lt, hi, hi + .22));
     const left = (prop, rest, k, m = M) => { pr.hold = Object.assign({}, pr.hold); if (prop) pr.hold.l = prop; handTo(pr, -1, m[0], m[1], k, rest); pr.hand = { l: prop ? 'grip' : 'open' }; };
-    const M2 = [M[0] + 36, M[1] + 34];
+    const M2 = [M[0] + 12, M[1] + 34];
     if (lt >= tB - .1 && lt < hB) left(null, REST, recv(tB, hB));
     else if (lt >= hB && lt < dB) left('basket9', REST, 1 - sk(lt, hB, hB + .22));
     else if (lt >= dB && lt < hP) left(null, REST, recv(tP, hP));
@@ -358,7 +358,7 @@ SCENES.arrival = {
       case 'door': zoomTo(540, lerp(990, 975, k), 1); CAM.shake = lt > d.s + .4 && lt < d.s + 1.3 ? 3 * seg(lt, d.s + .4, d.s + 1.25) : (lt >= d.s + 1.3 ? 6 * Math.max(0, 1 - (lt - d.s - 1.3) / .3) : 0); break;
       case 'doorB': zoomTo(lerp(470, 480, k), 975, lerp(1.3, 1.45, k)); break;
       case 'cuA': F(C.ad, lerp(1.45, 1.55, k), 100); break;
-      case 'two': { const mx = (C.ad.x + C.pr.x) / 2; zoomTo(mx - 50, C.ad.y - 190 * C.ad.s, lerp(1.28, 1.34, k)); break; }
+      case 'two': { const mx = (C.ad.x + C.pr.x) / 2; zoomTo(mx - 70, C.ad.y - 190 * C.ad.s, lerp(1.28, 1.34, k)); break; }
       case 'cuP': F(C.pr, lerp(2.0, 2.15, k), 100); break;
       case 'cuS2': F(C.sp, lerp(1.8, 1.95, k), 90); break;
       case 'cuA2': F(C.ad, lerp(1.5, 1.6, k), 100); break;
@@ -385,7 +385,7 @@ SCENES.arrival = {
       } });
       // the sun and the party: glare behind the doorway, confetti behind the cast
       const k = kz(1750);
-      V2.glow(r.door[0], r.door[1] + 10, 620 * k, '255,246,220', .62 * P.open * (1 - .7 * seg(lt, d.s + 2.2, d.s + 4.5)), 'screen', .7);
+      V2.glow(r.door[0], r.door[1] + 10, 620 * k, '255,246,220', .5 * P.open * (1 - .7 * seg(lt, d.s + 1.6, d.s + 4.0)), 'screen', .7);
       V2.dust(60, 600, 1020, 1400, lt, { n: 28, alpha: .5, color: '255,246,214' });
       burst(lt, popL, 1, 74); burst(lt, popR, -1, 74);
       confetti(lt, d.s + 1.5, 46);
@@ -395,8 +395,8 @@ SCENES.arrival = {
     // the cast, back to front; everyone but the subject of a close-up is a soft neighbor
     const order = [['lm', 'lemon'], ['ad', 'admin'], ['pr', 'pers'], ['sp', 'straw'], ['mg', 'mango']].filter(([, id]) => id !== 'pers' || lt >= d.s + .3).sort((a, b) => (crisp.length === 1 ? (crisp.includes(a[1]) ? 1 : 0) - (crisp.includes(b[1]) ? 1 : 0) : 0) || C.z[b[0]] - C.z[a[0]]);
     for (const [key, id] of order) {
-      const o = C[key], bg = !crisp.includes(id), sil = id === 'pers' ? 1 - seg(lt, d.s + 1.1, d.s + 1.9) : 0;
-      V2.setLight(sil > 0 ? Object.assign({}, L0, { back: { color: '255,240,200', a: .8 * sil, w: 20 }, frontDark: .45 * sil, shadowLong: .5 * sil }) : L0);
+      const o = C[key], bg = !crisp.includes(id), sil = id === 'pers' ? 1 - seg(lt, d.s + .65, d.s + 1.25) : 0;
+      V2.setLight(sil > 0 ? Object.assign({}, L0, { back: { color: '255,240,200', a: .6 * sil, w: 20 }, frontDark: .28 * sil, shadowLong: .5 * sil }) : L0);
       if (id === 'pers') o.alpha = seg(lt, d.s + .3, d.s + .75);
       (bg ? nbr : drawChar)(o);
     }
@@ -408,13 +408,13 @@ SCENES.arrival = {
       ctx.beginPath(); ctx.moveTo(0, -r * 1.9); ctx.bezierCurveTo(r * 1.1, -r * .4, r * 1.1, r * 1.1, 0, r * 1.1); ctx.bezierCurveTo(-r * 1.1, r * 1.1, -r * 1.1, -r * .4, 0, -r * 1.9); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,.8)'; ell(-r * .35, r * .1, r * .22, r * .4, .2); ctx.fill(); ctx.restore(); } }
     // the sun's lens flare, in front of everything
-    if (P.open > 0 && lt < d.s + 3.6) V2.flare(...toScr(...p2(0, 250, 1750)), .4 * P.open * (1 - seg(lt, d.s + 1.8, d.s + 3.4)));
+    if (P.open > 0 && lt < d.s + 2.6) V2.flare(...toScr(...p2(0, 250, 1750)), .26 * P.open * (1 - seg(lt, d.s + .9, d.s + 2.3)));   // it fades before she is close, so her colors read
     if (flash > 0) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,252,240,${.4 * flash})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
   },
   fx(lt) {
     const d = B('door'), horn = d.s + 1.3, tune = lt > d.s && lt < d.e + 1.5 ? 1 : 0;
     const flash = lt >= horn && lt < horn + .3 ? 1 - (lt - horn) / .3 : 0, st = B('sting'), stK = seg(lt, st.s, st.e);
-    return { bloom: .6 + .35 * tune * seg(lt, d.s, horn) + .3 * flash, vignette: .38 + .25 * stK, grain: .045, contrast: .12, sat: .14 - .1 * stK, tint: [['#ffe9b8', .12, 'soft-light']], aberr: lt > horn && lt < horn + .25 ? 6 * (1 - (lt - horn) / .25) : 0,
+    return { bloom: .6 + .06 * tune * seg(lt, d.s, horn) + .16 * flash, vignette: .38 + .25 * stK, grain: .045, contrast: .12 + .04 * tune, sat: .14 + .1 * tune - .1 * stK, tint: [['#ffe9b8', .12 - .08 * tune, 'soft-light']], aberr: lt > horn && lt < horn + .25 ? 6 * (1 - (lt - horn) / .25) : 0,
       fade: Math.max(lt < .25 ? 1 - lt / .25 : 0, seg(lt, CUR.dur - .3, CUR.dur - .02)), fadeColor: '0,0,10' };
   },
   blur: lt => { const d = B('door'); return lt > d.s + .3 && lt < d.e + 1.2 ? 3 : 1; },

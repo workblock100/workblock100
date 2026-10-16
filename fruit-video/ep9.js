@@ -173,9 +173,9 @@ SCENES.title = {
     V2.opts.reflect = false;
     const fy = 1700, s0 = easeBack(seg(lt, hit + .25, hit + .7)), p0 = easeBack(seg(lt, hit + .45, hit + .9)), m0 = easeBack(seg(lt, hit + .65, hit + 1.1));
     if (s0 + p0 + m0 > .01) { ctx.fillStyle = V2.grad(0, fy - 30, 0, H, [[0, 'rgba(18,12,48,0)'], [.1, 'rgba(18,12,48,.92)'], [1, 'rgba(6,4,20,1)']]); ctx.fillRect(0, fy - 30, W, H - fy + 30); }
-    if (s0 > 0) drawChar(straw({ x: 200, y: fy, s: 1.12 * s0, expr: 'dead', look: [.5, -.2], lid: .55, hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: 'rest', r: 'hold' }, transit: lt < hit + 1.3 }));
+    if (s0 > 0) drawChar(straw({ x: 236, y: fy, s: 1.12 * s0, expr: 'dead', look: [.5, -.2], lid: .55, hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: 'rest', r: 'hold' }, transit: lt < hit + 1.3 }));
     if (p0 > 0) drawChar(persimmon({ x: 540, y: fy, s: 1.3 * p0, expr: 'smug', look: [0, -.1], acc: ['sunglasses', 'perdiem', 'airpods'], hold: { r: 'icedcup' }, grip: { r: [86, 70] }, arms: { l: 'rest', r: 'hold' }, transit: lt < hit + 1.5 }));
-    if (m0 > 0) drawChar(mango({ x: 880, y: fy, s: 1.12 * m0, expr: 'happy', look: [-.5, -.1], arms: { l: 'cheer', r: 'cheer' }, t: lt + 1, transit: lt < hit + 1.6 }));
+    if (m0 > 0) drawChar(mango({ x: 868, y: fy, s: 1.12 * m0, expr: 'happy', look: [-.5, -.1], arms: { l: 'cheer', r: 'cheer' }, t: lt + 1, transit: lt < hit + 1.6 }));
     // the logo slams on the downbeat
     const k = seg(lt, hit, hit + .4);
     if (k > 0) {
@@ -316,20 +316,20 @@ SCENES.orient = {
     return order.find(([, e]) => lt < e)[0];
   },
   cast(lt) {
-    const b = id => B(id), at = k => V2.at(...OR[k]), deal = lt >= b('deal').s - .02;
+    const b = id => B(id), at = k => V2.at(...OR[k]), deal = lt >= b('deal').s - .02, sh0 = SCENES.orient.shot(lt), low = sh0 === 'two' || sh0 === 'deal';   // in the wider framings a hanging glove would sit under the captions, so a hand goes to the hip
     const lem = lemon(Object.assign(at('lemon'), { look: [.5, .1], expr: inB(lt, 'l1') || inB(lt, 'l2') ? 'neutral' : inB(lt, 'l3') ? 'smug' : 'neutral', hold: deal ? { l: 'deck9' } : lt < b('s1').s ? {} : { l: 'clipboard6' }, grip: { l: deal ? [-112, 62] : [-100, 30] }, clipText: 'ROSTER',
       arms: { l: lt < b('s1').s ? 'rest' : 'hold', r: lt >= b('l1').s && lt < b('l3').s ? 'point' : 'rest' } }));
     const sp = straw(Object.assign(at('straw'), { look: lt < b('p1').s ? [.7, .1] : [.55, 0], expr: inB(lt, 's1') ? 'neutral' : inB(lt, 's2') ? 'sour' : inB(lt, 's3') || inB(lt, 's4') ? 'dead' : inB(lt, 's5') ? 'angry' : inB(lt, 's6') ? 'dead' : inB(lt, 's7') ? 'shock' : 'dead',
-      hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: inB(lt, 's1') ? 'point' : inB(lt, 's6') ? 'shrug' : 'rest', r: 'hold' }, lid: inB(lt, 's1') || inB(lt, 's5') ? undefined : .5 }));
+      hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: low ? 'hips' : inB(lt, 's1') ? 'point' : inB(lt, 's6') ? 'shrug' : 'rest', r: 'hold' }, lid: inB(lt, 's1') || inB(lt, 's5') ? undefined : .5 }));
     const pr = persimmon(Object.assign(at('pers'), { look: [-.5, 0], expr: inB(lt, 'p2') || inB(lt, 'p4') || inB(lt, 'p5') ? 'smug' : 'neutral',
-      acc: ['sunglassesHead', 'perdiem', 'airpods'], hold: { r: 'icedcup' }, grip: { r: [86, 70] }, arms: { l: 'rest', r: 'hold' }, lid: .35 }));
+      acc: ['sunglassesHead', 'perdiem', 'airpods'], hold: { r: 'icedcup' }, grip: { r: [86, 70] }, arms: { l: low ? 'hips' : 'rest', r: 'hold' }, lid: .35 }));
     const mg = mango(Object.assign(at('mango'), { look: [-.5, -.05], expr: inB(lt, 'm1') ? 'smug' : inB(lt, 'l1') || inB(lt, 'l2') ? 'shock' : 'neutral', arms: { l: 'rest', r: inB(lt, 'm1') ? 'point' : 'rest' } }));
     return { lemon: lem, straw: sp, pers: pr, mango: mg };
   },
   cam(lt) {
     const sh = SCENES.orient.shot(lt), c = SCENES.orient.cast(lt), b = id => B(id);
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(1.04, 1.1, k)); }
+    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(1.04, 1.06, k)); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 2.0 + (inB(lt, 's6') ? .12 * seg(lt, b('s6').s, b('s6').e) : 0), 80);
     else if (sh === 'cuP') faceZoom({ kind: 'persimmon', x: c.pers.x, y: c.pers.y, s: c.pers.s }, 2.0, 80);
     else if (sh === 'cuM') faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80);

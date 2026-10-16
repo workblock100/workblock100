@@ -13,9 +13,10 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 6: Alarm Fatigue | [`shift-happens-ep6.mp4`](shift-happens-ep6.mp4) | 3:04 |
 | 7: The Actual Full Moon | [`shift-happens-ep7.mp4`](shift-happens-ep7.mp4) | 2:56 |
 | 8: The Double Shift | [`shift-happens-ep8.mp4`](shift-happens-ep8.mp4) | 2:06 |
+| 9: The Agency Nurse | [`shift-happens-ep9.mp4`](shift-happens-ep9.mp4) | 2:13 |
 
 To play an episode live in the browser, start a local server in this directory and open
-`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 8 for other episodes):
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 9 for other episodes):
 
 ```bash
 python3 -m http.server 8000
@@ -108,6 +109,25 @@ through; a phone call in a picture-in-picture ring; a full-screen mandation form
 RESIDENTS 40 / NURSES 1 counter that slams onto the screen; a break countdown that stops at 0:40 and a PERSONAL BEST badge; the bingo card payoff as a daubed full-screen insert; a Moon that sets
 behind the rooftops with a sky that runs from night to gold and light rays that reach the bed; and a sunrise end card.
 
+## Episode 9: The Agency Nurse
+
+Episode 8 ended on a TEMP badge. At 2:58 PM the facility hires its first agency nurse, Persimmon, who is per diem (the pun is the whole
+contract). The Administrator (a Melon in a suit) rolls out a red carpet, a gift basket and pizza; Strawberry holds up the one pen she got
+and asks about a raise ("We don't have the budget."); Persimmon mentions she makes a hundred and eighteen dollars an hour ("That's a
+different budget."). At 3:06 PM orientation is four minutes (the contract is on screen: admissions no, wound care no, helping not included),
+the computer on wheels refuses Persimmon's login ("Use mine." "That's against policy." "So is this.") and Lemon deals out the residents:
+twelve sleepers to Persimmon, twenty-eight awake to Strawberry ("It's contract math."). A split screen runs the shift: Strawberry sprinting
+the hall on top, Persimmon in a spa chair with cucumber slices on her eyes on the bottom, two pay meters rolling in the middle ("That's not in
+my contract." "Which part isn't?" "Helping."). At 11:00:00 PM she walks out with the facility's only key ring, the Administrator gives her
+five stars, Strawberry chases her through the parking lot and the Moon denies everything. Then a SHIFTGO notification arrives: her own
+facility is hiring on SHIFTGO at $118 an hour. "Where do I sign?" "Do it." The post-credits card is an envelope and the words Two Weeks' Notice.
+
+Episode 9 renders through the same v2 renderer and the same hard layout gate as Episodes 6 to 8, with new pieces on top: a staffing-app
+map for the title (a car on violet routes, an ETA that counts down, a SURGE 3.4x price card); a red-carpet welcome with a banner, balloons and
+confetti; an agency contract and a login screen as full-screen inserts; forty resident cards dealt to two piles that hover over the nurses
+who got them (one tidy and asleep, one a leaning heap); a true split screen with rolling-digit pay meters between the panels; a night lobby
+and a convertible chase; a rating-stars phone; and a night end card where the Moon watches.
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -125,7 +145,7 @@ behind the rooftops with a sky that runs from night to gold and light rays that 
 | Pineapple | Family member | The crown is a "Can I speak to your manager" |
 | Coconut | New admit, 10:55 PM | No med list. No paperwork. Just vibes |
 | Starfruit | State surveyor (Ep. 2) | "Don't mind me. I'm just going to observe." |
-| Melon | The Administrator (Ep. 2) | Leaves the office once a year, with pizza |
+| Melon | The Administrator (Ep. 2, 9) | Leaves the office once a year, with pizza. Has a different budget for agency nurses |
 | Kiwis x5 | Agency nurses (Ep. 2) | Appear when the State does. Vanish at 4:45 |
 | Nifedipine ER | Capsule (Ep. 2) | Almost crushed. Says thank you |
 | Fig | The Scheduler (Ep. 3) | Makes you an offer you can't refuse. Texts "hey :)" at 3 AM |
@@ -141,25 +161,26 @@ behind the rooftops with a sky that runs from night to gold and light rays that 
 | Papaya | Activities Director (Ep. 7) | Calls bingo like a game-show host, in a sun visor, with a microphone she does not need |
 | Goji | Resident, Room 14 (Ep. 7) | Is the wolf. Has not had water since lunch. It is a UTI |
 | Mr. Lime | Day nurse (Ep. 8; a resident who hears chirps in Ep. 6) | Arrives at 7:00 with a 7-3 mug and asks how the night was |
+| Persimmon | Agency nurse, per diem (Ep. 9) | Orientation is four minutes. Helping is not in her contract. Leaves at 11:00:00 with the keys |
 
 ## Layout audit
 
 `node render.js audit` checks every on-screen box (faces, hands, props, captions, HUD, cards) for anything covered, cut off
-or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 8 are checked at 30 frames per second and the command
-exits non-zero on any issue, so it works as a release gate (`EP=8 node render.js audit 0.0333333333`).
+or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 9 are checked at 30 frames per second and the command
+exits non-zero on any issue, so it works as a release gate (`EP=9 node render.js audit 0.0333333333`).
 
 ## How it's made
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep8.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep9.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
-  Episodes 6 to 8 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py`, `build_music7.py`, `build_music8.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8.
+  Episodes 6 to 9 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music9.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim.
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 5; `ep1.js` to `ep8.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`). Episode 5's new art and sets live in
+  Episodes 2 to 5; `ep1.js` to `ep9.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`). Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
-  Episodes 6 to 8 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
+  Episodes 6 to 9 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
   with two-bone arms and real hands) that Episodes 1 to 5 never touch. Episode 7's art, sets and inserts are `ep7_art.js`, `ep7_sets.js` and `ep7_ins.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
@@ -233,3 +254,20 @@ EP=8 FMT=image/png CRF=21 node render.js video shift-happens-ep8.mp4
 `build_music8.py` is the score (it reuses the instruments in `build_music6.py` and `build_music7.py`); `ep8.js` has the title, the
 station, the 7 AM report and the end card, and `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js` the three night scenes, all on the
 Episode 6 and 7 sets and art kits.
+
+## Episode 9 build and release gate
+
+```bash
+python3 build_audio9.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin   # voices, stereo mix, score, lip-sync -> build/ep9/audio.wav, timeline.js
+EP=9 node render.js events 15                                               # footsteps from the animation -> build/ep9/events.json (then run build_audio9.py again with --events build/ep9/events.json)
+EP=9 node render.js audit 0.0333333333                                      # hard gate: exits non-zero on any layout issue
+ffmpeg -y -i build/ep9/audio.wav -c:a aac -b:a 192k build/ep9/audio.m4a     # browser playback and CI
+EP=9 FMT=image/png CRF=21 node render.js video shift-happens-ep9.mp4
+```
+
+`script_ep9.json` holds the scenes, lines, voices and sound cues (a few lines carry a `say` that differs from their caption `text`, to
+make the text-to-speech stress Persimmon and per diem correctly); `build_audio9.py` reuses Episode 7's sound effects and beds and adds its own, and
+`build_music9.py` is the score (it reuses the instruments in `build_music6.py` and `build_music7.py`); `ep9.js` has the title, the orientation
+and the end card, `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js` the other scenes, and `ep9_art.js` the agency nurse, her props and the
+SHIFTGO app pieces, all on the Episode 6 and 7 sets and art kits.
+

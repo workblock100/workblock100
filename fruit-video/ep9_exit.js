@@ -380,14 +380,14 @@ SC_EXIT.cam = function (lt) {
   }
   const c = SC_EXIT.cast(lt), cdl = lt - b('cd').s;
   CAM.shake = 0;
-  if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, 1000, lerp(.98, 1.04, k)); }
-  else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lt >= b('out').s ? lerp(1.45, 1.6, seg(lt, b('out').s, b('out').e)) : 1.7, 80, lt >= b('out').s ? 250 : 0);
+  if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, 1000, lerp(.98, 1.02, k)); }
+  else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lt >= b('out').s ? lerp(1.45, 1.6, seg(lt, b('out').s, b('out').e)) : 1.7, 80, lt >= b('out').s ? 170 : 0);
   else if (sh === 'cuP') { const bk = lt >= b('p3').s && lt < b('p3').e ? seg(lt, b('p3').s, b('p3').e) : 0; camFace({ kind: 'persimmon', x: c.P.x, y: c.P.y, s: c.P.s }, 2.35 + .25 * (inB(lt, 'p1') ? seg(lt, b('p1').s, b('p1').e) : bk), 80); }
   else if (sh === 'foot') zoomTo(c.S.x + 8, c.S.y - 30, 4.8);
   else if (sh === 'adm') camFace({ kind: 'melon', x: c.Ad.x, y: c.Ad.y, s: c.Ad.s }, 1.55, 40, -60);
-  else if (sh === 'mang') { const k = seg(lt, b('m1').s - .15, b('m1').e); zoomTo(lerp(410, 430, k), 1000, lerp(1.16, 1.22, k)); }
+  else if (sh === 'mang') { const k = seg(lt, b('m1').s - .15, b('m1').e); zoomTo(lerp(375, 395, k), 1000, lerp(1.16, 1.22, k)); }
   else if (sh === 'dolly') { const d = ez(lt, b('s3').s - .05, b('s4').e + .1); camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lerp(1.6, 1.85, d), 70, 20); if (lt >= b('s4').s) CAM.shake = 12 * (1 - seg(lt, b('s4').s, b('s4').e + .3)); }
-  else if (sh === 'run') { const k = ez(lt, b('run').s, b('run').e); zoomTo(540, 960, lerp(.96, 1.02, k)); CAM.shake = 9 * (1 - seg(lt, b('run').s + .7, b('run').e)); }
+  else if (sh === 'run') { const k = ez(lt, b('run').s, b('run').e); zoomTo(540, 960, lerp(.94, .98, k)); CAM.shake = 9 * (1 - seg(lt, b('run').s + .7, b('run').e)); }
   void cdl;
 };
 
@@ -498,8 +498,8 @@ SC_LOT.car = lt => {
   const yaw = -PI / 2 + h, dir = [Math.sin(yaw), Math.cos(yaw)];
   return { x: base[0] + dir[0] * d, z: base[1] + dir[1] * d, yaw, v: a * u, burn: 0 };
 };
-SC_LOT.sPath = lt => { const t0 = B('car').s; return route([[0, 0, 2092], [t0 - .05, 0, 2092], [t0 + .95, 205, 1160, 'out'], [t0 + 1.4, 150, 1150, 'out'], [t0 + 1.9, STOP[0], STOP[1], 'out']])(lt); };
-SC_LOT.moonPos = lt => { const m = B('mo1').s; const r = ez(lt, B('car').s + 1.3, m); return [lerp(940, 800, r), lerp(840, 410, easeOut(seg(lt, B('car').s + 1.3, m)))]; };
+SC_LOT.sPath = lt => { const t0 = B('car').s; return route([[0, 0, 2092], [t0, 0, 2092], [t0 + .5, 60, 1770], [t0 + 1.05, 205, 1160], [t0 + 1.4, 175, 1150, 'out'], [t0 + 1.9, STOP[0], STOP[1], 'out']])(lt); };
+SC_LOT.moonPos = lt => { const m = B('mo1').s; const r = ez(lt, B('car').s + 1.3, m); return [lerp(980, 860, r), lerp(840, 410, easeOut(seg(lt, B('car').s + 1.3, m)))]; };
 SC_LOT.shot = lt => {
   const b = B, c = b('car'), m1 = b('mo1');
   const order = [['wide', c.e - .05], ['moonW', m1.s + 1.0], ['moonC', m1.e - .1], ['cuSq', b('ph').s - .05], ['phone', b('s5').s - .05], ['cuS', b('mo2').s - .05], ['cuM', b('tap').s - .05], ['tapph', b('tap').s + .85], ['pull', 1e9]];
@@ -594,7 +594,7 @@ SC_LOT.draw = function (lt) {
     V2.smoke(ex, ey, lt, 0, { n: 10, rate: 3.5, life: 2.2, rise: 70, spread: 40, size: 28, alpha: .22, color: '120,120,140', seed: 4 });
     if (lt >= t0 + 1.2) { const [sx, sy] = rearPos.PJ(0, 36, -170); V2.smoke(sx, sy, lt, t0 + 1.2, { n: 26, rate: 16, life: 2.2, rise: 130, spread: 130, size: 62, alpha: .62, color: '210,212,226', seed: 9 }); } }
   // Strawberry and the key ring's glint
-  if (S) { const o = sh === 'cuSq' || sh === 'cuS' ? S : S; drawChar(o); }
+  if (S && lt >= t0 - .02) drawChar(S);   // the lot is empty until the doors burst open
   if (lt >= t0 && lt < t0 + 1.9) { const [gx, gy] = rearPos.PJ(150, 280, 10); glint(gx, gy, 30 * V2.proj(cp.x, 0, cp.z)[2], Math.max(0, Math.sin(lt * 13))); }
   // the lamp light on top
   V2.addLight({ x: 700, y: 900, r: 900, color: '255,226,170', a: .22 });
@@ -649,7 +649,7 @@ SC_LOT.over = function (lt) {
   if (sh === 'wide') {
     const t0 = b('car').s;
     sfxWord(lt, t0 + .3, 'jingle jingle', 640, 520, { size: 60, hold: .8, fill: '#fff', rot: -.1 });
-    sfxWord(lt, t0 + .86, 'HONK!', 800, 340, { size: 140, hold: .5, fill: '#ffe135', rot: .06 });
+    sfxWord(lt, t0 + .86, 'HONK!', 330, 340, { size: 140, hold: .5, fill: '#ffe135', rot: .06 });
     sfxWord(lt, t0 + 1.3, 'SCREEEECH', 470, 470, { size: 110, hold: .8, fill: '#ff6a5e', rot: -.05 });
   }
 };
