@@ -32,4 +32,9 @@ build/ep8/*
 !build/ep8/timeline.js
 !build/ep8/audio.m4a
 !build/ep8/events.json
+!build/ep9/
+build/ep9/*
+!build/ep9/timeline.js
+!build/ep9/audio.m4a
+!build/ep9/events.json
 __pycache__/
