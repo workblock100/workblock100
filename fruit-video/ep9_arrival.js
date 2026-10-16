@@ -221,9 +221,7 @@ function lobby9(o = {}) {
     onZ(zb, dx0 - 40, dx1 + 40, dy1 + 4, dy1 + 74, '#6d4b38', 'rgba(25,16,30,.55)', 2.4); }
   { const [sx, sy] = p2(0, dy1 + 39, zb), kk = kz(zb); ctx.fillStyle = '#f6e6c4'; ctx.font = `900 ${30 * kk}px Nunito`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '3px'; ctx.fillText('FRUIT BOWL REHAB & NURSING', sx, sy); ctx.letterSpacing = '0px'; }
   wallClock(470, 470, zb, 1, 58, 2, 52);
-  box3({ x0: 230, x1: 590, y1: 200, z0: 960, z1: 1240, color: '#7a5a46', top: '#ecdcb4', frontGrad: [[0, '#8a6a52'], [1, '#6a4a36']], fog: { color: '#f1e4c6', amt: .2, zFar: zb } });
-  box3({ x0: 250, x1: 560, y0: 200, y1: 262, z0: 1040, z1: 1110, color: '#d9d4c8' });
-  box3({ x0: -560, x1: -330, y1: 100, z0: 980, z1: 1180, color: '#a2503e', top: '#c0624c', fog: { color: '#f1e4c6', amt: .2, zFar: zb } });
+  // (the reception desk and the bench that stood here are gone: the cast stood inside them, so their shoes looked like they floated above the furniture)
   plant3(-590, 1500, 1.0); plant3(590, 1550, 1.0);
   for (let i = 0; i < 7; i++) { const x = -520 + i * 173, [px, py] = p2(x, ch - 40, zb), k2 = kz(zb); ctx.fillStyle = ['#e8193a', '#ffd23a', '#58b83a', '#4a8ae8', '#ff9f1c', '#c25bd6', '#e8193a'][i]; ctx.beginPath(); ctx.moveTo(px - 34 * k2, py); ctx.lineTo(px + 34 * k2, py); ctx.lineTo(px, py + 80 * k2); ctx.closePath(); ctx.fill(); }
   for (const z of [300, 900, 1500]) { ceilingLamp(-260, z, ch, .9, '255,240,210'); ceilingLamp(260, z, ch, .9, '255,240,210'); }
@@ -263,7 +261,7 @@ function burst(lt, t0, side, n = 70) {
 }
 
 // ---- the scene -----------------------------------------------------------------------------------------------------------------------------------------
-const MK = { lemon: [-466, 1180], admin: [-215, 930], straw: [335, 1090], mango: [570, 1250], pers: [112, 930] };
+const MK = { lemon: [-445, 1180], admin: [-165, 930], straw: [305, 1090], mango: [515, 1250], pers: [112, 930] };
 const persPath = lt => { const d = B('door'), a2 = B('a2'); return route([[0, 0, 1748], [d.s + .45, 0, 1748], [a2.s - .55, MK.pers[0] * .85, 1000], [a2.s - .1, MK.pers[0], MK.pers[1], 'out']])(lt); };
 const strawPath = route([[0, 560, 800], [1.0, 420, 1010], [1.5, MK.straw[0], MK.straw[1], 'out']]);
 const mangoPath = route([[0, 800, 950], [.25, 800, 950], [1.25, 640, 1210], [1.65, MK.mango[0], MK.mango[1], 'out']]);
@@ -308,7 +306,7 @@ SCENES.arrival = {
       const pa = Math.max(reachA(tB, hB), reachA(tP, hP), reachA(tL, hL)), MM = lt >= hP ? [M[0] + 12, M[1] + 34] : M;
       if (lt < hB) ad.hold.r = 'basket9'; else if (lt >= tP - .22 && lt < hP) ad.hold.r = 'passcard9'; else if (lt >= hP && lt < hL) { ad.hold.r = 'pizzabox9'; ad.pzR = sk(lt, hP, hP + .14); }
       handTo(ad, 1, MM[0], MM[1], pa, [148, 92]);
-      if (lt < hP + .14) { ad.hold.l = 'pizzabox9'; ad.grip.l = [-176, 100]; ad.arms.l = 'hold'; ad.pzL = 1 - sk(lt, hP, hP + .14); }   // the pizza box rides at his left side until it moves to the hand that offers it
+      if (lt < hP + .14) { ad.hold.l = 'pizzabox9'; ad.grip.l = [-205, 112]; ad.arms.l = 'hold'; ad.pzL = 1 - sk(lt, hP, hP + .14); }   // the pizza box rides at his left side until it moves to the hand that offers it
     } else if (inB(lt, 'p1') || inB(lt, 's2') || lt >= hL + .3 && lt < a3x(a2)) ad.arms = { l: 'hips', r: 'hips' };
     else if (inB(lt, 'a3')) ad.arms = { l: 'hips', r: 'point' };
     else if (inB(lt, 'a4')) ad.arms = { l: 'shrug', r: 'shrug' };
@@ -341,33 +339,33 @@ SCENES.arrival = {
     const mg = person(mango, mangoPath, lt, { stride: 36, look: lerpA2(sw ? [-.6, .05] : [-.5, 0], [0, 0], look2cam), expr: sw ? 'happy' : inB(lt, 'm1') ? 'hopeful' : inB(lt, 'm2') ? 'shock' : clapM ? 'happy' : lt >= st.s ? 'dead' : 'neutral',
       arms: { l: sw ? [.28 + .35 * Math.sin(lt * 7 + 2), .25] : 'rest', r: 'rest' }, transit: lt < 1.8 });
     if (clapM) { const c = .5 + .5 * Math.sin(lt * 17); mg.grip = { l: [-lerp(8, 56, c), 74], r: [lerp(8, 56, c), 74] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'flat', r: 'flat' }; }
-    return { lm, ad, pr, sp, mg, z: { lm: MK.lemon[1], ad: MK.admin[1], pr: pp[1], sp: strawPath(lt)[1], mg: mangoPath(lt)[1] }, pz: { basketFloor: lt >= dB + .2, pizzaFloor: lt >= p1.s - .02, grabbed, open, qP, dB, hB, hP, hL, tB, tP, tL } };
+    return { lm, ad, pr, sp, mg, z: { lm: MK.lemon[1], ad: MK.admin[1], pr: pp[1], sp: strawPath(lt)[1], mg: mangoPath(lt)[1] }, pz: { basketFloor: lt >= dB, pizzaFloor: lt >= p1.s - .02, grabbed, open, qP, dB, hB, hP, hL, tB, tP, tL } };
   },
   cam(lt) {
     const sh = shotOf(lt), d = B('door'), a2 = B('a2'), k = seg(lt, sh.t0, sh.t1);
     V2.setCam({ f: 1400, cy: 360, hy: 860, cz: czAt(lt) });
     const C = SCENES.arrival.cast(lt), F = (o, z, up = 100) => faceZoom({ kind: o.kind, x: o.x, y: o.y, s: o.s, lift: o.lift, noLegs: o.noLegs }, z, up);
     switch (sh.n) {
-      case 'wide': zoomTo(540, lerp(985, 975, k), 1); break;
-      case 'cuS': F(C.sp, lerp(1.75, 1.85, k), 110); break;
+      case 'wide': zoomTo(540, lerp(985, 975, k), .97); break;
+      case 'cuS': F(C.sp, lerp(1.75, 1.85, k), 150); break;
       case 'cuL': F(C.lm, lerp(1.85, 1.95, k), 110); break;
       case 'cuM': F(C.mg, lerp(1.9, 2.0, k), 110); break;
       case 'cuL2': F(C.lm, lerp(2.0, 2.1, k), 110); break;
       case 'cuM2': F(C.mg, lerp(2.05, 2.15, k), 110); break;
       case 'cuL3': F(C.lm, lerp(2.2, 2.6, k), 100); break;
-      case 'door': zoomTo(540, lerp(990, 975, k), 1); CAM.shake = lt > d.s + .4 && lt < d.s + 1.3 ? 3 * seg(lt, d.s + .4, d.s + 1.25) : (lt >= d.s + 1.3 ? 6 * Math.max(0, 1 - (lt - d.s - 1.3) / .3) : 0); break;
+      case 'door': zoomTo(540, lerp(990, 975, k), .97); CAM.shake = lt > d.s + .4 && lt < d.s + 1.3 ? 3 * seg(lt, d.s + .4, d.s + 1.25) : (lt >= d.s + 1.3 ? 6 * Math.max(0, 1 - (lt - d.s - 1.3) / .3) : 0); break;
       case 'doorB': zoomTo(lerp(470, 480, k), 975, lerp(1.3, 1.45, k)); break;
       case 'cuA': F(C.ad, lerp(1.45, 1.55, k), 100); break;
-      case 'two': { const mx = (C.ad.x + C.pr.x) / 2; zoomTo(mx - 70, C.ad.y - 190 * C.ad.s, lerp(1.28, 1.34, k)); break; }
+      case 'two': { const mx = (C.ad.x + C.pr.x) / 2; zoomTo(mx - 100, C.ad.y - 190 * C.ad.s, lerp(1.28, 1.34, k)); break; }
       case 'cuP': F(C.pr, lerp(2.0, 2.15, k), 100); break;
-      case 'cuS2': F(C.sp, lerp(1.8, 1.95, k), 90); break;
+      case 'cuS2': F(C.sp, lerp(1.8, 1.95, k), 130); break;
       case 'cuA2': F(C.ad, lerp(1.5, 1.6, k), 100); break;
-      case 'cuS3': F(C.sp, lerp(1.9, 2.0, k), 100); break;
+      case 'cuS3': F(C.sp, lerp(1.9, 2.0, k), 140); break;
       case 'cuA3': F(C.ad, lerp(1.55, 1.8, k), 100); break;
       case 'cuP2': F(C.pr, lerp(1.6, 1.72, k), 90); break;
       case 'xcuS': F(C.sp, lerp(2.7, 3.1, k), 80); break;
       case 'xcuA': F(C.ad, lerp(2.0, 2.25, k), 90); break;
-      case 'sting': zoomTo(540, lerp(985, 975, k), 1); break;
+      case 'sting': zoomTo(540, lerp(985, 975, k), .97); break;
     }
   },
   draw(lt) {
@@ -379,10 +377,7 @@ SCENES.arrival = {
     const flash = lt >= horn && lt < horn + .28 ? 1 - (lt - horn) / .28 : 0;
     const dropT = P.dB + .02;
     V2.dof(blurPx, () => {
-      const r = lobby9({ sun: 1 + .6 * P.open, doorOpen: P.open, t, basketOnTable: !P.grabbed, pizzaOnTable: !P.grabbed, floorItems: () => {
-        if (P.basketFloor) { const Z = MK.pers[1] + 10, q = p2(MK.pers[0] - 150, 0, Z), kk = kz(Z), drop = Math.max(0, 1 - (lt - dropT) / .16); ctx.save(); ctx.translate(q[0], q[1] - 70 * drop * drop * kk); ctx.fillStyle = 'rgba(30,10,10,.22)'; ell(0, 2, 56 * kk, 11 * kk); ctx.fill(); ctx.scale(kk * .8, kk * .8); drawBasket(t); ctx.restore(); }
-        if (P.pizzaFloor) { const Z = MK.pers[1] - 30, q = p2(MK.pers[0] + 150, 0, Z), kk = kz(Z); ctx.save(); ctx.translate(q[0], q[1]); ctx.fillStyle = 'rgba(30,10,10,.22)'; ell(0, 2, 84 * kk, 12 * kk); ctx.fill(); ctx.scale(kk * .9, kk * .9); drawPizzaBox(); ctx.restore(); }
-      } });
+      const r = lobby9({ sun: 1 + .6 * P.open, doorOpen: P.open, t, basketOnTable: !P.grabbed, pizzaOnTable: !P.grabbed, floorItems: null });
       // the sun and the party: glare behind the doorway, confetti behind the cast
       const k = kz(1750);
       V2.glow(r.door[0], r.door[1] + 10, 620 * k, '255,246,220', .5 * P.open * (1 - .7 * seg(lt, d.s + 1.6, d.s + 4.0)), 'screen', .7);
@@ -390,6 +385,11 @@ SCENES.arrival = {
       burst(lt, popL, 1, 74); burst(lt, popR, -1, 74);
       confetti(lt, d.s + 1.5, 46);
     });
+    // the things on the floor are drawn after the soft background: crisp like the cast at their depth, and not under the sun's wedge
+    {
+      if (P.basketFloor) { const Z = MK.pers[1] + 10, q = p2(MK.pers[0] - 150, 0, Z), kk = kz(Z), drop = Math.max(0, 1 - (lt - dropT) / .16); ctx.save(); ctx.translate(q[0], q[1] - 70 * drop * drop * kk); ctx.fillStyle = 'rgba(30,10,10,.22)'; ell(0, 2, 56 * kk, 11 * kk); ctx.fill(); ctx.scale(kk * .8, kk * .8); drawBasket(t); ctx.restore(); }
+      if (P.pizzaFloor) { const Z = MK.pers[1] - 30, q = p2(MK.pers[0] + 150, 0, Z), kk = kz(Z); ctx.save(); ctx.translate(q[0], q[1]); ctx.fillStyle = 'rgba(30,10,10,.22)'; ell(0, 2, 84 * kk, 12 * kk); ctx.fill(); ctx.scale(kk * .9, kk * .9); drawPizzaBox(); ctx.restore(); }
+    }
     // balloon pops at the top of the scene, from the two corner clusters
     V2.sparks(...p2(-575, 520, 1610), lt, .35, { n: 14, speed: 380, life: .5, color: '255,236,160', g: 900, size: 4, seed: 3 }); V2.sparks(...p2(575, 520, 1610), lt, .6, { n: 14, speed: 380, life: .5, color: '255,210,230', g: 900, size: 4, seed: 8 });
     // the cast, back to front; everyone but the subject of a close-up is a soft neighbor
@@ -443,8 +443,8 @@ SCENES.arrival = {
         reg('overlay', [cx - 190 * k * pulse, cy - 100 * k * pulse, cx + 190 * k * pulse, cy + 100 * k * pulse], { id: 'rate-tag' });
         ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 8;
         ctx.fillStyle = V2.grad(-170, -70, 170, 70, [[0, '#fff2a0'], [.45, '#ffd23a'], [1, '#d99a0c']]); ctx.beginPath(); ctx.moveTo(-170, -22); ctx.lineTo(-128, -74); ctx.lineTo(170, -74); ctx.lineTo(170, 74); ctx.lineTo(-128, 74); ctx.lineTo(-170, 22); ctx.closePath(); ctx.fill(); ctx.shadowColor = 'transparent';
-        ctx.strokeStyle = '#150f22'; ctx.lineWidth = 7; ctx.lineJoin = 'round'; ctx.stroke(); ctx.fillStyle = '#150f22'; ell(-130, 0, 11, 11); ctx.fill();
-        text('$118/HR', 14, 4, { size: 92, font: 'Bangers', weight: 400, fill: '#150f22', spacing: 2, maxW: 280 });
+        ctx.strokeStyle = '#150f22'; ctx.lineWidth = 7; ctx.lineJoin = 'round'; ctx.stroke(); ctx.fillStyle = '#150f22'; ell(-148, 0, 10, 10); ctx.fill();   // the punch hole sits in the tip, 12 px from the dollar sign
+        text('$118/HR', 18, 4, { size: 92, font: 'Bangers', weight: 400, fill: '#150f22', spacing: 2, maxW: 270 });
         ctx.restore();
         // coins and sparkles at the first pulse
         for (let i = 0; i < 9; i++) { const a = i / 9 * TAU + .3, r = 150 + 130 * easeOut(seg(life, 0, .5)), al = 1 - seg(life, .1, .7); if (al <= 0) continue; ctx.save(); ctx.globalAlpha *= al * f; ctx.fillStyle = i % 2 ? '#fff6b0' : '#ffd23a'; ctx.translate(cx + Math.cos(a) * r * 1.25, cy + Math.sin(a) * r * .55); ctx.rotate(life * 6 + i); ctx.fillRect(-5, -5, 10, 10); ctx.restore(); }

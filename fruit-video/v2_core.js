@@ -227,7 +227,7 @@ const V2 = (() => {
     ctx.save();
     S.over && S.over(lt);
     ctx.restore();
-    drawCaption(T);
+    drawCaption(T, S);
     if (!S.noChyron) chyron(S, lt);
   }
 
@@ -258,9 +258,9 @@ const V2 = (() => {
 
   // ---------------------------------------------------------------- captions and chyron (screen space, never blurred)
   const CAP = { top: 1390, bottom: 1660 };
-  function drawCaption(t) {
-    // the legibility scrim lives under the caption zone for the whole episode so the picture does not jump around
-    ctx.save(); ctx.fillStyle = grad(0, 1390, 0, H, [[0, 'rgba(8,6,16,0)'], [.3, 'rgba(8,6,16,.42)'], [1, 'rgba(8,6,16,.78)']]); ctx.fillRect(0, 1390, W, H - 1390); ctx.restore();
+  function drawCaption(t, S) {
+    // the legibility scrim lives under the caption zone for the whole episode so the picture does not jump around (a scene with no spoken lines can opt out with noScrim)
+    if (!(S && S.noScrim)) { ctx.save(); ctx.fillStyle = grad(0, 1390, 0, H, [[0, 'rgba(8,6,16,0)'], [.3, 'rgba(8,6,16,.42)'], [1, 'rgba(8,6,16,.78)']]); ctx.fillRect(0, 1390, W, H - 1390); ctx.restore(); }
     const l = lineAt(t);
     if (!l) return;
     const lt = t - l.s;

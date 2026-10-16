@@ -66,7 +66,7 @@ EXT.acc.perdiem = (o, k, t, layer) => {   // a clip-on PER DIEM badge on a short
 EXT.acc.airpods = (o, k, t, layer) => {   // white earbuds at both ears
   if (layer !== 'front') return;
   for (const s of [-1, 1]) {
-    ctx.save(); ctx.translate(s * k.rx * .97, k.eyeY + 16);
+    ctx.save(); ctx.translate(s * k.rx * .97, k.eyeY - 16);   // at the ears, above the shoulder joints (they used to sit right under them)
     ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6;
     rr(-2.6, 2, 5.2, 26, 2.6); ctx.fill(); ctx.stroke();
     ell(0, 0, 7.5, 9.5); ctx.fill(); ctx.stroke();
@@ -127,7 +127,15 @@ EXT.prop.keyring9 = (side, o, t) => {   // the facility's key ring: far too many
 
 // ------------------------------------------------------------------ constructors
 A.persimmon = o => Object.assign({ kind: 'persimmon', id: 'persimmon', who: 'persimmon', s: SC, y: G, acc: ['perdiem', 'airpods'], expr: 'neutral', lid: .3, seed: 77 }, o);
-A.melon = o => Object.assign({ kind: 'melon', id: 'melon', who: 'melon', s: 1.22, y: G, acc: ['suit', 'nametag'], tag: 'ADMINISTRATOR', expr: 'happy' }, o);
+EXT.acc.nametag9 = (o, k, t, layer) => {   // the Administrator's tag, nearer the middle of the chest so a hand on the hip no longer lands on its end
+  if (layer !== 'front') return;
+  ctx.save(); ctx.translate(-k.rx * .3, k.ry * .7); ctx.rotate(-.06);
+  ctx.font = '900 15px Nunito'; const tw = Math.max(88, ctx.measureText(o.tag || 'ADMIN').width + 18);
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-tw / 2, -15, tw, 30, 6); ctx.fill(); ctx.stroke();
+  text(o.tag || 'ADMIN', 0, 1, { size: 15, fill: '#243a5e' });
+  ctx.restore();
+};
+A.melon = o => Object.assign({ kind: 'melon', id: 'melon', who: 'melon', s: 1.22, y: G, acc: ['suit', 'nametag9'], tag: 'ADMINISTRATOR', expr: 'happy' }, o);
 
 // ------------------------------------------------------------------ SHIFTGO, the staffing app (a rideshare for nurses)
 A.money = (n, cents = true) => '$' + (cents ? n.toFixed(2) : String(Math.round(n))).replace(/\B(?=(\d{3})+(?!\d))/g, ',').replace(/(\.\d\d)$/, '$1');

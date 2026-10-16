@@ -69,7 +69,7 @@ function mapBase() {
   // street names
   ctx.fillStyle = '#8b90a0'; ctx.font = '900 17px Nunito'; ctx.letterSpacing = '2px'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   VX.forEach((x, i) => { for (const y of [440, 980, 1330, 1620]) { ctx.save(); ctx.translate(x, y); ctx.rotate(-PI / 2); ctx.fillText(STREETS_V[i], 0, 0); ctx.restore(); } });
-  HY.forEach((y, i) => { for (const x of [250, 720, 905]) { if (i === 0 && x === 250) continue; ctx.fillText(STREETS_H[i], x, y); } });
+  HY.forEach((y, i) => { for (const x of [250, 720, 905]) { if (i === 0 && x === 250) continue; if ((i === 1 || i === 2) && x === 720) continue; /* the ETA bubble and the pin sit here */ ctx.fillText(STREETS_H[i], x, y); } });
   ctx.letterSpacing = '0px';
 }
 // the car and the violet route ahead of it. p is progress along the route, 0 to 1
@@ -158,7 +158,7 @@ function nurseCard(lt, p, hit) {
 }
 
 SCENES.title = {
-  noChyron: true,
+  noChyron: true, noScrim: true,   // no spoken lines here: the caption scrim would only dim the nurse card
   cam(lt) { const hit = B('logo').s + 2.2; CAM.shake = lt > hit && lt < hit + .6 ? 20 * (1 - (lt - hit) / .6) : 0; },
   draw(lt) {
     const hit = B('logo').s + 2.2, p = easeIO(seg(lt, .25, hit)), dim = easeOut(seg(lt, hit, hit + .4));
@@ -199,7 +199,7 @@ SCENES.title = {
 
 // ============================================================================ orientation, 3:06 PM
 // the cast at the station: a charge nurse, the staff nurse, the new one and the CNA, and a med cart on the floor between the first two
-const OR = { lemon: [-360, 1350], straw: [-100, 1000], cart: [8, 985], pers: [120, 1000], mango: [385, 1350] };
+const OR = { lemon: [-335, 1350], straw: [-100, 1000], cart: [8, 985], pers: [120, 1000], mango: [362, 1350] };
 // a med cart: a cabinet with drawers, a top with cups and a clipboard, four casters
 function medCart(X, Z) {
   const S6 = window.S6, k = V2.at(X, Z).s;
@@ -236,7 +236,7 @@ function insContract(lt, o = {}) {
   });
   // the stamp that closes it
   const st = .25 + 8 * .26 + .1, sk = seg(lt, st, st + .16);
-  if (sk > 0) { ctx.save(); ctx.translate(120, 370); ctx.rotate(-.12); ctx.scale(lerp(2, 1, easeOut(sk)), lerp(2, 1, easeOut(sk))); ctx.globalAlpha *= clamp(sk * 4); ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 9; rr(-170, -48, 340, 96, 14); ctx.stroke(); text('NO REFUNDS', 0, 6, { size: 66, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 3, maxW: 310 }); ctx.restore(); }
+  if (sk > 0) { ctx.save(); ctx.translate(70, 402); ctx.rotate(-.09); ctx.scale(lerp(2, 1, easeOut(sk)), lerp(2, 1, easeOut(sk))); ctx.globalAlpha *= clamp(sk * 4); ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 9; rr(-170, -48, 340, 96, 14); ctx.stroke(); text('NO REFUNDS', 0, 6, { size: 66, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 3, maxW: 310 }); ctx.restore(); }
   ctx.restore();
 }
 
@@ -250,12 +250,12 @@ function insLogin(lt) {
   ctx.fillStyle = V2.grad(0, -450, 0, 450, [[0, '#1c4a7a'], [1, '#2a78b8']]); rr(-366, -450, 732, 900, 12); ctx.fill();
   text('FRUIT BOWL HEALTH RECORDS', 0, -400, { size: 32, fill: '#e8f2ff', weight: 900, spacing: 3 });
   text('version 3.1 (2009)', 0, -362, { size: 22, fill: '#a9c6e6', weight: 700 });
-  ctx.save(); rr(-366, -450, 732, 900, 12); ctx.clip(); ctx.fillStyle = '#12304f'; ctx.fillRect(-366, 392, 732, 58); ctx.fillStyle = '#2f9a5a'; rr(-356, 400, 130, 42, 8); ctx.fill(); text('FRUIT', -291, 422, { size: 24, fill: '#fff', weight: 900, spacing: 2 }); text('3:06 PM', 322, 422, { size: 22, fill: '#cfe0f5', weight: 900 }); ctx.restore();
+  ctx.save(); rr(-366, -450, 732, 900, 12); ctx.clip(); ctx.fillStyle = '#12304f'; ctx.fillRect(-366, 392, 732, 58); ctx.fillStyle = '#2f9a5a'; rr(-356, 400, 130, 42, 8); ctx.fill(); text('FRUIT', -291, 422, { size: 24, fill: '#fff', weight: 900, spacing: 2 }); text('3:06 PM', 350, 422, { size: 22, fill: '#cfe0f5', weight: 900, align: 'right' }); ctx.restore();
   ctx.save(); ctx.translate(0, 60);
   ctx.fillStyle = '#f4f8ff'; rr(-300, -310, 600, 460, 16); ctx.fill();
   ctx.fillStyle = '#e8193a'; rr(-12, -290, 24, 70, 5); ctx.fill(); rr(-35, -267, 70, 24, 5); ctx.fill();   // a cross
-  text('USER', -250, -150, { size: 26, fill: '#6a6488', weight: 900, align: 'left', spacing: 2 });
-  text('PASSWORD', -250, -40, { size: 26, fill: '#6a6488', weight: 900, align: 'left', spacing: 2 });
+  text('USER', -250, -166, { size: 26, fill: '#6a6488', weight: 900, align: 'left', spacing: 2 });
+  text('PASSWORD', -250, -56, { size: 26, fill: '#6a6488', weight: 900, align: 'left', spacing: 2 });
   for (const y of [-130, -20]) { ctx.fillStyle = '#fff'; ctx.strokeStyle = '#8fa7c9'; ctx.lineWidth = 3; rr(-250, y - 10, 500, 56, 8); ctx.fill(); ctx.stroke(); }
   const u = 'PERSIMMON', nu = Math.floor(9 * seg(lt, .1, .7)), np = Math.floor(8 * seg(lt, .75, 1.15));
   text(u.slice(0, nu) + (nu < 9 && lt < .75 && Math.sin(lt * 14) > 0 ? '|' : ''), -236, -102, { size: 36, fill: '#1f4fd8', weight: 900, align: 'left' });
@@ -268,9 +268,9 @@ function insLogin(lt) {
   const ek = seg(lt, 1.75, 1.95);
   if (ek > 0) {
     const sh = (1 - ek) * 10 * Math.sin(lt * 60);
+    ctx.save(); rr(-366, -450, 732, 900, 12); ctx.clip(); ctx.fillStyle = 'rgba(214,32,58,.18)'; ctx.fillRect(-366, -450, 732, 900); ctx.restore();   // the wash stays inside the glass
     ctx.save(); ctx.translate(sh, 0); ctx.scale(lerp(1.15, 1, easeOut(ek)), lerp(1.15, 1, easeOut(ek)));
-    ctx.fillStyle = 'rgba(214,32,58,.18)'; ctx.fillRect(-366, -450, 732, 900);
-    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 24; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#7e0718'; ctx.lineWidth = 5; rr(-300, -60, 600, 300, 14); ctx.fill(); ctx.stroke(); ctx.shadowColor = 'transparent';
+    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 24; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#7e0718'; ctx.lineWidth = 5; rr(-300, -60, 600, 260, 14); ctx.fill(); ctx.stroke(); ctx.shadowColor = 'transparent';
     ctx.fillStyle = '#d6203a'; rr(-300, -60, 600, 70, 14); ctx.fill();
     text('ACCESS DENIED', 0, -24, { size: 50, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 });
     text('Temporary account expired.', 0, 50, { size: 34, fill: '#15121c', weight: 900 });
@@ -320,23 +320,23 @@ SCENES.orient = {
     const lem = lemon(Object.assign(at('lemon'), { look: [.5, .1], expr: inB(lt, 'l1') || inB(lt, 'l2') ? 'neutral' : inB(lt, 'l3') ? 'smug' : 'neutral', hold: deal ? { l: 'deck9' } : lt < b('s1').s ? {} : { l: 'clipboard6' }, grip: { l: deal ? [-112, 62] : [-100, 30] }, clipText: 'ROSTER',
       arms: { l: lt < b('s1').s ? 'rest' : 'hold', r: lt >= b('l1').s && lt < b('l3').s ? 'point' : 'rest' } }));
     const sp = straw(Object.assign(at('straw'), { look: lt < b('p1').s ? [.7, .1] : [.55, 0], expr: inB(lt, 's1') ? 'neutral' : inB(lt, 's2') ? 'sour' : inB(lt, 's3') || inB(lt, 's4') ? 'dead' : inB(lt, 's5') ? 'angry' : inB(lt, 's6') ? 'dead' : inB(lt, 's7') ? 'shock' : 'dead',
-      hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: low ? 'hips' : inB(lt, 's1') ? 'point' : inB(lt, 's6') ? 'shrug' : 'rest', r: 'hold' }, lid: inB(lt, 's1') || inB(lt, 's5') ? undefined : .5 }));
+      acc: ['steth', 'bandage'], hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: low ? 'hips' : inB(lt, 's6') ? 'shrug' : 'rest', r: 'hold' }, lid: inB(lt, 's1') || inB(lt, 's5') ? undefined : .5 }));
     const pr = persimmon(Object.assign(at('pers'), { look: [-.5, 0], expr: inB(lt, 'p2') || inB(lt, 'p4') || inB(lt, 'p5') ? 'smug' : 'neutral',
-      acc: ['sunglassesHead', 'perdiem', 'airpods'], hold: { r: 'icedcup' }, grip: { r: [86, 70] }, arms: { l: low ? 'hips' : 'rest', r: 'hold' }, lid: .35 }));
+      acc: ['sunglassesHead', 'perdiem', 'airpods'], hold: { r: 'icedcup' }, grip: low ? { r: [86, 70], l: [-128, 52] } : { r: [86, 70] }, hand: low ? { l: 'open' } : undefined, arms: { l: low ? 'hold' : 'rest', r: 'hold' }, lid: .35 }));
     const mg = mango(Object.assign(at('mango'), { look: [-.5, -.05], expr: inB(lt, 'm1') ? 'smug' : inB(lt, 'l1') || inB(lt, 'l2') ? 'shock' : 'neutral', arms: { l: 'rest', r: inB(lt, 'm1') ? 'point' : 'rest' } }));
     return { lemon: lem, straw: sp, pers: pr, mango: mg };
   },
   cam(lt) {
     const sh = SCENES.orient.shot(lt), c = SCENES.orient.cast(lt), b = id => B(id);
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(1.04, 1.06, k)); }
+    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(.99, 1.01, k)); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 2.0 + (inB(lt, 's6') ? .12 * seg(lt, b('s6').s, b('s6').e) : 0), 80);
     else if (sh === 'cuP') faceZoom({ kind: 'persimmon', x: c.pers.x, y: c.pers.y, s: c.pers.s }, 2.0, 80);
-    else if (sh === 'cuM') faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80);
+    else if (sh === 'cuM') { faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80); CAM.x += 30; }   // her pointing finger stays 60 px inside the right edge
     else if (sh === 'cuL') faceZoom({ kind: 'lemon', x: c.lemon.x, y: c.lemon.y, s: c.lemon.s }, 1.9, 80);
-    else if (sh === 'two') zoomTo(lerp(585, 600, seg(lt, b('p3').s, b('s5').e)), 965, 1.3);
+    else if (sh === 'two') zoomTo(lerp(585, 600, seg(lt, b('p3').s, b('s5').e)), 990, 1.3);
     else if (sh === 'badge') { const k = seg(lt, b('p2').s, b('p2').e), q = c.pers; zoomTo(q.x - 14 * q.s, q.y - 160 * q.s, lerp(1.8, 2.05, k)); }
-    else if (sh === 'deal') zoomTo(565, 905, lerp(1.16, 1.22, seg(lt, b('l1').s, b('tag').e)));
+    else if (sh === 'deal') zoomTo(565, 930, lerp(1.16, 1.22, seg(lt, b('l1').s, b('tag').e)));
   },
   draw(lt) {
     const sh = SCENES.orient.shot(lt), b = id => B(id);
@@ -352,7 +352,6 @@ SCENES.orient = {
       { t: 'RN: STRAWBERRY', x: .05, y: .29, size: .082, color: '#d62a3a', rot: -.01, p: 1 },
       { t: 'CNA: MANGO', x: .05, y: .44, size: .082, color: '#2a5ac8', rot: -.01, p: 1 },
       { t: 'AGENCY: PERSIMMON', x: .05, y: .59, size: .074, color: '#7b3fd0', rot: -.01, p: seg(lt, .2, 1.1), under: .55 },
-      { t: '(PER DIEM)', x: .05, y: .74, size: .062, color: '#7b3fd0', rot: -.01, p: seg(lt, .9, 1.5) },
     ];
     V2.dof(blurPx, () => { S7.stationBack({ noLabel: sh !== 'wide', night: false, t: lt + 7, hours: 8, min: 6, hr: 3, board, lamps: [] }); });
     S7.stationCounter({ night: false });
@@ -383,8 +382,8 @@ SCENES.orient = {
       const endP = t12 + 12 * .11 + .42, endS = t28 + 28 * .075 + .42;
       for (let i = 0; i < nP; i++) resCard(c.pers.x + (hash(i * 3 + 1) - .5) * 6, baseP - 42 * sc - i * 7 * sc, (hash(i * 5 + 2) - .5) * .08, i, true, sc);
       for (let i = 0; i < nS; i++) { const lean = Math.sin(lt * 2.3) * (i / 28) * 16; resCard(c.straw.x + (hash(i * 3 + 1) - .5) * 44 + lean, baseS - 42 * sc - i * 8.5 * sc, (hash(i * 5 + 2) - .5) * .8 + lean * .012, i + 3, false, sc); }
-      if (nP === 12) label(12, c.pers.x, baseP - 42 * sc - 11 * 7 * sc - 96, '#7be0a0', endP);
-      if (nS === 28) label(28, c.straw.x, baseS - 42 * sc - 27 * 8.5 * sc - 96, '#ff5a6e', endS);
+      if (nP === 12) label(12, c.pers.x, baseP - 42 * sc - 11 * 7 * sc - 112, '#7be0a0', endP);
+      if (nS === 28) label(28, c.straw.x, baseS - 42 * sc - 27 * 8.5 * sc - 128, '#ff5a6e', endS);
     }
   },
   fx: lt => ({ bloom: .5, vignette: .4, grain: .045, contrast: .14, sat: .12, tint: [['#ffd9a0', .1, 'soft-light']], fade: Math.max(seg(lt, CUR.dur - .3, CUR.dur - .02), lt < .25 ? 1 - lt / .25 : 0), fadeColor: '255,240,215' }),
@@ -394,7 +393,7 @@ SCENES.orient = {
 
 // ============================================================================ end card
 SCENES.end = {
-  noChyron: true,
+  noChyron: true, noScrim: true,
   cam() {},
   draw(lt) {
     // the night after the walkout: a deep sky, a low skyline, a lamp-lit ground and five stars the app never gave the staff
@@ -405,13 +404,13 @@ SCENES.end = {
     ctx.fillStyle = 'rgba(255,214,120,.8)'; for (let i = 0; i < 16; i++) for (let j = 0; j < 5; j++) if (hash(i * 7 + j) > .55) { const bw = 70 + hash(i) * 70, bh = 120 + hash(i + 9) * 260; if (j * 40 + 24 < bh - 10) { ctx.fillRect(i * 70 - 20 + 14 + (j % 2) * 24, fy - bh + 18 + j * 40, 12, 18); } }
     confetti(lt, .5);
     // the Moon, who said Do it, watching over the lot
-    A7.moon(770, 1135, 1.05, { t: lt, suppress: true, char: { expr: 'happy', look: [-.4, .5] } });
+    A7.moon(770, 1100, 1.05, { t: lt, suppress: true, char: { expr: 'happy', look: [-.4, .5] } });
     ctx.fillStyle = V2.grad(0, fy - 20, 0, H, [[0, 'rgba(26,18,70,0)'], [.08, 'rgba(30,22,84,.9)'], [1, 'rgba(8,6,24,1)']]); ctx.fillRect(0, fy - 20, W, H - fy + 20);
     ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.radial(540, fy + 6, 10, 560, [[0, 'rgba(255,200,140,.28)'], [1, 'rgba(255,200,140,0)']]); ctx.beginPath(); ctx.ellipse(540, fy + 6, 560, 70, 0, 0, TAU); ctx.fill(); ctx.restore();
     V2.setLight({ key: [-.4, -.8], keyColor: '#fff0d8', keyA: .26, rim: '#ffd9a0', rimA: .6, shadow: '#1a1236', shadowA: .45, amb: '#b0a0e0', ambA: .1 });
     V2.opts.reflect = true;
     const row = [['straw', { x: 180, s: .82, acc: ['steth', 'badge', 'bandage'], expr: 'dead', lashes: true, lid: .5 }], ['mango', { x: 360, s: .82, acc: ['badge7', 'gaitbelt7', 'keys7'], badgeText: 'CNA', expr: 'happy' }], ['lemon', { x: 540, s: .86, acc: ['readers', 'lanyard7'], expr: 'happy' }],
-      ['persimmon', { x: 720, s: .8, acc: ['sunglasses', 'perdiem', 'airpods'], expr: 'smug' }], ['melon', { x: 910, s: .66, acc: ['suit', 'nametag'], tag: 'ADMINISTRATOR', expr: 'happy' }]];
+      ['persimmon', { x: 720, s: .8, acc: ['sunglasses', 'perdiem', 'airpods'], expr: 'smug' }], ['melon', { x: 880, s: .64, acc: ['suit', 'nametag9'], tag: 'ADMINISTRATOR', expr: 'happy' }]];
     REG.suppress++;
     row.forEach(([kind, extra], i) => { const hop = Math.abs(Math.sin(lt * 4.2 + i)) * 14, pop = easeBack(seg(lt, .6 + i * .12, .95 + i * .12));
       if (pop > 0) drawChar(Object.assign({ kind, id: kind, y: fy - hop, lift: kind === 'straw' ? -11.8 * extra.s * pop : 0, arms: { l: 'cheer', r: 'wave' }, t: lt + i, transit: lt < 2.4 }, extra, { s: extra.s * pop })); });

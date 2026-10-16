@@ -49,7 +49,7 @@ EXT.prop.tote9 = (side, o, t) => {
   ctx.fillStyle = '#2ec4b6'; ctx.strokeStyle = INK; ctx.lineWidth = 3.6; rr(-42, 42, 84, 84, 10); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#fff'; rr(-26, 62, 52, 34, 5); ctx.fill(); ctx.lineWidth = 2.4; ctx.stroke();
   text('PER DIEM', 0, 74, { size: 9, fill: '#d62828', weight: 900 }); text('$118/HR', 0, 88, { size: 10, fill: INK, weight: 900 });
-  if (o.toteRing !== false) { ctx.save(); ctx.translate(side * 46, 52); ctx.scale(.64, .64); EXT.prop.keyring9(side, o, t); ctx.restore(); }
+  if (o.toteRing !== false) { ctx.save(); ctx.translate(-side * 70, 44); ctx.scale(.64, .64); EXT.prop.keyring9(side, o, t); ctx.restore(); /* on the body side of the tote: clear of the label and of the frame edge */ }
   ctx.restore();
 };
 // her phone with the alarm going off: 10:59 until o.alarmOn, then a red 11:00 with ring waves
@@ -205,15 +205,15 @@ function uiRate(w, h, o = {}) {
   ctx.fillStyle = '#2a1a5a'; ctx.fillRect(0, 0, w, 210);
   text('RATE YOUR NURSE', w / 2, 118, { size: 70, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 });
   text('Fruit Bowl Rehab & Nursing', w / 2, 176, { size: 26, fill: '#c9c0f0', weight: 800 });
-  const card = (y, name, sub, drawAvatar) => { ctx.save(); ctx.shadowColor = 'rgba(40,20,90,.25)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8; ctx.fillStyle = '#fff'; rr(26, y, w - 52, 330, 34); ctx.fill(); ctx.restore();
+  const card = (y, name, sub, drawAvatar) => { ctx.save(); ctx.shadowColor = 'rgba(40,20,90,.25)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8; ctx.fillStyle = '#fff'; rr(26, y, w - 52, 344, 34); ctx.fill(); ctx.restore();
     ctx.fillStyle = '#e8e4f6'; ell(116, y + 96, 70, 70); ctx.fill(); ctx.save(); ctx.beginPath(); ctx.arc(116, y + 96, 70, 0, TAU); ctx.clip(); drawAvatar(116, y + 96); ctx.restore();
-    text(name, 214, y + 80, { size: 52, font: 'Bangers', weight: 400, fill: '#2a1a5a', align: 'left', spacing: 2 }); text(sub, 214, y + 126, { size: 24, fill: '#7a7490', align: 'left', weight: 800 }); };
+    text(name, 214, y + 80, { size: 46, font: 'Bangers', weight: 400, fill: '#2a1a5a', align: 'left', spacing: 2 }); text(sub, 214, y + 126, { size: 24, fill: '#7a7490', align: 'left', weight: 800 }); };
   card(250, 'PERSIMMON', 'Agency RN, per diem', (x, y) => { REG.suppress++; drawChar(persimmon({ x, y: y + 8, s: .4, center: true, noLegs: true, noArms: true, noShadow: true, noReflect: true, expr: 'smug', acc: ['sunglasses'], who: null, id: 'rate-persimmon' })); REG.suppress--; });
-  A9.starRow(w / 2, 250 + 250, 40, n);
-  if (o.thumbHint) text('tap a star', w / 2, 250 + 306, { size: 22, fill: '#9a94b4', weight: 800 });
+  A9.starRow(w / 2, 250 + 240, 40, n, { empty: 'rgba(120,110,160,.3)' });
+  if (o.thumbHint) text('tap a star', w / 2, 250 + 312, { size: 22, fill: '#7a7490', weight: 800 });
   card(610, 'STRAWBERRY', 'Staff RN, 3-11', (x, y) => { REG.suppress++; drawChar(straw({ x, y: y + 12, s: .36, center: true, noLegs: true, noArms: true, noShadow: true, noReflect: true, expr: 'dead', who: null, id: 'rate-straw', lift: 0, acc: ['steth'] })); REG.suppress--; });
-  A9.starRow(w / 2, 610 + 250, 40, 0, { empty: 'rgba(120,110,160,.16)' });
-  ctx.save(); ctx.translate(w / 2, 610 + 300); ctx.fillStyle = '#9a96ad'; rr(-150, -22, 300, 44, 22); ctx.fill(); text('NOT ELIGIBLE', 0, 2, { size: 26, fill: '#fff', spacing: 3 }); ctx.restore();
+  A9.starRow(w / 2, 610 + 240, 40, 0, { empty: 'rgba(120,110,160,.3)' });
+  ctx.save(); ctx.translate(w / 2, 610 + 314); ctx.fillStyle = '#8a86a2'; rr(-150, -20, 300, 40, 20); ctx.fill(); text('NOT ELIGIBLE', 0, 2, { size: 26, fill: '#fff', spacing: 3 }); ctx.restore();
   text('Submit', w / 2, 995, { size: 30, fill: '#9a94b4', weight: 800 });
 }
 // Persimmon's pay app during the countdown
@@ -259,7 +259,7 @@ function phoneShot(drawBack, fn, o = {}) {
 
 // ============================================================================ the front door, 10:58 PM
 const SC_EXIT = {};
-const XC = { straw: [270, 1010], mango: [-280, 1010], admin: [-190, 1600], pers: [0, 1400] };
+const XC = { straw: [235, 1010], mango: [-225, 1010], admin: [-190, 1600], pers: [0, 1400] };
 // story time: seconds past 22:58:00. It runs fast to the countdown, then ticks a second per beat of the countdown, then in step with the video.
 const storySec = lt => {
   const cd = B('cd').s;
@@ -306,15 +306,15 @@ function lobbyNight(o = {}) {
   onZ(zb, dx0 - 26, dx1 + 26, dy1 + 26, dy1 + 100, '#1d2330', 'rgba(255,226,170,.5)', 2); onZ(zb, -40, 40, dy1 + 6, dy1 + 22, '#0e1018');
   { const [sx, sy] = p2(0, dy1 + 63, zb); ctx.save(); ctx.shadowColor = 'rgba(255,214,140,.9)'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffe9b0'; ctx.font = `900 ${30 * k}px Nunito`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '3px'; ctx.fillText('FRUIT BOWL REHAB & NURSING', sx, sy); ctx.restore(); ctx.letterSpacing = '0px'; }
   // a welcome banner for the agency nurse, with balloons
-  onZ(zb, -620, -340, 400, 490, '#ffd23a', 'rgba(25,16,30,.7)', 3);
-  { const [bx, by] = p2(-480, 445, zb); text('WELCOME', bx, by - 14 * k * 1.3, { size: 30 * k * 1.25, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 2 }); text('PERSIMMON!', bx, by + 15 * k * 1.3, { size: 30 * k * 1.25, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 2 });
-    for (const [bxx, col] of [[-640, '#ff4f6a'], [-330, '#4fa8ff']]) { const [x, y] = p2(bxx, 560, zb); ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y + 30 * k); ctx.lineTo(bxx < -400 ? x + 6 : x - 6, p2(0, 410, zb)[1]); ctx.stroke(); ctx.fillStyle = col; ell(x, y, 26 * k * 1.1, 32 * k * 1.1); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke(); } }
+  onZ(zb, -620, -340, 432, 522, '#ffd23a', 'rgba(25,16,30,.7)', 3);
+  { const [bx, by] = p2(-480, 477, zb); text('WELCOME', bx, by - 14 * k * 1.3, { size: 30 * k * 1.25, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 2 }); text('PERSIMMON!', bx, by + 15 * k * 1.3, { size: 30 * k * 1.25, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 2 });
+    for (const [bxx, col] of [[-640, '#ff4f6a'], [-330, '#4fa8ff']]) { const [x, y] = p2(bxx, 592, zb); ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y + 30 * k); ctx.lineTo(bxx < -400 ? x + 6 : x - 6, p2(0, 442, zb)[1]); ctx.stroke(); ctx.fillStyle = col; ell(x, y, 26 * k * 1.1, 32 * k * 1.1); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke(); } }
   // reception, a bench and plants
-  S6.box3({ x0: 330, x1: 640, y1: 200, z0: 960, z1: 1240, color: '#5a4636', top: '#d8c9a4', frontGrad: [[0, '#6a5240'], [1, '#463426']], fog: { color: '#2c3658', amt: .2, zFar: zb } });
+  S6.box3({ x0: 330, x1: 640, y1: 200, z0: 960, z1: 1240, color: '#5a4636', top: '#d8c9a4', side: '#43352a', frontGrad: [[0, '#6a5240'], [1, '#463426']], fog: { color: '#2c3658', amt: .2, zFar: zb } });
   onZ(960, 380, 590, 96, 160, '#f2ecdc', 'rgba(25,16,30,.7)', 2); { const [rx, ry] = p2(485, 128, 960); text('SIGN IN', rx, ry, { size: 26 * kz(960) * 1.0, fill: '#2a2530', spacing: 2 }); }
   S6.box3({ x0: 430, x1: 520, y0: 200, y1: 290, z0: 1070, z1: 1100, color: '#1a1d26', front: '#10131a' });
   S6.box3({ x0: 560, x1: 600, y0: 200, y1: 214, z0: 1010, z1: 1060, color: '#d7b64a' });
-  S6.box3({ x0: -620, x1: -400, y1: 100, z0: 1100, z1: 1300, color: '#7a3a30', top: '#a04c3e', fog: { color: '#2c3658', amt: .25, zFar: zb } });
+  S6.box3({ x0: -620, x1: -400, y1: 100, z0: 1100, z1: 1300, color: '#7a3a30', top: '#a04c3e', side: '#5a2c24', fog: { color: '#2c3658', amt: .25, zFar: zb } });
   S6.plant3(-600, 1500, 1.0); S6.plant3(600, 1560, 1.0);
   for (const z of [300, 900, 1500]) if (z + 150 > P.cz + 150) { S6.ceilingLamp(-260, z, ch, 1, '255,236,200'); S6.ceilingLamp(260, z, ch, 1, '255,236,200'); }
   // the wall clock
@@ -355,13 +355,13 @@ SC_EXIT.cast = lt => {
         expr: inB(lt, 'p3') ? 'dead' : lt >= b('p1').s && lt < b('s2').s ? 'smug' : 'chill', lid: .3,
         arms: { l: 'hold', r: 'hold' }, hold: { l: 'tote9', r: pOnPhone && !keysOut ? 'alarm9' : keysOut ? 'keyring9' : 'icedcup' }, grip: { l: [-118, 76], r: keysOut ? [112, 98] : pOnPhone ? [96, 86] : [92, 64] },
         toteRing: !keysOut && lt < b('cd').s + 1, alarmOn: lt >= b('cd').s + 1.9 ? 1 : 0, keySwing: .35 * Math.sin(lt * 9) } ));
-  if (sipT > 0) P.grip.r = [lerp(92, 40, sipT), lerp(64, 60, sipT)];
+  if (sipT > 0) P.grip.r = [lerp(92, 104, sipT), lerp(64, 22, sipT)];   // beside her face: the cup used to cover a lens and her mouth
   const clip = lt < b('cd').s + 1 && lt < b('s2').s || true;
   const S = person(straw, SC_EXIT.sPath, lt, { stride: 40, look: lt < b('s1').s ? [.2, .1] : sh === 'dolly' || lt >= b('out').s && lt < b('a1').s ? [-.2, .1] : [-.55, .05],
     expr: lt >= b('s4').s ? 'panic' : lt >= b('s3').s ? 'shock' : lt >= b('out').s + .6 ? 'shock' : lt >= b('out').s ? 'neutral' : inB(lt, 's2') ? 'sour' : 'dead',
     lid: lt >= b('out').s && lt < b('out').e + .3 ? lerp(.55, 0, ez(lt, b('out').s, b('out').e)) : (lt < b('s3').s && lt >= b('p3').s - 1 || lt < b('out').s) ? .5 : undefined,
-    browUp: lt >= b('out').s ? lerp(0, 16, ez(lt, b('out').s, b('out').e + .4)) : 0, hold: { l: 'clipboard6' }, grip: { l: [-110, 30] }, clipText: lt >= b('s1').s ? 'REPORT' : 'REPORT',
-    arms: { l: lt >= b('run').s ? 'flail' : 'hold', r: lt >= b('s4').s && lt < b('run').s ? 'up' : inB(lt, 's2') ? 'hips' : 'rest' },
+    browUp: 0, hold: { l: 'clipboard6' }, grip: inB(lt, 's2') ? { l: [-110, 30], r: [124, 56] } : { l: [-110, 30] }, hand: inB(lt, 's2') ? { r: 'open' } : undefined, clipText: lt >= b('s1').s ? 'REPORT' : 'REPORT',
+    arms: { l: lt >= b('run').s ? 'flail' : 'hold', r: lt >= b('s4').s && lt < b('run').s ? 'up' : inB(lt, 's2') ? 'hold' : 'rest' },
     legs: sh === 'foot' ? 'tap' : undefined, acc: ['steth', 'badge7', 'bandage7'].concat(lt >= b('out').e + 1.3 ? ['sweat'] : []), transit: lt >= b('run').s });
   if (lt >= b('run').s) { S.arms = { l: 'none', r: 'none' }; S.hold = {}; S.grip = {}; S.arms = { l: 'flail', r: 'flail' }; }
   const pinch = lt >= b('run').s ? seg(lt, b('run').s + .5, b('run').s + .66) * (1 - seg(lt, b('run').s + .8, b('run').s + .95)) : 0;
@@ -383,19 +383,19 @@ SC_EXIT.cam = function (lt) {
   const c = SC_EXIT.cast(lt), cdl = lt - b('cd').s;
   CAM.shake = 0;
   if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, 1000, lerp(.98, 1.02, k)); }
-  else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lt >= b('out').s ? lerp(1.45, 1.6, seg(lt, b('out').s, b('out').e)) : 1.7, 80, lt >= b('out').s ? 170 : 0);
+  else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lt >= b('out').s ? lerp(1.45, 1.6, seg(lt, b('out').s, b('out').e)) : 1.7, 120, lt >= b('out').s ? 170 : 0);
   else if (sh === 'cuP') { const bk = lt >= b('p3').s && lt < b('p3').e ? seg(lt, b('p3').s, b('p3').e) : 0; camFace({ kind: 'persimmon', x: c.P.x, y: c.P.y, s: c.P.s }, 2.35 + .25 * (inB(lt, 'p1') ? seg(lt, b('p1').s, b('p1').e) : bk), 80); }
   else if (sh === 'foot') zoomTo(c.S.x + 8, c.S.y - 30, 4.8);
   else if (sh === 'adm') camFace({ kind: 'melon', x: c.Ad.x, y: c.Ad.y, s: c.Ad.s }, 1.55, 40, -60);
-  else if (sh === 'mang') { const k = seg(lt, b('m1').s - .15, b('m1').e); zoomTo(lerp(375, 395, k), 1000, lerp(1.16, 1.22, k)); }
-  else if (sh === 'dolly') { const d = ez(lt, b('s3').s - .05, b('s4').e + .1); camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lerp(1.6, 1.85, d), 70, 20); if (lt >= b('s4').s) CAM.shake = 12 * (1 - seg(lt, b('s4').s, b('s4').e + .3)); }
+  else if (sh === 'mang') { const k = seg(lt, b('m1').s - .15, b('m1').e); zoomTo(lerp(380, 400, k), 1000, lerp(1.16, 1.22, k)); }
+  else if (sh === 'dolly') { const d = ez(lt, b('s3').s - .05, b('s4').e + .1); camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lerp(1.6, 1.85, d), 110, 20); if (lt >= b('s4').s) CAM.shake = 12 * (1 - seg(lt, b('s4').s, b('s4').e + .3)); }
   else if (sh === 'run') { const k = ez(lt, b('run').s, b('run').e); zoomTo(540, 960, lerp(.94, .98, k)); CAM.shake = 9 * (1 - seg(lt, b('run').s + .7, b('run').e)); }
   void cdl;
 };
 
 SC_EXIT.draw = function (lt) {
   const b = B, c = SC_EXIT.cast(lt), sh = c.sh, S0 = storySec(lt), ta = tickAge(lt), door = SC_EXIT.door(lt);
-  V2.setLight({ key: [-.35, -.8], keyColor: '#ffe3b8', keyA: .26, rim: '#8fb8ff', rimA: .55, shadow: '#0a1030', shadowA: .45, amb: '#9aa6e0', ambA: .1, bounce: '#ffcf99', bounceA: .2 });
+  V2.setLight({ key: [-.35, -.8], keyColor: '#ffe3b8', keyA: .26, rim: '#8fb8ff', rimA: sh === 'adm' ? .2 : .55, shadow: '#0a1030', shadowA: .45, amb: '#9aa6e0', ambA: .1, bounce: '#ffcf99', bounceA: .2 });   // the melon is wide: a full rim washes half of its face
   V2.opts.reflect = true;
   const bg = () => lobbyNight({ doorOpen: door, t: lt + 2, S0, tickAge: ta });
   const subj = { cuS: 'S', dolly: 'S', cuP: 'P', adm: 'A', mang: 'M' }[sh];
@@ -428,8 +428,8 @@ SC_EXIT.draw = function (lt) {
     const a2 = b('a2'), n = clamp((lt - (a2.s + .15)) / .55) * 5, pops = Math.floor(n + .001);
     phoneShot(bg, (w, h) => uiRate(w, h, { stars: n, t: lt }), { rot: -.04, blur: 14 });
     const tap = (lt - (a2.s + .15)) * 9, finger = n < 5 ? Math.floor(n) : 4;
-    glove(540 + (finger - 2) * 94 + 60, 815 - 240 + 150 - 40 * Math.abs(Math.sin(tap)) + 40, -2.5, 5.2);
-    if (n >= 5 && n - 5 < .2) V2.glow(540, 815 - 200, 500, '255,226,90', .5, 'screen', .6);
+    glove(540 + (finger - 2) * 94 + 60, 815 - 240 + 150 - 40 * Math.abs(Math.sin(tap)) + 30, -2.5, 5.2);
+    if (n >= 5 && n - 5 < .2) V2.glow(540, 815 - 200, 500, '255,226,90', .24, 'screen', .6);
     void pops; return;
   }
   // ---------------- the lobby itself
@@ -440,7 +440,7 @@ SC_EXIT.draw = function (lt) {
   const others = draws.filter(([n]) => sub && n !== sub).map(([, o]) => o), mains = draws.filter(([n]) => !sub || n === sub).map(([, o]) => o);
   if (others.length) V2.dof(6, () => others.forEach(drawBg));
   // the persimmon outside the door is behind the glass: draw her before the leaves would hide her; she is a distant figure either way
-  mains.forEach(o => sh === 'mang' && o === c.S ? drawBg(o) : drawChar(o));
+  mains.forEach(o => sh === 'mang' && o === c.S ? nbr(o) : drawChar(o));
   // the leaves of the doors passing in front of anyone walking through them
   V2.addLight({ x: 540, y: 1000, r: 900, color: '150,190,255', a: .18 });
   V2.dust(60, 600, 1020, 1400, lt, { n: 22, alpha: .25, color: '200,215,255' });
@@ -453,7 +453,7 @@ SC_EXIT.draw = function (lt) {
 };
 SC_EXIT.fx = lt => {
   const sh = SC_EXIT.shot(lt), cdx = lt - B('cd').s;
-  return { bloom: .7, vignette: .55, grain: .05, contrast: .18, sat: .1, tint: [['#3a54c8', .2, 'soft-light'], ['#0a1030', .1, 'multiply']],
+  return { bloom: ['adm', 'alarm', 'rate', 'thumb', 'admP', 'clk'].includes(sh) ? .22 : .7, vignette: .55, grain: .05, contrast: .18, sat: .1, tint: [['#3a54c8', .2, 'soft-light'], ['#0a1030', .1, 'multiply']],   // the lit glass doors bloom across the Administrator's face and over the phone screens
     aberr: sh === 'alarm' && cdx > 1.9 ? 7 : sh === 'run' ? 4 : 0, fade: Math.max(lt < .25 ? 1 - lt / .25 : 0, sh === 'alarm' && cdx >= 1.9 && cdx < 2.0 ? .4 * (1 - (cdx - 1.9) / .1) : 0), fadeColor: sh === 'alarm' ? '255,220,230' : '0,0,10' };
 };
 SC_EXIT.blur = lt => { const sh = SC_EXIT.shot(lt); return sh === 'run' || sh === 'thumb' || sh === 'foot' ? 3 : 1; };
