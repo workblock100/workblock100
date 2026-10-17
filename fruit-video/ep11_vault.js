@@ -601,9 +601,9 @@ EXT.prop.lap11 = (side, o, t) => {
   ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
   ctx.fillStyle = V2.grad(-w / 2, -h / 2, w / 2, h / 2, [[0, '#dfe3ec'], [.5, '#b8bfcc'], [1, '#8a92a4']]); ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-w / 2, -h / 2, w, h - dip, 9); ctx.fill(); ctx.stroke(); ctx.shadowColor = 'transparent';
   ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(-w / 2 + 8, -h / 2 + 7, w - 16, 10, 4); ctx.fill();
-  ctx.save(); ctx.translate(0, -2);   // the logo: a pear with a bite out of it
-  ctx.fillStyle = '#6a7084'; ctx.beginPath(); ctx.moveTo(0, -20); ctx.bezierCurveTo(14, -22, 18, -2, 14, 12); ctx.bezierCurveTo(10, 24, -10, 24, -14, 12); ctx.bezierCurveTo(-18, -2, -12, -22, 0, -20); ctx.fill();
-  ctx.fillStyle = '#b8bfcc'; ell(15, -6, 8, 8); ctx.fill(); ctx.strokeStyle = '#6a7084'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -20); ctx.quadraticCurveTo(2, -30, 10, -32); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.translate(0, 2);   // the logo: our own mark, three round fruit in a bowl (nothing that reads as a real brand)
+  ctx.fillStyle = '#6a7084'; ell(-9, -9, 8, 8); ctx.fill(); ell(9, -9, 8, 8); ctx.fill(); ell(0, -19, 8, 8); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-24, -2); ctx.quadraticCurveTo(0, 36, 24, -2); ctx.closePath(); ctx.fill(); ctx.restore();
   ctx.fillStyle = 'rgba(20,22,32,.45)'; ctx.fillRect(-w / 2 + 4, h / 2 - 7 - dip, w - 8, 4);
   ctx.restore();
 };
