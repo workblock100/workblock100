@@ -193,6 +193,21 @@ def sfx_slowmolong():
     return norm6(x, .7)
 
 
+def sfx_timelapse11():
+    """A time-lapse that fits the beat it is cued on (Episode 9's `timelapse` runs 6.4 s and rides on under the next five lines): a clock whose ticks speed up from one every 0.2 s to
+    a blur, a swell of wound-up noise that peaks at about 1.1 s, and a whoosh as the speed ramp lets go. 1.45 s, gone before the next line."""
+    d = 1.45
+    out = np.zeros(int(d * SR))
+    t, gap = 0.0, .21
+    while t < 1.2:
+        BA.place(out, bp(noise6(.012, int(t * 1000) + 4000), 2800, 9000, 1) * expdecay(.012, .003), t, 1.2)
+        t += gap
+        gap = max(.022, gap * .86)
+    out += bp(noise6(d, 4100), 300, 3200) * np.interp(tarr(d), [0, .9, 1.15, 1.45], [0, .5, 1.0, 0]) * .3
+    BA.place(out, _sweep_down(.5, 3200, 400, 4110) * np.sin(np.pi * np.linspace(0, 1, int(.5 * SR))) ** 1.2 * .35, .95)
+    return norm6(out, .6)
+
+
 def sfx_purse():
     """A coin purse's kiss-lock clasp: a bright 'tik', a lighter 'tak', and the small hollow breath of a purse with nothing in it."""
     d = .3
@@ -223,6 +238,7 @@ def sfx_tapeprint():
 
 # ================================================================ register
 BA.SFX.update({k[4:]: v for k, v in list(globals().items()) if k.startswith("sfx_")})
+A6.DUCK_SFX.update({"rumble", "typing"})   # the rumble's swell runs on into 'Oh. We do have that one.', the typing into the invoice speech: both duck under speech
 
 
 def main():

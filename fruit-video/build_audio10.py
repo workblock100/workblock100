@@ -366,6 +366,7 @@ def sfx_carddeal():
 
 # ================================================================ register
 BA.SFX.update({k[4:]: v for k, v in list(globals().items()) if k.startswith("sfx_")})
+A6.DUCK_SFX.update({"trombone", "crickets", "slidedoor"})   # long tails that ring on into the next line (the trombone's last note into the next scene's first words): they duck under speech
 
 
 def main():
