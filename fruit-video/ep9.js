@@ -323,13 +323,13 @@ SCENES.orient = {
       acc: ['steth', 'bandage'], hold: { r: 'mug7' }, grip: { r: [78, 48] }, arms: { l: low ? 'hips' : inB(lt, 's6') ? 'shrug' : 'rest', r: 'hold' }, lid: inB(lt, 's1') || inB(lt, 's5') ? undefined : .5 }));
     const pr = persimmon(Object.assign(at('pers'), { look: [-.5, 0], expr: inB(lt, 'p2') || inB(lt, 'p4') || inB(lt, 'p5') ? 'smug' : 'neutral',
       acc: ['sunglassesHead', 'perdiem', 'airpods'], hold: { r: 'icedcup' }, grip: low ? { r: [86, 70], l: [-128, 52] } : { r: [86, 70] }, hand: low ? { l: 'open' } : undefined, arms: { l: low ? 'hold' : 'rest', r: 'hold' }, lid: .35 }));
-    const mg = mango(Object.assign(at('mango'), { look: [-.5, -.05], expr: inB(lt, 'm1') ? 'smug' : inB(lt, 'l1') || inB(lt, 'l2') ? 'shock' : 'neutral', arms: { l: 'rest', r: inB(lt, 'm1') ? 'point' : 'rest' } }));
+    const mg = mango(Object.assign(at('mango'), { look: [-.5, -.05], expr: inB(lt, 'm1') ? 'smug' : inB(lt, 'l1') || inB(lt, 'l2') ? 'shock' : 'neutral', arms: { l: 'rest', r: inB(lt, 'm1') ? 'point' : sh0 === 'wide' ? 'hold' : 'rest' }, grip: !inB(lt, 'm1') && sh0 === 'wide' ? { r: [128, 56] } : undefined, hand: !inB(lt, 'm1') && sh0 === 'wide' ? { r: 'open' } : undefined }));
     return { lemon: lem, straw: sp, pers: pr, mango: mg };
   },
   cam(lt) {
     const sh = SCENES.orient.shot(lt), c = SCENES.orient.cast(lt), b = id => B(id);
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(.97, .99, k)); }
+    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(.93, .95, k)); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 2.0 + (inB(lt, 's6') ? .12 * seg(lt, b('s6').s, b('s6').e) : 0), 80);
     else if (sh === 'cuP') faceZoom({ kind: 'persimmon', x: c.pers.x, y: c.pers.y, s: c.pers.s }, 2.0, 80);
     else if (sh === 'cuM') { faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80); CAM.x += 30; }   // her pointing finger stays 60 px inside the right edge

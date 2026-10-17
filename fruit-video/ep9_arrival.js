@@ -337,7 +337,7 @@ SCENES.arrival = {
     if (lt >= b('s2').s - .2 && lt < b('a3').e + .1) { const up = sk(lt, b('s2').s - .2, b('s2').s + .2) * (1 - sk(lt, b('a3').e - .3, b('a3').e)); sp.hold.l = 'pen9'; sp.grip.l = [lerp(-110, -146, up), lerp(40, -36, up)]; sp.arms.l = 'hold'; }
     const clapM = lt >= d.s + 1.4 && lt < a1.e + .2;
     const mg = person(mango, mangoPath, lt, { stride: 36, look: lerpA2(sw ? [-.6, .05] : [-.5, 0], [0, 0], look2cam), expr: sw ? 'happy' : inB(lt, 'm1') ? 'hopeful' : inB(lt, 'm2') ? 'shock' : clapM ? 'happy' : lt >= st.s ? 'dead' : 'neutral',
-      arms: { l: sw ? [.28 + .35 * Math.sin(lt * 7 + 2), .25] : 'rest', r: 'rest' }, transit: lt < 1.8 });
+      arms: { l: sw ? [.28 + .35 * Math.sin(lt * 7 + 2), .25] : 'rest', r: sw ? 'rest' : 'hold' }, grip: sw ? undefined : { r: [128, 56] }, hand: sw ? undefined : { r: 'open' }, transit: lt < 1.8 });   // standing, her outer hand rests on the hip: out on the arm it ran off the frame edge
     if (clapM) { const c = .5 + .5 * Math.sin(lt * 17); mg.grip = { l: [-lerp(8, 56, c), 74], r: [lerp(8, 56, c), 74] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'flat', r: 'flat' }; }
     return { lm, ad, pr, sp, mg, z: { lm: MK.lemon[1], ad: MK.admin[1], pr: pp[1], sp: strawPath(lt)[1], mg: mangoPath(lt)[1] }, pz: { basketFloor: lt >= dB, pizzaFloor: lt >= p1.s - .02, grabbed, open, qP, dB, hB, hP, hL, tB, tP, tL } };
   },
@@ -346,17 +346,17 @@ SCENES.arrival = {
     V2.setCam({ f: 1400, cy: 360, hy: 860, cz: czAt(lt) });
     const C = SCENES.arrival.cast(lt), F = (o, z, up = 100) => faceZoom({ kind: o.kind, x: o.x, y: o.y, s: o.s, lift: o.lift, noLegs: o.noLegs }, z, up);
     switch (sh.n) {
-      case 'wide': zoomTo(540, lerp(985, 975, k), .94); break;
+      case 'wide': zoomTo(540, lerp(985, 975, k), .9); break;
       case 'cuS': F(C.sp, lerp(1.75, 1.85, k), 150); break;
       case 'cuL': F(C.lm, lerp(1.85, 1.95, k), 110); break;
       case 'cuM': F(C.mg, lerp(1.9, 2.0, k), 110); break;
       case 'cuL2': F(C.lm, lerp(2.0, 2.1, k), 110); break;
       case 'cuM2': F(C.mg, lerp(2.05, 2.15, k), 110); break;
       case 'cuL3': F(C.lm, lerp(2.2, 2.6, k), 100); break;
-      case 'door': zoomTo(540, lerp(990, 975, k), .94); CAM.shake = lt > d.s + .4 && lt < d.s + 1.3 ? 3 * seg(lt, d.s + .4, d.s + 1.25) : (lt >= d.s + 1.3 ? 6 * Math.max(0, 1 - (lt - d.s - 1.3) / .3) : 0); break;
-      case 'doorB': zoomTo(lerp(470, 480, k), 975, lerp(1.3, 1.45, k)); break;
+      case 'door': zoomTo(540, lerp(990, 975, k), .9); CAM.shake = lt > d.s + .4 && lt < d.s + 1.3 ? 3 * seg(lt, d.s + .4, d.s + 1.25) : (lt >= d.s + 1.3 ? 6 * Math.max(0, 1 - (lt - d.s - 1.3) / .3) : 0); break;
+      case 'doorB': zoomTo(440, 975, lerp(1.2, 1.3, k)); break;
       case 'cuA': F(C.ad, lerp(1.45, 1.55, k), 100); break;
-      case 'two': { const mx = (C.ad.x + C.pr.x) / 2; zoomTo(mx - 100, C.ad.y - 190 * C.ad.s, lerp(1.28, 1.34, k)); break; }
+      case 'two': { const mx = (C.ad.x + C.pr.x) / 2; zoomTo(mx - 80, C.ad.y - 190 * C.ad.s, lerp(1.16, 1.22, k)); break; }
       case 'cuP': F(C.pr, lerp(2.0, 2.15, k), 100); break;
       case 'cuS2': F(C.sp, lerp(1.8, 1.95, k), 130); break;
       case 'cuA2': F(C.ad, lerp(1.5, 1.6, k), 100); break;
@@ -365,7 +365,7 @@ SCENES.arrival = {
       case 'cuP2': F(C.pr, lerp(1.6, 1.72, k), 90); break;
       case 'xcuS': F(C.sp, lerp(2.7, 3.1, k), 135); break;
       case 'xcuA': F(C.ad, lerp(2.0, 2.25, k), 90); break;
-      case 'sting': zoomTo(540, lerp(985, 975, k), .94); break;
+      case 'sting': zoomTo(540, lerp(985, 975, k), .9); break;
     }
   },
   draw(lt) {

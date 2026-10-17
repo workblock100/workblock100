@@ -588,11 +588,11 @@ const SC = {
     meter(558, my, 492, 92, 'staff', lt, 'meter-staff');
     sfxWord(lt, b('open').s + .1, 'DING!', 430, 314, { fill: '#ffffff', size: 88, rot: .06, hold: .32 });   // clear of the HALL tag, and gone before BWEEP! pops
     sfxWord(lt, b('open').s + .55, 'BWEEP!', 580, 314, { fill: A6.ALARM.bed.hex, size: 80, rot: -.05, hold: .38 });
-    sfxWord(lt, b('end').s + .1, 'WAH WAH', 500, 314, { fill: '#cfe9ff', size: 84, rot: -.04, hold: .75 });
+    sfxWord(lt, b('end').s + .1, 'WAH WAH', 500, 304, { fill: '#cfe9ff', size: 78, rot: -.04, hold: .75 });
     sfxWord(lt, 6.5, 'SKRRT!', 410, 336, { fill: '#ffffff', size: 80, rot: -.05, hold: .55 });
     sfxWord(lt, 7.62, 'SLURP', 800, PC.y - 145, { fill: '#9be8ff', size: 84, rot: .08, hold: .6 });
-    sfxWord(lt, b('lapse1').s + .15, 'TICK TICK', 500, 314, { fill: '#ffd23a', size: 92, rot: -.04, hold: .9 });
-    sfxWord(lt, b('lapse2').s + .15, 'TICK TICK', 500, 314, { fill: '#ffd23a', size: 92, rot: -.04, hold: .8 });
+    sfxWord(lt, b('lapse1').s + .15, 'TICK TICK', 500, 304, { fill: '#ffd23a', size: 80, rot: -.04, hold: .9 });
+    sfxWord(lt, b('lapse2').s + .15, 'TICK TICK', 500, 304, { fill: '#ffd23a', size: 80, rot: -.04, hold: .8 });
   },
 };
 

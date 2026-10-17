@@ -366,7 +366,7 @@ SC_EXIT.cast = lt => {
   if (lt >= b('run').s) { S.arms = { l: 'none', r: 'none' }; S.hold = {}; S.grip = {}; S.arms = { l: 'flail', r: 'flail' }; }
   const pinch = lt >= b('run').s ? seg(lt, b('run').s + .5, b('run').s + .66) * (1 - seg(lt, b('run').s + .8, b('run').s + .95)) : 0;
   if (pinch > 0) S.sx = 1 - .36 * pinch;
-  const M = person(mango, () => XC.mango, lt, { look: lt >= b('m1').s - .15 ? [.75, -.1] : lt < b('s1').s ? [.3, 0] : [.7, 0], expr: lt >= b('m1').s - .2 && lt < b('s3').s ? 'shock' : lt >= b('s3').s ? 'sad' : 'neutral', arms: { l: sh === 'wide' ? 'hips' : 'rest', r: 'rest' } });
+  const M = person(mango, () => XC.mango, lt, { look: lt >= b('m1').s - .15 ? [.75, -.1] : lt < b('s1').s ? [.3, 0] : [.7, 0], expr: lt >= b('m1').s - .2 && lt < b('s3').s ? 'shock' : lt >= b('s3').s ? 'sad' : 'neutral', arms: { l: sh === 'wide' || sh === 'run' ? 'hips' : 'rest', r: 'rest' } });
   const aq = lt >= b('a2').s - .1 && lt < b('m1').s - .15, waveOn = inB(lt, 'a1') || lt >= b('a1').s - .2 && lt < b('a1').e + .2;
   const Ad = person(melon, () => XC.admin, lt, { look: lt >= b('out').s ? [.8, -.1] : [.3, .1], expr: lt >= b('m1').s - .2 ? 'shock' : lt >= b('out').s + .3 ? 'happy' : 'happy', hold: { r: 'cell' }, grip: { r: [150, 56] }, arms: { l: waveOn ? 'wave' : 'rest', r: 'hold' }, lid: lt >= b('m1').s - .2 ? undefined : undefined });
   void outT; void cdT; void clip; void aq;
@@ -383,13 +383,13 @@ SC_EXIT.cam = function (lt) {
   const c = SC_EXIT.cast(lt), cdl = lt - b('cd').s;
   CAM.shake = 0;
   if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, 1000, lerp(.92, .94, k)); }   // wide enough that the outer two keep their bodies and, with a hand on the hip, their gloves in frame
-  else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lt >= b('out').s ? lerp(1.45, 1.6, seg(lt, b('out').s, b('out').e)) : 1.7, 120, lt >= b('out').s ? 170 : 0);
+  else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lt >= b('out').s ? lerp(1.45, 1.6, seg(lt, b('out').s, b('out').e)) : 1.7, 120, lt >= b('out').s ? 150 : 0);
   else if (sh === 'cuP') { const bk = lt >= b('p3').s && lt < b('p3').e ? seg(lt, b('p3').s, b('p3').e) : 0; camFace({ kind: 'persimmon', x: c.P.x, y: c.P.y, s: c.P.s }, 2.35 + .25 * (inB(lt, 'p1') ? seg(lt, b('p1').s, b('p1').e) : bk), 80); }
   else if (sh === 'foot') zoomTo(c.S.x + 8, c.S.y - 30, 4.8);
   else if (sh === 'adm') camFace({ kind: 'melon', x: c.Ad.x, y: c.Ad.y, s: c.Ad.s }, 1.55, 40, -60);
   else if (sh === 'mang') { const k = seg(lt, b('m1').s - .15, b('m1').e); zoomTo(lerp(350, 370, k), 1000, lerp(1.16, 1.22, k)); }
   else if (sh === 'dolly') { const d = ez(lt, b('s3').s - .05, b('s4').e + .1); camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lerp(1.6, 1.85, d), 110, 20); if (lt >= b('s4').s) CAM.shake = 12 * (1 - seg(lt, b('s4').s, b('s4').e + .3)); }
-  else if (sh === 'run') { const k = ez(lt, b('run').s, b('run').e); zoomTo(540, 960, lerp(.94, .98, k)); CAM.shake = 9 * (1 - seg(lt, b('run').s + .7, b('run').e)); }
+  else if (sh === 'run') { const k = ez(lt, b('run').s, b('run').e); zoomTo(540, 960, lerp(.9, .94, k)); CAM.shake = 9 * (1 - seg(lt, b('run').s + .7, b('run').e)); }
   void cdl;
 };
 
@@ -500,8 +500,8 @@ SC_LOT.car = lt => {
   const yaw = -PI / 2 + h, dir = [Math.sin(yaw), Math.cos(yaw)];
   return { x: base[0] + dir[0] * d, z: base[1] + dir[1] * d, yaw, v: a * u, burn: 0 };
 };
-SC_LOT.sPath = lt => { const t0 = B('car').s; return route([[0, 0, 2092], [t0, 0, 2092], [t0 + .5, 230, 1770], [t0 + 1.05, 240, 1160], [t0 + 1.4, 215, 1150, 'out'], [t0 + 1.9, STOP[0], STOP[1], 'out']])(lt); };
-SC_LOT.moonPos = lt => { const m = B('mo1').s; const r = ez(lt, B('car').s + 1.3, m); return [lerp(1000, 880, r), lerp(840, 410, easeOut(seg(lt, B('car').s + 1.3, m)))]; };
+SC_LOT.sPath = lt => { const t0 = B('car').s; return route([[0, 0, 2092], [t0, 0, 2092], [t0 + .5, 230, 1770], [t0 + 1.05, 205, 1160], [t0 + 1.4, 192, 1150, 'out'], [t0 + 1.9, STOP[0], STOP[1], 'out']])(lt); };
+SC_LOT.moonPos = lt => { const m = B('mo1').s; const r = ez(lt, B('car').s + 1.3, m); return [lerp(985, 860, easeOut(r)), lerp(840, 410, easeOut(seg(lt, B('car').s + 1.3, m)))]; };
 SC_LOT.shot = lt => {
   const b = B, c = b('car'), m1 = b('mo1');
   const order = [['wide', c.e - .05], ['moonW', m1.s + 1.0], ['moonC', m1.e - .1], ['cuSq', b('ph').s - .05], ['phone', b('s5').s - .05], ['cuS', b('mo2').s - .05], ['cuM', b('tap').s - .05], ['tapph', b('tap').s + .85], ['pull', 1e9]];
@@ -513,7 +513,7 @@ SC_LOT.cast = lt => {
   const S = runner(straw, SC_LOT.sPath, lt, { id: 'straw', look: bent ? [-.3, .2] : [-.2, .1], stride: 44,
     expr: lt >= b('tap').s + .9 ? 'happy' : lt >= b('s5').s ? 'hopeful' : lt >= b('ph').s ? 'neutral' : bent ? 'dead' : lt >= t0 + 1.0 ? 'panic' : 'angry',
     lid: bent && lt < b('ph').s ? .55 : undefined,
-    arms: { l: run ? (lt > t0 + 1.2 ? 'reach' : 'run') : 'rest', r: run ? (lt > t0 + 1.2 ? 'reach' : 'run') : 'rest' }, acc: ['steth', 'badge7', 'bandage7'].concat(bent && lt < b('ph').s ? ['sweat'] : []),
+    arms: { l: run ? (lt > t0 + 1.2 ? 'reach' : 'run') : 'rest', r: run ? 'run' : 'rest' }, acc: ['steth', 'badge7', 'bandage7'].concat(bent && lt < b('ph').s ? ['sweat'] : []),
     transit: lt < t0 + .4 }, 280);
   if (!run) { S.gaitW = undefined; S.axis = undefined; S.dir = undefined; S.vx = 0; }
   if (bent && lt < b('ph').s) { const br = Math.sin(lt * 11); S.squash = .5 + .1 * br; S.plant = true; S.rot = .1; S.grip = { l: [-70, 84], r: [70, 84] }; S.arms = { l: 'hold', r: 'hold' }; S.look = [0, .5]; }
@@ -527,8 +527,8 @@ SC_LOT.cam = function (lt) {
   CAM.shake = 0;
   if (sh === 'wide') {
     const pan = ez(lt, t0 + 1.35, t0 + 2.5);
-    V2.setCam({ f: 1400, cy: 360, hy: 860, cx: -110 * pan });
-    zoomTo(540, 1090, lerp(.98, 1.02, seg(lt, 0, t0 + 2.5)) - .05 * pan);
+    V2.setCam({ f: 1400, cy: 360, hy: 860, cx: -80 * pan });
+    zoomTo(540, 1090, lerp(.91, .95, seg(lt, 0, t0 + 2.5)) - .05 * pan);
     if (lt > t0 + 1.35 && lt < t0 + 1.9) CAM.shake = 7 * (1 - seg(lt, t0 + 1.35, t0 + 1.9));
   } else {
     const c = SC_LOT.cast(lt);
