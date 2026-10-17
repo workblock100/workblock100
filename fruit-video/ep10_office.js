@@ -151,7 +151,7 @@ function hand(str, x, y, size, p, o = {}) {
   return pen;
 }
 // the resignation letter. prog: how much of each line is written (0 to 1) [Dear, body, effective, reason, sincerely, signature]; o.stamp: strength of the RECEIVED imprint; returns the ink front
-const LET = { x: 190, y: 250, w: 700, h: 900 };
+const LET = { x: 190, y: 290, w: 700, h: 900 };
 const LETTER_LINES = [['Dear Administrator,', 232, 46], ["I am giving my two weeks' notice.", 318, 40], ['Effective in 14 days.', 404, 44], ['Reason: see $118.', 490, 46], ['Sincerely,', 742, 44]];
 function paper(prog, o = {}) {
   const { x, y, w, h } = LET;
@@ -195,12 +195,12 @@ function insLetter(lt) {
   deskTop();
   const w = id => wordT('s1', id, 0), tG = w('giving') || 1.75, tM = w('my') || 2.23, tTwo = w('two') || 2.38, tWk = w('weeks') || 2.56, tN = w('notice') || 2.82, tE = tN + .45;
   const prog = [1, reveal(lt, [[1.6, 0], [tG, .15], [tM, .36], [tTwo, .45], [tWk, .58], [tN, .79], [tE - .12, 1]]), seg(lt, 3.24, 3.36), seg(lt, 3.32, 3.44), seg(lt, 3.4, 3.47), seg(lt, 3.44, 3.55)];
-  ctx.save(); ctx.translate(540, 700 + py); ctx.rotate(lerp(.05, -.01, slide)); ctx.translate(-540, -700);
+  ctx.save(); ctx.translate(540, 740 + py); ctx.rotate(lerp(.05, -.01, slide)); ctx.translate(-540, -740);
   const pen = paper(prog);
   if (pen && lt < 3.55) star(pen[0], pen[1], 22 + 6 * Math.sin(lt * 40), .9, '170,200,255');   // the ink front glints
   ctx.restore();
   // the glove that lays the letter down: it pushes the sheet in, then slips away to the lower right
-  const out = sk(lt, t0 + .26, t0 + .6), gx = 700 + 380 * out, gy = 1230 + py - 120 + 260 * out;
+  const out = sk(lt, t0 + .26, t0 + .6), gx = 700 + 380 * out, gy = 1270 + py - 120 + 260 * out;
   if (out < 1) glove(gx, gy, -2.3, 4.4, { kind: 'flat' });
 }
 // the stamp: a big wooden knob comes down out of the camera onto the letter; impact is the scene-local time it lands
@@ -208,15 +208,15 @@ function insStamp(lt, impact) {
   const k = lt - impact, down = easeIn(seg(lt, impact - .3, impact)), lift = easeOut(seg(lt, impact + .24, impact + .66));
   deskTop();
   const flut = k >= 0 ? Math.exp(-k * 9) * Math.sin(k * 44) : 0, jump = k >= 0 ? 16 * Math.exp(-k * 14) : 0;
-  ctx.save(); ctx.translate(540, 700); ctx.rotate(-.012 + flut * .012); ctx.translate(-540, -700 - jump);
+  ctx.save(); ctx.translate(540, 740); ctx.rotate(-.012 + flut * .012); ctx.translate(-540, -740 - jump);
   paper([1, 1, 1, 1, 1, 1], { stamp: k >= 0 ? clamp(k * 14) : 0 });
   ctx.restore();
   // ink splatter: dots thrown out from the box at the moment of impact
-  if (k >= 0) { const u = easeOut(seg(k, 0, .28)); ctx.save(); ctx.fillStyle = '#d6202e'; for (let i = 0; i < 38; i++) { const an = hash(i + 4) * TAU, d = (230 + hash(i + 19) * 330) * u, r = (3 + hash(i + 8) * 10) * (.5 + .5 * u); ctx.globalAlpha = .5 + .5 * hash(i + 2); ell(540 + Math.cos(an) * d * 1.15, 848 + Math.sin(an) * d * .8 - jump, r, r * (.7 + .3 * hash(i))); ctx.fill(); } ctx.restore(); }
+  if (k >= 0) { const u = easeOut(seg(k, 0, .28)); ctx.save(); ctx.fillStyle = '#d6202e'; for (let i = 0; i < 38; i++) { const an = hash(i + 4) * TAU, d = (230 + hash(i + 19) * 330) * u, r = (3 + hash(i + 8) * 10) * (.5 + .5 * u); ctx.globalAlpha = .5 + .5 * hash(i + 2); ell(540 + Math.cos(an) * d * 1.15, LET.y + 598 + Math.sin(an) * d * .8 - jump, r, r * (.7 + .3 * hash(i))); ctx.fill(); } ctx.restore(); }
   // the stamp itself, from above: it grows as it nears the camera
   const sc = down < 1 ? lerp(2.5, 1, down) : lerp(1, 2.2, lift);
   if (lift < 1) {
-    ctx.save(); ctx.translate(540 + 10, 848 - jump * .5); ctx.rotate(-.16 + (1 - down) * .05); ctx.scale(sc, sc); ctx.globalAlpha *= 1 - seg(lift, .55, 1);
+    ctx.save(); ctx.translate(540 + 10, LET.y + 598 - jump * .5); ctx.rotate(-.16 + (1 - down) * .05); ctx.scale(sc, sc); ctx.globalAlpha *= 1 - seg(lift, .55, 1);
     ctx.fillStyle = 'rgba(0,0,0,.34)'; ctx.filter = 'blur(' + (1 + (1 - down) * 14) + 'px)'; rr(-282, -82 + 30 * (1 - down) + 10, 584, 184, 14); ctx.fill(); ctx.filter = 'none';
     ctx.fillStyle = '#2a1a12'; ctx.strokeStyle = INK; ctx.lineWidth = 6; rr(-286, -96, 572, 192, 14); ctx.fill(); ctx.stroke();
     ctx.fillStyle = V2.grad(0, -96, 0, 96, [[0, '#4a3022'], [1, '#2a1a12']]); rr(-270, -82, 540, 164, 10); ctx.fill();
@@ -233,7 +233,7 @@ function insStill(lt, t0) {
   const k = lt - t0, push = 1 + .045 * seg(lt, t0, t0 + .9);
   deskTop();
   ctx.save(); ctx.translate(540, 760); ctx.scale(push, push); ctx.translate(-540, -760);
-  ctx.save(); ctx.translate(430, 610); ctx.rotate(-.09); ctx.scale(.7, .7); ctx.translate(-540, -700); paper([1, 1, 1, 1, 1, 1], { stamp: 1 }); ctx.restore();
+  ctx.save(); ctx.translate(430, 610); ctx.rotate(-.09); ctx.scale(.7, .7); ctx.translate(-540, -740); paper([1, 1, 1, 1, 1, 1], { stamp: 1 }); ctx.restore();
   // the pen cup, seen from above: a dark ring, the black mouth, one pen leaning out of it
   const pa = .8, PL = 215;
   ctx.save(); ctx.translate(215, 1130);
@@ -379,7 +379,9 @@ const OFFICE = {
     switch (n) {
       case 'wide': zoomTo(492, 900, 1.15); break;
       case 'walk': { const o = C.sp; zoomTo(o.x + 10, o.y - 150 * o.s, lerp(1.85, 1.98, k)); } break;
-      case 'letter': case 'stamp': case 'still': zoomTo(540, 960, 1); break;
+      case 'letter': zoomTo(540, 960, lerp(1, 1.035, k)); break;
+      case 'stamp': { const q = lt >= T_STAMP ? Math.exp(-(lt - T_STAMP) * 11) : 0; zoomTo(540, 960, 1 + .06 * q); CAM.shake = lt >= T_STAMP ? 9 * Math.exp(-(lt - T_STAMP) * 10) : 0; } break;
+      case 'still': zoomTo(540, 960, 1); break;
       case 'cuA': F(C.ad, lerp(1.7, 1.8, k), 130, -140); break;
       case 'cuS': F(C.sp, lerp(1.45, 1.6, k), 250, 190); break;
       case 'cuA2': F(C.ad, lerp(1.7, 1.78, k), 120); { const tt = wordT('a2', 'agency', 7.83); CAM.shake = 5 * Math.max(0, 1 - Math.abs(lt - tt - .06) * 6); } break;
@@ -429,7 +431,9 @@ const OFFICE = {
     off.coat();
     OFFICE.fxWorld(lt, C, off);
     off.over();
-    if (n === 'hero') V2.flare(170, 250, .55 * (.8 + .2 * Math.sin(lt * 5)));
+    if (n === 'hero') {   // the sun through the window, top left: a bloom and a lens flare across the frame, kept clear of her face
+      const a = .85 * (.85 + .15 * Math.sin(lt * 5)); ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.radial(120, 200, 0, 520, [[0, `rgba(255,238,190,${.55 * a})`], [1, 'rgba(255,238,190,0)']]); ctx.fillRect(0, 0, 700, 700); ctx.restore(); V2.flare(120, 200, a);
+    }
   },
   deskExtras(lt, C) {
     const d = C.off.layout.desk;
@@ -479,7 +483,7 @@ const OFFICE = {
     const t1 = wordT('s2', 'eighteen', 6.0) - .02, k = lt - t1;
     if (k > 0 && k < 1.5 && lt < 7.4) {
       const e = easeOut(seg(k, 0, .14)), f = 1 - seg(k, 1.15, 1.5), sc = lerp(1.4, 1, e);
-      ctx.save(); ctx.globalAlpha *= f; ctx.translate(730, 292); ctx.rotate(-.07); ctx.scale(sc, sc);
+      ctx.save(); ctx.globalAlpha *= f; ctx.translate(745, 248); ctx.rotate(-.07); ctx.scale(sc, sc);
       text('$118/HR', 0, 0, { size: 132, font: 'Bangers', weight: 400, fill: '#ffe135', lw: 18, stroke: '#150f22', spacing: 3, shadow: 18 });
       ctx.restore();
     }
@@ -542,7 +546,7 @@ function bubble(x, y, S, t, ding = 0) {
  *   11.20 s4: high on her, "It's the only option."    12.81 stamp: EXIT INTERVIEW COMPLETE lands at 13.01 (the same wooden stamp as the office scene)
  *   13.73 a5: "Please return all company property."    15.15 her reaction    15.80 property: top-down, she empties the tote (clatter 16.15, rattle 16.55); he ticks the inventory list: everything but PEN
  *   17.35 a6: "Pen."    18.19 s5: she takes the pen out of her leaf    19.27 a7: "To share."    20.24 s6: "I shared it for four years."
- *   21.62 she slides the pen across the desk: it rolls off the edge    22.05 it drops into the wastebasket (clink 22.25, the sting)    22.55 end: wide, the pen among the other resignations */
+ *   21.62 she slides the pen across the desk: it rolls off the edge    22.05 it drops into the wastebasket (clink 22.25, the sting)    22.55 his reaction    22.95 top-down: the pen on the other resignations, twinkling */
 const FY = { head: -428, title: -366, q1: -274, o1: -214, o2: -150, q2: -58, l1: 42, l2: 106, q3: 196, q3b: 236, o3: 310, q4: 414, sig: 486 };
 const INK_B = '#1d3fa8', INK_R = '#d6202e';
 // FORM 27-B on a clipboard, seen from above. The origin is the middle of the sheet (700 x 1060), x to the right, y down. S carries what has been written so far; returns the ink front of the active line, in form coordinates
@@ -556,6 +560,30 @@ function formArt(S = {}) {
   ctx.fillStyle = V2.grad(-100, 0, 100, 0, [[0, '#8a92a4'], [.4, '#f2f5fa'], [1, '#7a8498']]); ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-100, -622, 200, 92, 16); ctx.fill(); ctx.stroke();   // the clip
   ctx.fillStyle = '#5a6278'; rr(-64, -604, 128, 30, 8); ctx.fill();
   const L = (str, x, y, o) => text(str, x, y, Object.assign({ size: 28, fill: '#20202c', weight: 900, align: 'left' }, o));
+  if (S.page2) {   // the back page, turned over while the camera was on her: only his boxes, and one empty DISPOSITION box for the stamp
+    text('FRUIT BOWL REHAB & NURSING', -310, FY.head, { size: 19, fill: '#8a90a4', weight: 800, spacing: 2, align: 'left', maxW: 400 });
+    text('FORM 27-B  (PAGE 2)', 310, FY.head, { size: 19, fill: '#8a90a4', weight: 900, spacing: 2, align: 'right', maxW: 260 });
+    text('FOR OFFICE USE ONLY', 0, FY.title, { size: 56, fill: '#20202c', weight: 900, spacing: 2, maxW: 640 });
+    ctx.strokeStyle = '#20202c'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-310, -318); ctx.lineTo(310, -318); ctx.stroke();
+    [['EMPLOYEE', 'STRAWBERRY (PER DIEM)'], ['REASON FOR LEAVING', 'MONEY (X2)'], ['WOULD RECOMMEND', 'N/A'], ['PIZZA OWED TO EMPLOYEE', 'NONE'], ['REVIEWED BY', 'THE ADMINISTRATOR']].forEach(([a, b], i) => {
+      const y = -262 + i * 62; text(a, -310, y - 14, { size: 15, fill: '#8a90a4', weight: 800, spacing: 2, align: 'left', maxW: 300 }); text(b, -310, y + 12, { size: 28, fill: '#20202c', weight: 900, align: 'left', maxW: 600 });
+      ctx.strokeStyle = 'rgba(32,32,44,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-310, y + 32); ctx.lineTo(310, y + 32); ctx.stroke();
+    });
+    text('DISPOSITION', -310, 84, { size: 22, fill: '#20202c', weight: 900, spacing: 3, align: 'left', maxW: 300 });
+    ctx.strokeStyle = '#20202c'; ctx.lineWidth = 4; ctx.setLineDash([16, 10]); rr(-310, 108, 620, 380, 10); ctx.stroke(); ctx.setLineDash([]);
+    text('STAMP HERE', -290, 138, { size: 16, fill: '#b5bac8', weight: 900, spacing: 3, align: 'left', maxW: 200 });
+    if ((S.done ?? 0) > 0) {   // the verdict, in the same ink as the office RECEIVED
+      ctx.save(); ctx.translate(0, 300); ctx.rotate(-.1); ctx.globalAlpha *= .94 * clamp(S.done * 1.5); ctx.globalCompositeOperation = 'multiply';
+      ctx.strokeStyle = INK_R; ctx.lineWidth = 12; rr(-280, -116, 560, 232, 16); ctx.stroke(); ctx.lineWidth = 4; rr(-259, -95, 518, 190, 10); ctx.stroke();
+      text('EXIT INTERVIEW', 0, -46, { size: 78, font: 'Bangers', weight: 400, fill: INK_R, spacing: 4, maxW: 480 });
+      text('COMPLETE', 0, 30, { size: 100, font: 'Bangers', weight: 400, fill: INK_R, spacing: 6, maxW: 480 });
+      text('FRUIT BOWL REHAB  *  10:30 PM', 0, 82, { size: 18, fill: INK_R, weight: 900, spacing: 3, maxW: 460 });
+      ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(255,254,248,.6)'; for (let i = 0; i < 90; i++) { ell((hash(i + 3) - .5) * 540, (hash(i + 77) - .5) * 220, 1.2 + hash(i + 9) * 2.8, 1.1 + hash(i + 11) * 1.8); ctx.fill(); }
+      ctx.restore();
+    }
+    ctx.restore();
+    return null;
+  }
   text('FRUIT BOWL REHAB & NURSING', -310, FY.head, { size: 19, fill: '#8a90a4', weight: 800, spacing: 2, align: 'left', maxW: 400 });
   text('FORM 27-B', 310, FY.head, { size: 19, fill: '#8a90a4', weight: 900, spacing: 2, align: 'right', maxW: 200 });
   text('EXIT INTERVIEW', 0, FY.title, { size: 66, fill: '#20202c', weight: 900, spacing: 3, maxW: 640 });
@@ -591,15 +619,6 @@ function formArt(S = {}) {
     ctx.strokeStyle = INK_R; ctx.lineWidth = 11; rr(-138, -62, 276, 124, 14); ctx.stroke(); ctx.lineWidth = 3.6; rr(-120, -46, 240, 92, 8); ctx.stroke();
     text('N/A', 0, 4, { size: 112, font: 'Bangers', weight: 400, fill: INK_R, spacing: 6, maxW: 230 });
     ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(255,254,248,.55)'; for (let i = 0; i < 50; i++) { ell((hash(i + 13) - .5) * 250, (hash(i + 91) - .5) * 110, 1.2 + hash(i + 5) * 2.4, 1 + hash(i + 7) * 1.6); ctx.fill(); }
-    ctx.restore();
-  }
-  if ((S.done ?? 0) > 0) {   // the verdict, in the same ink as the office RECEIVED
-    ctx.save(); ctx.translate(0, 236); ctx.rotate(-.1); ctx.globalAlpha *= .94 * clamp(S.done * 1.5); ctx.globalCompositeOperation = 'multiply';
-    ctx.strokeStyle = INK_R; ctx.lineWidth = 12; rr(-318, -132, 636, 264, 16); ctx.stroke(); ctx.lineWidth = 4; rr(-296, -110, 592, 220, 10); ctx.stroke();
-    text('EXIT INTERVIEW', 0, -52, { size: 92, font: 'Bangers', weight: 400, fill: INK_R, spacing: 4, maxW: 560 });
-    text('COMPLETE', 0, 36, { size: 112, font: 'Bangers', weight: 400, fill: INK_R, spacing: 6, maxW: 560 });
-    text('FRUIT BOWL REHAB  *  10:30 PM', 0, 92, { size: 20, fill: INK_R, weight: 900, spacing: 3, maxW: 520 });
-    ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = 'rgba(255,254,248,.6)'; for (let i = 0; i < 90; i++) { ell((hash(i + 3) - .5) * 600, (hash(i + 77) - .5) * 240, 1.2 + hash(i + 9) * 2.8, 1.1 + hash(i + 11) * 1.8); ctx.fill(); }
     ctx.restore();
   }
   ctx.restore();
@@ -755,10 +774,10 @@ function stampTool(x, y, rot, w, h, down, lift) {
   ctx.restore();
 }
 // the form insert: the clipboard on the desk, framed on one question (view: z, cy, sy), with her pen hand and his marker hand
-const FORM_Q = { q1: { z: 1.3, cx: 70, cy: -210, sy: 760 }, q2: { z: 1.3, cx: 0, cy: -10, sy: 780 }, q3: { z: 1.3, cx: 60, cy: 250, sy: 880 }, all: { z: 1.0, cx: 0, cy: 70, sy: 800 } };
+const FORM_Q = { q1: { z: 1.3, cx: 70, cy: -210, sy: 760 }, q2: { z: 1.3, cx: 0, cy: -10, sy: 780 }, q3: { z: 1.3, cx: 60, cy: 100, sy: 880 }, all: { z: 1.0, cx: 0, cy: 70, sy: 800 } };
 function insForm(lt, view) {
   deskTop();
-  const S = { tick: seg(lt, 3.44, 3.56), money1: seg(lt, 3.5, 3.97), money2: seg(lt, 5.47, 6.25), asag: seg(lt, 8.66, 9.49), circle: seg(lt, 9.86, 10.42), na: lt >= 10.56 ? clamp((lt - 10.56) * 14) : 0, done: lt >= 13.01 ? clamp((lt - 13.01) * 14) : 0 };
+  const S = { tick: seg(lt, 3.44, 3.56), money1: seg(lt, 3.5, 3.97), money2: seg(lt, 5.47, 6.25), asag: seg(lt, 8.66, 9.49), circle: seg(lt, 9.86, 10.42), na: lt >= 10.56 ? clamp((lt - 10.56) * 14) : 0, done: lt >= 13.01 ? clamp((lt - 13.01) * 14) : 0, page2: lt >= 12.8 };
   const z = view.z, cy = view.cy, sx = 540, sy = view.sy, shk = (lt >= 10.56 && lt < 10.9 ? Math.exp(-(lt - 10.56) * 14) * 7 * Math.sin((lt - 10.56) * 70) : 0) + (lt >= 13.01 && lt < 13.4 ? Math.exp(-(lt - 13.01) * 12) * 9 * Math.sin((lt - 13.01) * 70) : 0);
   const cx0 = view.cx ?? 0, to = (fx, fy) => [sx + (fx - cx0) * z, sy + (fy - cy) * z + shk];
   ctx.save(); ctx.translate(sx, sy + shk); ctx.scale(z, z); ctx.translate(-cx0, -cy);
@@ -776,16 +795,50 @@ function insForm(lt, view) {
     penHand(P[0] + 520 * (1 - come) + 520 * go, P[1] - 700 * (1 - come) - 700 * go, 2.2, 4.1, '#d6202e');
   }
   if (lt >= 10.34 && lt < 11.1) { const P = to(176, FY.o3 + 6); stampTool(P[0], P[1] + shk, -.2, 276 * z, 124 * z, easeIn(seg(lt, 10.34, 10.56)), easeOut(seg(lt, 10.78, 11.08))); }
-  if (lt >= 12.8 && lt < 13.75) { const P = to(0, 236); stampTool(P[0], P[1] + shk, -.1, 636 * z, 264 * z, easeIn(seg(lt, 12.81, 13.01)), easeOut(seg(lt, 13.25, 13.65))); }
+  if (lt >= 12.8 && lt < 13.75) { const P = to(0, 300); stampTool(P[0], P[1] + shk, -.1, 580 * z, 236 * z, easeIn(seg(lt, 12.81, 13.01)), easeOut(seg(lt, 13.25, 13.65))); }
   ctx.save(); ctx.fillStyle = V2.grad(0, 1230, 0, 1392, [[0, 'rgba(8,6,14,0)'], [1, 'rgba(8,6,14,.96)']]); ctx.fillRect(0, 1230, W, H - 1230); ctx.restore();   // the paper sinks into the dark where the captions sit
   // ink dots at the stamps
-  for (const [t0, cx2, cy2, n] of [[10.56, 176, FY.o3 + 6, 22], [13.01, 0, 236, 40]]) { const k = lt - t0; if (k >= 0 && k < .6) { const P = to(cx2, cy2), u = easeOut(seg(k, 0, .28)); ctx.save(); ctx.fillStyle = INK_R; ctx.globalAlpha = 1 - seg(k, .3, .6); for (let i = 0; i < n; i++) { const an = hash(i + 4 + t0) * TAU, d = (140 + hash(i + 19) * 260) * u, r = (3 + hash(i + 8) * 8) * (.5 + .5 * u); ell(P[0] + Math.cos(an) * d * 1.1, P[1] + Math.sin(an) * d * .8, r, r); ctx.fill(); } ctx.restore(); } }
+  for (const [t0, cx2, cy2, n] of [[10.56, 176, FY.o3 + 6, 22], [13.01, 0, 300, 40]]) { const k = lt - t0; if (k >= 0 && k < .6) { const P = to(cx2, cy2), u = easeOut(seg(k, 0, .28)); ctx.save(); ctx.fillStyle = INK_R; ctx.globalAlpha = 1 - seg(k, .3, .6); for (let i = 0; i < n; i++) { const an = hash(i + 4 + t0) * TAU, d = (140 + hash(i + 19) * 260) * u, r = (3 + hash(i + 8) * 8) * (.5 + .5 * u); ell(P[0] + Math.cos(an) * d * 1.1, P[1] + Math.sin(an) * d * .8, r, r); ctx.fill(); } ctx.restore(); } }
+}
+
+// the last image, from above: the wire wastebasket with the two resignations already in it, and the pen that has just landed on them, twinkling
+function crumple(cx, cy, r, rot, seed, label) {
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+  const n = 13, pts = []; for (let i = 0; i < n; i++) { const a = i / n * TAU, rr0 = r * (.78 + .36 * hash(seed + i * 3.1)); pts.push([Math.cos(a) * rr0, Math.sin(a) * rr0 * .92]); }
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x + 10, y + 16) : ctx.moveTo(x + 10, y + 16)); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = V2.radial(-r * .3, -r * .3, r * .1, r * 1.2, [[0, '#fffdf4'], [.6, '#ece6d4'], [1, '#c9c2ae']]); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+  ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.save(); ctx.clip();
+  ctx.strokeStyle = 'rgba(60,50,40,.28)'; ctx.lineWidth = 2.4; for (let i = 0; i < 9; i++) { const a = hash(seed + i * 7) * TAU, d = r * (.2 + .7 * hash(seed + i * 11)); ctx.beginPath(); ctx.moveTo(Math.cos(a) * d, Math.sin(a) * d); ctx.lineTo(Math.cos(a + 1.1 + hash(seed + i)) * r * .3, Math.sin(a + 1.1) * r * .3); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(255,255,255,.5)'; for (let i = 0; i < 5; i++) { ell((hash(seed + i * 5) - .5) * r, (hash(seed + i * 13) - .5) * r, r * .16, r * .07, hash(i) * 3); ctx.fill(); }
+  ctx.rotate(-.35); text(label[0], 0, -r * .16, { size: r * .2, fill: 'rgba(32,32,44,.8)', weight: 900, spacing: 1, maxW: r * 1.2 }); text(label[1], 0, r * .12, { size: r * .24, fill: 'rgba(32,32,44,.85)', weight: 900, spacing: 1, maxW: r * 1.3 });
+  ctx.restore(); ctx.restore();
+}
+function insBinTop(lt, t0) {
+  const k = lt - t0, push = 1 + .05 * seg(lt, t0, t0 + .55), rock = k > 0 ? Math.exp(-k * 7) * Math.sin(k * 32) * .05 : 0;
+  ctx.fillStyle = V2.grad(0, 0, 0, H, [[0, '#14363c'], [1, '#0a1c24']]); ctx.fillRect(-300, -300, W + 600, H + 600);
+  ctx.strokeStyle = 'rgba(240,220,170,.07)'; ctx.lineWidth = 2; for (let x = -100; x < W + 100; x += 26) { ctx.beginPath(); ctx.moveTo(x, -50); ctx.lineTo(x + 40, H + 50); ctx.stroke(); }   // the carpet's weave
+  ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.radial(540, 900, 60, 760, [[0, 'rgba(215,244,232,.22)'], [1, 'rgba(215,244,232,0)']]); ctx.fillRect(0, 0, W, H); ctx.restore();   // the lamp's pool
+  ctx.save(); ctx.translate(540, 900); ctx.scale(push, push);
+  ctx.fillStyle = 'rgba(0,0,0,.4)'; ell(18, 26, 345, 335); ctx.fill();
+  ctx.fillStyle = V2.grad(-330, -330, 330, 330, [[0, '#cfd5e2'], [.5, '#6a7284'], [1, '#aab2c2']]); ctx.strokeStyle = INK; ctx.lineWidth = 6; ell(0, 0, 336, 336); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#05070c'; ell(0, 0, 312, 312); ctx.fill();
+  ctx.save(); ell(0, 0, 312, 312); ctx.clip(); ctx.strokeStyle = 'rgba(150,160,190,.3)'; ctx.lineWidth = 3; for (let i = -12; i <= 12; i++) { ctx.beginPath(); ctx.moveTo(i * 34 - 400, -400); ctx.lineTo(i * 34 + 400, 400); ctx.moveTo(i * 34 + 400, -400); ctx.lineTo(i * 34 - 400, 400); ctx.stroke(); } ctx.restore();   // the wire mesh of the basket floor
+  ctx.save(); ell(0, 0, 312, 312); ctx.clip();
+  crumple(-120, 90, 150, -.4, 3, ['NOTICE OF', 'RESIGNATION']); crumple(120, -90, 140, .5, 17, ['I QUIT', '(NICELY)']); crumple(30, 150, 100, 1.3, 31, ['NOTICE', 'OF NOTICE']);
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 322, 3.5, 5.0); ctx.stroke();
+  ctx.restore();
+  const pa = -.5 + rock, psc = 1.45 * push, px = 540 + 20 * push, py = 880 - 10 * push;
+  penTop(px, py, pa, psc, 0);
+  const lx = 24, ly = -6, a = .65 + .35 * Math.sin(k * 15);   // the glint sits on the blue barrel: on the cream paper a white twinkle would vanish
+  star(px + (lx * Math.cos(pa) - ly * Math.sin(pa)) * psc, py + (lx * Math.sin(pa) + ly * Math.cos(pa)) * psc, 76 * (.6 + .4 * a), a, '255,255,255');
 }
 
 const EXIT_CUTS = [['open', 1.2], ['cuA1', 2.15], ['q1', 4.25], ['cuA2', 5.4], ['q2', 6.36], ['cuA3', 7.45], ['q3', 11.2], ['cuS4', 12.81], ['stamp', 13.73], ['cuA5', 15.15], ['cuS5', 15.8], ['prop', 17.35], ['cuA6', 18.19],
-  ['cuS6', 19.27], ['cuA7', 20.24], ['cuS7', 21.62], ['slide', 22.05], ['bin', 22.55], ['cuA8', 23.0], ['end', 1e9]];
-const EX_HARD = [1.2, 2.15, 4.25, 5.4, 6.36, 7.45, 11.2, 12.81, 13.73, 15.15, 15.8, 17.35, 18.19, 19.27, 20.24, 21.62, 22.05, 22.55, 23.0];
-const exShot = lt => { let t0 = 0; for (const [n, e] of EXIT_CUTS) { if (lt < e) return { n, t0, t1: Math.min(e, CUR.dur) }; t0 = e; } return { n: 'end', t0, t1: CUR.dur }; };
+  ['cuS6', 19.27], ['cuA7', 20.24], ['cuS7', 21.62], ['slide', 22.05], ['bin', 22.55], ['cuA8', 22.95], ['binTop', 1e9]];
+const EX_HARD = [1.2, 2.15, 4.25, 5.4, 6.36, 7.45, 11.2, 12.81, 13.73, 15.15, 15.8, 17.35, 18.19, 19.27, 20.24, 21.62, 22.05, 22.55, 22.95];
+const exShot = lt => { let t0 = 0; for (const [n, e] of EXIT_CUTS) { if (lt < e) return { n, t0, t1: Math.min(e, CUR.dur) }; t0 = e; } return { n: 'binTop', t0, t1: CUR.dur }; };
 const BIN_CAM = { f: 1400, cy: 330, hy: 880, cz: -200, cx: -420 };
 // her legs, for a guest in the low chair: hidden behind the seat front, the shoes on the floor between the chair's front legs
 function sitLegs(off) {
@@ -833,8 +886,9 @@ const EXIT = {
     if (lt >= 10.9 && lt < 12.9) { sp.expr = 'angry'; sp.lid = .25; sp.look = [.8, 0]; }
     if (lt >= 15.0 && lt < 16.9) { sp.expr = 'sad'; sp.lid = .3; sp.look = [0, .5]; }
     // the pen: out of the leaf at "Pen.", shown on "gift", held to her chest through the last line, then pushed across the desk
-    const pt = sk(lt, 17.9, 18.15), pl = sk(lt, 18.25, 18.6);
-    if (lt >= 17.85 && lt < 21.62) { sp.hold.r = 'pen9'; sp.arms.r = 'hold'; sp.hand.r = 'grip'; sp.grip.r = lt < 18.15 ? [lerp(70, 104, pt), lerp(-118, 6, pt)] : [lerp(104, 96, pl), lerp(6, 28, pl)]; sp.look = [.6, .1]; }
+    const pt = sk(lt, 17.5, 18.1), pl = sk(lt, 18.25, 18.6);
+    if (lt >= 16.9 && lt < 17.5) { sp.arms.r = 'hold'; sp.hand.r = 'open'; sp.grip.r = [96, 96]; }   /* the tote is gone: her hand rests on her lap */
+    if (lt >= 17.5 && lt < 21.62) { sp.hold.r = 'pen9'; sp.arms.r = 'hold'; sp.hand.r = 'grip'; sp.grip.r = lt < 18.1 ? [lerp(96, 104, pt), lerp(96, 6, pt)] : [lerp(104, 96, pl), lerp(6, 28, pl)]; sp.look = lt < 18.1 ? sp.look : [.6, .1]; }
     if (lt >= 18.19 && lt < 19.27) { sp.expr = 'sad'; sp.lid = .3; }
     if (lt >= 20.24 && lt < 21.7) { sp.expr = 'sad'; sp.lid = .2; sp.look = [.3, .5]; }
     if (lt >= 21.62) { sp.expr = 'dead'; sp.lid = .55; sp.look = [.8, 0]; sp.arms = { l: DOWN, r: DOWN }; }
@@ -843,15 +897,18 @@ const EXIT = {
     return { off, ad, sp };
   },
   cam(lt) {
-    const sh = exShot(lt), n = sh.n, k = seg(lt, sh.t0, sh.t1), INS = ['q1', 'q2', 'q3', 'stamp', 'prop', 'slide'];
+    const sh = exShot(lt), n = sh.n, k = seg(lt, sh.t0, sh.t1), INS = ['q1', 'q2', 'q3', 'stamp', 'prop', 'slide', 'binTop'];
     let cam = BASE;
     if (n === 'open') cam = { f: 1400, cy: 420, hy: 900, cz: lerp(-600, -540, k) };
     else if (n.startsWith('cuA')) cam = { f: 1400, cy: 268, hy: 880, cz: -100 };
     else if (n.startsWith('cuS')) cam = { f: 1400, cy: 520, hy: 780, cz: -100 };
     else if (n === 'bin') cam = BIN_CAM;
-    else if (n === 'end') cam = { f: 1400, cy: 420, hy: 900, cz: lerp(-540, -500, k) };
     V2.setCam(cam); CAM.shake = 0;
-    if (INS.includes(n)) { zoomTo(540, 960, 1); return; }
+    if (INS.includes(n)) {
+      zoomTo(540, 960, n === 'q1' || n === 'q2' || n === 'q3' ? lerp(1, 1.03, k) : 1);
+      if (n === 'prop') CAM.shake = (lt >= 16.15 ? 5 * Math.exp(-(lt - 16.15) * 12) : 0) + (lt >= 16.55 ? 3.5 * Math.exp(-(lt - 16.55) * 12) : 0);
+      return;
+    }
     const C = EXIT.cast(lt), F = (o, z, up = 100, dx = 0) => { const [fx, fy] = faceC(o); zoomTo(fx + dx / z, fy + up / z, z); };
     switch (n) {
       case 'open': zoomTo(620, 900, 1.2); break;
@@ -867,7 +924,6 @@ const EXIT = {
       case 'cuS7': F(C.sp, lerp(1.75, 1.95, k), 140, 60); break;
       case 'bin': zoomTo(770, 1030, lerp(2.0, 2.3, k)); CAM.shake = lt >= 22.25 ? 6 * Math.exp(-(lt - 22.25) * 10) : 0; break;
       case 'cuA8': F(C.ad, lerp(1.45, 1.55, k), 120, 60); break;
-      case 'end': zoomTo(620, 900, 1.15); break;
     }
   },
   draw(lt) {
@@ -878,6 +934,7 @@ const EXIT = {
     if (n === 'stamp') { insForm(lt, FORM_Q.all); return; }
     if (n === 'prop') { insProp(lt); return; }
     if (n === 'slide') { insSlide(lt); return; }
+    if (n === 'binTop') { insBinTop(lt, 22.95); return; }
     const C = EXIT.cast(lt), off = C.off, A = n.startsWith('cuA'), S = n.startsWith('cuS');
     V2.opts.reflect = false;
     V2.dof(A || S ? 7 : n === 'bin' ? 6 : 0, () => { off.back(); off.sunFloor(); });
@@ -929,7 +986,7 @@ const EXIT = {
   },
   fx(lt) {
     const n = exShot(lt).n;
-    return { bloom: .62, vignette: n === 'open' || n === 'end' ? .4 : .5, grain: .05, contrast: .14, sat: .08, tint: [['#9fb4ff', .14, 'soft-light']], aberr: 0, fade: Math.max(lt < .25 ? 1 - lt / .25 : 0, seg(lt, CUR.dur - .3, CUR.dur - .02)), fadeColor: '0,0,10' };
+    return { bloom: .62, vignette: n === 'open' ? .4 : .5, grain: .05, contrast: .14, sat: .08, tint: [['#9fb4ff', .14, 'soft-light']], aberr: 0, fade: Math.max(lt < .25 ? 1 - lt / .25 : 0, seg(lt, CUR.dur - .3, CUR.dur - .02)), fadeColor: '0,0,10' };
   },
   blur(lt) { if (near(lt, EX_HARD, .035)) return 1; const n = exShot(lt).n; return n === 'prop' ? 3 : 1; },
   over(lt) { },

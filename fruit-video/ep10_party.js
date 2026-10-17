@@ -549,7 +549,7 @@ function streamerFlight(lt, from, to, t0, dur, col, seed) {
 const ROUTE = {
   straw: lt => route([[0, MK.door[0], MK.door[1]], [B('m1').s - .05, MK.door[0], MK.door[1]], [B('m1').s + 1.0, MK.straw[0], MK.straw[1], 'io'], [END_AT(), MK.straw[0], MK.straw[1]]])(lt),
   mango: lt => route([[0, MK.mango[0], MK.mango[1]], [B('m2').e + .02, MK.mango[0], MK.mango[1]], [B('l1').s + 1.0, -5, 1395, 'io'], [B('l2').s + .3, -5, 1395], [B('m3').s - .1, 160, 1250, 'io'], [B('m5').s - 1.0, 160, 1250], [B('m5').s - .05, 190, 1235, 'io'], [END_AT(), 190, 1235], [END_AT() + .01, 182, 1250]])(lt),
-  lemon: lt => route([[0, MK.lemon[0], MK.lemon[1]], [B('m2').e + .02, MK.lemon[0], MK.lemon[1]], [B('l1').s + .55, -250, 1345, 'io'], [B('l1').s + 1.25, 30, 1345], [B('l1').s + 1.9, 130, 1250, 'io'], [B('coins').e + .1, 130, 1250], [B('m4').s, -20, 1260, 'io'], [END_AT(), -20, 1260], [END_AT() + .01, -415, 1250]])(lt),
+  lemon: lt => route([[0, MK.lemon[0], MK.lemon[1]], [B('m2').e + .02, MK.lemon[0], MK.lemon[1]], [B('l1').s + .55, -250, 1345, 'io'], [B('l1').s + 1.25, 30, 1345], [B('l1').s + 1.9, 130, 1250, 'io'], [B('coins').e + .1, 130, 1250], [B('m4').s, -4, 1260, 'io'], [END_AT(), -4, 1260], [END_AT() + .01, -415, 1250]])(lt),
 };
 const END_AT = () => B('l4').e + .08;   // from here on it is the end of the party: plates, a time jump
 const NAMED = ['lemon', 'cran', 'mango', 'straw'];

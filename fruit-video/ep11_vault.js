@@ -1,6 +1,31 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 11: Welcome Back. Scene module: vault (10:55 PM, THE ADMINISTRATOR'S OFFICE). Registers window.__EP11_SCENES.vault.
- * (work in progress: stage 4)
+/* SHIFT HAPPENS, Episode 11: Welcome Back. Scene module: vault (10:55 PM, THE ADMINISTRATOR'S OFFICE, 21.149 s). Registers window.__EP11_SCENES.vault.
+ *
+ * The invoice argument, the vault reveal, the budget joke and the moth. Built on the finished night office set window.S10 (ep10_set.js, not edited):
+ * S10.office() gives the room, the throne (chairShift rolls it along the desk), the portrait + vault door + recess, the lamp (lampOn), the guest chair.
+ * Cast: A11.straw (per diem look; teal coat accessory 'excoat11' when ep11_exit.js has registered it, looked up at draw time) and A9.melon (the Administrator, s 1.22, seated noLegs).
+ * Everything is a pure function of the scene-local time lt; every time below is tied to a beat (B('id')) or to a spoken word (TL.lines via wordT).
+ *
+ * SHOTS (scene-local seconds; SHOTS() holds the cut times, the shot name changes at every cut):
+ *   screen 0-1.00      insert: her laptop screen, the invoice being typed (typing cue at 0.05)      wide 1.00-2.32   the office in the lamp pool, push-in
+ *   two 2.32-2.78      two-shot as he lifts the invoice                                              inv1 2.78-4.18   insert: invoice slides in, his gloved finger taps the total on "eighteen / hundred / dollars"
+ *   cuS1 4.18-5.08     "Helping."                                                                     inv2 5.08-6.93   insert: his red marker strikes HELPING, writes NOT IN CONTRACT
+ *   two2 6.93-7.30     two-shot                                                                       inv3 7.30-9.12   insert: her blue pen rings (ADD-ON) and $200/HR, underlines the total
+ *   cuA3 9.12-10.82    "We don't have the budget"                                                     cuS3 10.82-11.52 "You have the agency budget." (smug)
+ *   cuA3b 11.52-11.84  his face goes still                                                            trk 11.84-12.93  high camera tracks left while the throne rolls to the portrait
+ *   vault 12.93-15.21  the reveal: portrait swings (V-.15..V+.26), wheel spin V+.20 (ratchet), bolts V+.30/.41/.52, hiss V+.58, hinge groan V+.54..V+2.05, door stops V+2.05,
+ *                      coin avalanche from V+.35, ka-ching V+1.0, sparkle V+1.3 (V = 12.81); camera pulls out and trucks left; god rays, flare at V+1.25, shake on each clunk
+ *   cuA4 15.21-16.70   "Oh. We do have that one." (pleasant surprise)                                cuS4 16.70-18.22 "And the staff budget?" (throne rolls home behind her at 16.72)
+ *   cuA5 18.22-19.30   "That's this." the worn purse comes out of his pocket                          purse 19.30-20.28 the purse on the desk: clasp click M+.02, lamp flicker M+.10, moth out M+.12, sting M+.50
+ *   wideE 20.28-21.15  the three of them (Administrator, Strawberry stepping in, the moth) in the lamp pool; fade out at the end.
+ *
+ * Systems: the gold (150 sliding coins + 12 bars + 3 rollers, seeded, deterministic parabola/bounce/friction physics, depth-sorted in four passes between the actors; sprites cached
+ * once with S10.art), the vault's inside (painted once), god rays/glow/ring/blobs/dust (V2.beam/glow/dust/flare), the grade (fx: bloom + gold tint), shutter-sampled blur in the two
+ * action windows (blur), onomatopoeia in over() (CLANK!, KA-CHING!: small, away from faces). Props registered on EXT.prop: inv11 (the invoice he holds), lap11 (her laptop), purse11
+ * (the purse), each with a PROP_BOX for the audit. The moth (drawMoth) has a fuzzy body, powdery two-pair wings that blur at the flap rate, a tiny tired face and a multiply shadow.
+ * Layout numbers: STRAW_AT [-100,1040], throne SHIFT -350, vault mouth RC (-355,449,1742), desk purse (372,1340), desk paper (196,1252); cameras BASE/MID/HIGH differ by cy/hy only.
+ * Decisions: typing is shown (her laptop in the opening insert, then in her hands, snapped shut on "Strawberry."); the Administrator never walks (the set has no legs behind the desk: he rolls
+ * on the throne, which also keeps him framed); invoice reads "HELPING (ADD-ON): 9 HR MINIMUM x $200/HR = $1,800.00", subtotal, "PER DIEM SURCHARGE: $0.00", total $1,800.00.
  */
 (() => {
 if (!window.TIMELINE_EP11) return;
@@ -61,8 +86,8 @@ function K() {
     flick: V + .0, spin0: V + .20, spin1: V + .66,     // he flicks the wheel; the ratchet sound starts at V + .20
     bolt: [V + .30, V + .41, V + .52], hissAt: V + .58, door0: V + DOOR_T0, door1: V + DOOR_T1,   // three bolts, a hiss, then the hinge groan until the door arrives at its stop
     ching: V + 1.0, sparkle: V + 1.3,
-    back0: a4.e + .06, back1: s4.s + .5,               // the throne rolls home while the camera is on Strawberry
-    purseOut: a5.s + .1, purseAway: a5.s + .78, popped: M + .02, mothOut: M + .12, laid: 4.0,
+    back0: 16.72, back1: s4.s + .5,                    // the throne rolls home while the camera is on Strawberry
+    purseOut: a5.s + .1, purseAway: M, popped: M + .02, mothOut: M + .12, laid: 4.0,   // the purse leaves his hand exactly at the cut to the desk
   };
 }
 function chairShift(lt, k) {
@@ -158,8 +183,8 @@ function coinsInit() {
   }
   // the heap under the door: rows of coins that arc from the mouth to their slot, the lower rows first
   let n = 0;
-  for (let row = 0; row < 10; row++) {
-    const half = 232 * Math.pow(1 - row / 11.5, .9), cnt = Math.max(2, Math.round(half * 2 / 24));
+  for (let row = 0; row < 12; row++) {
+    const half = 232 * Math.pow(1 - row / 13.5, .9), cnt = Math.max(2, Math.round(half * 2 / 24));
     for (let j = 0; j < cnt; j++, n++) {
       const slotX = -372 + ((j + .5) / cnt * 2 - 1) * half + (R(n, 20) - .5) * 12, slotY = 3 + row * 10.5 + R(n, 21) * 4, slotZ = 1672 + R(n, 22) * 58 - row * 3;
       const t0 = .62 + row * .12 + R(n, 23) * .3, [x0, y0] = mouthPt(t0, R(n, 25), R(n, 26));
@@ -175,6 +200,10 @@ function coinsInit() {
       xs: -372 + (R(i, 42) - .5) * 330, ys: 9 + (i % 3) * 13, zs: 1690 + R(i, 43) * 34, vx: (R(i, 44) - .5) * 160, vy: 40, vz: -(160 + R(i, 45) * 340), e: .26, mu: .6, lam: 3.4,
       rad: 19, w: 6 + R(i, 46) * 6, ph: R(i, 47) * TAU, spr: 0, gl: R(i, 48), rest: 1, rot: (R(i, 49) - .5) * .8 });
   }
+  // the rollers: they land at the foot of the heap, roll on their edge toward her shoes, slow down and wobble flat beside them
+  [[-300, 1560, -140, 1004, .82, 1.1], [-250, 1590, -52, 998, .9, 1.22], [-330, 1520, -96, 984, .98, 1.12]].forEach(([xa, za, xe, ze, tl, ta], i) => {
+    list.push({ type: 'roll', t0: .7 + i * .09, tl, ta, xa, za, xe, ze, x0: RC.x + 70, y0: RC.y - 60, z0: RC.z - 4, rad: 17, spr: [0, 3, 1][i], ph: i * 2.1, gl: .9, w: 10, rot: 0, rest: .42 });
+  });
   COINS = list;
   return list;
 }
@@ -183,6 +212,14 @@ function coinState(c, lt, V) {
   const tau = lt - (V + c.t0);
   if (tau < 0) return null;
   let x, y, z, air = true, asp, rot = c.rot + c.w * .05 * tau;
+  if (c.type === 'roll') {
+    // an arc from the mouth to the foot of the heap, then a roll on its edge (a thin upright disc) that slows to a stop, then the wobble down
+    const tl = c.tl - c.t0, ta = c.ta - c.t0;
+    if (tau < tl) { const u = tau / tl, vy = (0 - c.y0 + .5 * GRAV * tl * tl) / tl; x = lerp(c.x0, c.xa, u); z = lerp(c.z0, c.za, u); y = c.y0 + vy * tau - .5 * GRAV * tau * tau; asp = Math.abs(Math.cos(c.ph + tau * 22)) * .8 + .15; rot = tau * 9; }
+    else if (tau < ta) { const u = (tau - tl) / (ta - tl), e = 1 - Math.pow(1 - u, 2.2); x = lerp(c.xa, c.xe, e) + 22 * Math.sin(u * PI) * (c.ph > 2 ? -1 : 1); z = lerp(c.za, c.ze, e); y = c.rad; air = false; asp = .17; rot = PI / 2 + .05 * Math.sin(tau * 30); }
+    else { const w = clamp((tau - ta) / .38); x = c.xe + 6 * w; z = c.ze; air = false; const dec = Math.pow(1 - w, 1.6); y = lerp(c.rad, 1.5, smooth(w)) + 2 * dec * Math.abs(Math.sin(w * 30)); rot = (PI / 2) * (1 - smooth(w)) + .5 * dec * Math.sin(w * 30); asp = lerp(.17, c.rest, smooth(w)) + .18 * dec * Math.abs(Math.sin(w * 30)); }
+    return { x, y: Math.max(y, 1.2), z, asp, rot, air };
+  }
   if (c.type === 'heap' || c.type === 'bar') {
     const D = c.dur, u = Math.min(1, tau / D), tt = Math.min(tau, D), vy = (c.ys - c.y0 + .5 * GRAV * D * D) / D;
     x = lerp(c.x0, c.xs, u); z = lerp(c.z0, c.zs, u); y = c.y0 + vy * tt - .5 * GRAV * tt * tt;
@@ -220,7 +257,7 @@ function coinFrame(lt, V) {
 function drawCoins(list, zLo, zHi) {
   for (const s of list) {
     if (s.z < zLo || s.z >= zHi) continue;
-    const c = s.c, k = kz(s.z), [sx, sy] = p2(s.x, s.y, s.z), bar = c.type === 'bar' || c.type === 'barslide', Rr = c.rad * k;
+    const c = s.c, k = kz(s.z), [sx, sy] = p2(s.x, s.y, s.z), bar = c.type === 'bar' || c.type === 'barslide', Rr = c.rad * k;   // rollers carry no extra drawing: they are coins like the rest
     if (s.y < 70) { const sh = (1 - s.y / 70) * .38; ctx.fillStyle = `rgba(24,12,0,${sh})`; ell(sx + 3 * k, sy + 1.5 * k, Rr * (bar ? 1.5 : 1.05), Rr * (bar ? .32 : .3)); ctx.fill(); }
     ctx.save(); ctx.translate(sx, sy - (bar ? 0 : Rr * .1)); ctx.rotate(s.rot); ctx.scale(1, s.asp);
     if (bar) { const q = barSpr(), w = Rr * 3.4; ctx.drawImage(q, -w / 2, -w * .29, w, w * .571); }
@@ -231,7 +268,7 @@ function drawCoins(list, zLo, zHi) {
 // a mound of dark gold under the heap so the coins never show the carpet through their gaps: it grows as the coins arrive
 function drawMound(lt, V) {
   const grow = smooth(seg(lt, V + .7, V + 2.4)); if (grow <= .01) return;
-  const cx = -372, H = 104 * grow, W = 244 * (.55 + .45 * grow), a = p2(cx - W, 0, 1712), b = p2(cx + W, 0, 1712), t = p2(cx, H, 1712), kk = kz(1700);
+  const cx = -372, H = 124 * grow, W = 244 * (.55 + .45 * grow), a = p2(cx - W, 0, 1712), b = p2(cx + W, 0, 1712), t = p2(cx, H, 1712), kk = kz(1700);
   ctx.save(); ctx.fillStyle = grad(0, t[1], 0, a[1], [[0, '#d9a030'], [.5, '#a8700e'], [1, '#5a3604']]);
   ctx.beginPath(); ctx.moveTo(a[0], a[1] + 6 * kk); ctx.quadraticCurveTo(a[0] + (t[0] - a[0]) * .5, t[1] + 8 * kk, t[0], t[1]); ctx.quadraticCurveTo(b[0] - (b[0] - t[0]) * .5, t[1] + 8 * kk, b[0], b[1] + 6 * kk); ctx.closePath(); ctx.fill(); ctx.restore();
 }
@@ -271,9 +308,10 @@ function vaultInside(c, lt) {
 }
 
 // ------------------------------------------------------------------ gold light on the wall: halo, god rays, drifting reflections
-function goldWall(lt, off, g) {
+function goldWall(lt, off, g, k) {
   if (g <= .01) return;
   const [cx, cy] = off.at.recess(), kk = kz(off.layout.zb);
+  V2.ring(cx, cy, (lt - k.ching) / .8, { r0: 60 * kk, r1: 640 * kk, color: '255,222,130', lw: 12, alpha: .7, bloom: .4 });
   V2.glow(cx, cy, 520 * kk * 1.4, '255,196,84', .5 * g, 'screen', .7);
   V2.glow(cx, cy, 200 * kk * 1.4, '255,226,150', .42 * g, 'screen', .5);
   const rays = [[8, 1100, 70, 330, .1], [24, 1500, 60, 280, .16], [40, 1700, 54, 250, .21], [54, 1650, 50, 240, .19], [68, 1450, 56, 260, .15], [84, 1150, 62, 300, .1], [-8, 900, 60, 300, .07]];
@@ -465,7 +503,8 @@ function penHand(tx, ty, ang, kind, sc = 3) {
 const TYPE0 = .25, TYPE_CPS = 90;
 function insScreen(lt) {
   ctx.fillStyle = grad(0, 0, 0, H, [[0, '#0d1226'], [1, '#04050c']]); ctx.fillRect(0, 0, W, H);
-  V2.glow(540, 700, 1000, '150,190,255', .18, 'screen', 0);
+  V2.glow(540, 790, 1000, '150,190,255', .18, 'screen', 0);
+  ctx.save(); ctx.translate(0, 92);   // below the clock and place pills
   ctx.fillStyle = grad(0, 170, 0, 1160, [[0, '#2f3240'], [1, '#191b25']]); ctx.strokeStyle = '#5a5f74'; ctx.lineWidth = 4; rr(40, 170, 1000, 990, 40); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#0a0b12'; ell(540, 192, 6, 6); ctx.fill();
   const sx = 84, sy = 214, sw = 912, sh = 900, typed = clamp(Math.floor((lt - TYPE0) * TYPE_CPS), 0, LINE.length), done = typed >= LINE.length;
@@ -490,6 +529,8 @@ function insScreen(lt) {
   text('PER DIEM SURCHARGE:', px, sy + 462, { size: 21, fill: '#55596e', weight: 900, align: 'left', spacing: 1 }); text('$0.00', sx + sw - 96, sy + 462, { size: 21, fill: '#20202c', weight: 900, align: 'right' });
   ctx.strokeStyle = '#20202c'; ctx.lineWidth = 4; rr(px - 10, sy + 492, sw - 172, 84, 8); ctx.stroke();
   text('TOTAL', px + 14, sy + 534, { size: 34, fill: NAVY, weight: 900, align: 'left', spacing: 2 }); text(done ? '$1,800.00' : '$0.00', sx + sw - 120, sy + 536, { size: 52, fill: done ? NAVY : '#b0b4c4', weight: 900, align: 'right' });
+  text('* 9 HR MINIMUM APPLIES TO EVERY CALL-OUT. NO EXCEPTIONS.', px, sy + 640, { size: 14, fill: '#9aa0b4', weight: 800, italic: true, align: 'left', spacing: .6 });
+  text('Payment due on receipt (it is now).', px, sy + 672, { size: 16, fill: '#8a90a4', weight: 800, italic: true, align: 'left' });
   if (fl > 0 && fl < 1) { ctx.fillStyle = `rgba(255,236,120,${.5 * (1 - fl)})`; ctx.fillRect(px - 10, sy + 400, sw - 172, 180); }
   ctx.fillStyle = grad(sx, sy, sx + sw, sy + sh, [[0, 'rgba(255,255,255,.1)'], [.4, 'rgba(255,255,255,0)'], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(sx, sy, sw, sh);
   ctx.restore();
@@ -505,12 +546,13 @@ function insScreen(lt) {
   const tap = k => Math.max(0, Math.sin((lt - TYPE0) * 34 + k)) * 14;
   glove(300 + 4 * Math.sin(lt * 21), 1250 - tap(0) + 40, -1.5, 3.1, { kind: 'point' });
   glove(740 + 4 * Math.sin(lt * 17 + 1), 1260 - tap(2) + 40, -1.64, 3.1, { kind: 'point' });
+  ctx.restore();
 }
 
 // ------------------------------------------------------------------ inserts: the invoice on the desk (the Administrator's finger on the total, his red marker, her blue pen)
 function insInvoice(lt, n) {
   deskTopN();
-  const k = K(), A1 = B('a1'), t0 = 2.78;
+  const t0 = 2.78;
   const slide = n === 'inv1' ? eo(lt, t0, t0 + .24) : 1, py = lerp(160, 0, slide);
   let st = {};
   if (n === 'inv2') { const t = wordT('a2', 'not', 5.68); st = { strike: seg(lt, t - .2, t + .16), red: seg(lt, t + .24, B('a2').e - .04) }; }
@@ -526,25 +568,19 @@ function insInvoice(lt, n) {
     if (enter > 0) { ctx.save(); ctx.translate(lerp(380, 0, enter), lerp(-420, 0, enter) + 30 * dip); glove(fx + 20, fy - 40, 2.3, 3.2, { kind: 'point' }); ctx.restore(); }
   }
   if (n === 'inv2') {
-    const t = wordT('a2', 'not', 5.68), tipS = pr.tips.strike, tipR = pr.tips.red, tip = tipR || tipS || [pr.sp.helping[0], ROW.y - 2];
+    const tipS = pr.tips.strike, tipR = pr.tips.red, tip = tipR || tipS || [pr.sp.helping[0], ROW.y - 2];
     const enter = eo(lt, 5.1, 5.4) * (1 - eo(lt, B('a2').e - .02, B('a2').e + .12));
     if (enter > 0) { const [x, y] = T(tip[0], tip[1]); ctx.save(); ctx.translate(lerp(520, 0, enter), lerp(-360, 0, enter)); penHand(x, y, -.88 + .04 * Math.sin(lt * 30), 'red'); ctx.restore(); }
-    void t;
   }
   if (n === 'inv3') {
     const tip = pr.tips.under || pr.tips.cRate || pr.tips.cAdd || [pr.sp.addon[0], ROW.y - 2], enter = eo(lt, 7.1, 7.4) * (1 - eo(lt, 8.98, 9.1));
     if (enter > 0) { const [x, y] = T(tip[0], tip[1]); ctx.save(); ctx.translate(lerp(-480, 0, enter), lerp(-340, 0, enter)); penHand(x, y, -.8 + .04 * Math.sin(lt * 28), 'blue'); ctx.restore(); }
   }
-  void k; void A1;
 }
 
 // ------------------------------------------------------------------ props: the invoice in the Administrator's hand, her laptop, the purse (the laptop's registered box follows its pose)
-const LAP = { w: 210, h: 100, cy: 18, d: 140 };
-const lapRect = o => {   // the laptop's rectangle relative to the hand: open lid facing us, shut slab, then turned edge-on and carried by her side
-  const open = clamp(o.lapOpen ?? 1), hang = clamp(o.lapHang ?? 0), w = lerp(LAP.w, 14, hang), h = lerp(lerp(14, LAP.h, open), LAP.d, hang), cx = lerp(-100, 0, hang), cy = lerp(LAP.cy, 0, hang);
-  return { w, h, cx, cy, open };
-};
-Object.assign(PROP_BOX, { inv11: [-56, -140, 56, 8], purse11: [-52, -68, 52, 26], lap11: o => { const r = lapRect(o); return [r.cx - r.w / 2, r.cy - r.h / 2, r.cx + r.w / 2, r.cy + r.h / 2]; } });
+const LAP = { w: 210, h: 100, cx: -100, cy: 18 };   // the lid, relative to her right hand: shut or open it looks the same from the front, so she just keeps holding it
+Object.assign(PROP_BOX, { inv11: [-56, -140, 56, 8], purse11: [-52, -68, 52, 26], lap11: [LAP.cx - LAP.w / 2, LAP.cy - LAP.h / 2, LAP.cx + LAP.w / 2, LAP.cy + LAP.h / 2] });
 // the invoice in the Administrator's hand: a sheet that turns about its vertical axis (o.invFlip 0 back .. 1 front)
 EXT.prop.inv11 = (side, o, t) => {
   const fl = clamp(o.invFlip ?? 1), sx = Math.abs(Math.cos(fl * PI)), front = fl > .5;
@@ -558,23 +594,21 @@ EXT.prop.inv11 = (side, o, t) => {
   } else { ctx.fillStyle = 'rgba(120,130,170,.18)'; for (let i = 0; i < 6; i++) ctx.fillRect(-40, -46 + i * 14, 80 - (i % 3) * 16, 3); }
   ctx.restore();
 };
-// her laptop: open in front of her chest with its lid toward us, then shut and carried by its edge at her side (o.lapOpen 1 to 0, then o.lapHang 0 to 1)
+// her laptop, lid toward us: she types on it, snaps it shut on "Strawberry." (o.lapSnap 0..1 dips the lid for a moment) and keeps hugging it
 EXT.prop.lap11 = (side, o, t) => {
-  const { w, h, cx, cy, open } = lapRect(o);
-  ctx.save(); ctx.translate(cx, cy);
-  if (open > .05) { ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4; }
-  ctx.fillStyle = V2.grad(-w / 2, -h / 2, w / 2, h / 2, [[0, '#dfe3ec'], [.5, '#b8bfcc'], [1, '#8a92a4']]); ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-w / 2, -h / 2, w, h, Math.min(9, w / 2, h / 2)); ctx.fill(); ctx.stroke(); ctx.shadowColor = 'transparent';
-  if (open > .5 && w > 150) {
-    ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(-w / 2 + 8, -h / 2 + 7, w - 16, 10, 4); ctx.fill();
-    ctx.save(); ctx.translate(0, -2); ctx.globalAlpha = (open - .5) * 2;   // the logo: a pear with a bite out of it
-    ctx.fillStyle = '#6a7084'; ctx.beginPath(); ctx.moveTo(0, -20); ctx.bezierCurveTo(14, -22, 18, -2, 14, 12); ctx.bezierCurveTo(10, 24, -10, 24, -14, 12); ctx.bezierCurveTo(-18, -2, -12, -22, 0, -20); ctx.fill();
-    ctx.fillStyle = '#b8bfcc'; ell(15, -6, 8, 8); ctx.fill(); ctx.strokeStyle = '#6a7084'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -20); ctx.quadraticCurveTo(2, -30, 10, -32); ctx.stroke(); ctx.restore();
-    ctx.fillStyle = 'rgba(20,22,32,.45)'; ctx.fillRect(-w / 2 + 4, h / 2 - 7, w - 8, 4);
-  }
+  const { w, h, cx, cy } = LAP, dip = 7 * Math.sin(clamp(o.lapSnap ?? 0) * PI);
+  ctx.save(); ctx.translate(cx, cy + dip * .5);
+  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 4;
+  ctx.fillStyle = V2.grad(-w / 2, -h / 2, w / 2, h / 2, [[0, '#dfe3ec'], [.5, '#b8bfcc'], [1, '#8a92a4']]); ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-w / 2, -h / 2, w, h - dip, 9); ctx.fill(); ctx.stroke(); ctx.shadowColor = 'transparent';
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(-w / 2 + 8, -h / 2 + 7, w - 16, 10, 4); ctx.fill();
+  ctx.save(); ctx.translate(0, -2);   // the logo: a pear with a bite out of it
+  ctx.fillStyle = '#6a7084'; ctx.beginPath(); ctx.moveTo(0, -20); ctx.bezierCurveTo(14, -22, 18, -2, 14, 12); ctx.bezierCurveTo(10, 24, -10, 24, -14, 12); ctx.bezierCurveTo(-18, -2, -12, -22, 0, -20); ctx.fill();
+  ctx.fillStyle = '#b8bfcc'; ell(15, -6, 8, 8); ctx.fill(); ctx.strokeStyle = '#6a7084'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -20); ctx.quadraticCurveTo(2, -30, 10, -32); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = 'rgba(20,22,32,.45)'; ctx.fillRect(-w / 2 + 4, h / 2 - 7 - dip, w - 8, 4);
   ctx.restore();
 };
 // the purse: a squat felt bag, threadbare, a tiny brass kiss-lock; o = 0 shut, 1 open (billboard coordinates, base at the origin)
-function purseDraw(open, glow = 0) {
+function purseDraw(open) {
   S10.softShadow(0, 3, 44, 7, .38);
   ctx.fillStyle = V2.grad(-30, -40, 30, 0, [[0, '#8a6272'], [.5, '#6a4654'], [1, '#41262f']]); ctx.strokeStyle = INK; ctx.lineWidth = 3.2;
   ctx.beginPath(); ctx.moveTo(-26, -34); ctx.bezierCurveTo(-36, -22, -34, -4, -20, 0); ctx.lineTo(20, 0); ctx.bezierCurveTo(34, -4, 36, -22, 26, -34); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -589,7 +623,6 @@ function purseDraw(open, glow = 0) {
   ctx.beginPath(); ctx.moveTo(-28, -33); ctx.quadraticCurveTo(0, -42 - lift * .5, 28, -33); ctx.lineTo(28, -30 - lift * .3); ctx.quadraticCurveTo(0, -38 - lift * .5, -28, -30); ctx.closePath(); ctx.fill(); ctx.stroke();
   if (open < .6) { ctx.fillStyle = '#e8c458'; ell(-5, -37, 3.6, 3.6); ctx.fill(); ctx.stroke(); ell(5, -37, 3.6, 3.6); ctx.fill(); ctx.stroke(); }
   ctx.strokeStyle = '#6a4654'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(18, -2); ctx.quadraticCurveTo(30, 8, 22, 14); ctx.stroke();   // a loose thread
-  void glow;
 }
 EXT.prop.purse11 = (side, o, t) => { ctx.save(); ctx.rotate(side * .1 + .04 * Math.sin(t * 2.3)); ctx.translate(0, 18); ctx.scale(1.5, 1.5); purseDraw(o.purseOpen || 0); ctx.restore(); };
 
@@ -646,7 +679,7 @@ function mothDraw(lt, k, off, part) {
   const s = mothAt(lt, k, off); if (!s) return;
   if ((part === 'front') !== s.front) return;
   const [x, y] = p2(s.X, s.Y, s.Z), kk = kz(s.Z), lamp = p2(s.L[0], s.L[1], s.L[2]), near = Math.max(0, 1 - Math.hypot(x - lamp[0], y - lamp[1]) / (60 * kk)) * (s.front ? 0 : 1);
-  drawMoth(x, y, 96 * kk, lt, { rot: .2 * Math.sin(lt * 5), lift: near, hz: 12, look: s.vx * .8 });
+  drawMoth(x, y, 118 * kk, lt, { rot: .2 * Math.sin(lt * 5), lift: near, hz: 12, look: s.vx * .8 });
 }
 // the moth's shadow on the wall behind the desk: the lamp throws it big and soft, so it sweeps around while the moth circles.
 // It is drawn small into a scratch canvas and blown up, which is both the blur and far cheaper than a filter on every stroke.
@@ -659,7 +692,7 @@ function mothShadow(lt, k, off) {
   g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 96, 96);
   ctx = g; ctx.save(); REG.suppress++;
   try { drawMoth(48, 48, 64, lt, { sil: true, hz: 12, rot: .2 * Math.sin(lt * 5) }); } finally { REG.suppress--; ctx.restore(); ctx = prev; }
-  const size = 96 * kz(s.Z) * f * 1.5;
+  const size = 118 * kz(s.Z) * f * 1.5;
   ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = .55 * lampAt(lt, k); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(SHADOW_CV, sx - size / 2, sy - size / 2, size, size); ctx.restore();
 }
 // the invoice lying on the desk after the insert, and the purse once it is set down
@@ -676,7 +709,8 @@ function deskPaper(off, lt, k) {
 function deskPurse(off, lt, k) {
   if (lt < k.purseAway) return;
   const open = lt >= k.popped ? Math.min(1, easeBack(seg(lt, k.popped, k.popped + .18))) : 0;
-  S10.stand(PURSE_AT[0], off.layout.desk.top, PURSE_AT[1], () => { ctx.scale(1.2, 1.2); purseDraw(open); });
+  const hop = lt >= k.popped ? 9 * Math.exp(-(lt - k.popped) * 16) * Math.abs(Math.cos((lt - k.popped) * 24)) : 0;
+  S10.stand(PURSE_AT[0], off.layout.desk.top, PURSE_AT[1], () => { ctx.translate(0, -hop); ctx.scale(1.2, 1.2); purseDraw(open); });
   if (open > .3 && lt < k.popped + .6) { const [x, y] = p2(PURSE_AT[0], off.layout.desk.top + 52, PURSE_AT[1]), u = seg(lt, k.popped, k.popped + .6), kk = kz(PURSE_AT[1]); ctx.save(); ctx.globalAlpha = (1 - u) * .5; for (let i = 0; i < 9; i++) { const a = i / 9 * TAU + .4, r = (10 + 46 * u) * kk; ctx.fillStyle = 'rgba(210,196,170,.9)'; ell(x + Math.cos(a) * r, y - 8 * kk - 24 * u * kk + Math.sin(a) * r * .5, (4 + 5 * u) * kk, (4 + 5 * u) * kk); ctx.fill(); } ctx.restore(); }   // a puff of dust
 }
 
@@ -717,26 +751,22 @@ function cast(lt) {
   if (lt >= A4.s && lt < A4.e + .4) { ad.expr = 'happy'; ad.browUp = 8; ad.sparkle = true; ad.look = lt < A4.s + .6 ? [-.9, -.35] : [-.7, .1]; ad.rot = .03 * Math.sin((lt - A4.s) * 5); }
   if (lt >= A4.e + .4 && lt < A5.s) { ad.expr = 'neutral'; ad.look = [-.85, .05]; }
   if (lt >= A5.s && lt < MO.s) {   // the purse: out of an inside pocket, held up beside him, then lowered out of the picture
-    const out = sk(lt, k.purseOut, k.purseOut + .3), away = sk(lt, k.purseAway - .22, k.purseAway), [fx, fy] = faceC(ad);
+    const out = sk(lt, k.purseOut, k.purseOut + .3), away = sk(lt, k.purseAway - .22, k.purseAway);
     ad.expr = 'weak'; ad.look = lt < A5.s + .5 ? [-.5, .6] : [-.85, .1]; ad.lid = undefined;
     if (lt < k.purseAway) { ad.hold.l = 'purse11'; gripTo(ad, 'l', [lerp(-142, -172, out) + 8 * away, lerp(92, 14, out) + 80 * away]); ad.hand.l = 'grip'; ad.purseOpen = 0; }
-    void fx; void fy;
   }
-  if (lt >= MO.s) {   // the moth: he follows it, then the apologetic shrug
-    const sh = sk(lt, MO.s + .8, MO.s + 1.05);
+  if (lt >= MO.s) {   // the moth: his finger flicks the purse's clasp at the cue, he follows the moth, then the apologetic shrug
+    const sh = sk(lt, MO.s + .8, MO.s + 1.05), [cx, cy] = p2(PURSE_AT[0], off.layout.desk.top + 56, PURSE_AT[1]), fl = (1 - sk(lt, k.popped + .08, k.popped + .34));
+    if (fl > 0) { handTo(ad, 1, cx + 6 * kz(PURSE_AT[1]), cy - 8 * kz(PURSE_AT[1]) + 8 * Math.exp(-Math.pow((lt - k.popped) / .03, 2)), fl, [130, 60]); ad.hand = { r: 'point' }; }
     ad.expr = 'weak'; ad.lid = undefined; ad.browUp = 4; ad.look = lt < MO.s + .8 ? [-.1 + .5 * Math.sin((lt - MO.s) * 3), -.5] : [-.85, .1];
     if (sh > 0) { ad.arms.l = 'shrug'; ad.arms.r = 'shrug'; ad.rot = -.03 * sh; }
   }
   // ---------------- Strawberry: typing at first, then the stare
   const sp = person(A11.straw, route([[0, STRAW_AT[0], STRAW_AT[1]]]), lt, { id: 'straw', who: 'straw', expr: 'dead', lid: .4, look: [.85, 0], arms: { l: 'rest', r: 'rest' }, acc: ['steth', 'bandage7', 'perdiem9'], hold: {}, grip: {}, hand: {} });
   if (EXT.acc.excoat11) sp.acc.push('excoat11');
-  const type = lt < 1.6;
-  if (lt < 2.15) {   // the laptop: lid toward us while she types, shut on "Strawberry." and carried by its edge
-    sp.hold.r = 'lap11'; sp.lapOpen = 1 - sk(lt, 1.45, 1.7); sp.lapHang = sk(lt, 1.68, 2.1); gripTo(sp, 'r', [lerp(112, 121, sp.lapHang), lerp(104, 96, sp.lapHang)]); sp.hand = { r: 'grip', l: 'open' };
-    if (lt < 1.6) { gripTo(sp, 'l', [-70 + 4 * Math.sin(lt * 31), 98 + 4 * Math.sin(lt * 27 + 1)]); sp.look = [0, .85]; sp.lid = .4; sp.expr = 'neutral'; }
-    else { sp.arms.l = 'rest'; sp.look = lerpA([0, .85], [.85, 0], sk(lt, 1.42, 1.6)); }
-  } else { sp.hold.r = 'lap11'; sp.lapOpen = 0; sp.lapHang = 1; gripTo(sp, 'r', [121, 96]); sp.hand = { r: 'grip' }; }
-  void type;
+  sp.hold.r = 'lap11'; sp.lapSnap = seg(lt, 1.46, 1.62); gripTo(sp, 'r', [112, 104]); sp.hand = { r: 'grip', l: 'grip' };   // the laptop: lid toward us while she types, snapped shut on "Strawberry."
+  if (lt < 1.6) { gripTo(sp, 'l', [-70 + 4 * Math.sin(lt * 31), 98 + 4 * Math.sin(lt * 27 + 1)]); sp.look = [0, .85]; sp.lid = .4; sp.expr = 'neutral'; }
+  else { gripTo(sp, 'l', [-84 + 1.5 * Math.sin(lt * 1.9), 100]); sp.look = lerpA([0, .85], [.85, 0], sk(lt, 1.42, 1.6)); }
   if (lt >= S1.s && lt < A2.s) { sp.expr = 'dead'; sp.lid = .5; sp.look = [.85, 0]; }
   if (lt >= S2.s && lt < A3.s) { const br = sk(lt, wordT('s2', 'two', 7.87) - .05, wordT('s2', 'two', 7.87) + .15); sp.expr = 'dead'; sp.lid = .45; sp.browUp = 6 * br; sp.look = [.85, 0]; }
   if (lt >= S3.s && lt < k.roll0 + .6) { sp.expr = 'smug'; sp.lid = .35; sp.look = [.85, -.05]; }
@@ -765,7 +795,6 @@ function lightFor(C, who) {
 const faceKeep = o => { const [x, y] = faceC(o); return [x, y, 100 * o.s]; };
 
 // ------------------------------------------------------------------ the scene
-const PF = (name, fn) => { if (window.__V11OFF && window.__V11OFF[name]) return; if (!window.__V11PROF) return fn(); const a = performance.now(); const r = fn(); window.__V11PROF[name] = (window.__V11PROF[name] || 0) + performance.now() - a; return r; };
 const SC = {
   shot: lt => shotOf(lt).n,
   cam(lt) {
@@ -790,11 +819,11 @@ const SC = {
       case 'purse': { V2.setCam(MID); const p = p2(428, 300, 1378); zoomTo(p[0] - 84, p[1] + 70, lerp(2.0, 2.2, k)); } break;
       case 'trk': {
         V2.setCam(HIGH); const u = sk(lt, sh.t0, KK.roll1 + .1);
-        zoomTo(lerp(580, 462, u), lerp(1160, 1200, u), lerp(1.28, 1.5, u));
+        zoomTo(lerp(594, 462, u), lerp(1160, 1200, u), lerp(1.28, 1.5, u));
       } break;
       case 'vault': {
         const u = sk(lt, KK.V + .85, KK.V + 2.0), p = sk(lt, KK.V + .1, KK.V + .6);
-        V2.setCam(Object.assign({}, HIGH, { cz: lerp(-100, -330, u), cx: lerp(0, -200, u), cy: lerp(580, 560, u), hy: lerp(800, 800, u) }));
+        V2.setCam(Object.assign({}, HIGH, { cz: lerp(-100, -330, u), cx: lerp(0, -200, u), cy: lerp(580, 640, u), hy: lerp(800, 790, u) }));
         const A = p2(-230, 300, 1400), z = lerp(lerp(1.5, 1.65, p), 1.25, u);
         zoomTo(lerp(lerp(462, 424, p), A[0] + 34, u), lerp(lerp(1200, 1170, p), A[1] - 20, u), z);
       } break;
@@ -805,6 +834,10 @@ const SC = {
         zoomTo(lerp(p[0] + 150, 650, u), lerp(1040, 1060, u), lerp(1.6, 1.1, u));
       }
     }
+    if (n === 'trk' || n === 'vault') {   // the clank, the three bolts, a low rumble while the hinge groans, the door hitting its stop
+      const hit = (t0, a, d = 14) => lt >= t0 ? a * Math.exp(-(lt - t0) * d) : 0;
+      CAM.shake = hit(KK.spin0, 2.2) + KK.bolt.reduce((q, t) => q + hit(t, 3), 0) + hit(KK.door1 - .05, 7, 11) + 1.2 * smooth(seg(lt, KK.door0, KK.door0 + .3)) * (1 - smooth(seg(lt, KK.door1 - .12, KK.door1)));
+    }
   },
   draw(lt) {
     const n = shotOf(lt).n;
@@ -814,27 +847,32 @@ const SC = {
     const coins = lt > V ? coinFrame(lt, V) : [], keep = [faceKeep(C.ad), faceKeep(C.sp)];
     const blurBack = { cuS1: 8, cuS3: 8, cuS4: 8, cuA3: 8, cuA3b: 8, cuA4: 7, cuA5: 7, purse: 4 }[n] || 0;
     lightFor(C, 'sp');
-    V2.dof(blurBack, () => { PF('back', () => { off.back(); off.sunFloor(); }); PF('hiss', () => hiss(lt, off, k)); PF('goldWall', () => goldWall(lt, off, g)); PF('mound', () => drawMound(lt, V)); PF('coins0', () => drawCoins(coins, 1580, 1e9)); PF('mothShadow', () => mothShadow(lt, k, off)); });
-    PF('admin', () => { lightFor(C, 'ad'); (subjS ? nbr : drawChar)(C.ad); });
-    PF('moth', () => mothDraw(lt, k, off, 'behind'));
-    PF('coins1', () => drawCoins(coins, 1184, 1580));
-    PF('desk', () => { if (subjS) V2.dof(7, () => off.desk()); else off.desk(); });
-    PF('deskx', () => { deskPaper(off, lt, k); deskPurse(off, lt, k); });
-    PF('moth', () => mothDraw(lt, k, off, 'front'));
-    PF('coins2', () => drawCoins(coins, 1010, 1184));
-    PF('straw', () => { lightFor(C, 'sp'); off.visitor('back'); (subjA ? nbr : drawChar)(C.sp); off.visitor('front'); });
-    PF('coins3', () => drawCoins(coins, -1e9, 1010));
-    PF('floor', () => goldFloor(g));
-    PF('glints', () => goldGlints(coins, lt, k, g, keep));
+    V2.dof(blurBack, () => { off.back(); off.sunFloor(); hiss(lt, off, k); goldWall(lt, off, g, k); drawMound(lt, V); drawCoins(coins, 1580, 1e9); mothShadow(lt, k, off); });
+    lightFor(C, 'ad'); (subjS ? nbr : drawChar)(C.ad);
+    mothDraw(lt, k, off, 'behind');
+    drawCoins(coins, 1184, 1580);
+    if (subjS) V2.dof(7, () => off.desk()); else off.desk();
+    deskPaper(off, lt, k); deskPurse(off, lt, k);
+    mothDraw(lt, k, off, 'front');
+    drawCoins(coins, 1010, 1184);
+    lightFor(C, 'sp'); off.visitor('back'); (subjA ? nbr : drawChar)(C.sp); off.visitor('front');
+    drawCoins(coins, -1e9, 1010);
+    goldFloor(g);
+    goldGlints(coins, lt, k, g, keep);
+    if (g > .02) { const [cx, cy] = off.at.recess(); V2.dust(cx - 150, cy - 120, cx + 760, cy + 760, lt, { n: 46, color: '255,228,150', alpha: .75 * g, size: 3, speed: 9, seed: 6 }); }
   },
   fx(lt) {
     const k = K(), g = gold(lt, k);
     return { bloom: .5 + .3 * g, vignette: .45, grain: .045, contrast: .14, sat: .1, tint: [['#9fb4ff', .08 * (1 - g), 'soft-light'], ['#ffc860', .26 * g, 'soft-light']], fade: Math.max(lt < .2 ? 1 - lt / .2 : 0, seg(lt, CUR.dur - .25, CUR.dur - .02)), fadeColor: '0,0,10' };
   },
-  blur: lt => { const k = K(); return lt > k.V + .3 && lt < k.V + 2.3 ? 3 : lt > k.M && lt < k.M + 1.7 ? 3 : 1; },
+  blur: lt => { const k = K(); return lt > k.V + .3 && lt < k.V + 2.3 ? 3 : lt > k.M + .07 && lt < k.M + 1.7 ? 3 : 1; },   // 1 right after a cut: no double exposure
   over(lt) {
-    const k = K();
-    sfxWord(lt, k.V + .2, 'CLANK!', 300, 400, { size: 104, rot: -.1, fill: '#d8e4ff', hold: .45 });
+    const k = K(), pk = Math.exp(-Math.pow((lt - (k.V + 1.25)) / .42, 2));
+    if (pk > .03 && shotOf(lt).n === 'vault') {   // a soft flare off the vault's opening at the peak of the reveal
+      const [vx, vy] = V2.p2(RC.x, RC.y, RC.z), sx = W / 2 + (vx - CAM.x) * CAM.z, sy = H / 2 + (vy - CAM.y) * CAM.z;
+      if (sx > -300 && sx < W + 300 && sy > -300 && sy < H + 300) V2.flare(sx, sy, .5 * pk, '255,226,170');
+    }
+    sfxWord(lt, k.V + .2, 'CLANK!', 290, 318, { size: 100, rot: -.1, fill: '#d8e4ff', hold: .45 });
     sfxWord(lt, k.ching, 'KA-CHING!', 740, 276, { size: 100, rot: -.05, fill: '#ffe135', hold: .7 });
   },
 };

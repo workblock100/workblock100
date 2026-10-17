@@ -44,7 +44,8 @@ function timeCard(st = {}) {
   // the two punch holes at the top
   ctx.fillStyle = '#2a2236'; for (const hx of [-86, 86]) { ell(hx, -CARD_H / 2 + 14, 7, 7); ctx.fill(); }
   ctx.restore();
-  const T = (s, x, y, size, col, wt = 900, al = 'center', maxW = 0) => { ctx.save(); ctx.scale(.1, .1); text(s, x * 10, y * 10, { size: size * 10, fill: col, weight: wt, align: al, maxW: maxW * 10 }); ctx.restore(); };   // drawn at 10x and scaled down: tiny sizes keep their spacing
+  const ta = st.textA ?? 1;   // the printing only shows once the card is well inside the frame
+  const T = (s, x, y, size, col, wt = 900, al = 'center', maxW = 0) => { if (ta < .01) return; ctx.save(); ctx.globalAlpha *= ta; ctx.scale(.1, .1); text(s, x * 10, y * 10, { size: size * 10, fill: col, weight: wt, align: al, maxW: maxW * 10 }); ctx.restore(); };   // drawn at 10x and scaled down: tiny sizes keep their spacing
   T('EMPLOYEE TIME CARD', 0, -CARD_H / 2 + 38, 14, '#6a6488', 900);
   T('PER DIEM,', 0, -CARD_H / 2 + 60, 31, '#22285a', 900, 'center', 236);
   T('S. BERRY', 0, -CARD_H / 2 + 87, 31, '#22285a', 900, 'center', 236);
@@ -195,7 +196,7 @@ const SC_TITLE = {
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(sc, sc);
     if (hover > .02) { ctx.save(); ctx.shadowColor = `rgba(0,0,0,${.5 * hover})`; ctx.shadowBlur = 30 * hover; ctx.shadowOffsetX = 14 * hover; ctx.shadowOffsetY = 26 * hover; ctx.fillStyle = '#000'; rr(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, 10); ctx.fill(); ctx.restore(); }
     const bleed = seg(lt, st, st + 1.4);
-    timeCard({ inK: lt >= st ? seg(lt, st, st + .1) : 0, inBleed: bleed });
+    timeCard({ inK: lt >= st ? seg(lt, st, st + .1) : 0, inBleed: bleed, textA: clamp((925 - cx) / 60) });
     ctx.restore();
     // the lever snaps to IN on the clunk
     const lk = lt < cl ? 0 : clamp(easeBack(seg(lt, cl - .02, cl + .12)), 0, 1.06);

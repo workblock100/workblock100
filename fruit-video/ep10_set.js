@@ -10,7 +10,8 @@
  *   off.sunFloor();                     // the sun's stripes on the carpet (day) or moonlight (night): after back()
  *   drawChar(off.admin({ ...extra }));  // the Administrator seated: A9.melon, noLegs, the bottom of his body resting on his chair (extra is merged: expr, look, arms, hold, grip ...)
  *   off.desk();                         // the executive desk with its props and the pizza tower: drawn in FRONT of him and behind anybody standing or sitting on the visitor side
- *   off.visitor('back'); drawChar(off.guest(A7.straw, { ...extra })); off.visitor('front');   // the low guest chair around a sitter (off.visitor() with no argument draws it whole)
+ *   off.visitor('back'); drawChar(off.guest(A7.straw, { ...extra })); off.visitor('front');   // the low guest chair around a sitter (off.visitor() with no argument draws it whole). A sitter has noLegs:
+ *                                       //        ep10_office.js sitLegs(off) draws a pair (hidden behind the seat front, shoes on the floor): call it between visitor('back') and the sitter
  *   off.over();                         // dust drifting in the sun's beams: after the cast (day)
  *
  * OPTIONS  night | t (seconds, drives stars, clouds, dust) | blinds (0 slats open .. 1 shut; day .45, night .5) | blindsUp (0..1 stack raised; night .78) | sun (0..1 strength of the stripes) | dust (0..1)

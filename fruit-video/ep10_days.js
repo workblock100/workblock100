@@ -212,7 +212,7 @@ const wob = (lt, t0, f, damp) => lt < t0 ? 0 : Math.sin((lt - t0) * f * TAU) * M
 Object.assign(PROP_BOX, { fingers10: [-30, -62, 30, 14] });
 EXT.prop.fingers10 = (side, o, t) => {
   ctx.save(); ctx.lineJoin = 'round';
-  const L = [28, 38, 36, 26], X = [-15.5, -5.5, 5, 15], A = [-.2, -.07, .07, .2];
+  const fk = o.fingerK ?? 1, L = [28, 38, 36, 26].map(v => v * fk), X = [-15.5, -5.5, 5, 15], A = [-.2, -.07, .07, .2];
   L.forEach((len, i) => {
     ctx.save(); ctx.translate(X[i], -6); ctx.rotate(A[i]);
     ctx.fillStyle = V2.grad(-6, 0, 6, 0, [[0, '#ffffff'], [1, '#d9deea']]); ctx.strokeStyle = INK; ctx.lineWidth = 3.4;
@@ -387,7 +387,7 @@ function p1cast(lt, F) {
   const jump = sh.reduce((a, t0) => Math.max(a, lt >= t0 && lt < t0 + .22 ? Math.sin((lt - t0) / .22 * PI) * 12 * qS.s : 0), 0);
   const four = wordT('s1', 'four', b('s1').s + 1.24), up = sk(lt, four - .22, four + .06) * (1 - sk(lt, four + .5, four + .8));
   const sp = straw(Object.assign(qS, { look: [.62, .02], expr: 'dead', lid: .5, arms: { l: 'hips', r: 'rest' }, rot: .03 + .012 * Math.sin(lt * 1.3), sway: .05, lift: (qS.lift || 0) + jump, transit: tr }));
-  if (up > .02) { handTo(sp, 1, sp.x + 150 * sp.s, sp.y - 330 * sp.s, up, [150, 90]); sp.hold = { r: 'fingers10' }; sp.hand = { r: 'fist' }; }
+  if (up > .02) { handTo(sp, 1, sp.x + 150 * sp.s, sp.y - 330 * sp.s, up, [150, 90]); sp.hold = { r: 'fingers10' }; sp.hand = { r: 'fist' }; sp.fingerK = clamp((up - .35) / .65); }
   return { lm, sp, zs: P1CAST.S[1], zl: P1CAST.L[1] };
 }
 function p1shot(lt) { const b = id => B(id); return lt < 2.58 ? 'wide' : lt < b('s1').s - .05 ? 'ms' : lt < b('l2').s - .05 ? 'cuS' : 'cuL'; }
@@ -535,7 +535,7 @@ function donutSign() {
   text('ONE PER', 0, -30, { size: 26, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 2 }); text('NURSE', 0, -2, { size: 32, font: 'Bangers', weight: 400, fill: '#1f3f9a', spacing: 2 });
   ctx.restore();
 }
-const P2POS = { M: [-142, 1000], S: [85, 1180], G: [395, 1100] };   // Melon, Strawberry, Mango (X, Z): Mango's is where she ends up, beside the stand
+const P2POS = { M: [-178, 1000], S: [40, 1180], G: [395, 1100] };   // Melon, Strawberry, Mango (X, Z): Mango's is where she ends up, beside the stand
 const P2T = () => ({ poke: wordT('a2', 'very', B('a2').s + .34), hop: wordT('a2', 'large', B('a2').s + .6), stop: wordT('a1', 'donut', B('a1').s + 1.62) + .03, roll0: 11.2, one: wordT('a1', 'one', B('a1').s + 1.36) });
 // the donut arrives on its casters from the right, pushed by Mango, and stops dead on "donut"
 const rollX = (lt, T2) => { const u = seg(lt, T2.roll0, T2.stop); return u >= 1 ? 0 : 800 * Math.pow(1 - u, 1.8); };
@@ -547,7 +547,7 @@ function p2cast(lt, F) {
   // the Administrator: jazz hands for the title, a presenting sweep as the donut arrives, hands on his hips once it is there
   const shake = Math.sin(lt * 21), jazz = lt < T2.one - .1, sweep = lt >= T2.one - .1 && lt < b('s2').s;
   const me = melon(Object.assign(qM, { acc: ['suit', 'nametag9', ...hat], look: sweep ? [.7, -.1] : [.1, -.1], expr: 'happy', transit: tr, arms: { l: 'rest', r: 'rest' }, hand: {} }));
-  if (jazz) { me.arms = { l: [2.35 + .12 * shake, .55 + .3 * shake], r: [2.35 - .12 * shake, .55 - .3 * shake] }; me.hand = { l: 'wave', r: 'wave' }; }
+  if (jazz) { me.arms = { l: [2.9 + .1 * shake, .2 + .16 * shake], r: [2.9 - .1 * shake, .2 - .16 * shake] };   /* hands up over his head, wiggling: they stay inside the frame */ me.hand = { l: 'wave', r: 'wave' }; }
   else if (sweep) { handTo(me, 1, me.x + 330, me.y - 205, sk(lt, T2.one - .1, T2.one + .3), [96, 40]); me.hand = { r: 'open' }; me.arms.l = 'hips'; }
   else me.arms = { l: 'hips', r: 'hips' };
   // Strawberry: tiny, dead-eyed, in the hat she was handed; at the end she looks straight into the lens
@@ -939,7 +939,7 @@ function p4cam(lt) {
   const c = p4cast(lt), cf = faceC({ kind: 'clem', x: c.cl.x, y: c.cl.y, s: c.cl.s, lift: c.cl.lift });
   if (sh === 'two') { const k = seg(lt, 24.6, JAR().t0); return p4base(lerp(536, 548, k), lerp(1.26, 1.38, k)); }
   if (sh === 'cuC') { const k = seg(lt, 28.34, 29.6), z = lerp(1.95, 2.1, k); return { x: cf[0] - 16, y: cf[1] + 150 / z, z }; }
-  if (sh === 'ms') { const k = seg(lt, 29.6, 31.2); return p4base(lerp(540, 536, k), lerp(1.42, 1.5, k)); }
+  if (sh === 'ms') { const k = seg(lt, 29.6, 31.2); return p4base(lerp(540, 536, k), lerp(1.36, 1.44, k)); }
   if (sh === 'cuC2') { const k = seg(lt, 31.2, 31.88), z = lerp(2.1, 2.25, k); return { x: cf[0] - 16, y: cf[1] + 150 / z, z }; }
   if (sh === 'wide') return p4base(540, lerp(1.04, 1.0, seg(lt, 31.88, 32.85)), { at: 330 });
   if (sh === 'cuC3') { const k = seg(lt, 32.85, 33.55), z = lerp(2.3, 2.42, k); return { x: cf[0] + 6, y: cf[1] + 120 / z, z }; }

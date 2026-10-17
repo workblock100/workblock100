@@ -4,7 +4,27 @@
  * The mirror of Episode 9's arrival. The same lobby, dressed for a party (red carpet and stanchions, a banner that now reads WELCOME BACK STRAWBERY,
  * one R short, balloons), but the guest of honour is Strawberry, back as per diem, and the one watching with somebody else's badge on her chest is
  * Clementine. Every position is a world coordinate: X right, Z forward (V2.at).
- * Shot list (scene-local seconds):  [filled in with the final cut points]
+ *
+ * Shot list (scene-local seconds; the names are what shotOf() returns):
+ *   wide  0.00-1.65   the lobby dressed for a party, the committee waiting, two balloons pop (0.35, 0.60), Clementine and Mango come in from the right
+ *   cuCM  1.65-3.13   Clementine and Mango (hard cut to a two-shot): "Is it somebody's birthday?" She scans the room
+ *   cuM   3.13-4.25   Mango points up; on "Strawberry" the camera whips across to the banner, which holds until the cut
+ *   cuC   4.25-5.29   Clementine: "Who's Strawberry?"
+ *   badge 5.29-6.93   two-shot pushing in to a macro of the badge (STRAWBERRY struck out, NEW in marker): "You're wearing her badge."
+ *   doorA 6.93-8.20   low angle on the sliding doors, drumroll shake, the backlit silhouette steps through
+ *   doorW 8.20-8.76   the hit: horn, two poppers, rays, TA-DAAA!, flash, glitter
+ *   doorS 8.76-9.76   low tracking dolly-back: she walks lit toward the lens through falling confetti
+ *   cuA   9.76-10.73  the Administrator: "Welcome back to Fruit Bowl!" (Strawberry's deadpan face behind his basket)
+ *   two   10.73-13.05 the two of them: basket, parking pass (flies to her badge), lunch (the bag crosses his hands)
+ *   cuS   13.05-14.04 Strawberry: "Cool."
+ *   cuP   14.04-15.59 Persimmon: "Welcome to the club." (shades up, iced-coffee toast)
+ *   pen   15.59-17.71 two-shot, the pen between them (out of his pocket, laid flat), "That's my pen."
+ *   cuA2  17.71-18.82 the Administrator shrugs: "It was a gift."
+ *   cuS2  18.82-20.21 Strawberry takes the pen: "To share." and raises it like a hand
+ *   cuA3  20.21-21.70 the Administrator's face as "Is there a raise?" lands (shock, one drop of sweat)
+ *   two2  21.70-23.21 "You're per diem. You're in the other budget." with the OTHER BUDGET stamp slammed on "budget"
+ *   xcuS  23.21-24.73 slow push-in on Strawberry: "I know. I'm in it."
+ *   sting 24.73-26.20 hold wide, everybody on the carpet, a balloon drifts off, Clementine lifts her badge and tilts her head on each trombone note
  */
 (() => { if (!window.TIMELINE_EP11) return;
 const { person, zoomTo, faceZoom, drawBg, inB, faceC, localOf, localToScreen, pathDist } = window.H6;
@@ -133,8 +153,11 @@ EXT.prop.bag11 = (side, o, t) => {   // o.bagOff: while it crosses from his left
   ctx.save(); if (o.bagOff && side > 0) ctx.translate(o.bagOff[0], o.bagOff[1]); ctx.rotate(.035 * Math.sin(t * 2.1 + 1) + (o.bagRot || 0)); ctx.scale(.72, .72); drawBag();
   regLocal('prop', -38, -26, 38, 118, { id: 'bag11', owner: o.id || o.kind, transit: o.transit }); ctx.restore();
 };
+EXT.prop.passcard11 = (side, o, t) => {   // ep9's parking pass, growing from the size of the corner showing in his pocket to full size as it is drawn out
+  ctx.save(); const k = o.passScale ?? 1; ctx.scale(k, k); EXT.prop.passcard9(side, o, t); regLocal('prop', -36, -76, 36, 6, { id: 'passcard11', owner: o.id || o.kind, transit: o.transit }); ctx.restore();
+};
 EXT.prop.pen11 = (side, o, t) => {
-  ctx.save(); ctx.rotate(o.penAng ?? -.3); ctx.scale(1.2, 1.2); drawPen(t, o.penShine || 0);
+  ctx.save(); ctx.rotate(o.penAng ?? -.3); ctx.scale(1.2 * (o.penScale ?? 1), 1.2 * (o.penScale ?? 1)); drawPen(t, o.penShine || 0);
   // its footprint for the audit: four boxes along its axis (the bounding box of a tilted pen is mostly empty air)
   for (let i = 0; i < 4; i++) regLocal('prop', -64 + i * 34.5, -15, -64 + (i + 1) * 34.5, 12, { id: 'pen11', owner: o.id || o.kind, transit: o.transit });
   ctx.restore();
@@ -314,7 +337,7 @@ function lobby11(o = {}) {
   // ---- the party
   carpet();
   for (const s of [-1, 1]) for (let i = 0; i < 5; i++) { const Z = 1650 - i * 150; if (Z < P.cz + 120) continue; if (i) rope(s * 150, Z + 150, Z); stanchion(s * 150, Z); }
-  if (!o.noBanner && 1250 > P.cz + 200) banner(t);
+  if (!o.noBanner && 1250 > P.cz + 200) { ctx.save(); ctx.globalAlpha *= o.bannerA ?? 1; banner(t); ctx.restore(); }
   balloons(-575, 1610, t, 0, o.popsL, o.lt ?? 0); balloons(575, 1610, t, 2.3, o.popsR, o.lt ?? 0, o.escape);
   if (o.floorItems) o.floorItems();
   // ---- the sun on the floor: a long bright wedge from the doors toward the camera, plus rays and a bloom at the opening
@@ -366,6 +389,13 @@ function lensConfetti(lt, t0, n = 26) {
     }
   });
   ctx.restore();
+}
+// a four-point twinkle (L is its reach in px, a its brightness)
+function star(x, y, L, a, rot = 0) {
+  if (L <= .5 || a <= 0) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x, y); ctx.rotate(rot); ctx.fillStyle = `rgba(255,252,230,${a})`;
+  ctx.beginPath(); ctx.moveTo(0, -L); ctx.lineTo(L * .12, 0); ctx.lineTo(0, L); ctx.lineTo(-L * .12, 0); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-L * .8, 0); ctx.lineTo(0, L * .1); ctx.lineTo(L * .8, 0); ctx.lineTo(0, -L * .1); ctx.closePath(); ctx.fill(); ctx.restore();
 }
 // a figure against the light: drawn on a scratch canvas, flooded with dark, then laid down. k is how dark (1 is a black cut-out)
 const silCv = V2.mk(W, H), silCtx = silCv.getContext('2d');
@@ -427,8 +457,8 @@ const popMouth = (o, who) => { const P = POP[who], h = localToScreen(o, P.g[0], 
 // marks (world X, Z). The committee stands to the left of the carpet, the two who came in to clock on to the right; Strawberry stops on the carpet between them
 const MK = { adm: [-200, 985], per: [-490, 1085], cl: [322, 1060], mg: [520, 1145], sp: [80, 990] };
 const PL = [-98, 74], MR = [108, 64];   // where Persimmon's left hand and Mango's right hand rest (kept in from the frame edges)
-const clPath = route([[0, 760, 840], [.9, 560, 960], [1.5, MK.cl[0], MK.cl[1], 'out']]);
-const mgPath = route([[0, 900, 940], [.2, 900, 940], [1.0, 700, 1090], [1.7, MK.mg[0], MK.mg[1], 'out']]);
+const clPath = route([[0, 760, 840], [1.5, MK.cl[0], MK.cl[1], 'io']]);
+const mgPath = route([[0, 900, 940], [.2, 900, 940], [1.7, MK.mg[0], MK.mg[1], 'io']]);
 // she waits outside the glass, starts walking as the doors open and arrives at her mark as the Administrator begins to list her gifts
 const spPath = () => route([[0, 0, 1800], [B('door').s + .54, 0, 1800], [B('a2').s - .24, 0, MK.sp[1] + 40], [B('a2').s + .16, MK.sp[0], MK.sp[1], 'out']]);
 const SHOT_ORDER = () => {
@@ -500,11 +530,11 @@ const SC = SCENES.arrival = {
     armKeys(ad, -1, lt, [[0, L0g], [T.horn + .55, L0g], [T.horn + .95, UP_L], [a1.e - .2, UP_L], [a1.e + .3, L0g], [hP - .1, L0g], [tSwap, CL], [tSwap + .1, CL], [tSwap + .45, 'rest']]);
     // props in the hands: the basket (right) until it is given, the pass from the pocket, then the lunch that crosses from his left hand to his right, and the pen
     if (lt < hB) { setHold(ad, 1, 'basket11'); setHand(ad, 1, 'grip'); }
-    else if (lt >= hB + .34 && lt < hP + .02) { setHold(ad, 1, 'passcard9'); setHand(ad, 1, 'grip'); }
+    else if (lt >= hB + .34 && lt < hP + .02) { setHold(ad, 1, 'passcard11'); setHand(ad, 1, 'grip'); ad.passScale = trk(lt, [[hB + .34, .38], [hP - .02, 1]]); }
     { const cL = armClamp(ad, -1, CL), cR = armClamp(ad, 1, CR), g = 1 - sk(lt, tSwap, tSwap + .14);
       if (lt < tSwap) { setHold(ad, -1, 'bag11'); setHand(ad, -1, 'grip'); }
       else if (lt < hL) { setHold(ad, 1, 'bag11'); setHand(ad, 1, 'grip'); ad.bagOff = [(cL[0] - cR[0]) * g, (cL[1] - cR[1]) * g]; } }
-    if (lt >= a3.s + .2 && lt < takePen) { setHold(ad, 1, 'pen11'); setHand(ad, 1, 'grip'); ad.penAng = trk(lt, [[a3.s + .2, -1.45], [hPen - .16, -1.45], [hPen + .02, -.12]]); ad.penShine = pulse(lt, hPen, 2.6) * .9; }   // out of the pocket pointing up, laid flat to be handed over
+    if (lt >= a3.s + .2 && lt < takePen) { setHold(ad, 1, 'pen11'); setHand(ad, 1, 'grip'); ad.penAng = trk(lt, [[a3.s + .2, -1.45], [hPen - .16, -1.45], [hPen + .02, -.12]]); ad.penScale = trk(lt, [[a3.s + .2, .42], [hPen, 1]]); ad.penShine = pulse(lt, hPen, 2.6) * .9; }   // out of the pocket pointing up, laid flat to be handed over
     if (lt >= a4.s && lt < a4.e + .3) ad.arms.l = 'shrug';
 
     // ---- Persimmon: the committee's calm: sunglasses, earbuds, an iced coffee and a popper she fires without any visible enthusiasm
@@ -531,7 +561,7 @@ const SC = SCENES.arrival = {
     armKeys(sp, -1, lt, [[tB - .32, 'rest'], [tB + .02, M1], [hB + .04, M1], [hB + .46, BSK], [hB + .52, BSK], [hP - .02, M2], [hP + .12, M2], [hL - .34, RDY], [hL - .02, M2], [hL + .06, M2], [hL + .42, BGS], [dropBag - .2, BGS], [dropBag, [-134, 100]], [dropBag + .35, 'rest'],
       [takePen - .34, 'rest'], [takePen - .02, M3], [takePen + .06, M3], [takePen + .26, OUT], [takePen + .56, RAISE], [s4.e + .5, RAISE], [a5.s + 1.1, [-130, 64]], [CUR.dur + 1, [-130, 64]]]);
     if (lt >= hB && lt < dropB) { setHold(sp, -1, 'basket11'); setHand(sp, -1, 'grip'); }
-    else if (lt >= hP && lt < hP + .12) { setHold(sp, -1, 'passcard9'); setHand(sp, -1, 'grip'); }
+    else if (lt >= hP && lt < hP + .12) { setHold(sp, -1, 'passcard11'); setHand(sp, -1, 'grip'); }
     else if (lt >= hL && lt < dropBag) { setHold(sp, -1, 'bag11'); setHand(sp, -1, 'grip'); }
     else if (lt >= takePen) { setHold(sp, -1, 'pen11'); setHand(sp, -1, 'grip'); sp.penAng = trk(lt, [[takePen + .04, -.12], [takePen + .3, -1.25], [takePen + .6, -1.35]]); }
     return { cl, mg, ad, pr, sp, z: { cl: MK.cl[1], mg: MK.mg[1], ad: MK.adm[1], pr: MK.per[1], sp: spFn(lt)[1] }, M, T, tB, hB, hP, hL, dropB, dropBag, tPen, hPen, takePen, tRaise, walkEnd };
@@ -563,7 +593,7 @@ const SC = SCENES.arrival = {
       case 'two': mid(C.ad, C.sp, lerp(1.4, 1.48, k), 150); break;
       case 'cuS': F(C.sp, lerp(1.85, 1.98, k), 135); break;
       case 'cuP': F(C.pr, lerp(2.0, 2.12, k), 105); break;
-      case 'pen': mid(C.ad, C.sp, lerp(1.5, 1.6, k), 120); break;
+      case 'pen': mid(C.ad, C.sp, lerp(1.44, 1.5, k), 120); break;
       case 'cuA2': F(C.ad, lerp(1.7, 1.8, k), 100); break;
       case 'cuS2': F(C.sp, lerp(1.7, 1.6, k), 70); break;
       case 'cuA3': F(C.ad, lerp(1.9, 2.05, k), 95); break;
@@ -580,8 +610,10 @@ const SC = SCENES.arrival = {
     const open = sk(lt, d.s + .1, d.s + 1.0), sil = 1 - seg(lt, T.horn - .12, T.horn + 1.15), outside = C.z.sp > 1752, aisle = sh.n === 'doorA' || sh.n === 'doorS';
     const flash = lt >= T.horn && lt < T.horn + .3 ? 1 - (lt - T.horn) / .3 : 0, spx = C.sp, pops = [op.s + .35, op.s + .6], camZ = V2.P.cz;
     const spDraw = fn => silhouette(sil, () => fn(spx));
+    // the banner is wider than any close-up: it is in the wides and the whip that reveals it, and out of shot (not drawn) everywhere else
+    const tStrawB = wordT('m1', 'strawberry'), bannerA = ['wide', 'doorW', 'sting'].includes(sh.n) ? 1 : sh.n === 'cuM' ? seg(lt, tStrawB - .12, tStrawB + .04) : 0;
     V2.dof(blurPx, () => {
-      const r = lobby11({ sun: 1 + 1.1 * open, doorOpen: open, t, lt, noBanner: aisle, glassLate: outside, doorBloom: sil > .02 ? .06 : .5, popsL: [null, null, pops[0]], popsR: [null, null, null, pops[1]], escape: { i: 5, t0: st.s - .45 } });
+      const r = lobby11({ sun: 1 + 1.1 * open, doorOpen: open, t, lt, noBanner: aisle || bannerA <= 0, bannerA, glassLate: outside, doorBloom: sil > .02 ? .06 : .5, popsL: [null, null, pops[0]], popsR: [null, null, null, pops[1]], escape: { i: 5, t0: st.s - .45 } });
       // the sun floods in as the doors part: a glare in the doorway that settles once she is through
       const kd = kz(1750);
       V2.glow(r.door[0], r.door[1] + 10, 620 * kd, '255,246,220', .5 * open * (1 - .7 * seg(lt, d.s + 1.6, d.s + 4.0)), 'screen', sil > .02 ? .06 : .7);
@@ -596,10 +628,7 @@ const SC = SCENES.arrival = {
       { const k = seg(lt, d.s + .9, d.s + 1.22);
         if (k > 0 && k < 1) for (const [wx, wy, sz] of [[172, 430, 1], [-172, 290, .7]]) {
           const [gx, gy] = p2(wx, wy, r.zb), kk = kz(r.zb), a = Math.sin(k * PI), L = 130 * sz * kk * a;
-          V2.glow(gx, gy, 110 * sz * kk * a, '255,250,220', .55 * a, 'screen', .25);
-          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(gx, gy); ctx.rotate(.3 * k); ctx.fillStyle = `rgba(255,252,230,${.9 * a})`;
-          ctx.beginPath(); ctx.moveTo(0, -L); ctx.lineTo(L * .12, 0); ctx.lineTo(0, L); ctx.lineTo(-L * .12, 0); ctx.closePath(); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(-L * .8, 0); ctx.lineTo(0, L * .1); ctx.lineTo(L * .8, 0); ctx.lineTo(0, -L * .1); ctx.closePath(); ctx.fill(); ctx.restore(); } }
+          V2.glow(gx, gy, 110 * sz * kk * a, '255,250,220', .55 * a, 'screen', .25); star(gx, gy, L, .9 * a, .3 * k); } }
       // the horn: rays fan out of the doorway behind her
       { const rk = seg(lt, T.horn - .02, T.horn + .6);
         if (rk > 0 && rk < 1 && sh.n === 'doorW') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(r.door[0], r.door[1] + 40);
@@ -631,6 +660,11 @@ const SC = SCENES.arrival = {
         const sp = C.sp, ss = sp.s, a = [C.M[0] + 12, C.M[1] + 46 - 50 * ss], z = localToScreen(sp, 71.7, 133), e = easeIO(f);
         ctx.save(); ctx.translate(lerp(a[0], z[0], e), lerp(a[1], z[1], e) - 90 * Math.sin(f * PI) * ss); ctx.rotate(lerp(-.1, .14, e) + 5 * Math.sin(f * PI) * .08); ctx.scale(ss * lerp(1, .667, e), ss * lerp(1, .667, e)); drawPassCard(); ctx.restore();
       } }
+    // the sparkle cue (+1.50): glitter around her as she steps into the light
+    if (sh.n === 'doorW' || sh.n === 'doorS') for (let i = 0; i < 9; i++) {
+      const t0 = T.horn + .2 + i * .055, k = seg(lt, t0, t0 + .36), sp = C.sp; if (k <= 0 || k >= 1) continue;
+      star(sp.x + (hash(i * 3 + 1) - .5) * 300 * Math.max(sp.s, .5), sp.y - (40 + hash(i * 5 + 2) * 290) * Math.max(sp.s, .5), (34 + 46 * hash(i + 11)) * Math.sin(k * PI), .95, hash(i) * 1.2);
+    }
     // paper in the air: from both poppers, over the cast
     confetti('air', lt, T.shot1, ...popMouth(C.pr, 'p'), 1, 90, 5, C.pr.y + 10, 1.25);
     confetti('air', lt, T.shot2, ...popMouth(C.mg, 'm'), -1, 90, 11, C.mg.y + 10, 1.25);
@@ -653,7 +687,7 @@ const SC = SCENES.arrival = {
     return { bloom: .6 + .06 * tune * seg(lt, d.s, horn) + .16 * flash, vignette: .38 + .25 * stK + .08 * seg(lt, d.s + .3, horn) * (1 - seg(lt, horn, horn + .6)), grain: .045, contrast: .12 + .04 * tune, sat: .14 + .1 * tune - .1 * stK, tint: [['#ffe9b8', .12 - .08 * tune, 'soft-light']],
       aberr: lt > horn && lt < horn + .25 ? 6 * (1 - (lt - horn) / .25) : 0, fade: Math.max(lt < .25 ? 1 - lt / .25 : 0, seg(lt, CUR.dur - .3, CUR.dur - .02)), fadeColor: '0,0,10' };
   },
-  blur: lt => { const sh = shotOf(lt); if (SHOT_ORDER().some(([, e]) => Math.abs(lt - e) < .022)) return 1; return sh.n === 'doorA' || sh.n === 'doorW' || sh.n === 'doorS' ? 3 : (sh.n === 'cuM' && lt > wordT('m1', 'strawberry') - .16 && lt < wordT('m1', 'strawberry') + .16) ? 6 : 1; },
+  blur: lt => { const sh = shotOf(lt); if (SHOT_ORDER().some(([, e]) => Math.abs(lt - e) < .022)) return 1; return sh.n === 'doorA' || sh.n === 'doorW' || sh.n === 'doorS' ? 3 : (sh.n === 'cuM' && lt > wordT('m1', 'strawberry') - .16 && lt < wordT('m1', 'strawberry') + .16) ? 10 : 1; },
   over(lt) {
     const d = B('door'), horn = d.s + 1.3, a5 = B('a5');
     sfxWord(lt, horn, 'TA-DAAA!', 540, 330, { size: 150, rot: -.05, hold: .45, fill: '#ffe135' });
