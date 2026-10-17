@@ -294,9 +294,10 @@ function goldGlints(list, lt, k, g, keep) {
   let n = 0;
   for (const s of list) {
     if (s.air && s.y > 120) continue;
+    if (s.c.type === 'heap' && s.c.gl < .55) continue;
     const c = s.c, ph = lt * (2.2 + c.gl * 2) + c.ph, a = calm * Math.pow(Math.max(0, Math.sin(ph)), 20) * (.6 + .3 * g) + (c.gl > .55 ? burst * Math.pow(Math.max(0, Math.sin(ph * 3 + 1.3)), 2) * .8 : 0);
     if (a < .12) continue;
-    const k0 = kz(s.z), [sx, sy] = p2(s.x, s.y + 8, s.z), sz = (16 + 28 * a) * k0 * (c.type === 'bar' ? 1.4 : 1);
+    const k0 = kz(s.z), [sx, sy] = p2(s.x, s.y + 8, s.z), sz = (14 + 22 * a) * k0 * (c.type === 'bar' ? 1.4 : 1);
     if (keep.some(([fx, fy, r]) => Math.hypot(sx - fx, sy - fy) < r + sz * .6)) continue;
     ctx.globalAlpha = Math.min(1, a); ctx.drawImage(gl, sx - sz, sy - sz, sz * 2, sz * 2);
     if (++n > 34) break;
@@ -682,7 +683,7 @@ function cast(lt) {
   if (lt >= k.V + .5 && lt < A4.s) {   // the light hits him: a squint, an arm up against the glare, then the smile of a man who had forgotten
     const sh = sk(lt, k.V + .45, k.V + .7) * (1 - sk(lt, k.V + 1.7, k.V + 2.1)), [fx, fy] = faceC(ad);
     ad.expr = 'shock'; ad.look = [-.9, -.4]; ad.lid = lerp(0, .55, sh); if (lt > k.V + 1.7) { ad.expr = 'happy'; ad.lid = undefined; ad.browUp = 6; ad.sparkle = true; }
-    if (sh > 0) handTo(ad, -1, fx - 26 * ad.s, fy - 70 * ad.s, sh, rest);
+    if (sh > 0) handTo(ad, -1, fx - 150 * ad.s, fy - 40 * ad.s, sh, rest);
   }
   if (lt >= A4.s && lt < A4.e + .4) { ad.expr = 'happy'; ad.browUp = 8; ad.sparkle = true; ad.look = lt < A4.s + .6 ? [-.9, -.35] : [-.7, .1]; ad.rot = .03 * Math.sin((lt - A4.s) * 5); }
   if (lt >= A4.e + .4 && lt < A5.s) { ad.expr = 'neutral'; ad.look = [-.85, .05]; }
@@ -763,7 +764,7 @@ const SC = {
       } break;
       case 'vault': {
         const u = sk(lt, KK.V + .85, KK.V + 2.0), p = sk(lt, KK.V + .1, KK.V + .6);
-        V2.setCam(Object.assign({}, HIGH, { cz: lerp(-100, -330, u), cx: lerp(0, -200, u), cy: lerp(580, 700, u), hy: lerp(800, 780, u) }));
+        V2.setCam(Object.assign({}, HIGH, { cz: lerp(-100, -330, u), cx: lerp(0, -200, u), cy: lerp(580, 470, u), hy: lerp(800, 800, u) }));
         const A = p2(-230, 300, 1400), z = lerp(lerp(1.5, 1.65, p), 1.25, u);
         zoomTo(lerp(lerp(462, 410, p), A[0], u), lerp(lerp(1085, 1060, p), A[1] - 20, u), z);
       } break;
