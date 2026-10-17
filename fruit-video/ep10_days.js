@@ -353,19 +353,18 @@ function hallSet(lt) {
 }
 const P1CAST = { S: [-279, 1000], L: [-88, 1040] };   // Strawberry stands nearer the camera, so Lemon's clipboard is behind her, never across her face
 // where the pointer rests: it glides from rule to rule as Lemon reads them
-const ruleY = lt => { const sh = STAMP_AT(); return lerp(lerp(ROW_Y(0), ROW_Y(1), sk(lt, sh[0] + .05, sh[0] + .45)), ROW_Y(2), sk(lt, sh[1] + .05, sh[1] + .45)); };
+const ruleY = lt => { const sh = STAMP_AT(); return lerp(lerp(ROW_Y(0), ROW_Y(1), sk(lt, sh[0] + .05, sh[0] + .45)), ROW_Y(2), sk(lt, sh[1] + .05, sh[1] + .45)) + lerp(0, BD.y + BD.h - 30 - ROW_Y(2), sk(lt, B('l1').e + .1, B('l1').e + .7)); };
 function p1cast(lt, F) {
   const b = id => B(id), sh = STAMP_AT(), tr = F && F.mode !== 'part';   // dive and pull: nobody is held to the frame edge
   const qS = V2.at(...P1CAST.S), qL = V2.at(...P1CAST.L);
   // Lemon: flat affect, reading a clipboard and pointing at each rule as she reads it; the slams never make her flinch
   const look = lt < b('l1').s ? [.3, .05] : lt < b('l1').e - .5 ? [.4, .1] : lt < b('l2').s ? [-.45, .02] : [-.3, 0];
   const lm = lemon(Object.assign(qL, { look, expr: 'dead', lid: lt >= b('l2').s ? .42 : .24, hold: { l: 'clipboard6', r: 'pointer10' }, grip: { l: [-100, 30] }, clipText: 'NOTICES', arms: { l: 'hold', r: 'rest' }, transit: tr }));
-  const aim = sk(lt, b('l1').s + 1.0, b('l1').s + 1.6) * (1 - sk(lt, b('l1').e - .1, b('l1').e + .45));
-  {
+  {   // the pointer stays at the board's left margin the whole time: its tip rides down the checkboxes, then drops to the tray (it never crosses the lettering or her face)
     const tx = BD.x + 42, ty = ruleY(lt) + 14;
-    handTo(lm, 1, BD.x + 8, ty + 70, aim, [118, 40]); lm.hand = { r: 'grip' };
-    const [u, v] = localOf(lm, tx, ty), g = lm.grip.r, ang = Math.atan2(v - g[1], u - g[0]), len = Math.max(60, Math.hypot(u - g[0], v - g[1]));
-    lm.pointAng = lerp(1.5, ang, aim); lm.pointLen = lerp(110, len, aim);   // at rest the pointer hangs from her fist
+    handTo(lm, 1, BD.x + 12, ty + 70, 1, [106, 40]); lm.hand = { r: 'grip' };
+    const [u, v] = localOf(lm, tx, ty), g = lm.grip.r;
+    lm.pointAng = Math.atan2(v - g[1], u - g[0]); lm.pointLen = Math.max(50, Math.hypot(u - g[0], v - g[1]));
   }
   // Strawberry: tired, listening; every slam makes her jump a little, and on "four" she holds up four fingers
   const jump = sh.reduce((a, t0) => Math.max(a, lt >= t0 && lt < t0 + .22 ? Math.sin((lt - t0) / .22 * PI) * 12 * qS.s : 0), 0);
@@ -519,7 +518,7 @@ function donutSign() {
   text('ONE PER', 0, -30, { size: 26, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 2 }); text('NURSE', 0, -2, { size: 32, font: 'Bangers', weight: 400, fill: '#1f3f9a', spacing: 2 });
   ctx.restore();
 }
-const P2POS = { M: [-190, 1000], S: [40, 1180], G: [440, 1100] };   // Melon, Strawberry, Mango (X, Z): Mango's is where she ends up, beside the stand
+const P2POS = { M: [-178, 1000], S: [40, 1180], G: [395, 1100] };   // Melon, Strawberry, Mango (X, Z): Mango's is where she ends up, beside the stand
 const P2T = () => ({ poke: wordT('a2', 'very', B('a2').s + .34), hop: wordT('a2', 'large', B('a2').s + .6), stop: wordT('a1', 'donut', B('a1').s + 1.62) + .03, roll0: 11.2, one: wordT('a1', 'one', B('a1').s + 1.36) });
 // the donut arrives on its casters from the right, pushed by Mango, and stops dead on "donut"
 const rollX = (lt, T2) => { const u = seg(lt, T2.roll0, T2.stop); return u >= 1 ? 0 : 800 * Math.pow(1 - u, 1.8); };
@@ -544,7 +543,7 @@ function p2cast(lt, F) {
   if (lt < T2.roll0 - .1) mg = null;
   else if (pushing) {
     const pathG = t => [(DN.cx + rollX(t, T2) + 322 - 540) / kz(1100) / 1 * 1, 1100];   // placeholder, replaced below
-    mg = runner(mango, t => [((DN.cx + rollX(t, T2) + 322) - 540) / (1400 / 1100), 1100], lt, { look: [-.6, 0], expr: 'happy', acc: ['badge7', 'gaitbelt7', 'keys7', ...hat], badgeText: 'CNA', transit: tr || lt < T2.roll0 + .85 * (T2.stop - T2.roll0) }, 320);
+    mg = runner(mango, t => [((DN.cx + rollX(t, T2) + 322) - 540) / (1400 / 1100), 1100], lt, { look: [-.6, 0], expr: 'happy', acc: ['badge7', 'gaitbelt7', 'keys7', ...hat], badgeText: 'CNA', transit: tr || lt < T2.stop }, 320);
     handTo(mg, -1, DN.cx + ox + DN.R + 32, DN.yb + 28, 1, [-100, 40]); mg.hand = { l: 'flat' }; mg.arms.r = 'run';
     void pathG;
   } else {
@@ -564,7 +563,7 @@ function p2wob(lt) {   // the donut's squash, push, lean and flag: it jolts when
 function p2shot(lt) { const b = id => B(id); return lt < 11.35 ? 'ms1' : lt < b('s2').s - .06 ? 'wide2' : lt < b('a2').s - .06 ? 'cuS' : 'wide3'; }
 function p2cam(lt) {
   const b = id => B(id), sh = p2shot(lt), c = p2cast(lt);
-  const wide = k => feetCam(lerp(680, 700, k), lerp(.84, .9, k), { feet: 1369 }), ms1 = k => feetCam(540, lerp(1.0, 1.07, k), { feet: 1369 });
+  const wide = k => feetCam(lerp(680, 700, k), lerp(.84, .9, k), { feet: 1369 }), ms1 = k => feetCam(528, lerp(1.0, 1.07, k), { feet: 1369 });
   if (sh === 'ms1') return ms1(seg(lt, 10.7, 11.5));
   if (sh === 'wide2') return mixCam(ms1(1), wide(0), easeIO(seg(lt, 11.35, 12.15)));
   if (sh === 'cuS') { const k = seg(lt, b('s2').s - .06, b('s2').e), z = lerp(1.8, 1.9, k), [fx, fy] = faceC({ kind: 'straw', x: c.sp.x, y: c.sp.y, s: c.sp.s }); return { x: fx + 40, y: fy + 150 / z, z }; }
@@ -694,7 +693,7 @@ function p3cast(lt, F) {
   if (up < 1) { handTo(so, 1, so.x + 70 * so.s, so.y - 210 * so.s - 8 * so.s, 1 - up, [74, 30]); so.hand = { r: 'open' }; }   // her cheek in her hand
   // Mango: bounces up, hands over the news
   const hop = lt < b('m1').s + .1 ? Math.abs(Math.sin(lt * 7)) * 16 * qG.s * seg(lt, 17.3, 17.5) : 0, offer = sk(lt, b('m1').s + .1, b('m1').s + .5) * (1 - sk(lt, 22.1, 22.45) * 0);
-  const mg = mango(Object.assign(qG, { look: [-.55, 0], expr: lt < b('m1').s ? 'happy' : lt < b('a3').s ? 'sad' : 'sad', lift: hop, hold: { l: 'tablet10' }, arms: { l: 'hold', r: 'rest' }, tabTilt: 0, transit: tr }));
+  const mg = mango(Object.assign(qG, { look: [-.55, 0], expr: lt < b('m1').s ? 'happy' : lt < b('a3').s ? 'sad' : 'sad', lift: hop, hold: { l: 'tablet10' }, arms: { l: 'hold', r: 'hips' }, tabTilt: 0, transit: tr }));
   handTo(mg, -1, so.x + 205 * so.s, so.y - 135 * so.s, offer, [-96, 30]); mg.hand = { l: 'grip' };
   // the Administrator slides in from the left and leans over them: "Different budget."
   const enter = sk(lt, b('a3').s - .05, b('a3').s + .3), ax = lerp(-190, qA.x, enter), here = lt >= b('a3').s - .08;
@@ -870,7 +869,7 @@ function sweatDrops(lt, o) {
 const P4POS = { S: [-150, 1060], C: [150, 1100] };                               // Strawberry, Clementine (X, Z)
 const HOPS4 = [[24.32, 24.56, 560, 420], [24.56, 24.80, 420, 285], [24.80, 25.10, 285, 150]];   // Clementine bounds in from the door on the right: three hops
 const MIRROR = .42;                                                               // the beat she is late by
-const POSE4 = { rest: [.28, .25], hips: [.85, -2.15], temple: [3.5, 1.58], offer: [1.06, 2.23], wide: [1.9, .25], cheer: [2.8, .2] };   // temple: a hand over the eye; offer: a palm up beside the face
+const POSE4 = { rest: [.28, .25], hips: [.85, -2.15], temple: [3.5, 1.58], offer: [1.06, 2.23], shrug: [1.15, 2.4], cheer: [2.8, .2] };   // temple: a hand over the eye; offer: a palm up beside the face; shrug: both
 const poseOf4 = p => Array.isArray(p) ? p : POSE4[p];
 // keys: [t, pose]: at each t the arm starts moving to its pose (taking .2 s)
 function armAt(lt, keys, dur = .2) {
@@ -880,8 +879,8 @@ function armAt(lt, keys, dur = .2) {
   return [lerp(from[0], to[0], k), lerp(from[1], to[1], k)];
 }
 // Strawberry's arms, in her own time. Clementine copies them, mirrored, MIRROR seconds later
-const S_L = [[0, 'rest'], [25.10, 'hips'], [32.18, 'wide']];
-const S_R = [[0, 'rest'], [25.10, 'hips'], [25.95, 'temple'], [26.95, 'hips'], [30.25, 'offer'], [30.95, 'hips'], [32.18, 'wide']];
+const S_L = [[0, 'rest'], [25.10, 'hips'], [32.18, 'shrug']];
+const S_R = [[0, 'rest'], [25.10, 'hips'], [25.95, 'temple'], [26.95, 'hips'], [30.25, 'offer'], [30.95, 'hips'], [32.18, 'shrug']];
 const bump4 = (lt, t0, d = .24) => lt >= t0 && lt < t0 + d ? Math.sin((lt - t0) / d * PI) : 0;
 const lookS4 = t => t < 31.9 ? [.62, .02] : lerpA2([.62, .02], [0, 0], sk(t, 31.9, 32.1));
 const rotS4 = t => .02 * Math.sin(t * 1.3) - .05 * bump4(t, 25.98, .7);
@@ -895,13 +894,13 @@ function clemMove(lt) {
   let bn = 0; for (const t0 of [25.40, 25.98, 26.30, 28.37, 28.76, 29.04]) bn = Math.max(bn, bump4(lt, t0));
   bn = Math.max(bn, 1.7 * bump4(lt, 31.26, .3));
   const stepC = seg(lt, 32.40, 32.72), stepS = seg(lt, 31.98, 32.32);
-  if (lt >= 32.40) XC = lerp(P4POS.C[0], 300, easeIO(stepC));
+  if (lt >= 32.40) XC = lerp(P4POS.C[0], 250, easeIO(stepC));
   const hopC = stepC > 0 && stepC < 1 ? Math.sin(stepC * PI) : 0, hopS = stepS > 0 && stepS < 1 ? Math.sin(stepS * PI) : 0;
-  return { XC, XS: lerp(P4POS.S[0], -240, easeIO(stepS)), liftC: (arc * 78 + bn * 16 + hopC * 34) * sC, liftS: hopS * 14 * sS, sqC: Math.max(sq, .1 * bn, .12 * hopC) };
+  return { XC, XS: lerp(P4POS.S[0], -215, easeIO(stepS)), liftC: (arc * 78 + bn * 16 + hopC * 34) * sC, liftS: hopS * 14 * sS, sqC: Math.max(sq, .1 * bn, .12 * hopC) };
 }
 function p4cast(lt, F) {
   const tr = F && F.mode !== 'part', m = clemMove(lt), qS = V2.at(m.XS, P4POS.S[1]), qC = V2.at(m.XC, P4POS.C[1]);
-  // Strawberry: unimpressed. Fists on her hips, a hand to her forehead at "replacement", a palm up at "supplies", both arms out at "There aren't any."
+  // Strawberry: unimpressed. Fists on her hips, a hand to her forehead at "replacement", a palm up at "supplies", both hands up in a shrug at "There aren't any."
   const lidS = Math.max(lerp(.5, .92, Math.sin(PI * seg(lt, 26.0, 26.6))), lerp(.5, .97, Math.sin(PI * seg(lt, 34.0, 34.5))));
   const sp = straw(Object.assign(qS, { look: lookS4(lt), expr: 'dead', lid: lidS, arms: { l: armAt(lt, S_L), r: armAt(lt, S_R) }, rot: rotS4(lt), sway: .03, lift: m.liftS, transit: tr }));
   // Clementine: three hops through the door, then she copies Strawberry's every pose a beat late (her left arm is Strawberry's right)
@@ -926,7 +925,7 @@ function p4cam(lt) {
   if (sh === 'ms') { const k = seg(lt, 29.6, 31.2); return p4base(lerp(540, 536, k), lerp(1.42, 1.5, k)); }
   if (sh === 'cuC2') { const k = seg(lt, 31.2, 31.88), z = lerp(2.1, 2.25, k); return { x: cf[0] - 16, y: cf[1] + 150 / z, z }; }
   if (sh === 'wide') return p4base(540, lerp(1.04, 1.0, seg(lt, 31.88, 32.85)), { at: 330 });
-  if (sh === 'cuC3') { const k = seg(lt, 32.85, 33.55), z = lerp(2.3, 2.42, k); return { x: cf[0] - 10, y: cf[1] + 120 / z, z }; }
+  if (sh === 'cuC3') { const k = seg(lt, 32.85, 33.55), z = lerp(2.3, 2.42, k); return { x: cf[0] + 6, y: cf[1] + 120 / z, z }; }
   return p4base(540, lerp(.98, .86, easeIO(seg(lt, 33.55, 35.09))), { at: 330 });
 }
 // the one-second insert at "marmalade": a jar with a gingham lid, a tiny leaf, and a label that is a face

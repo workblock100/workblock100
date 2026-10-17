@@ -375,6 +375,22 @@ function silhouette(k, fn) {
   ctx = prev; ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(silCv, 0, 0); ctx.restore();
 }
 
+// the rubber stamp that lands on "the other budget": red ink in a double border with specks and a few scratches worn out of it. Built once, off screen
+let STAMP = null;
+function stampArt() {
+  if (STAMP) return STAMP;
+  const cv = V2.mk(520, 124), c = cv.getContext('2d'), prev = ctx, RED = '#d0142c';
+  ctx = c; REG.suppress++;
+  c.lineJoin = 'round'; c.strokeStyle = RED; c.lineWidth = 8; rr(6, 6, 508, 112, 20); c.stroke(); c.lineWidth = 2.6; rr(18, 18, 484, 88, 12); c.stroke();
+  text('OTHER BUDGET', 260, 63, { size: 68, font: 'Bangers', weight: 400, fill: RED, spacing: 4, maxW: 440 });
+  c.globalCompositeOperation = 'destination-out'; c.fillStyle = '#000'; c.strokeStyle = '#000';
+  for (let i = 0; i < 300; i++) { const h = hash(i * 1.37 + 5); c.globalAlpha = .5 + .5 * hash(i * 2.9 + 1); c.beginPath(); c.arc(hash(i * 3.1 + 7) * 520, hash(i * 5.7 + 2) * 124, .7 + 2.4 * h * h, 0, TAU); c.fill(); }
+  c.globalAlpha = .85; c.lineWidth = 1.6;
+  for (let i = 0; i < 5; i++) { const x = hash(i * 7 + 3) * 520, y = hash(i * 4 + 1) * 124; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 70 * (hash(i + 9) - .5), y + 34 * (hash(i + 12) - .5)); c.stroke(); }
+  c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1;
+  REG.suppress--; ctx = prev; return STAMP = cv;
+}
+
 // ---- arm scripting -------------------------------------------------------------------------------------------------------------------------------------
 // where a hand ends up in the plain 'rest' pose (local px), so a scripted arm can leave it and return to it without a jump
 function armRest(o, side, t) {
@@ -428,14 +444,14 @@ const SCENES = {};
 const SC = SCENES.arrival = {
   shot: lt => shotOf(lt).n,
   cast(lt) {
-    const b = id => B(id), d = b('door'), op = b('open'), a1 = b('a1'), a2 = b('a2'), p1 = b('p1'), a3 = b('a3'), s2 = b('s2'), a4 = b('a4'), s3 = b('s3'), s4 = b('s4'), a5 = b('a5'), s5 = b('s5'), st = b('sting'), c1 = b('c1'), m1 = b('m1'), c2 = b('c2'), m2 = b('m2');
+    const b = id => B(id), d = b('door'), op = b('open'), a1 = b('a1'), a2 = b('a2'), s1 = b('s1'), p1 = b('p1'), a3 = b('a3'), s2 = b('s2'), a4 = b('a4'), s3 = b('s3'), s4 = b('s4'), a5 = b('a5'), s5 = b('s5'), st = b('sting'), c1 = b('c1'), m1 = b('m1'), c2 = b('c2'), m2 = b('m2');
     const T = { pop1: op.s + .35, pop2: op.s + .6, horn: d.s + 1.3, shot1: d.s + 1.35, shot2: d.s + 1.45, tromb: st.s + .1 };
     const tBirthday = wordT('c1', 'birthday'), tStraw = wordT('m1', 'strawberry'), tBadge = wordT('m2', 'badge');
     const tB = wordT('a2', 'basket'), tPass = wordT('a2', 'pass'), tL = wordT('a2', 'lunch'), hB = tB + .3, hP = tPass + .14, hL = tL + .3, dropB = hB + .5, dropBag = p1.e + .12, tSwap = hP + .24;
     const tPen = wordT('a3', 'pen'), hPen = tPen + .1, tShare = wordT('s3', 'share'), takePen = tShare + .12, tRaise = wordT('s4', 'raise');
     const spFn = spPath(), qs = V2.at(...spFn(lt)), qa = V2.at(...MK.adm), qp = V2.at(...MK.per);
     const M = [lerp(qa.x, V2.at(...MK.sp).x, .5), qa.y - 185 * qa.s];   // where a handoff happens: chest height, halfway between the two of them
-    const M1 = { s: M }, M2 = { s: [M[0] + 12, M[1] + 46] }, M3 = { s: [M[0] - 20, M[1] + 96] };
+    const M1 = { s: M }, M2 = { s: [M[0] + 12, M[1] + 46] }, M3 = { s: [M[0] - 32, M[1] + 96] };
     const walkEnd = a2.s + .16;
     const look = keys => { for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) return lerpA2(keys[i - 1][1], keys[i][1], sk(lt, keys[i - 1][0], keys[i][0])); return keys[keys.length - 1][1]; };
 
@@ -472,10 +488,10 @@ const SC = SCENES.arrival = {
     if (lt >= a1.s - .1 && lt < a1.e + .2) { const c = .5 + .5 * Math.sin(lt * 17); mg.grip = { l: [-lerp(8, 56, c), 74], r: [lerp(8, 56, c), 74] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'flat', r: 'flat' }; mg.hold = {}; }   // a polite clap for the welcome
 
     // ---- the Administrator: gifts in both hands, a pocket with the pass and the pen, and the handoffs
-    const ad = melon(Object.assign(qa, { s: qa.s * 1.14, look: lerpA2(lt < d.s ? [.3, -.3] : [.45, -.05], [.62, 0], sk(lt, a1.s, a1.s + .6)), expr: lt >= tRaise && lt < a5.s ? 'shock' : 'happy',
+    const ad = melon(Object.assign(qa, { s: qa.s * 1.14, look: look([[0, [.3, -.3]], [d.s, [.3, -.3]], [d.s + .4, [.45, -.05]], [a1.s, [.45, -.05]], [a1.s + .6, [.62, 0]], [a3.s + .02, [.62, 0]], [a3.s + .22, [.4, .45]], [hPen - .08, [.4, .45]], [hPen + .15, [.62, 0]]]), expr: lt >= tRaise && lt < a5.s ? 'shock' : 'happy',
       acc: ['suit', 'nametag9', 'pocket11'], lift: lt > T.horn ? 13 * Math.abs(Math.sin((lt - T.horn) * 13)) * Math.exp(-(lt - T.horn) * 4.2) : 0, pocketPass: lt < hB + .36, pocketPen: lt < a3.s + .2, hold: {}, grip: {}, hand: {}, arms: { l: 'rest', r: 'rest' } }));
     const jig = 7 * Math.sin(lt * 11), R0 = [124, 96], L0g = [-140, 104], UP_R = [152, -92 + jig], UP_L = [-152, -92 - jig], PKT = [116, 92], CR = [34, 126], CL = [-30, 126];
-    armKeys(ad, 1, lt, [[0, R0], [T.horn + .55, R0], [T.horn + .95, UP_R], [a1.e - .2, UP_R], [tB + .04, M1], [hB + .02, M1], [hB + .3, PKT], [hB + .36, PKT], [hP, M2], [hP + .04, M2], [hP + .2, CR], [tSwap + .1, CR], [hL, M2], [hL + .03, M2], [hL + .3, R0], [hL + .8, 'rest'],
+    armKeys(ad, 1, lt, [[0, R0], [T.horn + .55, R0], [T.horn + .95, UP_R], [a1.e - .36, UP_R], [a1.e - .02, R0], [tB + .04, M1], [hB + .02, M1], [hB + .3, PKT], [hB + .36, PKT], [hP, M2], [hP + .04, M2], [hP + .2, CR], [tSwap + .1, CR], [hL, M2], [hL + .03, M2], [hL + .3, R0], [hL + .8, 'rest'],
       [a3.s - .05, 'rest'], [a3.s + .12, PKT], [a3.s + .2, PKT], [hPen - .1, M3], [takePen, M3], [takePen + .35, 'rest']]);
     armKeys(ad, -1, lt, [[0, L0g], [T.horn + .55, L0g], [T.horn + .95, UP_L], [a1.e - .2, UP_L], [a1.e + .3, L0g], [hP - .1, L0g], [tSwap, CL], [tSwap + .1, CL], [tSwap + .45, 'rest']]);
     // props in the hands: the basket (right) until it is given, the pass from the pocket, then the lunch that crosses from his left hand to his right, and the pen
@@ -498,11 +514,15 @@ const SC = SCENES.arrival = {
 
     // ---- Strawberry: outside the glass, then the walk, then the gifts, the pen and the raise she asks for
     const walking = lt >= d.s + .54 && lt < walkEnd, ph = walking ? pathDist(spFn, lt) / 84 * PI : 0;
-    const sp = person(straw, spFn, lt, { stride: 40, look: lt < a2.s - .2 ? [0, .05] : lerpA2([0, .05], [-.5, 0], sk(lt, a2.s - .2, a2.s + .2)),
+    // her eyes: dead ahead while she walks, then on the Administrator, dropping to each gift as it comes, to Persimmon for the toast, to the pen, and back to the camera at the end
+    const spLook = look([[0, [0, .05]], [a2.s - .2, [0, .05]], [a2.s + .2, [-.5, 0]], [tB + .05, [-.5, 0]], [tB + .2, [-.35, .5]], [hB + .25, [-.35, .5]], [tPass - .03, [-.5, .05]], [hP - .02, [-.45, .3]], [hP + .3, [-.5, .05]], [tL + .1, [-.4, .5]], [hL + .35, [-.4, .5]],
+      [s1.s - .08, [-.5, 0]], [s1.s + .12, [.05, .08]], [p1.s - .1, [.05, .08]], [p1.s + .1, [.62, 0]], [p1.e + .15, [.62, 0]], [a3.s, [-.5, .05]], [hPen - .25, [-.3, .35]], [hPen + .2, [-.5, 0]], [s2.s + .3, [-.5, 0]], [takePen - .3, [-.4, .35]], [takePen + .35, [-.5, -.05]],
+      [a5.s, [-.5, -.05]], [s5.s - .05, [-.5, 0]], [s5.s + .3, [.05, .08]]]);
+    const sp = person(straw, spFn, lt, { stride: 40, look: spLook,
       expr: lt >= s5.s + .5 && lt < s5.e ? 'chill' : (inB(lt, 's4') || (lt >= s4.e && lt < a5.s + 1.1)) ? 'hopeful' : (lt >= p1.s + .6 && lt < a4.s) ? 'sour' : 'dead',
       lid: lt < a2.s ? .42 : lt >= s4.s && lt < s4.e ? undefined : lt >= a5.s + .3 && lt < s5.s ? lerp(.1, .6, seg(lt, a5.s + .3, a5.s + 1.3)) : .5, badgeSwing: walking ? .12 : 0, passA: lt >= hP + .4 ? 1 : 0,
       arms: { l: walking ? [.28 + .35 * Math.sin(ph), .25] : 'rest', r: walking ? [.28 + .35 * Math.sin(ph + PI), .25] : 'rest' }, hold: {}, grip: {}, hand: {} });
-    const BSK = [-134, 98], BGS = [-100, 92], RDY = [-128, 70], RAISE = [-138, -108], OUT = [-150, 10];
+    const BSK = [-134, 98], BGS = [-100, 92], RDY = [-128, 70], RAISE = [-138, -108], OUT = [-162, 8];
     armKeys(sp, -1, lt, [[tB - .32, 'rest'], [tB + .02, M1], [hB + .04, M1], [hB + .46, BSK], [hB + .52, BSK], [hP - .02, M2], [hP + .12, M2], [hL - .34, RDY], [hL - .02, M2], [hL + .06, M2], [hL + .42, BGS], [dropBag - .2, BGS], [dropBag, [-134, 100]], [dropBag + .35, 'rest'],
       [takePen - .34, 'rest'], [takePen - .02, M3], [takePen + .06, M3], [takePen + .26, OUT], [takePen + .56, RAISE], [s4.e + .5, RAISE], [a5.s + 1.1, [-130, 64]], [CUR.dur + 1, [-130, 64]]]);
     if (lt >= hB && lt < dropB) { setHold(sp, -1, 'basket11'); setHand(sp, -1, 'grip'); }
@@ -535,14 +555,14 @@ const SC = SCENES.arrival = {
       case 'doorW': { const hit = pulse(lt, d.s + 1.3, 6); zoomTo(540, 975, lerp(.9, .94, k)); CAM.shake = 9 * hit; CAM.r = .01 * hit; break; }
       case 'doorS': zoomTo(540, 990, lerp(1.0, 1.06, k)); CAM.shake = 3 * pulse(lt, sh.t0, 4); break;
       case 'cuA': F(C.ad, lerp(1.5, 1.62, k), 95); break;
-      case 'two': mid(C.ad, C.sp, lerp(1.22, 1.3, k), 150); break;
+      case 'two': mid(C.ad, C.sp, lerp(1.4, 1.48, k), 150); break;
       case 'cuS': F(C.sp, lerp(1.85, 1.98, k), 135); break;
       case 'cuP': F(C.pr, lerp(2.0, 2.12, k), 105); break;
       case 'pen': mid(C.ad, C.sp, lerp(1.7, 1.85, k), 120); break;
       case 'cuA2': F(C.ad, lerp(1.7, 1.8, k), 100); break;
       case 'cuS2': F(C.sp, lerp(1.7, 1.6, k), 70); break;
       case 'cuA3': F(C.ad, lerp(1.9, 2.05, k), 95); break;
-      case 'two2': mid(C.ad, C.sp, lerp(1.2, 1.28, k), 150); break;
+      case 'two2': mid(C.ad, C.sp, lerp(1.38, 1.46, k), 150); break;
       case 'xcuS': F(C.sp, lerp(2.5, 3.0, k), lerp(190, 240, k)); break;
       case 'sting': zoomTo(540, lerp(985, 975, k), lerp(.9, .93, k)); break;
     }
@@ -567,9 +587,22 @@ const SC = SCENES.arrival = {
         const keep = aisle || sh.n === 'doorW'; if (!keep) REG.suppress++; spDraw(drawChar); if (!keep) REG.suppress--;
         r.panels();
       }
+      // the chime as the doors reach the end of their travel: a twinkle on each leading edge
+      { const k = seg(lt, d.s + .9, d.s + 1.22);
+        if (k > 0 && k < 1) for (const [wx, wy, sz] of [[172, 430, 1], [-172, 290, .7]]) {
+          const [gx, gy] = p2(wx, wy, r.zb), kk = kz(r.zb), a = Math.sin(k * PI), L = 130 * sz * kk * a;
+          V2.glow(gx, gy, 110 * sz * kk * a, '255,250,220', .55 * a, 'screen', .25);
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(gx, gy); ctx.rotate(.3 * k); ctx.fillStyle = `rgba(255,252,230,${.9 * a})`;
+          ctx.beginPath(); ctx.moveTo(0, -L); ctx.lineTo(L * .12, 0); ctx.lineTo(0, L); ctx.lineTo(-L * .12, 0); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-L * .8, 0); ctx.lineTo(0, L * .1); ctx.lineTo(L * .8, 0); ctx.lineTo(0, -L * .1); ctx.closePath(); ctx.fill(); ctx.restore(); } }
+      // the horn: rays fan out of the doorway behind her
+      { const rk = seg(lt, T.horn - .02, T.horn + .6);
+        if (rk > 0 && rk < 1 && sh.n === 'doorW') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(r.door[0], r.door[1] + 40);
+          for (let i = 0; i < 18; i++) { const a = i / 18 * TAU + .25 * rk, w = .05 + .025 * hash(i); ctx.fillStyle = `rgba(255,240,190,${.2 * (1 - rk) * (.6 + .4 * hash(i + 3))})`; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 1100 * (.35 + .65 * easeOut(rk)), a - w, a + w); ctx.closePath(); ctx.fill(); }
+          ctx.restore(); } }
       // the carpet after the poppers: the confetti that has already landed
-      confetti('floor', lt, T.shot1, ...popMouth(C.pr, 'p'), -1, 90, 5, C.pr.y + 10, 1.25);
-      confetti('floor', lt, T.shot2, ...popMouth(C.mg, 'm'), 1, 90, 11, C.mg.y + 10, 1.25);
+      confetti('floor', lt, T.shot1, ...popMouth(C.pr, 'p'), 1, 90, 5, C.pr.y + 10, 1.25);
+      confetti('floor', lt, T.shot2, ...popMouth(C.mg, 'm'), -1, 90, 11, C.mg.y + 10, 1.25);
     });
     // things on the floor are drawn after the soft room: crisp, like the cast at their depth
     { const sp = C.sp, ss = sp.s;
@@ -594,8 +627,8 @@ const SC = SCENES.arrival = {
         ctx.save(); ctx.translate(lerp(a[0], z[0], e), lerp(a[1], z[1], e) - 90 * Math.sin(f * PI) * ss); ctx.rotate(lerp(-.1, .14, e) + 5 * Math.sin(f * PI) * .08); ctx.scale(ss * lerp(1, .667, e), ss * lerp(1, .667, e)); drawPassCard(); ctx.restore();
       } }
     // paper in the air: from both poppers, over the cast
-    confetti('air', lt, T.shot1, ...popMouth(C.pr, 'p'), -1, 90, 5, C.pr.y + 10, 1.25);
-    confetti('air', lt, T.shot2, ...popMouth(C.mg, 'm'), 1, 90, 11, C.mg.y + 10, 1.25);
+    confetti('air', lt, T.shot1, ...popMouth(C.pr, 'p'), 1, 90, 5, C.pr.y + 10, 1.25);
+    confetti('air', lt, T.shot2, ...popMouth(C.mg, 'm'), -1, 90, 11, C.mg.y + 10, 1.25);
     V2.sparks(...popMouth(C.pr, 'p'), lt, T.shot1, { n: 16, speed: 520, life: .45, color: '255,236,160', g: 700, size: 5, seed: 12 });
     V2.sparks(...popMouth(C.mg, 'm'), lt, T.shot2, { n: 16, speed: 520, life: .45, color: '255,210,230', g: 700, size: 5, seed: 14 });
     // the sweat after the raise
@@ -619,6 +652,22 @@ const SC = SCENES.arrival = {
   over(lt) {
     const d = B('door'), horn = d.s + 1.3, a5 = B('a5');
     sfxWord(lt, horn, 'TA-DAAA!', 540, 330, { size: 150, rot: -.05, hold: .45, fill: '#ffe135' });
+    // "OTHER BUDGET" is stamped on the air above the two of them as the word lands, and fades as the shot cuts
+    const tS = wordT('a5', 'budget'), k = lt - tS, land = .07, SX = 560, SY = 470;
+    if (k >= 0 && lt < a5.e + .3) {
+      const f = 1 - seg(lt, a5.e + .02, a5.e + .3), ink = pulse(lt, tS + land, 15);
+      const sc = k < land ? lerp(1.25, 1, easeIn(k / land)) : 1 + .05 * ink * Math.cos((k - land) * 38), jx = k < land ? 0 : 6 * ink * Math.sin((k - land) * 52);
+      ctx.save(); ctx.globalAlpha *= Math.min(1, k / .03) * .95 * f; ctx.translate(SX + jx, SY + jx * .4); ctx.rotate(-.07); ctx.scale(sc, sc);
+      ctx.drawImage(stampArt(), -260, -62);
+      regLocal('overlay', -260, -62, 260, 62, { id: 'stamp' }); regLocal('otext', -225, -40, 225, 40, { name: 'OTHER BUDGET' });
+      ctx.restore();
+      // a flick of ink off the edge on the hit
+      const sp = seg(k, land, land + .32);
+      if (sp > 0 && sp < 1) for (let i = 0; i < 14; i++) {
+        const a = i / 14 * TAU + hash(i) * .4, d = 36 + 70 * easeOut(sp) * (.5 + hash(i + 8)), x = SX + Math.cos(a) * (262 + d * .5), y = SY + Math.sin(a) * (70 + d * .5) - 10;
+        ctx.save(); ctx.globalAlpha *= (1 - sp) * f; ctx.fillStyle = '#d0142c'; ell(x, y, 2 + 3.4 * hash(i + 3) * (1 - sp * .5), 2 + 3.4 * hash(i + 3) * (1 - sp * .5)); ctx.fill(); ctx.restore();
+      }
+    }
   },
 };
 window.__EP11_SCENES = window.__EP11_SCENES || {};

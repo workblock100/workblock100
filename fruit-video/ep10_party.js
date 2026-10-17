@@ -4,10 +4,29 @@
  * Strawberry's farewell: a surprise party at the station for $4.17, a cake missing an R, and a card everybody signed.
  * Set: a shallow station room (zb 1500) built from S6.shell, with the Episode 9 banner reused (WELCOME PERSIMMON taped over: GOODBYE STRAWBERY).
  * Every position is a world coordinate: X right, Z forward, from V2.at(X, Z). Crowd members are soft neighbours (drawBg), the named cast is audited.
+ * Three macro inserts are drawn full frame in screen space over party bokeh (cake, coins, card); the counter and the cuff diagram are over() overlays.
  *
- * Shot list (scene-local seconds):
- *   0.00  wide     lights on at 0.30 (partyhorn), cannons pop left 0.40 and right 0.55, cheer 0.50; Strawberry in the doorway, a streamer lands on her
+ * Shot list (scene-local seconds; the shot name changes at every cut):
+ *   0.00 wide      dark, lights on at 0.30 (partyhorn), confetti cannons pop left 0.40 / right 0.55, cheer 0.50, streamers land on Strawberry in the doorway
+ *   1.45 cakeTwo   m1 "We got you a cake!"  Mango with the cake, Strawberry at her mark
+ *   2.71 cakeIns   s1 "It's missing an R."  macro of the cake: GOODBYE STRAWBER_Y, the caret, Strawberry's finger tapping the gap
+ *   3.90 cuM1      m2 "We ran out."  Mango, the candle gives way
+ *   4.76 cuS0      a flat look from Strawberry
+ *   5.05 cuL1      l1 Lemon with the STRAWBERRY FUND can
+ *   7.06 cuS1      s2 "How much?"          8.00 cuL2  l2 "Four dollars and seventeen cents."          9.99 twoSL  the can tips toward Strawberry's palm
+ *  10.51 coinsIns  macro: eight coins and four crumpled singles with real bounce and spin on her palm, the counter ticking to $4.17 on every landing
+ *  11.46 medM      m3 "And everyone signed the card!"  Mango holds up the card
+ *  13.26 cardIns   macro: the open card, two gloved pens signing in real time at 13.39 and 14.29 (Mango <3, Lemon (read report), Mrs C, Clem, Night shift 4ever)
+ *  15.51 cuC       r1 Mrs. Cranberry "Come back by 1962!", waving her flag
+ *  17.51 cuM2      m4 "Who's going to tell me where the good cuff is?"
+ *  19.18 medS      s3 tight on Strawberry; THE GOOD CUFF diagram pops up: closet, 2nd shelf (arrow), the QUIET sign slides in
+ *  21.74 crowdW    cut wide on "Behind the Q-word sign": the Q is crossed out, the crowd leans in, Lemon's pencil drops
+ *  23.60 warm      m5 "I love you." / s4 "I know." slow push-in, warm glow, motes, a held smile (hold 0.43 s)
+ *  25.70 cuL3 / 27.41 cuS5 / 29.16 threeL   the reports (p. 1 with the bookmark) while everyone else tears up
+ *  30.96 cuS6      the end: plates and a party hat for Strawberry
+ *  31.35 endWide   the line-up with plates; Clem's balloon floats up and bumps the smoke detector (LED blinks, no beep) at 31.48
  */
+
 (() => {
 if (!window.TIMELINE_EP10) return;
 const { person, zoomTo, faceZoom, drawBg, inB, faceC, localOf, localToScreen } = window.H6;
@@ -469,7 +488,7 @@ const cue = { on: () => B('open').s + .1, popL: () => B('open').s + .2, cheer: (
 // the two pops come from just outside the frame, left and right (as in the Episode 9 lobby); the origins are in scene coordinates for the wide camera
 const PO = { L: [10, 1240], R: [1130, 1240] };
 const PCOL = ['#ffaa28', '#50a5ff', '#5ae682', '#ffcd46', '#ff4646', '#ffffff', '#ff7ad9', '#b38cff'];
-const CF = { L: { seed: 11, dir: 1, n: 120 }, R: { seed: 29, dir: -1, n: 120 } };
+const CF = { L: { seed: 11, dir: 1, n: 230 }, R: { seed: 29, dir: -1, n: 230 } };
 // one piece of confetti at age ta after the burst: a fast climb that drag kills at once, then a flutter down at its own terminal speed
 function piece(bu, i, ta, ox, oy) {
   const h = j => hash(bu.seed + i * 7.31 + j * 13.7);
@@ -489,13 +508,13 @@ function confettiBurst(lt, key, t0, ox, oy) {
   const bu = CF[key], ta = lt - t0; if (ta < 0) return;
   if (ta < .5) {   // the bang: a flash and a few puffs of smoke at the corner
     const u = ta / .5; ctx.save();
-    if (ta < .12) { ctx.fillStyle = `rgba(255,246,200,${1 - ta / .12})`; ell(ox, oy - 30, 150, 150); ctx.fill(); }
-    ctx.fillStyle = `rgba(244,240,250,${.8 * (1 - u)})`; for (let i = 0; i < 6; i++) { const a = -PI / 2 + bu.dir * (.1 + i * .22), r = 40 + 80 * u + i * 8; ell(ox + Math.cos(a) * 110 * u * bu.dir * bu.dir, oy + Math.sin(a) * 150 * u, r, r); ctx.fill(); }
+    if (ta < .12) { ctx.fillStyle = `rgba(255,246,200,${.7 * (1 - ta / .12)})`; ell(ox, oy - 30, 110, 110); ctx.fill(); }
+    ctx.fillStyle = `rgba(244,240,250,${.34 * (1 - u) * (1 - u)})`; for (let i = 0; i < 6; i++) { const a = -PI / 2 + bu.dir * (.1 + i * .22), r = 26 + 58 * u + i * 6; ell(ox + Math.cos(a) * 110 * u * bu.dir * bu.dir, oy + Math.sin(a) * 150 * u, r, r); ctx.fill(); }
     ctx.restore();
   }
   ctx.save();
   for (let i = 0; i < bu.n; i++) {
-    const L = landing(key + Math.round(ox) + ',' + Math.round(oy), bu, i, ox, oy), h = j => hash(bu.seed + i * 7.31 + j * 13.7), col = PCOL[i % PCOL.length], w = 10 + 9 * h(9), hh = 5 + 4 * h(10), ang = h(11) * TAU;
+    const L = landing(key + Math.round(ox) + ',' + Math.round(oy), bu, i, ox, oy), h = j => hash(bu.seed + i * 7.31 + j * 13.7), col = PCOL[i % PCOL.length], w = 12 + 10 * h(9), hh = 6 + 5 * h(10), ang = h(11) * TAU;
     ctx.fillStyle = col;
     if (ta < L.tl) {
       const [x, y] = piece(bu, i, ta, ox, oy);
@@ -534,14 +553,20 @@ const ROUTE = {
 const END_AT = () => B('l4').e + .08;   // from here on it is the end of the party: plates, a time jump
 const NAMED = ['lemon', 'cran', 'mango', 'straw'];
 const CROWD = [   // soft neighbours: constructor, mark, accessories, hat and a phase. They stand behind and left of the named cast; the right of the room belongs to Strawberry
-  { id: 'banana', ctor: banana, at: [-545, 1340], acc: [], hat: { c1: '#4aa8ff', c2: '#ffffff', rot: .3 }, ph: .3 },
-  { id: 'pine', ctor: pine, at: [-335, 1400], acc: ['chain'], ph: 1.1 },
-  { id: 'apple', ctor: apple, at: [-120, 1420], acc: ['nightcap'], ph: 2.0 },
-  { id: 'papaya', ctor: papaya, at: [125, 1410], acc: ['visor'], ph: 2.6 },
-  { id: 'pear', ctor: pear, at: [-10, 1450], acc: [], hat: { c1: '#c25bd6', c2: '#ffe135', rot: .2 }, ph: 1.7 },
-  { id: 'goji', ctor: goji, at: [-460, 1270], acc: [], hat: { c1: '#58c85a', c2: '#ffffff', s: .8 }, ph: .8 },
-  { id: 'clem', ctor: clem, at: [545, 1390], acc: ['pricetag'], hat: { c1: '#ffe135', c2: '#ff4f9a', rot: -.3, dx: -.3 }, ph: 3.3 },
+  { id: 'banana', ctor: banana, at: [-545, 1340], end: [-492, 1352], acc: [], hat: { c1: '#4aa8ff', c2: '#ffffff', rot: .3 }, ph: .3 },
+  { id: 'pine', ctor: pine, at: [-335, 1400], end: [-168, 1352], acc: ['chain'], ph: 1.1 },
+  { id: 'apple', ctor: apple, at: [-120, 1420], end: [-8, 1352], acc: ['nightcap'], ph: 2.0 },
+  { id: 'papaya', ctor: papaya, at: [125, 1410], end: [316, 1352], acc: ['visor'], ph: 2.6 },
+  { id: 'pear', ctor: pear, at: [-10, 1450], end: [152, 1352], acc: [], hat: { c1: '#c25bd6', c2: '#ffe135', rot: .2 }, ph: 1.7 },
+  { id: 'goji', ctor: goji, at: [-460, 1270], end: [-330, 1352], acc: [], hat: { c1: '#58c85a', c2: '#ffffff', s: .8 }, ph: .8 },
+  { id: 'clem', ctor: clem, at: [545, 1390], end: [476, 1352], acc: ['pricetag'], hat: { c1: '#ffe135', c2: '#ff4f9a', rot: -.3, dx: -.3 }, ph: 3.3 },
 ];
+const RISER = { x0: -598, x1: 598, z0: 1326, z1: 1430, h: 196 };   // the low riser the crowd stands on for the last picture
+function riser() {
+  const r = RISER;
+  box3({ x0: r.x0, x1: r.x1, y1: r.h, z0: r.z0, z1: r.z1, color: '#a48a68', top: '#c2aa84', front: '#8d7458', side: '#6f5c48', edge: 'rgba(25,16,30,.55)' });
+  onZ(r.z0, r.x0, r.x1, r.h - 16, r.h, '#6f5a44', 'rgba(25,16,30,.4)', 1.6);   // a darker lip along the top edge
+}
 const gaze = (o, tx, ty = 0) => [clamp((tx - o.x) / 360, -1, 1) * .9, ty];
 const tri = (lt, a, b, c) => lt < b ? seg(lt, a, b) : 1 - seg(lt, b, c);   // 0 -> 1 -> 0 over a..b..c
 
@@ -599,7 +624,7 @@ function cast(lt) {
     C.cranQ = p; }
   // ---- the crowd: they hop for the surprise, watch the speaker, lean in for the directions, flinch at the Q-word, cry at the end
   C.crowd = CROWD.map((c, i) => {
-    const p0 = q(...c.at), cheering = lt < 1.5, hop = lt < tOn ? 0 : Math.abs(Math.sin((lt - tOn) * 5 + i * .9)) * 46 * (1 - seg(lt, 1.0, 1.5));
+    const e = ending ? q(...c.end) : null, p0 = e ? Object.assign({}, e, { y: e.y - RISER.h * e.s }) : q(...c.at), cheering = lt < 1.5, hop = lt < tOn ? 0 : Math.abs(Math.sin((lt - tOn) * 5 + i * .9)) * 46 * (1 - seg(lt, 1.0, 1.5));
     const lean = seg(lt, b('s3').s + .2, b('s3').s + 1.0) * (1 - seg(lt, b('s3').e, b('s3').e + .5)), flinch = pulse(lt, tq, tq + .55), dir = Math.sign(MK.straw[0] - c.at[0]);
     const watch = ending ? 560 : inB(lt, 'r1') ? MK.cran[0] : (lt >= b('m4').s && lt < b('s3').s) ? 40 : lt >= b('s3').s - .6 && lt < b('m5').s ? MK.straw[0] : lt >= b('m5').s && lt < b('l3').s ? 120 : lt >= b('l3').s ? -10 : 200;
     const cry = lt >= b('m5').s + .2 ? clamp(seg(lt, b('m5').s + .2, b('l3').s) * (.6 + .4 * hash(i + 4)) + (ending ? .3 : 0)) : 0;
@@ -633,25 +658,25 @@ function cameraFor(lt, sh, C) {
   const k = seg(lt, sh.t0, sh.t1), b = id => B(id);
   V2.setCam({ f: 1400, cy: 360, hy: 860 });
   switch (sh.n) {
-    case 'wide': zoomTo(lerp(600, 590, k), 1020, lerp(.86, .9, k)); break;
-    case 'cakeTwo': { const z = lerp(1.3, 1.44, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0] + 20, m[1] + 120 / z, z); break; }
-    case 'cuM1': F(C.mango, lerp(1.8, 1.95, k), 150); CAM.x += 98; break;
+    case 'wide': zoomTo(lerp(600, 590, k), 985, lerp(.86, .9, k)); break;
+    case 'cakeTwo': { const z = lerp(1.28, 1.38, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0] + 20, m[1] + 120 / z, z); break; }
+    case 'cuM1': F(C.mango, lerp(1.8, 1.95, k), 150); CAM.x += 93; break;
     case 'cuS0': F(C.straw, lerp(1.95, 2.05, k), 180); break;
     case 'cuL1': F(C.lemon, lerp(1.85, 2.0, k), 190); break;
     case 'cuS1': F(C.straw, lerp(2.0, 2.15, k), 180); break;
     case 'cuL2': F(C.lemon, lerp(2.0, 2.25, k), 180); break;
     case 'twoSL': { const z = 1.45, m = mid(faceC(C.lemon), faceC(C.straw)); zoomTo(m[0], m[1] + 130 / z, z); break; }
     case 'medM': F(C.mango, lerp(1.66, 1.76, k), 130); CAM.x += 92; break;
-    case 'cuC': F(C.cran, lerp(1.95, 2.15, k), 180); CAM.x += 78; break;
+    case 'cuC': F(C.cran, lerp(1.95, 2.15, k), 180); CAM.x += 73; break;
     case 'cuM2': F(C.mango, lerp(2.1, 2.3, k), 170); break;
-    case 'medS': { const z0 = lerp(1.7, 1.78, k), f = faceC(C.straw); zoomTo(f[0] + 105, f[1] + 190 / z0, z0); break; }
-    case 'crowdW': zoomTo(lerp(690, 700, k), 1010, lerp(.95, 1.0, k)); break;
-    case 'warm': { const z = lerp(1.5, 1.74, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0], m[1] + 160 / z, z); break; }
+    case 'medS': { const z0 = lerp(1.66, 1.74, k), f = faceC(C.straw); zoomTo(f[0] + 105, f[1] + 190 / z0, z0); break; }
+    case 'crowdW': zoomTo(lerp(681, 691, k), 1010, lerp(.95, 1.0, k)); break;
+    case 'warm': { const z = lerp(1.48, 1.69, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0], m[1] + 160 / z, z); break; }
     case 'cuL3': F(C.lemon, lerp(1.85, 1.95, k), 180); break;
     case 'cuS5': F(C.straw, lerp(2.05, 2.15, k), 180); break;
     case 'threeL': { const z = lerp(1.3, 1.38, k), f = faceC(C.lemon); zoomTo(f[0] + 8, f[1] + 310 / z, z); break; }
     case 'cuS6': F(C.straw, lerp(2.1, 2.2, k), 170); break;
-    case 'endWide': zoomTo(lerp(574, 570, k), 965, lerp(.88, .86, k)); break;
+    case 'endWide': zoomTo(lerp(574, 570, k), 915, lerp(.88, .86, k)); break;
     default: zoomTo(540, 960, 1);
   }
 }
@@ -865,7 +890,7 @@ const PARTY_LIGHT = { key: [-.35, -.8], keyColor: '#fff0d0', keyA: .26, rim: '#f
 // a pencil falls out of the crowd when the Q-word is said: it drops, bounces twice and rolls
 function pencilDrop(lt, C) {   // Lemon's pencil slips out of her hand at the Q-word: it drops, bounces twice and rolls
   const tq = wordT('s3', 'q-word', B('s3').s + 2.44) + .02, ta = lt - tq; if (ta < 0 || ta > 3) return;
-  const pr = C.lemon, s = pr.s, h = localToScreen(pr, 100, 72), x0 = h[0], y0 = h[1], fy = pr.y + 10 * s, g = 3400 * s, T = Math.sqrt(2 * (fy - y0) / g);
+  const pr = C.lemon, s0 = pr.s, s = s0 * 1.7, h = localToScreen(pr, 100, 72), x0 = h[0], y0 = h[1], fy = pr.y + 10 * s0, g = 3400 * s0, T = Math.sqrt(2 * (fy - y0) / g);
   let x = x0 + 14 * s * Math.min(ta, T), y, rot;
   if (ta < T) { y = y0 + .5 * g * ta * ta; rot = 1.2 + ta * 6; }
   else { const u = ta - T, v = Math.sqrt(2 * g * (fy - y0)) * .42, tb = 2 * v / g; x += 34 * s * Math.min(u, tb + .3); y = u < tb ? fy - (v * u - .5 * g * u * u) : fy; rot = 1.2 + 6 * T + (u < tb ? u * 5 : tb * 5 + (u - tb) * 3 * Math.max(0, 1 - (u - tb))); }
@@ -892,7 +917,8 @@ const SC = {
     const dark = 1 - easeOut(seg(lt, tOn - .01, tOn + .04));
     V2.setLight(PARTY_LIGHT); V2.opts.reflect = true;
     const crisp = CRISP[sh.n] || NAMED, bg = crisp.length === 1 ? 9 : crisp.length === 2 ? 5 : crisp.length === 3 ? 3 : 1.2, crowdBlur = crisp.length === 1 ? 6 : crisp.length === 2 ? 4 : 2.2;
-    V2.dof(bg, () => { room(lt); stringLights(lt); banner(lt); balloonBunch(-535, 1450, lt, 0); heldBunch(C, lt); floater(lt, C); tableSet(lt, { cake: lt >= b('l1').s + 1.1 }); lightPool(); });
+    V2.dof(bg, () => { room(lt, { led: Math.max(pulse(lt, REL.bump() + .02, REL.bump() + .3), .6 * pulse(lt, REL.bump() + .62, REL.bump() + .85)) }); if (lt >= END_AT()) riser(); stringLights(lt); banner(lt); balloonBunch(-535, 1450, lt, 0); heldBunch(C, lt); floater(lt, C); if (lt < END_AT()) tableSet(lt, { cake: lt >= b('l1').s + 1.1 }); lightPool(); });
+    if (sh.n === 'warm') { const m = mid(faceC(C.mango), faceC(C.straw)), g = seg(lt, b('m5').s - .1, b('m5').s + .5); V2.glow(m[0], m[1] + 30, 620, '255,196,130', .3 * g, 'screen', .5); V2.dust(m[0] - 520, m[1] - 460, m[0] + 520, m[1] + 520, lt, { n: 46, alpha: .6 * g, size: 4.4, speed: 18, color: '255,236,190', seed: 7 }); }
     // confetti: behind every character, so it never crosses a face
     confettiBurst(lt, 'L', cue.popL(), PO.L[0], PO.L[1]); confettiBurst(lt, 'R', cue.popR(), PO.R[0], PO.R[1]);
     if (WIDE.includes(sh.n)) {
@@ -917,9 +943,10 @@ const SC = {
   },
   fx: lt => {
     const tOn = cue.on(), pops = Math.max(pulse(lt, cue.popL(), cue.popL() + .2), pulse(lt, cue.popR(), cue.popR() + .2));
-    return { bloom: .6, vignette: .42, grain: .045, contrast: .14, sat: .12, tint: [['#ffb36b', .08, 'soft-light']], aberr: 3.5 * pops, fade: Math.max(1 - seg(lt, 0, .28), seg(lt, CUR.dur - .3, CUR.dur - .02)), fadeColor: '0,0,10' };
+    const warm = shotOf(lt).n === 'warm' ? 1 : 0;
+    return { bloom: .6 + .25 * warm, vignette: .42 + .1 * warm, grain: .045, contrast: .14, sat: .12 + .06 * warm, tint: [['#ffb36b', .08 + .06 * warm, 'soft-light']], aberr: 3.5 * pops, fade: Math.max(1 - seg(lt, 0, .28), seg(lt, CUR.dur - .3, CUR.dur - .02)), fadeColor: '0,0,10' };
   },
-  blur: lt => (lt > .28 && lt < .9) ? 3 : 1,
+  blur: lt => { const n = shotOf(lt).n; return (lt > .28 && lt < .9) ? 3 : n === 'coinsIns' ? 5 : n === 'cakeIns' ? 3 : n === 'cardIns' ? 2 : 1; },
   over(lt) {
     const tOn = cue.on(), sh = shotOf(lt), b = id => B(id);
     if (sh.n === 'wide') {
@@ -948,7 +975,7 @@ function counter(lt) {
 function cuffMap(lt) {
   const b = id => B(id), s3 = b('s3'), k = easeBack(seg(lt, s3.s + .02, s3.s + .3)) * (1 - easeIn(seg(lt, s3.e - .45, s3.e - .15)));
   if (k <= .02) return;
-  const K = .86, x0 = 640, y0 = 285, w = 480, h = 470, cx = x0 + w * K / 2, cy = y0 + h * K / 2, tSecond = wordT('s3', 'second', s3.s + .94) - .05, tBehind = wordT('s3', 'behind', s3.s + 1.83) - .05, tQ = wordT('s3', 'q-word', s3.s + 2.44), tSign = wordT('s3', 'sign', s3.s + 2.77);
+  const K = .86, x0 = 652, y0 = 285, w = 480, h = 470, cx = x0 + w * K / 2, cy = y0 + h * K / 2, tSecond = wordT('s3', 'second', s3.s + .94) - .05, tBehind = wordT('s3', 'behind', s3.s + 1.83) - .05, tQ = wordT('s3', 'q-word', s3.s + 2.44), tSign = wordT('s3', 'sign', s3.s + 2.77);
   ctx.save(); ctx.translate(cx, cy); ctx.scale(k * K, k * K); ctx.rotate(-.02); ctx.translate(-w / 2, -h / 2); ctx.lineJoin = 'round';
   reg('overlay', [cx - w / 2 * k * K - 8, cy - h / 2 * k * K - 8, cx + w / 2 * k * K + 8, cy + h / 2 * k * K + 8], { id: 'cuff-map', transit: Math.abs(k - 1) > .02 });
   ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 28; ctx.shadowOffsetY = 10; ctx.fillStyle = '#fffaf0'; rr(0, 0, w, h, 26); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.stroke();
@@ -986,5 +1013,4 @@ function cuffMap(lt) {
 
 window.__EP10_SCENES = window.__EP10_SCENES || {};
 window.__EP10_SCENES.party = SC;
-window.__P10 = { cast, toScr, shotOf };   // DEBUG-REMOVE
 })();

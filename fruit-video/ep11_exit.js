@@ -52,7 +52,7 @@ const nbr = o => V2.dof(6, () => drawBg(o));
 function sfxWord(lt, t0, str, x, y, o = {}) {
   const k = seg(lt, t0, t0 + .14), f = 1 - seg(lt, t0 + (o.hold ?? .5), t0 + (o.hold ?? .5) + .2);
   if (k <= 0 || f <= 0) return;
-  ctx.save(); ctx.globalAlpha *= f; ctx.translate(x, y); ctx.scale(lerp(1.25, 1, easeOut(k)), lerp(1.25, 1, easeOut(k))); ctx.rotate(o.rot ?? -.08);
+  ctx.save(); ctx.globalAlpha *= f; ctx.translate(x, y); const pk = lerp(o.pop ?? 1.25, 1, easeOut(k)); ctx.scale(pk, pk); ctx.rotate(o.rot ?? -.08);
   text(str, 0, 0, { size: o.size ?? 130, font: 'Bangers', weight: 400, fill: o.fill ?? '#ffe135', lw: 14, stroke: '#150f22', spacing: 3, shadow: 14 }); ctx.restore();
 }
 const ez = (t, a, b) => easeIO(seg(t, a, b));
@@ -199,7 +199,7 @@ function lobbyN11(o = {}) {
   banner11(t);
   // reception, a lamp and plants
   S6.box3({ x0: 340, x1: 640, y1: 205, z0: 1300, z1: 1600, color: '#5a4636', top: '#d8c9a4', side: '#43352a', frontGrad: [[0, '#6a5240'], [1, '#463426']], fog: { color: '#2c3658', amt: .2, zFar: ZB } });
-  onZ(1300, 380, 600, 96, 160, '#f2ecdc', 'rgba(25,16,30,.7)', 2); { const [rx, ry] = p2(490, 128, 1300); text('SIGN IN', rx, ry, { size: 26 * kz(1300), fill: '#2a2530', spacing: 2 }); }
+  onZ(1300, 380, 600, 96, 160, '#f2ecdc', 'rgba(25,16,30,.7)', 2); { ctx.strokeStyle = 'rgba(42,37,48,.55)'; ctx.lineWidth = Math.max(1.5, 3 * kz(1300)); ctx.lineCap = 'round'; for (const y of [146, 128, 110]) { const a = p2(398, y, 1300), b = p2(y === 146 ? 560 : 582, y, 1300); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); } }   // the sign-in sheet: ruled lines
   S6.box3({ x0: 440, x1: 530, y0: 205, y1: 292, z0: 1430, z1: 1462, color: '#1a1d26', front: '#10131a' });
   { const q = p2(485, 262, 1430), kk = kz(1430); V2.glow(q[0], q[1], 120 * kk, '120,180,255', .35, 'screen', .5); }
   S6.box3({ x0: 580, x1: 614, y0: 205, y1: 214, z0: 1340, z1: 1380, color: '#d7b64a' });
@@ -401,7 +401,7 @@ SC_EXIT.cam = function (lt) {
     zoomTo(540, 960, lerp(1, 1.05, seg(lt, b('out').s, CUR.dur)));
     return;
   }
-  V2.setCam(sh === 'wideD' ? { f: 1400, cy: 360, hy: 860, cx: -105 } : { f: 1400, cy: 360, hy: 860 });   // wideD sits a little left so the Administrator's raised glove clears the frame
+  V2.setCam(sh === 'wideD' ? { f: 1240, cy: 360, hy: 860, cx: lerp(-60, -150, seg(lt, a1.s - .5, a1.s + .24)) } : { f: 1400, cy: 360, hy: 860 });   // wideD sits a little left so the Administrator's raised glove clears the frame
   const c = SC_EXIT.cast(lt);
   if (sh === 'wide') { const k = seg(lt, 0, b('l1').s); zoomTo(lerp(535, 520, k), 930, lerp(1.14, 1.2, k)); }
   else if (sh === 'wideD') zoomTo(540, 960, 1);
@@ -1015,7 +1015,7 @@ SC_LOT.over = function (lt) {
   w(h.howl(), 'AWOOOO!', 270, 290, { size: 108, fill: '#cfe0ff', hold: .5, rot: -.09 });
   w(h.peel(), 'WHOOPS!', 560, 1296, { size: 92, fill: '#ffe135', hold: .5, rot: .08 });
   w(h.pa(), 'DING-DONG', 480, 340, { size: 76, fill: '#bfe3ff', hold: .38, rot: .05 });
-  w(h.crash(), 'CRASH!', 250, 1196, { size: 132, fill: '#ff6a5e', hold: .6, rot: -.06 });
+  w(h.crash(), 'CRASH!', 236, 1236, { size: 126, pop: 1.08, fill: '#ff6a5e', hold: .6, rot: -.06 });
   w(h.siren(), 'WEE-OO!', 520, 320, { size: 96, fill: '#9fc4ff', hold: .65, rot: .05 });
 };
 

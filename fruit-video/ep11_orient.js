@@ -51,11 +51,11 @@ function handTo(o, side, x, y, k, rest) {
 
 // ------------------------------------------------------------------ layout and timing
 const LP = { straw: [-206, 1000], cart: [20, 1062], lemon: [-22, 1185], house: [246, 960], brick: [-116, 935] };
-const cartXAt = lt => lerp(-660, LP.cart[0], easeOut(seg(lt, .30, 1.25)));   // the wheels cue is 0.30: the cart starts rolling on it and brakes as Lemon speaks
+const cartXAt = lt => { const u = seg(lt, .30, 1.25); return lerp(-660, LP.cart[0], u * u * (3 - 2 * u) * (1 - u) + (1 - Math.pow(1 - u, 3)) * u); };   // the wheels cue is 0.30: the cart starts rolling on it and brakes as Lemon speaks
 const lemonXAt = lt => cartXAt(lt) + (LP.lemon[0] - LP.cart[0]);
 // Lemon rolls the cart in, stays behind it, and steps round the cart to Clementine's side for the sticker
 const lemonPath = lt => { const k = sk(lt, 22.1, 22.86); return [lerp(lemonXAt(lt), -62, k), lerp(LP.lemon[1], 985, k)]; };
-const clemPath = route([[0, 246, 1000], [8.24, 246, 1000], [8.7, 98, 1000, 'out']]);
+const clemPath = route([[0, 240, 1000], [8.24, 240, 1000], [8.7, 98, 1000, 'out']]);
 // the dealing: twelve flips in 0.6 s (the flips cue), then twenty-eight over the line "Clementine, you have twenty-eight."
 const FLY12 = .30, FLY28 = .40;
 const sp12 = i => B('deal').s + .10 + i * .05;
@@ -375,13 +375,17 @@ function cast(lt) {
   const UP = [2.5, .32], REST = [.28, .25];
   const GEST = [[0, REST], [13.55, UP], [14.62, REST], [18.05, UP], [18.9, REST]];
   const UP2 = [2.78, .2], gestM = tt => lerpA(REST, UP2, gest(tt)[0] > REST[0] + .01 ? (gest(tt)[0] - REST[0]) / (UP[0] - REST[0]) : 0);
+  const GK = [[0, 0], [13.55, 1], [14.62, 0], [18.05, 1], [18.9, 0]];
+  const gk = tt => { let cur = 0; for (let i = 1; i < GK.length; i++) { const k = sk(tt, GK[i][0] - .24, GK[i][0]); if (k <= 0) break; cur = lerp(GK[i - 1][1], GK[i][1], k); } return cur; };
   const gest = tt => { let cur = GEST[0][1]; for (let i = 1; i < GEST.length; i++) { const k = sk(tt, GEST[i][0] - .24, GEST[i][0]); if (k <= 0) break; cur = lerpA(GEST[i - 1][1], GEST[i][1], k); } return cur; };
-  if (lt >= 12.3 && lt < 19.2) { sp.arms.l = gest(lt); sp.hand = Object.assign(sp.hand || {}, { l: 'point' }); }
+  // Strawberry's free hand holds one finger up: the hand rises along the side of her body (a straight line in local space), so it never swings out of the frame. It starts and ends on cuts
+  if (lt >= 12.68 && lt < 19.1) { const g = gk(lt); sp.grip.l = [lerp(-148, -124, g), lerp(92, -118, g)]; sp.arms.l = 'hold'; sp.hand = Object.assign(sp.hand || {}, { l: g > .3 ? 'point' : 'open' }); }
   { const lean = sk(lt, 12.7, 13.0) * (1 - sk(lt, 16.5, 16.9)) + sk(lt, 17.9, 18.15) * (1 - sk(lt, 18.9, 19.2)); sp.rot = .055 * lean; }
   if (ctOn) { sp.hold = { r: 'contract11' }; sp.ctS = lerp(.4, 1, easeOut(seg(lt, t('s1') - .02, t('s1') + .12))); sp.arms.r = 'hold'; sp.grip.r = [lerp(80, /^cuS/.test(shotOf(lt)) ? 82 : 66, ctUp), lerp(96, -62, ctUp)]; sp.hand = { r: 'grip' };
     sp.ctRot = .16 * (pulse(lt, 15.26) + pulse(lt, 15.41) + pulse(lt, 15.68) + pulse(lt, 15.83)); }
   // ---- Clementine: eager. She steps out from behind the house on "Sure!"
-  const cm = person(clem, clemPath, lt, { who: 'clem', stride: 34, arms: { l: 'rest', r: 'rest' } });
+  const dxC = /^cuL[23]$/.test(shotOf(lt)) ? 80 : 0, clemP = l => { const q = clemPath(l); return [q[0] + dxC, q[1]]; };
+  const cm = person(clem, clemP, lt, { who: 'clem', stride: 34, arms: { l: 'rest', r: 'rest' } });
   cm.look = pick(lt, [[t('deal'), [-.4, .1]], [t('l2') + .8, [-.9, .5]], [7.3, [.1, .7]], [8.4, [0, -.8]], [t('s2'), [0, .1]], [t('teach'), [-.7, -.4]], [12.66, [.75, -.9]], [t('c2'), [-.8, .1]], [t('s4'), [-.5, .5]], [t('c3'), [-.8, .1]], [t('l4'), [-.1, .15]], [t('c4'), [-.3, .2]], [1e9, [-.5, .3]]]);
   cm.expr = pick(lt, [[t('l2') + 1.1, 'hopeful'], [8.3, 'shock'], [t('s2'), 'happy'], [t('teach'), 'happy'], [t('s3'), 'shock'], [t('c2') + .4, 'hopeful'], [t('s4'), 'sad'], [t('c3'), 'hopeful'], [t('l4'), 'smug'], [t('c4'), 'sad'], [t('tag'), 'happy'], [1e9, 'happy']]);
   if (lt >= 12.6 && lt < 17.0) { cm.arms.r = gestM(lt - .3); cm.hand = { r: 'point' }; }
@@ -481,14 +485,14 @@ const SC = {
     const sh = shotOf(lt), c = cast(lt), t = id => B(id).s;
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
     const F = (o, z, up) => faceZoom({ kind: o.kind, x: o.x, y: o.y, s: o.s, lift: o.lift }, z, up);
-    if (sh === 'wide') { const k = seg(lt, 0, 1.3); zoomTo(540, lerp(1090, 1080, k), lerp(.96, 1, k)); }
+    if (sh === 'wide') { const k = seg(lt, 0, 1.3); zoomTo(540, lerp(1095, 1085, k), lerp(.9, .95, k)); }
     else if (sh === 'wide2') zoomTo(lerp(700, 660, sk(lt, 6.2, 8.3)), lerp(1100, 1070, sk(lt, 6.2, 8.3)), lerp(1.12, .98, sk(lt, 6.2, 8.3)));
     else if (sh === 'cuL' || sh === 'cuL2' || sh === 'cuL3') { const k = seg(lt, shotStart(sh), shotStart(sh) + 1.8); F(c.lm, lerp(1.9, 2.0, k), 140); }
-    else if (sh === 'cuS' || sh === 'cuS2' || sh === 'cuS3') { const k = seg(lt, shotStart(sh), shotStart(sh) + 1.1); F(c.sp, lerp(1.75, 1.85, k), 150); if (sh !== 'cuS3') CAM.x += 45; }
+    else if (sh === 'cuS' || sh === 'cuS2' || sh === 'cuS3') { const k = seg(lt, shotStart(sh), shotStart(sh) + 1.1); F(c.sp, lerp(1.75, 1.85, k), 150); CAM.x += sh === 'cuS3' ? -60 : 15; }
     else if (sh === 'cuC' || sh === 'cuC2' || sh === 'cuC3') { const k = seg(lt, shotStart(sh), shotStart(sh) + 1.2); F(c.cm, lerp(2.0, 2.12, k), 85); }
     else if (sh === 'deal') zoomTo(400, 1150, lerp(1.18, 1.26, seg(lt, t('deal'), t('l2'))));
-    else if (sh === 'teach') zoomTo(560, 1095, .94);
-    else if (sh === 'three' || sh === 'two') { const k = seg(lt, 12.68, 20.5); zoomTo(560, 1095, lerp(.94, .97, k)); }
+    else if (sh === 'teach') zoomTo(541, 1095, .94);
+    else if (sh === 'three' || sh === 'two') { const k = seg(lt, 12.68, 20.5); zoomTo(541, 1095, lerp(.94, .97, k)); }
     else if (sh === 'tag') { const k = sk(lt, t('tag') + .1, CUR.dur - .1), z = lerp(1.45, 2.25, k), cm = c.cm; const [fx, fy] = faceC({ kind: 'clem', x: cm.x, y: cm.y, s: cm.s, lift: cm.lift }); zoomTo(lerp(610, cm.x - 70, k), lerp(1040, fy + 70 + 20 / z * 0, k), z); }
     else zoomTo(540, 1010, 1);
   },

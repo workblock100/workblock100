@@ -208,6 +208,35 @@ def sfx_timelapse11():
     return norm6(out, .6)
 
 
+def _pip(f0, f1, d, seed):
+    """A bubble popping into a tiny, cheerful note: a sine that glides from f0 to f1 over its short life, its octave, and a flick of air at the start."""
+    t = tarr(d)
+    x = (osc("sine", np.linspace(f0, f1, len(t)), d) + .22 * osc("sine", np.linspace(f0, f1, len(t)) * 2, d)) * np.exp(-t / (d * .3)) * ar(d, .0015, d * .4)
+    flick = _burst(seed, .012, 1800, 6500, .003) * .5
+    x[:len(flick)] += flick
+    return x
+
+
+def sfx_pip():
+    """The silent speech bubble that says 'Sure!': a cheerful little pip, like a bubble pop with a slight upward pitch."""
+    return norm6(_pip(1500, 2250, .1, 4200), .7)
+
+
+def sfx_pip2():
+    """The same pip a little lower (about three semitones down): the second 'Sure!' in a beat."""
+    return norm6(_pip(1250, 1880, .105, 4201), .7)
+
+
+def sfx_pipdown():
+    """The last 'Sure!' of the lapse, deflated: the pip's pitch falls from 1450 to 420 Hz on a little wobble, with the air hissing out of it. 0.28 s."""
+    d = .28
+    t = tarr(d)
+    f = np.linspace(1450, 420, len(t)) * (1 + .035 * np.sin(2 * np.pi * 26 * t))
+    x = osc("sine", f, d) * np.exp(-t / .11) * ar(d, .002, .12)
+    x += lp(noise6(d, 4202), 2500) * np.exp(-t / .07) * .25
+    return norm6(x, .7)
+
+
 def sfx_purse():
     """A coin purse's kiss-lock clasp: a bright 'tik', a lighter 'tak', and the small hollow breath of a purse with nothing in it."""
     d = .3

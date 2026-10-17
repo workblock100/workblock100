@@ -441,10 +441,10 @@ DIPS11 = {"punchclock": (8, .3, .25), "stamp7": (6, .3, .25), "pop": (4, .12, .1
           "confetti": (3, .5, .3), "sparkle": (3, .4, .3), "trombone": (3, .8, .5), "flips": (4, .35, .2), "carddeal": (4, .8, .2), "sting": (8, .9, .5), "timelapse11": (3, 1.0, .4),
           "chaching9": (5, .4, .3), "whoosh2": (5, .35, .25), "scramble": (4, .8, .3), "boing": (4, .3, .2), "slowmo": (3, .5, .3), "vaultopen": (3, 1.0, .5), "goldrush": (3, 1.2, .6),
           "rumble": (2, 1.0, .5), "typing": (2, .8, .3), "moth": (3, 1.0, .3), "flicker": (3, .5, .2), "purse": (3, .15, .15), "clockdigit": (6, .1, .12), "clockding": (8, .45, .4),
-          "slowmolong": (2, 1.8, .4), "tick": (2, .3, .2)}   # not the chaos beat (a_call, klaxon, stampede ...): its score is already six dB down
+          "slowmolong": (2, 1.8, .4), "tick": (2, .3, .2), "pip": (3, .1, .1), "pip2": (3, .1, .1), "pipdown": (3, .2, .15)}   # not the chaos beat (a_call, klaxon, stampede ...): its score is already six dB down
 
 CUES = {"title": cue_title11, "arrival": cue_arrival11, "orient": cue_orient11, "floor": cue_floor11, "vault": cue_vault11, "exit": cue_exit11, "lot": cue_lot11, "end": cue_end7}
-LEVEL11 = {"arrival": 1.6, "orient": 1.75, "floor": .92, "vault": 1.5, "exit": .83, "lot": 1.25}   # per-scene trim, set from the measured stems (see the report)
+LEVEL11 = {"title": 1.25, "arrival": 1.6, "orient": 1.75, "floor": .92, "vault": 1.5, "exit": .83, "lot": 1.25}   # per-scene trim, set from the measured stems (see the report)
 
 
 def score(script, scenes, lines, N):

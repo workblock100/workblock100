@@ -283,6 +283,7 @@ const shotOf = lt => { let t0 = 0; for (const [n, e] of CUTS) { if (lt < e) retu
 // who is in focus in each shot (everyone else is a soft neighbor, drawn out of focus and left out of the audit)
 const CRISP = { cuA: ['ad'], cuA2: ['ad'], cuA5: ['ad'], cuA6: ['ad', 'sp'], think: ['ad'], cuS: ['sp'], cuS4: ['sp'], cuS5: ['sp'], cuS6: ['sp'], cuS7: ['sp'], hero: ['sp'], slam: ['ad'], two: ['ad'], whip: ['sp'], tower: [] };
 const BASE = { f: 1400, cy: 400, hy: 860, cz: -100 };
+const DOWN = [.12, .1];   // an arm hanging close to the body
 
 // ------------------------------------------------------------------ the office scene
 const OFFICE = {
@@ -297,7 +298,7 @@ const OFFICE = {
   },
   pulse(lt) {
     const ts = [wordT('a6', 'pizza', 18.83) - .02, wordT('a6', 'budget', 19.1) - .02]; let v = 0;
-    for (const t0 of ts) { const k = lt - t0; if (k > 0 && k < 1) v = Math.max(v, Math.exp(-k * 4) * (.5 + .5 * Math.cos(k * 17))); }
+    for (const t0 of ts) { const k = lt - t0; if (k > 0 && k < 1) v = Math.max(v, Math.exp(-k * 3.2) * (.6 + .4 * Math.cos(k * 16))); }
     return v;
   },
   glint(lt) { const w = wordT('a1', 'pen', 4.39); return Math.exp(-Math.abs(lt - w - .08) * 5) * .95 + .12 * (.5 + .5 * Math.sin(lt * 3)); },
@@ -343,9 +344,9 @@ const OFFICE = {
       ad.grip.r = [lerp(lerp(150, 98, bite), 190, pu), lerp(lerp(60, 34, bite), -10, pu)]; ad.mouthOpen = .55 * bite; ad.cheese = 1; ad.cheeseSag = 1.3;
     }
     // ---- Strawberry
-    const sp = person(straw, strawPath, lt, { stride: 40, acc: ['steth', 'badge7', 'bandage7'], look: [.7, .05], expr: 'neutral', lid: .3, arms: { l: 'rest', r: 'rest' }, hold: {}, grip: {}, hand: {}, id: 'straw', transit: lt < 2.4 || lt > T_OUT - .6 || (lt > 14.88 && lt < 15.3) });
+    const sp = person(straw, strawPath, lt, { stride: 40, acc: ['steth', 'badge7', 'bandage7'], look: [.7, .05], expr: 'neutral', lid: .3, arms: { l: DOWN, r: DOWN }, hold: {}, grip: {}, hand: {}, id: 'straw', transit: lt < 2.4 || lt > T_OUT - .6 || (lt > 14.88 && lt < 15.3) });
     const dist = pathDist(strawPath, lt), sw = [.28 + .35 * Math.sin(dist / 84 * PI), .25], sw2 = [.28 - .35 * Math.sin(dist / 84 * PI), .25];
-    if (lt < T_ARRIVE + .15) { sp.hold.r = 'letter10'; sp.grip.r = [120, 74]; sp.arms.r = 'hold'; sp.hand.r = 'grip'; sp.arms.l = walking ? sw : 'rest'; sp.lid = .2; }
+    if (lt < T_ARRIVE + .15) { sp.hold.r = 'letter10'; sp.grip.r = [120, 74]; sp.arms.r = 'hold'; sp.hand.r = 'grip'; sp.arms.l = walking ? sw : DOWN; sp.lid = .2; }
     if (lt < T_WALK) sp.look = [0, 0];
     if (lt >= T_ARRIVE && lt < 4.55) { sp.expr = 'dead'; sp.lid = .5; sp.look = [.8, .1]; }
     if (lt >= 4.55 && lt < 7.4) { sp.expr = 'dead'; sp.lid = .45; sp.look = [.8, .05]; }
@@ -358,7 +359,7 @@ const OFFICE = {
     if (lt >= 16.6 && lt < 18.37) { sp.expr = 'angry'; sp.lid = .25; sp.look = [.9, .1]; sp.arms.r = 'point'; sp.hand.r = 'point'; }
     if (lt >= 18.37 && lt < 20.02) { sp.expr = 'dead'; sp.lid = .55; sp.look = [.8, 0]; }
     if (lt >= 20.02 && lt < T_LEAVE) { const tt = wordT('s7', 'it', 20.47), cl = sk(lt, tt - .05, tt + .2); sp.expr = 'dead'; sp.lid = lerp(.55, 1, cl); sp.look = [.5, .2]; }
-    if (lt >= T_LEAVE) { sp.expr = 'dead'; sp.lid = lerp(1, .5, sk(lt, T_LEAVE, T_LEAVE + .2)); sp.look = [-.6, 0]; sp.arms = { l: walking ? sw : 'rest', r: walking ? sw2 : 'rest' }; }
+    if (lt >= T_LEAVE) { sp.expr = 'dead'; sp.lid = lerp(1, .5, sk(lt, T_LEAVE, T_LEAVE + .2)); sp.look = [-.6, 0]; sp.arms = { l: walking ? sw : DOWN, r: walking ? sw2 : DOWN }; }
     if (lt >= T_LEAVE + .3) sp.noFace = true;
     return { off, ad, sp, dist };
   },
@@ -374,13 +375,13 @@ const OFFICE = {
     CAM.shake = 0;
     const C = OFFICE.cast(lt), F = (o, z, up = 100, dx = 0) => { const [fx, fy] = faceC(o); zoomTo(fx + dx / z, fy + up / z, z); };
     switch (n) {
-      case 'wide': zoomTo(455, 900, 1.15); break;
+      case 'wide': zoomTo(492, 900, 1.15); break;
       case 'walk': { const o = C.sp; zoomTo(o.x + 10, o.y - 150 * o.s, lerp(1.85, 1.98, k)); } break;
       case 'letter': case 'stamp': case 'still': zoomTo(540, 960, 1); break;
-      case 'cuA': F(C.ad, lerp(1.7, 1.8, k), 130, -190); break;
+      case 'cuA': F(C.ad, lerp(1.7, 1.8, k), 130, -140); break;
       case 'cuS': F(C.sp, lerp(1.45, 1.6, k), 250, 190); break;
       case 'cuA2': F(C.ad, lerp(1.7, 1.78, k), 120); { const tt = wordT('a2', 'agency', 7.83); CAM.shake = 5 * Math.max(0, 1 - Math.abs(lt - tt - .06) * 6); } break;
-      case 'hero': F(C.sp, lerp(1.45, 1.55, k), -150); CAM.r = lerp(-.035, -.015, k); break;
+      case 'hero': F(C.sp, lerp(1.45, 1.55, k), -45); CAM.r = lerp(-.035, -.015, k); break;
       case 'think': F(C.ad, lerp(1.25, 1.38, k), 40, -40); break;
       case 'slam': zoomTo(780, 880, 1.15); CAM.shake = lt >= T_BOX1 ? 8 * Math.exp(-(lt - T_BOX1) * 9) : 0; break;
       case 'cuS4': F(C.sp, lerp(1.85, 1.95, k), 140); break;
@@ -390,9 +391,9 @@ const OFFICE = {
       case 'cuA5': { const c = C.off.at.chart(), o = C.ad, e = easeIO(seg(lt, 15.17, 15.62)), [fx, fy] = faceC(o); zoomTo(lerp(c[0] + 150, fx - 50, e), lerp(c[1] + 120, fy + 40, e), lerp(1.3, 1.5, e)); } break;
       case 'cuS6': F(C.sp, lerp(1.45, 1.55, k), 190, 250); break;
       case 'tower': { const t = C.off.at.towerTop(2), z = lerp(2.1, 2.25, k); zoomTo(t[0] - 40, t[1] - 40 + 190 / z, z); } break;
-      case 'cuA6': { const o = C.ad; zoomTo(484, o.y - 160 * o.s, lerp(1.0, 1.04, k)); } break;
+      case 'cuA6': { const o = C.ad; zoomTo(484, o.y - 160 * o.s + 140, lerp(1.0, 1.04, k)); } break;
       case 'cuS7': F(C.sp, lerp(1.8, 2.05, k), 110); break;
-      case 'end': zoomTo(455, 900, 1.15); break;
+      case 'end': zoomTo(492, 900, 1.15); break;
     }
   },
   draw(lt) {
@@ -413,7 +414,7 @@ const OFFICE = {
     if (only === 'sp') V2.dof(6, () => off.desk()); else off.desk();
     OFFICE.deskExtras(lt, C);
     lightFor('sp');
-    if (only === 'ad') V2.dof(n === 'slam' || n === 'two' ? 14 : 11, () => off.visitor()); else off.visitor();
+    if (only !== 'ad') off.visitor();   /* in his close-ups the low chair would be a big blur in the foreground corner */
     // Strawberry: while she is behind the wall plane (the hall) she is only visible through the open part of the doorway
     const dr = off.layout.door, zb = off.layout.zb, behind = C.sp.z > 0 ? false : false;
     const Zs = strawPath(lt)[1], hall = Zs > zb - 8;
@@ -452,6 +453,8 @@ const OFFICE = {
       for (let i = -9; i <= 9; i++) { const x = i * 150 + 20 * Math.sin(lt * .6 + i); ctx.fillStyle = V2.grad(x, -1300, x, 1300, [[0, 'rgba(255,238,190,0)'], [.5, 'rgba(255,238,190,.2)'], [1, 'rgba(255,238,190,0)']]); ctx.fillRect(x - 38, -1300, 76, 2600); }
       ctx.restore();
     }
+    // the FY BUDGET chart: a warm glow and a ring on each pulse
+    { const pv = OFFICE.pulse(lt); if (pv > .02 && (n === 'cuA6' || n === 'cuA5')) { const c = off.at.chart(), kc = kz(off.layout.zb); V2.glow(c[0], c[1], 300 * kc, '255,232,150', .5 * pv, 'screen', .8); const k2 = ((lt - (wordT('a6', 'pizza', 18.83) - .02)) % .27) / .27; V2.ring(c[0], c[1], clamp(k2), { r0: 60 * kc, r1: 300 * kc, lw: 8, color: '255,236,160', alpha: .8 * pv, bloom: .2 }); } }
     // the exhale
     if (n === 'cuS7') {
       const o = C.sp, kd = KINDS[o.kind], yc = o.y - (o.lift || 0) - ((o.noLegs ? 0 : (kd.leg || 90)) + kd.ry * .9) * o.s, tt = wordT('s7', 'is', 20.62) - .02;
@@ -474,7 +477,7 @@ const OFFICE = {
     const t1 = wordT('s2', 'eighteen', 6.0) - .02, k = lt - t1;
     if (k > 0 && k < 1.5 && lt < 7.4) {
       const e = easeOut(seg(k, 0, .14)), f = 1 - seg(k, 1.15, 1.5), sc = lerp(1.4, 1, e);
-      ctx.save(); ctx.globalAlpha *= f; ctx.translate(700, 330); ctx.rotate(-.07); ctx.scale(sc, sc);
+      ctx.save(); ctx.globalAlpha *= f; ctx.translate(730, 292); ctx.rotate(-.07); ctx.scale(sc, sc);
       text('$118/HR', 0, 0, { size: 132, font: 'Bangers', weight: 400, fill: '#ffe135', lw: 18, stroke: '#150f22', spacing: 3, shadow: 18 });
       ctx.restore();
     }
@@ -494,7 +497,7 @@ function sigh(x, y, k, s) {
   if (k < 0 || k > 1.7) return;
   for (let i = 0; i < 3; i++) {
     const a = (k - i * .2) / 1.15; if (a <= 0 || a >= 1) continue;
-    const px = x + (26 + 60 * a + i * 34) * s, py = y + (14 + 120 * a + i * 12) * s, r = (16 + 30 * a) * s, al = Math.min(1, a * 5) * (1 - a) * .95;
+    const px = x - (30 + 64 * a + i * 36) * s, py = y + (16 + 120 * a + i * 12) * s, r = (20 + 36 * a) * s, al = Math.min(1, a * 5) * (1 - a) * .95;
     ctx.save(); ctx.globalAlpha *= al; ctx.translate(px, py);
     for (const [dx, dy, rr0] of [[-.55, .1, .62], [.1, -.3, .85], [.7, .15, .6], [0, .35, .7]]) { ctx.fillStyle = INK; ell(dx * r, dy * r, rr0 * r + 3.4, rr0 * r + 3.4); ctx.fill(); }
     for (const [dx, dy, rr0] of [[-.55, .1, .62], [.1, -.3, .85], [.7, .15, .6], [0, .35, .7]]) { ctx.fillStyle = '#eef3ff'; ell(dx * r, dy * r, rr0 * r, rr0 * r); ctx.fill(); }
@@ -660,8 +663,8 @@ function flyItem(it, k) {
 }
 const TOTE_MOUTH = [330, 1210];
 const ITEM_LIST = [
-  { id: 'badge', to: [200, 560], a: .25, w: 1 }, { id: 'keys', to: [470, 470], a: -.55, w: 1 }, { id: 'light', to: [270, 880], a: 1.25, w: 1 }, { id: 'scissors', to: [510, 800], a: .7, w: 1 },
-  { id: 'glove', to: [150, 1090], a: -.3, w: 2 }, { id: 'lanyard', to: [470, 1080], a: .9, w: 2 }, { id: 'steth', to: [330, 700], a: .15, w: 2 }, { id: 'pop', to: [150, 270], a: 2.2, w: 2 }].map((it, i) => {
+  { id: 'badge', to: [225, 620], a: .25, w: 1 }, { id: 'keys', to: [470, 470], a: -.55, w: 1 }, { id: 'light', to: [270, 880], a: 1.25, w: 1 }, { id: 'scissors', to: [510, 800], a: .7, w: 1 },
+  { id: 'glove', to: [150, 1090], a: -.3, w: 2 }, { id: 'lanyard', to: [470, 1080], a: .9, w: 2 }, { id: 'steth', to: [330, 700], a: .15, w: 2 }, { id: 'pop', to: [175, 370], a: .6, w: 2 }].map((it, i) => {
   const wave = it.w === 1 ? 16.15 : 16.55, off = hash(i * 7 + 3);
   return Object.assign(it, { tL: wave + (i % 4) * .012, from: [TOTE_MOUTH[0] + (hash(i + 1) - .5) * 60, TOTE_MOUTH[1] - 20], land: [it.to[0] + (hash(i + 20) - .5) * 70, it.to[1] + 36 + off * 30], a0: (hash(i + 5) - .5) * 4, a1: it.a + (hash(i + 9) - .5) * 1.4, a2: it.a });
 });
@@ -746,7 +749,7 @@ function stampTool(x, y, rot, w, h, down, lift) {
   ctx.restore();
 }
 // the form insert: the clipboard on the desk, framed on one question (view: z, cy, sy), with her pen hand and his marker hand
-const FORM_Q = { q1: { z: 1.3, cx: 70, cy: -210, sy: 760 }, q2: { z: 1.3, cx: 0, cy: -10, sy: 780 }, q3: { z: 1.3, cx: 60, cy: 250, sy: 720 }, all: { z: 1.0, cx: 0, cy: 70, sy: 800 } };
+const FORM_Q = { q1: { z: 1.3, cx: 70, cy: -210, sy: 760 }, q2: { z: 1.3, cx: 0, cy: -10, sy: 780 }, q3: { z: 1.3, cx: 60, cy: 250, sy: 880 }, all: { z: 1.0, cx: 0, cy: 70, sy: 800 } };
 function insForm(lt, view) {
   deskTop();
   const S = { tick: seg(lt, 3.44, 3.56), money1: seg(lt, 3.5, 3.97), money2: seg(lt, 5.47, 6.25), asag: seg(lt, 8.66, 9.49), circle: seg(lt, 9.86, 10.42), na: lt >= 10.56 ? clamp((lt - 10.56) * 14) : 0, done: lt >= 13.01 ? clamp((lt - 13.01) * 14) : 0 };
@@ -802,22 +805,22 @@ const EXIT = {
     // ---- the Administrator
     const ad = off.admin({ look: [-.6, .1], expr: 'neutral', hold: {}, grip: {}, hand: {}, arms: { l: 'rest', r: 'rest' } });
     const clip = lt < 2.15;
-    if (clip) { ad.hold.l = 'clipboard6'; ad.clipText = '27-B'; ad.arms.l = 'hold'; ad.grip.l = [lerp(-134, -190, sk(lt, 1.85, 2.15)), lerp(44, 10, sk(lt, 1.85, 2.15))]; ad.hand.l = 'grip'; ad.look = lt < 1.2 ? [-.2, .8] : [-.55, .2]; ad.expr = 'neutral'; }
+    if (clip) { ad.hold.l = 'clipboard6'; ad.clipText = '27-B'; ad.arms.l = 'hold'; ad.grip.l = [lerp(-134, -156, sk(lt, 1.85, 2.15)), lerp(44, 30, sk(lt, 1.85, 2.15))]; ad.hand.l = 'grip'; ad.look = lt < 1.2 ? [-.2, .8] : [-.55, .2]; ad.expr = 'neutral'; }
     if (lt >= 1.2 && lt < 4.25) ad.expr = 'neutral';
     if (lt >= 4.25 && lt < 5.47) { ad.expr = 'neutral'; ad.look = [-.6, .1]; ad.browUp = 4; }
     if (lt >= 6.36 && lt < 8.4) { ad.expr = 'happy'; ad.look = [-.6, -.05]; ad.arms = { l: 'rest', r: 'rest' }; }
     if (lt >= 9.79 && lt < 11.2) { ad.expr = 'sour'; ad.look = [-.7, .1]; }
     if (lt >= 12.8 && lt < 13.76) { ad.expr = 'smug'; ad.look = [-.5, .5]; }
-    if (lt >= 13.73 && lt < 15.7) { ad.expr = 'neutral'; ad.look = [-.7, 0]; ad.arms.l = [1.1, .5]; ad.hand.l = 'flat'; ad.browUp = 3; }
+    if (lt >= 13.73 && lt < 15.7) { ad.expr = 'neutral'; ad.look = [-.7, 0]; ad.arms.l = 'hold'; ad.grip.l = [-222, 24]; ad.hand.l = 'flat'; ad.browUp = 3; }
     if (lt >= 15.7 && lt < 17.4) { ad.expr = 'neutral'; ad.look = [-.5, .6]; }
-    if (lt >= 17.35 && lt < 18.3) { ad.expr = 'angry'; ad.look = [-.8, 0]; ad.arms.l = [1.15, .35]; ad.hand.l = 'flat'; }
-    if (lt >= 18.3 && lt < 19.27) { ad.expr = 'neutral'; ad.look = [-.8, 0]; ad.arms.l = [1.15, .35]; ad.hand.l = 'flat'; }
-    if (lt >= 19.27 && lt < 20.3) { ad.expr = 'smug'; ad.look = [-.7, 0]; ad.arms = { l: [1.9, .8], r: [1.9, .8] }; ad.hand = { l: 'open', r: 'open' }; }
+    if (lt >= 17.35 && lt < 18.3) { ad.expr = 'angry'; ad.look = [-.8, 0]; ad.arms.l = 'hold'; ad.grip.l = [-224, 22]; ad.hand.l = 'flat'; }
+    if (lt >= 18.3 && lt < 19.27) { ad.expr = 'neutral'; ad.look = [-.8, 0]; ad.arms.l = 'hold'; ad.grip.l = [-224, 22]; ad.hand.l = 'flat'; }
+    if (lt >= 19.27 && lt < 20.3) { ad.expr = 'smug'; ad.look = [-.7, 0]; ad.arms = { l: 'hold', r: 'hold' }; ad.grip = { l: [-206, -8], r: [206, -8] }; ad.hand = { l: 'open', r: 'open' }; }
     if (lt >= 20.3 && lt < 21.7) { ad.expr = 'neutral'; ad.look = [-.8, 0]; ad.arms = { l: 'rest', r: 'rest' }; }
-    if (lt >= 21.7) { ad.expr = lt < 22.25 ? 'neutral' : lt < 22.95 ? 'shock' : 'dead'; ad.look = lt < 22.25 ? [-.8, .3] : lerpA([-.8, .3], [-.9, .75], sk(lt, 22.25, 22.5)); ad.arms.l = lt < 22.9 ? [1.15, .35] : 'rest'; ad.hand.l = 'flat'; if (lt >= 22.9) ad.lid = .6; }
+    if (lt >= 21.7) { ad.expr = lt < 22.25 ? 'neutral' : lt < 22.95 ? 'shock' : 'dead'; ad.look = lt < 22.25 ? [-.8, .3] : lerpA([-.8, .3], [-.9, .75], sk(lt, 22.25, 22.5)); if (lt < 22.9) { ad.arms.l = 'hold'; ad.grip.l = [-224, 22]; } ad.hand.l = 'flat'; if (lt >= 22.9) ad.lid = .6; }
     // ---- Strawberry, seated in the low chair, the tote on her lap
-    const sp = off.guest(straw, { look: [.8, -.1], expr: 'dead', lid: .45, hold: {}, grip: {}, hand: {}, arms: { l: 'rest', r: 'rest' }, id: 'straw', acc: ['steth', 'badge7', 'bandage7'] });
-    if (lt < 16.9) { sp.hold.l = 'tote9'; sp.arms.l = 'hold'; sp.grip.l = [-86, 74]; sp.hand.l = 'grip'; sp.arms.r = 'hold'; sp.grip.r = [70, 80]; sp.hand.r = 'open'; }
+    const sp = off.guest(straw, { look: [.8, -.1], expr: 'dead', lid: .45, hold: {}, grip: {}, hand: {}, arms: { l: DOWN, r: DOWN }, id: 'straw', acc: ['steth', 'badge7', 'bandage7'] });
+    if (lt < 16.9) { sp.hold.l = 'tote9'; sp.arms.l = 'hold'; sp.grip.l = [-86, 98]; sp.hand.l = 'grip'; sp.arms.r = 'hold'; sp.grip.r = [70, 80]; sp.hand.r = 'open'; }
     if (lt >= 3.4 && lt < 4.3) sp.lid = .35;
     if (lt >= 6.36 && lt < 8.7) { sp.expr = 'dead'; sp.lid = .5; sp.look = [.7, .2]; }
     if (lt >= 8.66 && lt < 9.8) { sp.expr = 'smug'; sp.lid = .4; }
@@ -828,7 +831,7 @@ const EXIT = {
     if (lt >= 17.85 && lt < 21.62) { sp.hold.r = 'pen9'; sp.arms.r = 'hold'; sp.hand.r = 'grip'; sp.grip.r = lt < 18.15 ? [lerp(70, 104, pt), lerp(-118, 6, pt)] : [lerp(104, 96, pl), lerp(6, 28, pl)]; sp.look = [.6, .1]; }
     if (lt >= 18.19 && lt < 19.27) { sp.expr = 'sad'; sp.lid = .3; }
     if (lt >= 20.24 && lt < 21.7) { sp.expr = 'sad'; sp.lid = .2; sp.look = [.3, .5]; }
-    if (lt >= 21.62) { sp.expr = 'dead'; sp.lid = .55; sp.look = [.8, 0]; sp.arms = { l: 'rest', r: 'rest' }; }
+    if (lt >= 21.62) { sp.expr = 'dead'; sp.lid = .55; sp.look = [.8, 0]; sp.arms = { l: DOWN, r: DOWN }; }
     return { off, ad, sp };
   },
   cam(lt) {
@@ -844,18 +847,18 @@ const EXIT = {
     const C = EXIT.cast(lt), F = (o, z, up = 100, dx = 0) => { const [fx, fy] = faceC(o); zoomTo(fx + dx / z, fy + up / z, z); };
     switch (n) {
       case 'open': zoomTo(620, 900, 1.2); break;
-      case 'cuA1': F(C.ad, lerp(1.6, 1.72, k), 120, 70); break;
+      case 'cuA1': F(C.ad, lerp(1.6, 1.72, k), 120, 40); break;
       case 'cuA2': F(C.ad, lerp(1.75, 1.88, k), 120, 120); break;
       case 'cuA3': F(C.ad, lerp(1.7, 1.85, k), 120, 130); break;
       case 'cuS4': F(C.sp, lerp(1.65, 1.8, k), 150, 70); break;
-      case 'cuA5': F(C.ad, lerp(1.55, 1.68, k), 110, 110); break;
+      case 'cuA5': F(C.ad, lerp(1.4, 1.5, k), 110, 60); break;
       case 'cuS5': F(C.sp, lerp(1.6, 1.7, k), 160, 70); break;
-      case 'cuA6': F(C.ad, lerp(1.8, 1.95, k), 120, 100); break;
+      case 'cuA6': F(C.ad, lerp(1.45, 1.55, k), 120, 60); break;
       case 'cuS6': F(C.sp, lerp(1.7, 1.82, k), 150, 150); break;
-      case 'cuA7': F(C.ad, lerp(1.7, 1.8, k), 120, 120); break;
+      case 'cuA7': F(C.ad, lerp(1.5, 1.6, k), 120, 60); break;
       case 'cuS7': F(C.sp, lerp(1.75, 1.95, k), 140, 60); break;
-      case 'bin': zoomTo(670, 1010, lerp(1.5, 1.62, k)); CAM.shake = lt >= 22.25 ? 6 * Math.exp(-(lt - 22.25) * 10) : 0; break;
-      case 'cuA8': F(C.ad, lerp(1.6, 1.7, k), 120, 110); break;
+      case 'bin': zoomTo(770, 1030, lerp(2.0, 2.3, k)); CAM.shake = lt >= 22.25 ? 6 * Math.exp(-(lt - 22.25) * 10) : 0; break;
+      case 'cuA8': F(C.ad, lerp(1.45, 1.55, k), 120, 60); break;
       case 'end': zoomTo(620, 900, 1.15); break;
     }
   },
@@ -871,24 +874,25 @@ const EXIT = {
     V2.opts.reflect = false;
     V2.dof(A || S ? 7 : n === 'bin' ? 6 : 0, () => { off.back(); off.sunFloor(); });
     off.setLight({ shadowLong: .45 });
-    (S ? nbr : drawChar)(C.ad);
+    (S || n === 'bin' ? nbr : drawChar)(C.ad);
     if (!S && lt > .3 && lt < .8 && C.ad.hold.l) {   // the page he flips over the top of the clipboard (the paper rustle at 0.30)
       const o = C.ad, kd = KINDS[o.kind], g = o.grip.l, a = easeIO(seg(lt, .3, .62)) * PI, hx = o.x + (g[0] - 44) * o.s, hy = o.y - (o.lift || 0) - .9 * kd.ry * o.s + (g[1] - 126) * o.s;
       ctx.save(); ctx.translate(hx, hy); ctx.globalAlpha *= 1 - seg(lt, .62, .8); ctx.scale(1, Math.cos(a)); ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = INK; ctx.lineWidth = 3 * o.s; rr(-40 * o.s, 0, 80 * o.s, 104 * o.s, 4 * o.s); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(30,63,168,.5)'; for (let i = 0; i < 5; i++) ctx.fillRect(-30 * o.s, (14 + i * 14) * o.s, (60 - (i % 3) * 14) * o.s, 3 * o.s); ctx.restore();
     }
     if (S) V2.dof(6, () => off.desk()); else off.desk();
-    EXIT.binPen(lt, C, 'behind');
+    if (lt >= 22.25) EXIT.binPen(lt, C);   /* landed: the pen stands in the basket, behind whoever sits in front of it */
     off.setLight({ shadowLong: .55 });
     off.visitor('back'); sitLegs(off);
-    (A ? nbr : drawChar)(C.sp);
+    (A || n === 'bin' ? nbr : drawChar)(C.sp);
     off.visitor('front');
     off.coat();
-    EXIT.binPen(lt, C, 'front');
+    if (lt < 22.25) EXIT.binPen(lt, C);   /* still falling: in front of everything */
+    EXIT.binFx(lt, C);
     off.over();
   },
   // the pen's last trip, in the world: off the desk's left edge, into the wastebasket (it lands at 22.25, the sting), and stays there with the two other resignations
-  binPen(lt, C, layer) {
-    if (lt < 22.0 || layer !== 'front') return;
+  binPen(lt, C) {
+    if (lt < 22.0) return;
     const off = C.off, bin = off.layout.bin, d = off.layout.desk, T0 = 22.05, T1 = 22.25;
     const u = clamp((lt - T0) / (T1 - T0)), land = lt >= T1;
     const X = lerp(d.x0 - 8, bin.x + 6, u), Y = lerp(d.top + 4, bin.top + 8, u * u) + 40 * u * (1 - u) * 0, ang = land ? -.3 + .04 * Math.exp(-(lt - T1) * 9) * Math.sin((lt - T1) * 40) : lerp(-.1, 2.9, easeOut(u));
@@ -900,7 +904,12 @@ const EXIT = {
     ctx.fillStyle = '#2a6fdb'; ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.lineJoin = 'round'; rr(-6, -L, 15, L, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#eef1f7'; rr(-6, -L, 15, 38, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#c8ced8'; rr(5, -L + 8, 5, 52, 2); ctx.fill();
     ctx.fillStyle = '#c0c6cf'; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(9, 0); ctx.lineTo(1.5, 16); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.restore();
-    if (land) { const kk = (lt - T1) / .5; if (kk > 0 && kk < 1) V2.ring(...V2.p2(bin.x + 6, bin.top + 6, bin.z), kk, { r0: 20, r1: 190 * k, lw: 7, color: '255,244,200', alpha: .95, bloom: .4 }); star(...V2.p2(bin.x + 8, bin.top + 150, bin.z), 40 * k * Math.exp(-(lt - T1) * 4), Math.exp(-(lt - T1) * 4), '255,248,214'); }
+  },
+  // the clink: a ring on the rim and a glint on the pen's end
+  binFx(lt, C) {
+    const off = C.off, bin = off.layout.bin, k = kz(bin.z), T1 = 22.25, kk = (lt - T1) / .5;
+    if (kk > 0 && kk < 1) V2.ring(...V2.p2(bin.x + 6, bin.top + 6, bin.z), kk, { r0: 20, r1: 190 * k, lw: 7, color: '255,244,200', alpha: .95, bloom: .4 });
+    if (lt >= T1 && lt < T1 + .9) star(...V2.p2(bin.x + 8, bin.top + 150, bin.z), 40 * k * Math.exp(-(lt - T1) * 4), Math.exp(-(lt - T1) * 4), '255,248,214');
   },
   fx(lt) {
     const n = exShot(lt).n;

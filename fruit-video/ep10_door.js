@@ -1,17 +1,19 @@
 'use strict';
 /* SHIFT HAPPENS, Episode 10: Two Weeks' Notice. Scenes `door` (11:00 PM, THE FRONT DOOR) and `lot` (11:00 PM, THE PARKING LOT), registered on window.__EP10_SCENES.
  *
- * door (11.0 s): the Episode 9 welcome lobby (red carpet, stanchions, the banner) re-lit as a farewell: warm lamps inside, cold night glass outside. A V of staff lines the aisle (Mango and Mrs. Cranberry in front, Lemon and
- *   Clementine behind, Banana and Pineapple soft at the back); the Administrator and Strawberry stand at the mouth of the aisle, 370 units from the doors.
- *   0.00 to 1.28  open   a macro of the wall clock, its second hand snapping to 11:00:00 on the tick cue (0.20); then a pull-back (2D zoom 7x to 0.92x, with a rack of light) to the wide: the banner (Persimmon's, taped over) hangs above the glass
+ * door (11.0 s): the Episode 9 welcome lobby (red carpet, stanchions, the banner) re-lit as a farewell: warm lamps inside, cold night glass outside. A V of staff lines the aisle (Mango and Mrs. Cranberry in front, Lemon
+ *   behind them, Banana and Pineapple soft at the back); the Administrator and Strawberry stand at the mouth of the aisle, 300 units from the doors, under a long lens (f 2100) that stacks the line-up into the frame.
+ *   0.00 to 1.28  open   a macro of the wall clock, its second hand snapping to 11:00:00 on the tick cue (0.20); then a pull-back (2D zoom 8x to 0.96x) to the wide: the banner (Persimmon's, taped over) hangs above the glass
  *   1.28 to 2.16  two    two-shot, "Your final paycheck." The envelope changes hands on the word (1.99)
  *   2.16 to 4.85  stub   insert: a receipt printer; the pay stub rises out of it a line at a time. CAKE prints on "cake" (3.21), BANNER on "banner" (4.22), the NET PAY $4.17 slaps in at 4.50
  *   4.85 to 6.32  cuS    Strawberry reads it: "That's Persimmon's banner."
  *   6.32 to 7.78  cuA    the Administrator, thumb up, "We're reusing it."; the camera tilts up and the focus racks to the banner behind him (the proof)
  *   7.78 to 9.22  two2   "Thank you for your service!" a salute, and Strawberry's turn (a squeeze through the profile, then her back to us)
- *   9.22 to 11.0  out    wide, a slow dolly: the staff clap (cheer9 0.20 -> 9.46), the doors slide on the cue (slidedoor 0.10 -> 9.36), cold light spills across the carpet, Strawberry walks into it as a silhouette with a long shadow;
- *                        the doors close behind her on the Administrator's wave and the picture goes to black.
- * Every world position is (X, Z) through V2.at(X, Z) (X right, Z forward); camera, cuts and clock are functions of lt only. */
+ *   9.22 to 11.0  out    wide, a slow dolly: the staff clap (cheer9 0.20 -> 9.46), the doors slide on the cue (slidedoor 0.10 -> 9.36) and the doorway blows out to cold white; Strawberry walks into it, her body colours
+ *                        fading to a night-violet silhouette with a long dark shadow down the carpet; the doors close behind her on the Administrator's wave and the picture goes to black.
+ * Every world position is (X, Z) through V2.at(X, Z) (X right, Z forward); camera, cuts and clock are functions of lt only.
+ *
+ * lot (11.45 s): see the block comment above `LF` below. */
 (() => {
 if (!window.TIMELINE_EP10) return;
 const { person, runner, zoomTo, faceC, drawBg, inB, localOf, confetti } = window.H6;
@@ -348,7 +350,7 @@ function burst(lt, t0, side, n = 70) {
 // Mango and Mrs. Cranberry at the front of the funnel, Lemon inside Mango, the principals at the apex (250 units from the glass); Clementine, Banana and Pineapple soft behind
 const CAMB = { f: 2100, cy: 360, hy: 860 }, CZ0 = -1100;
 const ST = .9;   // the staff stand a little smaller than the principals, so the funnel fits the frame without anyone standing on anyone's face
-const POS = { mango: [-440, 1000], cran: [345, 1000], lemon: [240, 1250], admin: [-250, 1450], straw: [85, 1450], banana: [400, 1580], pine: [-390, 1520] };
+const POS = { mango: [-420, 1000], cran: [345, 1000], lemon: [240, 1250], admin: [-250, 1450], straw: [85, 1450], banana: [400, 1580], pine: [-390, 1520] };
 const T_TURN = 8.7, T_WALK = 9.0, T_DOOR = 10.35, T_CLAP = 9.42;   // Strawberry turns, walks, reaches the glass; the staff start to clap
 const SP = route([[0, ...POS.straw], [T_WALK, ...POS.straw], [T_WALK + .3, 15, 1480, 'io'], [T_DOOR, 15, ZB + 4], [T_DOOR + .55, 15, ZB + 160]]);
 const D = {};
@@ -388,13 +390,14 @@ D.cast = lt => {
   const mg = mango(Object.assign(q('mango'), { s: q('mango').s * ST, id: 'mango', expr: lt >= T_CLAP ? 'happy' : 'sad', look: lt >= b('out').s ? [.5, -.15] : [.6, 0], arms: { l: 'rest', r: 'rest' }, lift: hop * .6, transit: tr }));
   const lm = lemon(Object.assign(q('lemon'), { s: q('lemon').s * ST, id: 'lemon', expr: 'neutral', look: lt >= b('out').s ? [-.4, -.1] : [-.55, 0], grip: { l: [-16, 78], r: [16, 78] }, hand: { l: 'grip', r: 'grip' }, arms: { l: 'hold', r: 'hold' }, transit: tr }));   // hands folded in front of her: formal, and nothing tall beside her face
   const qc = q('cran'), cr = cran({ x: qc.x, y: qc.y - 118 * qc.s * ST, s: qc.s * ST, id: 'cran', noLegs: true, noShadow: true, noReflect: true, expr: 'happy', look: lt >= b('out').s ? [-.5, -.2] : [-.6, 0], arms: { l: 'rest', r: 'rest' }, transit: tr });
+  if (!clap) { mg.grip = { l: [-24, 82], r: [24, 82] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'grip', r: 'grip' }; }   // before the applause his hands are folded in front of him: sad, and inside the frame
   if (clap) {
-    mg.grip = { l: [-lerp(8, 56, cp), 74], r: [lerp(8, 56, cp), 74] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'flat', r: 'flat' };
+    mg.grip = { l: [-lerp(8, 38, cp), 74], r: [lerp(8, 56, cp), 74] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'flat', r: 'flat' };
     cr.grip = { l: [-lerp(6, 46, cp), 54], r: [lerp(6, 46, cp), 54] }; cr.arms = { l: 'hold', r: 'hold' }; cr.hand = { l: 'flat', r: 'flat' };
     { const lc = .5 + .5 * Math.sin(lt * 7); lm.hand = {}; lm.grip = { l: [-lerp(16, 34, lc), 72], r: [lerp(16, 34, lc), 72] }; lm.arms = { l: 'hold', r: 'hold' }; lm.hand = { l: 'flat', r: 'flat' }; }   // a slow, small, entirely sincere golf clap
   }
-  const bn = banana(Object.assign(q('banana'), { s: q('banana').s * ST, id: 'banana', expr: 'happy', look: lt >= b('out').s ? [-.35, -.2] : [-.5, 0], transit: tr, arms: clap ? { l: 'cheer', r: 'wave' } : { l: 'rest', r: 'rest' }, lift: clap ? hop * .8 : 0 }));
-  const pn = pine(Object.assign(q('pine'), { id: 'pine', who: null, acc: [], expr: 'happy', look: [.5, 0], arms: clap ? { l: 'wave', r: 'cheer' } : { l: 'rest', r: 'rest' }, lift: clap ? hop : 0 }));
+  const bn = banana(Object.assign(q('banana'), { s: q('banana').s * ST, id: 'banana', noFace: true, expr: 'happy', look: lt >= b('out').s ? [-.35, -.2] : [-.5, 0], transit: tr, arms: clap ? { l: 'cheer', r: 'wave' } : { l: 'rest', r: 'rest' }, lift: clap ? hop * .8 : 0 }));
+  const pn = pine(Object.assign(q('pine'), { id: 'pine', who: null, noFace: true, acc: [], expr: 'happy', look: [.5, 0], arms: clap ? { l: 'wave', r: 'cheer' } : { l: 'rest', r: 'rest' }, lift: clap ? hop : 0 }));
   return { adm, sp, mg, lm, cr, bn, pn, qc, M, hT };
 };
 
@@ -418,18 +421,18 @@ D.cam = function (lt) {
 
 D.draw = function (lt) {
   const b = id => B(id), sh = D.shot(lt), c = D.cast(lt), open = D.open(lt), cold = D.cold(lt), S0 = D.S0(lt);
-  const rig = back => {   // warm key, cool rim from the glass; a backlit variant for the walk into the night
-    V2.setLight(Object.assign({ key: [-.35, -.8], keyColor: '#ffe3b8', keyA: .26, rim: '#8fb8ff', rimA: .5, shadow: '#1a1030', shadowA: .42, amb: '#ffd9b0', ambA: .07, bounce: '#ffcf99', bounceA: .2 }, back ? { back: { color: '190,222,255', a: .9, w: 24 }, frontDark: .78, shadow: '#070a24', shadowA: .6, shadowLong: 1.1 } : {}));
+  const rig = back => {   // warm key, cool rim from the glass; back (0..1) blends in the backlit variant for the walk into the night (the light, the dark face and the long shadow come up together)
+    V2.setLight(Object.assign({ key: [-.35, -.8], keyColor: '#ffe3b8', keyA: .26, rim: '#8fb8ff', rimA: .5, shadow: '#1a1030', shadowA: .42, amb: '#ffd9b0', ambA: .07, bounce: '#ffcf99', bounceA: .2 }, back > 0 ? { back: { color: '190,222,255', a: .9 * back, w: 24 }, frontDark: .78 * back, shadow: '#070a24', shadowA: lerp(.42, .6, back), shadowLong: 1.1 * back } : {}));
     V2.addLight({ x: 540, y: 960, r: 1000, color: '150,196,255', a: .16 + .26 * open });
   };
   V2.opts.reflect = true;
   const lobbyArgs = { t: lt + 3, open, cold, S0 };
-  if (sh === 'stub') { rig(false); insStub(lt, () => { const L = lobby(lobbyArgs); L.glass(); }); return; }
+  if (sh === 'stub') { rig(0); insStub(lt, () => { const L = lobby(lobbyArgs); L.glass(); }); return; }
   const focus = { two: ['adm', 'sp'], two2: ['adm', 'sp'], cuS: ['sp'], cuA: ['adm'] }[sh] || null, wide = !focus;
   const rack = ez(lt, 6.8, 7.3), blurPx = { two: 5, two2: 5, cuS: 8, cuA: lerp(8, 0, rack) }[sh] || 0;
-  let L; V2.dof(blurPx, () => { L = lobby(lobbyArgs); if (!wide) L.glass(); });
+  let L; if (blurPx >= 3) REG.suppress++; V2.dof(blurPx, () => { L = lobby(lobbyArgs); if (!wide) L.glass(); }); if (blurPx >= 3) REG.suppress--;   // a soft background is out of focus: its set text is not audited
   burst(lt, 9.46, 1, 64); burst(lt, 9.5, -1, 64);
-  rig(false);
+  rig(0);
   // the cast, far to near. Background fruit are always soft (a long lens) and never audited; in a close-up everything nearer than the subject is simply left out of the frame
   const softPx = wide ? 3 : 9, soft = o => V2.dof(softPx, () => drawBg(o));
   const items = [
@@ -437,7 +440,7 @@ D.draw = function (lt) {
     { z: POS.lemon[1], id: 'lm', main: true, draw: () => drawChar(c.lm) }, { z: POS.mango[1], id: 'mg', main: true, draw: () => drawChar(c.mg) },
     { z: POS.cran[1], id: 'cr', main: true, draw: () => { const q = c.qc; S7.wheelchairBack(q.x, q.y, q.s * ST); drawChar(c.cr); S7.wheelchairFront(q.x, q.y, q.s * ST); } },
     { z: POS.admin[1], id: 'adm', main: true, draw: () => (focus && focus.includes('adm') && sh === 'cuA' && rack > .55 ? soft : drawChar)(c.adm) },
-    { z: SP(lt)[1], id: 'sp', main: true, draw: () => { if (c.sp.noFace && lt >= T_WALK) { rig(true); drawChar(c.sp); rig(false); } else drawChar(c.sp); } },
+    { z: SP(lt)[1], id: 'sp', main: true, draw: () => { const bk = ez(lt, T_TURN + .15, T_WALK + .25); if (c.sp.noFace && bk > 0) { rig(bk); drawChar(c.sp); rig(0); } else drawChar(c.sp); } },
   ];
   if (wide) items.push({ z: ZB, id: 'glass', main: true, draw: () => L.glass() });
   const zf = focus ? Math.min(...items.filter(it => focus.includes(it.id)).map(it => it.z)) : 0;
@@ -601,7 +604,7 @@ function lotSet(o = {}) {
   for (const [X, Z] of LAMPS) mirror(X, Z, () => lamp(X, Z, { on: 1 }));
   mirror(-900, 2060, () => car10(-900, 2060, { color: '#2c8f9a', brake: .12 })); mirror(940, 2180, () => car10(940, 2180, { color: '#8a2d46', brake: .12, w: 160 }));
   mirror(CAR[0], CAR[1], () => car10(CAR[0], CAR[1], { color: '#e0883a', brake: o.carBrake ?? .1, w: CARW }));
-  if (o.vanX != null) mirror(o.vanX, 2040, () => van(o.vanX, 2040, t, { lights: o.vanLights ?? 1, brake: o.vanBrake ?? .3 }));
+  if (o.vanX != null) { const entering = p2(o.vanX - 330, 0, 2040)[0] < 40; mirror(o.vanX, 2040, () => { if (entering) REG.suppress++; van(o.vanX, 2040, t, { lights: o.vanLights ?? 1, brake: o.vanBrake ?? .3 }); if (entering) REG.suppress--; }); }
 }
 
 // ------------------------------------------------------------------ the SHIFTGO phone: lock screen, the notification growing into a job card, then BOOKED (the Episode 9 app, a night later)
@@ -756,7 +759,7 @@ LT.draw = function (lt) {
   }
   // the lot in the world
   const close = sh === 'cuS1' || sh === 'cuS2';
-  V2.dof(close ? 9 : 0, () => lotSet({ t: lt + 5, vanX: LT.vanX(lt), vanBrake: lt < 1.5 ? .9 : .3, carBrake: lt >= 10.85 ? .9 : .1, moon: close ? null : LT.moon(lt) }));
+  if (close) REG.suppress++; V2.dof(close ? 9 : 0, () => lotSet({ t: lt + 5, vanX: LT.vanX(lt), vanBrake: lt < 1.5 ? .9 : .3, carBrake: lt >= 10.85 ? .9 : .1, moon: close ? null : LT.moon(lt) })); if (close) REG.suppress--;   // soft background: not audited
   if (!close && lt > 1.3) { const q = V2.p2(-750, 70, 2040); V2.smoke(q[0], q[1], lt, 1.3, { n: 8, rate: 3, life: 2.2, rise: 60, spread: 26, size: 24, alpha: .2, color: '170,210,210', seed: 3 }); }
   if (close) { const [fx, fy] = faceC(S); V2.addLight({ x: fx + 80 * S.s, y: fy + 110 * S.s, r: 620 * S.s, color: '185,150,255', a: .65 }); }
   V2.dust(60, 600, 1020, 1400, lt, { n: 18, alpha: .18, color: '190,230,230' });
