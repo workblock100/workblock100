@@ -646,7 +646,7 @@ def cue_lot10(T, t0, d, beats):
 
 
 CUES = {"title": cue_title10, "office": cue_office10, "days": cue_days10, "exit": cue_exit10, "party": cue_party10, "door": cue_door10, "lot": cue_lot10, "end": cue_end7}
-LEVEL10 = {"office": 1.0, "days": 1.05, "exit": 2.0, "party": 1.9, "door": 1.4, "lot": 1.3}   # per-scene trim, set from the measured stems (see the report)
+LEVEL10 = {"office": 1.12, "days": 1.25, "exit": 2.4, "party": 2.25, "door": 1.4, "lot": 1.45}   # per-scene trim, set from the measured stems (see the report)
 
 
 def score(script, scenes, lines, N):

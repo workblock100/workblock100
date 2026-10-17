@@ -442,7 +442,7 @@ DIPS11 = {"punchclock": (8, .3, .25), "stamp7": (6, .3, .25), "pop": (4, .12, .1
           "slowmolong": (2, 1.8, .4), "tick": (2, .3, .2)}   # not the chaos beat (a_call, klaxon, stampede ...): its score is already six dB down
 
 CUES = {"title": cue_title11, "arrival": cue_arrival11, "orient": cue_orient11, "floor": cue_floor11, "vault": cue_vault11, "exit": cue_exit11, "lot": cue_lot11, "end": cue_end7}
-LEVEL11 = {"arrival": 1.4, "orient": 1.55, "floor": .8, "vault": 1.35, "exit": .72, "lot": 1.25}   # per-scene trim, set from the measured stems (see the report)
+LEVEL11 = {"arrival": 1.6, "orient": 1.75, "floor": .92, "vault": 1.5, "exit": .83, "lot": 1.25}   # per-scene trim, set from the measured stems (see the report)
 
 
 def score(script, scenes, lines, N):
