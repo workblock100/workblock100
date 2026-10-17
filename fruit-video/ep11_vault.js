@@ -731,8 +731,8 @@ function cast(lt) {
   const sp = person(A11.straw, route([[0, STRAW_AT[0], STRAW_AT[1]]]), lt, { id: 'straw', who: 'straw', expr: 'dead', lid: .4, look: [.85, 0], arms: { l: 'rest', r: 'rest' }, acc: ['steth', 'bandage7', 'perdiem9'], hold: {}, grip: {}, hand: {} });
   if (EXT.acc.excoat11) sp.acc.push('excoat11');
   const type = lt < 1.6;
-  if (lt < 1.95) {   // the laptop: lid toward us while she types, shut on "Strawberry." and carried by its edge
-    sp.hold.r = 'lap11'; sp.lapOpen = 1 - sk(lt, 1.45, 1.7); sp.lapHang = sk(lt, 1.7, 2.0); gripTo(sp, 'r', [lerp(112, 121, sp.lapHang), lerp(104, 96, sp.lapHang)]); sp.hand = { r: 'grip', l: 'open' };
+  if (lt < 2.15) {   // the laptop: lid toward us while she types, shut on "Strawberry." and carried by its edge
+    sp.hold.r = 'lap11'; sp.lapOpen = 1 - sk(lt, 1.45, 1.7); sp.lapHang = sk(lt, 1.68, 2.1); gripTo(sp, 'r', [lerp(112, 121, sp.lapHang), lerp(104, 96, sp.lapHang)]); sp.hand = { r: 'grip', l: 'open' };
     if (lt < 1.6) { gripTo(sp, 'l', [-70 + 4 * Math.sin(lt * 31), 98 + 4 * Math.sin(lt * 27 + 1)]); sp.look = [0, .85]; sp.lid = .4; sp.expr = 'neutral'; }
     else { sp.arms.l = 'rest'; sp.look = lerpA([0, .85], [.85, 0], sk(lt, 1.42, 1.6)); }
   } else { sp.hold.r = 'lap11'; sp.lapOpen = 0; sp.lapHang = 1; gripTo(sp, 'r', [121, 96]); sp.hand = { r: 'grip' }; }
@@ -781,22 +781,22 @@ const SC = {
     }
     switch (n) {
       case 'wide': V2.setCam(Object.assign({}, BASE, { cy: 380, hy: 860, cz: lerp(-420, -300, k) })); zoomTo(lerp(596, 586, k), lerp(1000, 990, k), lerp(1.2, 1.34, k)); break;
-      case 'two': case 'two2': { V2.setCam(BASE); const C = cast(lt), a = faceC(C.ad), s = faceC(C.sp); zoomTo((a[0] + s[0]) / 2, (a[1] + s[1]) / 2 + 80, 1.3); } break;
+      case 'two': case 'two2': { V2.setCam(BASE); const C = cast(lt), a = faceC(C.ad), s = faceC(C.sp); zoomTo((a[0] + s[0]) / 2 - 12, (a[1] + s[1]) / 2 + 80, 1.24); } break;
       case 'cuS1': case 'cuS3': { V2.setCam(BASE); const C = cast(lt); F(C.sp, lerp(1.85, 1.95, k), 130); } break;
       case 'cuS4': { V2.setCam(MID); const C = cast(lt); F(C.sp, lerp(1.85, 1.95, k), 130); } break;
       case 'cuA3': case 'cuA3b': { V2.setCam(BASE); const C = cast(lt); F(C.ad, lerp(1.7, 1.8, k), 130); } break;
       case 'cuA4': { V2.setCam(MID); const C = cast(lt); F(C.ad, lerp(1.7, 1.8, k), 130); } break;
       case 'cuA5': { V2.setCam(MID); const C = cast(lt); F(C.ad, lerp(1.5, 1.6, k), 60); } break;
-      case 'purse': { V2.setCam(MID); const p = p2(428, 300, 1378); zoomTo(p[0] - 40, p[1] + 70, lerp(2.1, 2.3, k)); } break;
+      case 'purse': { V2.setCam(MID); const p = p2(428, 300, 1378); zoomTo(p[0] - 84, p[1] + 70, lerp(2.0, 2.2, k)); } break;
       case 'trk': {
         V2.setCam(HIGH); const u = sk(lt, sh.t0, KK.roll1 + .1);
-        zoomTo(lerp(556, 462, u), lerp(1160, 1200, u), lerp(1.3, 1.5, u));
+        zoomTo(lerp(580, 462, u), lerp(1160, 1200, u), lerp(1.28, 1.5, u));
       } break;
       case 'vault': {
         const u = sk(lt, KK.V + .85, KK.V + 2.0), p = sk(lt, KK.V + .1, KK.V + .6);
-        V2.setCam(Object.assign({}, HIGH, { cz: lerp(-100, -330, u), cx: lerp(0, -200, u), cy: lerp(580, 470, u), hy: lerp(800, 800, u) }));
+        V2.setCam(Object.assign({}, HIGH, { cz: lerp(-100, -330, u), cx: lerp(0, -200, u), cy: lerp(580, 560, u), hy: lerp(800, 800, u) }));
         const A = p2(-230, 300, 1400), z = lerp(lerp(1.5, 1.65, p), 1.25, u);
-        zoomTo(lerp(lerp(462, 410, p), A[0], u), lerp(lerp(1200, 1170, p), A[1] - 20, u), z);
+        zoomTo(lerp(lerp(462, 424, p), A[0] + 34, u), lerp(lerp(1200, 1170, p), A[1] - 20, u), z);
       } break;
       default: {   // the last wide: the three of them in the lamp's pool, pulling back from the moth
         const u = sk(lt, sh.t0, sh.t0 + .85);
@@ -834,8 +834,8 @@ const SC = {
   blur: lt => { const k = K(); return lt > k.V + .3 && lt < k.V + 2.3 ? 3 : lt > k.M && lt < k.M + 1.7 ? 3 : 1; },
   over(lt) {
     const k = K();
-    sfxWord(lt, k.V + .2, 'CLANK!', 330, 420, { size: 110, rot: -.1, fill: '#d8e4ff', hold: .45 });
-    sfxWord(lt, k.ching, 'KA-CHING!', 560, 330, { size: 118, rot: -.06, fill: '#ffe135', hold: .8 });
+    sfxWord(lt, k.V + .2, 'CLANK!', 300, 400, { size: 104, rot: -.1, fill: '#d8e4ff', hold: .45 });
+    sfxWord(lt, k.ching, 'KA-CHING!', 740, 276, { size: 100, rot: -.05, fill: '#ffe135', hold: .7 });
   },
 };
 window.__EP11_SCENES = window.__EP11_SCENES || {};
