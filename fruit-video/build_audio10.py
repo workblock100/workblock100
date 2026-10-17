@@ -369,6 +369,52 @@ BA.SFX.update({k[4:]: v for k, v in list(globals().items()) if k.startswith("sfx
 A6.DUCK_SFX.update({"trombone", "crickets", "slidedoor"})   # long tails that ring on into the next line (the trombone's last note into the next scene's first words): they duck under speech
 
 
+def aac_guard(path, limit_db=-1.0, tries=4):
+    """The MP4's audio is an AAC encode of this wav, and one hard transient (a plosive with a click riding on it) can overshoot by two decibels after the encode, which the wav's own
+    peak limiter cannot see. Encode the way the release does (aac, 192k), decode, and wherever the decoded signal's 4x-oversampled peak is over `limit_db`, dip the wav at that
+    spot (a smooth 16 ms hann-shaped dip, as deep as the overshoot plus 4 percent) and try again, until it passes. Returns (number of dips, deepest dip in dB)."""
+    import subprocess
+    import tempfile
+
+    import imageio_ffmpeg
+    import soundfile as sf
+    from scipy import signal
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    lim = 10 ** (limit_db / 20)
+    x, sr = sf.read(path, dtype="float64")
+    n_dips, deepest = 0, 0.0
+    for _ in range(tries):
+        with tempfile.TemporaryDirectory() as tmp:
+            m4a, dec = os.path.join(tmp, "a.m4a"), os.path.join(tmp, "a.wav")
+            subprocess.run([ff, "-y", "-loglevel", "error", "-i", path, "-c:a", "aac", "-b:a", "192k", m4a], check=True)
+            subprocess.run([ff, "-y", "-loglevel", "error", "-i", m4a, dec], check=True)
+            y, _ = sf.read(dec, dtype="float64")
+        n = min(len(x), len(y))
+        pk = np.abs(signal.resample_poly(y[:n], 4, 1, axis=0)).max(axis=1).reshape(n, 4).max(axis=1)
+        over = np.where(pk > lim)[0]
+        if len(over) == 0:
+            break
+        gain = np.ones(n)
+        h = int(.008 * SR)
+        i = 0
+        while i < len(over):
+            j = i
+            while j + 1 < len(over) and over[j + 1] - over[j] < int(.01 * SR):
+                j += 1
+            grp = over[i:j + 1]
+            c = int(grp[np.argmax(pk[grp])])
+            g = lim * .96 / pk[c]
+            a, b = max(0, c - h), min(n, c + h)
+            gain[a:b] = np.minimum(gain[a:b], 1 - (1 - g) * np.hanning(2 * h)[a - (c - h):b - (c - h)])
+            n_dips += 1
+            deepest = min(deepest, 20 * np.log10(g))
+            print(f"  aac guard: dip at {c / sr:.3f} s, {20 * np.log10(g):.2f} dB")
+            i = j + 1
+        x[:n] *= gain[:, None]
+        sf.write(path, x, sr, subtype="PCM_16")
+    return n_dips, deepest
+
+
 def main():
     argv = sys.argv[1:]
     for k, v in (("--script", "script_ep10.json"), ("--out", "build/ep10"), ("--var", "TIMELINE_EP10"), ("--music", "build_music10")):
@@ -384,6 +430,8 @@ def main():
     if sf.info(wav).subtype != "PCM_16":   # the limiter only rewrites the file when something was over the ceiling
         x, sr = sf.read(wav, dtype="float64")
         sf.write(wav, np.clip(x, -1, 1), sr, subtype="PCM_16")
+    dips, deep = aac_guard(wav)
+    print(f"aac guard: {dips} dip(s), deepest {deep:.2f} dB (keeps the AAC encode under -1 dBTP)")
 
 
 if __name__ == "__main__":

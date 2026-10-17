@@ -256,6 +256,8 @@ def main():
     if sf.info(wav).subtype != "PCM_16":   # the limiter only rewrites the file when something was over the ceiling
         x, sr = sf.read(wav, dtype="float64")
         sf.write(wav, np.clip(x, -1, 1), sr, subtype="PCM_16")
+    dips, deep = A10.aac_guard(wav)
+    print(f"aac guard: {dips} dip(s), deepest {deep:.2f} dB (keeps the AAC encode under -1 dBTP)")
 
 
 if __name__ == "__main__":

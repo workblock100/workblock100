@@ -211,11 +211,11 @@ DIPS10 = {"tear": (5, .12, .12), "stamp10": (9, .4, .3), "flipcal": (8, .5, .3),
 
 # ================================================================ scene cues
 def cue_title10(T, t0, d, beats):
-    """The flyer. The series sting underneath (cue_title7's riser, timpani roll, impact, choir and bells, the riser and roll a little lighter), and on top a bouncy pizzicato theme that lands exactly one note on each of the fourteen tears
+    """The flyer. The series sting underneath (cue_title7's riser, timpani roll, impact, choir and bells, the noisy riser a little lighter so the tears can be heard), and on top a bouncy pizzicato theme that lands exactly one note on each of the fourteen tears
     (0.22 s apart: eighth notes at 136 bpm, so the downbeat of the second bar is the sting's chord). Fourteen days left, fourteen notes, counting down; then a two-note button."""
-    land = t0 + .2 + 2.2                                                                # cue_title7 with a lighter riser and roll: the tears have to be heard through them
-    T.put(riser(2.2, 240, 6200, .85), land - 2.2, .13)
-    T.put(roll(70, 2.0, 26), land - 2.0, .12, -.1)
+    land = t0 + .2 + 2.2                                                                # cue_title7 with a lighter riser (noise would hide the tears; the timpani roll is all low end and keeps its level)
+    T.put(riser(2.2, 240, 6200, .85), land - 2.2, .15)
+    T.put(roll(70, 2.0, 26), land - 2.0, .26, -.1)
     T.put(impact(1.8), land, .4)
     T.put(crash(2.2), land, .22, .1)
     T.put(choir([45, 52, 57, 60, 64], 2.6, "o", .08, 1.5), land, .18)

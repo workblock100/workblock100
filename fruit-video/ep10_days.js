@@ -20,6 +20,7 @@ function sfxWord(lt, t0, str, x, y, o = {}) {
   text(str, 0, 0, { size: o.size ?? 130, font: 'Bangers', weight: 400, fill: o.fill ?? '#ffe135', lw: 14, stroke: '#150f22', spacing: 3, shadow: 14 }); ctx.restore();
 }
 const nbr = o => V2.dof(6, () => drawBg(o));
+const bgDof = (px, fn) => { if (px > .5) REG.suppress++; try { V2.dof(px, fn); } finally { if (px > .5) REG.suppress--; } };   // a blurred set: drawn, not audited
 const sk = (lt, a, b) => easeIO(seg(lt, a, b));
 const logMix = (a, b, k) => a * Math.pow(b / a, k);
 const lerpA2 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
@@ -206,12 +207,12 @@ EXT.prop.fingers10 = (side, o, t) => {
 };
 
 // ------------------------------------------------------------------ PART 1: THE HALL (14 days). Lemon's board, a giant stamp for every rule
-const BD = { x: 468, y: 790, w: 610, h: 350 };       // the whiteboard's writing surface, in scene px at the board's depth (Z 1010)
+const BD = { x: 528, y: 790, w: 610, h: 350 };       // the whiteboard's writing surface, in scene px at the board's depth (Z 1010)
 const BPAD = { px: BD.x + 458, py: BD.y + 30, s: .26 };   // the countdown pad clipped on the board's right
 const ROW_Y = i => BD.y + 130 + i * 72;               // the three rules
 const STAMP_AT = () => [3.45, 4.42, 5.40];             // impact of each stamp: the end of "call-outs", "vacation" and just before "days" lands
 const SLOT_X = BD.x + 370;                              // centre of the STATUS slots
-function boardSprite(lt, sw) {
+function boardSprite(lt, tr) {
   const sh = STAMP_AT();
   const shakeX = sh.reduce((a, t0) => a + wob(lt, t0, 7, 9) * 5, 0), shakeY = sh.reduce((a, t0) => a + wob(lt, t0 + .02, 9, 11) * 3, 0);
   ctx.save(); ctx.translate(shakeX, shakeY);
@@ -259,7 +260,7 @@ function boardSprite(lt, sw) {
   ctx.fillStyle = '#4a4f5c'; ctx.strokeStyle = INK; rr(BD.x + 300, BD.y + BD.h - 18, 62, 22, 5); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#d6dae2'; rr(BD.x + 300, BD.y + BD.h - 18, 62, 8, 4); ctx.fill();
   ctx.restore();
   // the board's lettering is a key sign: nothing may cover it
-  regLocal('key', BD.x + 62, BD.y + 14, BD.x + 442, BD.y + BD.h - 6, { id: 'policy-board' });
+  regLocal('key', BD.x + 62, BD.y + 14, BD.x + 442, BD.y + BD.h - 6, { id: 'policy-board', transit: tr });
 }
 // the giant stamp: it comes down from above the frame on the rule that was just read, squashes, and lifts away
 function bigStamp(cx, by, sq) {
@@ -288,7 +289,7 @@ function stampLayer(lt) {
 }
 
 // Lemon's telescoping pointer: the shaft runs from the fist along o.pointAng (set per frame) for o.pointLen local px, silver sections, a red rubber tip
-Object.assign(PROP_BOX, { pointer10: [-34, -30, 190, 30] });
+Object.assign(PROP_BOX, { pointer10: o => { const L = o.pointLen ?? 150, a = o.pointAng ?? -.5, x1 = Math.cos(a) * L, y1 = Math.sin(a) * L; return [Math.min(-10, x1) - 6, Math.min(0, y1) - 10, Math.max(-10, x1) + 8, Math.max(0, y1) + 10]; } });
 EXT.prop.pointer10 = (side, o, t) => {
   const L = o.pointLen ?? 150, a = o.pointAng ?? -.5;
   ctx.save(); ctx.rotate(a); ctx.lineCap = 'round';
@@ -350,7 +351,7 @@ function hallSet(lt) {
   ctx.fillStyle = grad(0, f0[1], 0, f2[1], [[0, 'rgba(255,244,210,.32)'], [1, 'rgba(255,244,210,0)']]); ctx.beginPath(); ctx.moveTo(...f0); ctx.lineTo(...f1); ctx.lineTo(...f2); ctx.lineTo(...f3); ctx.closePath(); ctx.fill(); ctx.restore();
   plant3(-470, 1400, 1.0); plant3(470, 1500, 1.0);
 }
-const P1CAST = { S: [-267, 880], L: [-113, 990] };   // Strawberry stands nearer the camera, so Lemon's clipboard is behind her, never across her face
+const P1CAST = { S: [-279, 1000], L: [-88, 1040] };   // Strawberry stands nearer the camera, so Lemon's clipboard is behind her, never across her face
 // where the pointer rests: it glides from rule to rule as Lemon reads them
 const ruleY = lt => { const sh = STAMP_AT(); return lerp(lerp(ROW_Y(0), ROW_Y(1), sk(lt, sh[0] + .05, sh[0] + .45)), ROW_Y(2), sk(lt, sh[1] + .05, sh[1] + .45)); };
 function p1cast(lt, F) {
@@ -360,33 +361,34 @@ function p1cast(lt, F) {
   const look = lt < b('l1').s ? [.3, .05] : lt < b('l1').e - .5 ? [.4, .1] : lt < b('l2').s ? [-.45, .02] : [-.3, 0];
   const lm = lemon(Object.assign(qL, { look, expr: 'dead', lid: lt >= b('l2').s ? .42 : .24, hold: { l: 'clipboard6', r: 'pointer10' }, grip: { l: [-100, 30] }, clipText: 'NOTICES', arms: { l: 'hold', r: 'rest' }, transit: tr }));
   const aim = sk(lt, b('l1').s + 1.0, b('l1').s + 1.6) * (1 - sk(lt, b('l1').e - .1, b('l1').e + .45));
-  if (aim > 0) {
-    const tx = BD.x + 190, ty = ruleY(lt) + 14;
-    handTo(lm, 1, BD.x + 8, ty + 70, aim, [96, 36]); lm.hand = { r: 'grip' };
-    const [u, v] = localOf(lm, tx, ty), g = lm.grip.r;
-    lm.pointAng = Math.atan2(v - g[1], u - g[0]); lm.pointLen = Math.max(60, Math.hypot(u - g[0], v - g[1]) / 1);
+  {
+    const tx = BD.x + 42, ty = ruleY(lt) + 14;
+    handTo(lm, 1, BD.x + 8, ty + 70, aim, [118, 40]); lm.hand = { r: 'grip' };
+    const [u, v] = localOf(lm, tx, ty), g = lm.grip.r, ang = Math.atan2(v - g[1], u - g[0]), len = Math.max(60, Math.hypot(u - g[0], v - g[1]));
+    lm.pointAng = lerp(1.5, ang, aim); lm.pointLen = lerp(110, len, aim);   // at rest the pointer hangs from her fist
   }
   // Strawberry: tired, listening; every slam makes her jump a little, and on "four" she holds up four fingers
   const jump = sh.reduce((a, t0) => Math.max(a, lt >= t0 && lt < t0 + .22 ? Math.sin((lt - t0) / .22 * PI) * 12 * qS.s : 0), 0);
   const four = wordT('s1', 'four', b('s1').s + 1.24), up = sk(lt, four - .22, four + .06) * (1 - sk(lt, four + .5, four + .8));
   const sp = straw(Object.assign(qS, { look: [.62, .02], expr: 'dead', lid: .5, arms: { l: lt > b('l1').s + .6 && lt < b('l2').s ? 'hips' : 'rest', r: 'rest' }, rot: .03 + .012 * Math.sin(lt * 1.3), sway: .05, lift: (qS.lift || 0) + jump, transit: tr }));
-  if (up > .02) { handTo(sp, 1, sp.x + 150 * sp.s, sp.y - 330 * sp.s, up, [80, 50]); sp.hold = { r: 'fingers10' }; sp.hand = { r: 'fist' }; }
+  if (up > .02) { handTo(sp, 1, sp.x + 150 * sp.s, sp.y - 330 * sp.s, up, [150, 90]); sp.hold = { r: 'fingers10' }; sp.hand = { r: 'fist' }; }
   return { lm, sp, zs: P1CAST.S[1], zl: P1CAST.L[1] };
 }
 function p1shot(lt) { const b = id => B(id); return lt < 2.58 ? 'wide' : lt < b('s1').s - .05 ? 'ms' : lt < b('l2').s - .05 ? 'cuS' : 'cuL'; }
 function p1cam(lt) {
   const b = id => B(id), sh = p1shot(lt), c = p1cast(lt), e = STAMP_AT();
-  if (sh === 'wide') { const k = seg(lt, .5, 2.58); return feetCam(lerp(500, 530, k), lerp(.88, .94, k), { feet: 1433 }); }
-  if (sh === 'ms') { const k = seg(lt, 2.58, b('s1').s), cam = feetCam(lerp(652, 672, k), lerp(1.2, 1.3, k)); cam.shake = e.reduce((a, t0) => a + kick(lt, t0, .22, 7), 0); return cam; }
+  if (sh === 'wide') { const k = seg(lt, .5, 2.58); return feetCam(lerp(538, 543, k), lerp(.86, .9, k), { feet: 1433 }); }
+  if (sh === 'ms') { const k = seg(lt, 2.58, b('s1').s), cam = feetCam(lerp(622, 632, k), lerp(1.04, 1.08, k)); cam.shake = e.reduce((a, t0) => a + kick(lt, t0, .22, 7), 0); return cam; }
   if (sh === 'cuS') { const k = seg(lt, b('s1').s - .05, b('s1').e), z = lerp(1.7, 1.82, k), [fx, fy] = faceC({ kind: 'straw', x: c.sp.x, y: c.sp.y, s: c.sp.s, lift: c.sp.lift }); return { x: fx + 10 - 20 * k, y: fy + 210 / z, z }; }
   const k = seg(lt, b('l2').s - .05, b('l2').e + .3), z = lerp(2.0, 2.16, k), [fx, fy] = faceC({ kind: 'lemon', x: c.lm.x, y: c.lm.y, s: c.lm.s });
-  return { x: fx + 30, y: fy + 120 / z, z };
+  return { x: fx - 40, y: fy + 120 / z, z };
 }
 function p1draw(lt, F) {
   const sh = p1shot(lt), c = p1cast(lt, F), cu = sh === 'cuS' || sh === 'cuL';
   V2.setLight({ key: [-.4, -.8], keyColor: '#fff3dc', keyA: .26, rim: '#cfe0ff', rimA: .5, shadow: '#3a3048', shadowA: .3, bounce: '#ffe0b0', bounceA: .18, amb: '#fff6e6', ambA: .05 }); V2.opts.reflect = true;
-  V2.dof(cu ? 7 : 0, () => { hallSet(lt); V2.dust(40, 500, 1040, 1300, lt, { n: 30, alpha: .45, color: '255,246,214' }); });
-  V2.dof(cu ? 5 : 0, () => { boardSprite(lt); stampLayer(lt); });
+  const tr = F && F.mode !== 'part';
+  bgDof(cu ? 7 : 0, () => { hallSet(lt); V2.dust(40, 500, 1040, 1300, lt, { n: 30, alpha: .45, color: '255,246,214' }); });
+  bgDof(cu ? 5 : 0, () => { boardSprite(lt, tr); stampLayer(lt); });
   const order = [['sp', c.zs, 'straw'], ['lm', c.zl, 'lemon']].sort((a, b2) => b2[1] - a[1]);
   for (const [k, , id] of order) { const o = c[k]; if ((cu && !((sh === 'cuS' && id === 'straw') || (sh === 'cuL' && id === 'lemon'))) || (sh === 'ms' && id === 'straw')) nbr(o); else drawChar(o); }
 }
@@ -396,6 +398,7 @@ const STN = { zb: 1900, hw: 760, ch: 900 };
 const SPAD = { px: 236, py: 600, s: .22 };                 // the countdown pad on the station's back wall (scene px at identity camera)
 const DN = { cx: 780, yb: 1040, R: 250, t: .4, H: 88, hr: 112 };   // the donut: centre x, y of the bottom ellipse, outer radius, tilt, thickness, hole radius (the stand's plate carries it)
 const DN_YT = DN.yb - DN.H, DN_RY = DN.R * DN.t, DN_HRY = DN.hr * DN.t;
+const tw = (str, size, o = {}) => { ctx.save(); ctx.font = `${o.weight || 400} ${size}px ${o.font || 'Bangers'}`; ctx.letterSpacing = (o.spacing || 0) + 'px'; const w = ctx.measureText(str).width; ctx.restore(); return w; };
 const fitSize = (str, maxW, o = {}) => { ctx.save(); ctx.font = `${o.weight || 400} 100px ${o.font || 'Bangers'}`; ctx.letterSpacing = (o.spacing || 0) + 'px'; const w = ctx.measureText(str).width; ctx.restore(); return 100 * maxW / w; };
 // copy of ep9_arrival's balloons: six bobbing balloons on strings from a weight on the floor
 function balloons(Xc, Zc, t, seed) {
@@ -419,7 +422,7 @@ function sparkle(x, y, r, a, col = '#fff6c0') {   // a four-point glint (copy of
   if (a <= 0) return; ctx.save(); ctx.translate(x, y); ctx.globalAlpha *= a; ctx.fillStyle = col; ctx.beginPath();
   for (let i = 0; i < 8; i++) { const an = i * PI / 4 - PI / 2, R = i % 2 ? r * .22 : r; ctx.lineTo(Math.cos(an) * R, Math.sin(an) * R); } ctx.closePath(); ctx.fill(); ctx.restore();
 }
-function stationSet(lt) {
+function stationSet(lt, tr) {
   const { zb, hw, ch } = STN, k = kz(zb), t = lt + 3;
   shell({ zb, hw, ch, wall: '#f6e8cc', wain: '#4f8f96', floorA: '#dccfb4', floorB: '#aca28a', ceil: '#f5f2ea', fog: '#cdd6e4', fogAmt: .24, tile: 120, rail: 110, bright: 1.04 });
   S7.winPane(zb, { x0: 330, x1: 640, y0: 250, y1: 700 }, f => { A7.clouds(t, f[2][1] + 20, f[0][1] - 60, { n: 3, a: .9, speed: 6, seed: 3, scale: .5 }); }, { sky: [[0, '#6fb4f2'], [1, '#cfe9fb']], curtains: '#d98a5c' });
@@ -442,7 +445,7 @@ function stationSet(lt) {
     ctx.save(); ctx.translate(cx0, cy0); text('STAFF APPRECIATION WEEK', 0, 0, { size, font: 'Bangers', weight: 400, fill: '#fff8dc', lw: size * .1, stroke: '#0e2c66', spacing: 4 }); ctx.restore();
     for (let i = 0; i < 17; i++) { const u = (i + .5) / 17, px = lerp(bl[0], br[0], u), py = bl[1] + wv(u * 24 * 36 + 90) + 3; ctx.fillStyle = ['#ffd23a', '#ff5a7a', '#58c85a', '#ff9f1c', '#c25bd6'][i % 5]; ctx.strokeStyle = 'rgba(30,16,36,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px - 15 * k, py); ctx.lineTo(px + 15 * k, py); ctx.lineTo(px, py + 30 * k); ctx.closePath(); ctx.fill(); ctx.stroke(); }
     ctx.restore();
-    regLocal('key', Math.min(tl[0], bl[0]) + (tr[0] - tl[0]) * .07, tl[1] - 4, Math.max(tr[0], br[0]) - (tr[0] - tl[0]) * .07, bl[1] + 4, { id: 'banner' }); }
+    regLocal('key', Math.min(tl[0], bl[0]) + (tr[0] - tl[0]) * .07, tl[1] - 4, Math.max(tr[0], br[0]) - (tr[0] - tl[0]) * .07, bl[1] + 4, { id: 'banner', transit: tr }); }
   plant3(690, 1500, 1.0); plant3(-690, 1560, .9);
   S7.stationCounter({ night: false });
   balloons(-620, 1580, t, 0); balloons(610, 1600, t, 2.3);
@@ -541,11 +544,11 @@ function p2cast(lt, F) {
   if (lt < T2.roll0 - .1) mg = null;
   else if (pushing) {
     const pathG = t => [(DN.cx + rollX(t, T2) + 322 - 540) / kz(1100) / 1 * 1, 1100];   // placeholder, replaced below
-    mg = runner(mango, t => [((DN.cx + rollX(t, T2) + 322) - 540) / (1400 / 1100), 1100], lt, { look: [-.6, 0], expr: 'happy', acc: ['badge7', 'gaitbelt7', 'keys7', ...hat], badgeText: 'CNA', transit: tr || lt < T2.roll0 + .5 }, 320);
+    mg = runner(mango, t => [((DN.cx + rollX(t, T2) + 322) - 540) / (1400 / 1100), 1100], lt, { look: [-.6, 0], expr: 'happy', acc: ['badge7', 'gaitbelt7', 'keys7', ...hat], badgeText: 'CNA', transit: tr || lt < T2.roll0 + .85 * (T2.stop - T2.roll0) }, 320);
     handTo(mg, -1, DN.cx + ox + DN.R + 32, DN.yb + 28, 1, [-100, 40]); mg.hand = { l: 'flat' }; mg.arms.r = 'run';
     void pathG;
   } else {
-    const gx = lerp(qG.x, DN.cx, easeIO(fl)), gyF = lerp(qG.y, DN.yb, easeIn(fl)) - 330 * Math.sin(fl * PI), gs = lerp(qG.s, kz(1250), fl);
+    const gx = lerp(qG.x, DN.cx, easeIO(fl)), gyF = lerp(qG.y, DN.yb, easeIn(fl)) - 290 * Math.sin(fl * PI), gs = lerp(qG.s, kz(1250), fl);
     mg = mango({ x: gx, y: lt >= T2.hop ? gyF : qG.y, s: gs, look: [-.5, -.1], expr: lt >= T2.hop ? 'hopeful' : 'happy', acc: ['badge7', 'gaitbelt7', 'keys7', ...hat], badgeText: 'CNA', arms: { l: 'rest', r: 'rest' }, transit: tr, squash: .22 * crouch + .16 * land, plant: true });
     if (lt >= T2.hop) { mg.arms = { l: 'cheer', r: 'cheer' }; mg.noShadow = true; mg.noReflect = true; if (lt >= T2.hop + .34) { mg.arms = { l: 'cheer', r: 'wave' }; mg.expr = 'happy'; } }
     else if (lt >= T2.poke - .2 && lt < T2.poke + .45) { const k = sk(lt, T2.poke - .2, T2.poke) * (1 - sk(lt, T2.poke + .2, T2.poke + .45)); handTo(mg, -1, DN.cx + DN.R * .96, DN_YT + 70, k, [-100, 40]); mg.hand = { l: 'point' }; }
@@ -570,7 +573,8 @@ function p2cam(lt) {
 function p2draw(lt, F) {
   const sh = p2shot(lt), c = p2cast(lt, F), cu = sh === 'cuS', w = p2wob(lt), T2 = c.T2;
   V2.setLight({ key: [-.35, -.8], keyColor: '#fff0d0', keyA: .28, rim: '#ffb0d8', rimA: .5, shadow: '#3a2a50', shadowA: .3, bounce: '#ffd9a0', bounceA: .2, amb: '#fff2e0', ambA: .05 }); V2.opts.reflect = true;
-  V2.dof(cu ? 7 : 0, () => { stationSet(lt); confetti(lt, 10.9, 46); });
+  const tr = F && F.mode !== 'part';
+  bgDof(cu ? 7 : 0, () => { stationSet(lt, tr); confetti(lt, 10.9, 46); });
   V2.addLight({ x: 120, y: 700, r: 900, color: '255,120,180', a: .3 }); V2.addLight({ x: 980, y: 760, r: 900, color: '120,200,255', a: .26 });
   const stand = () => { ctx.save(); ctx.translate(c.ox, 0); donutStand(); donutSign(); donut('all', w);
     const sweep = seg(lt, T2.stop - .02, T2.stop + .5);   // glints that come and go on the glaze, and a shine that sweeps across it as it arrives
@@ -578,7 +582,7 @@ function p2draw(lt, F) {
     if (sweep > 0 && sweep < 1) { ctx.save(); ctx.globalCompositeOperation = 'screen'; const x0 = lerp(DN.cx - DN.R * 1.3, DN.cx + DN.R * 1.3, easeIO(sweep)); ctx.fillStyle = V2.grad(x0 - 90, 0, x0 + 90, 0, [[0, 'rgba(255,255,255,0)'], [.5, `rgba(255,255,255,${.55 * Math.sin(sweep * PI)})`], [1, 'rgba(255,255,255,0)']]);
       ctx.beginPath(); ctx.ellipse(DN.cx, DN_YT, DN.R, DN_RY, 0, 0, TAU); ctx.ellipse(DN.cx, DN_YT, DN.hr, DN_HRY, 0, 0, TAU, true); ctx.clip('evenodd'); ctx.fillRect(x0 - 100, DN_YT - DN_RY, 200, DN_RY * 2); ctx.restore(); }
     ctx.restore(); };
-  if (c.ox < 700 || cu) V2.dof(cu ? 5 : 0, stand);
+  if (c.ox < 700 || cu) bgDof(cu ? 5 : 0, stand);
   const list = [['sp', c.zs, 'straw'], ['me', c.zm, 'melon']].sort((a, b2) => b2[1] - a[1]);
   const focus = cu ? 'straw' : null, show = (o, id) => (focus && id !== focus ? nbr : drawChar)(o);
   if (c.inHole) { drawChar(c.mg); ctx.save(); ctx.translate(c.ox, 0); donut('near', w); ctx.restore(); for (const [k, , id] of list) show(c[k], id); }   // Strawberry and Melon stand nearer than the donut: they are drawn after its front half
@@ -638,8 +642,8 @@ function insTablet(lt) {
   const b = id => B(id), tA = 18.25, tCardB = wordT('m1', 'twice', b('m1').s + 1.2) - .06, tP1 = wordT('s3', 'thirty', b('s3').s), tP2 = wordT('s3', 'hundred', b('s3').s + 1.25), tP2b = wordT('s3', 'eighteen', b('s3').s + 1.78);
   A6.bokeh(lt, ['150,220,200', '120,170,255'], ['#0c1a22', '#14303c']);
   const sway = Math.sin(lt * 1.4) * .006, push = 1 + .03 * seg(lt, tA, 22.0), pop0 = easeBack(seg(lt, tA - .05, tA + .22));
-  ctx.save(); ctx.translate(540, 758); ctx.rotate(sway); ctx.scale(push * lerp(.8, 1, pop0), push * lerp(.8, 1, pop0)); ctx.translate(-540, -758); ctx.globalAlpha *= clamp(pop0 * 3);
-  const X0 = 120, Y0 = 208, TW = 840, TH = 1100;
+  ctx.save(); ctx.translate(540, 790); ctx.rotate(sway); ctx.scale(push * lerp(.8, 1, pop0), push * lerp(.8, 1, pop0)); ctx.translate(-540, -790); ctx.globalAlpha *= clamp(pop0 * 3);
+  const X0 = 120, Y0 = 240, TW = 840, TH = 1100;
   ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 44; ctx.shadowOffsetY = 20; ctx.fillStyle = '#1a1c24'; rr(X0, Y0, TW, TH, 58); ctx.fill(); ctx.shadowColor = 'transparent';
   ctx.strokeStyle = '#3a3e4c'; ctx.lineWidth = 5; rr(X0, Y0, TW, TH, 58); ctx.stroke();
   const sx = X0 + 26, sy = Y0 + 26, sw = TW - 52, sh = TH - 52;
@@ -655,20 +659,20 @@ function insTablet(lt) {
     ctx.strokeStyle = o.edge; ctx.lineWidth = 5; rr(sx + 26, y, sw - 52, CH, 28); ctx.stroke();
     text(o.title, sx + 60, y + 46, { size: 56, font: 'Bangers', weight: 400, fill: '#1a2a4a', align: 'left', spacing: 2 });
     ctx.fillStyle = o.chip; rr(sx + 60, y + 80, 250, 38, 19); ctx.fill(); text(o.sub, sx + 185, y + 99, { size: 21, fill: '#fff', spacing: 2 });
-    text('Passes meds. Answers call lights.', sx + 60, y + 148, { size: 28, fill: '#46506a', weight: 800, align: 'left' }); text('Finds the good cuff. Absorbs the building.', sx + 60, y + 182, { size: 28, fill: '#46506a', weight: 800, align: 'left' });
+    text('Passes meds. Answers call lights.', sx + 60, y + 142, { size: 28, fill: '#46506a', weight: 800, align: 'left' }); text('Finds the good cuff. Absorbs the building.', sx + 60, y + 174, { size: 28, fill: '#46506a', weight: 800, align: 'left' });
     const k = o.pay, pk = easeBack(clamp(k)), shown = k > 0;   // the pay: a dim slot until it pops
-    if (!shown) { ctx.fillStyle = '#e6ebf2'; rr(sx + 60, y + 208, 330, 98, 18); ctx.fill(); text('PAY: ????', sx + 225, y + 258, { size: 42, font: 'Bangers', weight: 400, fill: '#aab4c6', spacing: 3 }); }
-    else { ctx.save(); ctx.translate(sx + 60, y + 258); ctx.scale(lerp(1.5, 1, pk), lerp(1.5, 1, pk)); text(o.money, 0, 0, { size: 116, font: 'Bangers', weight: 400, fill: o.moneyCol, align: 'left', spacing: 2, lw: 0 }); ctx.restore(); }
-    ctx.fillStyle = '#e9eef6'; rr(sx + 60, y + 322, sw - 172, 52, 26); ctx.fill();   // applicants
-    text(o.apps, sx + 92, y + 349, { size: 29, fill: '#2a3a5a', weight: 900, align: 'left' });
-    const dots = o.dots; for (let i = 0; i < dots; i++) { ctx.fillStyle = ['#ff8a94', '#ffd23f', '#c79be0', '#7bd47e', '#ffb347', '#8ac8ff'][i % 6]; ell(sx + sw - 128 - i * 22, y + 348, 12, 12); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
+    if (!shown) { ctx.fillStyle = '#e6ebf2'; rr(sx + 60, y + 208, 330, 92, 18); ctx.fill(); text('PAY: ????', sx + 225, y + 254, { size: 42, font: 'Bangers', weight: 400, fill: '#aab4c6', spacing: 3 }); }
+    else { ctx.save(); ctx.translate(sx + 60, y + 254); ctx.scale(lerp(1.5, 1, pk), lerp(1.5, 1, pk)); text(o.money, 0, 0, { size: 116, font: 'Bangers', weight: 400, fill: o.moneyCol, align: 'left', spacing: 2, lw: 0 }); ctx.restore(); }
+    ctx.fillStyle = '#e9eef6'; rr(sx + 60, y + 308, sw - 172, 66, 33); ctx.fill();   // applicants: the number is big, the word small
+    if (o.num) { const nz = 54; text(o.num, sx + 92, y + 343, { size: nz, font: 'Bangers', weight: 400, fill: o.numCol, align: 'left', spacing: 2 }); text('applicants', sx + 92 + tw(o.num, nz, { spacing: 2 }) + 14, y + 345, { size: 30, fill: '#2a3a5a', weight: 900, align: 'left' }); }
+    const dots = o.dots; for (let i = 0; i < dots; i++) { ctx.fillStyle = ['#ff8a94', '#ffd23f', '#c79be0', '#7bd47e', '#ffb347', '#8ac8ff'][i % 6]; ell(sx + sw - 128 - i * 22, y + 341, 12, 12); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
     ctx.restore();
   };
   const ya = sy + 148, yb = sy + 148 + CH + 66;
   const a1 = easeOut(seg(lt, tA - .05, tA + .3));
-  card(ya, { title: 'NURSE (STAFF)', sub: 'FULL-TIME  3-11', chip: '#2a8a5a', edge: '#2a8a5a', pay: seg(lt, tP1, tP1 + .2), money: '$34.00/hr', moneyCol: '#1c7a4c', apps: '2 applicants', dots: 2, dy: (1 - a1) * 120, a: a1 });
+  card(ya, { title: 'NURSE (STAFF)', sub: 'FULL-TIME  3-11', chip: '#2a8a5a', edge: '#2a8a5a', pay: seg(lt, tP1, tP1 + .2), money: '$34.00/hr', moneyCol: '#1c7a4c', num: '2', numCol: '#1c7a4c', dots: 2, dy: (1 - a1) * 120, a: a1 });
   const bk = easeBack(seg(lt, tCardB, tCardB + .28)), roll = clamp((lt - tP2) / (tP2b - tP2 - .1)), mon = lt >= tP2 ? '$' + (lt >= tP2b ? 118 : Math.round(lerp(100, 118, roll))) + '.00/hr' : '';
-  if (bk > .01) card(yb, { title: 'NURSE (AGENCY)', sub: 'PER DIEM  3-11', chip: '#7a3fb0', edge: '#7a3fb0', pay: seg(lt, tP2, tP2 + .2), money: mon, moneyCol: '#b07a00', apps: lt >= tCardB ? Math.round(4000 * easeOut(seg(lt, tCardB + .2, tCardB + .9))).toLocaleString('en-US') + ' applicants' : '', dots: 12, dy: (1 - bk) * 160, a: clamp(bk * 2) });
+  if (bk > .01) card(yb, { title: 'NURSE (AGENCY)', sub: 'PER DIEM  3-11', chip: '#7a3fb0', edge: '#7a3fb0', pay: seg(lt, tP2, tP2 + .2), money: mon, moneyCol: '#b07a00', num: lt >= tCardB ? Math.round(4000 * easeOut(seg(lt, tCardB + .2, tCardB + .9))).toLocaleString('en-US') : '', numCol: '#7a3fb0', dots: 12, dy: (1 - bk) * 160, a: clamp(bk * 2) });
   // the "same job" badge between them, and the red POSTED TWICE stamp
   const eq = easeBack(seg(lt, tCardB + .12, tCardB + .4));
   if (eq > .01) { ctx.save(); ctx.translate(sx + sw / 2, ya + CH + 33); ctx.scale(eq, eq); ctx.fillStyle = '#1a2a4a'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; rr(-262, -27, 524, 54, 27); ctx.fill(); ctx.stroke(); text('=  SAME JOB, WORD FOR WORD', 0, 2, { size: 25, fill: '#fff', spacing: 2 }); ctx.restore(); }
@@ -701,6 +705,7 @@ function p3shot(lt) { const b = id => B(id); return lt < 18.25 ? 'two' : lt < 21
 function p3cam(lt) {
   const b = id => B(id), sh = p3shot(lt), c = p3cast(lt);
   const base = (x, z) => feetCam(x, z, { feet: 1273, at: 330 });
+  if (sh === 'tab') return { x: 540, y: 960, z: 1 };
   if (sh === 'two') { const k = seg(lt, 17.6, 18.25); return base(lerp(640, 690, k), lerp(1.25, 1.38, k)); }
   if (sh === 'cuS') { const k = seg(lt, 21.95, b('a3').s), z = lerp(1.9, 2.0, k), [fx, fy] = faceC({ kind: 'straw', x: c.so.x, y: c.so.y, s: c.so.s, noLegs: true }); return { x: fx + 10, y: fy + 140 / z, z }; }
   return base(lerp(520, 530, seg(lt, b('a3').s, b('a3').e + .4)), .9);
@@ -711,7 +716,7 @@ function p3draw(lt, F) {
   const c = p3cast(lt, F), cu = sh === 'cuS';
   V2.setLight({ key: [-.3, -.85], keyColor: '#dcecff', keyA: .22, rim: '#8fd0ff', rimA: .42, shadow: '#0e1830', shadowA: .4, amb: '#cfe6ff', ambA: .07, bounce: '#b8e0d0', bounceA: .12 }); V2.opts.reflect = true;
   const tb = tube3(lt);
-  V2.dof(cu ? 8 : 0, () => {
+  bgDof(cu ? 8 : 0, () => {
     breakSet(lt);
     { const [px, py] = p2(SEAT3[0], 0, 1130), kk = kz(1130); ctx.save(); ctx.fillStyle = 'rgba(14,10,34,.26)'; ctx.beginPath(); ctx.ellipse(px, py + 3 * kk, 70 * kk, 15 * kk, 0, 0, TAU); ctx.fill(); ctx.restore(); }
     chair3(SEAT3[0], 1130, { color: '#c47a52', w: 50, d: 44, seat: 120, back: 280 });
@@ -724,24 +729,268 @@ function p3draw(lt, F) {
 }
 function drawChar_(list, c, bg, lt, cu) {
   // the table sits between Strawberry (behind it) and the standing ones (in front of it)
-  const tableDraw = () => V2.dof(cu ? 5 : 0, () => {
+  const tableDraw = () => bgDof(cu ? 5 : 0, () => {
     table3(TAB3[0], TAB3[1], { w: 130, d: 70, h: 135, color: '#c9a26a' });
-    const [mx, my] = p2(TAB3[0] + 100, 151, TAB3[1] + 20), k = kz(TAB3[1]); ctx.save(); ctx.translate(mx, my); ctx.scale(k, k); ctx.fillStyle = 'rgba(0,0,0,.22)'; ell(0, 2, 34, 8); ctx.fill();
+    const [mx, my] = p2(TAB3[0] - 96, 151, TAB3[1] + 20), k = kz(TAB3[1]); ctx.save(); ctx.translate(mx, my); ctx.scale(k, k); ctx.fillStyle = 'rgba(0,0,0,.22)'; ell(0, 2, 34, 8); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 3.5; rr(-26, -54, 52, 56, 7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(28, -26, 11, -PI / 2, PI / 2); ctx.stroke(); ctx.fillStyle = '#5a3210'; ell(0, -50, 22, 5); ctx.fill(); text('3-11', 0, -24, { size: 13, fill: '#d62828' });
     ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; for (const dx of [-2, 12]) { ctx.beginPath(); ctx.moveTo(dx, -60); ctx.quadraticCurveTo(dx + 6 * Math.sin(lt * 3 + dx), -70, dx, -80); ctx.stroke(); } ctx.restore(); });
   bg(c.so, 'so'); tableDraw();
   for (const [k] of list) if (k !== 'so') bg(c[k], k);
 }
 
-// ------------------------------------------------------------------ the parts of the montage (placeholders in this pass)
-const mkPart = (i, col, cal) => ({
-  camP: { f: 1400, cy: 360, hy: 860 }, cal,
-  cam: lt => ({ x: 540, y: 960, z: 1 }),
-  cover() { return { x: cal.px + PW * cal.s / 2, y: cal.py + PH * cal.s / 2, z: COVER / cal.s, r: cal.rot || 0 }; },
-  draw(lt, F) { ctx.fillStyle = col; ctx.fillRect(-300, -300, W + 600, H + 600); text('PART ' + (i + 1), 540, 600, { size: 120, font: 'Bangers', weight: 400, fill: '#fff' }); wallPad(cal.px, cal.py, cal.s, [14, 10, 7, 3][i], { rot: cal.rot }); },
-  fx: lt => ({}),
-});
-const PARTS = [{ camP: { f: 1400, cy: 360, hy: 860 }, cal: BPAD, cam: p1cam, cover() { return { x: BPAD.px + PW * BPAD.s / 2, y: BPAD.py + PH * BPAD.s / 2, z: COVER / BPAD.s, r: 0 }; }, draw: p1draw, fx: lt => ({ bloom: .62, vignette: .44, contrast: .2, sat: .28, tint: [['#ffe2a8', .16, 'soft-light'], ['#5a7fc8', .06, 'multiply']] }) }, { camP: { f: 1400, cy: 360, hy: 860 }, cal: SPAD, cam: p2cam, cover() { return { x: SPAD.px + PW * SPAD.s / 2, y: SPAD.py + PH * SPAD.s / 2, z: COVER / SPAD.s, r: 0 }; }, draw: p2draw, fx: lt => ({ bloom: .62, vignette: .42, contrast: .18, sat: .3, tint: [['#ffd0e0', .1, 'soft-light'], ['#ffe2a8', .08, 'soft-light']] }) }, { camP: BRK_CAM, cal: BPADR, cam: p3cam, cover() { return { x: BPADR.px + PW * BPADR.s / 2, y: BPADR.py + PH * BPADR.s / 2, z: COVER / BPADR.s, r: 0 }; }, draw: p3draw, fx: lt => ({ bloom: .5, vignette: .5, contrast: .2, sat: .06, tint: [['#8fd8c0', .16, 'soft-light'], ['#071a2c', .12, 'multiply']] }) }, mkPart(3, '#4a3a6a', { px: 150, py: 560, s: .3, rot: -.04 })];
+// ------------------------------------------------------------------ PART 4: THE SUPPLY CLOSET (3 days). The new hire, a mirror gag, and a great many empty shelves
+const CLO = { zb: 1750, hw: 400, ch: 760 };
+const CLO_CAM = { f: 1400, cy: 330, hy: 780 };
+const CPAD = { px: 652, py: 474, s: .2, rot: -.05 };                       // the pad hangs crooked, high on the back wall, right of the bulb
+const SHELF = { x0: -330, x1: 330, tiers: [40, 150, 260, 370], top: 470, depth: 96 };
+const BULB = { x: -40, y: 560, z: 1500, cord: 760 };
+// the bulb flickers on a few dips (as Clementine hops in, on the Q-word, on "There aren't any") and sags on the trombone
+const DIPS4 = [[24.92, .06, .75], [25.01, .04, .5], [26.52, .08, .85], [28.92, .06, .6], [30.18, .05, .7], [30.26, .04, .5], [32.02, .1, .9], [32.44, .05, .6], [33.84, .12, .9], [34.2, .1, .85], [34.56, .1, .85]];
+const bulb4 = lt => { let k = 1 - .05 * Math.abs(vnoise(lt * 9)); for (const [t0, d, dp] of DIPS4) if (lt >= t0 && lt < t0 + d) k *= 1 - dp; return k * (1 - .4 * seg(lt, 34.7, 35.05)); };
+const wind4 = lt => seg(lt, 32.0, 32.5) * (1 - seg(lt, 34.5, 35.05));      // a draught from the door that arrives with the news
+function dustBunny(x, y, z, r, a = .6) {
+  const [px, py] = p2(x, y, z), k = kz(z) * r;
+  ctx.save(); ctx.translate(px, py);
+  ctx.fillStyle = `rgba(206,206,194,${a})`; for (let i = 0; i < 6; i++) { ell(Math.cos(i * 1.7) * 9 * k, -5 * k + Math.sin(i * 2.3) * 4 * k, 9 * k, 6.5 * k); ctx.fill(); }
+  ctx.strokeStyle = `rgba(150,150,140,${a * .8})`; ctx.lineWidth = Math.max(1, 1.5 * k); ctx.lineCap = 'round';
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(Math.cos(i * 1.3) * 6 * k, -4 * k); ctx.lineTo(Math.cos(i * 1.3) * 17 * k, -4 * k + Math.sin(i * 2.9) * 9 * k); ctx.stroke(); }
+  ctx.restore();
+}
+// a web in a corner, its corner at (ax, ay): strands fan right and down; a small spider waits on a thread
+function cobweb(ax, ay, R, sway, lt) {
+  ctx.save(); ctx.translate(ax, ay); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const N = 5, rad = [];
+  for (let i = 0; i <= N; i++) { const a = .05 + i / N * (PI / 2 - .1) + .05 * sway * i / N; rad.push([Math.cos(a), Math.sin(a)]); }
+  ctx.strokeStyle = 'rgba(244,247,249,.6)'; ctx.lineWidth = 1.8;
+  for (const [cx, cy] of rad) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(cx * R, cy * R); ctx.stroke(); }
+  ctx.lineWidth = 1.5;
+  for (const f of [.3, .52, .74, .96]) {
+    ctx.beginPath();
+    rad.forEach(([cx, cy], i) => { const x = cx * R * f, y = cy * R * f; if (!i) ctx.moveTo(x, y); else { const [qx, qy] = rad[i - 1]; ctx.quadraticCurveTo((qx + cx) / 2 * R * f * .84, (qy + cy) / 2 * R * f * .84, x, y); } });
+    ctx.stroke();
+  }
+  const sx = rad[3][0] * R * .5, sy = rad[3][1] * R * .5, by = sy + R * (.5 + .08 * Math.sin(lt * 1.3)), r = R * .06;
+  ctx.strokeStyle = 'rgba(240,244,246,.7)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, by); ctx.stroke();
+  ctx.strokeStyle = '#1a1620'; ctx.lineWidth = Math.max(1.6, r * .28);
+  for (const sd of [-1, 1]) for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(sx, by + r * .2); ctx.lineTo(sx + sd * r * (1.1 + .25 * i), by + r * (-.8 + i * .55)); ctx.lineTo(sx + sd * r * (1.7 + .2 * i), by + r * (-.2 + i * .75)); ctx.stroke(); }
+  ctx.fillStyle = '#1a1620'; ell(sx, by + r * .3, r * .8, r); ctx.fill(); ell(sx, by - r * .6, r * .5, r * .5); ctx.fill();
+  ctx.fillStyle = '#fff'; ell(sx - r * .2, by - r * .65, r * .14, r * .14); ctx.fill(); ell(sx + r * .2, by - r * .65, r * .14, r * .14); ctx.fill();
+  ctx.restore();
+}
+// the one glove left in the building, standing on the GLOVES shelf; the draught tips it
+function lonelyGlove(lt, wd) {
+  const gz = CLO.zb - SHELF.depth + 52, gy = SHELF.tiers[2] + 26, [px, py] = p2(70, gy, gz), kk = kz(gz) * 1.9;
+  ctx.fillStyle = 'rgba(8,14,12,.35)'; ell(px, py + 2, 34 * kk, 7 * kk); ctx.fill();
+  ctx.save(); ctx.translate(px, py - 3 * kk); ctx.rotate(-PI / 2 + .2 + .04 * Math.sin(lt * 1.2) + wd * .16 * Math.sin(lt * 8.5)); ctx.scale(kk, kk);
+  ctx.fillStyle = '#4a4258'; ctx.beginPath(); ctx.roundRect(-8, -8.5, 10, 17, 3); ctx.fill();
+  V2C.hand('open', 1, {});
+  ctx.restore();
+}
+function closetSet(lt) {
+  const { zb, hw, ch } = CLO, bl = bulb4(lt), wd = wind4(lt), { x0, x1, tiers, top, depth } = SHELF, zf = zb - depth, kb = kz(zb), kf = kz(zf);
+  shell({ zb, hw, ch, wall: '#b3c2b6', wain: '#587670', floorA: '#a8afa6', floorB: '#7b837c', ceil: '#cdd6d0', fog: '#586a6c', fogAmt: .4, tile: 100, bright: .9, rail: 120 });
+  // the shelf unit on the back wall: a dark recess, three uprights, four boards with their tags; nothing on any of them
+  onZ(zb - 3, x0 - 6, x1 + 6, 8, top + 8, grad(0, p2(0, top, zb)[1], 0, p2(0, 0, zb)[1], [[0, '#2e3e44'], [1, '#1c282d']]), 'rgba(10,16,20,.8)', 2.4);
+  for (const x of [x0 - 16, x1, -8]) box3({ x0: x, x1: x + 16, y0: 0, y1: top + 16, z0: zf, z1: zb - 3, color: '#7b8791', front: '#97a3ad', side: '#667079' });
+  const tags = ['GAUZE', 'CUFFS', 'GLOVES', 'TUBING'];
+  tiers.forEach((y, i) => {
+    box3({ x0: x0 - 16, x1: x1 + 16, y0: y, y1: y + 26, z0: zf, z1: zb - 3, color: '#9aa6ac', top: '#cdd5d6', front: '#b0bbc0', side: '#8793a0' });
+    const cx = x0 + 120 + (i % 2) * 40;
+    onZ(zf, cx - 62, cx + 62, y + 4, y + 22, '#f7f7ee', 'rgba(20,20,30,.6)', 1.2);
+    const [tx, ty] = p2(cx, y + 13, zf); text(tags[i], tx, ty, { size: 14 * kf, fill: '#2a3140', weight: 900, spacing: 1 });
+  });
+  dustBunny(-205, tiers[0] + 26, zb - 40, 1.2); dustBunny(150, tiers[0] + 26, zb - 60, 1); dustBunny(-90, tiers[1] + 26, zb - 50, .9); dustBunny(215, tiers[1] + 26, zb - 36, 1.1); dustBunny(-240, tiers[2] + 26, zb - 44, 1);
+  lonelyGlove(lt, wd);
+  { const [ax, ay] = p2(x0 - 16, top + 16, zb - 3); cobweb(ax, ay, 150 * kb, wd * Math.sin(lt * 6), lt); }
+  // an empty carton at the foot of the shelves, flaps open
+  box3({ x0: -150, x1: -20, y0: 0, y1: 74, z0: 1540, z1: 1650, color: '#b98a52', top: '#3a2c18', front: '#c99a60', side: '#a07a45' });
+  poly([p2(-150, 74, 1540), p2(-20, 74, 1540), p2(-20, 74, 1650), p2(-150, 74, 1650)], '#2a2012', '#d9b27a', 3);
+  onZ(1540, -130, -40, 16, 54, '#fffdf4', 'rgba(20,20,30,.5)', 1.2); { const [lx, ly] = p2(-85, 35, 1540); text('GLOVES L', lx, ly, { size: 14 * kz(1540), fill: '#2a3140', weight: 900 }); }
+  dustBunny(-310, 0, 1450, 1.6, .5); dustBunny(120, 0, 1380, 1.3, .5);
+  // shelves down the left wall, as empty as the others
+  for (const y of [150, 300, 450]) box3({ x0: -hw, x1: -hw + 86, y0: y, y1: y + 14, z0: 1180, z1: 1740, color: '#9aa6ac', top: '#cdd5d6', front: '#b0bbc0', side: '#8793a0' });
+  for (const z of [1180, 1456, 1726]) box3({ x0: -hw, x1: -hw + 12, y0: 0, y1: 480, z0: z, z1: z + 14, color: '#7b8791' });
+  // the Q-word sign, taped over the shelves: the Q is crossed out
+  { const [qx, qy] = p2(-250, 604, zb); ctx.save(); ctx.translate(qx, qy); ctx.rotate(-.04); ctx.scale(kb, kb);
+    ctx.fillStyle = '#fffdf4'; ctx.strokeStyle = 'rgba(30,24,40,.6)'; ctx.lineWidth = 3; rr(-92, -32, 184, 64, 4); ctx.fill(); ctx.stroke();
+    text('QUIET', 0, 3, { size: 46, font: 'Bangers', weight: 400, fill: '#1c2a5a', spacing: 3 });
+    ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-78, -22); ctx.lineTo(-40, 22); ctx.moveTo(-78, 22); ctx.lineTo(-40, -22); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,226,120,.8)'; for (const x of [-92, 92]) { ctx.save(); ctx.translate(x, -32); ctx.rotate(x < 0 ? -.5 : .5); ctx.fillRect(-18, -8, 36, 16); ctx.restore(); } ctx.restore(); }
+  // the countdown pad, crooked, flapping a little when the draught comes
+  wallPad(CPAD.px, CPAD.py, CPAD.s, 3, { rot: CPAD.rot + wd * .025 * Math.sin(lt * 11) });
+  // the bare bulb on its cord, a green enamel shade, and the light it throws
+  { const [bx, by] = p2(BULB.x, BULB.y, BULB.z), [cx0, cy0] = p2(BULB.x, BULB.cord, BULB.z), kk = kz(BULB.z), sw = Math.sin(lt * 1.1) * 4 * kk;
+    ctx.strokeStyle = '#26232c'; ctx.lineWidth = Math.max(2, 3 * kk); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx0, cy0); ctx.lineTo(bx + sw, by - 44 * kk); ctx.stroke();
+    ctx.save(); ctx.translate(bx + sw, by); ctx.lineJoin = 'round';
+    ctx.fillStyle = '#3d5a4d'; ctx.strokeStyle = INK; ctx.lineWidth = 3.2 * kk; ctx.beginPath(); ctx.moveTo(-50 * kk, 0); ctx.quadraticCurveTo(-44 * kk, -52 * kk, 0, -54 * kk); ctx.quadraticCurveTo(44 * kk, -52 * kk, 50 * kk, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.22)'; ell(-18 * kk, -30 * kk, 14 * kk, 8 * kk); ctx.fill();
+    ctx.fillStyle = `rgba(255,${Math.round(230 - 40 * (1 - bl))},${Math.round(160 - 60 * (1 - bl))},${.35 + .65 * bl})`; ctx.strokeStyle = INK; ctx.lineWidth = 2.6 * kk; ell(0, 16 * kk, 20 * kk, 24 * kk); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,150,40,${.4 + .6 * bl})`; ctx.lineWidth = 2 * kk; ctx.beginPath(); ctx.moveTo(-6 * kk, 6 * kk); ctx.lineTo(-3 * kk, 22 * kk); ctx.lineTo(3 * kk, 12 * kk); ctx.lineTo(6 * kk, 24 * kk); ctx.stroke();
+    ctx.restore();
+    V2.glow(bx + sw, by + 20 * kk, 620 * kk, '255,228,150', .5 * bl, 'screen', .55);
+    V2.beam(bx + sw, by + 20 * kk, bx + sw - 30 * kk, by + 860 * kk, 70 * kk, 820 * kk, '255,230,160', .11 * bl);
+    const [fx, fy] = p2(BULB.x, 0, 1200); V2.glow(fx, fy, 480 * kz(1200), '255,226,150', .16 * bl, 'screen', .2); }
+  // dust on the draught
+  V2.dust(120, 560, 960, 1300, lt, { n: 26, alpha: .38 * bl, color: '255,236,190', speed: 10, seed: 7 });
+  if (wd > 0) V2.dust(-100, 700, 1180, 1300, lt, { n: 30, alpha: .5 * wd, color: '240,240,230', speed: -120, seed: 11, size: 2.6 });
+}
+// a crumpled sheet of paper, rolling in on the draught: it crosses the floor in front of everybody
+function tumbleweed(lt, cu) {
+  const t0 = 32.25, t1 = 35.3; if (lt < t0 - .05 || lt > t1) return;
+  const body = () => {
+    const u = (lt - t0) / (t1 - t0), z = 940, k = kz(z), R = 44 * k, x = lerp(1250, -260, u), hop = Math.abs(Math.sin(lt * 5.4)) * 15 * k, fy = p2(0, 0, z)[1], y = fy - R * .92 - hop;
+    ctx.fillStyle = 'rgba(10,16,14,.28)'; ell(x, fy + 2, R * .95 * (1 - hop / (60 * k)), R * .2); ctx.fill();
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-(x / R) * .95); ctx.lineJoin = 'round';
+    const N = 15, P = []; for (let i = 0; i < N; i++) { const a = i / N * TAU, rr_ = R * (.86 + .16 * hash(i + 3)); P.push([Math.cos(a) * rr_, Math.sin(a) * rr_]); }
+    ctx.beginPath(); P.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.closePath();
+    ctx.fillStyle = V2.radial(-R * .3, -R * .35, R * .1, R * 1.15, [[0, '#fbf6e4'], [.7, '#e6dcc0'], [1, '#bfb08a']]); ctx.fill(); ctx.strokeStyle = 'rgba(40,30,20,.75)'; ctx.lineWidth = Math.max(2, 3 * k); ctx.stroke();
+    ctx.save(); ctx.clip();
+    for (let i = 0; i < 9; i++) { const a0 = hash(i * 5 + 1) * TAU, a1 = a0 + .9 + hash(i + 9), q0 = [Math.cos(a0) * R * .2, Math.sin(a0) * R * .2]; ctx.beginPath(); ctx.moveTo(...q0); ctx.lineTo(Math.cos(a0) * R * 1.1, Math.sin(a0) * R * 1.1); ctx.lineTo(Math.cos(a1) * R * 1.1, Math.sin(a1) * R * 1.1); ctx.closePath(); ctx.fillStyle = `rgba(${hash(i + 2) > .5 ? '90,70,40' : '255,255,245'},${.1 + .12 * hash(i + 4)})`; ctx.fill(); }
+    ctx.strokeStyle = 'rgba(70,60,50,.4)'; ctx.lineWidth = Math.max(1.4, 2 * k); for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(-R * .7, -R * .55 + i * R * .24); ctx.lineTo(R * (.1 + .5 * hash(i)), -R * .55 + i * R * .24 + R * .05 * (hash(i + 7) - .5)); ctx.stroke(); }
+    ctx.restore(); ctx.restore();
+  };
+  cu ? V2.dof(9, body) : body();
+}
+// a bead of sweat: a clear drop that starts at her temple and runs down her cheek, while her smile stays exactly where it was
+function sweatDrops(lt, o) {
+  if (lt < 32.5) return;
+  const [fx, fy] = faceC({ kind: 'clem', x: o.x, y: o.y, s: o.s, lift: o.lift }), s = o.s;
+  for (const [t0, d, side] of [[32.55, .95, 1], [33.2, .9, -1], [33.95, .95, 1]]) {
+    const u = (lt - t0) / d; if (u < 0 || u > 1) continue;
+    const grow = easeOut(clamp(u * 5)), fall = easeIn(clamp((u - .18) / .82)), x = fx + side * (76 - 8 * fall) * s, y = fy + (-54 + 112 * fall) * s, w = 12 * s * grow, h = 24 * s * grow;
+    ctx.save(); ctx.translate(x, y); ctx.globalAlpha *= 1 - seg(u, .86, 1); ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(0, -h); ctx.bezierCurveTo(w * .35, -h * .35, w, 0, w, h * .35); ctx.arc(0, h * .35, w, 0, PI); ctx.bezierCurveTo(-w, 0, -w * .35, -h * .35, 0, -h); ctx.closePath();
+    ctx.fillStyle = V2.grad(-w, 0, w, 0, [[0, '#d6f1ff'], [1, '#8fd0f0']]); ctx.fill(); ctx.strokeStyle = '#2f7fae'; ctx.lineWidth = Math.max(2, 2.6 * s); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; ell(-w * .35, h * .25, w * .2, h * .22); ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ---- the people
+const P4POS = { S: [-150, 1060], C: [150, 1100] };                               // Strawberry, Clementine (X, Z)
+const HOPS4 = [[24.32, 24.56, 560, 420], [24.56, 24.80, 420, 285], [24.80, 25.10, 285, 150]];   // Clementine bounds in from the door on the right: three hops
+const MIRROR = .42;                                                               // the beat she is late by
+const POSE4 = { rest: [.28, .25], hips: [.85, -2.15], temple: [3.5, 1.58], offer: [1.06, 2.23], wide: [1.9, .25], cheer: [2.8, .2] };   // temple: a hand over the eye; offer: a palm up beside the face
+const poseOf4 = p => Array.isArray(p) ? p : POSE4[p];
+// keys: [t, pose]: at each t the arm starts moving to its pose (taking .2 s)
+function armAt(lt, keys, dur = .2) {
+  let i = 0; while (i + 1 < keys.length && lt >= keys[i + 1][0]) i++;
+  const to = poseOf4(keys[i][1]); if (!i) return to;
+  const from = poseOf4(keys[i - 1][1]), k = sk(lt, keys[i][0], keys[i][0] + dur);
+  return [lerp(from[0], to[0], k), lerp(from[1], to[1], k)];
+}
+// Strawberry's arms, in her own time. Clementine copies them, mirrored, MIRROR seconds later
+const S_L = [[0, 'rest'], [25.10, 'hips'], [32.18, 'wide']];
+const S_R = [[0, 'rest'], [25.10, 'hips'], [25.95, 'temple'], [26.95, 'hips'], [30.25, 'offer'], [30.95, 'hips'], [32.18, 'wide']];
+const bump4 = (lt, t0, d = .24) => lt >= t0 && lt < t0 + d ? Math.sin((lt - t0) / d * PI) : 0;
+const lookS4 = t => t < 31.9 ? [.62, .02] : lerpA2([.62, .02], [0, 0], sk(t, 31.9, 32.1));
+const rotS4 = t => .02 * Math.sin(t * 1.3) - .05 * bump4(t, 25.98, .7);
+function clemMove(lt) {
+  const sC = V2.at(...P4POS.C).s, sS = V2.at(...P4POS.S).s;
+  let XC = P4POS.C[0], arc = 0, sq = 0;
+  if (lt < HOPS4[0][0]) XC = HOPS4[0][2];
+  else for (const [t0, t1, xa, xb] of HOPS4) if (lt >= t0 && lt < t1) { const u = (lt - t0) / (t1 - t0); XC = lerp(xa, xb, u); arc = Math.sin(u * PI); }
+  for (const tb of [HOPS4[0][1], HOPS4[1][1], HOPS4[2][1]]) { const d = Math.abs(lt - tb); if (d < .08) sq = Math.max(sq, .24 * (1 - d / .08)); }
+  if (lt >= HOPS4[0][0] - .06 && lt < HOPS4[0][0]) sq = Math.max(sq, .2);
+  let bn = 0; for (const t0 of [25.40, 25.98, 26.30, 28.37, 28.76, 29.04]) bn = Math.max(bn, bump4(lt, t0));
+  bn = Math.max(bn, 1.7 * bump4(lt, 31.26, .3));
+  const stepC = seg(lt, 32.40, 32.72), stepS = seg(lt, 31.98, 32.32);
+  if (lt >= 32.40) XC = lerp(P4POS.C[0], 300, easeIO(stepC));
+  const hopC = stepC > 0 && stepC < 1 ? Math.sin(stepC * PI) : 0, hopS = stepS > 0 && stepS < 1 ? Math.sin(stepS * PI) : 0;
+  return { XC, XS: lerp(P4POS.S[0], -240, easeIO(stepS)), liftC: (arc * 78 + bn * 16 + hopC * 34) * sC, liftS: hopS * 14 * sS, sqC: Math.max(sq, .1 * bn, .12 * hopC) };
+}
+function p4cast(lt, F) {
+  const tr = F && F.mode !== 'part', m = clemMove(lt), qS = V2.at(m.XS, P4POS.S[1]), qC = V2.at(m.XC, P4POS.C[1]);
+  // Strawberry: unimpressed. Fists on her hips, a hand to her forehead at "replacement", a palm up at "supplies", both arms out at "There aren't any."
+  const lidS = Math.max(lerp(.5, .92, Math.sin(PI * seg(lt, 26.0, 26.6))), lerp(.5, .97, Math.sin(PI * seg(lt, 34.0, 34.5))));
+  const sp = straw(Object.assign(qS, { look: lookS4(lt), expr: 'dead', lid: lidS, arms: { l: armAt(lt, S_L), r: armAt(lt, S_R) }, rot: rotS4(lt), sway: .03, lift: m.liftS, transit: tr }));
+  // Clementine: three hops through the door, then she copies Strawberry's every pose a beat late (her left arm is Strawberry's right)
+  const lc = lookS4(lt - MIRROR), gl = sk(lt, 32.42, 32.55) * (1 - sk(lt, 32.8, 32.95)), lookC = lerpA2([-lc[0], lc[1]], [-.35, -.55], gl);
+  const ownL = lt < 24.56 ? [1.9, .3] : lt < 24.80 ? POSE4.cheer : POSE4.rest, waveP = [2.3, .55 + .55 * Math.sin(lt * 15)], ownR = lt < 24.56 ? [1.9, .3] : lt < 24.80 ? POSE4.cheer : lt < 25.15 ? waveP : POSE4.rest;
+  const mix = sk(lt, 25.3, 25.55), mL = armAt(lt - MIRROR, S_R), mR = armAt(lt - MIRROR, S_L);
+  const frozen = lt >= 32.8;   // after "There aren't any." her smile is set: it does not move, even to say "Sure!"
+  const cl = clem(Object.assign(qC, { look: lookC, expr: lt < 31.2 ? 'hopeful' : 'happy', arms: { l: lerpA2(ownL, mL, mix), r: lerpA2(ownR, mR, mix) }, rot: -rotS4(lt - MIRROR) * (lt > 25.3 ? 1 : 0), lift: m.liftC, squash: m.sqC, plant: true,
+    sparkle: lt >= 28.3 && lt < 31.9, transit: tr || lt < 25.15, talk: frozen ? 0 : undefined, face: frozen ? { pup: .5, wide: 1.18 } : undefined, twitch: lt >= 32.9 }));
+  return { so: sp, cl, zs: P4POS.S[1], zc: P4POS.C[1] };
+}
+// ---- the shots: two-shot, the jar, Clementine, two-shot, Clementine, the reveal, Clementine frozen, the empty closet
+const JAR = () => ({ t0: wordT('s4', 'marmalade', B('s4').s + .56) - .02, t1: B('c2').s - .03 });
+function p4shot(lt) { const J = JAR(); return lt < J.t0 ? 'two' : lt < J.t1 ? 'jar' : lt < 29.6 ? 'cuC' : lt < 31.2 ? 'ms' : lt < 31.88 ? 'cuC2' : lt < 32.85 ? 'wide' : lt < 33.55 ? 'cuC3' : 'end'; }
+const p4base = (x, z, o = {}) => ({ x, y: (o.feet ?? 1216) - (o.at ?? 370) / z, z });
+function p4cam(lt) {
+  const sh = p4shot(lt);
+  if (sh === 'jar') return { x: 540, y: 960, z: 1 };
+  const c = p4cast(lt), cf = faceC({ kind: 'clem', x: c.cl.x, y: c.cl.y, s: c.cl.s, lift: c.cl.lift });
+  if (sh === 'two') { const k = seg(lt, 24.6, JAR().t0); return p4base(lerp(536, 548, k), lerp(1.26, 1.38, k)); }
+  if (sh === 'cuC') { const k = seg(lt, 28.34, 29.6), z = lerp(1.95, 2.1, k); return { x: cf[0] - 16, y: cf[1] + 150 / z, z }; }
+  if (sh === 'ms') { const k = seg(lt, 29.6, 31.2); return p4base(lerp(540, 536, k), lerp(1.42, 1.5, k)); }
+  if (sh === 'cuC2') { const k = seg(lt, 31.2, 31.88), z = lerp(2.1, 2.25, k); return { x: cf[0] - 16, y: cf[1] + 150 / z, z }; }
+  if (sh === 'wide') return p4base(540, lerp(1.04, 1.0, seg(lt, 31.88, 32.85)), { at: 330 });
+  if (sh === 'cuC3') { const k = seg(lt, 32.85, 33.55), z = lerp(2.3, 2.42, k); return { x: cf[0] - 10, y: cf[1] + 120 / z, z }; }
+  return p4base(540, lerp(.98, .86, easeIO(seg(lt, 33.55, 35.09))), { at: 330 });
+}
+// the one-second insert at "marmalade": a jar with a gingham lid, a tiny leaf, and a label that is a face
+function insJar(lt) {
+  const J = JAR(), age = lt - J.t0, fall = easeIn(seg(lt, J.t0, J.t0 + .13)), land = lt >= J.t0 + .13 ? Math.max(0, 1 - (lt - J.t0 - .13) / .14) : 0;
+  const a2 = Math.max(0, age - .13), wob = Math.sin(a2 * 20) * Math.exp(-a2 * 6) * .035, push = 1 + .06 * seg(lt, J.t0, J.t1);
+  A6.bokeh(lt, ['255,200,120', '255,150,80', '255,232,170'], ['#2a1408', '#4a2a10']);
+  ctx.fillStyle = V2.grad(0, 1180, 0, 1560, [[0, '#b9824a'], [1, '#6a4422']]); ctx.fillRect(-20, 1180, W + 40, 500);   // the shelf
+  ctx.fillStyle = 'rgba(255,236,190,.28)'; ctx.fillRect(-20, 1180, W + 40, 8);
+  ctx.strokeStyle = 'rgba(40,20,8,.35)'; ctx.lineWidth = 3; for (let i = 0; i < 6; i++) { const y = 1230 + i * 60; ctx.beginPath(); ctx.moveTo(-20, y); ctx.bezierCurveTo(300, y + 8, 700, y - 8, W + 20, y + 4); ctx.stroke(); }
+  ctx.save(); ctx.translate(540, 1180); ctx.scale(1.2 * push, 1.2 * push); ctx.translate(-540, -1130);
+  ctx.fillStyle = 'rgba(20,10,4,.4)'; ell(540, 1140, 270 + 30 * land, 30); ctx.fill();
+  ctx.translate(540, 1130 - 340 * (1 - fall)); ctx.rotate(wob); ctx.scale(1 + .1 * land, 1 - .12 * land); ctx.translate(-540, -1130);
+  const jx0 = 330, jx1 = 750, jyb = 1120, jyt = 640;
+  const body = () => { ctx.beginPath(); ctx.moveTo(jx0 + 50, jyb); ctx.lineTo(jx1 - 50, jyb); ctx.quadraticCurveTo(jx1, jyb, jx1, jyb - 50); ctx.lineTo(jx1, jyt + 70); ctx.quadraticCurveTo(jx1, jyt, jx1 - 50, jyt - 14); ctx.lineTo(jx0 + 50, jyt - 14); ctx.quadraticCurveTo(jx0, jyt, jx0, jyt + 70); ctx.lineTo(jx0, jyb - 50); ctx.quadraticCurveTo(jx0, jyb, jx0 + 50, jyb); ctx.closePath(); };
+  body(); ctx.fillStyle = 'rgba(210,235,245,.35)'; ctx.fill();
+  ctx.save(); body(); ctx.clip();   // the marmalade, to just below the neck
+  ctx.fillStyle = V2.grad(jx0, 0, jx1, 0, [[0, '#ff9a1c'], [.5, '#ffb43a'], [1, '#e8700c']]); ctx.fillRect(jx0, jyt + 30, jx1 - jx0, jyb - jyt);
+  ctx.strokeStyle = 'rgba(160,70,0,.45)'; ctx.lineWidth = 7; ctx.lineCap = 'round'; for (let i = 0; i < 16; i++) { const x = jx0 + 30 + hash(i) * 360, y = jyt + 70 + hash(i + 8) * 420, a = hash(i + 3) * PI; ctx.beginPath(); ctx.arc(x, y, 18 + hash(i + 5) * 14, a, a + 1.9); ctx.stroke(); }   // strands of peel
+  ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 3; for (let i = 0; i < 9; i++) { const x = jx0 + 40 + hash(i + 20) * 340, y = jyt + 90 + hash(i + 25) * 400, r = 5 + hash(i + 30) * 9; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); }   // bubbles
+  ctx.fillStyle = 'rgba(255,255,255,.42)'; rr(jx0 + 26, jyt + 50, 30, 400, 15); ctx.fill(); rr(jx1 - 50, jyt + 80, 14, 200, 7); ctx.fill();   // the glass catches the light
+  ctx.restore();
+  body(); ctx.strokeStyle = INK; ctx.lineWidth = 7; ctx.stroke();
+  ctx.fillStyle = '#dfe4ec'; ctx.strokeStyle = INK; ctx.lineWidth = 6; rr(jx0 + 36, jyt - 78, jx1 - jx0 - 72, 62, 14); ctx.fill(); ctx.stroke();   // the rim
+  // the gingham lid, tied with twine, and one small leaf
+  ctx.save(); ctx.beginPath(); ctx.moveTo(jx0 + 14, jyt - 56); ctx.quadraticCurveTo(540, jyt - 230, jx1 - 14, jyt - 56);
+  for (let x = jx1 - 14; x > jx0 + 14; x -= 52) ctx.quadraticCurveTo(x - 26, jyt - 6, x - 52, jyt - 56); ctx.closePath(); ctx.fillStyle = '#fffaf0'; ctx.fill(); ctx.clip();
+  ctx.fillStyle = 'rgba(214,40,60,.62)'; for (let x = jx0; x < jx1 + 40; x += 68) ctx.fillRect(x, jyt - 240, 34, 260); for (let y = jyt - 240; y < jyt + 20; y += 68) ctx.fillRect(jx0, y, jx1 - jx0, 34);
+  ctx.fillStyle = 'rgba(255,255,255,.2)'; ell(470, jyt - 130, 60, 26); ctx.fill(); ctx.restore();
+  ctx.beginPath(); ctx.moveTo(jx0 + 14, jyt - 56); ctx.quadraticCurveTo(540, jyt - 230, jx1 - 14, jyt - 56); for (let x = jx1 - 14; x > jx0 + 14; x -= 52) ctx.quadraticCurveTo(x - 26, jyt - 6, x - 52, jyt - 56); ctx.closePath(); ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.stroke();
+  ctx.strokeStyle = '#c9a063'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(jx0 + 40, jyt - 60); ctx.quadraticCurveTo(540, jyt - 40, jx1 - 40, jyt - 60); ctx.stroke(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.stroke();
+  ctx.fillStyle = '#c9a063'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; for (const sd of [-1, 1]) { ctx.beginPath(); ctx.ellipse(540 + sd * 34, jyt - 46, 30, 15, sd * .5, 0, TAU); ctx.fill(); ctx.stroke(); }
+  ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(540, jyt - 176); ctx.quadraticCurveTo(544, jyt - 206, 560, jyt - 226); ctx.stroke();
+  leaf(560, jyt - 222, .95, 96, 28, '#4fb046'); leaf(554, jyt - 214, -1.1, 76, 24, '#3f9a3a');
+  // the label: a round face with huge eyes and a smile, and a price tag still tied on
+  const lx = 540, ly = 900, blink = age > .42 && age < .52 ? 1 : 0;
+  ctx.fillStyle = '#fff6dc'; ctx.strokeStyle = '#8a4a14'; ctx.lineWidth = 7; ell(lx, ly, 172, 168); ctx.fill(); ctx.stroke(); ctx.strokeStyle = 'rgba(138,74,20,.5)'; ctx.lineWidth = 3; ell(lx, ly, 154, 150); ctx.stroke();
+  for (const sd of [-1, 1]) { const ex = lx + sd * 62, ey = ly - 36; ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 5; ell(ex, ey, 40, blink ? 6 : 46); ctx.fill(); ctx.stroke();
+    if (!blink) { ctx.fillStyle = INK; ell(ex - sd * 8, ey + 4, 22, 24); ctx.fill(); ctx.fillStyle = '#fff'; ell(ex - sd * 8 - 7, ey - 6, 7, 8); ctx.fill(); ell(ex - sd * 8 + 7, ey + 11, 3.4, 3.8); ctx.fill(); }
+    ctx.fillStyle = 'rgba(255,110,150,.35)'; ell(lx + sd * 98, ly + 28, 28, 16); ctx.fill(); }
+  ctx.strokeStyle = INK; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(lx - 46, ly + 44); ctx.quadraticCurveTo(lx, ly + 92, lx + 46, ly + 44); ctx.stroke();
+  text('MARMALADE', lx, ly + 126, { size: 36, font: 'Bangers', weight: 400, fill: '#b04a00', spacing: 3 });
+  ctx.save(); ctx.translate(jx0 + 12, jyt + 40); ctx.rotate(-.35); ctx.strokeStyle = '#8a8a8a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-44, 52); ctx.stroke();
+  ctx.fillStyle = '#fffdf0'; ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-84, 44); ctx.lineTo(-22, 44); ctx.lineTo(-22, 96); ctx.lineTo(-84, 96); ctx.lineTo(-96, 70); ctx.closePath(); ctx.fill(); ctx.stroke(); text('$89', -52, 71, { size: 28, fill: '#d62828', weight: 900 }); ctx.restore();
+  ctx.restore();
+  // a glint that crosses the glass just after it lands
+  const gk = seg(lt, J.t0 + .2, J.t0 + .6); if (gk > 0 && gk < 1) sparkle(lerp(jx0 + 60, jx1 - 60, gk), 760 + 40 * Math.sin(gk * PI), 44, Math.sin(gk * PI), '#fff6c0');
+}
+function p4draw(lt, F) {
+  const sh = p4shot(lt);
+  if (sh === 'jar') { insJar(lt); return; }
+  const c = p4cast(lt, F), cu = sh === 'cuC' || sh === 'cuC2' || sh === 'cuC3', bl = bulb4(lt);
+  V2.setLight({ key: [-.2, -.9], keyColor: '#ffe9b0', keyA: .3, rim: '#8fe0c0', rimA: .35, shadow: '#0c1814', shadowA: .45, amb: '#cfe0d0', ambA: .05, bounce: '#ffd9a0', bounceA: .1 }); V2.opts.reflect = true;
+  bgDof(cu ? 8 : 0, () => closetSet(lt));
+  const [bx, by] = p2(BULB.x, BULB.y, BULB.z);
+  V2.addLight({ x: bx, y: by, r: 1000, color: '255,226,150', a: .4 * bl });
+  const list = [['cl', c.zc], ['so', c.zs]].sort((a, b2) => b2[1] - a[1]);
+  for (const [k] of list) (cu && k !== 'cl' ? nbr : drawChar)(c[k]);
+  sweatDrops(lt, c.cl);
+  tumbleweed(lt, cu);
+}
+
+// ------------------------------------------------------------------ the parts of the montage
+const PARTS = [{ camP: { f: 1400, cy: 360, hy: 860 }, cal: BPAD, cam: p1cam, cover() { return { x: BPAD.px + PW * BPAD.s / 2, y: BPAD.py + PH * BPAD.s / 2, z: COVER / BPAD.s, r: 0 }; }, draw: p1draw, fx: lt => ({ bloom: .62, vignette: .44, contrast: .2, sat: .28, tint: [['#ffe2a8', .16, 'soft-light'], ['#5a7fc8', .06, 'multiply']] }) }, { camP: { f: 1400, cy: 360, hy: 860 }, cal: SPAD, cam: p2cam, cover() { return { x: SPAD.px + PW * SPAD.s / 2, y: SPAD.py + PH * SPAD.s / 2, z: COVER / SPAD.s, r: 0 }; }, draw: p2draw, fx: lt => ({ bloom: .62, vignette: .42, contrast: .18, sat: .3, tint: [['#ffd0e0', .1, 'soft-light'], ['#ffe2a8', .08, 'soft-light']] }) }, { camP: BRK_CAM, cal: BPADR, cam: p3cam, cover() { return { x: BPADR.px + PW * BPADR.s / 2, y: BPADR.py + PH * BPADR.s / 2, z: COVER / BPADR.s, r: 0 }; }, draw: p3draw, fx: lt => ({ bloom: .5, vignette: .5, contrast: .2, sat: .06, tint: [['#8fd8c0', .16, 'soft-light'], ['#071a2c', .12, 'multiply']] }) }, { camP: CLO_CAM, cal: CPAD, cam: p4cam, cover() { const th = CPAD.rot, sc = CPAD.s; return { x: CPAD.px + PW * sc / 2 - Math.sin(th) * PH * sc / 2, y: CPAD.py + Math.cos(th) * PH * sc / 2, z: COVER / sc, r: -th }; }, draw: p4draw, fx: lt => { const bl = bulb4(lt); return { bloom: .55, vignette: .6, contrast: .22, sat: .08, tint: [['#ffe9a0', .1 * bl, 'soft-light'], ['#06100c', .2 + .22 * (1 - bl), 'multiply']] }; } }];
 
 // ------------------------------------------------------------------ the scene
 const mixCam = (a, b, e) => ({ x: lerp(a.x, b.x, e), y: lerp(a.y, b.y, e), z: logMix(a.z, b.z, e), r: lerp(a.r || 0, b.r || 0, e) });
@@ -779,7 +1028,7 @@ const SC = {
   },
   fx: lt => { const F = frameOf(lt), base = { bloom: .5, vignette: .4, grain: .045, contrast: .12, sat: .1 }, own = F.part != null && F.mode !== 'rip' ? PARTS[F.part].fx(lt) : {}; return Object.assign(base, own, { fade: Math.max(1 - seg(lt, 0, .22), seg(lt, CUR.dur - .35, CUR.dur - .02)), fadeColor: '0,0,10' }); },
   blur: lt => { const F = frameOf(lt); return F.mode === 'dive' ? 10 : F.mode === 'rip' ? 10 : F.mode === 'pull' ? 10 : 1; },
-  over(lt) {},
+  over(lt) { sfxWord(lt, B('end').s + .10, 'WAH WAH', 540, 470, { size: 120, rot: -.06, hold: .9 }); },
 };
 window.__DAYS_DBG = { peel, pageFront, wallPad };
 window.__EP10_SCENES = window.__EP10_SCENES || {};

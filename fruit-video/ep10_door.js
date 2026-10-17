@@ -15,10 +15,10 @@
 (() => {
 if (!window.TIMELINE_EP10) return;
 const { person, runner, zoomTo, faceC, drawBg, inB, localOf, confetti } = window.H6;
-const A7 = window.A7, A9 = window.A9, A10 = window.A10, S6 = window.S6, S7 = window.S7;
-const { straw, mango, lemon, cran, banana, pine } = A7, melon = A9.melon, clem = A10.clem;
+const A7 = window.A7, A9 = window.A9, S6 = window.S6, S7 = window.S7;
+const { straw, mango, lemon, cran, banana, pine } = A7, melon = A9.melon;
 const { onZ, kz, box3 } = S6;
-const { p2 } = V2;
+const { p2, poly } = V2;
 window.__EP10_SCENES = window.__EP10_SCENES || {};
 
 // ------------------------------------------------------------------ helpers (copies of the Episode 9 ones)
@@ -201,14 +201,17 @@ function lobby(o) {
   { const [cx, cy] = p2(480, 560, ZB); ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); dial(70, o.S0 ?? 0); ctx.restore(); }
   banner(t);
   balloons(-575, 1610, t, 0); balloons(575, 1610, t, 2.3);
-  carpet();
-  for (const s of [-1, 1]) for (let i = 0; i < 2; i++) { const Z = 1660 - i * 140; if (i) rope(s * 150, Z + 140, Z); stanchion(s * 150, Z); }
-  // light: a cool spill from the glass across the floor (it grows when the doors open), warm pools under the lamps
+  // light: a cool spill from the glass across the floor (it grows when the doors open), laid down before the carpet so the carpet stays crimson, then a faint second pass over it
   const fa = p2(DX0, 0, ZB), fb = p2(DX1, 0, ZB), fc = p2(560, 0, P.cz + 260), fd = p2(-560, 0, P.cz + 260), cl = .12 + .16 * open + .1 * cold;
-  ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.grad(0, fa[1], 0, fc[1], [[0, `rgba(110,164,255,${cl})`], [.6, `rgba(110,164,255,${.05 + .08 * open + .06 * cold})`], [1, 'rgba(110,164,255,0)']]);
-  ctx.beginPath(); ctx.moveTo(...fa); ctx.lineTo(...fb); ctx.lineTo(...fc); ctx.lineTo(...fd); ctx.closePath(); ctx.fill(); ctx.restore();
+  const spill = m => { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.grad(0, fa[1], 0, fc[1], [[0, `rgba(110,164,255,${cl * m})`], [.6, `rgba(110,164,255,${(.05 + .08 * open + .06 * cold) * m})`], [1, 'rgba(110,164,255,0)']]);
+    ctx.beginPath(); ctx.moveTo(...fa); ctx.lineTo(...fb); ctx.lineTo(...fc); ctx.lineTo(...fd); ctx.closePath(); ctx.fill(); ctx.restore(); };
+  spill(1.25);
+  carpet();
+  spill(.3);
+  for (const s of [-1, 1]) for (let i = 0; i < 2; i++) { const Z = 1660 - i * 140; if (i) rope(s * 150, Z + 140, Z); stanchion(s * 150, Z); }
   for (const [X, Z] of [[-260, 540], [260, 540], [-260, 1140], [260, 1140], [-260, 1620], [260, 1620]]) if (Z > P.cz + 150) { const [gx, gy] = p2(X, 0, Z); V2.glow(gx, gy, 330 * kz(Z), '255,214,150', .12 * (1 - .5 * cold), 'screen', 0); }
   const [dxx, dyy] = p2(0, 240, ZB); V2.glow(dxx, dyy, 700 * k, '150,200,255', .14 + .34 * open, 'screen', .6);
+  if (open > .02) V2.glow(dxx, dyy - 20, 420 * k, '225,240,255', .8 * open, 'screen', .85);
   return {
     door: [dxx, dyy],
     // the door leaves slide aside over the fixed panes
@@ -224,7 +227,7 @@ function lobby(o) {
 }
 
 // ------------------------------------------------------------------ the pay stub: a receipt printer, the paper rising out of its slot a line at a time
-const SLOT_Y = 1130, YV = SLOT_Y - 26, PX0 = 232, PX1 = 848;   // YV: where the paper disappears behind the lid
+const SLOT_Y = 1130, YV = SLOT_Y - 26, PX0 = 196, PX1 = 884;   // YV: where the paper disappears behind the lid
 // the lines of the stub and when each prints (the CAKE line lands on the word "cake", BANNER on "banner", NET PAY slaps in just after); the figures add up: 2720.00 - 2715.83 = 4.17
 function stubRows() {
   const tc = wordT('s1', 'cake', 3.21), tb = wordT('a2', 'banner', 4.22);
@@ -345,7 +348,7 @@ function burst(lt, t0, side, n = 70) {
 // Mango and Mrs. Cranberry at the front of the funnel, Lemon inside Mango, the principals at the apex (250 units from the glass); Clementine, Banana and Pineapple soft behind
 const CAMB = { f: 2100, cy: 360, hy: 860 }, CZ0 = -1100;
 const ST = .9;   // the staff stand a little smaller than the principals, so the funnel fits the frame without anyone standing on anyone's face
-const POS = { mango: [-440, 1000], cran: [345, 1000], lemon: [240, 1250], admin: [-250, 1450], straw: [85, 1450], clem: [-120, 1640], banana: [390, 1560], pine: [-390, 1520] };
+const POS = { mango: [-440, 1000], cran: [345, 1000], lemon: [240, 1250], admin: [-250, 1450], straw: [85, 1450], banana: [400, 1580], pine: [-390, 1520] };
 const T_TURN = 8.7, T_WALK = 9.0, T_DOOR = 10.35, T_CLAP = 9.42;   // Strawberry turns, walks, reaches the glass; the staff start to clap
 const SP = route([[0, ...POS.straw], [T_WALK, ...POS.straw], [T_WALK + .3, 15, 1480, 'io'], [T_DOOR, 15, ZB + 4], [T_DOOR + .55, 15, ZB + 160]]);
 const D = {};
@@ -380,20 +383,19 @@ D.cast = lt => {
   if (reach > .01) handTo(sp, -1, M[0], M[1], reach, [-100, 40]);
   if (lt >= hT) { sp.hold = { l: 'envelope10' }; sp.arms = { l: 'hold', r: 'rest' }; if (lt >= hT + .4) sp.grip = { l: [-134, 62] }; }
   if (walking) { sp.arms.r = [.28 - .35 * sw, .25]; sp.arms.l = 'hold'; sp.grip = { l: [-134, 62] }; sp.hold = { l: 'envelope10' }; }
+  { const dk = ez(lt, T_WALK, T_DOOR - .3), c0 = KINDS.straw.c; if (dk > 0) { sp.colors = [mixc(c0[0], '#3a2450', dk), mixc(c0[1], '#1e1236', dk), mixc(c0[2], '#0b0620', dk)]; sp.shadowA = lerp(.5, .95, dk); } }
   // ---- the staff
   const mg = mango(Object.assign(q('mango'), { s: q('mango').s * ST, id: 'mango', expr: lt >= T_CLAP ? 'happy' : 'sad', look: lt >= b('out').s ? [.5, -.15] : [.6, 0], arms: { l: 'rest', r: 'rest' }, lift: hop * .6, transit: tr }));
   const lm = lemon(Object.assign(q('lemon'), { s: q('lemon').s * ST, id: 'lemon', expr: 'neutral', look: lt >= b('out').s ? [-.4, -.1] : [-.55, 0], grip: { l: [-16, 78], r: [16, 78] }, hand: { l: 'grip', r: 'grip' }, arms: { l: 'hold', r: 'hold' }, transit: tr }));   // hands folded in front of her: formal, and nothing tall beside her face
   const qc = q('cran'), cr = cran({ x: qc.x, y: qc.y - 118 * qc.s * ST, s: qc.s * ST, id: 'cran', noLegs: true, noShadow: true, noReflect: true, expr: 'happy', look: lt >= b('out').s ? [-.5, -.2] : [-.6, 0], arms: { l: 'rest', r: 'rest' }, transit: tr });
-  const cl = clem(Object.assign(q('clem'), { s: q('clem').s * ST, id: 'clem', expr: lt >= T_CLAP ? 'happy' : 'hopeful', look: lt >= b('out').s ? [.4, -.2] : [.35, .05], arms: { l: 'rest', r: 'rest' }, lift: hop * 1.3, transit: tr }));
   if (clap) {
     mg.grip = { l: [-lerp(8, 56, cp), 74], r: [lerp(8, 56, cp), 74] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'flat', r: 'flat' };
     cr.grip = { l: [-lerp(6, 46, cp), 54], r: [lerp(6, 46, cp), 54] }; cr.arms = { l: 'hold', r: 'hold' }; cr.hand = { l: 'flat', r: 'flat' };
-    cl.grip = { l: [-lerp(8, 52, 1 - cp), 66], r: [lerp(8, 52, 1 - cp), 66] }; cl.arms = { l: 'hold', r: 'hold' }; cl.hand = { l: 'flat', r: 'flat' };
     { const lc = .5 + .5 * Math.sin(lt * 7); lm.hand = {}; lm.grip = { l: [-lerp(16, 34, lc), 72], r: [lerp(16, 34, lc), 72] }; lm.arms = { l: 'hold', r: 'hold' }; lm.hand = { l: 'flat', r: 'flat' }; }   // a slow, small, entirely sincere golf clap
   }
-  const bn = banana(Object.assign(q('banana'), { id: 'banana', expr: 'happy', look: [-.5, 0], arms: clap ? { l: 'cheer', r: 'wave' } : { l: 'rest', r: 'rest' }, lift: clap ? hop * .8 : 0 }));
+  const bn = banana(Object.assign(q('banana'), { s: q('banana').s * ST, id: 'banana', expr: 'happy', look: lt >= b('out').s ? [-.35, -.2] : [-.5, 0], transit: tr, arms: clap ? { l: 'cheer', r: 'wave' } : { l: 'rest', r: 'rest' }, lift: clap ? hop * .8 : 0 }));
   const pn = pine(Object.assign(q('pine'), { id: 'pine', who: null, acc: [], expr: 'happy', look: [.5, 0], arms: clap ? { l: 'wave', r: 'cheer' } : { l: 'rest', r: 'rest' }, lift: clap ? hop : 0 }));
-  return { adm, sp, mg, lm, cr, cl, bn, pn, qc, M, hT };
+  return { adm, sp, mg, lm, cr, bn, pn, qc, M, hT };
 };
 
 D.cam = function (lt) {
@@ -431,7 +433,7 @@ D.draw = function (lt) {
   // the cast, far to near. Background fruit are always soft (a long lens) and never audited; in a close-up everything nearer than the subject is simply left out of the frame
   const softPx = wide ? 3 : 9, soft = o => V2.dof(softPx, () => drawBg(o));
   const items = [
-    { z: POS.pine[1], id: 'pn', main: false, draw: () => soft(c.pn) }, { z: POS.banana[1], id: 'bn', main: false, draw: () => soft(c.bn) }, { z: POS.clem[1], id: 'cl', main: false, draw: () => soft(c.cl) },
+    { z: POS.pine[1], id: 'pn', main: false, draw: () => soft(c.pn) }, { z: POS.banana[1], id: 'bn', main: false, draw: () => soft(c.bn) },
     { z: POS.lemon[1], id: 'lm', main: true, draw: () => drawChar(c.lm) }, { z: POS.mango[1], id: 'mg', main: true, draw: () => drawChar(c.mg) },
     { z: POS.cran[1], id: 'cr', main: true, draw: () => { const q = c.qc; S7.wheelchairBack(q.x, q.y, q.s * ST); drawChar(c.cr); S7.wheelchairFront(q.x, q.y, q.s * ST); } },
     { z: POS.admin[1], id: 'adm', main: true, draw: () => (focus && focus.includes('adm') && sh === 'cuA' && rack > .55 ? soft : drawChar)(c.adm) },
@@ -454,4 +456,323 @@ D.over = function (lt) {
   sfxWord(lt, 9.46, 'YAAAY!', 700, 330, { size: 120, hold: .6, fill: '#ffe135', rot: .05 });
 };
 window.__EP10_SCENES.door = D;
+
+// ============================================================================ the parking lot, 11:00 PM
+// Not Episode 9's blue-violet lot: a teal night, sodium-orange lamps, wet asphalt. A long lens from across the lot (the whole front of the building sits right behind whoever walks toward us),
+// and the phone inserts look straight down at the phone while the ground slides under it.
+//   0.00 to 1.40  open    the lot: crickets, WE'RE HIRING flapping, a SHIFTGO van pulling in; Strawberry walks out of the glass doors toward us with the envelope
+//   1.40 to 2.98  ping    the phone from above (textding 1.40): the notification drops in and grows into the job card; "Fruit Bowl?" begins over it
+//   2.98 to 3.80  cuS1    Strawberry, lit by the phone: "...Bowl?"
+//   3.80 to 5.40  moonC1  the Moon: "That was fast."
+//   5.40 to 6.76  cuS2    Strawberry: "It's short notice."
+//   6.76 to 8.16  tap     the phone again: her thumb lands on ACCEPT (click 6.89), sparkle (7.24), YOU'RE BOOKED and five stars (7.39)
+//   8.16 to 9.88  moonC2  the Moon: "See you tomorrow."
+//   9.88 to 11.45 fin     a held wide under the Moon: "At three." and she walks to her car; the picture fades
+const LF = { f: 2400, cy: 330, hy: 1000 }, LZ0 = -1000, ZBL = 2500, CAR = [560, 1560], CARW = 165;
+const LAMPS = [[-600, 2230], [700, 2070]];
+Object.assign(PROP_BOX, { phone10: Object.assign([-34, -68, 34, 32], { nearFace: true }) });
+EXT.prop.phone10 = (side, o, t) => {   // the SHIFTGO lock screen in her hand: a lit violet screen, the app tile, a green button
+  ctx.rotate(side * .3);
+  ctx.fillStyle = '#16121e'; ctx.strokeStyle = '#4a4458'; ctx.lineWidth = 3; rr(-23, -62, 46, 88, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = V2.grad(0, -54, 0, 18, [[0, '#6c4bff'], [1, '#ff4fa3']]); rr(-18, -54, 36, 72, 6); ctx.fill();
+  A9.appIcon(0, -30, 22);
+  ctx.fillStyle = '#12c37a'; rr(-13, -2, 26, 11, 5.5); ctx.fill();
+};
+
+// a parked car seen from behind: the Episode 6 car with true colours (that one blends its faces through a fog that cannot read rgb() strings, which drops their red)
+const lit10 = (c, f) => { const [r, g, b] = V2.rgb(c), q = v => Math.max(0, Math.min(255, v)) | 0; return `rgb(${q(r * f)},${q(g * f)},${q(b * f)})`; };
+function car10(X, Z, o = {}) {
+  const w = o.w ?? 165, len = o.len ?? 440, c = o.color ?? '#2c8f9a', brake = o.brake ?? .35, bx = S6.box3;
+  for (const sx of [-1, 1]) bx({ x0: sx < 0 ? X - w - 6 : X + w - 34, x1: sx < 0 ? X - w + 34 : X + w + 6, y1: 64, z0: Z + 70, z1: Z + 160, color: '#16141c', lw: 1.2 });
+  bx({ x0: X - w, x1: X + w, y0: 30, y1: 120, z0: Z, z1: Z + len, color: c, front: lit10(c, 1.0), side: lit10(c, .66), top: lit10(c, 1.24) });
+  bx({ x0: X - w * .74, x1: X + w * .74, y0: 120, y1: 204, z0: Z + len * .16, z1: Z + len * .66, color: c, front: lit10(c, .92), side: lit10(c, .64), top: lit10(c, 1.3) });
+  { const a = [p2(X - w * .64, 128, Z + len * .16), p2(X + w * .64, 128, Z + len * .16), p2(X + w * .64, 196, Z + len * .16), p2(X - w * .64, 196, Z + len * .16)];
+    poly(a, V2.grad(0, a[2][1], 0, a[0][1], [[0, '#2a3a66'], [1, '#101628']]), 'rgba(10,8,20,.7)', 2); }
+  bx({ x0: X - w - 2, x1: X + w + 2, y0: 22, y1: 46, z0: Z - 14, z1: Z + 6, color: lit10(c, .5), lw: 1.4 });
+  const k = kz(Z);
+  for (const [a, b] of [[X - w + 8, X - w + 66], [X + w - 66, X + w - 8]]) { onZ(Z - 14, a, b, 62, 100, `rgb(255,${58 + 120 * (1 - brake) | 0},${58 + 120 * (1 - brake) | 0})`, 'rgba(20,8,12,.7)', 1.6); const [gx, gy] = p2((a + b) / 2, 81, Z - 14); V2.glow(gx, gy, 90 * k, '255,50,50', .5 + .5 * brake, 'screen', .7); }
+  onZ(Z - 14, X - 34, X + 34, 48, 78, '#f0eee4', 'rgba(20,16,24,.7)', 1.6);
+}
+// a sodium lamp post with its pool of light and a wet streak running toward the camera
+function lamp(X, Z, o = {}) {
+  const h = o.h ?? 700, side = X < 0 ? 1 : -1, k = kz(Z), on = o.on ?? 1;
+  S6.box3({ x0: X - 9, x1: X + 9, y1: h, z0: Z, z1: Z + 18, color: '#1c2a30', front: '#2a3a42', side: '#122026', lw: 1.2 });
+  S6.box3({ x0: Math.min(X, X + side * 110), x1: Math.max(X, X + side * 110), y0: h - 8, y1: h + 8, z0: Z - 6, z1: Z + 24, color: '#1c2a30', lw: 1.2 });
+  const hx = X + side * 112, [lx, ly] = p2(hx, h - 12, Z + 8);
+  ctx.fillStyle = `rgba(255,214,150,${.5 + .5 * on})`; ctx.beginPath(); ctx.ellipse(lx, ly + 2 * k, 36 * k, 10 * k, 0, 0, TAU); ctx.fill();
+  V2.glow(lx, ly, 330 * k, '255,168,70', .5 * on, 'screen', .2);
+  const [gx, gy] = p2(hx, 0, Z + 8);
+  ctx.save(); ctx.globalCompositeOperation = 'screen';
+  ctx.fillStyle = V2.radial(gx, gy, 10, 620 * k, [[0, `rgba(255,170,80,${.24 * on})`], [1, 'rgba(255,170,80,0)']]); ctx.beginPath(); ctx.ellipse(gx, gy, 700 * k, 120 * k, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = V2.grad(0, gy, 0, gy + 560 * k, [[0, `rgba(255,190,110,${.2 * on})`], [1, 'rgba(255,190,110,0)']]); ctx.fillRect(gx - 18 * k, gy, 36 * k, 560 * k);
+  ctx.restore();
+}
+// a puddle on the asphalt: a patch of sky, a lamp streak, and a ring now and then where a drop lands
+function puddle(X, Z, rx, rz, t, seed) {
+  const pts = []; for (let i = 0; i < 32; i++) { const a = i / 32 * TAU, wob = 1 + .09 * Math.sin(a * 3 + seed) + .05 * Math.sin(a * 5 + seed * 2); pts.push(p2(X + Math.cos(a) * rx * wob, 0, Z + Math.sin(a) * rz * wob)); }
+  const c = p2(X, 0, Z), k = kz(Z), hh = rz * k;
+  ctx.save(); ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+  ctx.fillStyle = V2.grad(0, c[1] - hh, 0, c[1] + hh, [[0, 'rgba(140,215,210,.62)'], [.55, 'rgba(60,130,138,.5)'], [1, 'rgba(14,40,48,.7)']]); ctx.fill();
+  ctx.strokeStyle = 'rgba(190,240,236,.35)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.clip();
+  ctx.fillStyle = V2.grad(0, c[1] - hh, 0, c[1] + hh, [[0, 'rgba(255,196,120,.0)'], [.5, 'rgba(255,196,120,.28)'], [1, 'rgba(255,196,120,0)']]); ctx.fillRect(c[0] - rx * k * .25, c[1] - hh, rx * k * .5, hh * 2);
+  const q = ((t * .6 + seed * .37) % 1), a = 1 - q;
+  ctx.strokeStyle = `rgba(230,250,250,${.5 * a})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(c[0] + rx * k * .2 * Math.sin(seed), c[1], rx * k * .55 * q + 2, hh * .55 * q + 1, 0, 0, TAU); ctx.stroke();
+  ctx.restore();
+}
+// the WE'RE HIRING banner over the doors: yellow vinyl, tied at the corners, the bottom edge flapping in the wind (the small print is the joke)
+function hireBanner(t) {
+  const Z = ZBL - 6, X0 = -440, X1 = 440, Y1 = 720, Y0 = 500, k = kz(Z);
+  const wv = (x, ph) => 11 * k * Math.sin(x * .0115 + t * 3.2 + ph) + 5 * k * Math.sin(x * .029 - t * 4.9 + ph * 2);
+  const tl = p2(X0, Y1, Z), tr = p2(X1, Y1, Z), bl = p2(X0, Y0, Z), br = p2(X1, Y0, Z), N = 26;
+  ctx.save(); ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(20,14,16,.75)'; ctx.lineWidth = 3; for (const [a, X] of [[tl, X0], [tr, X1]]) { const c = p2(X + (X < 0 ? -60 : 60), Y1 + 70, Z); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke(); }
+  ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 14 * k; ctx.shadowOffsetY = 8 * k;
+  ctx.fillStyle = V2.grad(0, tl[1], 0, bl[1], [[0, '#ffe34a'], [1, '#f4b800']]); ctx.strokeStyle = '#3a2a08'; ctx.lineWidth = Math.max(3, 6 * k);
+  ctx.beginPath(); ctx.moveTo(tl[0], tl[1] + wv(0, 0) * .15); for (let i = 1; i <= N; i++) ctx.lineTo(lerp(tl[0], tr[0], i / N), tl[1] + wv(i * 34, 0) * .15); for (let i = N; i >= 0; i--) ctx.lineTo(lerp(bl[0], br[0], i / N), bl[1] + wv(i * 34, 1.3)); ctx.closePath(); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
+  const cx = (tl[0] + tr[0]) / 2, cy = lerp(tl[1], bl[1], .42), sz = 134 * k;
+  ctx.save(); ctx.translate(cx, cy + wv(440, .7) * .4); ctx.rotate(.012 * Math.sin(t * 3.2));
+  text("WE'RE HIRING", 0, 0, { size: sz, font: 'Bangers', weight: 400, fill: '#1a1424', spacing: 4, maxW: (tr[0] - tl[0]) * .92 }); ctx.restore();
+  ctx.save(); ctx.translate((tl[0] + tr[0]) / 2, lerp(tl[1], bl[1], .86) + wv(440, 1.3) * .6); text('(AGENCY ONLY)', 0, 0, { size: 46 * k, fill: '#5a1a14', weight: 900, spacing: 3 }); ctx.restore();
+  ctx.fillStyle = '#3a2a08'; for (const [a, dy] of [[tl, 0], [tr, 0], [bl, wv(0, 1.3)], [br, wv(880, 1.3)]]) { ell(a[0] + (a === tl || a === bl ? 14 : -14) * k, a[1] + (a === tl || a === tr ? 14 : -14) * k + dy, 5 * k, 5 * k); ctx.fill(); }
+  ctx.restore();
+}
+// the front of the building: brick, warm windows, the lit entrance with its canopy and sign, the banner
+function building(t) {
+  const hw = 1900, bh = 1100, k = kz(ZBL), yTop = p2(0, bh, ZBL)[1], yBot = p2(0, 0, ZBL)[1];
+  onZ(ZBL, -hw, hw, 0, bh, V2.grad(0, yTop, 0, yBot, [[0, '#2f2a3c'], [.5, '#4d3a45'], [1, '#6a4a48']]));
+  ctx.strokeStyle = 'rgba(20,8,16,.17)'; ctx.lineWidth = Math.max(1, 1.6 * k);
+  for (let y = 36; y < bh; y += 36) { const a = p2(-hw, y, ZBL), b = p2(hw, y, ZBL); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
+  onZ(ZBL, -hw, hw, bh - 34, bh + 26, '#211a28', 'rgba(8,4,12,.6)', 2); onZ(ZBL, -hw, hw, 0, 40, '#5b4a52');
+  for (let r = 0; r < 3; r++) for (let c = -7; c <= 7; c++) {
+    const xc = c * 250, y0 = [110, 400, 700][r];
+    if (r < 2 && Math.abs(xc) < (r ? 520 : 470)) continue;
+    const lit = hash(r * 15 + c + 30) > .3;
+    onZ(ZBL, xc - 78, xc + 78, y0, y0 + 190, lit ? V2.grad(0, p2(0, y0 + 190, ZBL)[1], 0, p2(0, y0, ZBL)[1], [[0, '#ffe7ad'], [1, '#ffbe5e']]) : '#16202c', 'rgba(8,4,12,.7)', 2.4);
+    ctx.strokeStyle = 'rgba(30,14,10,.5)'; ctx.lineWidth = Math.max(1.4, 3 * k); { const a = p2(xc, y0, ZBL), b = p2(xc, y0 + 190, ZBL), c1 = p2(xc - 78, y0 + 100, ZBL), c2 = p2(xc + 78, y0 + 100, ZBL); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.moveTo(...c1); ctx.lineTo(...c2); ctx.stroke(); }
+    if (lit) { const [gx, gy] = p2(xc, y0 + 95, ZBL); V2.glow(gx, gy, 230 * k, '255,190,100', .2, 'screen', .08); }
+  }
+  // the entrance: a lit lobby behind two glass doors
+  onZ(ZBL, -330, 330, 0, 340, '#241d2e', 'rgba(8,4,12,.7)', 3);
+  onZ(ZBL, -250, 250, 0, 285, V2.grad(0, p2(0, 285, ZBL)[1], 0, p2(0, 0, ZBL)[1], [[0, '#ffd890'], [1, '#fff0c8']]), 'rgba(10,8,20,.7)', 3);
+  for (const [a, b] of [[-250, -4], [4, 250]]) onZ(ZBL, a, b, 0, 285, 'rgba(190,225,235,.18)', '#1d1824', 4);
+  { const [dx, dy] = p2(0, 140, ZBL); V2.glow(dx, dy, 520 * k, '255,214,150', .45, 'screen', .3); }
+  S6.box3({ x0: -400, x1: 400, y0: 345, y1: 395, z0: ZBL - 200, z1: ZBL, color: '#2b2436', front: '#352d42', top: '#443b55', lw: 1.6 });
+  { const [sx, sy] = p2(0, 370, ZBL - 200); ctx.save(); ctx.shadowColor = 'rgba(255,214,140,.9)'; ctx.shadowBlur = 12; ctx.fillStyle = '#ffe9b0'; ctx.font = `900 ${34 * kz(ZBL - 200)}px Nunito`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '2px'; ctx.fillText('FRUIT BOWL REHAB & NURSING', sx, sy); ctx.restore(); ctx.letterSpacing = '0px'; }
+  hireBanner(t);
+}
+// the SHIFTGO van, seen from the side as it drives along the lot: the body, the cab, the app tile and name, the wheels, a beam of headlight and a strobe on the roof
+function van(X, Z, t, o = {}) {
+  const k = kz(Z), P = (x, y) => p2(X + x, y, Z), lights = o.lights ?? 1;
+  const body = [[-300, 48], [-306, 130], [-302, 238], [-284, 256], [168, 256], [212, 250], [292, 156], [320, 140], [326, 76], [312, 48]];
+  if (lights > 0) { const f = P(322, 100); V2.beam(f[0], f[1], f[0] + 560 * k, f[1] + 44 * k, 34 * k, 190 * k, '255,236,190', .5 * lights); }
+  poly(body.map(([x, y]) => P(x, y)), V2.grad(0, P(0, 256)[1], 0, P(0, 48)[1], [[0, '#8f6bff'], [1, '#4a2fc4']]), '#1b1030', Math.max(2.5, 5 * k));
+  poly([[-300, 74], [318, 74], [322, 98], [-304, 98]].map(([x, y]) => P(x, y)), '#ff4fa3');
+  poly([[120, 232], [214, 232], [276, 160], [120, 160]].map(([x, y]) => P(x, y)), V2.grad(0, P(0, 232)[1], 0, P(0, 160)[1], [[0, '#9fd0e6'], [1, '#33506a']]), '#1b1030', Math.max(2, 3 * k));
+  { const a = P(-30, 236), b = P(-30, 60); ctx.strokeStyle = 'rgba(20,10,40,.7)'; ctx.lineWidth = Math.max(2, 3 * k); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); const h = P(-18, 150); ctx.fillStyle = '#d6d2e4'; rr(h[0] - 3 * k, h[1] - 18 * k, 7 * k, 36 * k, 3 * k); ctx.fill(); }
+  { const [lx, ly] = P(-170, 172); ctx.save(); ctx.translate(lx, ly); ctx.scale(k * 1.0, k * 1.0); ctx.fillStyle = '#fff'; rr(-48, -48, 96, 96, 22); ctx.fill(); A9.appIcon(0, 0, 80); ctx.restore();
+    const [tx, ty] = P(-12, 176); text('SHIFTGO', tx + 70 * k, ty - 18 * k, { size: 70 * k, font: 'Bangers', weight: 400, fill: '#fff', lw: 5 * k, stroke: '#1b1030', spacing: 3 }); text('NURSES ON DEMAND', tx + 70 * k, ty + 40 * k, { size: 26 * k, fill: '#ffe2f0', weight: 900, spacing: 2 }); }
+  for (const wx of [-190, 196]) { const [x, y] = P(wx, 50); ctx.fillStyle = '#0c0a12'; ell(x, y - 2 * k, 58 * k, 58 * k); ctx.fill(); ctx.fillStyle = '#c8cbd6'; ell(x, y - 2 * k, 30 * k, 30 * k); ctx.fill(); ctx.fillStyle = '#6a6e80'; ell(x, y - 2 * k, 11 * k, 11 * k); ctx.fill(); }
+  { const [x, y] = P(322, 112); ctx.fillStyle = '#fff6d8'; ell(x, y, 15 * k, 11 * k); ctx.fill(); V2.glow(x, y, 120 * k, '255,236,180', .7 * lights, 'screen', .5); }
+  { const [x, y] = P(-306, 118); ctx.fillStyle = `rgb(255,${60 + 100 * (1 - (o.brake ?? .3)) | 0},60)`; rr(x - 7 * k, y - 18 * k, 10 * k, 36 * k, 3 * k); ctx.fill(); V2.glow(x, y, 120 * k, '255,50,50', .25 + .5 * (o.brake ?? .3), 'screen', .5); }
+  { const [x, y] = P(-60, 266), on = Math.sin(t * 9) > 0 ? 1 : .25; ctx.fillStyle = `rgba(255,170,40,${.5 + .5 * on})`; rr(x - 26 * k, y - 4 * k, 52 * k, 14 * k, 5 * k); ctx.fill(); V2.glow(x, y, 190 * k, '255,170,40', .55 * on, 'screen', .4); }
+}
+// the whole lot. o: t, vanX, vanBrake, carLights, moon {x, y, s, expr, look, suppress}
+function lotSet(o = {}) {
+  const t = o.t ?? 0, ygb = p2(0, 0, ZBL)[1];
+  ctx.fillStyle = V2.grad(0, -300, 0, ygb, [[0, '#021a21'], [.45, '#0a3b46'], [.82, '#1a6068'], [1, '#3f8f8e']]); ctx.fillRect(-300, -300, W + 600, ygb + 320);
+  A7.stars(t, 520, { n: 110, seed: 31, a: .95 });
+  A7.clouds(t, 250, 560, { n: 4, tint: '110,195,195', belly: '12,62,72', a: .26, speed: 8, seed: 5, scale: 1.2 });
+  if (o.moon) { const m = o.moon; A7.moon(m.x, m.y, m.s, { t, haloA: .75, suppress: m.suppress !== false, char: { expr: m.expr || 'neutral', look: m.look || [-.5, .4], lid: m.lid } }); }
+  building(t);
+  // the asphalt, wet: the front of the building mirrored in it, softened and fading with distance, with a few ripples across it
+  ctx.fillStyle = V2.grad(0, ygb - 2, 0, H + 200, [[0, '#2c5458'], [.2, '#1d3c42'], [.6, '#10252c'], [1, '#08141a']]); ctx.fillRect(-300, ygb - 2, W + 600, H - ygb + 520);
+  ctx.save(); ctx.beginPath(); ctx.rect(-300, ygb, W + 600, H); ctx.clip(); ctx.globalAlpha = .34; ctx.translate(0, 2 * ygb); ctx.scale(1, -1); REG.suppress++; V2.dof(4, () => building(t)); REG.suppress--; ctx.restore();
+  ctx.fillStyle = V2.grad(0, ygb, 0, ygb + 800, [[0, 'rgba(8,22,28,0)'], [.5, 'rgba(8,22,28,.45)'], [1, 'rgba(6,16,22,.92)']]); ctx.fillRect(-300, ygb, W + 600, 900);
+  ctx.save(); ctx.lineCap = 'round'; for (let i = 0; i < 34; i++) { const y = ygb + 30 + hash(i + 50) * 520, x = (hash(i) * (W + 200) - 100 + t * 14 * (hash(i + 7) - .5)), l = 40 + hash(i + 3) * 150; ctx.strokeStyle = `rgba(190,235,232,${.05 + .08 * hash(i + 11) * (1 - (y - ygb) / 560)})`; ctx.lineWidth = 2 + hash(i + 9) * 2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + l, y); ctx.stroke(); } ctx.restore();
+  // the sidewalk and its curb, a painted crossing, stall lines
+  V2.quad3([-1900, 0, 2330], [1900, 0, 2330], [1900, 0, ZBL], [-1900, 0, ZBL], '#4e666a', 'rgba(6,16,20,.5)', 2);
+  S6.box3({ x0: -1900, x1: 1900, y1: 22, z0: 2318, z1: 2334, color: '#6f878b', lw: 1.4 });
+  for (let i = -4; i <= 4; i++) V2.quad3([i * 66 - 20, .4, 2190], [i * 66 + 20, .4, 2190], [i * 66 + 20, .4, 2316], [i * 66 - 20, .4, 2316], 'rgba(236,246,246,.82)');
+  for (const x of [-1500, -1180, -860, 860, 1180, 1500]) V2.quad3([x - 7, .4, 1500], [x + 7, .4, 1500], [x + 7, .4, 2150], [x - 7, .4, 2150], 'rgba(236,246,246,.55)');
+  puddle(-330, 1820, 230, 80, t, 1.3); puddle(420, 2060, 260, 74, t, 2.1); puddle(-90, 2130, 150, 46, t, 3.7); puddle(-760, 1620, 200, 70, t, 4.4);
+  // each standing thing is drawn with a faint reflection about its own foot line
+  const mirror = (X, Z, fn) => { const by = p2(X, 0, Z)[1]; ctx.save(); ctx.globalAlpha = .22; ctx.translate(0, 2 * by); ctx.scale(1, -1); REG.suppress++; fn(); REG.suppress--; ctx.restore(); fn(); };
+  for (const [X, Z] of LAMPS) mirror(X, Z, () => lamp(X, Z, { on: 1 }));
+  mirror(-900, 2060, () => car10(-900, 2060, { color: '#2c8f9a', brake: .12 })); mirror(940, 2180, () => car10(940, 2180, { color: '#8a2d46', brake: .12, w: 160 }));
+  mirror(CAR[0], CAR[1], () => car10(CAR[0], CAR[1], { color: '#e0883a', brake: o.carBrake ?? .1, w: CARW }));
+  if (o.vanX != null) mirror(o.vanX, 2040, () => van(o.vanX, 2040, t, { lights: o.vanLights ?? 1, brake: o.vanBrake ?? .3 }));
+}
+
+// ------------------------------------------------------------------ the SHIFTGO phone: lock screen, the notification growing into a job card, then BOOKED (the Episode 9 app, a night later)
+const PHW = 600, PHH = 1060, ACC_LY = 800;   // the phone's screen size, and where the ACCEPT button sits in it
+// o: t, slide (0..1 the notification drops in), expand (0..1 banner -> job card), press, pulse, done (0..1 booked), stars (0..5)
+function uiJob(w, h, o = {}) {
+  const t = o.t ?? 0, ex = clamp(o.expand ?? 1), dn = clamp(o.done ?? 0), e = easeIO(ex), stars = o.stars ?? 0;
+  ctx.fillStyle = V2.grad(0, 0, w, h, [[0, '#1b1550'], [.6, '#3b1d6e'], [1, '#6a2a86']]); ctx.fillRect(0, 0, w, h);
+  V2.glow(w * .75, h * .16, 260, '255,120,200', .25, 'screen', 0);
+  text('Friday, October 30', w / 2, 92, { size: 30, fill: 'rgba(255,255,255,.75)', weight: 800 });
+  text('11:00', w / 2, 196, { size: 150, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 });
+  const x0 = lerp(28, 18, e), top = lerp(330, 40, e), cw = w - 2 * x0, ch = lerp(244, 982, e), R = lerp(38, 46, e);
+  ctx.save(); ctx.translate(0, (1 - easeOut(o.slide ?? 1)) * -380);
+  ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12; ctx.fillStyle = 'rgba(255,255,255,.97)'; rr(x0, top, cw, ch, R); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.save(); rr(x0, top, cw, ch, R); ctx.clip(); ctx.translate(x0, top);   // card coordinates from here: (0, 0) is the card's top left, cw wide
+  A9.appIcon(70, 62, 70);
+  text('SHIFTGO', 120, 52, { size: 30, fill: '#2a1a5a', align: 'left', spacing: 2 }); text('now', cw - 34, 52, { size: 24, fill: '#5f5878', align: 'right', weight: 800 });
+  // the notification text, until the card opens
+  const nA = 1 - clamp((ex - .06) / .26);
+  if (nA > 0) { ctx.save(); ctx.globalAlpha *= nA;
+    ['New shift near you:', 'Fruit Bowl Rehab & Nursing', '$118.00/hr, tomorrow 3 PM'].forEach((ln, i) => text(ln, 36, 118 + i * 38, { size: 30, fill: i === 1 ? '#6c4bff' : '#1d1838', align: 'left', weight: 800 }));
+    ctx.restore(); }
+  // the job card
+  const jA = clamp((ex - .35) / .4) * (1 - clamp(dn * 4));
+  if (jA > 0) {
+    ctx.save(); ctx.globalAlpha *= jA;
+    text('NEW SHIFT NEAR YOU', cw / 2, 150, { size: 26, fill: '#6c4bff', spacing: 4, weight: 900 });
+    text('FRUIT BOWL', cw / 2, 235, { size: 72, font: 'Bangers', weight: 400, fill: '#2a1a5a', spacing: 3 }); text('REHAB & NURSING', cw / 2, 310, { size: 72, font: 'Bangers', weight: 400, fill: '#2a1a5a', spacing: 3 });
+    ctx.fillStyle = '#ece8fb'; rr(cw / 2 - 190, 352, 380, 58, 29); ctx.fill(); text('NURSE (AGENCY)', cw / 2, 382, { size: 30, fill: '#4f3bb0', weight: 900, spacing: 1 });
+    text('$118.00', 45, 505, { size: 132, font: 'Bangers', weight: 400, fill: '#6c4bff', align: 'left', spacing: 2 }); text('/HR', 428, 528, { size: 60, font: 'Bangers', weight: 400, fill: '#6c4bff', align: 'left', spacing: 2 });
+    text('TOMORROW  3:00 PM', cw / 2, 598, { size: 40, fill: '#1d1838', weight: 900, spacing: 2 });
+    text('POSTED 1 MIN AGO', cw / 2, 655, { size: 24, fill: '#8a84a4', weight: 800, spacing: 3 });
+    const pk = (t * 1.3) % 1, bp = 1 - (o.press ?? 0) * .08 + (o.pulse ?? 0) * .05;
+    ctx.save(); ctx.translate(cw / 2, ACC_LY - top); ctx.strokeStyle = `rgba(18,195,122,${.45 * (1 - pk)})`; ctx.lineWidth = 6; rr(-220 - pk * 36, -52 - pk * 36, 440 + pk * 72, 104 + pk * 72, 52 + pk * 36); ctx.stroke();
+    ctx.scale(bp, bp); ctx.fillStyle = V2.grad(-220, 0, 220, 0, [[0, '#12c37a'], [1, '#0a9f66']]); rr(-220, -52, 440, 104, 52); ctx.fill();
+    if ((o.press ?? 0) > .5) { ctx.fillStyle = 'rgba(255,255,255,.3)'; rr(-220, -52, 440, 104, 52); ctx.fill(); }
+    text('ACCEPT', 0, 4, { size: 66, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 }); ctx.restore();
+    text('DECLINE', cw / 2, 872, { size: 34, fill: '#9a94b4', weight: 800, spacing: 2 });
+    ctx.restore();
+  }
+  // booked
+  if (dn > 0) {
+    const dd = easeOut(dn);
+    ctx.save(); ctx.globalAlpha *= dd; ctx.fillStyle = V2.grad(0, 0, 0, ch, [[0, '#14cf84'], [1, '#0b8f5f']]); ctx.fillRect(0, 0, cw, ch);
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha *= clamp(dn * 2 - .3);
+    const pk = easeBack(clamp(dn * 1.4));
+    ctx.save(); ctx.translate(cw / 2, 150); ctx.scale(pk, pk); ctx.fillStyle = '#fff'; ell(0, 0, 76, 76); ctx.fill(); ctx.strokeStyle = '#12c37a'; ctx.lineWidth = 16; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(-34, 4); ctx.lineTo(-8, 30); ctx.lineTo(36, -26); ctx.stroke(); ctx.restore();
+    const sc = lerp(1.5, 1, easeOut(clamp(dn * 1.6)));
+    ctx.save(); ctx.translate(cw / 2, 290); ctx.scale(sc, sc); text("YOU'RE BOOKED", 0, 0, { size: 82, font: 'Bangers', weight: 400, fill: '#fff', spacing: 3 }); ctx.restore();
+    text('FRUIT BOWL REHAB & NURSING', cw / 2, 352, { size: 24, fill: 'rgba(255,255,255,.92)', weight: 900, spacing: 2 });
+    text('TOMORROW  3:00 PM', cw / 2, 410, { size: 40, fill: '#fff', weight: 900, spacing: 2 });
+    // the rating card: Episode 9 left her grey (NOT ELIGIBLE); an agency nurse gets stars
+    ctx.save(); ctx.shadowColor = 'rgba(0,40,20,.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 8; ctx.fillStyle = '#fff'; rr(28, 480, cw - 56, 360, 34); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(110, 568); ctx.fillStyle = '#e8e4f6'; ell(0, 0, 66, 66); ctx.fill(); ctx.beginPath(); ctx.arc(0, 0, 66, 0, TAU); ctx.clip();
+    REG.suppress++; drawChar(straw({ x: 0, y: 10, s: .4, center: true, noLegs: true, noArms: true, noShadow: true, noReflect: true, expr: stars > 4.5 ? 'happy' : 'dead', who: null, id: 'job-straw', lift: 0, acc: ['steth'] })); REG.suppress--; ctx.restore();
+    text('STRAWBERRY', 196, 548, { size: 46, font: 'Bangers', weight: 400, fill: '#2a1a5a', align: 'left', spacing: 2 }); text('Agency RN, per diem', 196, 594, { size: 24, fill: '#7a7490', align: 'left', weight: 800 });
+    A9.starRow(cw / 2, 700, 40, stars, { empty: 'rgba(120,110,160,.3)' });
+    const ek = seg(stars, 4.2, 5), el = ek > .5, bs = el ? lerp(1.5, 1, easeOut(clamp((ek - .5) * 2))) : 1;
+    ctx.save(); ctx.translate(cw / 2, 790); ctx.scale(bs, bs); ctx.fillStyle = el ? '#12c37a' : '#8a86a2'; rr(-150, -22, 300, 44, 22); ctx.fill(); text(el ? 'ELIGIBLE' : 'NOT ELIGIBLE', 0, 2, { size: 28, fill: '#fff', spacing: 3 }); ctx.restore();
+    ctx.restore();
+  }
+  ctx.restore(); ctx.restore();
+}
+// the ground seen from straight above while she walks: wet asphalt grain, a double yellow line, a white dashed line, a stall end, a puddle with a lamp in it; everything slides with d (pixels walked)
+function groundTop(d, t) {
+  ctx.fillStyle = V2.grad(0, 0, 0, H, [[0, '#2a5a63'], [1, '#12303a']]); ctx.fillRect(-100, -100, W + 200, H + 200);
+  const M = H + 600, wy = y0 => (((y0 + d) % M) + M) % M - 300;
+  ctx.fillStyle = 'rgba(190,230,230,.1)'; for (let i = 0; i < 300; i++) { ell(hash(i * 3 + 1) * W, wy(hash(i * 7 + 2) * M), 2 + hash(i) * 4, 1.5 + hash(i + 5) * 3); ctx.fill(); }
+  ctx.fillStyle = 'rgba(255,214,90,.85)'; ctx.fillRect(86, -100, 13, H + 200); ctx.fillRect(114, -100, 13, H + 200);
+  ctx.fillStyle = 'rgba(240,248,248,.8)'; for (let i = 0; i < 6; i++) ctx.fillRect(940, wy(i * 420), 15, 230);
+  ctx.fillStyle = 'rgba(240,248,248,.7)'; ctx.fillRect(170, wy(900), 640, 15);
+  const py = wy(1250);
+  ctx.save(); ctx.beginPath(); ctx.ellipse(330, py, 250, 150, -.2, 0, TAU); ctx.fillStyle = V2.grad(0, py - 150, 0, py + 150, [[0, 'rgba(150,220,215,.55)'], [1, 'rgba(20,56,64,.7)']]); ctx.fill(); ctx.clip();
+  V2.glow(360, py - 20, 260, '255,190,110', .55, 'screen', 0); ctx.restore();
+  V2.glow(790, wy(500), 420, '255,168,70', .3, 'screen', 0);
+}
+// the phone as the whole picture, the ground sliding by beneath it
+function phoneShot10(bg, fn, o = {}) {
+  V2.dof(o.blur ?? 12, bg);
+  ctx.save(); ctx.fillStyle = 'rgba(2,10,14,.38)'; ctx.fillRect(-100, -100, W + 200, H + 200); ctx.restore();
+  A9.phoneFrame(540 + (o.dx ?? 0), 815 + (o.dy ?? 0), PHW, PHH, fn, { rot: o.rot ?? 0, scale: o.scale ?? 1 });
+}
+// the Moon's own sky for the close-ups: teal night, stars, a drifting cloud, the roofline of Fruit Bowl at the foot of the frame
+function bgMoon(lt) {
+  ctx.fillStyle = V2.grad(0, 0, 0, H, [[0, '#021419'], [.55, '#0a3641'], [1, '#1d6a70']]); ctx.fillRect(-100, -100, W + 200, H + 200);
+  A7.stars(lt, 1300, { n: 130, seed: 9, a: 1 });
+  A7.clouds(lt, 1150, 1500, { n: 3, tint: '120,205,205', belly: '14,66,76', a: .5, speed: 8, seed: 3, scale: 1.5 });
+  ctx.fillStyle = '#0f161d'; ctx.fillRect(-100, 1400, W + 200, 600); ctx.fillStyle = '#1d1726'; ctx.fillRect(-100, 1392, W + 200, 20);
+  for (let i = 0; i < 9; i++) if (hash(i + 12) > .35) { ctx.fillStyle = 'rgba(255,214,140,.85)'; ctx.fillRect(60 + i * 118, 1440 + (i % 2) * 70, 62, 44); }
+  V2.glow(150, 1360, 260, '255,168,70', .4, 'screen', .3);
+}
+
+// ------------------------------------------------------------------ the scene
+// Strawberry: out of the glass doors and across the lot, slowing to a stop as she reads the phone (3.0); then, after the Moon's last line, to her car
+const LP = route([[0, -45, 2420], [2.0, -28, 1830], [3.0, -25, 1700, 'out'], [9.88, -25, 1700], [11.3, 335, 1790, 'io']]);
+const LT = {};
+LT.ends = () => [['open', B('ping').s + .2], ['ping', B('s1').s + .28], ['cuS1', B('mo1').s - .04], ['moonC1', B('s2').s - .03], ['cuS2', B('tap').s - .03], ['tap', B('mo2').s - .03], ['moonC2', B('s3').s - .04], ['fin', 1e9]];
+LT.shot = lt => LT.ends().find(([, e]) => lt < e)[0];
+LT.cz = lt => { const t0 = B('s3').s - .04; return lt >= t0 ? lerp(LZ0, LZ0 - 140, ez(lt, t0, CUR.dur)) : LZ0; };
+LT.vanX = lt => lerp(-1900, -430, easeOut(seg(lt, 0, 1.45)));
+LT.moon = lt => ({ x: 790, y: 300, s: .95, expr: lt >= B('s3').s ? 'smug' : 'neutral', look: [-.4, .5] });
+
+LT.cast = lt => {
+  const b = id => B(id), sw = Math.sin(window.H6.pathDist(LP, lt) / 84 * PI), phone = lt >= 1.4 && lt < b('mo2').e;
+  const expr = lt >= b('s3').s - .1 ? 'chill' : lt >= b('s2').s - .25 ? 'dead' : lt >= b('s1').s ? 'sour' : 'dead';
+  const lookUp = lt >= b('mo1').e - .2 && lt < b('s2').e - .3;   // she looks up at the Moon to answer it
+  const look = lt >= b('mo2').e ? [.4, -.55] : lookUp ? [.25, -.55] : phone ? [.3, .55] : [.1, .15];
+  const S = person(straw, LP, lt, { id: 'straw', stride: 46, expr, lid: expr === 'sour' ? .3 : .5, look, acc: ['steth', 'badge7', 'bandage7'], arms: { l: 'hold', r: 'rest' } });
+  S.hold = { l: 'envelope10' }; S.grip = { l: [-134, 62] };
+  if (phone) { S.hold.r = 'phone10'; S.arms.r = 'hold'; S.grip.r = [92, 56]; } else S.arms.r = [.28 - .35 * sw, .25];
+  return { S };
+};
+
+LT.cam = function (lt) {
+  V2.setCam(Object.assign({ cz: LT.cz(lt) }, LF)); CAM.shake = 0;
+  const sh = LT.shot(lt), c = LT.cast(lt), b = id => B(id);
+  if (sh === 'open') zoomTo(540, 980, lerp(1.0, 1.05, seg(lt, 0, 1.4)));
+  else if (sh === 'cuS1') camFace(c.S, lerp(2.1, 2.25, seg(lt, 2.98, 3.8)), 170);
+  else if (sh === 'cuS2') camFace(c.S, lerp(2.0, 2.15, seg(lt, b('s2').s - .03, b('tap').s)), 170);
+  else if (sh === 'fin') { const k = ez(lt, b('s3').s - .04, CUR.dur); zoomTo(lerp(600, 560, k), lerp(900, 960, k), lerp(1.08, 1.0, k)); }
+};
+
+LT.draw = function (lt) {
+  const b = id => B(id), sh = LT.shot(lt), c = LT.cast(lt), S = c.S;
+  V2.setLight({ key: [.35, -.7], keyColor: '#ffc78a', keyA: .28, rim: '#7fe6dc', rimA: .6, shadow: '#06161e', shadowA: .5, amb: '#5fb8b0', ambA: .1, bounce: '#ffa860', bounceA: .2 });
+  V2.opts.reflect = true;
+  if (sh === 'ping') {   // the phone from above while she walks: the ground slides under it
+    const x = lt - b('ping').s - .2, pd = window.H6.pathDist(LP, lt), buzz = Math.exp(-Math.max(0, x) * 3.5) * Math.sin(lt * 90), sway = Math.sin(pd / 84 * PI * 2) * 5 * (lt < 3.0 ? 1 : 0);
+    phoneShot10(() => groundTop(pd * 1.5, lt), (w, h) => uiJob(w, h, { t: lt, slide: seg(x, .04, .32), expand: ez(x, .55, 1.1), pulse: .5 + .5 * Math.sin(lt * 8) }), { dx: buzz * 14, dy: sway, rot: buzz * .02 + Math.sin(lt * 3) * .004 });
+    return;
+  }
+  if (sh === 'tap') {   // her thumb lands on ACCEPT (click), the card turns BOOKED, glints (sparkle), the stars pop
+    const tt = lt - b('tap').s, press = seg(tt, .1, .16) * (1 - seg(tt, .2, .32)), done = easeOut(seg(tt, .1, .17)), stars = clamp((tt - .6) / .4) * 5;
+    phoneShot10(() => groundTop(window.H6.pathDist(LP, 3.0) * 1.5, lt), (w, h) => uiJob(w, h, { t: lt, expand: 1, press, pulse: tt < .1 ? .5 + .5 * Math.sin(lt * 8) : 0, done, stars }), { dy: Math.sin(lt * 2.1) * 3 });
+    const by = 815 - PHH / 2 + ACC_LY, hover = 90 * (1 - seg(tt, -.03, .1)), away = seg(tt, .3, .6);
+    glove(612 + hover * .35 + away * 420, by - 4 + hover * .7 + (tt > .1 && tt < .2 ? 6 : 0) + away * 260, -2.45, 5.0);
+    if (tt > .1) { V2.ring(540, by, (tt - .1) / .6, { color: '200,255,230', r0: 40, r1: 420, lw: 12, alpha: .8 }); V2.glow(540, by, 420, '120,255,200', .35 * (1 - seg(tt, .1, .5)), 'screen', .4); }
+    if (tt > .45) {
+      confetti(tt, .45, 70);
+      const q = clamp((tt - .45) / .9);
+      for (let i = 0; i < 10; i++) { const a = i / 10 * TAU + 1, r = 170 + 230 * easeOut(clamp((tt - .45) / .6)); glint(540 + Math.cos(a) * r, 815 + Math.sin(a) * r * .86, 38 * (1 - q) + 6, 1 - q); }
+    }
+    for (let i = 0; i < 5; i++) { const q = (tt - (.6 + i * .08)) / .4; if (q > 0 && q < 1) glint(540 + (i - 2) * 94, 815 - PHH / 2 + 740, 44 * (1 - q) + 10, 1 - q); }
+    return;
+  }
+  if (sh === 'moonC1' || sh === 'moonC2') {
+    const m1 = sh === 'moonC1', push = m1 ? lerp(2.15, 2.35, seg(lt, b('mo1').s, b('mo1').e)) : lerp(2.2, 2.3, seg(lt, b('mo2').s - .05, b('mo2').e));
+    bgMoon(lt);
+    A7.moon(540, 790, push, { t: lt, haloA: 1, char: { expr: m1 ? 'smug' : lt > b('mo2').e - .1 ? 'happy' : 'chill', look: m1 ? [-.65, .5 + .1 * Math.sin(lt * 4)] : [0, .1], lid: m1 ? .32 : .2 } });
+    return;
+  }
+  // the lot in the world
+  const close = sh === 'cuS1' || sh === 'cuS2';
+  V2.dof(close ? 9 : 0, () => lotSet({ t: lt + 5, vanX: LT.vanX(lt), vanBrake: lt < 1.5 ? .9 : .3, carBrake: lt >= 10.85 ? .9 : .1, moon: close ? null : LT.moon(lt) }));
+  if (!close && lt > 1.3) { const q = V2.p2(-750, 70, 2040); V2.smoke(q[0], q[1], lt, 1.3, { n: 8, rate: 3, life: 2.2, rise: 60, spread: 26, size: 24, alpha: .2, color: '170,210,210', seed: 3 }); }
+  if (close) { const [fx, fy] = faceC(S); V2.addLight({ x: fx + 80 * S.s, y: fy + 110 * S.s, r: 620 * S.s, color: '185,150,255', a: .65 }); }
+  V2.dust(60, 600, 1020, 1400, lt, { n: 18, alpha: .18, color: '190,230,230' });
+  drawChar(S);
+};
+LT.fx = lt => {
+  const sh = LT.shot(lt), phone = sh === 'ping' || sh === 'tap', moon = sh === 'moonC1' || sh === 'moonC2', tp = B('tap').s;
+  return { bloom: phone ? .4 + (sh === 'tap' ? .4 * seg(lt, tp + .4, tp + .6) * (1 - seg(lt, tp + .6, tp + 1.1)) : 0) : moon ? .75 : .7, vignette: .5, grain: .05, contrast: .16, sat: .1,
+    tint: [['#18b0a8', .16, 'soft-light'], ['#ff9a40', .05, 'soft-light']], fade: Math.max(lt < .2 ? 1 - lt / .2 : 0, seg(lt, CUR.dur - .32, CUR.dur - .02)), fadeColor: '0,8,10' };
+};
+LT.blur = lt => { const sh = LT.shot(lt); return sh === 'ping' && lt < 2.2 ? 2 : sh === 'open' ? 2 : 1; };
+LT.over = function (lt) {
+  const b = id => B(id);
+  sfxWord(lt, .25, 'chirp . . . chirp', 330, 1560, { size: 56, hold: .6, fill: '#c9fff0', rot: -.05 });
+  sfxWord(lt, b('ping').s + .2, 'DING!', 800, 190, { size: 120, hold: .5, fill: '#ff8ad0', rot: .06 });
+  sfxWord(lt, b('tap').s + .1, 'CLICK', 820, 960, { size: 110, hold: .45, fill: '#ffe135', rot: .07 });
+};
+window.__EP10_SCENES.lot = LT;
 })();

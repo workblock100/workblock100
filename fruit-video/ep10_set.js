@@ -17,7 +17,7 @@
  *   door (0..1: the pocket door slides into the wall, hall light floods in) | paintingOpen (0..1: the portrait swings out on its LEFT hinge, past .8 you see its back)
  *   vaultOpen (0..1: the round door swings open on its left hinge) | vaultBolts (1 locked, 0 retracted) | wheelRot (radians, the spoked wheel) | vaultDraw(c) paints the vault's INSIDE (c = {x, y, r, k, open} in screen
  *   coordinates, clipped to the round opening: gold goes here; without it you get a dark steel chamber) | chartPulse (0..1: the pizza on the FY BUDGET chart swells) | tower [{ y: lift, sq: squash, a: alpha }, ...] pizza
- *   boxes stacked on the desk (bottom first; y > 0 means still falling) | steamK (0..1 steam off the tower) | penGlint (0..1 the pen in the pen cup gleams) | lampOn (0..1 the banker's lamp and the night pool, for flickers)
+ *   boxes stacked on the desk (bottom first; y > 0 means still falling) | steamK (0..1 steam off the tower) | penGlint (0..1 the pen in the pen cup gleams) | lampOn (0..1 the banker's lamp and the night pool, for flickers) | lampGlow (0..1, default 1: the soft screen-blend glow over the desk; lower it in a close-up of the Administrator)
  *   chairShift (world X, rolls the Administrator's chair aside) | visitorX, visitorZ (move the guest chair) | coatLate (back() leaves the coat stand out; draw it yourself with off.coat() after a character
  *   who passes it from behind, e.g. someone coming through the door) | pens (0 or 1: pens in the pen cup, default 1)
  *
@@ -602,7 +602,7 @@ function drawBin(night) {
 // ------------------------------------------------------------------ the set
 function office(o = {}) {
   const night = !!o.night, P = night ? PAL.night : PAL.day, t = o.t ?? 0, D = LAY.desk, lampOn = o.lampOn ?? (night ? 1 : .35);
-  const layout = { zb: LAY.zb, hw: LAY.hw, ch: LAY.ch, door: LAY.door, win: LAY.win, portrait: LAY.portrait, recess: LAY.recess, chart: LAY.chart, desk: D, admin: LAY.admin, visitor: LAY.visitor, credenza: LAY.credenza };
+  const layout = { zb: LAY.zb, hw: LAY.hw, ch: LAY.ch, door: LAY.door, win: LAY.win, portrait: LAY.portrait, recess: LAY.recess, chart: LAY.chart, desk: D, admin: LAY.admin, visitor: LAY.visitor, credenza: LAY.credenza, bin: LAY.bin };
   const adminX = LAY.admin.x + (o.chairShift ?? 0);
   // where things are on the screen under the current camera
   const deskPt = (X, Z) => p2(X, D.top, Z);
@@ -650,11 +650,11 @@ function office(o = {}) {
     for (let i = 0; i < 3; i++) onZ(cz.z0, cz.x0 + 12 + i * (cw - 24) / 3, cz.x0 + (i + 1) * (cw - 24) / 3 + 4, 14, cz.top - 14, lit(P.desk, .84), 'rgba(10,6,4,.6)', 1.8);
     for (let i = 0; i < 5; i++) pizzaBox((cz.x0 + cz.x1) / 2 + (i % 2 ? 7 : -5) + (i === 3 ? 6 : 0), (cz.z0 + cz.z1) / 2, cz.top + i * 26, { color: ['#d9a85a', '#e0b468', '#d09c4c', '#e4bc74', '#d4a252'][i] });
     stand(760, 0, 1630, () => drawFicus(night), .82);
-    if (!o.coatLate) stand(-690, 0, 1560, () => drawCoatStand(night));   /* coatLate: the scene draws it with off.coat() after a character who walks past it from behind */
+    if (!o.coatLate) stand(-840, 0, 1530, () => drawCoatStand(night));   /* coatLate: the scene draws it with off.coat() after a character who walks past it from behind */
     adminChair(night, adminX, LAY.admin.z + 80);
     lightsBack();
   }
-  const coat = () => stand(-690, 0, 1560, () => drawCoatStand(night));
+  const coat = () => stand(-840, 0, 1530, () => drawCoatStand(night));
   // light that belongs behind the cast: the day's sun on the floor, the night's cold pool
   function lightsBack() {
     const zb = LAY.zb;
@@ -694,10 +694,11 @@ function office(o = {}) {
   }
   function lightsDesk() {
     const lampXZ = [D.x1 - 96, D.z1 - 44], [lx, ly] = p2(lampXZ[0], D.top + 112, lampXZ[1]), kk = kz(lampXZ[1]);
-    V2.glow(lx, ly, 380 * kk, '215,244,232', .55 * lampOn, 'screen', .8);
+    const gl = o.lampGlow ?? 1;   /* scales the soft light laid over the desk and over whoever sits behind it: lower it in close-ups so it never washes a face */
+    V2.glow(lx, ly, 380 * kk, '215,244,232', .55 * lampOn * gl, 'screen', .8);
     ctx.save(); ctx.globalCompositeOperation = 'screen';   // the lamp's pool on the desk top and the front panel: a wide soft ellipse
     const [px, py] = p2(lampXZ[0] - 60, D.top, D.z0 + 90);
-    ctx.translate(px, py + 40); ctx.scale(1, .42); ctx.fillStyle = radial(0, 0, 0, 430 * kk, [[0, `rgba(215,244,232,${.3 * lampOn})`], [.6, `rgba(215,244,232,${.12 * lampOn})`], [1, 'rgba(215,244,232,0)']]); ctx.beginPath(); ctx.arc(0, 0, 430 * kk, 0, TAU); ctx.fill();
+    ctx.translate(px, py + 40); ctx.scale(1, .42); ctx.fillStyle = radial(0, 0, 0, 430 * kk, [[0, `rgba(215,244,232,${.3 * lampOn * gl})`], [.6, `rgba(215,244,232,${.12 * lampOn * gl})`], [1, 'rgba(215,244,232,0)']]); ctx.beginPath(); ctx.arc(0, 0, 430 * kk, 0, TAU); ctx.fill();
     ctx.restore();
   }
   // stripes of sun on a horizontal plane (the floor or the desk top): each slit between two slats throws a band, further from the window the higher the slit

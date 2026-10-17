@@ -47,7 +47,7 @@ function handTo(o, side, x, y, k, rest) {
 // ------------------------------------------------------------------ layout: a shallow station room, back wall at Z 1500
 const ZB = 1500, HW = 600, CH = 900;
 const DOOR = { x0: 230, x1: 450, y1: 450 };   // the hall door in the back wall, right: Strawberry stands in it at the start
-const DET = { x: 360, z: 1150 };               // the smoke detector on the ceiling
+const DET = { x: 488, z: 1150 };               // the smoke detector on the ceiling
 // the party's marks (X, Z): the named cast in the front row, Strawberry's mark at the right, the door behind her, the table at the back left
 const MK = { lemon: [-385, 1250], cran: [-195, 1250], mango: [30, 1250], straw: [420, 1250], door: [340, 1440], table: [0, 1440] };
 const CAKE = { dx: 158, dy: 100 };   // where Mango's right hand holds the cake tray, in her local pixels
@@ -131,7 +131,7 @@ Object.assign(PROP_BOX, {
   card10: [-6, -280, 196, 12],
   flag10: [-10, -160, 96, 16],
   reports10: Object.assign([-76, -150, 76, 16], { nearFace: true }),
-  plate10: [-62, -40, 62, 12],
+  plate10: Object.assign([-62, -40, 62, 12], { nearFace: true }),
 });
 
 // ---- the sheet cake. Origin: bottom centre of the silver tray, y up is negative; 200 wide. o.t time, o.fall 0..1 the leaning candle going over, o.pop the caret's ping,
@@ -224,7 +224,7 @@ EXT.prop.can10 = (side, o, t) => {
   ctx.fillStyle = '#222630'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-50, -124, 100, 16, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#05060a'; rr(-22, -119, 44, 5, 2.5); ctx.fill();
   ctx.save(); ctx.translate(0, -62); ctx.rotate(-.025);
   ctx.fillStyle = '#efe0b6'; ctx.strokeStyle = 'rgba(110,90,50,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-47, -33); ctx.lineTo(47, -34); ctx.lineTo(48, -30); ctx.lineTo(46, 32); ctx.lineTo(-46, 33); ctx.lineTo(-48, 28); ctx.closePath(); ctx.fill(); ctx.stroke();
-  text('STRAWBERRY', 0, -11, { size: 15.5, fill: '#d6203a', weight: 900, maxW: 88, spacing: .4 }); text('FUND', 0, 13, { size: 27, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 2 });
+  text('STRAWBERRY', 0, -11, { size: 12.6, fill: '#d6203a', weight: 900, maxW: 94, spacing: .2 }); text('FUND', 0, 13, { size: 27, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 2 });
   ctx.restore();
   ctx.restore();
 };
@@ -528,7 +528,7 @@ function streamerFlight(lt, from, to, t0, dur, col, seed) {
 // where each named character goes: Strawberry in from the door, Mango back to the table with the cake and out again with the card, Lemon over to Strawberry with the can
 const ROUTE = {
   straw: lt => route([[0, MK.door[0], MK.door[1]], [B('m1').s - .05, MK.door[0], MK.door[1]], [B('m1').s + 1.0, MK.straw[0], MK.straw[1], 'io'], [END_AT(), MK.straw[0], MK.straw[1]]])(lt),
-  mango: lt => route([[0, MK.mango[0], MK.mango[1]], [B('m2').e + .02, MK.mango[0], MK.mango[1]], [B('l1').s + 1.0, -5, 1395, 'io'], [B('l2').s + .3, -5, 1395], [B('m3').s - .1, 60, 1250, 'io'], [B('m5').s - 1.0, 60, 1250], [B('m5').s - .05, 175, 1235, 'io'], [END_AT(), 175, 1235], [END_AT() + .01, 215, 1250]])(lt),
+  mango: lt => route([[0, MK.mango[0], MK.mango[1]], [B('m2').e + .02, MK.mango[0], MK.mango[1]], [B('l1').s + 1.0, -5, 1395, 'io'], [B('l2').s + .3, -5, 1395], [B('m3').s - .1, 160, 1250, 'io'], [B('m5').s - 1.0, 160, 1250], [B('m5').s - .05, 190, 1235, 'io'], [END_AT(), 190, 1235], [END_AT() + .01, 182, 1250]])(lt),
   lemon: lt => route([[0, MK.lemon[0], MK.lemon[1]], [B('m2').e + .02, MK.lemon[0], MK.lemon[1]], [B('l1').s + .55, -250, 1345, 'io'], [B('l1').s + 1.25, 30, 1345], [B('l1').s + 1.9, 130, 1250, 'io'], [B('coins').e + .1, 130, 1250], [B('m4').s, -20, 1260, 'io'], [END_AT(), -20, 1260], [END_AT() + .01, -415, 1250]])(lt),
 };
 const END_AT = () => B('l4').e + .08;   // from here on it is the end of the party: plates, a time jump
@@ -570,7 +570,7 @@ function cast(lt) {
   { const jump = pulse(lt, tOn, tOn + .4) * 38, hasCake = lt < b('l1').s + .85, hasCard = lt >= b('l2').s + .4 && lt < b('r1').s, cry = ending ? .6 : clamp(seg(lt, b('m4').s + .4, b('m5').s + .2) * .55 + seg(lt, b('m5').s, b('s4').s + .6) * .45);
     const exprM = pick(lt, [[b('m2').s + .6, 'happy'], [b('l1').s, 'happy'], [b('m4').s, 'happy'], [b('m5').s + .55, 'sad'], [b('s4').s + .25, 'sad'], [b('l3').s, 'happy'], [1e9, 'sad']]);
     const freeze = tri(lt, b('m2').s + .5, b('m2').s + .75, 99) * (lt < b('l1').s ? 1 : 0), lipQ = inB(lt, 'm5') || (lt >= b('m5').e && lt < b('s4').s + .4);
-    C.mango = person(mango, ROUTE.mango, lt, { look: lt < b('m2').s + .5 ? [.7, 0] : lt < b('l1').s ? [.9, .1 + .15 * Math.sin(lt * 9)] : lt < b('m5').s ? [-.2, 0] : [.8, 0], expr: ending ? 'sad' : exprM, hat: { c1: '#ff4f9a', c2: '#ffe135' }, lift: jump, cry, stride: 40,
+    C.mango = person(mango, ROUTE.mango, lt, { look: lt < b('m2').s + .5 ? [.7, 0] : lt < b('l1').s ? [.9, .1 + .15 * Math.sin(lt * 9)] : lt < b('s3').s ? [-.2, 0] : lt < b('m5').s ? [.7, .05] : [.8, 0], expr: ending ? 'sad' : exprM, hat: { c1: '#ff4f9a', c2: '#ffe135' }, lift: jump, cry, stride: 40,
       acc: ['badge7', 'gaitbelt7', 'keys7', 'partyhat10', 'tears10'],
       hold: hasCake ? { r: 'cake10' } : hasCard ? { r: 'card10' } : ending ? { r: 'plate10' } : {}, grip: { r: hasCake ? [CAKE.dx, CAKE.dy] : hasCard ? [150, 84] : ending ? [96, 70] : [70, 70] }, hand: { r: hasCake ? 'flat' : ending ? 'flat' : 'grip' },
       arms: { l: lt < 1.6 ? 'cheer' : 'rest', r: hasCake || hasCard || ending ? 'hold' : 'rest' },
@@ -586,7 +586,7 @@ function cast(lt) {
   // ---- Lemon: a blower in her mouth, the can, the reports, then a plate
   { const jump = pulse(lt, tOn, tOn + .4) * 30, blow = seg(lt, .3, .52) * (1 - seg(lt, .95, 1.25)), hasCan = lt >= b('m2').e && lt < b('coins').e, hasRep = lt >= b('l3').s - .05 && !ending, canUp = tri(lt, b('l2').s + .9, b('l2').s + 1.35, b('l2').s + 1.8) * 40;
     const tilt = CAN_TILT(lt);
-    C.lemon = person(lemon, ROUTE.lemon, lt, { look: lt < b('m2').s ? [.5, 0] : lt < b('l1').s + 1.9 ? [.85, 0] : [.9, .05], expr: ending ? 'neutral' : 'neutral', lid: inB(lt, 'l4') || inB(lt, 'l3') ? .22 : undefined, hat: { c1: '#4aa8ff', c2: '#ffe135', rot: -.25, dx: -.3 }, acc: ['readers', 'lanyard7', 'partyhat10', 'blower10'], blow, lift: jump, stride: 36,
+    C.lemon = person(lemon, ROUTE.lemon, lt, { look: lt < b('m2').s ? [.5, 0] : lt < b('l1').s + 1.9 ? [.85, 0] : [.9, .05], expr: 'neutral', face: ending ? undefined : { curve: .06, lid: .3 }, lid: undefined, hat: { c1: '#4aa8ff', c2: '#ffe135', rot: -.25, dx: -.3 }, acc: ['readers', 'lanyard7', 'partyhat10', 'blower10'], blow, lift: jump, stride: 36,
       hold: hasCan ? { r: 'can10' } : hasRep ? { r: 'reports10' } : ending ? { r: 'plate10' } : {}, grip: { r: hasCan ? [128, 66 - canUp] : hasRep ? [142, 64 - 30 * tri(lt, b('l3').s + .85, b('l3').s + 1.1, b('l3').s + 1.5) - 34 * tri(lt, b('l4').s + .75, b('l4').s + 1.0, 99)] : ending ? [96, 70] : [128, 66] },
       hand: { r: hasRep ? 'flat' : hasCan ? 'grip' : 'flat' }, canTilt: tilt, arms: { l: 'rest', r: hasCan || hasRep || ending ? 'hold' : 'rest' } });
     if (ending) C.lemon.plateCake = true;
@@ -617,14 +617,14 @@ const pick = (lt, list) => list.find(([e]) => lt < e)[1];   // the first entry w
 const SHOTS = () => { const b = id => B(id); return [
   ['wide', b('m1').s - .05], ['cakeTwo', b('s1').s - .05], ['cakeIns', b('m2').s - .05], ['cuM1', b('m2').e], ['cuS0', b('l1').s - .06],
   ['cuL1', b('s2').s - .06], ['cuS1', b('l2').s - .05], ['cuL2', b('coins').s - .55], ['twoSL', b('coins').s - .03], ['coinsIns', b('m3').s - .03],
-  ['medM', b('card').s - .04], ['cardIns', b('r1').s - .04], ['cuC', b('m4').s - .02], ['cuM2', b('s3').s - .85], ['medS', b('m5').s - .07],
+  ['medM', b('card').s - .04], ['cardIns', b('r1').s - .04], ['cuC', b('m4').s - .02], ['cuM2', b('s3').s - .85], ['medS', wordT('s3', 'behind', b('s3').s + 1.9) - .12], ['crowdW', b('m5').s - .07],
   ['warm', b('l3').s - .02], ['cuL3', b('s5').s - .12], ['cuS5', b('l4').s - .12], ['threeL', b('l4').e + .08], ['cuS6', b('end').s - .03], ['endWide', 1e9]]; };
 const shotOf = lt => { const o = SHOTS(); let t0 = 0; for (const [n, e] of o) { if (lt < e) return { n, t0, t1: Math.min(e, CUR.dur) }; t0 = e; } return { n: 'endWide', t0, t1: CUR.dur }; };
 // who is in focus in each shot: the rest of the named cast is a soft neighbour, like the crowd
 const CRISP = { cakeTwo: ['mango', 'straw'], cuM1: ['mango'], cuS0: ['straw'], cuL1: ['lemon'], cuS1: ['straw'], cuL2: ['lemon'], twoSL: ['lemon', 'straw'], medM: ['mango'], cuC: ['cran'], cuM2: ['mango'],
-  medS: ['straw', 'mango'], warm: ['mango', 'straw'], cuL3: ['lemon'], cuS5: ['straw'], threeL: ['lemon', 'mango', 'cran'], cuS6: ['straw'] };
+  medS: ['straw'], warm: ['mango', 'straw'], cuL3: ['lemon'], cuS5: ['straw'], threeL: ['lemon', 'mango', 'cran'], cuS6: ['straw'] };
 const INS = {};   // full-frame inserts, filled in below
-const WIDE = ['wide', 'endWide'];
+const WIDE = ['wide', 'endWide', 'crowdW'];
 const toScr = (x, y) => [W / 2 + (x - CAM.x) * CAM.z, H / 2 + (y - CAM.y) * CAM.z];
 const F = (o, z, up = 150) => faceZoom({ kind: o.kind, x: o.x, y: o.y, s: o.s, lift: o.lift, noLegs: o.noLegs }, z, up);
 const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
@@ -634,23 +634,24 @@ function cameraFor(lt, sh, C) {
   V2.setCam({ f: 1400, cy: 360, hy: 860 });
   switch (sh.n) {
     case 'wide': zoomTo(lerp(600, 590, k), 1020, lerp(.86, .9, k)); break;
-    case 'cakeTwo': { const z = lerp(1.4, 1.6, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0] + 20, m[1] + 120 / z, z); break; }
-    case 'cuM1': F(C.mango, lerp(1.85, 2.0, k), 150); CAM.x += 105; break;
+    case 'cakeTwo': { const z = lerp(1.3, 1.44, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0] + 20, m[1] + 120 / z, z); break; }
+    case 'cuM1': F(C.mango, lerp(1.8, 1.95, k), 150); CAM.x += 98; break;
     case 'cuS0': F(C.straw, lerp(1.95, 2.05, k), 180); break;
     case 'cuL1': F(C.lemon, lerp(1.85, 2.0, k), 190); break;
     case 'cuS1': F(C.straw, lerp(2.0, 2.15, k), 180); break;
     case 'cuL2': F(C.lemon, lerp(2.0, 2.25, k), 180); break;
     case 'twoSL': { const z = 1.45, m = mid(faceC(C.lemon), faceC(C.straw)); zoomTo(m[0], m[1] + 130 / z, z); break; }
-    case 'medM': F(C.mango, lerp(1.7, 1.85, k), 130); CAM.x += 70; break;
-    case 'cuC': F(C.cran, lerp(1.95, 2.15, k), 180); break;
+    case 'medM': F(C.mango, lerp(1.66, 1.76, k), 130); CAM.x += 92; break;
+    case 'cuC': F(C.cran, lerp(1.95, 2.15, k), 180); CAM.x += 78; break;
     case 'cuM2': F(C.mango, lerp(2.1, 2.3, k), 170); break;
-    case 'medS': { const s3 = b('s3'), e = easeIO(seg(lt, s3.e - .6, sh.t1 - .02)), z0 = 1.95 + .07 * seg(lt, sh.t0, s3.e - .6), f = faceC(C.straw); zoomTo(lerp(f[0] + 105, 800, e), lerp(f[1] + 190 / z0, 1000, e), lerp(z0, 1.2, e)); break; }
-    case 'warm': { const z = lerp(1.55, 1.8, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0], m[1] + 160 / z, z); break; }
+    case 'medS': { const z0 = lerp(1.7, 1.78, k), f = faceC(C.straw); zoomTo(f[0] + 105, f[1] + 190 / z0, z0); break; }
+    case 'crowdW': zoomTo(lerp(690, 700, k), 1010, lerp(.95, 1.0, k)); break;
+    case 'warm': { const z = lerp(1.5, 1.74, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0], m[1] + 160 / z, z); break; }
     case 'cuL3': F(C.lemon, lerp(1.85, 1.95, k), 180); break;
     case 'cuS5': F(C.straw, lerp(2.05, 2.15, k), 180); break;
-    case 'threeL': { const z = lerp(1.08, 1.14, k), m = mid(faceC(C.cran), faceC(C.mango)); zoomTo(m[0] + 20, m[1] + 130 / z, z); break; }
+    case 'threeL': { const z = lerp(1.3, 1.38, k), f = faceC(C.lemon); zoomTo(f[0] + 8, f[1] + 310 / z, z); break; }
     case 'cuS6': F(C.straw, lerp(2.1, 2.2, k), 170); break;
-    case 'endWide': zoomTo(lerp(590, 585, k), 1020, lerp(.88, .86, k)); break;
+    case 'endWide': zoomTo(lerp(574, 570, k), 965, lerp(.88, .86, k)); break;
     default: zoomTo(540, 960, 1);
   }
 }
@@ -785,7 +786,7 @@ const CARD_MSGS = [   // [text, page, x, y, size, colour, rot, font, hand ('' al
   ['Banana :)', 0, 34, 222, 38, '#0e8a7e', -.03, 'n', ''], ['Goji', 0, 300, 236, 42, '#7a3fb0', .04, 'n', ''], ['Pear: dues are due', 0, 28, 392, 33, '#7a4a1a', -.02, 'n', ''], ['Apple zzz', 0, 40, 626, 38, '#4a6a9a', .02, 'n', ''],
   ['Pineapple', 1, 36, 262, 44, '#e07a10', -.03, 'n', ''], ['Dragon (nights): ok', 1, 26, 338, 31, '#4a3a8a', .015, 'n', ''], ['Papaya', 1, 120, 640, 44, '#d4438a', -.03, 'n', ''],
   ['Mango', 0, 38, 316, 74, '#e8196a', -.05, 'b', 'A', 13.39, 13.86], ['Lemon (read report)', 1, 26, 410, 35, '#1d3a8a', -.012, 'n', 'B', 13.62, 14.17],
-  ['Mrs C: 1962 or bust', 1, 24, 486, 34, '#1f8a3a', .03, 'n', 'B', 14.29, 14.8], ['(WE\'RE NOT)', 1, 150, 206, 40, '#d6203a', -.07, 'n', 'B', 14.82, 15.07], ['Clem: Sure!', 0, 30, 488, 56, '#ff8a1a', -.04, 'b', 'A', 14.45, 14.93]];
+  ['Mrs C: 1962 or bust', 1, 24, 486, 34, '#1f8a3a', .03, 'n', 'B', 14.29, 14.8], ['Night shift 4ever', 1, 28, 202, 38, '#d6203a', -.05, 'n', 'B', 14.82, 15.07], ['Clem: Sure!', 0, 30, 488, 56, '#ff8a1a', -.04, 'b', 'A', 14.45, 14.93]];
 function heart(x, y, r, col) { ctx.save(); ctx.translate(x, y); ctx.fillStyle = col; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, r * .9); ctx.bezierCurveTo(-r * 1.5, -r * .2, -r * .7, -r * 1.2, 0, -r * .45); ctx.bezierCurveTo(r * .7, -r * 1.2, r * 1.5, -r * .2, 0, r * .9); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
 // handwriting: letters a little off the line, revealed left to right; returns the pen tip in screen coordinates
 function ink(str, x, y, size, color, rot, p, o = {}) {
@@ -862,12 +863,12 @@ INS.cardIns = (lt, C, sh) => {
 // ------------------------------------------------------------------ the scene
 const PARTY_LIGHT = { key: [-.35, -.8], keyColor: '#fff0d0', keyA: .26, rim: '#ff9ad0', rimA: .5, shadow: '#3a2a50', shadowA: .32, bounce: '#ffd9a0', bounceA: .2, amb: '#fff4e0', ambA: .04 };
 // a pencil falls out of the crowd when the Q-word is said: it drops, bounces twice and rolls
-function pencilDrop(lt, C) {
-  const tq = wordT('s3', 'q-word', B('s3').s + 2.44) + .05, ta = lt - tq; if (ta < 0 || ta > 3) return;
-  const pr = C.crowd[1], s = pr.s, x0 = pr.x + 70 * s, y0 = pr.y - 190 * s, fy = pr.y + 70 * s, g = 3600, T = Math.sqrt(2 * (fy - y0) / g);
-  let x = x0 + 18 * Math.min(ta, T), y, rot;
-  if (ta < T) { y = y0 + .5 * g * ta * ta; rot = ta * 7; }
-  else { const u = ta - T, v = Math.sqrt(2 * g * (fy - y0)) * .4, tb = 2 * v / g; x += 40 * Math.min(u, tb + .3); const uu = u % 1e9; y = u < tb ? fy - (v * u - .5 * g * u * u) : fy; rot = 7 * T + (u < tb ? u * 6 : tb * 6 + (u - tb) * 3.5 * Math.max(0, 1 - (u - tb))); }
+function pencilDrop(lt, C) {   // Lemon's pencil slips out of her hand at the Q-word: it drops, bounces twice and rolls
+  const tq = wordT('s3', 'q-word', B('s3').s + 2.44) + .02, ta = lt - tq; if (ta < 0 || ta > 3) return;
+  const pr = C.lemon, s = pr.s, h = localToScreen(pr, 100, 72), x0 = h[0], y0 = h[1], fy = pr.y + 10 * s, g = 3400 * s, T = Math.sqrt(2 * (fy - y0) / g);
+  let x = x0 + 14 * s * Math.min(ta, T), y, rot;
+  if (ta < T) { y = y0 + .5 * g * ta * ta; rot = 1.2 + ta * 6; }
+  else { const u = ta - T, v = Math.sqrt(2 * g * (fy - y0)) * .42, tb = 2 * v / g; x += 34 * s * Math.min(u, tb + .3); y = u < tb ? fy - (v * u - .5 * g * u * u) : fy; rot = 1.2 + 6 * T + (u < tb ? u * 5 : tb * 5 + (u - tb) * 3 * Math.max(0, 1 - (u - tb))); }
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.lineJoin = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
   ctx.fillStyle = '#ffd23a'; rr(-40 * s, -5 * s, 66 * s, 10 * s, 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#f2d3a0'; ctx.beginPath(); ctx.moveTo(26 * s, -5 * s); ctx.lineTo(42 * s, 0); ctx.lineTo(26 * s, 5 * s); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#333'; ctx.beginPath(); ctx.moveTo(38 * s, -1.4 * s); ctx.lineTo(42 * s, 0); ctx.lineTo(38 * s, 1.4 * s); ctx.fill(); ctx.fillStyle = '#ff8fb1'; rr(-50 * s, -5 * s, 11 * s, 10 * s, 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#c0c6cf'; ctx.fillRect(-40 * s, -5 * s, 5 * s, 10 * s);
@@ -896,8 +897,8 @@ const SC = {
     confettiBurst(lt, 'L', cue.popL(), PO.L[0], PO.L[1]); confettiBurst(lt, 'R', cue.popR(), PO.R[0], PO.R[1]);
     if (WIDE.includes(sh.n)) {
       // a wide shot: everybody sharp, one depth-sorted pass so a nearer neighbour is always in front of a farther one
-      const list = [...C.crowd.map(o => ({ o, y: o.y })), ...NAMED.map(n => ({ n, y: depthOf(n, C) }))].sort((a, c) => a.y - c.y);
-      for (const it of list) it.n ? drawNamed(it.n, C) : drawBg(it.o);
+      const list = [...C.crowd.map(o => ({ o, y: o.y })), ...NAMED.map(n => ({ n, y: depthOf(n, C) })), ...(sh.n === 'crowdW' ? [{ pencil: true, y: C.lemon.y + 6 }] : [])].sort((a, c) => a.y - c.y);
+      for (const it of list) it.pencil ? pencilDrop(lt, C) : it.n ? drawNamed(it.n, C) : drawBg(it.o);
     } else {
       // the crowd and whoever of the named cast is not the subject: one soft pass, then the subject(s) sharp
       const soft = NAMED.filter(n => !crisp.includes(n));
@@ -905,7 +906,6 @@ const SC = {
         const list = [...C.crowd.map(o => ({ o, y: o.y })), ...soft.map(n => ({ n, y: depthOf(n, C) }))].sort((a, c) => a.y - c.y);
         for (const it of list) it.n ? drawSoft(it.n, C) : drawBg(it.o);
       });
-      if (sh.n === 'medS') pencilDrop(lt, C);
       for (const n of crisp.slice().sort((a, c) => depthOf(a, C) - depthOf(c, C))) drawNamed(n, C);
     }
     if (dark > .01) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = `rgba(52,58,110,${.86 * dark})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
@@ -924,11 +924,11 @@ const SC = {
     const tOn = cue.on(), sh = shotOf(lt), b = id => B(id);
     if (sh.n === 'wide') {
       sfxWord(lt, tOn, 'SURPRISE!', 700, 285, { size: 84, rot: -.04, hold: .8 });
-      sfxWord(lt, cue.popL(), 'POP!', 170, 690, { size: 76, rot: -.1, hold: .45, fill: '#7fe0ff' });
-      sfxWord(lt, cue.popR(), 'POP!', 930, 690, { size: 76, rot: .1, hold: .45, fill: '#ff9ad0' });
+      sfxWord(lt, cue.popL(), 'POP!', 190, 548, { size: 76, rot: -.1, hold: .45, fill: '#7fe0ff' });
+      sfxWord(lt, cue.popR(), 'POP!', 905, 548, { size: 76, rot: .1, hold: .45, fill: '#ff9ad0' });
     }
     if (sh.n === 'coinsIns') counter(lt);
-    if (sh.n === 'medS') cuffMap(lt);
+    if (sh.n === 'medS' || sh.n === 'crowdW') cuffMap(lt);
   },
 };
 // the counter: a plaque that ticks up as the money leaves the can
@@ -950,7 +950,7 @@ function cuffMap(lt) {
   if (k <= .02) return;
   const K = .86, x0 = 640, y0 = 285, w = 480, h = 470, cx = x0 + w * K / 2, cy = y0 + h * K / 2, tSecond = wordT('s3', 'second', s3.s + .94) - .05, tBehind = wordT('s3', 'behind', s3.s + 1.83) - .05, tQ = wordT('s3', 'q-word', s3.s + 2.44), tSign = wordT('s3', 'sign', s3.s + 2.77);
   ctx.save(); ctx.translate(cx, cy); ctx.scale(k * K, k * K); ctx.rotate(-.02); ctx.translate(-w / 2, -h / 2); ctx.lineJoin = 'round';
-  reg('overlay', [cx - w / 2 * k * K - 8, cy - h / 2 * k * K - 8, cx + w / 2 * k * K + 8, cy + h / 2 * k * K + 8], { id: 'cuff-map', transit: k < .98 });
+  reg('overlay', [cx - w / 2 * k * K - 8, cy - h / 2 * k * K - 8, cx + w / 2 * k * K + 8, cy + h / 2 * k * K + 8], { id: 'cuff-map', transit: Math.abs(k - 1) > .02 });
   ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 28; ctx.shadowOffsetY = 10; ctx.fillStyle = '#fffaf0'; rr(0, 0, w, h, 26); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.stroke();
   ctx.fillStyle = '#1d4fd8'; ctx.beginPath(); ctx.roundRect(0, 0, w, 66, [26, 26, 0, 0]); ctx.fill(); ctx.stroke();
   text('THE GOOD CUFF', w / 2, 36, { size: 44, font: 'Bangers', weight: 400, fill: '#ffffff', spacing: 3 });

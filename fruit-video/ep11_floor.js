@@ -11,18 +11,18 @@
  * Layout (y): clock pill 116-184, place label 196-242, TOP panel 262-764, BAND 764-896 (meters 100 px tall, 16 px of clear band above and below), BOTTOM panel 896-1372, speaker chip from 1386.
  *
  * Shot list (scene-local seconds):
- *   0.20  open    seam flash, the panels wipe open (whoosh 0.20), DING 0.35 (first call lights), BWEEP 0.70 (bed alarm): HALL wide: Clementine sprints at us with the tower, the IV pole after her / LOUNGE locked off
- *   1.60  c1      HALL: she skids in front of Room 9, the pole bonks, the tower explodes into sheets, she shouts into the comm badge / LOUNGE: she sips, brow twitch
- *   3.51  s1      HALL: freeze, the badge rings back / LOUNGE: "That's not in my contract." (phone voice), guilt ticks up
+ *   0.20  open    seam flash, the panels wipe open (whoosh 0.20), DING 0.35 (first call lights), BWEEP 0.70 (bed alarm), the two panel tags pop in (0.6) and leave (4.1-4.5): HALL wide: Clementine sprints at us with the tower, the IV pole after her / LOUNGE locked off
+ *   1.60  c1      HALL: she skids in front of Room 9, the tower explodes into sheets, the pole rolls in behind her and wobbles to a stop, she shouts into the comm badge / LOUNGE: she sips, brow twitch
+ *   3.51  s1      HALL: freeze, the badge rings back, she flinches on "contract" (4.3) / LOUNGE: "That's not in my contract." (phone voice), guilt ticks up
  *   5.19  c2      HALL: ping-pong between the door frames (BONK, BONK) / LOUNGE: toe flex
- *   6.35  s2      HALL: she skids to a stop and stares / LOUNGE: "Helping."
- *   7.46  lapse1  TIME-LAPSE: clock to 7:45, sun sets in the lounge window, giant clock hands over both panels, hall route a blur of ghosts, lights multiply, CHA-CHING 8.36 ($560.50)
- *   9.16  m1      HALL: panting, the pole nudges her / LOUNGE: Mango walks in and says it (robe and turban have arrived, a third cup)
+ *   6.35  s2      HALL: she skids to a stop and stares / LOUNGE: "Helping."   then 7.00: her silent "Sure!" (a bubble, mouth flapping, no voice) before she takes off
+ *   7.46  lapse1  TIME-LAPSE: clock to 7:45, sun sets in the lounge window, giant clock hands over both panels, hall route a blur of ghosts (three more silent "Sure!"s as she passes doors), lights multiply, CHA-CHING 8.36 ($560.50)
+ *   9.16  m1      HALL: panting, the pole rolls up at her shoulder / LOUNGE: Mango walks in and says it (robe and turban have arrived, a third cup)
  *   11.16 c3      HALL: she sends the wheelchair (Mrs. Cranberry riding) spinning / LOUNGE: sip
  *   12.83 s3      HALL: dizzy stars, the board hits 28/28 / LOUNGE: twelve zZz bubbles pop over twelve doors
- *   14.96 lapse2  TIME-LAPSE: 9:30 PM, moonrise, stars, candle burns down, CHA-CHING 15.76 ($767.00)
+ *   14.96 lapse2  TIME-LAPSE: 9:30 PM, moonrise, stars, candle burns down, a limp "sure..." and "sure.", CHA-CHING 15.76 ($767.00)
  *   16.46 c4      HALL: close-up push-in, puppy eyes / LOUNGE: a gulp of coffee, guilt 70%
- *   17.80 s4,s5   HALL: she sinks into the sheets, the pole leans on her / LOUNGE: out loud, twice, the mask begins to crack
+ *   17.80 s4,s5   HALL: she sinks into the sheets, flinching at each "contract", the pole hovers at her shoulder / LOUNGE: out loud, twice, sweat under the clay, the mask begins to crack
  *   21.07 snap    HALL: she looks up, frozen / LOUNGE: BOING 21.17: the thermometer bursts, the cucumbers fly in two arcs, slow-motion push-in, she sits bolt upright
  *   21.93 s6      LOUNGE: she hops out of the chair, shouts, crouches / HALL: Clementine bounces up with hope
  *   23.47 run     she launches straight up through the divider (whoosh 23.47): band + lounge shatter, one wide hall, SCRAMBLE 23.57, both nurses sprint away down the hall
@@ -206,14 +206,19 @@ function chairRide(q, o = {}) {
   }
   return c;
 }
-// a speech bubble with one silent word in it (Clementine's "Sure!" instinct)
+// a speech bubble with one silent word in it (Clementine's "Sure!" instinct). (x, y) is the tip of the tail, at her cheek; the body floats up and out to the side (side = +1 right, -1 left)
 function bubble(x, y, str, k, o = {}) {
   if (k <= .02) return;
-  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.rotate(o.rot || 0);
-  ctx.font = '900 34px Nunito'; const w = ctx.measureText(str).width + 40;
-  ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-w / 2, -26, w, 52, 26); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-8, 24); ctx.lineTo(-18, 44); ctx.lineTo(10, 26); ctx.closePath(); ctx.fillStyle = '#fff'; ctx.fill(); ctx.stroke(); ctx.fillRect(-9, 22, 18, 6);
-  text(str, 0, 2, { size: 34, fill: o.fill || '#e8731a', weight: 900 });
+  const sz = o.size || 56, side = o.side || 1;
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.rotate(o.rot || 0); ctx.lineJoin = 'round';
+  ctx.font = `900 ${sz}px Nunito`; const w = ctx.measureText(str).width + sz * 1.0, h = sz * 1.42, cx = side * (w / 2 + 4), cy = -(h / 2 + 22);
+  ctx.fillStyle = '#fffdf5'; ctx.strokeStyle = INK; ctx.lineWidth = 5.5;
+  rr(cx - w / 2, cy - h / 2, w, h, h / 2); ctx.fill(); ctx.stroke();
+  const bx = cx - side * w * .3, by = cy + h / 2 - 2;                 // the tail leaves the lower edge of the body, nearest the head
+  ctx.beginPath(); ctx.moveTo(bx - 15, by - 6); ctx.lineTo(0, 0); ctx.lineTo(bx + 15, by - 6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx - 15, by - 7); ctx.lineTo(0, 0); ctx.lineTo(bx + 15, by - 7); ctx.closePath(); ctx.fill();
+  ctx.fillRect(bx - 13, by - 9, 26, 7);
+  text(str, cx, cy + 3, { size: sz, fill: o.fill || '#e8731a', weight: 900 });
   ctx.restore();
 }
 
@@ -226,11 +231,6 @@ const CP = route([
   [14.96, 20, 2935], [15.40, 80, 6200, 'in'], [15.48, 80, 6200], [16.25, 188, 2960, 'out'], [16.36, 188, 2960],   // time-lapse: down the hall, back to Room 9
   [23.55, 188, 2960], [23.95, 150, 2960], [24.5, 150, 4700, 'in'], [25.4, 130, 6000],                                       // the run: she bolts after Strawberry's arrival
 ]);
-// the camera: nearly locked while she works the same stretch of hall, so her sprints read against it
-const hallCam = lt => {
-  const cz = lerp(1250, 1400, seg(lt, 1.6, 5.0)) + (lt > 5.19 ? 0 : 0), cx = 22 * Math.sin(lt * .5);
-  return { f: 1400, cy: 360, hy: 419, cz, cx };
-};
 
 // ------------------------------------------------------------------ accessories made for this scene
 EXT.acc.pricetag11 = (o, k, t, layer) => {   // Clementine's price tag: it streams out behind her at speed (o.tagA, radians, positive trails to the left) and flutters with o.tagFlap
@@ -283,15 +283,16 @@ function clemObj(lt, ghost) {
   else if (lt < b('s6').s) { arms = { l: 'hold', r: 'hold' }; grip = { l: [-22, 54], r: [22, 54] }; hand = { l: 'flat', r: 'flat' }; }   // hands pressed together: please
   else if (lt < b('run').s + .12) arms = { l: 'cheer', r: 'cheer' };
   // body language: hops on her key words, the skid, the BONKs, the sink into the sheets, the dizzy sway
+  const flinch = Math.max(pulse(lt, wd('s1', 'contract', 4.3) - .02, .34), pulse(lt, wd('s4', 'contract', 18.5), .3) * .5, pulse(lt, wd('s5', 'contract', 20.2), .3) * .6);   // she flinches every time "contract" lands
   const hop = 30 * (pulse(lt, wd('c1', 'strawberry', 1.6) - .02, .34) + pulse(lt, wd('c1', 'help', 2.4), .3) + pulse(lt, wd('c1', 'room', 2.7), .4)) + 26 * (pulse(lt, wd('c3', 'strawberry', 11.2), .34) + pulse(lt, wd('c3', 'twenty', 12), .4))
-    + 22 * pulse(lt, b('lapse1').s + .1, .3) + 70 * pulse(lt, b('s6').s + .05, .5) + 56 * pulse(lt, TRUN() + .0, .42);
-  const bonk = Math.max(pulse(lt, 5.49, .24), pulse(lt, 5.87, .24)), skid = pulse(lt, 1.64, .46) * (lt < 2.2 ? 1 : 0);
+    + 22 * pulse(lt, b('lapse1').s + .1, .3) + 14 * flinch + 70 * pulse(lt, b('s6').s + .05, .5) + 56 * pulse(lt, TRUN() + .0, .42);
+  const bonk = Math.max(pulse(lt, 5.49, .24), pulse(lt, 5.87, .24), flinch * .65), skid = pulse(lt, 1.64, .46) * (lt < 2.2 ? 1 : 0);
   const sink = sk(lt, b('c4').e, b('s5').e) * (lt < b('s6').s ? 1 : 1 - seg(lt, b('s6').s, b('s6').s + .12));
   const sway = lt >= b('s3').s && lt < b('lapse2').s ? .16 * Math.sin(lt * 5.2) * (1 - seg(lt, 14.2, 14.9)) : 0;
   const extra = { who: 'clem', t: lt, acc: ['steth', 'pricetag11', 'badge7', 'combadge11'].concat(tired > .02 ? ['sweat'] : []), expr, arms, grip, hand, lift: hop - 12 * sink,
     squash: .2 * skid + .38 * bonk + .12 * sink, plant: true, rot: (sway || 0) + .5 * (bonk > 0 ? (lt < 5.7 ? 1 : -1) * .3 * bonk : 0) - .05 * sink,
-    look: lt < 1.6 ? [0, .2] : hearing ? [0, 0] : [.1, .1], sparkle: inB(lt, 'c4') || inB(lt, 's4') || inB(lt, 's5') || inB(lt, 'snap'), eyeScale: inB(lt, 'c4') || lt >= b('s4').s && lt < b('s6').s ? 1.16 : 1,
-    lid: expr === 'weak' ? .34 : undefined, callRing: (cTalk || hearing) && lt < b('s6').s ? 1 : 0, tagFlap: clamp(v / 1300), id: 'clem' };
+    look: lt < 1.6 ? [0, .2] : lt >= b('c4').e && lt < b('s6').s ? L2([-.55, .55], [0, -.15], .5 + .5 * Math.sin(lt * 1.9 + 1)) : hearing ? [0, 0] : [.1, .1], sparkle: inB(lt, 'c4') || inB(lt, 's4') || inB(lt, 's5') || inB(lt, 'snap'), eyeScale: inB(lt, 'c4') || lt >= b('s4').s && lt < b('s6').s ? 1.16 : 1,
+    lid: expr === 'weak' ? .34 : undefined, callRing: (cTalk || hearing) && lt < b('s6').s ? 1 : 0, tagFlap: clamp(v / 1300), mouthOpen: sureOpen(lt), id: 'clem' };
   if (ghost) Object.assign(extra, { noShadow: true, noReflect: true, alpha: ghost });
   const o = runner(A10.clem, CP, lt, extra, run ? 380 : 300);
   if (run) { const [X2] = CP(lt + .04); o.tagA = X2 > X ? .55 : -.55; }
@@ -300,6 +301,10 @@ function clemObj(lt, ghost) {
   if (lt >= T_TOWER && lt < b('lapse1').e) o.badgeText = 'NEW';
   return { o, X, Z, v, run };
 }
+// Clementine's silent "Sure!" instincts: [start, text, size, hold]. Nobody says them out loud (there is no voice line): her mouth flaps and a bubble pops. Bold after "Helping.", then one per door in the first time-lapse, then limp in the second
+const SURES = [[7.0, 'Sure!', 66, .46], [7.80, 'Sure!', 52, .27], [8.14, 'Sure!', 52, .27], [8.58, 'Sure!', 52, .3], [15.2, 'sure...', 48, .46], [15.9, 'sure.', 44, .34]];
+const sureAt = lt => SURES.find(e => lt >= e[0] && lt < e[0] + e[3] + .2) || null;
+const sureOpen = lt => { const e = sureAt(lt); return e && lt < e[0] + e[3] ? clamp(.55 + .45 * Math.sin((lt - e[0]) * 44)) * seg(lt, e[0], e[0] + .05) : 0; };
 // the sheets the tower becomes when she skids: each flies up and toward the lens, flutters down, lands in the heap
 function sheetBurst(lt, q) {   // q: the V2.at position of the skid
   const u = lt - T_TOWER; if (u < 0 || u > 1.3) return [];
@@ -322,7 +327,7 @@ function hallBg(lt, cam) {
   const n = nLit(lt), ph = phaseOf(lt), near = cam.cz + 90;
   const doors = DOORS.map((d, i) => Object.assign({}, d, { dome: d.z < cam.cz + 1100 ? null : domeAt(i, lt, n), open: d.n === '9' ? 1 : 0 }));   // a dome next to the lens would flood the panel with its glow (and sits above the panel anyway)
   const lamp = [.58, .46, .36][ph] * (hash(Math.floor(lt * 12) + ph * 7) > (ph === 2 ? .1 : .03) ? 1 : .35);
-  S6.corridor({ doors, fog: ph === 2 ? '#434a74' : '#4a5278', fogAmt: .5, wall: '#cfc6b4', wain: '#46707a', lampOn: lamp, bright: .74 * (1 - .4 * clamp((n - 3) / 18)), signs: [], zFar: 7600 });
+  S6.corridor({ doors, fog: ph === 2 ? '#434a74' : '#4a5278', fogAmt: .5, wall: '#cfc6b4', wain: '#46707a', lampOn: lamp, bright: (.74 - .07 * ph) * (1 - .4 * clamp((n - 3) / 18)), signs: [], zFar: 7600 });
   let rings = 0;
   doors.forEach((d, i) => {   // sound rings off the lit domes (the near ones only: they are what the eye reads)
     if (!d.dome || i % 2 || d.z < near || rings > 9) return; rings++;
@@ -338,7 +343,7 @@ function lapseFx(lt, y0, y1, o = {}) {
     const bb = b(id), p = seg(lt, bb.s, bb.e), env = Math.sin(clamp(p) * PI);
     if (p <= 0 || p >= 1) continue;
     ctx.save(); ctx.globalCompositeOperation = 'screen';
-    for (const [off, col, a] of [[0, '255,214,140', .34 * (o.k ?? 1)], [-340, '120,160,255', .26 * (o.k ?? 1)]]) {
+    for (const [off, col, a] of [[0, '255,214,140', .26 * (o.k ?? 1)], [-340, '120,160,255', .2 * (o.k ?? 1)]]) {
       const cx = lerp(-300, 1400, easeIO(p)) + off;
       ctx.fillStyle = V2.grad(cx - 300, 0, cx + 300, 0, [[0, `rgba(${col},0)`], [.5, `rgba(${col},${a * env})`], [1, `rgba(${col},0)`]]); ctx.fillRect(0, y0, W, y1 - y0);
     }
@@ -360,7 +365,7 @@ function hallActors(lt, cam, o = {}) {
   const items = [], lapse = inB(lt, 'lapse1') || inB(lt, 'lapse2'), c = clemObj(lt), cq = V2.at(c.X, c.Z);
   // the pole
   { const [px, pz] = POLEP(lt), q = V2.at(px, pz), moving = spd(POLEP, lt) > 60;
-    if (pz > cam.cz + 300) items.push({ z: pz, fn: () => ivPole(q.x, q.y, q.s * .95, { t: lt, lean: .05 * Math.sin(lt * 3.1) - (moving ? .06 : 0) }) }); }
+    if (pz > cam.cz + 300) items.push({ z: pz, fn: () => ivPole(q.x, q.y, q.s * .95, { t: lt, lean: .05 * Math.sin(lt * 3.1) - (moving ? .06 : 0) + (lt > 3.4 && lt < 5 ? .17 * Math.exp(-(lt - 3.4) * 3.2) * Math.sin((lt - 3.4) * 19) : 0) }) }); }
   // the wheelchair
   if (lt > 10.8 && lt < 15.5) { const [wx, wz] = WCP(lt), q = V2.at(wx, wz), th = chairTheta(lt), sp = chairSpinning(lt), mv = spd(WCP, lt) > 60;
     items.push({ z: wz, fn: () => chairRide(q, { spin: th, t: lt, roll: lt * 30, swirl: sp ? sk(lt, 11.4, 11.8) * (1 - sk(lt, 13.4, 14.2)) : 0, mouth: sp ? .9 : .2, expr: sp ? 'shock' : 'happy', transit: mv && (wx < -300), vx: mv ? 500 : 0 }) }); }
@@ -390,7 +395,7 @@ function hallGhosts(lt, cam) {
 
 // ------------------------------------------------------------------ the spa lounge (bottom panel): the Episode 9 lounge from a higher, calmer angle, now with a window that tells the time
 const LCAM = { f: 1400, cy: 385, hy: 848, cz: 0, cx: 0 };       // the camera looks slightly down on the room: the horizon is above the panel
-const ZB = 1700, HW = 640, CH = 560, WB = [LCAM.hy + LCAM.cy * LCAM.f / ZB];   // the back wall's floor line on screen: y 1165
+const ZB = 1700, HW = 640, CH = 560, LOCK0 = -386;   // LOCK0: the world X of the first of her twelve residents' doors (56 apart)
 const U = .85;                                                  // the chair and Strawberry are drawn at this scale in the panel (she fits her panel with 70 px of headroom)
 const PCX = 410, PCY = 1163;                                    // the chair's centre (screen): its footrest ends at y 1352
 const TX = 690, TY = 1205;                                      // the side table top
@@ -431,16 +436,16 @@ function skyView(f, lt) {
   ctx.lineTo(fx1, fy0); ctx.closePath(); ctx.fill();
   if (sk2.lit > 0) { ctx.fillStyle = `rgba(255,220,130,${.9 * sk2.lit})`; for (let i = 0; i < 22; i++) ctx.fillRect(fx0 + w * hash(i * 1.7 + 2) * .96, fy0 - h * (.04 + .17 * hash(i * 2.9 + 5)), 3.4, 4.4); }
 }
-const LIT_WALL = { x0: 330, x1: 590, y0: 22, y1: 236 };     // the window on the back wall (world units)
+const WIN = { x0: 330, x1: 590, y0: 22, y1: 236 };     // the window on the back wall (world units)
 function loungeRoom(lt) {
   V2.setCam(LCAM);
   const u = todU(lt), sk2 = skyAt(u);
   S6.shell({ zb: ZB, hw: HW, ch: CH, wall: mixh('#cfc3e6', '#8f86c0', u * .6), wain: mixh('#8e74b8', '#5f4c92', u * .6), floorA: mixh('#dcbf98', '#a0866c', u * .6), floorB: mixh('#bc9d74', '#7d6650', u * .6), ceil: '#e8e0f2', fog: mixh('#a496c6', '#4a4274', u * .7), fogAmt: .25, tile: 130, bright: 1, rail: 96 });
   // the break room door with the DO NOT DISTURB hanger on its knob
-  S6.onZ(ZB, -604, -486, 0, 230, '#a8744f', 'rgba(25,16,30,.7)', 2.4); S6.onZ(ZB, -586, -504, 40, 100, '#96623e', 'rgba(25,16,30,.35)', 1.4); S6.onZ(ZB, -586, -504, 124, 210, '#96623e', 'rgba(25,16,30,.35)', 1.4);
+  S6.onZ(ZB, -580, -462, 0, 230, '#a8744f', 'rgba(25,16,30,.7)', 2.4); S6.onZ(ZB, -562, -480, 40, 100, '#96623e', 'rgba(25,16,30,.35)', 1.4); S6.onZ(ZB, -562, -480, 124, 210, '#96623e', 'rgba(25,16,30,.35)', 1.4);
   // the twelve doors of her twelve residents: closed, dark domes (nobody is calling)
   for (let j = 0; j < 12; j++) {
-    const X = -410 + j * 56, z = ZB - 2;
+    const X = LOCK0 + j * 56, z = ZB - 2;
     S6.onZ(z, X - 22, X + 22, 0, 205, ['#6d8f88', '#9d6b74', '#8e6f55', '#a8744f'][(j * 3) % 4], 'rgba(25,16,30,.65)', 2);
     S6.onZ(z, X - 15, X + 15, 22, 84, 'rgba(0,0,0,.14)'); S6.onZ(z, X - 15, X + 15, 104, 172, 'rgba(0,0,0,.14)');
     S6.onZ(z, X - 12, X + 12, 184, 200, '#f6eee0', 'rgba(25,16,30,.5)', 1.2);
@@ -448,10 +453,10 @@ function loungeRoom(lt) {
     const [nx, ny] = V2.p2(X, 192, z), kk = S6.kz(z); text(String(j + 1), nx, ny + 1, { size: 11 * kk, fill: '#3a2a4a', weight: 900 });
   }
   // the window, with its own sky
-  S6.backWindow(ZB, { x0: LIT_WALL.x0, x1: LIT_WALL.x1, y0: LIT_WALL.y0, y1: LIT_WALL.y1, sky: ['#74b6f5', '#ffe0a8'], mull: 2, sill: true, draw: f => skyView(f, lt) });
+  S6.backWindow(ZB, { x0: WIN.x0, x1: WIN.x1, y0: WIN.y0, y1: WIN.y1, sky: ['#74b6f5', '#ffe0a8'], mull: 2, sill: true, draw: f => skyView(f, lt) });
   wallClock11(919, 924, 26, lt);
   // the hanger
-  { const hk = Math.sin(lt * 2.1) * .03, [hx, hy] = V2.p2(-494, 150, ZB - 8), kk = S6.kz(ZB); ctx.save(); ctx.translate(hx, hy); ctx.rotate(hk); ctx.scale(kk, kk);
+  { const hk = Math.sin(lt * 2.1) * .03, [hx, hy] = V2.p2(-470, 150, ZB - 8), kk = S6.kz(ZB); ctx.save(); ctx.translate(hx, hy); ctx.rotate(hk); ctx.scale(kk, kk);
     ctx.fillStyle = '#d9a441'; ell(0, 0, 8, 8); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.stroke();
     ctx.fillStyle = '#e8193a'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; rr(-50, 4, 100, 106, 10); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#fff'; ell(0, 24, 9, 9); ctx.fill(); ctx.fillStyle = '#e8193a'; ell(0, 24, 4.2, 4.2); ctx.fill();
@@ -459,7 +464,7 @@ function loungeRoom(lt) {
     ctx.restore(); }
   // the window's light on the floor: a warm patch sliding with the sun, a pale one after the moon rises
   { const warm = sk2.sunA * (1 - u / .5), cool = sk2.moonA * .5, sh = lerp(-260, 260, clamp(u / .45)), patch = (col, a, off) => { if (a <= .01) return;
-      const q = [[LIT_WALL.x0 + off, 0, ZB - 20], [LIT_WALL.x1 + off, 0, ZB - 20], [LIT_WALL.x1 + off + sh * .6 - 220, 0, ZB - 640], [LIT_WALL.x0 + off + sh * .6 - 220, 0, ZB - 640]], p = q.map(v => V2.p2(...v));
+      const q = [[WIN.x0 + off, 0, ZB - 20], [WIN.x1 + off, 0, ZB - 20], [WIN.x1 + off + sh * .6 - 220, 0, ZB - 640], [WIN.x0 + off + sh * .6 - 220, 0, ZB - 640]], p = q.map(v => V2.p2(...v));
       ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.grad(0, p[0][1], 0, p[2][1], [[0, `rgba(${col},${a * .34})`], [1, `rgba(${col},0)`]]); ctx.beginPath(); p.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill(); ctx.restore(); };
     patch('255,200,120', warm, -140); patch('150,180,255', cool, -60); }
   const [wx, wy] = V2.p2(460, 130, ZB);
@@ -569,7 +574,7 @@ function strawSeat(lt, ctxo) {
   const up = upAt(lt);
   const brow = 9 * (pulse(lt, wordT('c1', 'strawberry', 1.6), .3) + pulse(lt, wordT('c2', 'which', 5.2), .3) + pulse(lt, wordT('c3', 'strawberry', 11.2), .3) + pulse(lt, wordT('c4', 'strawberry', 16.5), .3) + pulse(lt, 20.0, .4));
   const acc = ['clay9', 'crack11', 'steth', 'bandage7', 'perdiem9'];
-  if (spa) acc.push('robe9'); if (!post) acc.push('cuke11'); if (spa) acc.push('turban9');
+  if (spa) acc.push('robe9'); if (!post) acc.push('cuke11'); if (spa) acc.push('turban9'); if (!post && lt >= b('c4').s) acc.push('sweat');   // guilt sweats through the clay once the pleas turn to begging
   const o = A11.straw({ id: 'straw', who: talkS ? 'strawphone' : 'straw', x: 0, y: seatY(lt), s: 1, noLegs: true, noShadow: true, noReflect: true, cap: false, acc, t: lt, lift: 11.8,
     expr: post ? (sl < .55 ? 'shock' : 'angry') : 'neutral', face: post ? undefined : seatExpr(g), lid: post ? 0 : undefined, browUp: post ? 0 : brow, look: [0, 0],
     rot: post ? .02 * Math.sin(lt * 40) * (1 - up) : -.04 * (1 - g * .8) + .012 * Math.sin(lt * 1.7) + (loud ? .018 * Math.sin(lt * 31) : 0), sway: .02, sy: 1 + .14 * (post ? pulse(sl, .02, .7) : 0), sx: 1 - .06 * (post ? pulse(sl, .02, .7) : 0),
@@ -619,7 +624,7 @@ const MP = route([[8.7, 860, 1660], [9.35, 340, 1660, 'out'], [11.05, 340, 1660]
 function mangoObj(lt) {
   if (lt < 8.6 || lt > 12.0) return null;
   const q = V2.at(...MP(lt)), moving = spd(MP, lt) > 20, m1 = inB(lt, 'm1'), talk = m1;
-  const o = A7.mango(Object.assign(q, { s: q.s * .8, id: 'mango', who: 'mango', expr: m1 ? 'smug' : lt > b('m1').e ? 'neutral' : 'neutral', look: [-.9, .05], arms: { l: 'hold', r: 'rest' }, hold: { l: 'clipboard6' }, grip: { l: [-86, 30] }, clipText: 'BREAK LOG', t: lt, noReflect: true, transit: lt < 9.4 || lt > 10.9 }));
+  const o = A7.mango(Object.assign(q, { s: q.s * .8, id: 'mango', who: 'mango', expr: m1 ? 'smug' : lt > b('m1').e ? 'neutral' : 'neutral', look: [-.9, .05], arms: { l: 'hold', r: 'rest' }, hold: { l: 'clipboard6' }, grip: { l: [-86, 30] }, clipText: '4:00', t: lt, noReflect: true, transit: lt < 9.4 || lt > 10.9 }));
   if (moving) { o.gaitW = pathDistM(lt); o.axis = 'x'; o.dir = MP(lt + .04)[0] > MP(lt - .04)[0] ? 1 : -1; if (o.dir > 0) o.look = [.8, 0]; }
   if (m1 && lt > b('m1').e - .5) { o.arms.r = 'shrug'; }
   void talk;
@@ -678,7 +683,7 @@ function loungeDraw(lt, o = {}) {   // o.noStraw leaves her out (the frozen slab
   // twelve zZz bubbles over twelve dark domes: "They're all asleep."
   for (let j = 0; j < 12; j++) {
     const at = wordT('s3', 'twelve', 13.15) + .02 + j * .075, p = easeBack(seg(lt, at, at + .2)), out = 1 - seg(lt, b('lapse2').s + .2, b('lapse2').s + .55); if (p <= .02 || out <= 0) continue;
-    const X = -410 + j * 56, [bx, by] = V2.p2(X, 262, ZB - 2), bob = 2 * Math.sin(tt * 2.4 + j * .8);
+    const X = LOCK0 + j * 56, [bx, by] = V2.p2(X, 262, ZB - 2), bob = 2 * Math.sin(tt * 2.4 + j * .8);
     ctx.save(); ctx.globalAlpha *= clamp(p * 2) * out; ctx.translate(bx, by - 12 + bob); ctx.scale(p, p);
     ctx.fillStyle = '#f4efff'; ctx.strokeStyle = '#4b3a78'; ctx.lineWidth = 3; rr(-24, -14, 48, 28, 14); ctx.fill(); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-6, 12); ctx.lineTo(0, 20); ctx.lineTo(6, 12); ctx.closePath(); ctx.fillStyle = '#f4efff'; ctx.fill(); ctx.stroke(); ctx.fillRect(-5, 10, 10, 4);
@@ -822,7 +827,6 @@ const SHARDS = (() => {
 let SLABCV = null;
 function slabCanvas() { if (!SLABCV) SLABCV = V2.mk(W, SLAB[1] - SLAB[0]); return SLABCV; }
 // copy the rows that are about to shatter out of the picture drawn so far
-function grabSlab() { const c = slabCanvas(), g = c.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'copy'; g.drawImage(ctx.canvas, 0, SLAB[0], W, SLAB[1] - SLAB[0], 0, 0, W, SLAB[1] - SLAB[0]); }
 // draw the shards at age u (seconds since the glass cracked): at rest they are the picture with its cracks lit; then they fly outward, tumble toward the lens and fall
 function drawShards(u) {
   const c = slabCanvas();
@@ -861,19 +865,17 @@ function topFrame(lt, face) {
 }
 // the lounge's framing: calm and locked off, a hair of creep, then the slow-motion push-in on her face for the snap and a snap back out
 function loungeFrame(lt) {
-  const sa = slowT(lt), tw = TWAKE();
-  let z = 1 + .016 * seg(lt, 0, 20);
-  if (lt >= TSNAP() && lt < tw) z = lerp(z, 1.36, easeOut(seg(sa, 0, .5)));
-  else if (lt >= tw) z = lerp(1.36, 1, sk(lt, tw, tw + .32));
-  return { z, px: PCX, py: 905 };
+  const tw = TWAKE(), zIn = t => { const z0 = 1 + .016 * seg(t, 0, 20); return t >= TSNAP() ? lerp(z0, 1.36, easeOut(seg(slowT(t), 0, .5))) : z0; };   // the push-in, in the snap's slow motion
+  return { z: lt < tw ? zIn(lt) : lerp(zIn(tw), 1, sk(lt, tw, tw + .32)), px: PCX, py: 905 };   // and the pull-back starts from wherever the push-in had got to (no pop when she leaves the chair)
 }
 const topShot = lt => lt < b('c1').s ? 'wide' : lt < b('c2').s ? 'push' : lt < b('lapse1').s ? 'bounce' : lt < b('m1').s ? 'lapse1' : lt < b('c3').s ? 'pant' : lt < b('lapse2').s ? 'wheel' : lt < b('c4').s ? 'lapse2' : lt < b('s6').s ? 'plea' : lt < TF() ? 'rise' : 'merge';
 const botShot = lt => lt < TF() ? 'lounge' : 'merge';
 
 // ------------------------------------------------------------------ panel furniture
 const speakerOf = lt => ['c1', 'c2', 'c3', 'c4'].some(id => inB(lt, id)) ? 'top' : ['s1', 's2', 's3', 's4', 's5', 's6', 'm1'].some(id => inB(lt, id)) ? 'bot' : null;
-function panelTag(str, x, y, col) {   // x < 0: flush to the right with the same 48 px margin
-  ctx.save(); ctx.font = '900 22px Nunito'; ctx.letterSpacing = '2px'; const w = ctx.measureText(str).width + 34; ctx.letterSpacing = '0px'; if (x < 0) x = W - 48 - w;
+function panelTag(str, x, y, col, lt) {   // x < 0: flush to the right with the same 48 px margin; the labels pop in after the wipe and leave after four seconds, clear of everything that follows
+  const al = seg(lt, .6, .85) * (1 - seg(lt, 4.1, 4.5)); if (al <= 0) return;
+  ctx.save(); ctx.globalAlpha *= al; ctx.font = '900 22px Nunito'; ctx.letterSpacing = '2px'; const w = ctx.measureText(str).width + 34; ctx.letterSpacing = '0px'; if (x < 0) x = W - 48 - w;
   ctx.fillStyle = 'rgba(10,8,22,.8)'; rr(x, y, w, 36, 18); ctx.fill(); ctx.fillStyle = col; ell(x + 19, y + 18, 6, 6); ctx.fill(); text(str, x + 34, y + 19, { size: 20, fill: '#fff', align: 'left', spacing: 2 }); ctx.restore();
 }
 // the panel's own audit: faces, heads and held props drawn in a panel must stay inside it (and 20 px in from the frame's sides); a body may be cropped by the panel's edge
@@ -904,6 +906,19 @@ function giantClock(lt) {
 }
 
 // ------------------------------------------------------------------ the scene
+// the hall's framing transform applied by hand: a point of the hall picture to its place in the panel
+const hallToScreen = (fr, x, y) => { const c = Math.cos(fr.r), s = Math.sin(fr.r), dx = (x - fr.tx) * fr.z, dy = (y - fr.ty) * fr.z; return [540 + fr.dx + dx * c - dy * s, TMID + fr.dy + dx * s + dy * c]; };
+// her silent "Sure!": a bubble beside her head, on whichever side has room, drawn in screen space so that it keeps its size under the zoom. In a time-lapse its tail stops at the outermost of her afterimages
+function sureBubbles(lt) {
+  const e = sureAt(lt); if (!e) return;
+  const k = seg(lt, e[0], e[0] + .12), f = 1 - seg(lt, e[0] + e[3], e[0] + e[3] + .18); if (k <= 0 || f <= 0) return;
+  const lap = inB(lt, 'lapse1') || inB(lt, 'lapse2'), c0 = clemObj(lt), face = faceC(c0.o), fr = topFrame(lt, face), P = [];
+  for (let j = 0; j <= (lap ? 5 : 0); j++) { const c = j ? clemObj(lt - j * .045) : c0, fc = faceC(c.o), [fx, fy] = hallToScreen(fr, fc[0], fc[1]); P.push({ fx, fy, z: fr.z * c.o.s }); }
+  const side = P[0].fx > 540 ? -1 : 1, tipX = side > 0 ? Math.max(...P.map(q => q.fx + 96 * q.z)) : Math.min(...P.map(q => q.fx - 96 * q.z));
+  ctx.save(); ctx.globalAlpha *= f;
+  bubble(tipX, Math.max(P[0].fy - 26 * P[0].z, TOP[0] + 190), e[1], easeBack(k), { size: e[2], side, rot: -side * .05 });
+  ctx.restore();
+}
 const LAND = () => ({ lx: (PCX - 540) / .96, lz: 1400 + 1400 / .96 });
 const hallCamAt = lt => {
   if (lt < b('c1').s) return { f: 1400, cy: 360, hy: 455, cz: 1000, cx: 0 };   // the establishing wide: a hair higher and farther, so the tower fits above her
@@ -930,7 +945,7 @@ function mergedFrame(lt, cam, fr) {
     hallBg(lt, cam); lapseFx(lt, TOP[0], BOT[1]);
     ctx.restore();
     // the HUD of the top panel goes with the screen
-    { const a = 1 - seg(u, .1, .3); if (a > 0) { ctx.save(); ctx.globalAlpha *= a; callBoard(684, TOP[0] + 12, lt, 28); panelTag('ROOM 9 / 28 RESIDENTS', 48, TOP[0] + 12, '#ff8a1a'); ctx.restore(); } }
+    { const a = 1 - seg(u, .1, .3); if (a > 0) { ctx.save(); ctx.globalAlpha *= a; callBoard(684, TOP[0] + 12, lt, 28); ctx.restore(); } }
     drawShards(u);
     // the actors: Clementine, the pole, and (once landed) Strawberry
     V2.setCam(cam);
@@ -972,7 +987,7 @@ const SC = {
       ctx.save(); ctx.translate(540 + fr.dx, TMID + fr.dy); ctx.rotate(fr.r); ctx.scale(fr.z, fr.z); ctx.translate(-fr.tx, -fr.ty);
       hallGhosts(lt, cam); hallActors(lt, cam);
       ctx.restore();
-      callBoard(684, TOP[0] + 12, lt, nLit(lt)); if (kOpen > .9) panelTag('ROOM 9 / 28 RESIDENTS', 48, TOP[0] + 12, '#ff8a1a');
+      callBoard(684, TOP[0] + 12, lt, nLit(lt)); if (kOpen > .9) panelTag('ROOM 9 / 28 RESIDENTS', 48, TOP[0] + 12, '#ff8a1a', lt);
       if (spk === 'bot') { ctx.fillStyle = 'rgba(8,6,20,.22)'; ctx.fillRect(0, TOP[0], W, TOP[1] - TOP[0]); }
       ctx.restore();
       panelCheck(n0, TOP, 'hall', kOpen < 1);
@@ -980,13 +995,13 @@ const SC = {
       const botH = (BOT[1] - BOT[0]) * kOpen, n1 = REG.items.length;
       ctx.save(); ctx.beginPath(); ctx.rect(0, BOT[0], W, botH); ctx.clip();
       loungeDraw(lt, { frame: loungeFrame(lt) });
-      if (kOpen > .9) panelTag('BREAK (ALLEGEDLY)', -1, BOT[1] - 48, '#7fe0a0');
+      if (kOpen > .9) panelTag('BREAK (ALLEGEDLY)', 48, BOT[0] + 12, '#7fe0a0', lt);
       if (spk === 'top') { ctx.fillStyle = 'rgba(8,6,20,.22)'; ctx.fillRect(0, BOT[0], W, BOT[1] - BOT[0]); }
       ctx.restore();
       panelCheck(n1, BOT, 'lounge', kOpen < 1 || lt >= TRUN() - .02);
       // ---- the divider band, drawn open from its centre line
       const bh = (BAND[1] - BAND[0]) * kOpen, my = (BAND[0] + BAND[1]) / 2;
-      ctx.save(); ctx.beginPath(); ctx.rect(0, my - bh / 2, W, bh); ctx.clip(); bandDraw(lt); ctx.restore();
+      ctx.save(); if (kOpen < 1) { ctx.beginPath(); ctx.rect(0, my - bh / 2, W, bh); ctx.clip(); } bandDraw(lt); ctx.restore();
       if (kOpen < 1) { ctx.fillStyle = `rgba(255,255,255,${.9 * (1 - kOpen)})`; ctx.fillRect(0, my - 4, W, 8); ctx.fillRect(0, TOP[1] - (TOP[1] - TOP[0]) * kOpen - 4, W, 8); ctx.fillRect(0, BOT[0] + botH - 4, W, 8); }
       else if (lt < .9) { const sw = seg(lt, .72, .95); ctx.fillStyle = `rgba(255,255,255,${.55 * (1 - sw)})`; ctx.fillRect(lerp(-300, 1380, sw) - 150, BAND[0], 300, BAND[1] - BAND[0]); }
       // the seam before it opens: the divider as a bright line
@@ -1004,6 +1019,7 @@ const SC = {
   },
   blur: lt => (inB(lt, 'lapse1') || inB(lt, 'lapse2')) ? 4 : (lt >= TRUN() - .06 && lt < TRUN() + .9 ? 6 : lt < .8 ? 3 : (lt >= TSNAP() - .05 && lt < TSNAP() + .5 ? 3 : (lt >= TRUN() + .9 ? 3 : 2))),
   over(lt) {
+    if (sureAt(lt) && lt < TF()) { V2.setCam(hallCamAt(lt)); sureBubbles(lt); }   // her silent "Sure!": over the grade, so the word stays crisp through the time-lapse blur
     const hx = 800, hy = 192;   // the header zone to the right of the pills: nothing else lives here, so the pops never touch a face
     sfxWord(lt, b('open').s + .15, 'DING!', hx - 100, hy, { fill: '#ffffff', size: 92, rot: .05, hold: .3 });
     sfxWord(lt, b('open').s + .5, 'BWEEP!', hx + 40, hy + 6, { fill: A6.ALARM.bed.hex, size: 86, rot: -.05, hold: .4 });

@@ -46,6 +46,8 @@ def cue_title11(T, t0, d, beats):
             T.put(woodblock(), at, .07, .3 if (i // 2) % 2 else -.3)
             T.put(pizz(midi(45 if (i // 2) % 2 == 0 else 52), .22), at, .17, 0)
     T.put(riser(punch - lg - .1, 260, 2600, .6), lg + .05, .1)                           # a faint rise under the winding clock
+    T.put(roll(70, punch - lg - .5, 18), lg + .2, .2, -.1)                               # and a low timpani roll: all low end, so the ticks stay clear
+    T.put(strings([33, 40, 45], land - lg - .3, 1.4, .15, 4.8, 500), lg + .1, .13)       # and a low string swell for the weight the sting has in the other episodes
     T.gate(punch - .05, punch + .02, 0, .004)
     T.put(brass([57, 60, 64], .25, .01, .1, 1800), stamp + .04, .07, 0)                  # IN 2:58 PM
     T.put(timp(55, .8), stamp + .04, .12)

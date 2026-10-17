@@ -1,6 +1,32 @@
 'use strict';
 /* SHIFT HAPPENS, Episode 11: Welcome Back. Scenes 'exit' (10:59 PM, THE FRONT DOOR) and 'lot' (11:00 PM, THE PARKING LOT).
- * (header comment written at the end of the build)
+ * Everything is a pure function of the scene-local time; the only module state is INSIDE (set at the top of SC_LOT.draw, read by entrance11).
+ *
+ * exit (12.46 s)  the night lobby (one-point set, back wall at Z 1750, doors centred on X 0, red carpet with stanchions running to the camera,
+ *   the big LED wall clock over the glass doors, the office door at the left, EXIT sign, reception desk, plants, banner WELCOME BACK STRAWBERY).
+ *   0.00 wide (slow push-in)       Strawberry walks in, in her teal coat (excoat11); Lemon waits with the OT FORM clipboard; tick 0.00
+ *   1.25 cuL / 4.16 cuS            "Can you stay five more minutes?" (pen held out at 'five'), then "Overtime is $177": calc graphic (calc11) in step with the words
+ *   6.37 cuLr / 6.92 cuS           Lemon's blank stare, back to Strawberry; the office door flies open at a1.s - .55
+ *   7.14 wideD                     the Administrator sprints out of the office (runner), the GO beat
+ *   8.02 cuA                       Administrator CU, each GO punches the picture in
+ *   8.98 trk                       the countdown: long lens (f 2000) dollying forward, DoF on the lobby, 10:59:56 .. :59 on the four ticks (TICK words, tick pulse
+ *                                  on the LED digits), the Administrator's flat hand on her flank (pit crew), Lemon's clipboard alongside; DING! at 10.96 =
+ *                                  white flash, 11:00:00, camera kick; the chyron clock pill switches to 11:00 PM on the ding (SC_EXIT.clock)
+ *   11.11 out                      close behind her, low and long: the doorway (leaves slide apart at out.s + .1) floods the frame, white-out at the end
+ *   The Administrator sags after the ding; Lemon side-steps out of the doors' way. Strawberry's back view (coatBack) only exists in `out`.
+ *
+ * lot (10.93 s)  facade at Z 2600 (ZL), long lens, one fixed camera through the chaos so every event reads in its own window/door:
+ *   upper row of six windows (call lights), lobby window left (stampede, wheelchair crash), glass entrance (the Administrator, Lemon), roof sign (R's pop off),
+ *   siren beacon over the doors, Strawberry's car at right (S7.car), the Moon top right (A7.moon), shrubs, two lamp posts.
+ *   0.00 wide (crickets: fireflies + 'chirp chirp')   1.05 moonA "How was your night?"   2.64 cuS "Quiet."   3.30 moonB (sweat, held frame, the dread)
+ *   3.62 chaos, locked wide, hits at chaos.s + 0.1 call (every window flashes), +0.3 klaxon, +0.5 stampede (silhouettes cross the lobby window, the building rumbles),
+ *   +0.9 howl (a werewolf silhouette in an upper window), +1.3 peel (banana peel kicked up, the Administrator slips, tumbles, lies upside-down with stars),
+ *   +1.6 PA chime, +2.0 crash (a wheelchair launches through the lobby window, glass shards, lands in the shrub), +2.2 siren (red/blue beacon, light on the cast);
+ *   the sign's R's fall off one by one, flames grow in the windows and on the roof, the building shakes (SC_LOT.shake).
+ *   6.72 lemon   Lemon is first seen inside behind the glass, the doors open, she runs out waving the clipboard, growing from door size to her size
+ *   8.04 cuS2    "Not my shift."   9.28 moonC "Nice." (Moon grin and bob), then a pull-back at 10.28 to the burning building, Strawberry at her car, headlights flash
+ *   (fob press at mo2.e - .05); fade out over the last 0.3 s into the end card.
+ * Custom names (global registries): accessories excoat11; props exfob11. Strawberry's walk is never touched by the chaos, her face stays calm.
  */
 (() => {
 if (!window.TIMELINE_EP11) return;
@@ -305,7 +331,7 @@ const dingT = () => B('cd').s + 1.9;
 
 // positions in the lobby (X, Z); the back wall is at Z 1750, the doors are centred on X 0
 const XP = { door: [-540, 1736], lemon: [135, 1340], straw: [-115, 1330] };
-const DELTA = { admin: [-290, -85], lemon: [265, 105] };   // where the Administrator and Lemon walk relative to Strawberry in the countdown
+const DELTA = { admin: [-275, -85], lemon: [255, 105] };   // where the Administrator and Lemon walk relative to Strawberry in the countdown
 const WALK = () => ({ a: B('a1').e + .2, b: dingT() });     // Strawberry's walk: from just after the last GO to the ding
 const STRAW_END = [-15, 1625];
 SC_EXIT.sPath = lt => {
@@ -365,7 +391,7 @@ SC_EXIT.cam = function (lt) {
   CAM.shake = 0;
   if (sh === 'trk') {   // a long lens dollying forward with them: the wall and its clock grow ahead, the carpet and stanchions stream past
     const sp = SC_EXIT.sPath(lt), ap = SC_EXIT.aPath(lt), lp = SC_EXIT.lPath(lt), k = seg(lt, w.a - .1, b('out').s);
-    V2.setCam({ f: 2000, cz: lerp(-640, -170, easeIO(k) * .5 + k * .5), cx: (sp[0] + ap[0] + lp[0]) / 3, cy: 480, hy: 800 });
+    V2.setCam({ f: 2000, cz: lerp(-640, -250, easeIO(k) * .5 + k * .5), cx: (sp[0] + ap[0] + lp[0]) / 3 - 30, cy: 480, hy: 800 });
     zoomTo(540, 960, 1); CAM.r = .004 * Math.sin(lt * 1.9);
     if (lt >= ding && lt < ding + .35) CAM.shake = 8 * (1 - seg(lt, ding, ding + .35));
     return;
@@ -375,10 +401,10 @@ SC_EXIT.cam = function (lt) {
     zoomTo(540, 960, lerp(1, 1.05, seg(lt, b('out').s, CUR.dur)));
     return;
   }
-  V2.setCam({ f: 1400, cy: 360, hy: 860 });
+  V2.setCam(sh === 'wideD' ? { f: 1400, cy: 360, hy: 860, cx: -105 } : { f: 1400, cy: 360, hy: 860 });   // wideD sits a little left so the Administrator's raised glove clears the frame
   const c = SC_EXIT.cast(lt);
   if (sh === 'wide') { const k = seg(lt, 0, b('l1').s); zoomTo(lerp(535, 520, k), 930, lerp(1.14, 1.2, k)); }
-  else if (sh === 'wideD') zoomTo(430, 950, 1.08);
+  else if (sh === 'wideD') zoomTo(540, 960, 1);
   else if (sh === 'cuL') camFace(c.L, lerp(1.7, 1.85, seg(lt, b('l1').s, b('s1').s)), 130, 0);
   else if (sh === 'cuLr') camFace(c.L, 1.95, 130, 0);
   else if (sh === 'cuS') camFace(c.S, lerp(1.55, 1.75, seg(lt, b('s1').s, b('s1').e)), 150, 0);
@@ -551,11 +577,13 @@ function win11(X, y0, y1, w, o = {}) {
   if ((o.ring ?? -1) >= 0 && fl > 0) { const [dx, dy] = FX(X, y1 + 34); for (let i = 0; i < 2; i++) V2.ring(dx, dy, ringK(o.ring, i, 1.3, .5), { color: col, r0: 16 * k, r1: 110 * k, lw: 4, alpha: .55, bloom: .2 }); }
 }
 // the entrance: canopy, glass doors that slide apart (open 0..1), warm light inside
+let INSIDE = null;
 function entrance11(open) {
   const { x0, x1, y1 } = FACADE.ent, k = kz(ZL), cxE = ENT_X, hw = (x1 - x0) / 2;
   onZ(ZL, x0 - 20, x1 + 20, 0, y1 + 20, '#1a1830', 'rgba(8,6,16,.8)', 2.6);
   onZ(ZL, x0, x1, 0, y1, V2.grad(0, FX(0, y1)[1], 0, FX(0, 0)[1], [[0, '#ffd890'], [1, '#fff0c8']]));
   onZ(ZL, x0 + 24, x1 - 24, 120, 250, 'rgba(120,90,60,.3)');   // the lobby beyond: a reception shape
+  if (INSIDE) INSIDE();   // whoever is still in the lobby, seen through the glass
   const sh = open * hw * .5;
   for (const [a, b2] of [[x0 - sh, cxE - sh], [cxE + sh, x1 + sh]]) { const a2 = Math.max(x0, a), b3 = Math.min(x1, b2); if (b3 > a2) onZ(ZL, a2, b3, 0, y1, 'rgba(190,215,235,.32)', 'rgba(40,36,70,.85)', 3.6); }
   onZ(ZL, cxE - 4, cxE + 4, 0, y1, 'rgba(40,30,70,.6)');
@@ -740,13 +768,14 @@ const SLIP = { X: 70, Z: ZL - 55 }, ADM_S = .66;   // he is at the building's pl
 const slipT = () => HIT.peel();
 SC_LOT.adminAt = lt => {   // [X, Z, lift, rot, state] for the Administrator: bursting out, the slip, the thud, lying still
   const t0 = slipT(), run0 = t0 - .5, u = lt - t0, air = .62;
-  if (lt < run0) return null;
+  if (lt < run0 - .3) return null;
+  if (lt < run0) return [ENT_X, lerp(ZL + 110, ZL - 20, seg(lt, run0 - .3, run0)), 0, 0, 'run'];   // first seen inside the lobby, through the opening doors
   if (u < 0) { const k = seg(lt, run0, t0); return [lerp(ENT_X, SLIP.X - 10, k), lerp(ZL - 20, SLIP.Z, k), 0, 0, 'run']; }
   const k = clamp(u / air), lift = u < air ? 175 * Math.sin(PI * k) : 0, rot = u < air ? -(3 * PI) * easeOut(k) : -PI;
   return [SLIP.X - 10 + 34 * easeOut(k), SLIP.Z - 14 * easeOut(k), lift, rot, u < air ? 'air' : 'down'];
 };
-function adminDraw11(lt) {
-  const a = SC_LOT.adminAt(lt); if (!a) return;
+function adminDraw11(lt, inside) {
+  const a = SC_LOT.adminAt(lt); if (!a || (a[1] > ZL) !== !!inside) return;   // inside the lobby he is drawn behind the door glass (see entrance11), outside he is drawn in the lot
   const [X, Z, lift0, rot, st] = a, q = V2.at(X, Z), t0 = slipT(), u = lt - t0, air = .62; q.s *= ADM_S;
   const lift = lift0 * ADM_S - (st === 'down' ? 83 * q.s : st === 'air' ? 83 * q.s * easeIn(seg(u, air - .25, air)) : 0);   // lying on his back, the round body's centre sits lower than when he stands
   const land = st === 'down' ? Math.exp(-(u - air) * 7) : 0;
@@ -851,7 +880,7 @@ function fire11(lt) {
 function fireflies11(lt) {
   const a = 1 - seg(lt, B('s1').s + .1, B('s1').e + .02); if (a <= 0) return;
   const [x0, y0] = FX(-700, 90), [x1] = FX(1100, 0);
-  V2.dust(x0, y0 - 40, x1, y0 + 150, lt, { n: 16, color: '210,255,140', alpha: .9 * a, size: 3.6, speed: 5, seed: 8 });
+  V2.dust(x0, y0 - 40, x1, y0 + 150, lt, { n: 22, color: '210,255,140', alpha: .95 * a, size: 4.6, speed: 5, seed: 8 });
 }
 
 // ---------------------------------------------------------------- the facade, drawn as one layer so the whole building can shake
@@ -895,11 +924,11 @@ function building11(lt) {
   ctx.restore();
 }
 SC_LOT.doorOpen = lt => {
-  const t0 = slipT() - .5, l = B('l1').s - .22, adm = slipT();
+  const t0 = slipT() - .5, l = B('l1').s - .22, adm = slipT();   // each time the doors are open a beat before whoever comes through
   if (lt < .3) return 1;
-  if (lt < t0 - .15) return 1 - eo(lt, .3, .9);
-  if (lt < adm + .9) return eo(lt, t0 - .15, t0 + .05) * (1 - eo(lt, adm + .45, adm + .9));
-  return lt < l ? 0 : eo(lt, l, l + .12);
+  if (lt < t0 - .38) return 1 - eo(lt, .3, .9);
+  if (lt < adm + .9) return eo(lt, t0 - .38, t0 - .12) * (1 - eo(lt, adm + .45, adm + .9));
+  return lt < l - .38 ? 0 : eo(lt, l - .38, l - .12);
 };
 function lobbyWindow11(lt) {
   const w = FACADE.lobby, k = kz(ZL), crash = lt >= HIT.crash();
@@ -920,24 +949,25 @@ function lobbyWindow11(lt) {
   brokenGlass11(lt);
   const q = FX((w.x0 + w.x1) / 2, (w.y0 + w.y1) / 2); V2.glow(q[0], q[1], 330 * k, '255,200,120', .3, 'screen', .5);
 }
-SC_LOT.lemonAt = lt => route([[B('l1').s - .22, ENT_X + 30, ZL - 18], [B('l1').s + 1.2, 215, 2285, 'out']])(lt);
+SC_LOT.lemonAt = lt => { const l = B('l1').s - .22; return route([[l - .3, ENT_X + 30, ZL + 110], [l, ENT_X + 30, ZL - 18], [B('l1').s + 1.2, 215, 2285, 'out']])(lt); };
 SC_LOT.cast = lt => {
-  const b = B, sh = SC_LOT.shot(lt), s1 = b('s1'), m2 = b('mo2'), fobT = m2.e - .05, l0 = b('l1').s - .22;
+  const b = B, sh = SC_LOT.shot(lt), s1 = b('s1'), m2 = b('mo2'), fobT = m2.e - .05, lS = b('l1').s - .22, l0 = lS - .3;   // she steps out of the doors at lS, and is seen running up to them from l0
   const reach = ez(lt, fobT - .35, fobT - .1), press = lt >= fobT ? Math.max(0, 1 - (lt - fobT) / .3) : 0;
   const S = person(strawC, SC_LOT.sPath, lt, { id: 'straw', stride: 44, acc: ['steth', 'bandage7', 'perdiem9', 'excoat11'],
     look: inB(lt, 's1') ? [0, .06] : lt >= fobT - .3 ? [.75, .05] : [-.1, .04], expr: lt >= s1.s - .2 && lt < s1.e + .6 ? 'chill' : lt >= b('l1').s ? 'smug' : 'chill', lid: .3,
     arms: { l: 'rest', r: reach > 0 ? 'hold' : [.03, .06] }, hold: { r: 'exfob11' }, grip: reach > 0 ? { r: [lerp(118, 176, reach), lerp(78, 26, reach)] } : undefined, fobA: press, transit: lt >= m2.s });
   let Lm = null;
   if (lt >= l0) {
-    const run = lt < l0 + 1.25, hop = 80 * Math.sin(PI * seg(lt, l0 + .08, l0 + .46)) / lerp(.66, 1, ez(lt, l0, l0 + 1.25));
+    const run = lt < lS + 1.25, hop = 80 * Math.sin(PI * seg(lt, lS + .08, lS + .46)) / lerp(.66, 1, ez(lt, lS, lS + 1.25));
     Lm = (run ? runner : person)(lemonC, SC_LOT.lemonAt, lt, { id: 'lemon', stride: 40, lift: hop, rot: run ? .1 * Math.sin(lt * 14) : .04 * Math.sin(lt * 7), look: [.6, .1], expr: 'panic', lid: undefined,
-      arms: { l: 'flail', r: 'up' }, hold: { r: 'clipboard6' }, clipText: 'OT FORM', transit: lt < l0 + .5 }, ...(run ? [330] : []));
-    Lm.s *= lerp(.66, 1, ez(lt, l0, l0 + 1.25)); Lm.lift = (Lm.lift || 0) * Lm.s;   // door-sized at the doors, her real size by the time she reaches us
+      arms: { l: 'flail', r: 'up' }, hold: { r: 'clipboard6' }, clipText: 'OT FORM', transit: lt < lS + .5 }, ...(run ? [330] : []));
+    Lm.s *= lerp(.66, 1, ez(lt, lS, lS + 1.25)); Lm.lift = (Lm.lift || 0) * Lm.s;   // door-sized at the doors, her real size by the time she reaches us
   }
   return { S, L: Lm, sh };
 };
 SC_LOT.draw = function (lt) {
-  const b = B, c = SC_LOT.cast(lt), sh = c.sh, k = kz(ZL), h = HIT;
+  const b = B, c = SC_LOT.cast(lt), sh = c.sh, k = kz(ZL), h = HIT, lS = b('l1').s - .22;
+  INSIDE = () => { adminDraw11(lt, true); if (c.L && lt < lS) drawBg(c.L); };
   V2.setLight({ key: [-.35, -.8], keyColor: '#cfe0ff', keyA: .24, rim: '#9fc4ff', rimA: .55, shadow: '#080a28', shadowA: .5, amb: '#8a94d8', ambA: .12, bounce: '#ffcf99', bounceA: .18 });
   V2.opts.reflect = true;
   const moonCU = sh === 'moonA' || sh === 'moonB' || sh === 'moonC', cuS = sh === 'cuS' || sh === 'cuS2';
@@ -948,7 +978,7 @@ SC_LOT.draw = function (lt) {
     const yb = p2(0, 0, ZL - 300)[1]; ctx.fillStyle = V2.grad(0, yb - 2, 0, H + 400, [[0, '#25274a'], [.5, '#171833'], [1, '#0d0e22']]); ctx.fillRect(-400, yb - 2, W + 800, H + 800 - yb);
     ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineCap = 'butt';
     for (const x of [-200, 100, 400, CAR.X - CAR.w - 24, CAR.X + CAR.w + 24, 1300]) { const a = p2(x, 0, 1700), b2 = p2(x, 0, 2420); ctx.lineWidth = Math.max(2, 9 * kz(1900)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b2); ctx.stroke(); }
-    peel11(lt); adminDraw11(lt);
+    peel11(lt); adminDraw11(lt, false);
     for (let X = -900; X <= 1300; X += 170) if ((X < FACADE.ent.x0 - 110 || X > FACADE.ent.x1 + 110) && !(X > -330 && X < -60)) shrub11(X, ZL - 120, 190, X > 200 ? 100 : 70, X);
     landBush11(lt);
     S6.lampPost(-640, 2200, { h: 620, on: .8 }); S6.lampPost(1080, 2300, { h: 620, on: .8 });
@@ -961,7 +991,7 @@ SC_LOT.draw = function (lt) {
     V2.dof(8 * k0, () => { building11(lt); ground(); });
     if (sh === 'moonC') drawChar(c.S);
   } else if (cuS) { V2.dof(7, () => { sky11(lt + 3); moon11(lt, true); building11(lt); ground(); if (c.L) drawBg(c.L); }); drawChar(c.S); }
-  else { sky11(lt + 3); moon11(lt, true); building11(lt); ground(); if (c.L) drawChar(c.L); drawChar(c.S); }
+  else { sky11(lt + 3); moon11(lt, true); building11(lt); ground(); if (c.L && lt >= lS) drawChar(c.L); drawChar(c.S); }
   // coloured light on the cast: the siren's red and blue, the fire's orange from behind, the lamp
   if (lt >= h.siren()) { const ph = Math.sin((lt - h.siren()) * 16) > 0, q = FX(...FACADE.beacon); V2.addLight({ x: q[0], y: q[1], r: 1700, color: ph ? '255,50,70' : '60,120,255', a: .45 }); }
   if (lt >= FIRE[1][3]) { const q = FX(450, 500); V2.addLight({ x: q[0], y: q[1], r: 1500, color: '255,140,60', a: .3 * seg(lt, FIRE[1][3], FIRE[1][3] + 1.2) }); }
@@ -969,16 +999,18 @@ SC_LOT.draw = function (lt) {
 };
 SC_LOT.fx = lt => {
   const fi = lt < .2 ? 1 - lt / .2 : 0, fo = seg(lt, CUR.dur - .35, CUR.dur - .02), ch = lt >= HIT.call() && lt < B('chaos').e ? 1 : 0;
-  return { bloom: .75, vignette: .55, grain: .05, contrast: .18, sat: .12, tint: [['#3a54c8', .16, 'soft-light'], ['#0a1030', .08, 'multiply']], aberr: lt > HIT.crash() && lt < HIT.crash() + .3 ? 5 : 0, fade: Math.max(fi, fo), fadeColor: '0,0,10' };
+  return { bloom: .75, vignette: .55, grain: .05, contrast: .18, sat: .12, tint: [['#3a54c8', .16, 'soft-light'], ['#0a1030', .08, 'multiply']], aberr: lt > HIT.crash() && lt < HIT.crash() + .3 ? 4.5 * (1 - (lt - HIT.crash()) / .3) : 0, fade: Math.max(fi, fo), fadeColor: '0,0,10' };
 };
 SC_LOT.blur = lt => (lt > HIT.crash() - .05 && lt < HIT.crash() + 1.2) ? 2 : 1;
 SC_LOT.clock = () => '11:00 PM';
 // the comic words, each on the frame of its sound cue, spread over the facade so they never stack
 SC_LOT.over = function (lt) {
-  if (SC_LOT.shot(lt) !== 'chaos') return;
+  const shot = SC_LOT.shot(lt);
+  if (shot === 'wide' && lt < 1.1) sfxWord(lt, .24, 'chirp chirp', 215, 1215, { size: 56, fill: '#d6ffa0', hold: .5, rot: -.05 });   // the crickets cue
+  if (shot !== 'chaos') return;
   const h = HIT, w = (t0, str, x, y, o) => sfxWord(lt, t0, str, x, y, o);
-  w(h.call(), 'BRRRING!', 300, 330, { size: 92, fill: '#ff6a5e', hold: .34, rot: -.08 });
-  w(h.klaxon(), 'WHOOP!', 540, 300, { size: 100, fill: '#ffe135', hold: .3, rot: .07 });
+  w(h.call(), 'BRRRING!', 250, 330, { size: 92, fill: '#ff6a5e', hold: .34, rot: -.08 });
+  w(h.klaxon(), 'WHOOP!', 560, 300, { size: 100, fill: '#ffe135', hold: .3, rot: .07 });
   w(h.stampede(), 'RUMBLE', 220, 1296, { size: 90, fill: '#fff', hold: .75, rot: -.04 });
   w(h.howl(), 'AWOOOO!', 270, 290, { size: 108, fill: '#cfe0ff', hold: .5, rot: -.09 });
   w(h.peel(), 'WHOOPS!', 560, 1296, { size: 92, fill: '#ffe135', hold: .5, rot: .08 });

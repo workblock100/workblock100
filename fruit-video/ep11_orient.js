@@ -50,12 +50,12 @@ function handTo(o, side, x, y, k, rest) {
 }
 
 // ------------------------------------------------------------------ layout and timing
-const LP = { straw: [-235, 1000], cart: [22, 1062], lemon: [-20, 1185], house: [235, 960], brick: [-125, 935] };
-const cartXAt = lt => lerp(-660, LP.cart[0], easeOut(seg(lt, .05, 1.2)));
+const LP = { straw: [-206, 1000], cart: [20, 1062], lemon: [-22, 1185], house: [246, 960], brick: [-116, 935] };
+const cartXAt = lt => lerp(-660, LP.cart[0], easeOut(seg(lt, .30, 1.25)));   // the wheels cue is 0.30: the cart starts rolling on it and brakes as Lemon speaks
 const lemonXAt = lt => cartXAt(lt) + (LP.lemon[0] - LP.cart[0]);
 // Lemon rolls the cart in, stays behind it, and steps round the cart to Clementine's side for the sticker
 const lemonPath = lt => { const k = sk(lt, 22.1, 22.86); return [lerp(lemonXAt(lt), -62, k), lerp(LP.lemon[1], 985, k)]; };
-const clemPath = route([[0, 235, 1000], [8.24, 235, 1000], [8.7, 130, 1000, 'out']]);
+const clemPath = route([[0, 246, 1000], [8.24, 246, 1000], [8.7, 98, 1000, 'out']]);
 // the dealing: twelve flips in 0.6 s (the flips cue), then twenty-eight over the line "Clementine, you have twenty-eight."
 const FLY12 = .30, FLY28 = .40;
 const sp12 = i => B('deal').s + .10 + i * .05;
@@ -69,9 +69,9 @@ const SHOTS = () => {
   return [['wide', b('l1').s - .05], ['cuL', 3.12], ['cuS', 4.21], ['contract', b('deal').s - .05], ['deal', b('l2').s - .08], ['wide2', b('c1').s - .05], ['cuC', b('s2').s - .05], ['cuS2', b('l3').s - .05], ['cuL2', b('teach').s],
     ['teach', b('s3').s], ['three', b('c2').s - .05], ['cuC2', b('s4').s - .05], ['cuS3', b('c3').s - .06], ['two', b('l4').s - .05], ['cuL3', b('c4').s - .05], ['cuC3', b('tag').s], ['tag', 1e9]];
 };
-const shotOf = lt => window.__ORIENT_SHOT || SHOTS().find(([, e]) => lt < e)[0];   /* DEV */
+const shotOf = lt => SHOTS().find(([, e]) => lt < e)[0];
 // who is in focus (everyone else is a soft neighbour, drawn out of focus and left out of the audit)
-const CRISP = { cuL: ['lemon'], cuL2: ['lemon'], cuL3: ['lemon'], cuS: ['straw'], cuS2: ['straw'], cuS3: ['straw'], cuC: ['clem'], cuC2: ['clem'], cuC3: ['clem'], deal: ['lemon', 'straw'], two: ['straw', 'clem'], wide: ['lemon', 'straw', 'clem'], wide2: ['lemon', 'clem'], teach: ['lemon', 'straw', 'clem'], three: ['straw', 'clem'], tag: ['lemon', 'clem'] };
+const CRISP = { cuL: ['lemon'], cuL2: ['lemon'], cuL3: ['lemon'], cuS: ['straw'], cuS2: ['straw'], cuS3: ['straw'], cuC: ['clem'], cuC2: ['clem'], cuC3: ['clem'], deal: ['lemon', 'straw'], two: ['straw', 'clem'], wide: ['lemon', 'straw', 'clem'], wide2: ['lemon', 'clem'], teach: ['straw', 'clem'], three: ['straw', 'clem'], tag: ['lemon', 'clem'] };
 // how far out of focus the foreground cards are (the brick and the house stand in front of the cast)
 const NBR = { wide: 4, wide2: 4, deal: 4, teach: 3, three: 2.6, two: 2.6 };   // how soft the people who are not the subject are
 const FGBLUR = { cuL: 8, cuL2: 8, cuL3: 8, cuS: 2.5, cuS2: 2.5, cuS3: 2.5, cuC: 3, cuC2: 3, cuC3: 3 };
@@ -185,7 +185,7 @@ function flatStack(bx, by, kk, n, topI, back) {
 }
 
 // ------------------------------------------------------------------ the house of cards: 28 slots in building order (4 levels = 26 cards, a floor, one last card on top)
-const HC = .86, HL = CH * HC, TH = .40, HB = HL * Math.sin(TH), HHT = HL * Math.cos(TH), FT = 6, PITCH = HHT + FT, DX = 62, HTOT = 4 * PITCH, HSX = .74;
+const HC = .86, HL = CH * HC, TH = .34, HB = HL * Math.sin(TH), HHT = HL * Math.cos(TH), FT = 6, PITCH = HHT + FT, DX = 52, HTOT = 4 * PITCH, HSX = .74;
 const SLOTS = (() => {
   const s = [], nT = [4, 3, 2, 1];
   for (let lv = 0; lv < 4; lv++) {
@@ -205,7 +205,7 @@ function leanA(lt) {
   for (let i = 0; i < 28; i++) { const dt = lt - tl28(i); if (dt > 0 && dt < 1.3) A += (1 + 5 * SLOTS[i].y / HTOT) * Math.exp(-dt / .3) * Math.sin(dt * 19 + i * 1.7); }
   const bump = (a, pk, b) => lt < a || lt > b ? 0 : lt < pk ? easeIO(seg(lt, a, pk)) : 1 - easeIO(seg(lt, pk, b));
   A += 46 * bump(tEnd + .25, tEnd + 1.25, tEnd + 2.7) * (1 + .12 * Math.sin(lt * 9));
-  A -= 78 * bump(B('teach').s - .25, B('teach').s + .38, B('teach').e + .45) * (1 + .08 * Math.sin(lt * 11));
+  A -= 52 * bump(B('teach').s - .25, B('teach').s + .38, B('teach').e + .45) * (1 + .08 * Math.sin(lt * 11));
   if (lt > tEnd + 1) A += 3.2 * Math.sin(lt * 1.9) + 1.4 * Math.sin(lt * 4.3 + 1);
   return A;
 }
@@ -276,7 +276,7 @@ function paintContract(w, o = {}) {
   // text that never leaves its box: the size shrinks until the line fits maxW
   const T = (str, x, y, size, col, al = 'left', wt = 900, maxW = 0) => {
     if (maxW) size = Math.min(size, maxW / em(str, wt));
-    ctx.fillStyle = col; ctx.textAlign = al; ctx.textBaseline = 'middle'; ctx.font = `${wt} ${size}px Nunito`; ctx.fillText(str, x, y);
+    ctx.save(); ctx.translate(x, y); ctx.scale(.05, .05); ctx.fillStyle = col; ctx.textAlign = al; ctx.textBaseline = 'middle'; ctx.font = `${wt} ${size * 20}px Nunito`; ctx.fillText(str, 0, 0); ctx.restore();
   };
   T('FRUIT BOWL REHAB & NURSING', 50, 10, 3, '#8a8fa6', 'center', 900, 72);
   T('PER DIEM AGREEMENT', 50, 18.6, 7.6, '#22285a', 'center', 900, 82);
@@ -297,7 +297,7 @@ function paintContract(w, o = {}) {
   lines.forEach((ln, i) => T(ln, 8, 105 + i * 3.5, FS, '#8a8fa6', 'left', 700, 84));
   ctx.strokeStyle = '#22285a'; ctx.lineWidth = .5; ctx.setLineDash([1, 1.6]); ctx.beginPath(); ctx.moveTo(8, 126); ctx.lineTo(60, 126); ctx.stroke(); ctx.setLineDash([]);
   T('X', 8, 123.4, 4.2, '#22285a'); T('Per Diem', 34, 129.4, 2.6, '#8a8fa6', 'center', 800);
-  ctx.fillStyle = '#2a3a8a'; ctx.font = 'italic 800 4.6px Nunito'; ctx.textAlign = 'left'; ctx.save(); ctx.translate(20, 123.6); ctx.rotate(-.06); ctx.fillText('S. Berry', 0, 0); ctx.restore();
+  ctx.fillStyle = '#2a3a8a'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.save(); ctx.translate(20, 123.6); ctx.rotate(-.06); ctx.scale(.05, .05); ctx.font = 'italic 800 92px Nunito'; ctx.fillText('S. Berry', 0, 0); ctx.restore();
   // the coffee ring, a stain that bleeds past the page text
   ctx.save(); ctx.translate(70, 92); ctx.strokeStyle = 'rgba(120,70,30,.5)'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(0, 0, 15.5, .3, TAU - .2); ctx.stroke(); ctx.strokeStyle = 'rgba(100,56,20,.3)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(.8, .6, 14.4, 1.2, 5.2); ctx.stroke();
   ctx.fillStyle = 'rgba(120,70,30,.22)'; ctx.beginPath(); ctx.arc(-14, 9, 1.7, 0, TAU); ctx.arc(16, -8, 1.1, 0, TAU); ctx.fill(); ctx.restore();
@@ -372,23 +372,29 @@ function cast(lt) {
   sp.expr = pick(lt, [[t('l1'), 'dead'], [t('s1'), 'sour'], [t('l2'), 'smug'], [t('s2'), 'dead'], [t('l3'), 'dead'], [t('teach'), 'sour'], [t('s3'), 'chill'], [t('c2'), 'smug'], [t('s4'), 'neutral'], [t('l4'), 'smug'], [t('c4'), 'sour'], [t('tag'), 'neutral'], [1e9, 'chill']]);
   sp.lid = inB(lt, 's1') || inB(lt, 's3') || inB(lt, 's4') ? .34 : .5;
   if (inB(lt, 's2')) { sp.arms.l = 'shrug'; }
-  const GEST = [[0, [.28, .25]], [12.9, [1.1, .5]], [13.75, [1.45, -.15]], [14.6, [1.5, .05]], [15.0, [.28, .25]], [18.1, [1.45, -.15]], [18.6, [.28, .25]]];
+  const UP = [2.5, .32], REST = [.28, .25];
+  const GEST = [[0, REST], [13.55, UP], [14.62, REST], [18.05, UP], [18.9, REST]];
+  const UP2 = [2.78, .2], gestM = tt => lerpA(REST, UP2, gest(tt)[0] > REST[0] + .01 ? (gest(tt)[0] - REST[0]) / (UP[0] - REST[0]) : 0);
   const gest = tt => { let cur = GEST[0][1]; for (let i = 1; i < GEST.length; i++) { const k = sk(tt, GEST[i][0] - .24, GEST[i][0]); if (k <= 0) break; cur = lerpA(GEST[i - 1][1], GEST[i][1], k); } return cur; };
-  if (lt >= 12.3 && lt < 19) sp.arms.l = gest(lt);
-  if (ctOn) { sp.hold = { r: 'contract11' }; sp.ctS = lerp(.4, 1, easeOut(seg(lt, t('s1') - .02, t('s1') + .12))); sp.arms.r = 'hold'; sp.grip.r = [lerp(80, 113, ctUp), lerp(96, -62, ctUp)]; sp.hand = { r: 'grip' };
+  if (lt >= 12.3 && lt < 19.2) { sp.arms.l = gest(lt); sp.hand = Object.assign(sp.hand || {}, { l: 'point' }); }
+  { const lean = sk(lt, 12.7, 13.0) * (1 - sk(lt, 16.5, 16.9)) + sk(lt, 17.9, 18.15) * (1 - sk(lt, 18.9, 19.2)); sp.rot = .055 * lean; }
+  if (ctOn) { sp.hold = { r: 'contract11' }; sp.ctS = lerp(.4, 1, easeOut(seg(lt, t('s1') - .02, t('s1') + .12))); sp.arms.r = 'hold'; sp.grip.r = [lerp(80, /^cuS/.test(shotOf(lt)) ? 82 : 66, ctUp), lerp(96, -62, ctUp)]; sp.hand = { r: 'grip' };
     sp.ctRot = .16 * (pulse(lt, 15.26) + pulse(lt, 15.41) + pulse(lt, 15.68) + pulse(lt, 15.83)); }
   // ---- Clementine: eager. She steps out from behind the house on "Sure!"
   const cm = person(clem, clemPath, lt, { who: 'clem', stride: 34, arms: { l: 'rest', r: 'rest' } });
-  cm.look = pick(lt, [[t('deal'), [-.4, .1]], [t('l2') + .8, [-.9, .5]], [7.3, [.1, .7]], [8.4, [0, -.8]], [t('s2'), [0, .1]], [t('teach'), [-.7, -.4]], [t('c2'), [-.8, .1]], [t('s4'), [-.5, .5]], [t('c3'), [-.8, .1]], [t('l4'), [-.1, .15]], [t('c4'), [-.3, .2]], [1e9, [-.5, .3]]]);
-  cm.expr = pick(lt, [[t('l2') + 1.1, 'hopeful'], [8.3, 'shock'], [t('s2'), 'happy'], [t('teach'), 'happy'], [t('s3'), 'hopeful'], [t('c2') + .4, 'hopeful'], [t('s4'), 'sad'], [t('c3'), 'hopeful'], [t('l4'), 'smug'], [t('c4'), 'sad'], [t('tag'), 'happy'], [1e9, 'happy']]);
-  if (lt >= 12.6 && lt < 19.4) cm.arms.r = gest(lt - .3);
+  cm.look = pick(lt, [[t('deal'), [-.4, .1]], [t('l2') + .8, [-.9, .5]], [7.3, [.1, .7]], [8.4, [0, -.8]], [t('s2'), [0, .1]], [t('teach'), [-.7, -.4]], [12.66, [.75, -.9]], [t('c2'), [-.8, .1]], [t('s4'), [-.5, .5]], [t('c3'), [-.8, .1]], [t('l4'), [-.1, .15]], [t('c4'), [-.3, .2]], [1e9, [-.5, .3]]]);
+  cm.expr = pick(lt, [[t('l2') + 1.1, 'hopeful'], [8.3, 'shock'], [t('s2'), 'happy'], [t('teach'), 'happy'], [t('s3'), 'shock'], [t('c2') + .4, 'hopeful'], [t('s4'), 'sad'], [t('c3'), 'hopeful'], [t('l4'), 'smug'], [t('c4'), 'sad'], [t('tag'), 'happy'], [1e9, 'happy']]);
+  if (lt >= 12.6 && lt < 17.0) { cm.arms.r = gestM(lt - .3); cm.hand = { r: 'point' }; }
+  { const lean = sk(lt, 13.0, 13.3) * (1 - sk(lt, 16.8, 17.2)); cm.rot = -.055 * lean; }
+  // the pause: the tower leans over her, one hand shoots up behind the cards to hold it, she flinches
+  { const pk = sk(lt, 11.93, 12.15) * (1 - sk(lt, 12.7, 13.0)); if (pk > .001) cm.arms.r = lerpA(REST, UP, pk); const fl = lt - 12.0; if (fl >= 0 && fl < 1) { cm.squash = .07 * Math.exp(-fl * 6) * Math.cos(fl * 20); cm.plant = true; } }
   cm.acc = ['steth', 'pricetag', 'badge7', 'tag11']; cm.tagP = seg(lt, t('tag') + .1, t('tag') + .4);
   cm.lift = 14 * Math.sin(seg(lt, t('c1'), t('c1') + .34) * PI) + 12 * Math.sin(seg(lt, t('c4'), t('c4') + .34) * PI);
   // the blank page: rolled up in her left hand, unfurled on "a contract", held up like a shield on "Let me check my contract", rolled up again as Lemon says "You don't have one"
   const shK = Math.min(sk(lt, 17.15, 17.62), 1) * (1 - sk(lt, 20.5, 20.9));
   if (shK > .01) { cm.hold = { l: 'sheet11' }; cm.sheetK = shK; cm.arms.l = 'hold'; cm.hand = { l: 'grip' }; const up = sk(lt, 17.2, 17.6) * .6 + sk(lt, 19.0, 19.3) * .4; cm.grip = { l: [lerp(-84, -112, up), lerp(70, -52, up)] }; cm.ctRot = -.16 * (pulse(lt, 19.5) + pulse(lt, 19.77) + pulse(lt, 19.92)); }
   // ---- Lemon, behind the cart: both hands on the tray, one of them flicking while she deals
-  const lm = person(lemon, lemonPath, lt, { who: 'lemon', arms: { l: 'rest', r: 'rest' }, transit: lt < .7 });
+  const lm = person(lemon, lemonPath, lt, { who: 'lemon', arms: { l: 'rest', r: 'rest' }, transit: lt < 1.1 || (lt >= 22.8 && lt < t('tag') + .13) });
   lm.look = pick(lt, [[t('l1'), [.1, .1]], [t('l1') + 1.1, [-.7, .05]], [t('deal'), [-.7, .05]], [t('l2') - .2, [-.5, .5]], [t('c1') - .3, [.7, .15]], [t('s2'), [.5, .1]], [t('l3'), [0, .05]], [t('c2'), [0, 0]], [t('l4'), [-.2, 0]], [t('tag'), [0, 0]], [1e9, [.6, .3]]]);
   lm.expr = inB(lt, 'l3') ? 'smug' : 'neutral'; lm.lid = .26;
   const cx = cartXAt(lt), tray = (dx, dz = 52) => { const q = V2.proj(cx + dx, 170, LP.cart[1] + dz); return [q[0], q[1]]; };
@@ -399,7 +405,7 @@ function cast(lt) {
   // the sticker: held up in her right hand as she steps over, thrust onto Clementine's left chest at the sting (cue 0.10 into the tag beat), held a moment, withdrawn
   const tSlap = t('tag') + .10, [tgx, tgy] = localToScreen(cm, -.44 * 104, .66 * 100);
   if (lt >= 22.3) {
-    const kk = sk(lt, tSlap - .16, tSlap) * (1 - sk(lt, tSlap + .32, tSlap + .75)), up = sk(lt, 22.4, 22.8) * (1 - kk);
+    const kk = sk(lt, tSlap - .16, tSlap) * (1 - sk(lt, tSlap + .32, tSlap + .75)), up = sk(lt, 22.4, 22.8) * (1 - sk(lt, tSlap - .16, tSlap));
     handTo(lm, 1, tgx, tgy, kk, [lerp(84, 92, up), lerp(96, 20, up)]);
     if (lt < tSlap + .015) { lm.hold = { r: 'sticker11' }; lm.hand = { r: 'grip' }; }
   }
@@ -407,7 +413,7 @@ function cast(lt) {
   const sl = lt - tSlap;
   if (sl >= 0) { cm.squash = .16 * Math.exp(-sl * 9) * Math.cos(sl * 24); cm.plant = true; }
   if (lt >= 22.9) { cm.expr = sl < .2 ? 'shock' : 'happy'; cm.look = sl < .22 ? [-.3, .5] : sl < .85 ? [-.5, .95] : [-.1, .1]; }
-  if (sl >= .3) { const pk = sk(lt, tSlap + .3, tSlap + .6); cm.arms.r = 'hips'; handTo(cm, -1, tgx - 50 * cm.s, tgy + 52 * cm.s, pk, [-96, 60]); cm.hand = { l: 'open' }; }
+  if (sl >= .3) { const pk = sk(lt, tSlap + .3, tSlap + .6); cm.arms.r = 'hips'; handTo(cm, -1, tgx - 30 * cm.s, tgy + 42 * cm.s, pk, [-96, 60]); cm.hand = { l: 'open' }; }
   return { sp, cm, lm, cartX: cx, lmZ: lemonPath(lt)[1] };
 }
 
@@ -429,16 +435,15 @@ function insContract(lt, c) {
   ctx.strokeStyle = INK; ctx.lineWidth = 116; ctx.beginPath(); ctx.moveTo(1230, 1640); ctx.lineTo(826, 1312); ctx.stroke();
   ctx.strokeStyle = LIMB; ctx.lineWidth = 92; ctx.beginPath(); ctx.moveTo(1230, 1640); ctx.lineTo(826, 1312); ctx.stroke();
   ctx.save(); ctx.translate(850, 1330); ctx.rotate(-.68); ctx.fillStyle = '#4a4258'; ctx.strokeStyle = INK; ctx.lineWidth = 8; ctx.beginPath(); ctx.roundRect(-34, -64, 64, 128, 16); ctx.fill(); ctx.stroke(); ctx.restore();
-  blob(790, 1282, 118, 84, -.25, 12);
-  for (const [fx, fy, r2] of [[690, 1236, .1], [754, 1226, .02], [818, 1230, -.08]]) { ctx.save(); ctx.translate(fx, fy); ctx.rotate(r2); ctx.beginPath(); ctx.roundRect(-30, -36, 60, 112, 28); ctx.fillStyle = gl; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 12; ctx.stroke(); ctx.restore(); }
-  ctx.save(); ctx.translate(884, 1196); ctx.rotate(.38); ctx.beginPath(); ctx.roundRect(-30, -62, 60, 150, 30); ctx.fillStyle = gl; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 12; ctx.stroke(); ctx.restore();
+  blob(776, 1288, 128, 86, -.2, 12);
+  for (const [fx, fy, r2] of [[664, 1238, .1], [726, 1228, .04], [788, 1224, -.02], [850, 1228, -.1]]) { ctx.save(); ctx.translate(fx, fy); ctx.rotate(r2); ctx.beginPath(); ctx.roundRect(-30, -36, 60, 112, 28); ctx.fillStyle = gl; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 12; ctx.stroke(); ctx.restore(); }
   ctx.restore();
 }
 // the sticky note on the whiteboard: it slaps on at "say:", and the words write themselves as Strawberry says them
 function sticky(lt) {
   const t0 = 14.9; if (lt < t0) return;
   const zb = 1900, k = kz(zb), u = lt - t0, pop = easeBack(seg(u, 0, .17)), sq = 1 + .2 * Math.max(0, 1 - u / .1);
-  const [x, y] = p2(40, 548, zb);
+  const [x, y] = p2(68, 420, zb);
   ctx.save(); ctx.translate(x, y); ctx.rotate(-.06); ctx.scale(k * pop * sq, k * pop / sq);
   ctx.shadowColor = 'rgba(30,20,10,.4)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 6; ctx.fillStyle = '#ffe66d'; ctx.beginPath(); ctx.moveTo(-76, -76); ctx.lineTo(76, -76); ctx.lineTo(76, 54); ctx.lineTo(54, 76); ctx.lineTo(-76, 76); ctx.closePath(); ctx.fill(); ctx.shadowColor = 'transparent';
   ctx.fillStyle = 'rgba(180,140,20,.22)'; ctx.fillRect(-76, -76, 152, 14); ctx.fillStyle = 'rgba(160,110,0,.3)'; ctx.beginPath(); ctx.moveTo(76, 54); ctx.lineTo(54, 76); ctx.lineTo(56, 56); ctx.closePath(); ctx.fill();
@@ -456,16 +461,16 @@ function sticky(lt) {
 function tally(lt) {
   const t0 = wordT('s2', 'forty', 9.44) - .03, u = lt - t0; if (u < 0 || lt > 10.7) return;
   const pop = easeBack(seg(u, 0, .22)), out = 1 - seg(lt, 10.35, 10.65), bump = 1 + .08 * Math.max(0, Math.sin(u * 14)) * Math.exp(-u * 2.2);
-  const cx = 600, cy = 280, w = 600, h = 156;
+  const cx = 770, cy = 250, w = 520, h = 146;
   ctx.save(); ctx.globalAlpha *= clamp(pop * 2) * out; ctx.translate(cx, cy); ctx.scale(pop * bump, pop * bump); ctx.rotate(-.03);
   reg('overlay', [cx - w / 2 * pop * bump, cy - h / 2 * pop * bump, cx + w / 2 * pop * bump, cy + h / 2 * pop * bump], { id: 'tally', transit: pop < 1 });
   ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10; ctx.fillStyle = 'rgba(16,10,38,.92)'; rr(-w / 2, -h / 2, w, h, 46); ctx.fill(); ctx.shadowColor = 'transparent';
   ctx.strokeStyle = '#ffd60a'; ctx.lineWidth = 6; rr(-w / 2, -h / 2, w, h, 46); ctx.stroke();
-  text('12', -205, 6, { size: 88, font: 'Bangers', weight: 400, fill: '#7be0a0', lw: 10, stroke: '#150f22', spacing: 2 });
-  text('+', -128, 6, { size: 66, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 8, stroke: '#150f22' });
-  text('28', -52, 6, { size: 88, font: 'Bangers', weight: 400, fill: '#ff6a7e', lw: 10, stroke: '#150f22', spacing: 2 });
-  text('=', 38, 6, { size: 66, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 8, stroke: '#150f22' });
-  text('40', 160, 4, { size: 124, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 14, stroke: '#150f22', spacing: 2 });
+  text('12', -190, 6, { size: 80, font: 'Bangers', weight: 400, fill: '#7be0a0', lw: 10, stroke: '#150f22', spacing: 2 });
+  text('+', -118, 6, { size: 60, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 8, stroke: '#150f22' });
+  text('28', -48, 6, { size: 80, font: 'Bangers', weight: 400, fill: '#ff6a7e', lw: 10, stroke: '#150f22', spacing: 2 });
+  text('=', 36, 6, { size: 60, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 8, stroke: '#150f22' });
+  text('40', 150, 4, { size: 112, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 14, stroke: '#150f22', spacing: 2 });
   ctx.restore();
 }
 
@@ -476,14 +481,14 @@ const SC = {
     const sh = shotOf(lt), c = cast(lt), t = id => B(id).s;
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
     const F = (o, z, up) => faceZoom({ kind: o.kind, x: o.x, y: o.y, s: o.s, lift: o.lift }, z, up);
-    if (sh === 'wide') { const k = seg(lt, 0, 1.3); zoomTo(540, lerp(1030, 1020, k), lerp(.96, 1, k)); }
-    else if (sh === 'wide2') zoomTo(lerp(700, 660, sk(lt, 6.2, 8.3)), lerp(1040, 1000, sk(lt, 6.2, 8.3)), lerp(1.12, .98, sk(lt, 6.2, 8.3)));
+    if (sh === 'wide') { const k = seg(lt, 0, 1.3); zoomTo(540, lerp(1090, 1080, k), lerp(.96, 1, k)); }
+    else if (sh === 'wide2') zoomTo(lerp(700, 660, sk(lt, 6.2, 8.3)), lerp(1100, 1070, sk(lt, 6.2, 8.3)), lerp(1.12, .98, sk(lt, 6.2, 8.3)));
     else if (sh === 'cuL' || sh === 'cuL2' || sh === 'cuL3') { const k = seg(lt, shotStart(sh), shotStart(sh) + 1.8); F(c.lm, lerp(1.9, 2.0, k), 140); }
     else if (sh === 'cuS' || sh === 'cuS2' || sh === 'cuS3') { const k = seg(lt, shotStart(sh), shotStart(sh) + 1.1); F(c.sp, lerp(1.75, 1.85, k), 150); if (sh !== 'cuS3') CAM.x += 45; }
     else if (sh === 'cuC' || sh === 'cuC2' || sh === 'cuC3') { const k = seg(lt, shotStart(sh), shotStart(sh) + 1.2); F(c.cm, lerp(2.0, 2.12, k), 85); }
     else if (sh === 'deal') zoomTo(400, 1150, lerp(1.18, 1.26, seg(lt, t('deal'), t('l2'))));
-    else if (sh === 'teach') zoomTo(540, 1040, 1);
-    else if (sh === 'three' || sh === 'two') { const k = seg(lt, 12.68, 16.5); zoomTo(lerp(545, 550, k), 1040, sh === 'two' ? 1.02 : lerp(1, 1.02, k)); }
+    else if (sh === 'teach') zoomTo(560, 1095, .94);
+    else if (sh === 'three' || sh === 'two') { const k = seg(lt, 12.68, 20.5); zoomTo(560, 1095, lerp(.94, .97, k)); }
     else if (sh === 'tag') { const k = sk(lt, t('tag') + .1, CUR.dur - .1), z = lerp(1.45, 2.25, k), cm = c.cm; const [fx, fy] = faceC({ kind: 'clem', x: cm.x, y: cm.y, s: cm.s, lift: cm.lift }); zoomTo(lerp(610, cm.x - 70, k), lerp(1040, fy + 70 + 20 / z * 0, k), z); }
     else zoomTo(540, 1010, 1);
   },
@@ -511,7 +516,13 @@ const SC = {
   },
   fx: lt => ({ bloom: .5, vignette: .4, grain: .045, contrast: .14, sat: .12, tint: [['#ffd9a0', .1, 'soft-light']], fade: Math.max(seg(lt, CUR.dur - .3, CUR.dur - .02), lt < .25 ? 1 - lt / .25 : 0), fadeColor: '0,0,10' }),
   blur: lt => lt > 5.2 && lt < 8.3 ? 3 : 1,
-  over(lt) { tally(lt); },
+  over(lt) {
+    tally(lt);
+    const f0 = B('deal').s + .10;   // the flips cue: the cards flick out one after another
+    sfxWord(lt, f0, 'FLIP', 300, 1330, { rot: -.12, size: 112, hold: .55 });
+    sfxWord(lt, f0 + .15, 'FLIP', 560, 1376, { rot: .05, size: 112, hold: .5 });
+    sfxWord(lt, f0 + .30, 'FLIP!', 820, 1326, { rot: -.08, size: 124, hold: .5 });
+  },
 };
 const shotStart = sh => { let t0 = 0; for (const [n, e] of SHOTS()) { if (n === sh) return t0; t0 = e; } return t0; };
 
