@@ -383,7 +383,7 @@ SCENES.orient = {
       for (let i = 0; i < nP; i++) resCard(c.pers.x + (hash(i * 3 + 1) - .5) * 6, baseP - 42 * sc - i * 7 * sc, (hash(i * 5 + 2) - .5) * .08, i, true, sc);
       for (let i = 0; i < nS; i++) { const lean = Math.sin(lt * 2.3) * (i / 28) * 16; resCard(c.straw.x + (hash(i * 3 + 1) - .5) * 44 + lean, baseS - 42 * sc - i * 8.5 * sc, (hash(i * 5 + 2) - .5) * .8 + lean * .012, i + 3, false, sc); }
       if (nP === 12) label(12, c.pers.x, baseP - 42 * sc - 11 * 7 * sc - 112, '#7be0a0', endP);
-      if (nS === 28) label(28, c.straw.x, baseS - 42 * sc - 27 * 8.5 * sc - 128, '#ff5a6e', endS);
+      if (nS === 28) label(28, c.straw.x + 40, baseS - 42 * sc - 27 * 8.5 * sc - 128, '#ff5a6e', endS);   /* 40 px toward the middle: centered over the heap it ran into the clock pill */
     }
   },
   fx: lt => ({ bloom: .5, vignette: .4, grain: .045, contrast: .14, sat: .12, tint: [['#ffd9a0', .1, 'soft-light']], fade: Math.max(seg(lt, CUR.dur - .3, CUR.dur - .02), lt < .25 ? 1 - lt / .25 : 0), fadeColor: '255,240,215' }),

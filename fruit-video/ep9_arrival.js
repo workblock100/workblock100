@@ -363,7 +363,7 @@ SCENES.arrival = {
       case 'cuS3': F(C.sp, lerp(1.9, 2.0, k), 140); break;
       case 'cuA3': F(C.ad, lerp(1.55, 1.8, k), 100); break;
       case 'cuP2': F(C.pr, lerp(1.6, 1.72, k), 90); break;
-      case 'xcuS': F(C.sp, lerp(2.7, 3.1, k), 135); break;
+      case 'xcuS': F(C.sp, lerp(2.7, 3.0, k), lerp(200, 262, k)); break;   // the floor pizza box creeps down as the zoom grows: climb with it so the speaker chip never covers its lid
       case 'xcuA': F(C.ad, lerp(2.0, 2.25, k), 90); break;
       case 'sting': zoomTo(540, lerp(985, 975, k), .9); break;
     }
