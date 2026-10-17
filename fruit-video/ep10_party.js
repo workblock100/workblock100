@@ -32,7 +32,7 @@ if (!window.TIMELINE_EP10) return;
 const { person, zoomTo, faceZoom, drawBg, inB, faceC, localOf, localToScreen } = window.H6;
 const A6 = window.A6, A7 = window.A7, A9 = window.A9, A10 = window.A10, S6 = window.S6, S7 = window.S7;
 const { straw, mango, lemon, cran, banana, pine, apple, papaya, goji, pear, drag } = A7;
-const clem = A10.clem;
+const clem = (A10 && A10.clem) || A7.pear;   // Clem is built in ep10_art.js; the fallback only keeps the scene from throwing if that module is ever missing
 const { p2, poly, quad3, grad, radial, rgba } = V2;
 const { box3, onZ, kz, ceilingLamp } = S6;
 
@@ -660,8 +660,8 @@ function cameraFor(lt, sh, C) {
   V2.setCam({ f: 1400, cy: 360, hy: 860 });
   switch (sh.n) {
     case 'wide': zoomTo(lerp(600, 590, k), 985, lerp(.86, .9, k)); break;
-    case 'cakeTwo': { const z = lerp(1.28, 1.38, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0] + 20, m[1] + 120 / z, z); break; }
-    case 'cuM1': F(C.mango, lerp(1.8, 1.95, k), 150); CAM.x += 93; break;
+    case 'cakeTwo': { const z = lerp(1.26, 1.33, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0] + 8, m[1] + 120 / z, z); break; }
+    case 'cuM1': F(C.mango, lerp(1.8, 1.95, k), 150); CAM.x += 83; break;
     case 'cuS0': F(C.straw, lerp(1.95, 2.05, k), 180); break;
     case 'cuL1': F(C.lemon, lerp(1.85, 2.0, k), 190); break;
     case 'cuS1': F(C.straw, lerp(2.0, 2.15, k), 180); break;
@@ -671,11 +671,11 @@ function cameraFor(lt, sh, C) {
     case 'cuC': F(C.cran, lerp(1.95, 2.15, k), 180); CAM.x += 73; break;
     case 'cuM2': F(C.mango, lerp(2.1, 2.3, k), 170); break;
     case 'medS': { const z0 = lerp(1.66, 1.74, k), f = faceC(C.straw); zoomTo(f[0] + 105, f[1] + 190 / z0, z0); break; }
-    case 'crowdW': zoomTo(lerp(681, 691, k), 1010, lerp(.95, 1.0, k)); break;
+    case 'crowdW': zoomTo(lerp(668, 678, k), 1010, lerp(.95, 1.0, k)); break;
     case 'warm': { const z = lerp(1.48, 1.69, k), m = mid(faceC(C.mango), faceC(C.straw)); zoomTo(m[0], m[1] + 160 / z, z); break; }
     case 'cuL3': F(C.lemon, lerp(1.85, 1.95, k), 180); break;
     case 'cuS5': F(C.straw, lerp(2.05, 2.15, k), 180); break;
-    case 'threeL': { const z = lerp(1.3, 1.38, k), f = faceC(C.lemon); zoomTo(f[0] + 8, f[1] + 310 / z, z); break; }
+    case 'threeL': { const z = lerp(1.3, 1.38, k), f = faceC(C.lemon); zoomTo(f[0] - 7, f[1] + 310 / z, z); break; }
     case 'cuS6': F(C.straw, lerp(2.1, 2.2, k), 170); break;
     case 'endWide': zoomTo(lerp(574, 570, k), 915, lerp(.88, .86, k)); break;
     default: zoomTo(540, 960, 1);

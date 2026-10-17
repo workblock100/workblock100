@@ -7,7 +7,7 @@
  * Everything is a pure function of the scene-local time lt; every time below is tied to a beat (B('id')) or to a spoken word (TL.lines via wordT).
  *
  * SHOTS (scene-local seconds; SHOTS() holds the cut times, the shot name changes at every cut):
- *   screen 0-1.00      insert: her laptop screen, the invoice being typed (typing cue at 0.05)      wide 1.00-2.32   the office in the lamp pool, push-in
+ *   screen 0-1.00      insert: her laptop screen, the invoice typed from 0.25 (cue +0.05 into 'open') wide 1.00-2.32   the office in the lamp pool, push-in
  *   two 2.32-2.78      two-shot as he lifts the invoice                                              inv1 2.78-4.18   insert: invoice slides in, his gloved finger taps the total on "eighteen / hundred / dollars"
  *   cuS1 4.18-5.08     "Helping."                                                                     inv2 5.08-6.93   insert: his red marker strikes HELPING, writes NOT IN CONTRACT
  *   two2 6.93-7.30     two-shot                                                                       inv3 7.30-9.12   insert: her blue pen rings (ADD-ON) and $200/HR, underlines the total
@@ -469,8 +469,8 @@ function paper(st = {}) {
 }
 // the night desk seen from above: wood, the green blotter with its gold border, the lamp's cool pool from the top right
 function deskTopN() {
-  ctx.fillStyle = V2.grad(0, 0, 0, H, [[0, '#3c2619'], [1, '#1c1009']]); ctx.fillRect(-100, -100, W + 200, H + 200);
-  ctx.strokeStyle = 'rgba(10,5,2,.34)'; ctx.lineWidth = 2; for (let i = 0; i < 40; i++) { const x = hash(i + 1) * W; ctx.beginPath(); ctx.moveTo(x, -20); ctx.bezierCurveTo(x + (hash(i + 5) - .5) * 60, 600, x + (hash(i + 9) - .5) * 60, 1300, x + (hash(i + 3) - .5) * 40, H + 20); ctx.stroke(); }
+  ctx.fillStyle = V2.grad(0, 0, 0, H, [[0, '#3c2619'], [1, '#1c1009']]); ctx.fillRect(-300, -900, W + 600, H + 1800);   // the wood reaches well past the frame: the camera may start wide
+  ctx.strokeStyle = 'rgba(10,5,2,.34)'; ctx.lineWidth = 2; for (let i = 0; i < 52; i++) { const x = -150 + hash(i + 1) * (W + 300); ctx.beginPath(); ctx.moveTo(x, -900); ctx.bezierCurveTo(x + (hash(i + 5) - .5) * 60, 400, x + (hash(i + 9) - .5) * 60, 1300, x + (hash(i + 3) - .5) * 40, H + 900); ctx.stroke(); }
   ctx.fillStyle = V2.grad(0, 140, 0, 1420, [[0, '#215040'], [1, '#143222']]); rr(30, 150, 1020, 1280, 26); ctx.fill();
   goldLine(48, 168, 984, 1244, 18, 5); goldLine(60, 180, 960, 1220, 12, 1.6);
   ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = radial(1010, 170, 40, 1500, [[0, 'rgba(215,244,232,.3)'], [.5, 'rgba(215,244,232,.1)'], [1, 'rgba(215,244,232,0)']]); ctx.fillRect(0, 0, W, H); ctx.restore();
@@ -803,8 +803,8 @@ const SC = {
     if (INSERTS[n]) {
       V2.setCam(BASE);
       if (n === 'inv1') zoomTo(540, lerp(740, 800, k), lerp(1.0, 1.2, k));
-      else if (n === 'inv2') zoomTo(lerp(520, 470, k), 640, 1.5);
-      else if (n === 'inv3') zoomTo(lerp(560, 700, k), 650, 1.5);
+      else if (n === 'inv2') zoomTo(lerp(540, 505, k), 700, lerp(1.04, 1.18, k));   // the whole line (world x 118 to 933) stays inside the frame: HELPING and $1,800.00 are never cut
+      else if (n === 'inv3') zoomTo(lerp(528, 546, k), 700, lerp(1.04, 1.2, k));
       else zoomTo(540, 960, 1);
       return;
     }
@@ -816,7 +816,7 @@ const SC = {
       case 'cuA3': case 'cuA3b': { V2.setCam(BASE); const C = cast(lt); F(C.ad, lerp(1.7, 1.8, k), 130); } break;
       case 'cuA4': { V2.setCam(MID); const C = cast(lt); F(C.ad, lerp(1.7, 1.8, k), 130); } break;
       case 'cuA5': { V2.setCam(MID); const C = cast(lt); F(C.ad, lerp(1.5, 1.6, k), 60); } break;
-      case 'purse': { V2.setCam(MID); const p = p2(428, 300, 1378); zoomTo(p[0] - 84, p[1] + 70, lerp(2.0, 2.2, k)); } break;
+      case 'purse': { V2.setCam(MID); const p = p2(428, 300, 1378); zoomTo(p[0] - 90, p[1] + 70, lerp(2.0, 2.2, k)); } break;
       case 'trk': {
         V2.setCam(HIGH); const u = sk(lt, sh.t0, KK.roll1 + .1);
         zoomTo(lerp(594, 462, u), lerp(1160, 1200, u), lerp(1.28, 1.5, u));

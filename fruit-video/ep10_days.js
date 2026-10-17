@@ -60,7 +60,7 @@ function pageFront(n) {
   ctx.fillStyle = 'rgba(255,255,255,.55)'; for (let x = 20; x < PW - 10; x += 16) { ell(x, 14, 2.6, 2.6); ctx.fill(); }   // the perforation
   text('FRUIT BOWL REHAB & NURSING', 270, 142, { size: 25, fill: '#ffe9ee', weight: 900, spacing: 2 });
   if (cover) {
-    text("TWO WEEKS'", 270, 300, { size: 118, font: 'Bangers', weight: 400, fill: '#1c1b26', spacing: 3 });
+    text("TWO WEEKS'", 270, 300, { size: Math.min(118, fitSize("TWO WEEKS'", 480 - 10 * 3, { spacing: 0 })), font: 'Bangers', weight: 400, fill: '#1c1b26', spacing: 3 });   /* fitted: nothing on the cover reaches the frame edge */
     text('NOTICE', 270, 430, { size: 172, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 5 });
     ctx.save(); ctx.translate(270, 610); ctx.rotate(-.05);   // an envelope with a red seal
     ctx.fillStyle = '#fffdf6'; ctx.strokeStyle = '#2a2530'; ctx.lineWidth = 7; rr(-110, -70, 220, 140, 14); ctx.fill(); ctx.stroke();
@@ -79,7 +79,7 @@ function pageFront(n) {
       if (i < gone) { ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 4.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x + 5, y + 6); ctx.lineTo(x + 23, y + 30); ctx.moveTo(x + 23, y + 6); ctx.lineTo(x + 5, y + 30); ctx.stroke(); }
     }
   }
-  text(JOKE[n] || 'TEAR OFF ONE PAGE PER DAY', 270, cover ? 760 : 805, { size: cover ? 34 : 30, fill: '#5b5368', weight: 900, spacing: cover ? 4 : 1 });
+  text(JOKE[n] || 'TEAR OFF ONE PAGE PER DAY', 270, cover ? 760 : 805, { size: cover ? Math.min(34, fitSize(JOKE.cover, 470 - 25 * 2, { font: 'Nunito', weight: 900, spacing: 0 })) : 30, fill: '#5b5368', weight: 900, spacing: cover ? 2 : 1 });
 }
 function pageBack() {   // the back of a sheet: tan stock, a ruled notes page, and the pizza ad nobody told the staff about (mirrored in sheet space, so it reads right once the sheet is turned)
   ctx.fillStyle = V2.grad(0, 0, PW, PH, [[0, '#f0e1b4'], [1, '#dcc895']]); ctx.fillRect(0, 0, PW, PH);
@@ -402,11 +402,11 @@ function p1cam(lt) {
 function p1draw(lt, F) {
   const sh = p1shot(lt), c = p1cast(lt, F), cu = sh === 'cuS' || sh === 'cuL';
   V2.setLight({ key: [-.4, -.8], keyColor: '#fff3dc', keyA: .26, rim: '#cfe0ff', rimA: .5, shadow: '#3a3048', shadowA: .3, bounce: '#ffe0b0', bounceA: .18, amb: '#fff6e6', ambA: .05 }); V2.opts.reflect = true;
-  const tr = F && F.mode !== 'part';
-  bgDof(cu ? 7 : 0, () => { hallSet(lt); V2.dust(40, 500, 1040, 1300, lt, { n: 30, alpha: .45, color: '255,246,214' }); });
-  bgDof(cu ? 5 : 0, () => { boardSprite(lt, tr); stampLayer(lt); });
+  const tr = F && F.mode !== 'part', fd = cu ? 1 - seg(F && F.mode === 'dive' ? F.k : 0, 0, .4) : 0;   /* the focus is racked away in the first moments of the dive at the pad (it is also what keeps those frames cheap) */
+  bgDof(7 * fd, () => { hallSet(lt); V2.dust(40, 500, 1040, 1300, lt, { n: 30, alpha: .45, color: '255,246,214' }); });
+  bgDof(5 * fd, () => { boardSprite(lt, tr); stampLayer(lt); });
   const order = [['sp', c.zs, 'straw'], ['lm', c.zl, 'lemon']].sort((a, b2) => b2[1] - a[1]);
-  for (const [k, , id] of order) { const o = c[k]; if ((cu && !((sh === 'cuS' && id === 'straw') || (sh === 'cuL' && id === 'lemon'))) || (sh === 'ms' && id === 'straw')) nbr(o); else drawChar(o); }
+  for (const [k, , id] of order) { const o = c[k]; if ((cu && !((sh === 'cuS' && id === 'straw') || (sh === 'cuL' && id === 'lemon'))) || (sh === 'ms' && id === 'straw')) { if (fd > .02 || sh === 'ms') V2.dof(sh === 'ms' ? 6 : 6 * fd, () => drawBg(o)); else drawChar(o); } else drawChar(o); }
 }
 
 // ------------------------------------------------------------------ PART 2: THE STATION (10 days). Staff Appreciation Week, and one very large donut
@@ -1043,7 +1043,7 @@ const SC = {
     PARTS[F.part].draw(lt, F);
   },
   fx: lt => { const F = frameOf(lt), base = { bloom: .5, vignette: .4, grain: .045, contrast: .12, sat: .1 }, own = F.part != null && F.mode !== 'rip' ? PARTS[F.part].fx(lt) : {}; return Object.assign(base, own, { fade: Math.max(1 - seg(lt, 0, .22), seg(lt, CUR.dur - .35, CUR.dur - .02)), fadeColor: '0,0,10' }); },
-  blur: lt => { const F = frameOf(lt); return F.mode === 'dive' ? 10 : F.mode === 'rip' ? 10 : F.mode === 'pull' ? 10 : 1; },
+  blur: lt => { const F = frameOf(lt); return F.mode === 'dive' ? (F.k < .12 ? 4 : F.k < .5 ? 7 : 10) : F.mode === 'rip' ? 10 : F.mode === 'pull' ? 10 : 1; },   /* the zoom is slow at first: few samples are enough, and the focused close-up behind it is the expensive part */
   over(lt) { sfxWord(lt, B('end').s + .10, 'WAH WAH', 540, 470, { size: 120, rot: -.06, hold: .9 }); },
 };
 window.__EP10_SCENES = window.__EP10_SCENES || {};

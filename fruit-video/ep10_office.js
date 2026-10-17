@@ -503,7 +503,7 @@ function sigh(x, y, k, s) {
   if (k < 0 || k > 1.7) return;
   for (let i = 0; i < 3; i++) {
     const a = (k - i * .2) / 1.15; if (a <= 0 || a >= 1) continue;
-    const px = x - (30 + 64 * a + i * 36) * s, py = y + (16 + 120 * a + i * 12) * s, r = (20 + 36 * a) * s, al = Math.min(1, a * 5) * (1 - a) * .95;
+    const px = x - (34 + 96 * a + i * 44) * s, py = y + (10 - 34 * a - i * 8) * s, r = (20 + 34 * a) * s, al = Math.min(1, a * 5) * (1 - a) * .95;
     ctx.save(); ctx.globalAlpha *= al; ctx.translate(px, py);
     for (const [dx, dy, rr0] of [[-.55, .1, .62], [.1, -.3, .85], [.7, .15, .6], [0, .35, .7]]) { ctx.fillStyle = INK; ell(dx * r, dy * r, rr0 * r + 3.4, rr0 * r + 3.4); ctx.fill(); }
     for (const [dx, dy, rr0] of [[-.55, .1, .62], [.1, -.3, .85], [.7, .15, .6], [0, .35, .7]]) { ctx.fillStyle = '#eef3ff'; ell(dx * r, dy * r, rr0 * r, rr0 * r); ctx.fill(); }
@@ -811,7 +811,7 @@ function crumple(cx, cy, r, rot, seed, label) {
   ctx.save(); ctx.clip();
   ctx.strokeStyle = 'rgba(60,50,40,.28)'; ctx.lineWidth = 2.4; for (let i = 0; i < 9; i++) { const a = hash(seed + i * 7) * TAU, d = r * (.2 + .7 * hash(seed + i * 11)); ctx.beginPath(); ctx.moveTo(Math.cos(a) * d, Math.sin(a) * d); ctx.lineTo(Math.cos(a + 1.1 + hash(seed + i)) * r * .3, Math.sin(a + 1.1) * r * .3); ctx.stroke(); }
   ctx.fillStyle = 'rgba(255,255,255,.5)'; for (let i = 0; i < 5; i++) { ell((hash(seed + i * 5) - .5) * r, (hash(seed + i * 13) - .5) * r, r * .16, r * .07, hash(i) * 3); ctx.fill(); }
-  ctx.rotate(-.35); text(label[0], 0, -r * .16, { size: r * .2, fill: 'rgba(32,32,44,.8)', weight: 900, spacing: 1, maxW: r * 1.2 }); text(label[1], 0, r * .12, { size: r * .24, fill: 'rgba(32,32,44,.85)', weight: 900, spacing: 1, maxW: r * 1.3 });
+  ctx.rotate(-.35); text(label[0], 0, -r * .16, { size: r * .14, fill: 'rgba(32,32,44,.8)', weight: 900, spacing: 1, maxW: r * 1.25 }); text(label[1], 0, r * .1, { size: r * .16, fill: 'rgba(32,32,44,.85)', weight: 900, spacing: 1, maxW: r * 1.3 });
   ctx.restore(); ctx.restore();
 }
 function insBinTop(lt, t0) {

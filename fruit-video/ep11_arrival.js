@@ -460,7 +460,10 @@ const PL = [-98, 74], MR = [108, 64];   // where Persimmon's left hand and Mango
 const clPath = route([[0, 760, 840], [1.5, MK.cl[0], MK.cl[1], 'io']]);
 const mgPath = route([[0, 900, 940], [.2, 900, 940], [1.7, MK.mg[0], MK.mg[1], 'io']]);
 // she waits outside the glass, starts walking as the doors open and arrives at her mark as the Administrator begins to list her gifts
-const spPath = () => route([[0, 0, 1800], [B('door').s + .54, 0, 1800], [B('a2').s - .24, 0, MK.sp[1] + 40], [B('a2').s + .16, MK.sp[0], MK.sp[1], 'out']]);
+const spPath = () => {   // down the middle of the carpet, then angling toward the Administrator so that his body is not between her face and the lens (same speed all the way, then she eases to a stop)
+  const d = B('door').s + .54, e = B('a2').s - .24, zAt = t => lerp(1800, MK.sp[1] + 40, (t - d) / (e - d)), t1 = B('a1').s, t2 = B('a2').s - .6;
+  return route([[0, 0, 1800], [d, 0, 1800], [t1, 0, zAt(t1)], [t2, MK.sp[0], zAt(t2)], [e, MK.sp[0], MK.sp[1] + 40], [B('a2').s + .16, MK.sp[0], MK.sp[1], 'out']]);
+};
 const SHOT_ORDER = () => {
   const b = id => B(id), d = b('door');
   return [['wide', b('c1').s - .05], ['cuCM', b('m1').s - .05], ['cuM', b('c2').s - .05], ['cuC', b('m2').s - .05], ['badge', d.s - .03],
@@ -510,8 +513,8 @@ const SC = SCENES.arrival = {
     const mg = person(mango, mgPath, lt, { look: mgLook, expr: lt >= st.s - .1 ? 'dead' : lt >= s5.s ? 'sad' : lt >= a5.s + .6 ? 'sour' : lt >= T.shot2 - .2 && lt < a2.s ? 'happy' : 'neutral', stride: 36,
       arms: { l: lt < 1.7 ? [.28 + .35 * Math.sin(lt * 7 + 2), .25] : 'rest', r: lt < 1.7 ? 'rest' : 'hold' }, grip: lt < 1.7 ? {} : { r: MR }, hand: lt < 1.7 ? {} : { r: 'open' }, hold: {}, transit: lt < 1.9 || (lt > tStraw - .2 && lt < tStraw + .4) });
     // pointing: up at the banner on "Strawberry", then at the badge with two jabs on "badge"
-    armKeys(mg, -1, lt, [[m1.s, 'rest'], [m1.s + .3, { s: [mg.x - 120 * mg.s, mg.y - 560 * mg.s] }], [c2.s - .1, { s: [mg.x - 120 * mg.s, mg.y - 560 * mg.s] }], [c2.s + .3, 'rest']]);
-    if (lt >= m1.s && lt < c2.s + .3) setHand(mg, -1, 'point');
+    armKeys(mg, -1, lt, [[m1.s - .34, 'rest'], [m1.s + .04, { s: [mg.x - 120 * mg.s, mg.y - 560 * mg.s] }], [c2.s - .1, { s: [mg.x - 120 * mg.s, mg.y - 560 * mg.s] }], [c2.s + .3, 'rest']]);   // up before the word, so the camera follows her finger
+    if (lt >= m1.s - .2 && lt < c2.s + .3) setHand(mg, -1, 'point');
     { const bd = localToScreen(cl, 72, 77), jab = lt >= tBadge ? Math.max(0, Math.sin((lt - tBadge) * 21)) * Math.exp(-(lt - tBadge) * 1.4) : 0, off = 60 * mg.s * (1 - jab * .9);
       armKeys(mg, -1, lt, [[m2.s + .12, 'rest'], [m2.s + .5, { s: [bd[0] + off, bd[1] - 6 * mg.s] }], [d.s - .1, { s: [bd[0] + off, bd[1] - 6 * mg.s] }], [d.s + .3, 'rest']]); if (lt >= m2.s + .12 && lt < d.s + .3) setHand(mg, -1, 'point'); }
     // her popper, fired with her outer hand on the second pop and then let go of
@@ -677,7 +680,7 @@ const SC = SCENES.arrival = {
       ctx.beginPath(); ctx.moveTo(0, -r * 1.9); ctx.bezierCurveTo(r * 1.1, -r * .4, r * 1.1, r * 1.1, 0, r * 1.1); ctx.bezierCurveTo(-r * 1.1, r * 1.1, -r * 1.1, -r * .4, 0, -r * 1.9); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,.8)'; ell(-r * .35, r * .1, r * .22, r * .4, .2); ctx.fill(); ctx.restore(); } }
     // the lens: confetti falling past it during the walk, the sun's flare and the flash of the horn
-    if (['doorW', 'doorS', 'cuA', 'two'].includes(sh.n)) lensConfetti(lt, T.horn - .3, 34);
+    if (['doorW', 'doorS', 'cuA', 'two'].includes(sh.n)) lensConfetti(lt, T.shot1 - .15, 34);
     if (open > 0 && lt < d.s + 2.6 && sh.n !== 'badge') V2.flare(...toScr(...p2(0, 250, 1750)), .26 * open * (1 - seg(lt, d.s + .9, d.s + 2.3)));
     if (flash > 0) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,252,240,${.42 * flash})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
   },
