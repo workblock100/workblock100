@@ -1,0 +1,1008 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 5: Full Moon",
+ "music": {
+  "from": "break",
+  "to": "tally",
+  "bed": "moon",
+  "mute": [
+   "break:door",
+   "chart:cow"
+  ]
+ },
+ "beds": {
+  "cuff": {
+   "name": "temple"
+  },
+  "temple": {
+   "name": "temple"
+  },
+  "chase": {
+   "name": "gallop",
+   "until": "err"
+  },
+  "tally": {
+   "name": "tender",
+   "until": "door"
+  }
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ],
+ "level_lines": true,
+ "voices": {
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon"
+  },
+  "moony": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "chorus": [
+    "am_onyx",
+    "am_fenrir"
+   ],
+   "lang": "en-us",
+   "speed": 1.22,
+   "semis": 2,
+   "color": "#9fb3c8",
+   "fx": "moon"
+  },
+  "sun": {
+   "name": "THE SUN",
+   "voice": "am_puck",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ffd23f"
+  },
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c"
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "lang": "en-us",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a"
+  },
+  "pa": {
+   "name": "OVERHEAD PAGE",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#e8a86a",
+   "fx": "pa"
+  },
+  "drag": {
+   "name": "NIGHT NURSE DRAGONFRUIT",
+   "voice": "af_nicole",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#ff4fa3"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "6:14 PM",
+   "label": "SUNSET",
+   "head": 0.2,
+   "tail": 0.9,
+   "beats": [
+    {
+     "id": "jingle",
+     "pause": 2.6,
+     "sfx": [
+      [
+       "theme_moon",
+       0.0,
+       0.7
+      ],
+      [
+       "moonrise",
+       0.2,
+       0.4
+      ],
+      [
+       "crickets",
+       0.5,
+       0.35
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "sun",
+     "say": "Report: sunny, seventy two, no incidents. You're welcome.",
+     "text": "Report: sunny, 72, no incidents. You're welcome."
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "Anything else?",
+     "text": "Anything else?"
+    },
+    {
+     "id": "s2",
+     "who": "sun",
+     "say": "They're going to blame you for everything tonight.",
+     "text": "They're going to blame you for everything tonight.",
+     "gap": 0.55
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "They always do.",
+     "text": "They always do."
+    },
+    {
+     "id": "s3",
+     "who": "sun",
+     "say": "Ciao!",
+     "text": "Ciao!",
+     "sfx": [
+      [
+       "slowwhoosh",
+       0.05,
+       0.5
+      ],
+      [
+       "sparkle",
+       0.0,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "logo",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "sting",
+       0.0,
+       0.75
+      ],
+      [
+       "howl",
+       0.1,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "m3",
+     "who": "moon",
+     "say": "I'm the Moon. Every night, something goes wrong, and somebody blames me. I'm a rock. Tonight, I'm keeping score.",
+     "text": "I'm the Moon. Every night, something goes wrong, and somebody blames me. I'm a rock. Tonight, I'm keeping score.",
+     "sfx": [
+      [
+       "blip",
+       "end",
+       0.7
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "break",
+   "clock": "7:00 PM",
+   "label": "THE BREAK ROOM",
+   "head": 0.3,
+   "tail": 0.9,
+   "beats": [
+    {
+     "id": "door",
+     "pause": 1.7,
+     "sfx": [
+      [
+       "creak",
+       0.0,
+       0.7
+      ],
+      [
+       "poofs",
+       0.9,
+       0.45
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Seven o'clock. My break.",
+     "text": "Seven o'clock. My break."
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "That's Gala. She sat down in two thousand eleven.",
+     "text": "That's Gala. She sat down in two thousand eleven."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Is she... waiting for relief?",
+     "text": "Is she... waiting for relief?"
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "Look at her.",
+     "text": "Look at her.",
+     "gap": 0.5
+    },
+    {
+     "id": "sit",
+     "pause": 0.8,
+     "sfx": [
+      [
+       "sit",
+       0.1,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Okay. Thirty minutes. Just sit.",
+     "text": "Okay. Thirty minutes. Just sit."
+    },
+    {
+     "id": "chime",
+     "pause": 0.9,
+     "gap": 0.0,
+     "sfx": [
+      [
+       "pa_chime",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Strawberry to room nine. Strawberry to room nine.",
+     "text": "Strawberry to room nine. Strawberry to room nine."
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "It's the full moon.",
+     "text": "It's the full moon.",
+     "sfx": [
+      [
+       "tally",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "m3",
+     "who": "moon",
+     "say": "Four seconds. That's scheduling.",
+     "text": "Four seconds. That's scheduling."
+    }
+   ]
+  },
+  {
+   "id": "hall",
+   "clock": "8:00 PM",
+   "label": "THE HALLWAY",
+   "head": 0.2,
+   "tail": 0.8,
+   "beats": [
+    {
+     "id": "alarm",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "door_alarm",
+       0.0,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "chime",
+     "pause": 0.8,
+     "gap": 0.0,
+     "sfx": [
+      [
+       "pa_chime",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Code Mauve. Code Mauve. Exit door.",
+     "text": "Code Mauve. Code Mauve. Exit door."
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "What's a Code Mauve?",
+     "text": "What's a Code Mauve?"
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "Mister Pear. Every night, eight o'clock.",
+     "text": "Mister Pear. Every night, eight o'clock."
+    },
+    {
+     "id": "p1",
+     "who": "pear",
+     "say": "Excuse me, ladies. I'm late for work.",
+     "text": "Excuse me, ladies. I'm late for work."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Mister Pear, you retired in nineteen ninety one.",
+     "text": "Mister Pear, you retired in nineteen ninety one."
+    },
+    {
+     "id": "p2",
+     "who": "pear",
+     "say": "The contract doesn't expire.",
+     "text": "The contract doesn't expire.",
+     "sfx": [
+      [
+       "door_chirp",
+       0.0,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "...What contract?",
+     "text": "...What contract?"
+    },
+    {
+     "id": "p3",
+     "who": "pear",
+     "say": "Fifteen minutes, every four hours. Paid.",
+     "text": "Fifteen minutes, every four hours. Paid."
+    },
+    {
+     "id": "look",
+     "pause": 0.75
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "He's the only one in the building with a break.",
+     "text": "He's the only one in the building with a break."
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Must be the full moon.",
+     "text": "Must be the full moon.",
+     "sfx": [
+      [
+       "tally",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "That's his care plan. Page four.",
+     "text": "That's his care plan. Page four."
+    }
+   ]
+  },
+  {
+   "id": "cuff",
+   "clock": "8:20 PM",
+   "label": "THE VITALS CART",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "err",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "err",
+       0.15,
+       0.55
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Error three. Again.",
+     "text": "Error three. Again."
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "You need the good cuff.",
+     "text": "You need the good cuff."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "There's a good cuff?",
+     "text": "There's a good cuff?"
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "Nights hides it. It's the only one that doesn't lie.",
+     "text": "Nights hides it. It's the only one that doesn't lie."
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Where?",
+     "text": "Where?"
+    },
+    {
+     "id": "g3",
+     "who": "mango",
+     "say": "Nobody knows. It moves.",
+     "text": "Nobody knows. It moves."
+    },
+    {
+     "id": "map",
+     "pause": 2.9,
+     "sfx": [
+      [
+       "drumroll",
+       0.0,
+       0.5
+      ],
+      [
+       "paperslide",
+       0.1,
+       0.6
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "temple",
+   "clock": "8:24 PM",
+   "label": "THE SUPPLY CLOSET",
+   "head": 0.2,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "door",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "creak",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "reveal",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "choir",
+       0.0,
+       0.55
+      ],
+      [
+       "sparkle",
+       0.1,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "It's real.",
+     "text": "It's real."
+    },
+    {
+     "id": "swap",
+     "pause": 2.0,
+     "sfx": [
+      [
+       "tick",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "shake",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "rumble",
+       0.0,
+       0.8
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "chase",
+   "clock": "8:25 PM",
+   "label": "THE HALLWAY",
+   "head": 0.1,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "roll",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "wheels",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "Run! It's the full moon!",
+     "text": "Run! It's the full moon!",
+     "sfx": [
+      [
+       "tally",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Full moon!",
+     "text": "Full moon!",
+     "sfx": [
+      [
+       "tally",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "It's a ramp. Facilities has known since two thousand four.",
+     "text": "It's a ramp. Facilities has known since two thousand four."
+    },
+    {
+     "id": "crash",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "crash",
+       0.0,
+       0.9
+      ],
+      [
+       "poofs",
+       0.3,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "err",
+     "pause": 2.4,
+     "sfx": [
+      [
+       "cuffpump",
+       0.0,
+       0.6
+      ],
+      [
+       "err",
+       1.5,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "Batteries.",
+     "text": "Batteries."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Where are the batteries?",
+     "text": "Where are the batteries?"
+    },
+    {
+     "id": "g3",
+     "who": "mango",
+     "say": "That's a different legend.",
+     "text": "That's a different legend."
+    },
+    {
+     "id": "p1",
+     "who": "pear",
+     "say": "In my day, we used our ears.",
+     "text": "In my day, we used our ears."
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "...Fair.",
+     "text": "...Fair."
+    }
+   ]
+  },
+  {
+   "id": "chart",
+   "clock": "10:41 PM",
+   "label": "THE LOBBY",
+   "head": 0.3,
+   "tail": 0.7,
+   "beats": [
+    {
+     "id": "type",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "typing",
+       0.0,
+       0.55
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Forty residents. Eighteen minutes.",
+     "text": "Forty residents. Eighteen minutes."
+    },
+    {
+     "id": "paste",
+     "pause": 2.6,
+     "sfx": [
+      [
+       "typing",
+       0.0,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Resting. Quietly.",
+     "text": "Resting. Quietly."
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "Copy and paste?",
+     "text": "Copy and paste?"
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "It's called efficiency.",
+     "text": "It's called efficiency."
+    },
+    {
+     "id": "chime",
+     "pause": 0.8,
+     "gap": 0.0,
+     "sfx": [
+      [
+       "pa_chime",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Attention all staff. The Wy-Fy password has changed to...",
+     "text": "Attention all staff. The Wi-Fi password has changed to...",
+     "sfx": [
+      [
+       "pastatic",
+       "end",
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "To WHAT?",
+     "text": "To WHAT?"
+    },
+    {
+     "id": "cow",
+     "pause": 2.0,
+     "sfx": [
+      [
+       "moo",
+       0.25,
+       0.85
+      ]
+     ]
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "Full moon.",
+     "text": "Full moon.",
+     "sfx": [
+      [
+       "tally",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "Mm. Full moon.",
+     "text": "Mm. Full moon.",
+     "sfx": [
+      [
+       "tally",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "That's the Wy-Fy.",
+     "text": "That's the Wi-Fi."
+    }
+   ]
+  },
+  {
+   "id": "tally",
+   "clock": "10:58 PM",
+   "label": "THE LOBBY",
+   "head": 0.2,
+   "tail": 0.8,
+   "beats": [
+    {
+     "id": "hush",
+     "pause": 0.9
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "It's not you. Is it.",
+     "text": "It's not you. Is it."
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "No.",
+     "text": "No."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It's the staffing.",
+     "text": "It's the staffing."
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "That's staffing.",
+     "text": "That's staffing.",
+     "sfx": [
+      [
+       "gong",
+       "end",
+       0.45
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "I'm sorry.",
+     "text": "I'm sorry."
+    },
+    {
+     "id": "m3",
+     "who": "moon",
+     "say": "Thank you.",
+     "text": "Thank you."
+    },
+    {
+     "id": "m4",
+     "who": "moon",
+     "say": "For the record, I'm ninety seven percent. I'm not even full until tomorrow.",
+     "text": "For the record, I'm ninety seven percent. I'm not even full until tomorrow."
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "...Tomorrow.",
+     "text": "...Tomorrow."
+    },
+    {
+     "id": "m5",
+     "who": "moon",
+     "say": "Tomorrow.",
+     "text": "Tomorrow."
+    },
+    {
+     "id": "door",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "slidedoor",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "d1",
+     "who": "drag",
+     "say": "Hi! I slept eleven hours. How was your night?",
+     "text": "Hi! I slept eleven hours. How was your night?"
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "Good luck.",
+     "text": "Good luck."
+    },
+    {
+     "id": "d2",
+     "who": "drag",
+     "say": "Ooh. Full moon tonight.",
+     "text": "Ooh. Full moon tonight.",
+     "sfx": [
+      [
+       "tally",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "m6",
+     "who": "moony",
+     "say": "It's tomorrow!",
+     "text": "IT'S TOMORROW!",
+     "sfx": [
+      [
+       "stab",
+       0.0,
+       0.6
+      ],
+      [
+       "howl",
+       0.5,
+       0.35
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "",
+   "head": 0.0,
+   "tail": 0.0,
+   "beats": [
+    {
+     "id": "card",
+     "pause": 5.6,
+     "sfx": [
+      [
+       "theme_moon",
+       0.1,
+       0.8
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "post",
+   "clock": "6:02 AM",
+   "label": "THE NEXT MORNING",
+   "head": 0.3,
+   "tail": 1.0,
+   "beats": [
+    {
+     "id": "dawn",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "birds",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "Seven times. In one shift.",
+     "text": "Seven times. In one shift."
+    },
+    {
+     "id": "s1",
+     "who": "sun",
+     "say": "Rookie numbers. I got sundowning.",
+     "text": "Rookie numbers. I got sundowning."
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "That's not real.",
+     "text": "That's not real."
+    },
+    {
+     "id": "s2",
+     "who": "sun",
+     "say": "It's in the textbook. I don't even do anything. I just leave.",
+     "text": "It's in the textbook. I don't even do anything. I just leave."
+    },
+    {
+     "id": "m3",
+     "who": "moon",
+     "say": "...I'd like to speak to the textbook.",
+     "text": "...I'd like to speak to the textbook."
+    }
+   ]
+  }
+ ]
+}

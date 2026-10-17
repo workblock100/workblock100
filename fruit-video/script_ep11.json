@@ -1,0 +1,1082 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 11: Welcome Back",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "persimmon": {
+   "name": "AGENCY NURSE PERSIMMON",
+   "voice": "af_aoede",
+   "speed": 1.0,
+   "semis": -1,
+   "color": "#ff9a3c",
+   "pan": 0.22,
+   "lang": "en-us"
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "clem": {
+   "name": "NEW NURSE CLEMENTINE",
+   "voice": "af_kore",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff8a1a",
+   "pan": -0.3
+  },
+  "strawphone": {
+   "name": "NURSE STRAWBERRY, ON THE BADGE",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": 0,
+   "lang": "en-us",
+   "fx": "phone"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 4.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "textding",
+       0.12,
+       0.45,
+       0
+      ],
+      [
+       "punchclock",
+       1.5,
+       0.6,
+       0
+      ],
+      [
+       "stamp7",
+       1.62,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "arrival",
+   "clock": "2:58 PM",
+   "label": "THE FRONT DOOR",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "lobby",
+   "amb": {
+    "name": "lobby",
+    "gain": 0.3
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "pop",
+       0.35,
+       0.35,
+       -0.3
+      ],
+      [
+       "pop",
+       0.6,
+       0.3,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Is it somebody's birthday?",
+     "text": "Is it somebody's birthday?",
+     "gap": 0.3
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "It's Strawberry.",
+     "text": "It's Strawberry.",
+     "gap": 0.25
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "Who's Strawberry?",
+     "text": "Who's Strawberry?",
+     "gap": 0.25
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "You're wearing her badge.",
+     "text": "You're wearing her badge.",
+     "gap": 0.45
+    },
+    {
+     "id": "door",
+     "pause": 2.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0.3
+      ],
+      [
+       "drumroll",
+       0.45,
+       0.4,
+       0
+      ],
+      [
+       "partyhorn",
+       1.3,
+       0.5,
+       0
+      ],
+      [
+       "pop",
+       1.35,
+       0.5,
+       -0.2
+      ],
+      [
+       "pop",
+       1.45,
+       0.5,
+       0.25
+      ],
+      [
+       "cheer9",
+       1.35,
+       0.6,
+       0
+      ],
+      [
+       "sparkle",
+       1.5,
+       0.35,
+       0
+      ],
+      [
+       "confetti",
+       1.4,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Welcome back to Fruit Bowl!",
+     "text": "Welcome back to Fruit Bowl!",
+     "gap": 0.15
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "Gift basket. Parking pass. Lunch.",
+     "text": "Gift basket. Parking pass. Lunch.",
+     "gap": 0.3
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Cool.",
+     "text": "Cool.",
+     "gap": 0.5
+    },
+    {
+     "id": "p1",
+     "who": "persimmon",
+     "say": "Welcome to the club.",
+     "text": "Welcome to the club.",
+     "gap": 0.4
+    },
+    {
+     "id": "a3",
+     "who": "melon",
+     "say": "And a pen.",
+     "text": "And a pen.",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That's my pen.",
+     "text": "That's my pen.",
+     "gap": 0.3
+    },
+    {
+     "id": "a4",
+     "who": "melon",
+     "say": "It was a gift.",
+     "text": "It was a gift.",
+     "gap": 0.25
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "To share.",
+     "text": "To share.",
+     "gap": 0.4
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Is there a raise?",
+     "text": "Is there a raise?",
+     "gap": 0.3
+    },
+    {
+     "id": "a5",
+     "who": "melon",
+     "say": "You're per deeum. You're in the other budget.",
+     "text": "You're per diem. You're in the other budget.",
+     "gap": 0.35
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "I know. I'm in it.",
+     "text": "I know. I'm in it.",
+     "gap": 0.4
+    },
+    {
+     "id": "sting",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "trombone",
+       0.1,
+       0.3,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "orient",
+   "clock": "3:06 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.3
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "wheels",
+       0.1,
+       0.45,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Strawberry, you have twelve residents.",
+     "text": "Strawberry, you have twelve residents.",
+     "gap": 0.3
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Per my contract.",
+     "text": "Per my contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "deal",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "flips",
+       0.1,
+       0.6,
+       0
+      ],
+      [
+       "carddeal",
+       0.25,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Clementine, you have twenty-eight.",
+     "text": "Clementine, you have twenty-eight.",
+     "gap": 0.3
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That's forty.",
+     "text": "That's forty.",
+     "gap": 0.3
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "It's contract math.",
+     "text": "It's contract math.",
+     "gap": 0.45
+    },
+    {
+     "id": "teach",
+     "pause": 0.7,
+     "gap": 0.05
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Clementine. When they give you a number, say: let me check my contract.",
+     "text": "Clementine. When they give you a number, say: let me check my contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "I don't have a contract.",
+     "text": "I don't have a contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Say it anyway.",
+     "text": "Say it anyway.",
+     "gap": 0.3
+    },
+    {
+     "id": "c3",
+     "who": "clem",
+     "say": "Let me check my contract.",
+     "text": "Let me check my contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "You don't have one.",
+     "text": "You don't have one.",
+     "gap": 0.3
+    },
+    {
+     "id": "c4",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "gap": 0.4
+    },
+    {
+     "id": "tag",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "floor",
+   "clock": "5:32 PM",
+   "label": "THE FLOOR",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "alarms",
+    "gain": 0.28
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.3,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "whoosh2",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "a_call",
+       0.15,
+       0.5,
+       -0.3
+      ],
+      [
+       "a_bed",
+       0.5,
+       0.45,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Strawberry! I need help in Room nine!",
+     "text": "Strawberry! I need help in Room nine!",
+     "gap": 0.3
+    },
+    {
+     "id": "s1",
+     "who": "strawphone",
+     "say": "That's not in my contract.",
+     "text": "That's not in my contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "Which part isn't?",
+     "text": "Which part isn't?",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "strawphone",
+     "say": "Helping.",
+     "text": "Helping.",
+     "gap": 0.5
+    },
+    {
+     "id": "lapse1",
+     "pause": 1.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "timelapse",
+       0,
+       0.6,
+       0
+      ],
+      [
+       "chaching9",
+       0.9,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "She's been in that chair since four.",
+     "text": "She's been in that chair since four.",
+     "gap": 0.3
+    },
+    {
+     "id": "c3",
+     "who": "clem",
+     "say": "Strawberry! I have twenty-eight!",
+     "text": "Strawberry! I have twenty-eight!",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "strawphone",
+     "say": "I have twelve. They're all asleep.",
+     "text": "I have twelve. They're all asleep.",
+     "gap": 0.5
+    },
+    {
+     "id": "lapse2",
+     "pause": 1.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "timelapse",
+       0,
+       0.6,
+       0
+      ],
+      [
+       "chaching9",
+       0.8,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "c4",
+     "who": "clem",
+     "say": "Strawberry. Please.",
+     "text": "Strawberry. Please.",
+     "gap": 0.4
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "It's not in my contract.",
+     "text": "It's not in my contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "It's not in my contract.",
+     "text": "It's not in my contract.",
+     "gap": 0.25
+    },
+    {
+     "id": "snap",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "boing",
+       0.1,
+       0.35,
+       0
+      ],
+      [
+       "slowmo",
+       0.1,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "It's not in my contract!",
+     "text": "It's not in my contract!",
+     "gap": 0.2
+    },
+    {
+     "id": "run",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "whoosh2",
+       0,
+       0.6,
+       0
+      ],
+      [
+       "scramble",
+       0.1,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "vault",
+   "clock": "10:55 PM",
+   "label": "THE ADMINISTRATOR'S OFFICE",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.22
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "typing",
+       0.05,
+       1.0,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Strawberry. This invoice is eighteen hundred dollars.",
+     "text": "Strawberry. This invoice is eighteen hundred dollars.",
+     "gap": 0.3
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Helping.",
+     "text": "Helping.",
+     "gap": 0.25
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "Helping is not in your contract.",
+     "text": "Helping is not in your contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It's an add-on. Two hundred an hour.",
+     "text": "It's an add-on. Two hundred an hour.",
+     "gap": 0.3
+    },
+    {
+     "id": "a3",
+     "who": "melon",
+     "say": "We don't have the budget for that.",
+     "text": "We don't have the budget for that.",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "You have the agency budget.",
+     "text": "You have the agency budget.",
+     "gap": 0.4
+    },
+    {
+     "id": "vault",
+     "pause": 2.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "vaultopen",
+       0.2,
+       0.6,
+       0
+      ],
+      [
+       "rumble",
+       0.35,
+       0.6,
+       0
+      ],
+      [
+       "goldrush",
+       0.35,
+       0.6,
+       0
+      ],
+      [
+       "chaching9",
+       1.0,
+       0.6,
+       0
+      ],
+      [
+       "sparkle",
+       1.3,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "a4",
+     "who": "melon",
+     "say": "Oh. We do have that one.",
+     "text": "Oh. We do have that one.",
+     "gap": 0.4
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "And the staff budget?",
+     "text": "And the staff budget?",
+     "gap": 0.3
+    },
+    {
+     "id": "a5",
+     "who": "melon",
+     "say": "That's this.",
+     "text": "That's this.",
+     "gap": 0.3
+    },
+    {
+     "id": "moth",
+     "pause": 1.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "purse",
+       0.02,
+       0.35,
+       0
+      ],
+      [
+       "flicker",
+       0.1,
+       0.6,
+       0
+      ],
+      [
+       "moth",
+       0.12,
+       0.5,
+       0
+      ],
+      [
+       "sting",
+       0.5,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "exit",
+   "clock": "10:59 PM",
+   "label": "THE FRONT DOOR",
+   "head": 0.2,
+   "tail": 0.3,
+   "room": "lobby",
+   "amb": {
+    "name": "lobby",
+    "gain": 0.25
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "tick",
+       0,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Strawberry. Can you stay five more minutes?",
+     "text": "Strawberry. Can you stay five more minutes?",
+     "gap": 0.3
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Overtime is a hundred and seventy-seven dollars an hour.",
+     "text": "Overtime is a hundred and seventy-seven dollars an hour.",
+     "gap": 0.3
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Go! Go! GO!",
+     "text": "Go! Go! GO!",
+     "gap": 0.3
+    },
+    {
+     "id": "cd",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "clockdigit",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "clockdigit",
+       0.5,
+       0.5,
+       0
+      ],
+      [
+       "clockdigit",
+       1.0,
+       0.5,
+       0
+      ],
+      [
+       "clockdigit",
+       1.5,
+       0.5,
+       0
+      ],
+      [
+       "clockding",
+       1.9,
+       0.6,
+       0
+      ],
+      [
+       "slowmolong",
+       0,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "out",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0.3
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lot",
+   "clock": "11:00 PM",
+   "label": "THE PARKING LOT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "outside",
+   "amb": {
+    "name": "night",
+    "gain": 0.35
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "crickets",
+       0,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "How was your night?",
+     "text": "How was your night?",
+     "gap": 0.35
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Quiet.",
+     "text": "Quiet.",
+     "gap": 0.25
+    },
+    {
+     "id": "chaos",
+     "pause": 3.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "a_call",
+       0.1,
+       0.6,
+       -0.3
+      ],
+      [
+       "klaxon",
+       0.3,
+       0.5,
+       0.3
+      ],
+      [
+       "stampede",
+       0.5,
+       0.7,
+       0
+      ],
+      [
+       "howl7",
+       0.9,
+       0.5,
+       0.3
+      ],
+      [
+       "peel",
+       1.3,
+       0.5,
+       -0.3
+      ],
+      [
+       "pa_chime",
+       1.6,
+       0.5,
+       0
+      ],
+      [
+       "crash",
+       2.0,
+       0.5,
+       0.2
+      ],
+      [
+       "siren",
+       2.2,
+       0.4,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "She said the word!",
+     "text": "She said the word!",
+     "gap": 0.2
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Not my shift.",
+     "text": "Not my shift.",
+     "gap": 0.4
+    },
+    {
+     "id": "mo2",
+     "who": "moon",
+     "say": "Nice.",
+     "text": "Nice.",
+     "gap": 0.3
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "arrival",
+  "to_": "lot",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}
