@@ -259,7 +259,7 @@ function phoneShot(drawBack, fn, o = {}) {
 
 // ============================================================================ the front door, 10:58 PM
 const SC_EXIT = {};
-const XC = { straw: [235, 1010], mango: [-225, 1010], admin: [-190, 1600], pers: [0, 1400] };
+const XC = { straw: [254, 1010], mango: [-266, 1010], admin: [-190, 1600], pers: [0, 1400] };
 // story time: seconds past 22:58:00. It runs fast to the countdown, then ticks a second per beat of the countdown, then in step with the video.
 const storySec = lt => {
   const cd = B('cd').s;
@@ -360,13 +360,13 @@ SC_EXIT.cast = lt => {
   const S = person(straw, SC_EXIT.sPath, lt, { stride: 40, look: lt < b('s1').s ? [.2, .1] : sh === 'dolly' || lt >= b('out').s && lt < b('a1').s ? [-.2, .1] : [-.55, .05],
     expr: lt >= b('s4').s ? 'panic' : lt >= b('s3').s ? 'shock' : lt >= b('out').s + .6 ? 'shock' : lt >= b('out').s ? 'neutral' : inB(lt, 's2') ? 'sour' : 'dead',
     lid: lt >= b('out').s && lt < b('out').e + .3 ? lerp(.55, 0, ez(lt, b('out').s, b('out').e)) : (lt < b('s3').s && lt >= b('p3').s - 1 || lt < b('out').s) ? .5 : undefined,
-    browUp: 0, hold: { l: 'clipboard6' }, grip: inB(lt, 's2') ? { l: [-110, 30], r: [124, 56] } : { l: [-110, 30] }, hand: inB(lt, 's2') ? { r: 'open' } : undefined, clipText: lt >= b('s1').s ? 'REPORT' : 'REPORT',
-    arms: { l: lt >= b('run').s ? 'flail' : 'hold', r: lt >= b('s4').s && lt < b('run').s ? 'up' : inB(lt, 's2') ? 'hold' : 'rest' },
+    browUp: 0, hold: { l: 'clipboard6' }, grip: inB(lt, 's2') || sh === 'wide' ? { l: [-110, 30], r: [124, 56] } : { l: [-110, 30] }, hand: inB(lt, 's2') || sh === 'wide' ? { r: 'open' } : undefined, clipText: lt >= b('s1').s ? 'REPORT' : 'REPORT',
+    arms: { l: lt >= b('run').s ? 'flail' : 'hold', r: lt >= b('s4').s && lt < b('run').s ? 'up' : inB(lt, 's2') || sh === 'wide' ? 'hold' : 'rest' },
     legs: sh === 'foot' ? 'tap' : undefined, acc: ['steth', 'badge7', 'bandage7'].concat(lt >= b('out').e + 1.3 ? ['sweat'] : []), transit: lt >= b('run').s });
   if (lt >= b('run').s) { S.arms = { l: 'none', r: 'none' }; S.hold = {}; S.grip = {}; S.arms = { l: 'flail', r: 'flail' }; }
   const pinch = lt >= b('run').s ? seg(lt, b('run').s + .5, b('run').s + .66) * (1 - seg(lt, b('run').s + .8, b('run').s + .95)) : 0;
   if (pinch > 0) S.sx = 1 - .36 * pinch;
-  const M = person(mango, () => XC.mango, lt, { look: lt >= b('m1').s - .15 ? [.75, -.1] : lt < b('s1').s ? [.3, 0] : [.7, 0], expr: lt >= b('m1').s - .2 && lt < b('s3').s ? 'shock' : lt >= b('s3').s ? 'sad' : 'neutral', arms: { l: 'rest', r: 'rest' } });
+  const M = person(mango, () => XC.mango, lt, { look: lt >= b('m1').s - .15 ? [.75, -.1] : lt < b('s1').s ? [.3, 0] : [.7, 0], expr: lt >= b('m1').s - .2 && lt < b('s3').s ? 'shock' : lt >= b('s3').s ? 'sad' : 'neutral', arms: { l: sh === 'wide' ? 'hips' : 'rest', r: 'rest' } });
   const aq = lt >= b('a2').s - .1 && lt < b('m1').s - .15, waveOn = inB(lt, 'a1') || lt >= b('a1').s - .2 && lt < b('a1').e + .2;
   const Ad = person(melon, () => XC.admin, lt, { look: lt >= b('out').s ? [.8, -.1] : [.3, .1], expr: lt >= b('m1').s - .2 ? 'shock' : lt >= b('out').s + .3 ? 'happy' : 'happy', hold: { r: 'cell' }, grip: { r: [150, 56] }, arms: { l: waveOn ? 'wave' : 'rest', r: 'hold' }, lid: lt >= b('m1').s - .2 ? undefined : undefined });
   void outT; void cdT; void clip; void aq;
@@ -382,12 +382,12 @@ SC_EXIT.cam = function (lt) {
   }
   const c = SC_EXIT.cast(lt), cdl = lt - b('cd').s;
   CAM.shake = 0;
-  if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, 1000, lerp(.98, 1.02, k)); }
+  if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, 1000, lerp(.92, .94, k)); }   // wide enough that the outer two keep their bodies and, with a hand on the hip, their gloves in frame
   else if (sh === 'cuS') camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lt >= b('out').s ? lerp(1.45, 1.6, seg(lt, b('out').s, b('out').e)) : 1.7, 120, lt >= b('out').s ? 170 : 0);
   else if (sh === 'cuP') { const bk = lt >= b('p3').s && lt < b('p3').e ? seg(lt, b('p3').s, b('p3').e) : 0; camFace({ kind: 'persimmon', x: c.P.x, y: c.P.y, s: c.P.s }, 2.35 + .25 * (inB(lt, 'p1') ? seg(lt, b('p1').s, b('p1').e) : bk), 80); }
   else if (sh === 'foot') zoomTo(c.S.x + 8, c.S.y - 30, 4.8);
   else if (sh === 'adm') camFace({ kind: 'melon', x: c.Ad.x, y: c.Ad.y, s: c.Ad.s }, 1.55, 40, -60);
-  else if (sh === 'mang') { const k = seg(lt, b('m1').s - .15, b('m1').e); zoomTo(lerp(380, 400, k), 1000, lerp(1.16, 1.22, k)); }
+  else if (sh === 'mang') { const k = seg(lt, b('m1').s - .15, b('m1').e); zoomTo(lerp(350, 370, k), 1000, lerp(1.16, 1.22, k)); }
   else if (sh === 'dolly') { const d = ez(lt, b('s3').s - .05, b('s4').e + .1); camFace({ kind: 'straw', x: c.S.x, y: c.S.y, s: c.S.s }, lerp(1.6, 1.85, d), 110, 20); if (lt >= b('s4').s) CAM.shake = 12 * (1 - seg(lt, b('s4').s, b('s4').e + .3)); }
   else if (sh === 'run') { const k = ez(lt, b('run').s, b('run').e); zoomTo(540, 960, lerp(.94, .98, k)); CAM.shake = 9 * (1 - seg(lt, b('run').s + .7, b('run').e)); }
   void cdl;
@@ -501,7 +501,7 @@ SC_LOT.car = lt => {
   return { x: base[0] + dir[0] * d, z: base[1] + dir[1] * d, yaw, v: a * u, burn: 0 };
 };
 SC_LOT.sPath = lt => { const t0 = B('car').s; return route([[0, 0, 2092], [t0, 0, 2092], [t0 + .5, 230, 1770], [t0 + 1.05, 240, 1160], [t0 + 1.4, 215, 1150, 'out'], [t0 + 1.9, STOP[0], STOP[1], 'out']])(lt); };
-SC_LOT.moonPos = lt => { const m = B('mo1').s; const r = ez(lt, B('car').s + 1.3, m); return [lerp(980, 860, r), lerp(840, 410, easeOut(seg(lt, B('car').s + 1.3, m)))]; };
+SC_LOT.moonPos = lt => { const m = B('mo1').s; const r = ez(lt, B('car').s + 1.3, m); return [lerp(1000, 880, r), lerp(840, 410, easeOut(seg(lt, B('car').s + 1.3, m)))]; };
 SC_LOT.shot = lt => {
   const b = B, c = b('car'), m1 = b('mo1');
   const order = [['wide', c.e - .05], ['moonW', m1.s + 1.0], ['moonC', m1.e - .1], ['cuSq', b('ph').s - .05], ['phone', b('s5').s - .05], ['cuS', b('mo2').s - .05], ['cuM', b('tap').s - .05], ['tapph', b('tap').s + .85], ['pull', 1e9]];

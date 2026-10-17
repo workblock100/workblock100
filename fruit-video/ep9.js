@@ -199,7 +199,7 @@ SCENES.title = {
 
 // ============================================================================ orientation, 3:06 PM
 // the cast at the station: a charge nurse, the staff nurse, the new one and the CNA, and a med cart on the floor between the first two
-const OR = { lemon: [-335, 1350], straw: [-100, 1000], cart: [8, 985], pers: [120, 1000], mango: [362, 1350] };
+const OR = { lemon: [-360, 1350], straw: [-100, 1000], cart: [8, 985], pers: [120, 1000], mango: [385, 1350] };
 // a med cart: a cabinet with drawers, a top with cups and a clipboard, four casters
 function medCart(X, Z) {
   const S6 = window.S6, k = V2.at(X, Z).s;
@@ -329,7 +329,7 @@ SCENES.orient = {
   cam(lt) {
     const sh = SCENES.orient.shot(lt), c = SCENES.orient.cast(lt), b = id => B(id);
     V2.setCam({ f: 1400, cy: 360, hy: 860 });
-    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(.99, 1.01, k)); }
+    if (sh === 'wide') { const k = seg(lt, 0, b('s1').s); zoomTo(540, lerp(1040, 1020, k), lerp(.97, .99, k)); }
     else if (sh === 'cuS') faceZoom({ kind: 'straw', x: c.straw.x, y: c.straw.y, s: c.straw.s }, 2.0 + (inB(lt, 's6') ? .12 * seg(lt, b('s6').s, b('s6').e) : 0), 80);
     else if (sh === 'cuP') faceZoom({ kind: 'persimmon', x: c.pers.x, y: c.pers.y, s: c.pers.s }, 2.0, 80);
     else if (sh === 'cuM') { faceZoom({ kind: 'mango', x: c.mango.x, y: c.mango.y, s: c.mango.s }, 2.0, 80); CAM.x += 30; }   // her pointing finger stays 60 px inside the right edge

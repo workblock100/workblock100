@@ -261,7 +261,7 @@ function burst(lt, t0, side, n = 70) {
 }
 
 // ---- the scene -----------------------------------------------------------------------------------------------------------------------------------------
-const MK = { lemon: [-445, 1180], admin: [-165, 930], straw: [305, 1090], mango: [515, 1250], pers: [112, 930] };
+const MK = { lemon: [-485, 1180], admin: [-190, 930], straw: [335, 1090], mango: [570, 1250], pers: [112, 930] };
 const persPath = lt => { const d = B('door'), a2 = B('a2'); return route([[0, 0, 1748], [d.s + .45, 0, 1748], [a2.s - .55, MK.pers[0] * .85, 1000], [a2.s - .1, MK.pers[0], MK.pers[1], 'out']])(lt); };
 const strawPath = route([[0, 560, 800], [1.0, 420, 1010], [1.5, MK.straw[0], MK.straw[1], 'out']]);
 const mangoPath = route([[0, 800, 950], [.25, 800, 950], [1.25, 640, 1210], [1.65, MK.mango[0], MK.mango[1], 'out']]);
@@ -303,7 +303,7 @@ SCENES.arrival = {
     const shake = Math.sin(lt * 21);
     if (lt >= d.s + 1.3 && lt < a1.e + .1) { ad.arms = { l: [2.35 + .12 * shake, .55 + .3 * shake], r: [2.35 - .12 * shake, .55 - .3 * shake] }; ad.hand = { l: 'wave', r: 'wave' }; }   // jazz hands
     else if (lt >= a2.s - .2 && lt < hL + .3) {                 // the handoff: the right hand brings the basket and then the pass, the left hand carries the pizza box until it is offered
-      const pa = Math.max(reachA(tB, hB), reachA(tP, hP), reachA(tL, hL)), MM = lt >= hP ? [M[0] + 12, M[1] + 34] : M;
+      const pa = Math.max(reachA(tB, hB), reachA(tP, hP), reachA(tL, hL)), MM = lt >= hP ? [M[0] + 12, M[1] + 46] : M;
       if (lt < hB) ad.hold.r = 'basket9'; else if (lt >= tP - .22 && lt < hP) ad.hold.r = 'passcard9'; else if (lt >= hP && lt < hL) { ad.hold.r = 'pizzabox9'; ad.pzR = sk(lt, hP, hP + .14); }
       handTo(ad, 1, MM[0], MM[1], pa, [148, 92]);
       if (lt < hP + .14) { ad.hold.l = 'pizzabox9'; ad.grip.l = [-205, 112]; ad.arms.l = 'hold'; ad.pzL = 1 - sk(lt, hP, hP + .14); }   // the pizza box rides at his left side until it moves to the hand that offers it
@@ -320,7 +320,7 @@ SCENES.arrival = {
       hold: { r: 'icedcup' }, grip: { r: [lerp(100, 135, sip), lerp(72, -64, sip)] }, arms: { l: 'rest', r: 'hold' }, stride: 36, transit: lt < d.s + 1.0 });
     const REST = [-118, 62], RESTP = [-150, 100], recv = (ti, hi) => sk(lt, ti - .06, ti + .14) * (1 - sk(lt, hi, hi + .22));
     const left = (prop, rest, k, m = M) => { pr.hold = Object.assign({}, pr.hold); if (prop) pr.hold.l = prop; handTo(pr, -1, m[0], m[1], k, rest); pr.hand = { l: prop ? 'grip' : 'open' }; };
-    const M2 = [M[0] + 12, M[1] + 34];
+    const M2 = [M[0] + 12, M[1] + 46];
     if (lt >= tB - .1 && lt < hB) left(null, REST, recv(tB, hB));
     else if (lt >= hB && lt < dB) left('basket9', REST, 1 - sk(lt, hB, hB + .22));
     else if (lt >= dB && lt < hP) left(null, REST, recv(tP, hP));
@@ -346,14 +346,14 @@ SCENES.arrival = {
     V2.setCam({ f: 1400, cy: 360, hy: 860, cz: czAt(lt) });
     const C = SCENES.arrival.cast(lt), F = (o, z, up = 100) => faceZoom({ kind: o.kind, x: o.x, y: o.y, s: o.s, lift: o.lift, noLegs: o.noLegs }, z, up);
     switch (sh.n) {
-      case 'wide': zoomTo(540, lerp(985, 975, k), .97); break;
+      case 'wide': zoomTo(540, lerp(985, 975, k), .94); break;
       case 'cuS': F(C.sp, lerp(1.75, 1.85, k), 150); break;
       case 'cuL': F(C.lm, lerp(1.85, 1.95, k), 110); break;
       case 'cuM': F(C.mg, lerp(1.9, 2.0, k), 110); break;
       case 'cuL2': F(C.lm, lerp(2.0, 2.1, k), 110); break;
       case 'cuM2': F(C.mg, lerp(2.05, 2.15, k), 110); break;
       case 'cuL3': F(C.lm, lerp(2.2, 2.6, k), 100); break;
-      case 'door': zoomTo(540, lerp(990, 975, k), .97); CAM.shake = lt > d.s + .4 && lt < d.s + 1.3 ? 3 * seg(lt, d.s + .4, d.s + 1.25) : (lt >= d.s + 1.3 ? 6 * Math.max(0, 1 - (lt - d.s - 1.3) / .3) : 0); break;
+      case 'door': zoomTo(540, lerp(990, 975, k), .94); CAM.shake = lt > d.s + .4 && lt < d.s + 1.3 ? 3 * seg(lt, d.s + .4, d.s + 1.25) : (lt >= d.s + 1.3 ? 6 * Math.max(0, 1 - (lt - d.s - 1.3) / .3) : 0); break;
       case 'doorB': zoomTo(lerp(470, 480, k), 975, lerp(1.3, 1.45, k)); break;
       case 'cuA': F(C.ad, lerp(1.45, 1.55, k), 100); break;
       case 'two': { const mx = (C.ad.x + C.pr.x) / 2; zoomTo(mx - 100, C.ad.y - 190 * C.ad.s, lerp(1.28, 1.34, k)); break; }
@@ -363,9 +363,9 @@ SCENES.arrival = {
       case 'cuS3': F(C.sp, lerp(1.9, 2.0, k), 140); break;
       case 'cuA3': F(C.ad, lerp(1.55, 1.8, k), 100); break;
       case 'cuP2': F(C.pr, lerp(1.6, 1.72, k), 90); break;
-      case 'xcuS': F(C.sp, lerp(2.7, 3.1, k), 80); break;
+      case 'xcuS': F(C.sp, lerp(2.7, 3.1, k), 135); break;
       case 'xcuA': F(C.ad, lerp(2.0, 2.25, k), 90); break;
-      case 'sting': zoomTo(540, lerp(985, 975, k), .97); break;
+      case 'sting': zoomTo(540, lerp(985, 975, k), .94); break;
     }
   },
   draw(lt) {
