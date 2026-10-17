@@ -526,6 +526,7 @@ const SC = {
     sfxWord(lt, f0, 'FLIP', 300, 1330, { rot: -.12, size: 112, hold: .55 });
     sfxWord(lt, f0 + .15, 'FLIP', 560, 1376, { rot: .05, size: 112, hold: .5 });
     sfxWord(lt, f0 + .30, 'FLIP!', 820, 1326, { rot: -.08, size: 124, hold: .5 });
+    sfxWord(lt, 7.9, 'creeeak...', 775, 705, { rot: -.1, size: 72, hold: .22, fill: '#ffffff' });   // the tower complains just before Clementine's "Sure!"
   },
 };
 const shotStart = sh => { let t0 = 0; for (const [n, e] of SHOTS()) { if (n === sh) return t0; t0 = e; } return t0; };

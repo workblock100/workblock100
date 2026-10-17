@@ -345,6 +345,28 @@ function burst(lt, t0, side, n = 70) {
   ctx.restore();
 }
 
+// a party popper (the soft crackle at out +0.30): a flash, a cone of confetti and four curling streamers shot up and outward from a hand, the ribbons sagging as they fall; (x, y) is in scene coordinates
+function popper(lt, t0, x, y, side) {
+  const k = lt - t0; if (k < 0 || k > 2.2) return;
+  const cols = ['#ff5a8a', '#ffd23a', '#4aa8ff', '#5ae682', '#c25bd6', '#ffffff'], tau = .35;
+  ctx.save();
+  if (k < .2) V2.glow(x, y, 40 + 110 * (1 - k / .2), '255,240,200', .8 * (1 - k / .2), 'screen', 0);
+  for (let i = 0; i < 34; i++) {
+    const a = -PI / 2 + side * (.05 + .55 * hash(i + 3 + side * 17)), v = 900 + 1500 * hash(i + 9), u = tau * (1 - Math.exp(-k / tau));
+    const px = x + Math.cos(a) * v * u + 14 * Math.sin(k * 4 + i), py = y + Math.sin(a) * v * u + .5 * 620 * k * k;
+    ctx.save(); ctx.translate(px, py); ctx.rotate(k * (4 + 6 * hash(i)) + i); ctx.scale(1, Math.cos(k * (6 + 5 * hash(i + 5)) + i)); ctx.globalAlpha = 1 - seg(k, 1.5, 2.2);
+    ctx.fillStyle = cols[i % cols.length]; ctx.fillRect(-9, -5, 18, 10); ctx.restore();
+  }
+  for (let j = 0; j < 4; j++) {
+    const a = -PI / 2 + side * (.05 + .13 * j), L = 360 + 120 * hash(j + 40), u = easeOut(clamp(k / .5));
+    ctx.strokeStyle = cols[(j + 1) % cols.length]; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.globalAlpha = 1 - seg(k, 1.4, 2.0);
+    ctx.beginPath();
+    for (let q0 = 0; q0 <= 24; q0++) { const q = q0 / 24 * u, r = L * q, wob = Math.sin(q * 14 + j * 2 + k * 5) * 22 * q; const sx = x + Math.cos(a) * r + wob * Math.sin(a), sy = y + Math.sin(a) * r + 260 * q * q * k - wob * Math.cos(a); q0 ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // ============================================================================ the front door, 11:00 PM
 // a long lens from the back of the lobby for the whole scene: depth is compressed, so the line-up reads as a funnel running into the glass. Where everyone stands (X, Z):
 // Mango and Mrs. Cranberry at the front of the funnel, Lemon inside Mango, the principals at the apex (250 units from the glass); Clementine, Banana and Pineapple soft behind
@@ -445,6 +467,7 @@ D.draw = function (lt) {
   if (wide) items.push({ z: ZB, id: 'glass', main: true, draw: () => L.glass() });
   const zf = focus ? Math.min(...items.filter(it => focus.includes(it.id)).map(it => it.z)) : 0;
   items.filter(it => wide || focus.includes(it.id) || (!it.main && it.z >= zf)).sort((a, d) => (focus && !focus.includes(a.id) ? 0 : 1) - (focus && !focus.includes(d.id) ? 0 : 1) || d.z - a.z).forEach(it => it.draw());
+  if (wide) { const pm = V2.p2(POS.mango[0], 235, POS.mango[1]), pc = V2.p2(POS.cran[0] - 40, 210, POS.cran[1]); popper(lt, B('out').s + .30, pm[0] + 10, pm[1], -1); popper(lt, B('out').s + .30, pc[0], pc[1], 1); }   // in front of them: the confetti crackle on the sound at out +0.30
   V2.dust(60, 600, 1020, 1400, lt, { n: 22, alpha: .25, color: '255,226,180' });
 };
 D.fx = lt => {

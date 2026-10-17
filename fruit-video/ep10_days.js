@@ -1,18 +1,35 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 10: Two Weeks' Notice. Scene module: days (THE NEXT TWO WEEKS, no script clock: the clock pill carries the countdown).
- * WORK IN PROGRESS: infrastructure pass (calendar, peel, dive / pull camera) with placeholder sets. */
+/* SHIFT HAPPENS, Episode 10: Two Weeks' Notice. Scene module: days (THE NEXT TWO WEEKS, 35.09 s; the script gives no clock, so the clock pill carries the countdown).
+ *
+ * The device: a flip calendar. Every part of the montage hangs a countdown pad on its own wall (14, 10, 7, 3). Before each flip the camera dives into that pad until the page fills the frame
+ * (DIVE .22 s + HOLD .05 s), the page is torn off at the flip cue (flipcal +0.00, whoosh2 +0.05, paper tear +0.02: the first lift shows on the first frame), a riffle of pages peels away
+ * (14 to 10, 10 to 7, 7 to 3; the pill follows the pages), and the camera pulls back from the next pad into the next place. The cover ("TWO WEEKS' NOTICE", hit at open +0.05) does the same
+ * into the hall. peel() is a real page fold (crease, reflected back, shadow on the next sheet, fly-off); blur is 10 samples while the page moves, 1 otherwise.
+ *
+ * PART 1  THE HALL, day 14 (0 to 9.9). Bright afternoon, a hall with sun windows. Lemon's whiteboard NOTICE PERIOD POLICY with a pointer that rides down the checkboxes, and a giant
+ *         stamp for each rule (DENIED at 3.45, 4.42, 5.40). wide 1.1-2.58 | medium Lemon + board 2.58-5.80 (Strawberry a blur in the foreground) | CU Strawberry 5.80-7.93
+ *         (four fingers on "four years") | CU Lemon 7.93-9.63 ("Then nothing changes.", pointer hangs) | dive 9.63-9.85 | flip1 9.90.
+ * PART 2  THE STATION, day 10 (10.8 to 16.8). Warm, confetti, STAFF APPRECIATION WEEK banner, balloons. The Administrator's jazz hands, the donut (car tire sized, on a caster stand,
+ *         glaze, sprinkles, a "1" flag) rolls in pushed by Mango and stops dead on "donut"; Mango pokes it on "very" (it wobbles), hops into the hole on "large".
+ *         medium 10.8-11.95 (camera holds, the donut rolls in) | pan to wide 11.95-12.75 | CU Strawberry 13.68-14.96 ("That's one donut.") | wide 14.96-16.57 | dive | flip2 16.84.
+ * PART 3  THE BREAK ROOM, day 7 (17.74 to 23.7). Tired fluorescent tube, grey afternoon, vending machine, fridge, microwave at 3:34. Mango brings the job board to Strawberry.
+ *         two-shot 17.8-18.25 | full-screen tablet 18.25-21.95 (two postings, same words; $34.00 pops on "thirty-four", $100 rolls to $118.00 on "hundred" to "eighteen", 2 vs 4,000
+ *         applicants) | CU Strawberry 21.95-22.40 | three-shot, the Administrator leans in 22.40-23.46 ("Different budget.") | dive | flip3 23.73.
+ * PART 4  THE SUPPLY CLOSET, day 3 (24.6 to 35.09). Dim, a bare bulb that flickers, a crooked pad, a Q-word sign with the Q crossed out, shelves with nothing on them but one glove, a cobweb
+ *         and a spider, an empty carton. Clementine hops in (24.32-25.10) and copies Strawberry's every pose 0.42 s late (fists on hips, a hand over the eye on "replacement", a palm up on
+ *         "supplies", a shrug on "There aren't any."). two-shot 24.6-27.41 | marmalade jar insert 27.41-28.34 | CU Clementine 28.34-29.6 | two-shot 29.6-31.2 | CU "Sure!" 31.2-31.88 |
+ *         the reveal, they step apart, a tumbleweed rolls through 31.88-32.85 | CU frozen smile, a drop of sweat 32.85-33.55 | the empty closet 33.55-35.09 (trombone 33.84: WAH WAH,
+ *         the bulb sags, fade out).
+ *
+ * Layout numbers worth knowing: the pad pages are 540 x 960 units drawn at COVER 2.02 for a full frame; the clock pill is "N DAYS LEFT" in the pill's own family. The hall cast stands at
+ * x 158 (Strawberry) and x 421 (Lemon) with the board at BD.x 528 so that Lemon's pointer (a tight box on the shaft) clears her face on one side and the lettering on the other. */
 (() => {
 if (!window.TIMELINE_EP10) return;
-const { person, zoomTo, faceC, faceZoom, drawBg, inB, localOf } = window.H6;
+const { zoomTo, faceC, drawBg, localOf } = window.H6;
 const A7 = window.A7, A9 = window.A9, A10 = window.A10, S6 = window.S6, S7 = window.S7;
 
 // ------------------------------------------------------------------ helpers (copies of the Episode 9 ones)
 const wordT = (id, word, fb) => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id), w = l && l.words.find(x => x[0].toLowerCase().replace(/[^a-z]/g, '').includes(word)); return w ? l.s - CUR.start + w[1] : fb; };
-const route = keys => lt => {
-  if (lt <= keys[0][0]) return [keys[0][1], keys[0][2]];
-  for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = seg(lt, a[0], b[0]), e = b[3] === 'io' ? easeIO(k) : b[3] === 'out' ? easeOut(k) : k; return [lerp(a[1], b[1], e), lerp(a[2], b[2], e)]; }
-  const l = keys[keys.length - 1]; return [l[1], l[2]];
-};
 function sfxWord(lt, t0, str, x, y, o = {}) {
   const k = seg(lt, t0, t0 + .14), f = 1 - seg(lt, t0 + (o.hold ?? .5), t0 + (o.hold ?? .5) + .2);
   if (k <= 0 || f <= 0) return;
@@ -107,7 +124,7 @@ const clipHalf = (poly, nx, ny, d, sg) => {
 const pathPoly = P => { ctx.beginPath(); P.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); };
 function peel(frontFn, belowFn, p, o = {}) {
   const w = PW, h = PH, psi = o.psi ?? .5, nx = Math.sin(psi), ny = Math.cos(psi);
-  const d0 = nx * w + ny * h + 8, d1 = -230, e = .05 + .95 * Math.pow(p, o.pow ?? 1.4), d = lerp(d0, d1, e);
+  const d0 = nx * w + ny * h + 8, d1 = -230, e = .08 + .92 * Math.pow(p, o.pow ?? 1.35), d = lerp(d0, d1, e);
   const R = [[0, 0], [w, 0], [w, h], [0, h]], A = clipHalf(R, nx, ny, d, -1), Bq = clipHalf(R, nx, ny, d, 1);
   belowFn();
   if (Bq.length > 2) {   // the page below, shadowed where the sheet used to lie
@@ -174,8 +191,8 @@ function dayAt(lt) {
 }
 
 // ------------------------------------------------------------------ shared helpers for the parts
-const { box3, onZ, kz, shell, backWindow, ceilingLamp, plant3, table3, chair3, wallClock } = S6;
-const { p2, poly, quad3, grad, radial } = V2;
+const { box3, onZ, kz, shell, backWindow, ceilingLamp, plant3, table3, chair3 } = S6;
+const { p2, poly, grad, radial } = V2;
 const { straw, mango, lemon } = A7, melon = A9.melon, clem = A10.clem;
 // aim a hand at a point in scene coordinates: blend from a resting grip (local px) toward it, stopping short of the arm's full reach
 function handTo(o, side, x, y, k, rest) {
@@ -369,7 +386,7 @@ function p1cast(lt, F) {
   // Strawberry: tired, listening; every slam makes her jump a little, and on "four" she holds up four fingers
   const jump = sh.reduce((a, t0) => Math.max(a, lt >= t0 && lt < t0 + .22 ? Math.sin((lt - t0) / .22 * PI) * 12 * qS.s : 0), 0);
   const four = wordT('s1', 'four', b('s1').s + 1.24), up = sk(lt, four - .22, four + .06) * (1 - sk(lt, four + .5, four + .8));
-  const sp = straw(Object.assign(qS, { look: [.62, .02], expr: 'dead', lid: .5, arms: { l: lt > b('l1').s + .6 && lt < b('l2').s ? 'hips' : 'rest', r: 'rest' }, rot: .03 + .012 * Math.sin(lt * 1.3), sway: .05, lift: (qS.lift || 0) + jump, transit: tr }));
+  const sp = straw(Object.assign(qS, { look: [.62, .02], expr: 'dead', lid: .5, arms: { l: 'hips', r: 'rest' }, rot: .03 + .012 * Math.sin(lt * 1.3), sway: .05, lift: (qS.lift || 0) + jump, transit: tr }));
   if (up > .02) { handTo(sp, 1, sp.x + 150 * sp.s, sp.y - 330 * sp.s, up, [150, 90]); sp.hold = { r: 'fingers10' }; sp.hand = { r: 'fist' }; }
   return { lm, sp, zs: P1CAST.S[1], zl: P1CAST.L[1] };
 }
@@ -518,7 +535,7 @@ function donutSign() {
   text('ONE PER', 0, -30, { size: 26, font: 'Bangers', weight: 400, fill: '#d6203a', spacing: 2 }); text('NURSE', 0, -2, { size: 32, font: 'Bangers', weight: 400, fill: '#1f3f9a', spacing: 2 });
   ctx.restore();
 }
-const P2POS = { M: [-178, 1000], S: [40, 1180], G: [395, 1100] };   // Melon, Strawberry, Mango (X, Z): Mango's is where she ends up, beside the stand
+const P2POS = { M: [-142, 1000], S: [85, 1180], G: [395, 1100] };   // Melon, Strawberry, Mango (X, Z): Mango's is where she ends up, beside the stand
 const P2T = () => ({ poke: wordT('a2', 'very', B('a2').s + .34), hop: wordT('a2', 'large', B('a2').s + .6), stop: wordT('a1', 'donut', B('a1').s + 1.62) + .03, roll0: 11.2, one: wordT('a1', 'one', B('a1').s + 1.36) });
 // the donut arrives on its casters from the right, pushed by Mango, and stops dead on "donut"
 const rollX = (lt, T2) => { const u = seg(lt, T2.roll0, T2.stop); return u >= 1 ? 0 : 800 * Math.pow(1 - u, 1.8); };
@@ -531,7 +548,7 @@ function p2cast(lt, F) {
   const shake = Math.sin(lt * 21), jazz = lt < T2.one - .1, sweep = lt >= T2.one - .1 && lt < b('s2').s;
   const me = melon(Object.assign(qM, { acc: ['suit', 'nametag9', ...hat], look: sweep ? [.7, -.1] : [.1, -.1], expr: 'happy', transit: tr, arms: { l: 'rest', r: 'rest' }, hand: {} }));
   if (jazz) { me.arms = { l: [2.35 + .12 * shake, .55 + .3 * shake], r: [2.35 - .12 * shake, .55 - .3 * shake] }; me.hand = { l: 'wave', r: 'wave' }; }
-  else if (sweep) { handTo(me, 1, me.x + 330, me.y - 340, sk(lt, T2.one - .1, T2.one + .3), [96, 40]); me.hand = { r: 'open' }; me.arms.l = 'hips'; }
+  else if (sweep) { handTo(me, 1, me.x + 330, me.y - 205, sk(lt, T2.one - .1, T2.one + .3), [96, 40]); me.hand = { r: 'open' }; me.arms.l = 'hips'; }
   else me.arms = { l: 'hips', r: 'hips' };
   // Strawberry: tiny, dead-eyed, in the hat she was handed; at the end she looks straight into the lens
   const toCam = sk(lt, T2.hop + .3, T2.hop + .6);
@@ -563,9 +580,9 @@ function p2wob(lt) {   // the donut's squash, push, lean and flag: it jolts when
 function p2shot(lt) { const b = id => B(id); return lt < 11.35 ? 'ms1' : lt < b('s2').s - .06 ? 'wide2' : lt < b('a2').s - .06 ? 'cuS' : 'wide3'; }
 function p2cam(lt) {
   const b = id => B(id), sh = p2shot(lt), c = p2cast(lt);
-  const wide = k => feetCam(lerp(680, 700, k), lerp(.84, .9, k), { feet: 1369 }), ms1 = k => feetCam(528, lerp(1.0, 1.07, k), { feet: 1369 });
+  const wide = k => feetCam(lerp(680, 700, k), lerp(.84, .9, k), { feet: 1369 }), ms1 = k => feetCam(510, lerp(1.0, 1.07, k), { feet: 1369 });
   if (sh === 'ms1') return ms1(seg(lt, 10.7, 11.5));
-  if (sh === 'wide2') return mixCam(ms1(1), wide(0), easeIO(seg(lt, 11.35, 12.15)));
+  if (sh === 'wide2') return mixCam(ms1(1), wide(0), easeIO(seg(lt, 11.95, 12.75)));
   if (sh === 'cuS') { const k = seg(lt, b('s2').s - .06, b('s2').e), z = lerp(1.8, 1.9, k), [fx, fy] = faceC({ kind: 'straw', x: c.sp.x, y: c.sp.y, s: c.sp.s }); return { x: fx + 40, y: fy + 150 / z, z }; }
   return wide(seg(lt, b('a2').s - .06, b('a2').e + .4));
 }
@@ -689,8 +706,8 @@ function p3cast(lt, F) {
   const qSeat = V2.at(...TAB3), qG = V2.at(...MG3), qA = V2.at(...AD3);
   // Strawberry in the chair: chin in her hand until the tablet arrives, then upright and reading it
   const up = sk(lt, b('m1').s + .2, b('m1').s + .6), blink = lerp(.5, 1, Math.sin(PI * seg(lt, 21.98, 22.32)));
-  const so = straw({ x: qSeat.x, y: qSeat.y - 55 * qSeat.s, s: qSeat.s, noLegs: true, noShadow: true, noReflect: true, look: lt < b('m1').s + .3 ? [.2, .45] : [.55, .15], expr: 'dead', lid: Math.max(.5 - .06 * up, blink), arms: { l: 'rest', r: 'rest' }, rot: lerp(.07, .01, up), sway: 0, transit: tr });
-  if (up < 1) { handTo(so, 1, so.x + 70 * so.s, so.y - 210 * so.s - 8 * so.s, 1 - up, [74, 30]); so.hand = { r: 'open' }; }   // her cheek in her hand
+  const so = straw({ x: qSeat.x, y: qSeat.y - 55 * qSeat.s, s: qSeat.s, noLegs: true, noShadow: true, noReflect: true, look: lt < b('m1').s + .3 ? [.2, .45] : [.55, .15], expr: 'dead', lid: Math.max(.5 - .06 * up, blink, .92 * sk(lt, 23.2, 23.5)), arms: { l: 'rest', r: 'rest' }, rot: lerp(.07, .01, up), sway: 0, transit: tr });
+  if (up < 1) { handTo(so, 1, so.x + 58 * so.s, so.y - 85 * so.s, 1 - up, [74, 30]); so.hand = { r: 'open' }; }   // her chin in her hand
   // Mango: bounces up, hands over the news
   const hop = lt < b('m1').s + .1 ? Math.abs(Math.sin(lt * 7)) * 16 * qG.s * seg(lt, 17.3, 17.5) : 0, offer = sk(lt, b('m1').s + .1, b('m1').s + .5) * (1 - sk(lt, 22.1, 22.45) * 0);
   const mg = mango(Object.assign(qG, { look: [-.55, 0], expr: lt < b('m1').s ? 'happy' : lt < b('a3').s ? 'sad' : 'sad', lift: hop, hold: { l: 'tablet10' }, arms: { l: 'hold', r: 'hips' }, tabTilt: 0, transit: tr }));
@@ -869,17 +886,17 @@ function sweatDrops(lt, o) {
 const P4POS = { S: [-150, 1060], C: [150, 1100] };                               // Strawberry, Clementine (X, Z)
 const HOPS4 = [[24.32, 24.56, 560, 420], [24.56, 24.80, 420, 285], [24.80, 25.10, 285, 150]];   // Clementine bounds in from the door on the right: three hops
 const MIRROR = .42;                                                               // the beat she is late by
-const POSE4 = { rest: [.28, .25], hips: [.85, -2.15], temple: [3.5, 1.58], offer: [1.06, 2.23], shrug: [1.15, 2.4], cheer: [2.8, .2] };   // temple: a hand over the eye; offer: a palm up beside the face; shrug: both
+const POSE4 = { rest: [.28, .25], hips: [1.0, -1.7], temple: [3.5, 1.58], offer: [1.06, 2.23], shrug: [1.15, 2.4], cheer: [2.8, .2] };   // temple: a hand over the eye; offer: a palm up beside the face; shrug: both
 const poseOf4 = p => Array.isArray(p) ? p : POSE4[p];
 // keys: [t, pose]: at each t the arm starts moving to its pose (taking .2 s)
 function armAt(lt, keys, dur = .2) {
   let i = 0; while (i + 1 < keys.length && lt >= keys[i + 1][0]) i++;
   const to = poseOf4(keys[i][1]); if (!i) return to;
-  const from = poseOf4(keys[i - 1][1]), k = sk(lt, keys[i][0], keys[i][0] + dur);
-  return [lerp(from[0], to[0], k), lerp(from[1], to[1], k)];
+  const from = poseOf4(keys[i - 1][1]), k = sk(lt, keys[i][0], keys[i][0] + dur), a2 = to[1] + Math.round((from[1] - to[1]) / TAU) * TAU;   // the forearm takes the short way round
+  return [lerp(from[0], to[0], k), lerp(from[1], a2, k)];
 }
 // Strawberry's arms, in her own time. Clementine copies them, mirrored, MIRROR seconds later
-const S_L = [[0, 'rest'], [25.10, 'hips'], [32.18, 'shrug']];
+const S_L = [[0, 'hips'], [32.18, 'shrug']];
 const S_R = [[0, 'rest'], [25.10, 'hips'], [25.95, 'temple'], [26.95, 'hips'], [30.25, 'offer'], [30.95, 'hips'], [32.18, 'shrug']];
 const bump4 = (lt, t0, d = .24) => lt >= t0 && lt < t0 + d ? Math.sin((lt - t0) / d * PI) : 0;
 const lookS4 = t => t < 31.9 ? [.62, .02] : lerpA2([.62, .02], [0, 0], sk(t, 31.9, 32.1));
@@ -933,7 +950,7 @@ function insJar(lt) {
   const J = JAR(), age = lt - J.t0, fall = easeIn(seg(lt, J.t0, J.t0 + .13)), land = lt >= J.t0 + .13 ? Math.max(0, 1 - (lt - J.t0 - .13) / .14) : 0;
   const a2 = Math.max(0, age - .13), wob = Math.sin(a2 * 20) * Math.exp(-a2 * 6) * .035, push = 1 + .06 * seg(lt, J.t0, J.t1);
   A6.bokeh(lt, ['255,200,120', '255,150,80', '255,232,170'], ['#2a1408', '#4a2a10']);
-  ctx.fillStyle = V2.grad(0, 1180, 0, 1560, [[0, '#b9824a'], [1, '#6a4422']]); ctx.fillRect(-20, 1180, W + 40, 500);   // the shelf
+  ctx.fillStyle = V2.grad(0, 1180, 0, 1560, [[0, '#b9824a'], [1, '#6a4422']]); ctx.fillRect(-20, 1180, W + 40, 820);   // the shelf
   ctx.fillStyle = 'rgba(255,236,190,.28)'; ctx.fillRect(-20, 1180, W + 40, 8);
   ctx.strokeStyle = 'rgba(40,20,8,.35)'; ctx.lineWidth = 3; for (let i = 0; i < 6; i++) { const y = 1230 + i * 60; ctx.beginPath(); ctx.moveTo(-20, y); ctx.bezierCurveTo(300, y + 8, 700, y - 8, W + 20, y + 4); ctx.stroke(); }
   ctx.save(); ctx.translate(540, 1180); ctx.scale(1.2 * push, 1.2 * push); ctx.translate(-540, -1130);
@@ -1029,7 +1046,6 @@ const SC = {
   blur: lt => { const F = frameOf(lt); return F.mode === 'dive' ? 10 : F.mode === 'rip' ? 10 : F.mode === 'pull' ? 10 : 1; },
   over(lt) { sfxWord(lt, B('end').s + .10, 'WAH WAH', 540, 470, { size: 120, rot: -.06, hold: .9 }); },
 };
-window.__DAYS_DBG = { peel, pageFront, wallPad };
 window.__EP10_SCENES = window.__EP10_SCENES || {};
 window.__EP10_SCENES.days = SC;
 })();

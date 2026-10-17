@@ -504,9 +504,9 @@ function landing(key, bu, i, ox, oy) {
   for (let ta = .1; ta < 9; ta += .03) if (ta > .4 && piece(bu, i, ta, ox, oy)[1] >= fy) { r.tl = ta; r.x = piece(bu, i, ta, ox, oy)[0]; break; }
   return LAND[id] = r;
 }
-function confettiBurst(lt, key, t0, ox, oy) {
-  const bu = CF[key], ta = lt - t0; if (ta < 0) return;
-  if (ta < .5) {   // the bang: a flash and a few puffs of smoke at the corner
+function confettiBurst(lt, key, t0, ox, oy, fg = false) {   // fg: only a third of the pieces, drawn in front of the cast while they are fresh from the cannon, so the burst reads at once
+  const bu = CF[key], ta = lt - t0; if (ta < 0 || (fg && ta >= .9)) return;
+  if (!fg && ta < .5) {   // the bang: a flash and a few puffs of smoke at the corner
     const u = ta / .5; ctx.save();
     if (ta < .12) { ctx.fillStyle = `rgba(255,246,200,${.7 * (1 - ta / .12)})`; ell(ox, oy - 30, 110, 110); ctx.fill(); }
     ctx.fillStyle = `rgba(244,240,250,${.34 * (1 - u) * (1 - u)})`; for (let i = 0; i < 6; i++) { const a = -PI / 2 + bu.dir * (.1 + i * .22), r = 26 + 58 * u + i * 6; ell(ox + Math.cos(a) * 110 * u * bu.dir * bu.dir, oy + Math.sin(a) * 150 * u, r, r); ctx.fill(); }
@@ -514,7 +514,8 @@ function confettiBurst(lt, key, t0, ox, oy) {
   }
   ctx.save();
   for (let i = 0; i < bu.n; i++) {
-    const L = landing(key + Math.round(ox) + ',' + Math.round(oy), bu, i, ox, oy), h = j => hash(bu.seed + i * 7.31 + j * 13.7), col = PCOL[i % PCOL.length], w = 12 + 10 * h(9), hh = 6 + 5 * h(10), ang = h(11) * TAU;
+    if (fg !== (i % 3 === 0 && ta < .9)) continue;
+    const L = landing(key + Math.round(ox) + ',' + Math.round(oy), bu, i, ox, oy), h = j => hash(bu.seed + i * 7.31 + j * 13.7), col = PCOL[i % PCOL.length], w = (12 + 10 * h(9)) * (fg ? 1.3 : 1), hh = (6 + 5 * h(10)) * (fg ? 1.3 : 1), ang = h(11) * TAU;
     ctx.fillStyle = col;
     if (ta < L.tl) {
       const [x, y] = piece(bu, i, ta, ox, oy);
@@ -553,15 +554,15 @@ const ROUTE = {
 const END_AT = () => B('l4').e + .08;   // from here on it is the end of the party: plates, a time jump
 const NAMED = ['lemon', 'cran', 'mango', 'straw'];
 const CROWD = [   // soft neighbours: constructor, mark, accessories, hat and a phase. They stand behind and left of the named cast; the right of the room belongs to Strawberry
-  { id: 'banana', ctor: banana, at: [-545, 1340], end: [-492, 1352], acc: [], hat: { c1: '#4aa8ff', c2: '#ffffff', rot: .3 }, ph: .3 },
-  { id: 'pine', ctor: pine, at: [-335, 1400], end: [-168, 1352], acc: ['chain'], ph: 1.1 },
-  { id: 'apple', ctor: apple, at: [-120, 1420], end: [-8, 1352], acc: ['nightcap'], ph: 2.0 },
-  { id: 'papaya', ctor: papaya, at: [125, 1410], end: [316, 1352], acc: ['visor'], ph: 2.6 },
-  { id: 'pear', ctor: pear, at: [-10, 1450], end: [152, 1352], acc: [], hat: { c1: '#c25bd6', c2: '#ffe135', rot: .2 }, ph: 1.7 },
-  { id: 'goji', ctor: goji, at: [-460, 1270], end: [-330, 1352], acc: [], hat: { c1: '#58c85a', c2: '#ffffff', s: .8 }, ph: .8 },
-  { id: 'clem', ctor: clem, at: [545, 1390], end: [476, 1352], acc: ['pricetag'], hat: { c1: '#ffe135', c2: '#ff4f9a', rot: -.3, dx: -.3 }, ph: 3.3 },
+  { id: 'banana', ctor: banana, at: [-545, 1340], end: [-470, 1352], acc: [], hat: { c1: '#4aa8ff', c2: '#ffffff', rot: .3 }, ph: .3 },
+  { id: 'pine', ctor: pine, at: [-335, 1400], end: [-275, 1352], acc: ['chain'], ph: 1.1 },
+  { id: 'apple', ctor: apple, at: [-120, 1420], end: [-80, 1352], acc: ['nightcap'], ph: 2.0 },
+  { id: 'papaya', ctor: papaya, at: [125, 1410], end: [310, 1352], acc: ['visor'], ph: 2.6 },
+  { id: 'pear', ctor: pear, at: [-10, 1450], end: [115, 1352], acc: [], hat: { c1: '#c25bd6', c2: '#ffe135', rot: .2 }, ph: 1.7 },
+  { id: 'goji', ctor: goji, at: [-460, 1270], end: [-40, 1262, 1], acc: [], hat: { c1: '#58c85a', c2: '#ffffff', s: .8 }, ph: .8 },
+  { id: 'clem', ctor: clem, at: [545, 1390], end: [505, 1352], acc: ['pricetag'], hat: { c1: '#ffe135', c2: '#ff4f9a', rot: -.3, dx: -.3 }, ph: 3.3 },
 ];
-const RISER = { x0: -598, x1: 598, z0: 1326, z1: 1430, h: 196 };   // the low riser the crowd stands on for the last picture
+const RISER = { x0: -598, x1: 598, z0: 1326, z1: 1430, h: 250 };   // the low riser the crowd stands on for the last picture
 function riser() {
   const r = RISER;
   box3({ x0: r.x0, x1: r.x1, y1: r.h, z0: r.z0, z1: r.z1, color: '#a48a68', top: '#c2aa84', front: '#8d7458', side: '#6f5c48', edge: 'rgba(25,16,30,.55)' });
@@ -624,7 +625,7 @@ function cast(lt) {
     C.cranQ = p; }
   // ---- the crowd: they hop for the surprise, watch the speaker, lean in for the directions, flinch at the Q-word, cry at the end
   C.crowd = CROWD.map((c, i) => {
-    const e = ending ? q(...c.end) : null, p0 = e ? Object.assign({}, e, { y: e.y - RISER.h * e.s }) : q(...c.at), cheering = lt < 1.5, hop = lt < tOn ? 0 : Math.abs(Math.sin((lt - tOn) * 5 + i * .9)) * 46 * (1 - seg(lt, 1.0, 1.5));
+    const e = ending ? q(...c.end) : null, p0 = e ? Object.assign({}, e, { y: c.end[2] ? e.y : e.y - RISER.h * e.s }) : q(...c.at), cheering = lt < 1.5, hop = lt < tOn ? 0 : Math.abs(Math.sin((lt - tOn) * 5 + i * .9)) * 46 * (1 - seg(lt, 1.0, 1.5));
     const lean = seg(lt, b('s3').s + .2, b('s3').s + 1.0) * (1 - seg(lt, b('s3').e, b('s3').e + .5)), flinch = pulse(lt, tq, tq + .55), dir = Math.sign(MK.straw[0] - c.at[0]);
     const watch = ending ? 560 : inB(lt, 'r1') ? MK.cran[0] : (lt >= b('m4').s && lt < b('s3').s) ? 40 : lt >= b('s3').s - .6 && lt < b('m5').s ? MK.straw[0] : lt >= b('m5').s && lt < b('l3').s ? 120 : lt >= b('l3').s ? -10 : 200;
     const cry = lt >= b('m5').s + .2 ? clamp(seg(lt, b('m5').s + .2, b('l3').s) * (.6 + .4 * hash(i + 4)) + (ending ? .3 : 0)) : 0;
@@ -729,8 +730,9 @@ INS.cakeIns = (lt, C, sh) => {
 
 // ---- the coins, full frame: the can tips over Strawberry's palm; eight coins and four wrinkled singles with real bounce, spin and settle; a counter ticks to $4.17
 const CAN_TILT = lt => seg(lt, B('coins').s - .55, B('coins').s + .2) * 1.7 * (1 - seg(lt, B('coins').s + .5, B('coins').s + .9));
-const COINS = [   // [kind, rest x, rest y (relative to the pile)]
-  ['dime', -34, -10], ['penny', -88, 0], ['penny', 32, 0], ['penny', 88, 0], ['penny', -60, -20], ['penny', 2, -22], ['penny', 60, -20], ['penny', -2, -42]];
+const COINS = [   // [kind, rest x, rest y (relative to the pile), release offset from the rattle, style: p pours, b bounces twice, s spins down]
+  ['penny', -88, 0, 0, 'p'], ['penny', 32, 0, .03, 'p'], ['penny', 88, 0, .06, 'p'], ['penny', -60, -20, .09, 'p'],
+  ['penny', 60, -20, .12, 'b'], ['penny', 2, -22, .17, 'b'], ['penny', -2, -42, .22, 'b'], ['dime', -30, -6, .16, 's']];
 const BILLS = [[-62, -62, -.35], [54, -68, .28], [-8, -96, .1], [24, -116, -.2]];
 const CVAL = { dime: 10, penny: 1 };
 const MACRO = { wrist: [990, 1238], S: 6.3, pile: [868, 1168], can: [450, 850], canS: 3.1 };
@@ -755,7 +757,7 @@ function crumpledBill(x, y, rot, sc, k = 1) {   // a wrinkled one-dollar bill: a
   ctx.restore();
 }
 function coinPlan(i, t0) {   // the plan of coin i: release time, release point, rest point, fall time, bounce
-  const [, rx, ry] = COINS[i], r0 = t0 + .03 * i, th = CAN_TILT(r0), P = MACRO.can, S = MACRO.canS, m = [P[0] + Math.sin(th) * 128 * S, P[1] - Math.cos(th) * 128 * S];
+  const [, rx, ry, off] = COINS[i], r0 = t0 + off, th = CAN_TILT(r0), P = MACRO.can, S = MACRO.canS, m = [P[0] + Math.sin(th) * 128 * S, P[1] - Math.cos(th) * 128 * S];
   const rest = [MACRO.pile[0] + rx, MACRO.pile[1] + ry - 8], g = 7600, dy = rest[1] - m[1], T = (-30 + Math.sqrt(900 + 2 * g * dy)) / g;
   return { r0, m, rest, T, vx: (rest[0] - m[0]) / T, g };
 }
@@ -771,9 +773,19 @@ INS.coinsIns = (lt, C, sh) => {
   let value = 0, sag = 0, last = -9, allIn = 0;
   const coinState = i => {
     const pl = coinPlan(i, t0), ta = lt - pl.r0; if (ta < 0) return null;
-    const kind = COINS[i][0], r = kind === 'dime' ? 29 : 34, spin0 = 9 + 4 * hash(i), spinAt = a => spin0 * a * Math.max(0, 1 - a / (pl.T + .5));
+    const [kind, , , , style] = COINS[i], r = kind === 'dime' ? 29 : 34, spin0 = 9 + 4 * hash(i), spinAt = a => spin0 * a * Math.max(0, 1 - a / (pl.T + .5));
     if (ta < pl.T) return { x: pl.m[0] + pl.vx * ta, y: pl.m[1] + 30 * ta + .5 * pl.g * ta * ta, r, kind, spin: spinAt(ta), sq: .4, air: true };
-    const u = ta - pl.T, bounce = u < .26 ? 44 * (1 - u / .26) * Math.abs(Math.sin(u / .26 * PI * 1.5)) : 0, settle = seg(u, .26, .5);
+    const u = ta - pl.T;
+    if (style === 's') {   // the dime: a small hop, then it stands on its edge and spins down, turning faster and flatter, until it drops flat
+      const BU = .1, SP = .3, hop = u < BU ? 22 * (1 - Math.pow(2 * u / BU - 1, 2)) : 0, v = clamp((u - BU) / SP), phi = 9 * PI * Math.pow(v, 1.7);
+      const up = seg(u, BU - .04, BU + .05) * (1 - seg(v, .72, 1)), sqE = lerp(.4, 1, up), ryE = r * (sqE + (1 - sqE) * (1 - Math.abs(Math.cos(phi))));
+      return { x: pl.rest[0] + 5 * Math.sin(u * 40) * up * (1 - v), y: pl.rest[1] - hop - (ryE - .4 * r), r, kind, spin: phi, sq: sqE, air: false, landed: true, top: true };
+    }
+    if (style === 'b') {   // a penny that lands, bounces high, bounces again and rolls to rest
+      const d1 = .2, d2 = .13, h = u < d1 ? 78 * (1 - Math.pow(2 * u / d1 - 1, 2)) : u < d1 + d2 ? 28 * (1 - Math.pow(2 * (u - d1) / d2 - 1, 2)) : 0;
+      return { x: pl.rest[0] + 16 * (1 - Math.exp(-u * 8)) * (hash(i) - .5) * 2, y: pl.rest[1] - h, r, kind, spin: lerp(spinAt(pl.T + u), 0, seg(u, .3, .5)), sq: .4, air: false, landed: true };
+    }
+    const bounce = u < .26 ? 44 * (1 - u / .26) * Math.abs(Math.sin(u / .26 * PI * 1.5)) : 0, settle = seg(u, .26, .5);
     return { x: pl.rest[0] + (u < .26 ? 9 * Math.sin(u * 24) * (1 - u / .26) : 0), y: pl.rest[1] - bounce, r, kind, spin: lerp(spinAt(pl.T + u), 0, settle), sq: .4, air: false, landed: true };
   };
   for (let i = 0; i < COINS.length; i++) {
@@ -792,9 +804,10 @@ INS.coinsIns = (lt, C, sh) => {
   // Strawberry's arm and open palm (a left hand, fingers toward the left): it sags a little with each landing
   bigArm([w[0] + 760, w[1] + 520], [w[0], w[1] + sag], PI, S, 'flat', -1, 110);
   // the pile: coins that have landed, drawn low to high, then the bills on top
-  const landed = items.filter(it => it.landed).sort((p, q) => p.y - q.y).reverse();
-  for (const it of landed) coinShape(it.x, it.y + sag, it.r, it.kind, it.spin, .4);
+  const landed = items.filter(it => it.landed && !it.top).sort((p, q) => p.y - q.y).reverse();
+  for (const it of landed) coinShape(it.x, it.y + sag, it.r, it.kind, it.spin, it.sq);
   for (const bl of bills.slice().sort((p, q) => q.y - p.y)) crumpledBill(bl.x, bl.y + sag, bl.rot, bl.sc, bl.k);
+  for (const it of items.filter(q => q.top)) coinShape(it.x, it.y + sag, it.r, it.kind, it.spin, it.sq);   // the spinning dime stands at the front of the heap, in front of the singles
   for (const it of items.filter(q => q.air)) coinShape(it.x, it.y, it.r, it.kind, it.spin, .4);
   // Lemon's can and her glove on it: it tips over the palm, rattles while the money leaves, then she draws it back out of the frame
   const out = seg(lt, t0 + .38, t0 + .7) ** 2, pour = seg(lt, t0 - .1, t0 + .1) * (1 - seg(lt, t0 + .4, t0 + .5)), Pc = [P[0] - 760 * out, P[1] + 60 * out], thc = th + .018 * Math.sin(lt * 74) * pour;
@@ -934,6 +947,7 @@ const SC = {
       });
       for (const n of crisp.slice().sort((a, c) => depthOf(a, C) - depthOf(c, C))) drawNamed(n, C);
     }
+    if (sh.n === 'wide') { confettiBurst(lt, 'L', cue.popL(), PO.L[0], PO.L[1], true); confettiBurst(lt, 'R', cue.popR(), PO.R[0], PO.R[1], true); }
     if (dark > .01) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = `rgba(52,58,110,${.86 * dark})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
     const flash = seg(lt, tOn, tOn + .02) * (1 - seg(lt, tOn + .02, tOn + .22));
     if (flash > 0) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,252,240,${.55 * flash})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }

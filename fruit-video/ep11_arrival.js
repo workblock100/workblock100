@@ -127,9 +127,12 @@ function drawPopper(fired, t) {
   if (!fired) { for (const [x, c, h] of [[-12, '#4aa8ff', 14], [-2, '#ff7ad9', 20], [9, '#58c85a', 16], [16, '#ffd23a', 11]]) { ctx.strokeStyle = c; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, -80); ctx.quadraticCurveTo(x + 5, -80 - h * .6, x - 3 + 4 * Math.sin(t * 5 + x), -80 - h); ctx.stroke(); } }
   ctx.restore();
 }
-Object.assign(PROP_BOX, { basket11: [-38, -8, 38, 122], bag11: [-31, -19, 31, 88] });   // the pen and the popper register their own (turning) footprints
+Object.assign(PROP_BOX, { basket11: [-38, -8, 38, 122] });   // the bag, the pen and the popper register their own (moving, turning) footprints
 EXT.prop.basket11 = (side, o, t) => { ctx.save(); ctx.rotate(.04 * Math.sin(t * 2.4) + (o.basketRot || 0)); ctx.scale(.62, .62); ctx.translate(0, 186); drawBasket(t); ctx.restore(); };
-EXT.prop.bag11 = (side, o, t) => { ctx.save(); ctx.globalAlpha *= side < 0 ? (o.bagL ?? 1) : (o.bagR ?? 1); ctx.rotate(.035 * Math.sin(t * 2.1 + 1) + (o.bagRot || 0)); ctx.scale(.72, .72); drawBag(); ctx.restore(); };   // bagL and bagR hand it from one glove to the other
+EXT.prop.bag11 = (side, o, t) => {   // o.bagOff: while it crosses from his left hand to his right it is drawn that far from the hand holding it, closing to nothing
+  ctx.save(); if (o.bagOff && side > 0) ctx.translate(o.bagOff[0], o.bagOff[1]); ctx.rotate(.035 * Math.sin(t * 2.1 + 1) + (o.bagRot || 0)); ctx.scale(.72, .72); drawBag();
+  regLocal('prop', -38, -26, 38, 118, { id: 'bag11', owner: o.id || o.kind, transit: o.transit }); ctx.restore();
+};
 EXT.prop.pen11 = (side, o, t) => {
   ctx.save(); ctx.rotate(o.penAng ?? -.3); ctx.scale(1.2, 1.2); drawPen(t, o.penShine || 0);
   // its footprint for the audit: four boxes along its axis (the bounding box of a tilted pen is mostly empty air)
@@ -417,12 +420,13 @@ function armKeys(o, side, lt, keys) {
 const setHand = (o, side, shape) => { o.hand = o.hand || {}; o.hand[side < 0 ? 'l' : 'r'] = shape; };
 const setHold = (o, side, prop) => { o.hold = o.hold || {}; o.hold[side < 0 ? 'l' : 'r'] = prop; };
 // where a popper held in the outer hand sends its paper from (scene coordinates): the mouth of the cone
-const POP = { p: { g: [-100, -4], a: .08 }, m: { g: [-150, -16], a: .35 } };   // both in a left hand, held up (hers barely tilted: she stands at the edge of the frame)
-const popMouth = (o, who) => { const P = POP[who], h = localToScreen(o, P.g[0], P.g[1]), th = -P.a; return [h[0] + o.s * 78 * Math.sin(th), h[1] - o.s * 78 * Math.cos(th)]; };
+const POP = { p: { g: [-100, -4], a: .08, side: -1 }, m: { g: [92, -85], a: -.2, side: 1 } };   // Persimmon's in her outer left hand (barely tilted: she stands at the edge of the frame), Mango's in her right, leaning in
+const popMouth = (o, who) => { const P = POP[who], h = localToScreen(o, P.g[0], P.g[1]), th = P.a * (P.side < 0 ? -1 : 1); return [h[0] + o.s * 78 * Math.sin(th), h[1] - o.s * 78 * Math.cos(th)]; };
 
 // ---- the scene ---------------------------------------------------------------------------------------------------------------------------------------
 // marks (world X, Z). The committee stands to the left of the carpet, the two who came in to clock on to the right; Strawberry stops on the carpet between them
-const MK = { adm: [-200, 985], per: [-490, 1085], cl: [330, 1060], mg: [520, 1145], sp: [80, 990] };
+const MK = { adm: [-200, 985], per: [-490, 1085], cl: [322, 1060], mg: [520, 1145], sp: [80, 990] };
+const PL = [-98, 74], MR = [108, 64];   // where Persimmon's left hand and Mango's right hand rest (kept in from the frame edges)
 const clPath = route([[0, 760, 840], [.9, 560, 960], [1.5, MK.cl[0], MK.cl[1], 'out']]);
 const mgPath = route([[0, 900, 940], [.2, 900, 940], [1.0, 700, 1090], [1.7, MK.mg[0], MK.mg[1], 'out']]);
 // she waits outside the glass, starts walking as the doors open and arrives at her mark as the Administrator begins to list her gifts
@@ -474,16 +478,16 @@ const SC = SCENES.arrival = {
     // ---- Mango: warm, loud and deadpan today
     const mgLook = look([[0, [-.5, 0]], [m1.s, [-.6, 0]], [m1.s + .3, [-.4, -.85]], [m1.e + .1, [-.4, -.85]], [c2.s + .1, [-.7, 0]], [m2.s + .2, [-.7, .08]], [tBadge, [-.7, .4]], [d.s, [-.7, .4]], [d.s + .5, [-.4, -.1]]]);
     const mg = person(mango, mgPath, lt, { look: mgLook, expr: lt >= st.s - .1 ? 'dead' : lt >= s5.s ? 'sad' : lt >= a5.s + .6 ? 'sour' : lt >= T.shot2 - .2 && lt < a2.s ? 'happy' : 'neutral', stride: 36,
-      arms: { l: lt < 1.7 ? [.28 + .35 * Math.sin(lt * 7 + 2), .25] : 'rest', r: lt < 1.7 ? 'rest' : 'hold' }, grip: lt < 1.7 ? {} : { r: [128, 56] }, hand: lt < 1.7 ? {} : { r: 'open' }, hold: {}, transit: lt < 1.9 || (lt > tStraw - .2 && lt < tStraw + .4) });
+      arms: { l: lt < 1.7 ? [.28 + .35 * Math.sin(lt * 7 + 2), .25] : 'rest', r: lt < 1.7 ? 'rest' : 'hold' }, grip: lt < 1.7 ? {} : { r: MR }, hand: lt < 1.7 ? {} : { r: 'open' }, hold: {}, transit: lt < 1.9 || (lt > tStraw - .2 && lt < tStraw + .4) });
     // pointing: up at the banner on "Strawberry", then at the badge with two jabs on "badge"
     armKeys(mg, -1, lt, [[m1.s, 'rest'], [m1.s + .3, { s: [mg.x - 120 * mg.s, mg.y - 560 * mg.s] }], [c2.s - .1, { s: [mg.x - 120 * mg.s, mg.y - 560 * mg.s] }], [c2.s + .3, 'rest']]);
     if (lt >= m1.s && lt < c2.s + .3) setHand(mg, -1, 'point');
     { const bd = localToScreen(cl, 72, 77), jab = lt >= tBadge ? Math.max(0, Math.sin((lt - tBadge) * 21)) * Math.exp(-(lt - tBadge) * 1.4) : 0, off = 60 * mg.s * (1 - jab * .9);
       armKeys(mg, -1, lt, [[m2.s + .12, 'rest'], [m2.s + .5, { s: [bd[0] + off, bd[1] - 6 * mg.s] }], [d.s - .1, { s: [bd[0] + off, bd[1] - 6 * mg.s] }], [d.s + .3, 'rest']]); if (lt >= m2.s + .12 && lt < d.s + .3) setHand(mg, -1, 'point'); }
     // her popper, fired with her outer hand on the second pop and then let go of
-    if (lt >= d.s + .55 && lt < T.shot2 + .7) {
-      setHold(mg, -1, 'popper11'); mg.popFired = lt >= T.shot2; mg.popAng = POP.m.a - .12 * seg(lt, T.shot2, T.shot2 + .3) + (2.9 - POP.m.a) * sk(lt, T.shot2 + .3, T.shot2 + .7);
-      armKeys(mg, -1, lt, [[d.s + .55, 'rest'], [d.s + .95, POP.m.g], [T.shot2 + .25, POP.m.g], [T.shot2 + .7, 'rest']]); setHand(mg, -1, 'grip');
+    if (lt >= d.s + .55 && lt < T.shot2 + .72) {
+      setHold(mg, 1, 'popper11'); mg.popFired = lt >= T.shot2; mg.popAng = POP.m.a + .1 * pulse(lt, T.shot2, 12);
+      armKeys(mg, 1, lt, [[d.s + .55, MR], [d.s + .95, POP.m.g], [T.shot2 + .25, POP.m.g], [T.shot2 + .72, MR]]); setHand(mg, 1, 'grip');
     }
     if (lt >= a1.s - .1 && lt < a1.e + .2) { const c = .5 + .5 * Math.sin(lt * 17); mg.grip = { l: [-lerp(8, 56, c), 74], r: [lerp(8, 56, c), 74] }; mg.arms = { l: 'hold', r: 'hold' }; mg.hand = { l: 'flat', r: 'flat' }; mg.hold = {}; }   // a polite clap for the welcome
 
@@ -497,8 +501,9 @@ const SC = SCENES.arrival = {
     // props in the hands: the basket (right) until it is given, the pass from the pocket, then the lunch that crosses from his left hand to his right, and the pen
     if (lt < hB) { setHold(ad, 1, 'basket11'); setHand(ad, 1, 'grip'); }
     else if (lt >= hB + .34 && lt < hP + .02) { setHold(ad, 1, 'passcard9'); setHand(ad, 1, 'grip'); }
-    if (lt < tSwap + .1) { setHold(ad, -1, 'bag11'); setHand(ad, -1, 'grip'); ad.bagL = 1 - sk(lt, tSwap - .04, tSwap + .08); }
-    if (lt >= tSwap - .04 && lt < hL) { setHold(ad, 1, 'bag11'); setHand(ad, 1, 'grip'); ad.bagR = sk(lt, tSwap - .04, tSwap + .08); }
+    { const cL = armClamp(ad, -1, CL), cR = armClamp(ad, 1, CR), g = 1 - sk(lt, tSwap, tSwap + .14);
+      if (lt < tSwap) { setHold(ad, -1, 'bag11'); setHand(ad, -1, 'grip'); }
+      else if (lt < hL) { setHold(ad, 1, 'bag11'); setHand(ad, 1, 'grip'); ad.bagOff = [(cL[0] - cR[0]) * g, (cL[1] - cR[1]) * g]; } }
     if (lt >= a3.s + .2 && lt < takePen) { setHold(ad, 1, 'pen11'); setHand(ad, 1, 'grip'); ad.penAng = trk(lt, [[a3.s + .2, -1.45], [hPen - .16, -1.45], [hPen + .02, -.12]]); ad.penShine = pulse(lt, hPen, 2.6) * .9; }   // out of the pocket pointing up, laid flat to be handed over
     if (lt >= a4.s && lt < a4.e + .3) ad.arms.l = 'shrug';
 
@@ -507,9 +512,9 @@ const SC = SCENES.arrival = {
     const sip = Math.max(sipAt(2.0, 3.0), sipAt(9.4, 10.4), sipAt(12.9, 13.8), sipAt(16.0, 17.0), sipAt(21.2, 22.2), sipAt(24.3, 25.3));
     const shadeK = sk(lt, p1.s + .12, p1.s + .42) * (1 - sk(lt, p1.e + 1.0, p1.e + 1.4));
     const pr = persimmon(Object.assign(qp, { look: lt < d.s ? [.45, -.1] : lt < p1.s ? [.55, 0] : [.62, 0], expr: lt >= p1.s && lt < a3.s ? 'chill' : 'neutral', lid: .3, acc: ['perdiem9', 'airpods', 'shades9'], shadeK,
-      hold: { r: 'icedcup' }, grip: { r: [lerp(100, 135, sip), lerp(72, -64, sip)] }, arms: { l: 'rest', r: 'hold' }, hand: {} }));
+      hold: { r: 'icedcup' }, grip: { l: PL, r: [lerp(100, 135, sip), lerp(72, -64, sip)] }, arms: { l: 'hold', r: 'hold' }, hand: {} }));
     if (lt < T.shot1 + .75) { setHold(pr, -1, 'popper11'); pr.popFired = lt >= T.shot1; pr.popAng = POP.p.a + .1 * pulse(lt, T.shot1, 12);
-      armKeys(pr, -1, lt, [[0, [-94, 64]], [d.s + .5, [-94, 64]], [d.s + .95, POP.p.g], [T.shot1 + .25, POP.p.g], [T.shot1 + .75, 'rest']]); setHand(pr, -1, 'grip'); }
+      armKeys(pr, -1, lt, [[0, [-94, 64]], [d.s + .5, [-94, 64]], [d.s + .95, POP.p.g], [T.shot1 + .25, POP.p.g], [T.shot1 + .75, PL]]); setHand(pr, -1, 'grip'); }
     { const tk = sk(lt, p1.s + .5, p1.s + .85) * (1 - sk(lt, p1.e + .1, p1.e + .45)); if (tk > 0) pr.grip.r = [lerp(pr.grip.r[0], 150, tk), lerp(pr.grip.r[1], -30, tk)]; }   // the toast on "Welcome to the club"
 
     // ---- Strawberry: outside the glass, then the walk, then the gifts, the pen and the raise she asks for
@@ -549,16 +554,16 @@ const SC = SCENES.arrival = {
         { const fx = CAM.x, fy = CAM.y; zoomTo(lerp(fx, 540, w), lerp(fy, 810, w), lerp(CAM.z, 1.2, w)); } break; }
       case 'cuC': F(C.cl, lerp(1.8, 1.92, k), 110); break;
       case 'badge': {   // a push from the two of them to the badge itself, quick on "badge"
-        const bd = localToScreen(C.cl, 72, 77), f1 = faceC(C.cl), f2 = faceC(C.mg), z = trk(lt, [[sh.t0, 1.55], [tBadge - .2, 1.8], [tBadge + .15, 3.0], [sh.t1, 3.2]]);
-        const cx = lerp((f1[0] + f2[0]) / 2, 923, seg(z, 1.55, 3.0)), cy = lerp((f1[1] + f2[1]) / 2 + 70 / 1.55, (f1[1] + bd[1]) / 2 - 30 / z, seg(z, 1.55, 3.0)); zoomTo(cx, cy, z); break; }
+        const bd = localToScreen(C.cl, 72, 77), f1 = faceC(C.cl), f2 = faceC(C.mg), z = trk(lt, [[sh.t0, 1.55], [tBadge - .2, 1.8], [tBadge + .15, 2.9], [sh.t1, 3.0]]);
+        const cx = lerp((f1[0] + f2[0]) / 2, 915, seg(z, 1.55, 3.0)), cy = lerp((f1[1] + f2[1]) / 2 + 70 / 1.55, (f1[1] + bd[1]) / 2 - 30 / z, seg(z, 1.55, 3.0)); zoomTo(cx, cy, z); break; }
       case 'doorA': zoomTo(540, 1050, lerp(1.0, 1.1, k)); CAM.r = -.022 * sk(lt, d.s + .3, d.s + 1.2); CAM.shake = 1.2 + 5 * Math.pow(seg(lt, d.s + .45, d.s + 1.22), 2); break;
       case 'doorW': { const hit = pulse(lt, d.s + 1.3, 6); zoomTo(540, 975, lerp(.9, .94, k)); CAM.shake = 9 * hit; CAM.r = .01 * hit; break; }
       case 'doorS': zoomTo(540, 990, lerp(1.0, 1.06, k)); CAM.shake = 3 * pulse(lt, sh.t0, 4); break;
-      case 'cuA': F(C.ad, lerp(1.5, 1.62, k), 95); break;
+      case 'cuA': F(C.ad, lerp(1.5, 1.62, k), 95); CAM.x += 90 / CAM.z; break;
       case 'two': mid(C.ad, C.sp, lerp(1.4, 1.48, k), 150); break;
       case 'cuS': F(C.sp, lerp(1.85, 1.98, k), 135); break;
       case 'cuP': F(C.pr, lerp(2.0, 2.12, k), 105); break;
-      case 'pen': mid(C.ad, C.sp, lerp(1.7, 1.85, k), 120); break;
+      case 'pen': mid(C.ad, C.sp, lerp(1.5, 1.6, k), 120); break;
       case 'cuA2': F(C.ad, lerp(1.7, 1.8, k), 100); break;
       case 'cuS2': F(C.sp, lerp(1.7, 1.6, k), 70); break;
       case 'cuA3': F(C.ad, lerp(1.9, 2.05, k), 95); break;
@@ -608,7 +613,7 @@ const SC = SCENES.arrival = {
     { const sp = C.sp, ss = sp.s;
       if (lt >= C.dropB) { const slide = easeOut(seg(lt, C.dropB, C.dropB + .35)), q = localToScreen(sp, lerp(-134, -166, slide), 98); ctx.save(); ctx.translate(q[0], q[1]); ctx.fillStyle = 'rgba(30,10,10,.2)'; ell(0, 186 * .62 * ss, 52 * ss, 9 * ss); ctx.fill(); ctx.rotate(.04 * Math.sin(t * 2.4)); ctx.scale(.62 * ss, .62 * ss); ctx.translate(0, 186); drawBasket(t); ctx.restore(); }
       if (lt >= C.dropBag) { const q = localToScreen(sp, -100, 100), tt = lt - C.dropBag, fall = Math.min(27 * ss, .5 * 3600 * tt * tt) - 4 * ss * Math.abs(Math.sin(Math.max(0, tt - .12) * 20)) * Math.exp(-Math.max(0, tt - .12) * 9); ctx.save(); ctx.translate(q[0], q[1] + fall); ctx.fillStyle = 'rgba(30,10,10,.2)'; ell(0, 84 * ss - fall, 44 * ss, 8 * ss); ctx.fill(); ctx.scale(.72 * ss, .72 * ss); drawBag(); ctx.restore(); }
-      for (const [o, t0, s, a0] of [[C.pr, T.shot1 + .75, -1, -POP.p.a], [C.mg, T.shot2 + .72, -1, -2.9]]) if (lt >= t0) { const q = localToScreen(o, ...armRest(o, -1, t0)), fall = Math.min(1, (lt - t0) / .22), fy = o.y - 8 * o.s; ctx.save(); ctx.translate(q[0], lerp(q[1], fy, fall * fall)); ctx.rotate(lerp(a0, s * 1.45, fall)); ctx.scale(o.s * .62, o.s * .62); drawPopper(true, t); ctx.restore(); }
+      for (const [o, t0, s, a0, g] of [[C.pr, T.shot1 + .75, -1, -POP.p.a, PL], [C.mg, T.shot2 + .72, 1, POP.m.a, MR]]) if (lt >= t0) { const q = localToScreen(o, ...g), fall = Math.min(1, (lt - t0) / .22), fy = o.y - 8 * o.s; ctx.save(); ctx.translate(q[0], lerp(q[1], fy, fall * fall)); ctx.rotate(lerp(a0, s * 1.45, fall)); ctx.scale(o.s * .62, o.s * .62); drawPopper(true, t); ctx.restore(); }
     }
     // balloon pops: a puff of sparks where the rubber was, up at the top of the room
     for (const [Xc, seed, i, t0, col, sd] of [[-575, 0, 2, pops[0], '255,236,160', 3], [575, 2.3, 3, pops[1], '255,210,230', 8]]) { const bp = balPos(Xc, 1610, t, seed, i, null, lt); V2.sparks(...p2(bp.x, bp.y, bp.z), lt, t0, { n: 14, speed: 380, life: .5, color: col, g: 900, size: 4, seed: sd }); }

@@ -311,7 +311,7 @@ const OFFICE = {
     const pull = sk(lt, T_KNOCK[0] + .02, T_KNOCK[0] + .26), lower = sk(lt, 1.75, 2.6);
     if (lt < 3.0) {   // the slice: at his mouth, then yanked away mid-bite on the first knock, then lowered out of sight behind the desk
       ad.hold.r = 'slice10'; ad.arms.r = 'hold'; ad.hand.r = 'grip';
-      ad.grip.r = [lerp(lerp(98, 176, pull), 150, lower), lerp(lerp(34, -6, pull), 150, lower)];
+      ad.grip.r = [lerp(lerp(98, 210, pull), 150, lower), lerp(lerp(34, -12, pull), 150, lower)];
       ad.mouthOpen = eat; ad.cheeseSag = 1.1;
       ad.cheese = 1 - lower * .8;
       ad.expr = lt < T_KNOCK[0] ? 'happy' : lt < T_DOOR + .3 ? 'shock' : 'neutral';
@@ -361,6 +361,8 @@ const OFFICE = {
     if (lt >= 20.02 && lt < T_LEAVE) { const tt = wordT('s7', 'it', 20.47), cl = sk(lt, tt - .05, tt + .2); sp.expr = 'dead'; sp.lid = lerp(.55, 1, cl); sp.look = [.5, .2]; }
     if (lt >= T_LEAVE) { sp.expr = 'dead'; sp.lid = lerp(1, .5, sk(lt, T_LEAVE, T_LEAVE + .2)); sp.look = [-.6, 0]; sp.arms = { l: walking ? sw : DOWN, r: walking ? sw2 : DOWN }; }
     if (lt >= T_LEAVE + .3) sp.noFace = true;
+    const drift = (o, a) => { o.look = [clamp((o.look ? o.look[0] : 0) + .035 * Math.sin(lt * 1.9 + a), -1, 1), clamp((o.look ? o.look[1] : 0) + .025 * Math.cos(lt * 1.4 + a), -1, 1)]; };
+    if (lt > 4.5) { drift(ad, 0); drift(sp, 2); }
     return { off, ad, sp, dist };
   },
   cam(lt) {
@@ -414,7 +416,7 @@ const OFFICE = {
     if (only === 'sp') V2.dof(6, () => off.desk()); else off.desk();
     OFFICE.deskExtras(lt, C);
     lightFor('sp');
-    if (only !== 'ad') off.visitor();   /* in his close-ups the low chair would be a big blur in the foreground corner */
+    if (only !== 'ad' || n === 'cuA5') { const al = n === 'cuA5' ? 1 - seg(lt, 15.3, 15.62) : 1; ctx.save(); ctx.globalAlpha *= al; off.visitor(); ctx.restore(); }   /* in his close-ups the low chair would be a big blur in the foreground corner: it is only kept while the whip pan settles */
     // Strawberry: while she is behind the wall plane (the hall) she is only visible through the open part of the doorway
     const dr = off.layout.door, zb = off.layout.zb, behind = C.sp.z > 0 ? false : false;
     const Zs = strawPath(lt)[1], hall = Zs > zb - 8;
@@ -439,7 +441,7 @@ const OFFICE = {
     const th = B('think'), t0 = th.s + .12, tp = 11.43;
     if (((n === 'think') || (n === 'slam')) && lt >= t0 && lt < tp + .4) {
       const o = C.ad, S = o.s * .86, x = o.x + 150 * o.s, y = o.y - 540 * o.s, kk = lt < tp ? easeElastic(seg(lt, t0, t0 + .5)) : 0, pop = seg(lt, tp, tp + .3);
-      if (kk > .01) bubble(x, y, S * kk * (1 + .03 * Math.sin(lt * 9)), lt - t0);
+      if (kk > .01) bubble(x, y, S * kk * (1 + .03 * Math.sin(lt * 9)), lt - t0, Math.max(0, 1 - Math.abs(lt - 11.12) * 9));
       if (pop > 0) {
         for (let i = 0; i < 14; i++) { const a = i / 14 * TAU + .3, d = (60 + 200 * hash(i + 3)) * S * easeOut(pop); ctx.save(); ctx.globalAlpha = 1 - pop; ctx.fillStyle = i % 3 ? '#ffffff' : '#ffe135'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ell(x + Math.cos(a) * d, y + Math.sin(a) * d * .8, (14 - 9 * pop) * S, (14 - 9 * pop) * S); ctx.fill(); ctx.stroke(); ctx.restore(); }
         if (pop < .7) { ctx.save(); ctx.globalAlpha = 1 - pop / .7; ctx.strokeStyle = '#ffe135'; ctx.lineWidth = 7; ctx.lineCap = 'round'; for (let i = 0; i < 10; i++) { const a = i / 10 * TAU, r0 = 150 * S * (.6 + pop), r1 = r0 + 60 * S; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0 * .8); ctx.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1 * .8); ctx.stroke(); } ctx.restore(); }
@@ -470,7 +472,7 @@ const OFFICE = {
   blur(lt) {
     if (near(lt, HARD, .035)) return 1;
     const n = shotOf(lt).n;
-    return n === 'whip' ? 8 : n === 'cuA2' ? 3 : (lt > T_WALK && lt < T_ARRIVE + .2 && n !== 'letter') ? 2 : n === 'slam' || n === 'two' ? 2 : (n === 'stamp' && lt > T_STAMP - .06 && lt < T_STAMP + .25) ? 3 : 1;
+    return n === 'whip' ? 8 : n === 'cuA2' ? 2 : (lt > T_WALK && lt < T_ARRIVE + .2 && n !== 'letter') ? 2 : n === 'slam' || n === 'two' ? 2 : (n === 'stamp' && lt > T_STAMP - .06 && lt < T_STAMP + .25) ? 3 : 1;
   },
   over(lt) {
     // $118/HR lands on "eighteen"
@@ -515,7 +517,8 @@ function receipt(lt) {
   ctx.restore();
 }
 // the thought bubble: a cloud of circles, three small ones trailing down, a pizza and two turning gears inside
-function bubble(x, y, S, t) {
+function bubble(x, y, S, t, ding = 0) {
+  const rat = u => (Math.floor(u * 13) + easeOut(u * 13 % 1)) * .3, ga = t < .7 ? rat(Math.max(0, t)) : rat(.7) + (t - .7) * 5.5;   // the gears ratchet one click at a time, then whirr
   ctx.save(); ctx.translate(x, y); ctx.scale(S, S);
   const lumps = [[-120, 20, 70], [-60, -40, 80], [20, -62, 88], [100, -30, 76], [128, 30, 66], [60, 64, 74], [-40, 66, 72]], tail = [[-170, 150, 22], [-210, 205, 15], [-236, 246, 9]];
   ctx.lineJoin = 'round'; ctx.fillStyle = INK; for (const [cx, cy, r] of lumps) { ell(cx, cy, r + 6, r + 6); ctx.fill(); }
@@ -525,7 +528,8 @@ function bubble(x, y, S, t) {
   ctx.fillStyle = 'rgba(160,170,210,.25)'; ell(0, 40, 150, 50); ctx.fill();
   ctx.save(); ctx.translate(-40, 10); ctx.rotate(-.5); ctx.fillStyle = '#c28a3e'; ctx.strokeStyle = INK; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-60, -14); ctx.quadraticCurveTo(0, -34, 60, -14); ctx.lineTo(0, 100); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#ffd85a'; ctx.beginPath(); ctx.moveTo(-48, -10); ctx.quadraticCurveTo(0, -24, 48, -10); ctx.lineTo(0, 82); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#b3261e'; for (const [px, py] of [[-14, 8], [16, 14], [0, 42], [-4, 66]]) { ell(px, py, 11, 11); ctx.fill(); } ctx.restore();
-  for (const [gx, gy, gr, dir] of [[78, -6, 34, 1], [118, 38, 24, -1]]) { ctx.save(); ctx.translate(gx, gy); ctx.rotate(t * 3.2 * dir); ctx.fillStyle = '#8a92a4'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; ctx.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, r0 = i % 2 ? gr * .82 : gr * 1.06; ctx.lineTo(Math.cos(a) * r0, Math.sin(a) * r0); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ffffff'; ell(0, 0, gr * .32, gr * .32); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  if (ding > 0) star(-34, 44, 78 * ding, ding, '255,236,140');   // the idea bell: a twinkle on the pizza
+  for (const [gx, gy, gr, dir] of [[78, -6, 34, 1], [118, 38, 24, -1]]) { ctx.save(); ctx.translate(gx, gy); ctx.rotate(ga * dir); ctx.fillStyle = '#8a92a4'; ctx.strokeStyle = INK; ctx.lineWidth = 3.4; ctx.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, r0 = i % 2 ? gr * .82 : gr * 1.06; ctx.lineTo(Math.cos(a) * r0, Math.sin(a) * r0); } ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ffffff'; ell(0, 0, gr * .32, gr * .32); ctx.fill(); ctx.stroke(); ctx.restore(); }
   ctx.restore();
 }
 
@@ -670,7 +674,8 @@ const ITEM_LIST = [
 });
 const INV_ROWS = ['NAME BADGE', 'KEYS (ALL OF THEM)', 'FLASHLIGHT', 'BANDAGE SCISSORS', 'GLOVE (ONE)', 'LANYARD', 'STETHOSCOPE', 'LOLLIPOP (OPENED)', 'PEN'];
 // the Administrator's inventory: a list on a clipboard; nt = how many rows are ticked so far (a float: the last tick is being drawn). Returns the centre of the next row's box
-function invList(nt) {
+const TICK_T = [16.46, 16.54, 16.62, 16.7, 16.78, 16.9, 17.03, 17.15];   // the last three are the three pen ticks in the sound
+function invList(lt) {
   ctx.save(); ctx.translate(838, 640);
   ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 14; ctx.fillStyle = '#a8743e'; ctx.strokeStyle = INK; ctx.lineWidth = 5; rr(-196, -420, 392, 840, 20); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
   ctx.fillStyle = '#fffef8'; ctx.fillRect(-168, -376, 336, 780);
@@ -681,11 +686,10 @@ function invList(nt) {
     if (last) { ctx.fillStyle = 'rgba(255,225,53,.55)'; ctx.fillRect(-160, y - 30, 320, 60); }
     ctx.strokeStyle = '#20202c'; ctx.lineWidth = 3; ctx.strokeRect(-146, y - 15, 30, 30);
     text(r, -100, y, { size: 22, fill: '#20202c', weight: 800, align: 'left', maxW: 250 });
-    const tk = clamp(nt - i);
+    const tk = i < TICK_T.length ? clamp((lt - TICK_T[i]) / .08) : 0;
     if (tk > 0 && !last) { ctx.strokeStyle = INK_R; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-142, y); ctx.lineTo(lerp(-142, -128, clamp(tk * 2)), lerp(y, y + 12, clamp(tk * 2))); if (tk > .5) ctx.lineTo(lerp(-128, -106, (tk - .5) * 2), lerp(y + 12, y - 20, (tk - .5) * 2)); ctx.stroke(); }
   });
   ctx.restore();
-  return [838 - 131, 640 - 240 + Math.min(nt, 8) * 74];
 }
 // the tote, from above (a teal bag with two handles), tipped by rot
 function toteTop(rot) {
@@ -705,9 +709,10 @@ function insProp(lt) {
   ITEM_LIST.forEach(it => { const f = flyItem(it, lt - it.tL); if (!f) return; ctx.save(); ctx.translate(f.x + f.z * .1, f.y - f.z * .3); ctx.save(); ctx.translate(f.z * .22, f.z * .5); ctx.globalAlpha *= .3 * Math.max(0, 1 - f.z / 240); ctx.fillStyle = '#000'; ell(0, 0, 70, 26); ctx.fill(); ctx.restore(); const sc = (1 + f.z / 520) * 1.3; ctx.scale(sc, sc); ctx.rotate(f.a); itemArt(it.id, lt); ctx.restore(); });
   ctx.save(); ctx.translate(0, 340 * gone); toteTop(rot); ctx.restore();
   // the inventory, and his marker
-  const nt = reveal(lt, [[16.62, 0], [17.2, 8]]), nxt = invList(nt);
-  if (lt > 16.5 && lt < 17.36) {
-    const come = eo(lt, 16.5, 16.66), tap = lt > 17.2 ? Math.abs(Math.sin((lt - 17.2) * 30)) * 14 : 0;
+  invList(lt);
+  const rowF = reveal(lt, [...TICK_T.map((t, i) => [t, i]), [17.24, 8]]), nxt = [838 - 131, 640 - 240 + rowF * 74];
+  if (lt > 16.3 && lt < 17.36) {
+    const come = eo(lt, 16.3, 16.46), tap = lt > 17.24 ? Math.abs(Math.sin((lt - 17.24) * 30)) * 14 : 0;
     const tx = lerp(1180, nxt[0] + 22, come), ty = lerp(-150, Math.min(nxt[1], 940) - 10 - tap, come);
     penHand(tx, ty, 2.2, 4.0, '#d6202e');
   }
@@ -726,12 +731,13 @@ function penTop(x, y, a, sc = 1, glint = 0) {
   if (glint > 0) star(x - 70 * Math.cos(a) * sc, y - 70 * Math.sin(a) * sc, 36 * glint, glint, '255,248,214');
 }
 function insSlide(lt) {
-  const t0 = 21.62, u = clamp((lt - t0) / .43);
+  const t0 = 21.62, tf = 21.74, u = clamp((lt - tf) / .31);
   deskTop();
-  // the leather's left edge is at x 40: the pen leaves it at u about .8 and tips over
-  const x = lerp(900, 30, easeOut(u)), y = 760 + 24 * Math.sin(u * 5), a = Math.PI + (u > .75 ? -(u - .75) * 5 : 0) + .05, fall = Math.max(0, (u - .78) / .22);
-  ctx.save(); ctx.globalAlpha *= 1 - .8 * fall; penTop(x, y + 120 * fall * fall, a + fall * 1.8, 1 - .25 * fall, 0); ctx.restore();
-  ctx.save(); ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.restore();
+  // the pen rests under her glove, then a flick sends it left along the desk; it leaves the leather's edge (x 40) at u about .75 and tips over
+  const x = lerp(720, 20, easeOut(u)), y = 780 + 20 * Math.sin(u * 5), a = Math.PI + (u > .72 ? -(u - .72) * 5 : 0) + .05, fall = Math.max(0, (u - .74) / .26);
+  ctx.save(); ctx.globalAlpha *= 1 - .8 * fall; penTop(x, y + 120 * fall * fall, a + fall * 1.8, 1.4 * (1 - .25 * fall), 0); ctx.restore();
+  const come = sk(lt, t0 - .08, tf - .02), go = sk(lt, tf + .06, tf + .3), push = easeOut(seg(lt, tf - .02, tf + .06));   // in from the lower right, a short push, away again
+  if (lt < tf + .32) glove(lerp(1150, 860, come) - 130 * push + 330 * go, lerp(1180, 800, come) - 10 * push + 330 * go, -2.5, 4.4, { kind: 'point' });
 }
 
 // a rubber stamp seen from above: it grows as it comes down (down 0..1), and after the hit it lifts away (lift 0..1) and fades
@@ -832,6 +838,8 @@ const EXIT = {
     if (lt >= 18.19 && lt < 19.27) { sp.expr = 'sad'; sp.lid = .3; }
     if (lt >= 20.24 && lt < 21.7) { sp.expr = 'sad'; sp.lid = .2; sp.look = [.3, .5]; }
     if (lt >= 21.62) { sp.expr = 'dead'; sp.lid = .55; sp.look = [.8, 0]; sp.arms = { l: DOWN, r: DOWN }; }
+    const drift = (o, a) => { o.look = [clamp((o.look ? o.look[0] : 0) + .035 * Math.sin(lt * 1.9 + a), -1, 1), clamp((o.look ? o.look[1] : 0) + .025 * Math.cos(lt * 1.4 + a), -1, 1)]; };
+    drift(ad, 0); drift(sp, 2);
     return { off, ad, sp };
   },
   cam(lt) {
@@ -884,6 +892,14 @@ const EXIT = {
     off.setLight({ shadowLong: .55 });
     off.visitor('back'); sitLegs(off);
     (A || n === 'bin' ? nbr : drawChar)(C.sp);
+    if (n === 'cuS6' || n === 'cuS7') {   // a single tear runs down her cheek: on "gift" and again on "years"
+      const o = C.sp, kd = KINDS[o.kind], yc = o.y - (o.lift || 0) - kd.ry * .9 * o.s, k = lt - (n === 'cuS6' ? 18.72 : 20.96);
+      if (k > 0 && k < 1.05) {
+        const grow = easeOut(seg(k, 0, .2)), fall = easeIn(seg(k, .16, 1.05)), x = o.x + (kd.eyeX + 6) * o.s, y = yc + (kd.eyeY + 34 + 96 * fall) * o.s, r = 10 * o.s * grow;
+        ctx.save(); ctx.globalAlpha *= 1 - seg(k, .8, 1.05); ctx.translate(x, y); ctx.fillStyle = '#9adcff'; ctx.strokeStyle = INK; ctx.lineWidth = 3 * o.s; ctx.beginPath(); ctx.moveTo(0, -r * 1.9); ctx.bezierCurveTo(r * 1.1, -r * .4, r * 1.1, r * 1.1, 0, r * 1.1); ctx.bezierCurveTo(-r * 1.1, r * 1.1, -r * 1.1, -r * .4, 0, -r * 1.9); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.85)'; ell(-r * .35, r * .1, r * .22, r * .4, .2); ctx.fill(); ctx.restore();
+      }
+    }
     off.visitor('front');
     off.coat();
     if (lt < 22.25) EXIT.binPen(lt, C);   /* still falling: in front of everything */
