@@ -1,0 +1,729 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 4: The New Grad",
+ "music": {
+  "from": "intro",
+  "to": "shiftend",
+  "mute": [
+   "dream:pop",
+   "blue:hang",
+   "shiftend:beat",
+   "shiftend:melt",
+   "sure:c4"
+  ]
+ },
+ "beds": {
+  "dream": {
+   "name": "dreamy",
+   "until": "pop"
+  }
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ],
+ "level_lines": true,
+ "voices": {
+  "narr": {
+   "name": "NARRATOR",
+   "voice": "bm_george",
+   "lang": "en-gb",
+   "speed": 1.07,
+   "semis": 0,
+   "color": "#e8e8e8"
+  },
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "lang": "en-us",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a"
+  },
+  "apple2": {
+   "name": "DR. APPLE",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#e63946",
+   "fx": "phone"
+  },
+  "blue": {
+   "name": "MR. BLUEBERRY",
+   "voice": "am_santa",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#5b6cff"
+  },
+  "gfruit": {
+   "name": "GRAPEFRUIT",
+   "voice": "bm_lewis",
+   "lang": "en-gb",
+   "speed": 0.95,
+   "semis": -3,
+   "color": "#ff7b5c"
+  },
+  "clem": {
+   "name": "CLEMENTINE (NEW GRAD)",
+   "voice": "af_kore",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff8a1a"
+  },
+  "clemjar": {
+   "name": "CLEMENTINE (NOW MARMALADE)",
+   "voice": "af_kore",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff8a1a",
+   "fx": "muffled"
+  },
+  "kiwi1": {
+   "name": "AGENCY KIWI",
+   "voice": "am_liam",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#8a6a3a"
+  },
+  "appledream": {
+   "name": "DR. APPLE (IN NCLEX LAND)",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#e63946"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "DAY ONE",
+   "head": 0.2,
+   "tail": 1.2,
+   "beats": [
+    {
+     "id": "jingle",
+     "pause": 1.8,
+     "sfx": [
+      [
+       "theme",
+       0.0,
+       0.9
+      ],
+      [
+       "birds",
+       0.2,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Every year, a new nurse arrives.",
+     "text": "Every year, a new nurse arrives."
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "Fresh. Licensed. Full of hope.",
+     "text": "Fresh. Licensed. Full of hope.",
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "logo",
+     "pause": 1.2
+    }
+   ]
+  },
+  {
+   "id": "intro",
+   "clock": "2:55 PM",
+   "label": "NURSES' STATION",
+   "head": 0.3,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Everyone, this is Clementine. Our new grad.",
+     "text": "Everyone, this is Clementine. Our new grad."
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Hi! I passed my boards at eighty-five questions!",
+     "text": "Hi! I passed my boards at 85 questions!"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Aw. She still has hope.",
+     "text": "Aw. She still has hope."
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "The new grad. Identified by the price tag still on the stethoscope.",
+     "text": "The new grad. Identified by the price tag still on the stethoscope."
+    }
+   ]
+  },
+  {
+   "id": "orient",
+   "clock": "3:00 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "So how long is orientation?",
+     "text": "So how long is orientation?"
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Three days.",
+     "text": "Three days."
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "Three days of training?",
+     "text": "Three days of training?"
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Three days of videos. Then forty residents.",
+     "text": "Three days of videos. Then forty residents.",
+     "sfx": [
+      [
+       "slam",
+       "end",
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "Don't worry. We don't eat our young here.",
+     "text": "Don't worry. We don't eat our young here."
+    },
+    {
+     "id": "beat",
+     "pause": 0.7
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "We just give them the heaviest assignment.",
+     "text": "We just give them the heaviest assignment."
+    }
+   ]
+  },
+  {
+   "id": "dream",
+   "clock": "3:05 PM",
+   "label": "NCLEX LAND",
+   "head": 0.1,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "wave",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "harp",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "In NCLEX Land, every nurse has one patient.",
+     "text": "In NCLEX Land, every nurse has one patient."
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "The doctor answers on the first ring.",
+     "text": "The doctor answers on the first ring."
+    },
+    {
+     "id": "a1",
+     "who": "appledream",
+     "say": "I'm already here!",
+     "text": "I'm already here!"
+    },
+    {
+     "id": "n3",
+     "who": "narr",
+     "say": "And the answer is always...",
+     "text": "And the answer is always..."
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Assess the patient!",
+     "text": "Assess the patient!",
+     "sfx": [
+      [
+       "sparkle",
+       "end",
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "pop",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "scratch",
+       0.0,
+       0.8
+      ],
+      [
+       "callbells",
+       0.3,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Welcome to Fruit Bowl.",
+     "text": "Welcome to Fruit Bowl."
+    }
+   ]
+  },
+  {
+   "id": "rules",
+   "clock": "3:10 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Okay, new grad. Three rules.",
+     "text": "Okay, new grad. Three rules."
+    },
+    {
+     "id": "r1",
+     "who": "straw",
+     "say": "Rule one. Never say the Q word.",
+     "text": "Rule one. Never say the Q word.",
+     "sfx": [
+      [
+       "stamp",
+       0.05,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "r2",
+     "who": "straw",
+     "say": "Rule two. Always check the baseline.",
+     "text": "Rule two. Always check the baseline.",
+     "sfx": [
+      [
+       "stamp",
+       0.05,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "r3",
+     "who": "straw",
+     "say": "Rule three. Never lend anyone your pen.",
+     "text": "Rule three. Never lend anyone your pen.",
+     "sfx": [
+      [
+       "stamp",
+       0.05,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Why not?",
+     "text": "Why not?"
+    },
+    {
+     "id": "steal",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "zip",
+       0.15,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That's why.",
+     "text": "That's why."
+    }
+   ]
+  },
+  {
+   "id": "meds",
+   "clock": "5:00 PM",
+   "label": "HALLWAY",
+   "head": 0.2,
+   "tail": 0.6,
+   "beats": [
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Right patient. Right drug. Right dose. Right route. Right time. Right documentation. Right reason. Right response.",
+     "text": "Right patient. Right drug. Right dose. Right route. Right time. Right documentation. Right reason. Right response.",
+     "sfx": [
+      [
+       "timelapse",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Clementine. It's nine o'clock.",
+     "text": "Clementine. It's nine o'clock."
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "I'm on resident two!",
+     "text": "I'm on resident two!"
+    }
+   ]
+  },
+  {
+   "id": "sure",
+   "clock": "9:15 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Can you take the new admission?",
+     "text": "Can you take the new admission?"
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "sfx": [
+      [
+       "thud",
+       0.1,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "k1",
+     "who": "kiwi1",
+     "say": "Can you cover my break?",
+     "text": "Can you cover my break?"
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "sfx": [
+      [
+       "thud",
+       0.1,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "g1",
+     "who": "gfruit",
+     "say": "Can you put me back in the med fridge?",
+     "text": "Can you put me back in the med fridge?"
+    },
+    {
+     "id": "c3",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "sfx": [
+      [
+       "thud",
+       0.1,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "You have to learn to say no.",
+     "text": "You have to learn to say no."
+    },
+    {
+     "id": "c4",
+     "who": "clem",
+     "say": "No...",
+     "text": "No...",
+     "gap": 0.8
+    },
+    {
+     "id": "c5",
+     "who": "clem",
+     "say": "Problem!",
+     "text": "...problem!"
+    }
+   ]
+  },
+  {
+   "id": "blue",
+   "clock": "9:45 PM",
+   "label": "ROOM 12",
+   "head": 0.2,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Mister Blueberry is blue! His sats are eighty-seven percent!",
+     "text": "Mr. Blueberry is BLUE! His sats are 87%!",
+     "sfx": [
+      [
+       "alarm",
+       0.0,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Rule two.",
+     "text": "Rule two."
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "Always check the baseline.",
+     "text": "...always check the baseline."
+    },
+    {
+     "id": "c3",
+     "who": "clem",
+     "say": "I already called the doctor!",
+     "text": "I already called the doctor!"
+    },
+    {
+     "id": "ring",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "ringtone",
+       0.0,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "apple2",
+     "say": "You paged me because the blueberry... is blue?",
+     "text": "You paged me because the blueberry... is blue?"
+    },
+    {
+     "id": "c4",
+     "who": "clem",
+     "say": "Yes?",
+     "text": "...Yes?"
+    },
+    {
+     "id": "hang",
+     "pause": 0.8,
+     "sfx": [
+      [
+       "hangup",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "blue",
+     "say": "Relax, sweetheart. I've been blue since nineteen fifty-three.",
+     "text": "Relax, sweetheart. I've been blue since 1953."
+    }
+   ]
+  },
+  {
+   "id": "shiftend",
+   "clock": "11:00 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "You survived your first shift!",
+     "text": "You survived your first shift!"
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Is it always like this?",
+     "text": "Is it always like this?"
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "No.",
+     "text": "No."
+    },
+    {
+     "id": "beat",
+     "pause": 0.6
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Sometimes it's worse.",
+     "text": "Sometimes it's worse."
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Hey, new grad. Night shift called out. Can you stay till seven?",
+     "text": "Hey, new grad. Night shift called out. Can you stay till seven?"
+    },
+    {
+     "id": "melt",
+     "pause": 1.8,
+     "sfx": [
+      [
+       "squelch",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "And that... is how marmalade is made.",
+     "text": "And that... is how marmalade is made."
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "They grow up so fast.",
+     "text": "They grow up so fast."
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "",
+   "head": 0.0,
+   "tail": 0.0,
+   "beats": [
+    {
+     "id": "card",
+     "pause": 5.6,
+     "sfx": [
+      [
+       "theme",
+       0.1,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "post",
+   "clock": "3:00 AM",
+   "label": "HER BEDROOM",
+   "head": 0.3,
+   "tail": 1.3,
+   "beats": [
+    {
+     "id": "ringing",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "ringtone",
+       0.1,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "apple2",
+     "say": "Hey, it's Doctor Apple. Is the blueberry still blue?",
+     "text": "Hey, it's Dr. Apple. Is the blueberry still blue?"
+    },
+    {
+     "id": "c1",
+     "who": "clemjar",
+     "say": "Baseline.",
+     "text": "...Baseline.",
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.9
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shift Happens</title>
+<style>
+  @font-face { font-family: Bangers; src: url(fonts/Bangers-Regular.ttf); }
+  @font-face { font-family: Lucky; src: url(fonts/LuckiestGuy-Regular.ttf); }
+  @font-face { font-family: Nunito; src: url(fonts/Nunito.ttf); font-weight: 200 1000; }
+  :root { --bg: #111; --fg: #fff; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: Nunito, system-ui, sans-serif; }
+  #stage { position: relative; height: 100vh; aspect-ratio: 9 / 16; max-width: 100vw; margin: 0 auto; }
+  canvas { width: 100%; height: 100%; display: block; }
+  #play { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.45); border: 0; color: #fff; font: 900 28px Nunito, sans-serif; cursor: pointer; }
+  #play span { background: #ff3b55; padding: 18px 34px; border-radius: 999px; box-shadow: 0 8px 30px rgba(0,0,0,.4); }
+  body.capture #play { display: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c" width="1080" height="1920"></canvas>
+  <button id="play"><span>Play episode</span></button>
+</div>
+<audio id="audio" preload="auto"></audio>
+<script src="engine.js"></script>
+<script src="v2_core.js"></script>
+<script src="v2_char.js"></script>
+<script src="build/timeline.js"></script>
+<script src="build/ep2/timeline.js"></script>
+<script src="build/ep3/timeline.js"></script>
+<script src="build/ep4/timeline.js"></script>
+<script src="build/ep5/timeline.js"></script>
+<script src="build/ep6/timeline.js"></script>
+<script src="build/ep7/timeline.js"></script>
+<script src="build/ep8/timeline.js"></script>
+<script src="build/ep9/timeline.js"></script>
+<script src="build/ep10/timeline.js"></script>
+<script src="build/ep11/timeline.js"></script>
+<script src="ep1.js"></script>
+<script src="ep2.js"></script>
+<script src="ep3.js"></script>
+<script src="ep4.js"></script>
+<script src="ep5_art.js"></script>
+<script src="ep5_sets.js"></script>
+<script src="ep5.js"></script>
+<script src="ep6_sets.js"></script>
+<script src="ep6_rooms.js"></script>
+<script src="ep6_art.js"></script>
+<script src="ep6_ins.js"></script>
+<script src="ep6.js"></script>
+<script src="ep7_art.js"></script>
+<script src="ep7_sets.js"></script>
+<script src="ep7_ins.js"></script>
+<script src="ep7.js"></script>
+<script src="ep8_hall.js"></script>
+<script src="ep8_break.js"></script>
+<script src="ep8_dawn.js"></script>
+<script src="ep8.js"></script>
+<script src="ep9_art.js"></script>
+<script src="ep9_arrival.js"></script>
+<script src="ep9_floor.js"></script>
+<script src="ep9_exit.js"></script>
+<script src="ep9.js"></script>
+<script src="ep10_art.js"></script>
+<script src="ep10_title.js"></script>
+<script src="ep10_set.js"></script>
+<script src="ep10_office.js"></script>
+<script src="ep10_days.js"></script>
+<script src="ep10_party.js"></script>
+<script src="ep10_door.js"></script>
+<script src="ep10.js"></script>
+<script src="ep11_art.js"></script>
+<script src="ep11_title.js"></script>
+<script src="ep11_arrival.js"></script>
+<script src="ep11_orient.js"></script>
+<script src="ep11_floor.js"></script>
+<script src="ep11_vault.js"></script>
+<script src="ep11_exit.js"></script>
+<script src="ep11.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
