@@ -83,7 +83,7 @@ EXT.prop.envelope10 = (side, o, t) => {
 
 // ------------------------------------------------------------------ the lobby: the Episode 9 welcome lobby (carpet, stanchions, banner, balloons), re-lit for a farewell
 const ZB = 1750, HW = 640, CH = 720, DX0 = -300, DX1 = 300, DY1 = 520, CARPET_HW = 118;
-const BANNER_TOP = 'BYE', BANNER_NAME = 'STRAWBERY';   // the two patches taped over WELCOME PERSIMMON (the party scene's banner is the same one: keep the words in step)
+const BANNER_TOP = 'GOODBYE', BANNER_NAME = 'STRAWBERY';   // the two patches taped over WELCOME PERSIMMON (the party scene's banner is the same one: keep the words in step)
 // a wall clock with a second hand (S0 = seconds past 22:58:00); the second hand snaps on every whole second (copy of the Episode 9 dial)
 function dial(R, S0) {
   const tot = 22 * 3600 + 58 * 60 + S0, hr = (tot / 3600) % 12, mn = (tot / 60) % 60;
