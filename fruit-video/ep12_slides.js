@@ -50,7 +50,9 @@ function bodyStraw(lt) {
   const st = standK(lt);
   const front = turnK(lt) >= .5 || st > 0;
   const X = lerp(AUD.straw, 200, st), p = R.seatPt(X, AUD_Z);   /* she stands and eases 40 units left, clear of the Administrator */
-  const o = { x: p.x, y: lerp(p.y, R.pt(X, 0, AUD_Z).y, st), s: p.s, noLegs: st < .5, lift: 0, arms: { l: 'rest', r: 'rest' } };
+  /* the turn: a squash through zero on the chair (sx 1 -> .04 -> 1), the back view swapping to the front at the middle */
+  const tk = turnK(lt), sx = st > 0 ? 1 : Math.max(.04, Math.abs(1 - 2 * tk));
+  const o = { x: p.x, y: lerp(p.y, R.pt(X, 0, AUD_Z).y, st), s: p.s, noLegs: st < .5, lift: 0, sx, arms: { l: 'rest', r: 'rest' } };
   if (!front) return A11.straw(Object.assign(o, { noFace: true, noShadow: true, noReflect: true }));
   // her face: "No." (seated), the silence, her eyes to the Administrator, then standing
   if (st > 0) return A11.straw(Object.assign(o, { expr: 'sour', look: [.2, 0], lid: .5 }));

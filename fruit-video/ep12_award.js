@@ -429,7 +429,7 @@ window.__EP12_SCENES.award = {
     else if (sh === 'cuL') fz(c.lem, 2.2);
     else if (sh === 'rep') zoomTo(540, 905, 1.0);
     else if (sh === 'cuM') fz(c.mng, 2.2);
-    else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0], q[1] + 60, 1.2); }
+    else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0] - 40, q[1] + 60, 1.2); }   // a little room on the left for his report as his arm comes up
     else if (sh === 'walk') { const q = mid(F(c.mel), F(c.clm)); zoomTo(q[0] + 40, q[1] + 60, 1.12); }
     else if (sh === 'cuC2') { const f = F(c.clm); zoomTo(f[0] + 70, f[1] + 130 / 2.6, 2.6); }   // her raised rosette stays in frame
     else if (sh === 'back') zoomTo(520, 880, 1.02);
@@ -472,13 +472,22 @@ window.__EP12_SCENES.award = {
       e.sharp = sharp;
       if (sharp) covers.push([bx[0] - 20, bx[1] - 40, bx[2] + 40, bx[3]]);
     }
-    const list = setPieces(lt, takenDonut).map(p => ({ z: p.z, run: p.run }))
-      .concat(c.items.map(e => ({ z: e.z, run: () => {
-        if (e.pre) e.pre();
-        if (e.bg || !e.sharp) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
-        if (e.post) e.post(); } })));
-    list.sort((p, q) => q.z - p.z);
-    for (const it of list) it.run();
+    const runCast = e => () => {
+      if (e.pre) e.pre();
+      if (e.bg || !e.sharp) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
+      if (e.post) e.post(); };
+    const sets = setPieces(lt, takenDonut).map(p => ({ z: p.z, run: p.run })).sort((p, q) => q.z - p.z);
+    const castList = c.items.map(e => ({ z: e.z, run: runCast(e), key: e.key, sharp: e.sharp }));
+    if (closeUp) {
+      // a close-up: the set and the other characters are behind, the subject is drawn last so nothing stands over her face
+      for (const it of sets) it.run();
+      castList.filter(q => !(q.sharp && q.key === subj)).sort((p, q) => q.z - p.z).forEach(q => q.run());
+      castList.filter(q => q.sharp && q.key === subj).forEach(q => q.run());
+    } else {
+      const list = sets.concat(castList);
+      list.sort((p, q) => q.z - p.z);
+      for (const it of list) it.run();
+    }
   },
   fx(lt) {
     const still = seg(lt, bs('s2') + .1, bs('silence') + .2) * (1 - seg(lt, be('silence') + .4, be('silence') + 1.3));

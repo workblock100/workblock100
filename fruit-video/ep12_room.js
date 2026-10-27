@@ -40,7 +40,7 @@ const LAY = {
   table: { x0: -500, x1: 480, z0: 760, z1: 1000, top: 190 },      // the long folding table
   seats: { far: 1110, near: 640, xs: [-440, -180, 80, 340] },    // chair rows: far side (behind the table) and near side (between camera and table)
   projector: { X: -680, Z: 960, Y: 520 },
-  pizza: { X: -560, Z: 1230 },
+  pizza: { X: -520, Z: 1230 },
   cooler: { X: 700, Z: 1200 },
   seatY: 120,                                                    // a seated body rests on this height (the chair seat)
   cam: { f: 1100, cz: -650, cy: 700, hy: 860 },
