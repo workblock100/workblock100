@@ -111,15 +111,15 @@ const TRK = [
   [0, 0, 1.00, 360, 960], [1.5, 0, 1.04, 360, 960],
   [2.6, -70, 1.14, 360, 900], [4.3, -70, 1.14, 360, 900], [4.9, -250, 1.40, 360, 770], [6.6, -250, 1.40, 360, 770],   // a1 -> l1: the Administrator, then Lemon
   [7.1, 170, 1.12, 360, 840], [7.6, 150, 1.10, 360, 880],                                                              // the whip to the closet (blur on)
-  [8.33, 0, 1.00, 360, 960], [8.34, 200, 1.22, 360, 910], [11.0, 200, 1.22, 360, 910],                                 // m1, a two-shot by the closet
-  [11.04, 60, 1.46, 360, 880], [12.6, 60, 1.46, 360, 880], [12.61, 60, 1.46, 360, 880],                              // r1 -> m2: Mrs. Cranberry and Mango
-  [14.56, 90, 1.45, 130, 930], [15.9, 90, 1.45, 130, 930],                                                           // r2: a low angle on the chair
-  [15.91, 0, 1.00, 360, 960], [16.86, 0, 1.05, 360, 960],                                                            // peel: the hall
-  [16.87, -310, 1.60, 360, 760], [18.9, -310, 1.60, 360, 760],                                                       // s1: Strawberry's list
-  [18.95, -70, 1.65, 360, 720], [20.1, -70, 1.65, 360, 720],                                                         // a2
-  [20.15, -310, 1.60, 360, 760], [20.8, -310, 1.60, 360, 760],                                                       // s2
-  [20.83, -70, 1.65, 360, 720], [21.6, -70, 1.65, 360, 720],                                                         // a3
-  [21.71, -310, 1.60, 360, 760], [22.79, -310, 1.60, 360, 760],                                                      // s3
+  [8.33, 0, 1.00, 360, 960], [11.0, 0, 1.00, 360, 960],                                                                 // m1: the wide, Mango at the back right, Clementine at the closet
+  [11.04, 190, 1.90, 360, 808], [12.6, 190, 1.90, 360, 808], [12.61, 190, 1.90, 360, 808],                             // r1 -> m2: Mrs. Cranberry and Mango, tight
+  [14.56, 90, 1.45, 130, 900], [15.9, 90, 1.45, 130, 900],                                                              // r2: a low angle on the chair
+  [15.91, 0, 1.00, 360, 960], [16.86, 0, 1.05, 360, 960],                                                               // peel: the hall
+  [16.87, -310, 1.60, 360, 760], [18.9, -310, 1.60, 360, 760],                                                          // s1: Strawberry's list
+  [18.95, -70, 1.65, 360, 720], [20.1, -70, 1.65, 360, 720],                                                            // a2
+  [20.15, -310, 1.60, 360, 760], [20.8, -310, 1.60, 360, 760],                                                          // s2
+  [20.83, -70, 1.65, 360, 720], [21.6, -70, 1.65, 360, 720],                                                            // a3
+  [21.71, -310, 1.60, 360, 760], [22.79, -310, 1.60, 360, 760],                                                         // s3
 ];
 const trackAt = lt => {
   if (lt <= TRK[0][0]) return TRK[0].slice(1);
@@ -211,7 +211,9 @@ const FOCAL = {
 const shotHall = lt => lt < 1.5 ? 'alarm' : lt < 4.38 ? 'a1' : lt < 6.76 ? 'l1' : lt < 7.29 ? 'c1' : lt < 8.33 ? 'run' : lt < 11.04 ? 'm1' : lt < 12.70 ? 'r1' : lt < 14.56 ? 'm2' : lt < 15.91 ? 'r2' : lt < 16.86 ? 'peel' : lt < 18.95 ? 's1' : lt < 20.15 ? 'a2' : lt < 20.83 ? 's2' : lt < 21.71 ? 'a3' : lt < 22.79 ? 's3' : 'lot';
 function hallCast(lt, sh) {
   const F = FOCAL[sh] || [];
-  const draw = (k, o) => (F.includes(k) ? drawChar(o) : drawBg(o));
+  // a neighbour is drawn soft (the house depth of field), a focal character sharp and held to the audit
+  const near = (o, px = 5) => V2.dof(px, () => drawBg(o));
+  const draw = (k, o) => (F.includes(k) ? drawChar(o) : near(o));
   const fingers = fingerState(lt);
   // far back: Lemon (left), Mrs. Cranberry in her chair and Mango (right, pulling to the threshold)
   const lem = actor(A7.lemon, P_LEM, lt, { expr: 'dead', lid: .3, look: [.3, .1], hold: { l: 'clipboard6' }, grip: { l: [-100, 30] }, arms: { l: 'hold', r: 'rest' }, clipText: 'DRILL' }, 1);
@@ -219,10 +221,13 @@ function hallCast(lt, sh) {
   const cran = A7.cran({ x: qC.x, y: qC.y - 118 * qC.s, s: qC.s, noLegs: true, noShadow: true, look: [-.7, 0], expr: lt > 14.56 ? 'sour' : 'happy', arms: lt > 14.6 ? { l: [1.25, -2.0], r: [1.25, -2.0] } : { l: 'rest', r: 'rest' } });
   const mng = actor(A7.mango, P_MNG, lt, { look: [-.8, 0], expr: lt > 7.6 && lt < 8.4 ? 'panic' : 'happy', acc: ['badge7', 'gaitbelt7', 'keys7'], arms: { l: 'rest', r: lt > 13.2 && lt < 14.6 ? [2.0, .1] : 'reach' } }, 1);
   // the wheelchair: its back half, Mrs. Cranberry, then its front half (the Episode 7 chair)
-  const chairPass = o => { S7.wheelchairBack(qC.x, qC.y, qC.s); draw('cran', o); S7.wheelchairFront(qC.x, qC.y, qC.s); };
+  const chairPass = o => {
+    const go = () => { S7.wheelchairBack(qC.x, qC.y, qC.s); (F.includes('cran') ? drawChar(o) : drawBg(o)); S7.wheelchairFront(qC.x, qC.y, qC.s); };
+    if (F.includes('cran')) go(); else V2.dof(3, go);
+  };
   // the back row first (far to near), then the front
-  if (F.includes('lem')) drawChar(lem); else drawBg(lem);
-  if (F.includes('mng')) drawChar(mng); else drawBg(mng);
+  if (F.includes('lem')) drawChar(lem); else V2.dof(3, () => drawBg(lem));
+  if (F.includes('mng')) drawChar(mng); else V2.dof(3, () => drawBg(mng));
   chairPass(cran);
   // Clementine: at the closet from 7.1, then out with a mop
   const clm = actor(A10.clem, P_CLM, lt, { expr: lt > 7.2 && lt < 8.2 ? 'shock' : 'hopeful', look: [-.2, 0], hold: lt > 7.8 ? { r: 'drill12_mop' } : {}, grip: { r: [96, 40] }, arms: lt > 7.8 ? { l: 'rest', r: 'hold' } : { l: 'rest', r: 'rest' } }, 1);
