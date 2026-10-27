@@ -3,8 +3,8 @@
  *
  * The Staff Engagement Awards in the break room. The Administrator gives Lemon Most Reports Filed ("Nobody reads them."), pulls out
  * a report whose bookmark says where the good cuff is (Mango: "You knew?"), strikes the gong, hands Clementine the Newest Hire rosette
- * ("Sure!"), and calls Strawberry out for a Friday call-out. She says No. The room goes still. She takes a donut from the table, looks at
- * it, puts it back and walks out on the left (the sting). A framed ATTENDED, UNDER PROTEST certificate fades in on the back wall.
+ * ("Sure!"), and calls Strawberry out for a Friday call-out. She says No. The room goes still. She takes a donut from the plate, looks at it,
+ * puts it back and walks out on the left; the sting. A framed ATTENDED, UNDER PROTEST certificate fades in on the back wall.
  *
  * Copied, not imported (earlier episodes are private): the break-room kit and helpers from ep8_break.js, the balloons, bunch, banner and
  * sfxWord from ep10_party.js, the welcome banner's style from ep9_arrival.js, the table donut from ep10_days.js, Mrs. Cranberry's chair from ep7.js.
@@ -18,8 +18,9 @@
  *   7.42 rep     insert, full frame: page one of the report, the yellow bookmark in Lemon's hand (GOOD CUFF ...).
  *   9.72 cuM     m1 close-up Mango, double take ("You knew?").
  *  10.47 two     a3 two-shot ("It's in your report.").
- *  11.60 gong    the strike at 11.87 (the gong's sound cue at 0.10 into the beat): the gong shakes, a shock ring crosses the frame, the balloons jiggle, Mango flinches.
- *  12.80 walk    a4: Clementine walks up with the rosette, the Administrator points at her.
+ *  11.60 gong    the strike at 11.87 (the sound cue sits 0.10 into the beat): the gong shakes, a shock ring crosses the frame,
+ *                the balloons jiggle, Mango flinches.
+ *  12.80 walk    a4: Clementine walks up with the rosette while the Administrator points at her.
  *  14.90 cuC2    c2 close-up Clementine, bouncing ("Sure!").
  *  15.40 back    a5 wide of the back of the room: Strawberry by the door, Mango looking round at her ("Attended.").
  *  18.60 cuS1    s1 close-up Strawberry, sour ("Under protest.").
@@ -29,14 +30,15 @@
  *  25.20 two2    a7 two-shot ("Did you say...?") and s3 ("No.").
  *  26.70 cuM2    m2 Mango, hand over her mouth ("She said it.").
  *  27.60 cuA     a8 the Administrator's smile fades, then brightens ("There's no slide for that.").
- *  29.10 table   s4: she reaches to the plate, takes a donut (29.36), looks at it, puts it back (30.14), walks out left (sting at 31.04).
- *  30.90 tail    (0.55 s; the scene has no room for more): the room holds on the empty space; the Administrator and Lemon look at each other;
- *                a balloon drifts up; the certificate has faded in (from 31.04).
+ *  29.10 table   s4: she reaches to the plate, takes a donut (29.36), looks at it, puts it back (30.27), walks out left
+ *                (the sting at 31.04; she is off the frame by then).
+ *  30.90 tail    the last 0.55 s (the scene has no more room after `end`): the room holds on the empty space where she was,
+ *                the Administrator and Lemon look at each other, a balloon drifts up, the certificate has faded in (from 31.04).
  */
 (() => {
 if (!window.TIMELINE_EP12) return;
-const { person, zoomTo, faceZoom, faceC, drawBg, inB } = window.H6;
-const A6 = window.A6, A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, S6 = window.S6, S7 = window.S7;
+const { person, zoomTo, faceZoom, faceC, drawBg } = window.H6;
+const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, S6 = window.S6, S7 = window.S7;
 const { p2, poly, grad } = V2;
 const { box3, onZ, kz, ceilingLamp, table3, wallClock, microwave, backWindow } = S6;
 const melon = A9.melon, straw = A11.straw, lemon = A7.lemon, mango = A7.mango, cran = A7.cran, clem = A10.clem;
@@ -48,7 +50,7 @@ const route = keys => lt => {   // [t, X, Z, ease]: linear between keys, 'io' or
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = seg(lt, a[0], b[0]), e = b[3] === 'io' ? easeIO(k) : b[3] === 'out' ? easeOut(k) : k; return [lerp(a[1], b[1], e), lerp(a[2], b[2], e)]; }
   const l = keys[keys.length - 1]; return [l[1], l[2]];
 };
-const vtrack = keys => lt => {  // [t, [v, ...], ease]: a vector of numbers eased between keys (angles, grips)
+const vtrack = keys => lt => {  // [t, [v, ...], ease]: a vector of numbers (angles, grips) eased between keys
   if (lt <= keys[0][0]) return keys[0][1].slice();
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = seg(lt, a[0], b[0]), e = b[2] === 'io' ? easeIO(k) : b[2] === 'out' ? easeOut(k) : k; return a[1].map((v, j) => v + (b[1][j] - v) * e); }
   return keys[keys.length - 1][1].slice();
@@ -59,8 +61,6 @@ function sfxWord(lt, t0, str, x, y, o = {}) {   // an onomatopoeia that pops in 
   ctx.save(); ctx.globalAlpha *= f; ctx.translate(x, y); ctx.scale(lerp(1.25, 1, easeOut(k)), lerp(1.25, 1, easeOut(k))); ctx.rotate(o.rot ?? -.08);
   text(str, 0, 0, { size: o.size ?? 130, font: 'Bangers', weight: 400, fill: o.fill ?? '#ffe135', lw: 14, stroke: '#150f22', spacing: 3, shadow: 14 }); ctx.restore();
 }
-// the scene time of a spoken word, from the recorded line's word timings (falls back to a guess)
-const wordT = (id, word, fb) => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id), w = l && l.words.find(x => x[0].toLowerCase().replace(/[^a-z]/g, '').includes(word)); return w ? l.s - CUR.start + w[1] : fb; };
 const BCOL = ['#ff4f6d', '#ffd23a', '#4aa8ff', '#58c85a', '#c25bd6', '#ff9f1c'];
 
 // ---- the stage: the break room (warm, the afternoon sun through the window)
@@ -73,29 +73,31 @@ const BAN = { X0: -430, X1: 430, Y0: 506, Y1: 588 };                  // STAFF E
 const CERT = { x0: 290, x1: 450, y0: 236, y1: 452 };                  // Strawberry's certificate (fades in at the end)
 const TABLE = { x: -400, z: 1420, w: 95, d: 300, h: 135 };            // the long table on the left
 const PODIUM = { x: 40, z: 1420, w: 80, d: 80, h: 150 };              // the lectern; the trophy on top
-const GONG = { x: 470, y: 300, z: 1500, r: 96 };                      // the gong on its frame, near the window side
-const COUNTER = { x0: 260, x1: 500, z0: 1650, z1: 1930, h: 200 };     // the microwave counter, right
+const GONG = { x: 430, y: 300, z: 1500, r: 90 };                      // the gong on its frame, by the window side
+const COUNTER = { x0: 260, x1: 500, z0: 1650, z1: 1930, h: 200 };     // the counter, right
 const FRIDGE = { x0: 440, x1: 520, z0: 1990, z1: 2090, h: 470 };
-const BUNCH = [[-470, 1990], [470, 1600]];                            // balloon weights on the floor
-const TAKE = [-314, 158, 1212];                                       // the donut Strawberry takes (its centre)
-const DONUTS = [[-334, 1186], [-300, 1184], [-314, 1212]];           // the plate: three donuts, the last is the one she takes
+const BUNCH = [[-470, 1990], [470, 1600]];                            // balloon bunches on their floor weights
+const PLATE = [-352, 1200], PLATE_R = 42;                             // the donut plate on the table
+const DONUTS = [[-366, 1186], [-340, 1184], [-352, 1212]];            // the last one is the one she takes
+const TAKE = [-352, 160, 1212], UP = [-330, 236, 1190], HIP = [-292, 100, 1262];
 // ---- the cast: world X and Z
 const MEL = [250, 1450], LEM = [-190, 1400], MNG = [-40, 1700], CRN = [-380, 1790], BGB = [-250, 1975], BGP = [150, 1950];
 const CLM0 = [-40, 1900], CLM1 = [110, 1540];
 const STR0 = [-120, 1960], STR1 = [-240, 1262], STROUT = [-820, 1010];
-const SILENT = () => [bs('silence'), bs('silence') + .5, bs('silence') + 1.0];   // the three ticks
-const GONG_T = () => bs('gong') + .1;                                  // the strike (the sound cue sits at 0.10 in the gong beat)
+const GONG_T = () => bs('gong') + .1;                                  // the strike (the sound cue sits 0.10 into the gong beat)
+const REP_T = () => bs('a2') + 1.22;                                   // the insert of the report
 const EXIT_T = () => bs('s4') + 1.2;                                   // she starts for the door
+const RELEASE_T = () => bs('s4') + 1.17;                               // the donut goes back on the plate
 const SEAT_T = () => bs('end') + .1;                                   // the sting: the certificate fades in
 
-// the perspective kit for a point, with a scale factor on top (the Administrator is 1.22)
+// ---- the perspective: a character's screen origin and scale, and the hand target for a world point
 const at = (X, Z, sc = 1) => { const q = V2.at(X, Z); return { x: q.x, y: q.y, s: q.s * sc }; };
 const KD = kind => KINDS[kind] || KINDS.lemon;
-// the hand target for a world point, in the arms' local frame (see drawChar): the body centre sits (legs + 0.9 ry) above the origin
+// the arms are solved in the body's own frame (drawChar): its origin is the body centre, (legs + 0.9 ry) above the feet; `lift` is in screen px
 const gripAt = (o, kind, X, Y, Z, noLegs = false) => { const [px, py] = p2(X, Y, Z), k = KD(kind), leg = noLegs ? 0 : (k.leg || 90); return [(px - o.x) / o.s, (py + (o.lift || 0) - o.y) / o.s + leg + k.ry * .9]; };
-const calm = lt => { const s2 = bs('s2'), eS = be('silence'); return 1 - .95 * seg(lt, s2 - .2, s2 + .3) * (1 - seg(lt, eS + .2, eS + 1.4)); };   // the balloons stop for the silence, then drift again
-const jig = lt => lt > GONG_T() ? 1 + 1.6 * Math.exp(-(lt - GONG_T()) * 2.2) : 1;                                                 // the strike shakes them
-const cutTimes = () => [0, bs('a1') - .03, bs('l1') - .03, bs('a2') - .03, bs('m1') - .03, bs('a3') - .03, bs('gong') - .03, bs('a4') - .03, bs('c2') - .03, bs('a5') - .03, bs('s1') - .03, bs('a6') - .03, bs('s2') - .03, bs('a7') - .03, bs('m2') - .03, bs('a8') - .03, bs('s4') - .03, be('end') + .0];
+// the balloons: still for the silence (the calm factor), shaken by the gong
+const calm = lt => { const s2 = bs('s2'), eS = be('silence'); return 1 - .95 * seg(lt, s2 - .2, s2 + .3) * (1 - seg(lt, eS + .2, eS + 1.4)); };
+const jig = lt => lt > GONG_T() ? 1 + 1.6 * Math.exp(-(lt - GONG_T()) * 2.2) : 1;
 
 // ---- a balloon, a bunch on a weight, the pink banner (ep10_party.js, with the same look)
 function balloonAt(qx, qy, R, col, kk, sq) {
@@ -107,17 +109,17 @@ function balloonAt(qx, qy, R, col, kk, sq) {
   ctx.restore();
   return [qx, qy + R * 1.06, R];
 }
-function balloon3(x, y, z, col, o = {}) { const q = p2(x, y, z), kk = kz(z); return balloonAt(q[0], q[1], (o.r ?? 62) * kk, col, kk, o.sq || 0); }
+function balloon3(x, y, z, col) { const q = p2(x, y, z), kk = kz(z); return balloonAt(q[0], q[1], 62 * kk, col, kk, 0); }
 function balloonBunch(Xc, Zc, lt, seed, cm = 1, n = 6) {   // a bunch tied to a weight on the floor; each balloon bobs and sways on its own string
-  const kk = kz(Zc), w = p2(Xc, 0, Zc), list = [];
+  const kk = kz(Zc), w = p2(Xc, 0, Zc), list = [], j = jig(lt);
   ctx.save(); ctx.fillStyle = '#e9c34c'; ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.translate(w[0], w[1]); ctx.scale(kk, kk); rr(-22, -26, 44, 26, 5); ctx.fill(); ctx.stroke(); ctx.restore();
   for (let i = 0; i < n; i++) {
-    const bob = Math.sin(lt * 1.5 + i * 1.3 + seed) * 12 * cm * jig(lt), sway = Math.sin(lt * 1.05 + i * .9 + seed) * 9 * cm * jig(lt);
+    const bob = Math.sin(lt * 1.5 + i * 1.3 + seed) * 12 * cm * j, sway = Math.sin(lt * 1.05 + i * .9 + seed) * 9 * cm * j;
     list.push({ i, x: Xc + (i - (n - 1) / 2) * 34 + sway, y: 300 + (i % 3) * 58 + (i === 1 || i === 4 ? 40 : 0) + bob, z: Zc + (i % 2) * 18 });
   }
   list.sort((a, b) => b.z - a.z);
   for (const b of list) {
-    const [sx, sy] = balloon3(b.x, b.y, b.z, BCOL[(b.i + Math.floor(seed)) % 6]);
+    const [sx, sy] = balloon3(b.x, b.y, b.z, BCOL[(b.i + seed) % 6]);
     ctx.strokeStyle = 'rgba(40,30,40,.6)'; ctx.lineWidth = Math.max(1.6, 2.2 * kz(b.z)); ctx.beginPath(); ctx.moveTo(w[0], w[1] - 24 * kk);
     ctx.quadraticCurveTo(lerp(w[0], sx, .5) + 16 * Math.sin(lt + b.i) * cm, lerp(w[1], sy, .6), sx, sy); ctx.stroke();
   }
@@ -140,8 +142,8 @@ function banner12(lt) {
   ctx.restore();
 }
 
-// ---- the props: held ones (the origin is the hand, see drawProp in engine.js) and the two set pieces (origin at the base or centre)
-EXT.prop.mallet12 = (side, o, t) => {   // the Administrator's gong mallet: a wooden stick and a felt head
+// ---- the props: held ones (the origin is the hand, see drawProp in engine.js) and the set pieces (origin at the base or the centre)
+EXT.prop.mallet12 = (side, o, t) => {   // the gong mallet: a wooden stick and a felt head
   ctx.save(); ctx.lineJoin = 'round';
   ctx.fillStyle = '#9b6a3c'; ctx.strokeStyle = INK; ctx.lineWidth = 3.5; rr(-6, -112, 12, 116, 5); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#6d6a72'; ctx.beginPath(); ctx.arc(0, -122, 25, 0, TAU); ctx.fill(); ctx.stroke();
@@ -181,12 +183,12 @@ EXT.prop.donut12 = (side, o, t) => {   // the donut Strawberry takes off the pla
   ctx.fillStyle = '#e8a06a'; ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 0, 36, 30, 0, 0, TAU); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#ff7ac8'; ctx.beginPath(); ctx.ellipse(0, -3, 33, 27, 0, 0, TAU); ctx.fill();
   ctx.fillStyle = '#c9a26a'; ctx.beginPath(); ctx.ellipse(0, 0, 11, 9, 0, 0, TAU); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#ffe135'; for (const [x, y] of [[-18, -12], [14, -16], [-6, -22], [22, 4], [-22, 8]]) { ctx.fillRect(x, y, 5, 3); }
+  ctx.fillStyle = '#ffe135'; for (const [x, y] of [[-18, -12], [14, -16], [-6, -22], [22, 4], [-22, 8]]) ctx.fillRect(x, y, 5, 3);
   ctx.restore();
 };
 Object.assign(PROP_BOX, { donut12: [-40, -36, 40, 36] });
-EXT.prop.gong12 = (side, o, t) => {   // the gong: a brass disc with a rim, rings and a boss, origin at its centre (r 96 world units, scaled by the caller)
-  const R = 96, sw = Math.sin(t * 38) * Math.exp(-Math.max(0, t - GONG_T()) * 3) * (t > GONG_T() ? 1 : 0);
+EXT.prop.gong12 = (side, o, t) => {   // the gong: a brass disc with a rim, rings and a boss, origin at its centre (r 96 units, scaled by the caller)
+  const R = 96, sw = t > GONG_T() ? Math.sin(t * 38) * Math.exp(-(t - GONG_T()) * 3) : 0;
   ctx.save(); ctx.scale(1 + .035 * sw, 1 - .02 * Math.abs(sw));
   ctx.fillStyle = grad(-R, -R, R, R, [[0, '#f8e09a'], [.5, '#c8922e'], [1, '#6b4a14']]); ctx.strokeStyle = '#4a3010'; ctx.lineWidth = 6;
   ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill(); ctx.stroke();
@@ -209,7 +211,7 @@ EXT.prop.pizzaTrophy12 = (side, o, t) => {   // Most Reports Filed: a gold pizza
   ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-44, -100); ctx.lineTo(-30, -126); ctx.stroke();
   ctx.restore();
 };
-EXT.acc.sash12 = (o, k, t, layer) => {   // the Administrator's sash, over the chest: STAFF ENGAGEMENT
+EXT.acc.sash12 = (o, k, t, layer) => {   // the Administrator's sash over the chest: STAFF ENGAGEMENT
   if (layer !== 'front') return;
   const x0 = -k.rx * .7, y0 = k.ry * .08, x1 = k.rx * .62, y1 = k.ry * .72, L = Math.hypot(x1 - x0, y1 - y0);
   ctx.save(); ctx.translate(x0, y0); ctx.rotate(Math.atan2(y1 - y0, x1 - x0));
@@ -219,11 +221,12 @@ EXT.acc.sash12 = (o, k, t, layer) => {   // the Administrator's sash, over the c
   ctx.restore();
 };
 
-// ---- the set: the break room
-function gongSet(lt) {   // the gong on its frame, in front of the window side
+// ---- the set
+function gongSet(lt) {   // the gong on its frame, by the window side
   const k = kz(GONG.z), [cx, cy] = p2(GONG.x, GONG.y, GONG.z);
-  for (const X of [GONG.x - 110, GONG.x + 110]) { const a = p2(X, 0, GONG.z), b = p2(X, 430, GONG.z); ctx.strokeStyle = '#3a2a22'; ctx.lineWidth = Math.max(3, 9 * k); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
-  const top = [p2(GONG.x - 110, 430, GONG.z), p2(GONG.x + 110, 430, GONG.z)]; ctx.beginPath(); ctx.moveTo(top[0][0], top[0][1]); ctx.lineTo(top[1][0], top[1][1]); ctx.stroke();
+  ctx.strokeStyle = '#3a2a22'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(3, 9 * k);
+  for (const X of [GONG.x - 80, GONG.x + 80]) { const a = p2(X, 0, GONG.z), b = p2(X, 430, GONG.z); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+  const t0 = p2(GONG.x - 80, 430, GONG.z), t1 = p2(GONG.x + 80, 430, GONG.z); ctx.beginPath(); ctx.moveTo(t0[0], t0[1]); ctx.lineTo(t1[0], t1[1]); ctx.stroke();
   ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); EXT.prop.gong12(1, null, lt); ctx.restore();
 }
 function trophySet(lt) {   // on the lectern's top, between the Administrator and Lemon
@@ -235,58 +238,13 @@ function discTop(X, Y, Z, rx, rz, fill, stroke, lw = 2) {   // a flat ellipse on
   ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
   ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
 }
-function donutTop(X, Y, Z, s = 1) {   // a donut seen from above on the plate: pink frosting, a hole, sprinkles
-  discTop(X, Y, Z, 20 * s, 20 * s * .8, '#e8a06a', 'rgba(60,30,20,.5)', 1.6);
-  discTop(X, Y + .5, Z, 17 * s, 17 * s * .8, '#ff7ac8');
-  discTop(X, Y + .8, Z, 6.5 * s, 6.5 * s * .8, '#c9a26a');
-  for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + X * .1, rr2 = 11.5 * s; const [sx, sy] = p2(X + Math.cos(a) * rr2, Y + 1, Z + Math.sin(a) * rr2 * .8); ctx.fillStyle = ['#ffd60a', '#50a5ff', '#5ae682', '#ffffff'][i % 4]; ctx.fillRect(sx - 2, sy - 1, 4, 2); }
+function donutTop(X, Y, Z) {   // a donut seen from above on the plate: pink frosting, a hole, sprinkles
+  discTop(X, Y, Z, 19, 15, '#e8a06a', 'rgba(60,30,20,.5)', 1.4);
+  discTop(X, Y + .5, Z, 16, 12, '#ff7ac8');
+  discTop(X, Y + .8, Z, 6, 4.8, '#c9a26a');
+  for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + X * .1, rr2 = 11; const [sx, sy] = p2(X + Math.cos(a) * rr2, Y + 1, Z + Math.sin(a) * rr2 * .8); ctx.fillStyle = ['#ffd60a', '#50a5ff', '#5ae682', '#ffffff'][i % 4]; ctx.fillRect(sx - 2, sy - 1, 4, 2); }
 }
-function roomSet(lt, takenDonut) {
-  const k = kz(ZB);
-  S6.shell({ zb: ZB, hw: HW, ch: CH, wall: '#efe2c3', wain: '#4e8d95', floorA: '#d9c39b', floorB: '#a58d69', ceil: '#efe9da', fog: '#c4b08f', fogAmt: .22, tile: 120, bright: 1.02, rail: 110 });
-  backWindow(ZB, { x0: WIN.x0, x1: WIN.x1, y0: WIN.y0, y1: WIN.y1, sky: ['#8ccaf0', '#fff1cf'], mull: 2, beam: '255,226,160', beamA: .16, beamLen: 900, beamDx: -200,
-    draw: f => { const [fx0, fy0] = f[0], [fx1, fy1] = f[2], w = fx1 - fx0, h = fy0 - fy1;
-      ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.ellipse(fx0 + w * .3, fy1 + h * .3, w * .16, h * .05, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(fx0 + w * .66, fy1 + h * .2, w * .12, h * .04, 0, 0, TAU); ctx.fill();
-      V2.glow(fx0 + w * .8, fy1 + h * .14, h * .6, '255,240,200', .6, 'screen', .3);
-      ctx.fillStyle = '#c9b48a'; ctx.fillRect(fx0, fy0 - h * .12, w, h * .12); } });
-  { const { x0, x1, y1 } = DOOR;   // the sliding door, glass at the top
-    onZ(ZB, x0 - 14, x1 + 14, 0, y1 + 14, '#e8dccb', 'rgba(25,16,30,.6)', 2.4);
-    onZ(ZB, x0, x1, 0, y1, '#c9b89c', 'rgba(25,16,30,.6)', 2);
-    onZ(ZB, x0 + 16, x1 - 16, 210, y1 - 22, 'rgba(255,236,186,.85)', 'rgba(25,16,30,.4)', 1.6); }
-  banner12(lt);
-  { const [cx, cy] = p2(CLOCK.x, CLOCK.y, ZB - 4), R = kz(ZB) * CLOCK.r * .82, ticks = SILENT().filter(t => lt >= t).length;
-    wallClock(CLOCK.x, CLOCK.y, ZB - 4, 1, 52, 4 + 52 / 60, CLOCK.r);
-    const sa = .2 + ticks * (TAU / 60);   // the second hand steps on each tick of the silence
-    ctx.save(); ctx.strokeStyle = '#d62a3a'; ctx.lineWidth = Math.max(1.4, 2 * kz(ZB)); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx - Math.sin(sa) * R * .2, cy + Math.cos(sa) * R * .2); ctx.lineTo(cx + Math.sin(sa) * R, cy - Math.cos(sa) * R); ctx.stroke(); ctx.restore(); }
-  // the framed certificate: it fades in at the sting (the Administrator's ATTENDED, UNDER PROTEST)
-  certSet(lt);
-  // the long table on the left, with the plate and the reports
-  table3(TABLE.x, TABLE.z, { w: TABLE.w, d: TABLE.d, h: TABLE.h, color: '#c9a26a' });
-  discTop(-318, TABLE.h + 16, 1200, 60, 60, '#fbfbf6', 'rgba(60,50,40,.35)', 2);
-  DONUTS.forEach(([X, Z], i) => { if (!(takenDonut && i === 2)) donutTop(X, TABLE.h + 16, Z, 1); });
-  for (let i = 0; i < 5; i++) {   // the reports, a stack with coloured bookmarks
-    const y = TABLE.h + 16 + i * 3.2, X = -456, Z = 1480;
-    poly([p2(X - 26, y, Z - 33), p2(X + 26, y, Z - 33), p2(X + 26, y, Z + 33), p2(X - 26, y, Z + 33)], i % 2 ? '#fbf6e6' : '#fffdf6', 'rgba(40,30,30,.55)', 1.4);
-  }
-  for (const [c, col] of [['#ff4f6d', 0], ['#ffd23a', 1], ['#4aa8ff', 2], ['#58c85a', 3]]) { const [x, y] = p2(-456 + 20 - col * 10, TABLE.h + 26, 1480 + 33 + col * 2); ctx.fillStyle = c; ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.fillRect(x - 3, y - 14, 6, 20); ctx.strokeRect(x - 3, y - 14, 6, 20); }
-  for (const [X, Z] of [[-438, 1330], [-360, 1575]]) box3({ x0: X - 13, x1: X + 13, y0: TABLE.h + 16, y1: TABLE.h + 50, z0: Z - 13, z1: Z + 13, color: '#fbf9f2', top: '#5a3a24', front: '#ece6d8', side: '#d8d0c0' });
-  // the podium and its drawer (the report comes out of it), the trophy on top
-  box3({ x0: PODIUM.x - 40, x1: PODIUM.x + 40, y0: 0, y1: PODIUM.h, z0: PODIUM.z - 40, z1: PODIUM.z + 40, color: '#7a5532', top: '#8d6b45', front: '#654427', side: '#4f3520' });
-  onZ(PODIUM.z - 40, PODIUM.x - 32, PODIUM.x + 32, 26, 84, '#5b3d24', 'rgba(25,16,30,.6)', 2);
-  onZ(PODIUM.z - 40, PODIUM.x - 8, PODIUM.x + 8, 50, 58, '#e9c34c', 'rgba(25,16,30,.6)', 1.6);
-  trophySet(lt);
-  // the gong, on its frame
-  gongSet(lt);
-  // the back right: the counter, the microwave, the fridge with the sticky note
-  box3({ x0: COUNTER.x0, x1: COUNTER.x1, y1: COUNTER.h, z0: COUNTER.z0, z1: COUNTER.z1, color: '#c9d3d3', top: '#55606a', front: '#b9c4c6', side: '#98a6a8' });
-  microwave(380, 1700, { on: 0, display: '4:52' });
-  box3({ x0: FRIDGE.x0, x1: FRIDGE.x1, y1: FRIDGE.h, z0: FRIDGE.z0, z1: FRIDGE.z1, color: '#e9eef2', top: '#f4f7fa', front: '#f4f7fa', side: '#c9d2d9' });
-  onZ(FRIDGE.z0, 452, 504, 300, 352, '#ffe066', 'rgba(25,16,30,.55)', 1.6);
-  text('TO SHARE', 478, 328, { size: 12, font: 'Bangers', weight: 400, fill: '#2a1a0a', spacing: 1 });
-  // ceiling: two fluorescent panels over the room
-  ceilingLamp(-200, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(170, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(-10, 1560, CH, 1, '255,240,210', 110, 170);
-}
-function certSet(lt) {   // the framed certificate, hung at the back right; it fades in at the sting
+function certSet(lt) {   // the framed certificate, hung at the back right; it fades in at the sting (the Administrator's ATTENDED, UNDER PROTEST)
   const a = seg(lt, SEAT_T(), SEAT_T() + .34);
   if (a <= 0) return;
   const Z = ZB - 4, [cx, cy] = p2((CERT.x0 + CERT.x1) / 2, (CERT.y0 + CERT.y1) / 2, Z), k = kz(Z), w = (CERT.x1 - CERT.x0) * k, h = (CERT.y1 - CERT.y0) * k;
@@ -302,85 +260,128 @@ function certSet(lt) {   // the framed certificate, hung at the back right; it f
   text('UNDER PROTEST', 0, h * .25, { size: 24 * k, font: 'Bangers', weight: 400, fill: 'rgba(193,18,31,.9)', spacing: 1, maxW: w * .72 }); ctx.restore();
   ctx.restore();
 }
+function roomSet(lt, takenDonut) {
+  S6.shell({ zb: ZB, hw: HW, ch: CH, wall: '#efe2c3', wain: '#4e8d95', floorA: '#d9c39b', floorB: '#a58d69', ceil: '#efe9da', fog: '#c4b08f', fogAmt: .22, tile: 120, bright: 1.02, rail: 110 });
+  backWindow(ZB, { x0: WIN.x0, x1: WIN.x1, y0: WIN.y0, y1: WIN.y1, sky: ['#8ccaf0', '#fff1cf'], mull: 2, beam: '255,226,160', beamA: .16, beamLen: 900, beamDx: -200,
+    draw: f => { const [fx0, fy0] = f[0], [fx1, fy1] = f[2], w = fx1 - fx0, h = fy0 - fy1;
+      ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.ellipse(fx0 + w * .3, fy1 + h * .3, w * .16, h * .05, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(fx0 + w * .66, fy1 + h * .2, w * .12, h * .04, 0, 0, TAU); ctx.fill();
+      V2.glow(fx0 + w * .8, fy1 + h * .14, h * .6, '255,240,200', .6, 'screen', .3);
+      ctx.fillStyle = '#c9b48a'; ctx.fillRect(fx0, fy0 - h * .12, w, h * .12); } });
+  { const { x0, x1, y1 } = DOOR;   // the sliding door, glass at the top
+    onZ(ZB, x0 - 14, x1 + 14, 0, y1 + 14, '#e8dccb', 'rgba(25,16,30,.6)', 2.4);
+    onZ(ZB, x0, x1, 0, y1, '#c9b89c', 'rgba(25,16,30,.6)', 2);
+    onZ(ZB, x0 + 16, x1 - 16, 210, y1 - 22, 'rgba(255,236,186,.85)', 'rgba(25,16,30,.4)', 1.6); }
+  banner12(lt);
+  { const [cx, cy] = p2(CLOCK.x, CLOCK.y, ZB - 4), R = kz(ZB) * CLOCK.r * .82, ticks = [0, .5, 1].filter(d => lt >= bs('silence') + d).length;
+    wallClock(CLOCK.x, CLOCK.y, ZB - 4, 1, 52, 4, CLOCK.r);
+    const sa = .2 + ticks * (TAU / 60);   // the second hand steps on each tick of the silence
+    ctx.save(); ctx.strokeStyle = '#d62a3a'; ctx.lineWidth = Math.max(1.4, 2 * kz(ZB)); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx - Math.sin(sa) * R * .2, cy + Math.cos(sa) * R * .2); ctx.lineTo(cx + Math.sin(sa) * R, cy - Math.cos(sa) * R); ctx.stroke(); ctx.restore(); }
+  certSet(lt);
+  // the back right: the counter, the microwave, the fridge with its sticky note
+  box3({ x0: COUNTER.x0, x1: COUNTER.x1, y1: COUNTER.h, z0: COUNTER.z0, z1: COUNTER.z1, color: '#c9d3d3', top: '#55606a', front: '#b9c4c6', side: '#98a6a8' });
+  microwave(380, 1700, { on: 0, display: '4:52' });
+  box3({ x0: FRIDGE.x0, x1: FRIDGE.x1, y1: FRIDGE.h, z0: FRIDGE.z0, z1: FRIDGE.z1, color: '#e9eef2', top: '#f4f7fa', front: '#f4f7fa', side: '#c9d2d9' });
+  onZ(FRIDGE.z0, 452, 504, 300, 352, '#ffe066', 'rgba(25,16,30,.55)', 1.6);
+  { const [nx, ny] = p2(478, 326, FRIDGE.z0), k = kz(FRIDGE.z0); text('TO SHARE', nx, ny, { size: 13 * k, font: 'Bangers', weight: 400, fill: '#2a1a0a', spacing: 1 }); }
+  // the balloons in their bunches (behind the gong and the table)
+  balloonBunch(BUNCH[0][0], BUNCH[0][1], lt, 0, calm(lt));
+  balloonBunch(BUNCH[1][0], BUNCH[1][1], lt, 3, calm(lt));
+  if (lt >= be('end') + .1) { const u = easeOut(seg(lt, be('end') + .1, be('end') + .6)); balloon3(480 + 14 * u, 350 + 160 * u, 1600, BCOL[5]); }   // one lets go and drifts up in the tail
+  // the lectern, its drawer, the trophy on top
+  box3({ x0: PODIUM.x - 40, x1: PODIUM.x + 40, y0: 0, y1: PODIUM.h, z0: PODIUM.z - 40, z1: PODIUM.z + 40, color: '#7a5532', top: '#8d6b45', front: '#654427', side: '#4f3520' });
+  onZ(PODIUM.z - 40, PODIUM.x - 32, PODIUM.x + 32, 26, 84, '#5b3d24', 'rgba(25,16,30,.6)', 2);
+  onZ(PODIUM.z - 40, PODIUM.x - 8, PODIUM.x + 8, 50, 58, '#e9c34c', 'rgba(25,16,30,.6)', 1.6);
+  trophySet(lt);
+  // the long table on the left: the plate of donuts, the reports with their bookmarks, two cups
+  table3(TABLE.x, TABLE.z, { w: TABLE.w, d: TABLE.d, h: TABLE.h, color: '#c9a26a' });
+  discTop(PLATE[0], TABLE.h + 16, PLATE[1], PLATE_R, PLATE_R, '#fbfbf6', 'rgba(60,50,40,.35)', 2);
+  DONUTS.forEach(([X, Z], i) => { if (!(takenDonut && i === 2)) donutTop(X, TABLE.h + 16, Z); });
+  for (let i = 0; i < 5; i++) { const y = TABLE.h + 16 + i * 3.2, X = -456, Z = 1480; poly([p2(X - 26, y, Z - 33), p2(X + 26, y, Z - 33), p2(X + 26, y, Z + 33), p2(X - 26, y, Z + 33)], i % 2 ? '#fbf6e6' : '#fffdf6', 'rgba(40,30,30,.55)', 1.4); }
+  [['#ff4f6d', 0], ['#ffd23a', 1], ['#4aa8ff', 2], ['#58c85a', 3]].forEach(([c, col]) => { const [x, y] = p2(-436 - col * 10, TABLE.h + 26, 1513 + col * 2); ctx.fillStyle = c; ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.fillRect(x - 3, y - 14, 6, 20); ctx.strokeRect(x - 3, y - 14, 6, 20); });
+  for (const [X, Z] of [[-438, 1330], [-360, 1575]]) box3({ x0: X - 13, x1: X + 13, y0: TABLE.h + 16, y1: TABLE.h + 50, z0: Z - 13, z1: Z + 13, color: '#fbf9f2', top: '#5a3a24', front: '#ece6d8', side: '#d8d0c0' });
+  // the gong, on its frame
+  gongSet(lt);
+  // the counter's microwave and fridge are set; the ceiling: three fluorescent panels
+  ceilingLamp(-200, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(170, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(-10, 1560, CH, 1, '255,240,210', 110, 170);
+}
 
-// ---- the cast
+// ---- the cast: each character's options for the frame, and the order they are drawn in (the far ones first)
 function cast(lt) {
-  const b = bs, C = { items: [] }, add = (z, o, extra = {}) => C.items.push(Object.assign({ z, o }, extra));
-  // the Administrator: s 1.22, the sash and the nametag; the mallet in his right hand (the gong), the report in his left
+  const b = bs, items = [], add = (z, o, extra = {}) => items.push(Object.assign({ z, o }, extra));
+  // the Administrator: s 1.22, the sash and the nametag; his right hand holds the mallet, his left the report, then he points
   const admB = at(MEL[0], MEL[1], 1.22);
-  const admExpr = lt < b('a2') ? 'happy' : lt < b('s2') ? (lt < b('gong') ? 'smug' : 'happy') : lt < b('a7') ? 'shock' : lt < 28.2 ? (lt < b('a8') ? 'shock' : 'chill') : 'happy';
-  const lArm = vtrack([[0, [.28, .25]], [6.2, [.28, .25]], [7.0, [.7, .95], 'io'], [12.6, [.7, .95]], [12.9, [1.5, .05], 'io'], [14.2, [1.5, .05]], [14.9, [2.8, .2], 'io'], [15.5, [1.5, .05], 'io'], [18.5, [1.5, .05]], [19.6, [1.5, .05]], [22.7, [1.5, .05]], [23.5, [.9, .3], 'io'], [25.2, [1.25, -1.75], 'io'], [26.8, [.28, .25], 'io'], [27.6, [1.25, -1.75], 'io'], [29.0, [.28, .25], 'io']]);
+  const admExpr = lt < b('a3') ? 'happy' : lt < b('gong') ? 'smug' : lt < b('a5') ? 'happy' : lt < b('a6') ? 'smug' : lt < b('s2') ? 'happy' : lt < b('a8') ? 'shock' : lt < 28.2 ? 'chill' : 'happy';
+  const lArm = vtrack([[0, [.28, .25]], [6.2, [.28, .25]], [7.0, [.7, .95], 'io'], [12.6, [.7, .95]], [12.9, [1.5, .05], 'io'], [14.2, [1.5, .05]], [14.9, [2.8, .2], 'io'], [15.5, [1.5, .05], 'io'], [22.7, [1.5, .05]], [23.5, [.9, .3], 'io'], [25.2, [1.25, -1.75], 'io'], [26.8, [.28, .25], 'io'], [27.6, [1.25, -1.75], 'io'], [29.0, [.28, .25], 'io']]);
   const rArm = vtrack([[0, [.7, .95]], [11.3, [.7, .95]], [11.62, [2.9, .12], 'io'], [11.86, [1.85, .3], 'out'], [12.3, [.9, .5], 'io'], [13.2, [.7, .95], 'io']]);
-  const mel = melon(Object.assign({}, admB, { acc: ['suit', 'nametag9', 'sash12'], look: lt < b('a4') ? [-.6, 0] : lt < b('a6') ? [-.8, -.1] : lt < b('a8') ? [-.35, 0] : [-.3, 0],
-    expr: admExpr, lid: lt >= bs('gong') + .72 && lt < bs('gong') + .9 ? .9 : undefined,
+  const mel = melon(Object.assign({}, admB, { acc: ['suit', 'nametag9', 'sash12'], expr: admExpr,
+    look: lt < b('a4') ? [-.6, 0] : lt < b('a6') ? [-.8, -.1] : lt < b('a8') ? [-.35, 0] : [-.3, 0],
     arms: { l: lArm(lt), r: rArm(lt) }, hold: Object.assign({ r: 'mallet12' }, lt >= 6.9 && lt < 12.8 ? { l: 'report12' } : {}),
+    lid: lt >= b('gong') + .72 && lt < b('gong') + .9 ? .9 : undefined,
     lift: lt > GONG_T() && lt < GONG_T() + .3 ? 4 * Math.sin((lt - GONG_T()) / .3 * Math.PI) : 0 }));
-  add(MEL[1], mel);
-  // Lemon: flat, holding the stack in front of him (it lowers an inch in the silence)
+  add(MEL[1], mel, { key: 'mel' });
+  // Lemon: flat; the stack in his left hand, in front of him, lowering an inch in the silence
   const lemB = at(LEM[0], LEM[1]);
-  const stackY = vtrack([[0, [176]], [bs('silence') - .2, [176]], [bs('silence') + .4, [164], 'io']])(lt)[0];
-  const lem = lemon(Object.assign({}, lemB, { expr: lt > bs('l1') && lt < bs('l1') + 2.2 ? 'chill' : 'neutral', look: lt < 5.7 ? [.2, 0] : lt < 6.6 ? [.2, 0] : [.5, 0],
+  const stackY = vtrack([[0, [176]], [be('silence') - 1.6, [176]], [bs('silence') + .4, [164], 'io']])(lt)[0];
+  const lem = lemon(Object.assign({}, lemB, { expr: lt > bs('l1') && lt < bs('l1') + 2.2 ? 'chill' : 'neutral', look: lt < 6.6 ? [.2, 0] : [.5, 0],
     acc: ['readers', 'lanyard7'], hold: { l: 'reports12' }, grip: { l: gripAt(lemB, 'lemon', LEM[0] + 26, stackY, LEM[1] + 6) }, arms: { l: 'hold', r: 'rest' },
     lid: lt >= bs('silence') + .1 && lt < bs('silence') + .9 ? .35 : undefined }));
-  add(LEM[1], lem);
-  // Mango: warm and loud at the back of the room, the work-wife
+  add(LEM[1], lem, { key: 'lem' });
+  // Mango: warm and loud, the work-wife; her hand goes to her mouth at "She said it."
   const mngB = at(MNG[0], MNG[1]), mK = KD('mango');
-  const mngExpr = lt < 9.7 ? 'happy' : lt < 10.5 ? 'shock' : lt < b('gong') ? 'sour' : lt < 15.4 ? 'happy' : lt < b('s2') ? 'hopeful' : lt < 26.7 ? 'shock' : lt < 27.6 ? 'shock' : lt < 29.1 ? 'smug' : 'happy';
+  const mngExpr = lt < 9.7 ? 'happy' : lt < 10.5 ? 'shock' : lt < b('gong') ? 'sour' : lt < 15.4 ? 'happy' : lt < b('s2') ? 'hopeful' : lt < 27.6 ? 'shock' : lt < 29.1 ? 'smug' : 'happy';
+  const mngMouth = lt >= 26.7 && lt < 27.7 ? { l: [-mK.rx * .24, mK.mouthY + 8] } : undefined;
+  const mngHop = [bs('gong') + .02].reduce((m, h) => { const k = (lt - h) / .3; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * Math.PI) * 44 * mngB.s) : m; }, 0);
   const mngArm = lt < 1.2 ? 'up' : lt < 9.7 ? 'cheer' : lt < 10.5 ? 'up' : 'rest';
-  const mngMouth = (lt >= 26.7 && lt < 27.7) ? { l: [-mK.rx * .24, mK.mouthY + 8] } : undefined;
-  const mngHop = [bs('gong') + .02].reduce((m, h) => { const k = (lt - h) / .3; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * PI) * 44 * mngB.s) : m; }, 0);
-  const mng = mango(Object.assign({}, mngB, { acc: ['badge7', 'gaitbelt7', 'keys7'], expr: mngExpr, look: lt >= 9.7 && lt < 10.5 ? [.7, 0] : lt < 15 ? [.4, -.2] : [.1, -.2],
-    arms: mngMouth ? { l: 'hold', r: 'rest' } : { l: mngArm, r: lt >= 9.7 && lt < 10.5 ? 'hips' : mngArm }, grip: mngMouth, hand: mngMouth ? { l: 'flat' } : undefined, lift: mngHop + (lt >= 12.8 && lt < 15 ? 6 * Math.abs(Math.sin(lt * 8)) : 0) }));
-  add(MNG[1], mng);
-  // Mrs. Cranberry, in her wheelchair at the side, clapping, then startled at the gong
+  const mng = mango(Object.assign({}, mngB, { acc: ['badge7', 'gaitbelt7', 'keys7'], expr: mngExpr,
+    look: lt >= 9.7 && lt < 10.5 ? [.7, 0] : lt < 15 ? [.4, -.2] : [.1, -.2],
+    arms: mngMouth ? { l: 'hold', r: 'rest' } : { l: mngArm, r: lt >= 9.7 && lt < 10.5 ? 'hips' : mngArm }, grip: mngMouth, hand: mngMouth ? { l: 'flat' } : undefined,
+    lift: mngHop + (lt >= 12.8 && lt < 15 ? 6 * Math.abs(Math.sin(lt * 8)) : 0) }));
+  add(MNG[1], mng, { key: 'mng' });
+  // Mrs. Cranberry, in her wheelchair at the side: clapping, then startled at the gong and at the No
   const crB = at(CRN[0], CRN[1]);
-  const crJump = [bs('gong') + .02, bs('s2') + .05].reduce((m, h) => { const k = (lt - h) / .25; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * PI) * 34 * crB.s) : m; }, 0);
-  const cr = cran(Object.assign({ x: crB.x, y: crB.y - 118 * crB.s, s: crB.s, noLegs: true, noShadow: true, look: [.7, 0], lift: crJump,
-    expr: lt < bs('gong') ? 'happy' : lt < bs('s2') + .5 ? 'shock' : 'happy', arms: { l: lt < 1.2 ? 'up' : 'rest', r: lt < 1.2 ? 'up' : 'rest' } }));
+  const crJump = [bs('gong') + .02, bs('s2') + .05].reduce((m, h) => { const k = (lt - h) / .25; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * Math.PI) * 34 * crB.s) : m; }, 0);
+  const cr = cran({ x: crB.x, y: crB.y - 118 * crB.s, s: crB.s, noLegs: true, noShadow: true, look: [.7, 0], lift: crJump,
+    expr: lt < b('gong') ? 'happy' : lt < b('s2') + .5 ? 'shock' : 'happy', arms: { l: lt < 1.2 ? 'up' : 'rest', r: lt < 1.2 ? 'up' : 'rest' } });
   add(CRN[1] + 70, cr, { pre: () => S7.wheelchairBack(crB.x, crB.y, crB.s), post: () => S7.wheelchairFront(crB.x, crB.y, crB.s) });
-  // Clementine: hopeful at the back; walks up with the rosette for the Newest Hire award; "Sure!" bouncing
+  // Clementine: hopeful at the back with the rosette; walks up for the Newest Hire award; "Sure!", bouncing
   const clmPath = route([[0, CLM0[0], CLM0[1]], [12.7, CLM0[0], CLM0[1]], [13.4, -20, 1780, 'io'], [14.5, CLM1[0], CLM1[1], 'io'], [1e3, CLM1[0], CLM1[1]]]);
   const [clmX, clmZ] = clmPath(lt), clmQ = at(clmX, clmZ);
-  const clmBounce = lt >= bs('c2') && lt < be('c2') + .2 ? 0 : 0;
-  const clmLift = [bs('c2') + .02, bs('c2') + .24].reduce((m, h) => { const k = (lt - h) / .2; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * PI) * 38 * clmQ.s) : m; }, 0) + clmBounce;
-  const clmW = lt >= 12.7 && lt < 14.5;
-  const clmO = person(clem, clmPath, lt, { acc: ['steth', 'pricetag', 'badge7'], badgeText: 'NEW', expr: lt < 12.7 ? 'hopeful' : lt < be('c2') ? 'happy' : 'happy',
-    look: lt < 12.7 ? [.1, 0] : [-.6, -.1], hold: lt >= 13 ? { r: 'rosette12' } : undefined, hand: lt >= 13 ? { r: 'grip' } : undefined,
-    arms: { l: lt < 1.2 ? 'up' : (lt < 12.7 ? 'cheer' : 'rest'), r: lt < 1.2 ? 'up' : (lt < 13 ? 'cheer' : 'up') }, lift: clmLift + (lt >= 1.2 && lt < 12.7 ? 5 * Math.abs(Math.sin(lt * 9)) : 0), walkW: clmW ? 1 : undefined });
-  add(clmZ, clmO);
-  // the back row: Strawberry by the door; the background residents clapping (no lines)
-  const strPath = route([[0, STR0[0], STR0[1]], [19.9, STR0[0], STR0[1]], [21.6, STR1[0], STR1[1], 'io'], [EXIT_T(), STR1[0], STR1[1]], [EXIT_T() + .42, -272, 1080, 'out'], [EXIT_T() + 1.3, STROUT[0], STROUT[1], 'io'], [1e3, STROUT[0], STROUT[1]]]);
+  const clmLift = [bs('c2') + .02, bs('c2') + .24].reduce((m, h) => { const k = (lt - h) / .2; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * Math.PI) * 38 * clmQ.s) : m; }, 0);
+  const clmO = person(clem, clmPath, lt, { acc: ['steth', 'pricetag', 'badge7'], badgeText: 'NEW', expr: lt < be('c2') ? 'happy' : 'happy',
+    look: lt < 12.7 ? [.1, 0] : [-.6, -.1], hold: { r: 'rosette12' },
+    arms: { l: lt < 1.2 ? 'up' : (lt < 12.7 ? 'cheer' : 'rest'), r: lt < 1.2 ? 'up' : (lt < 12.8 ? 'rest' : 'up') },
+    lift: clmLift + (lt >= 1.2 && lt < 12.7 ? 5 * Math.abs(Math.sin(lt * 9)) : 0) });
+  add(clmZ, clmO, { key: 'clm' });
+  // Strawberry: by the door at the back, then forward; the donut; and out on the left
+  const strPath = route([[0, STR0[0], STR0[1]], [19.9, STR0[0], STR0[1]], [21.6, STR1[0], STR1[1], 'io'], [EXIT_T(), STR1[0], STR1[1]],
+    [EXIT_T() + .42, -272, 1080, 'out'], [EXIT_T() + 1.3, STROUT[0], STROUT[1], 'io'], [1e3, STROUT[0], STROUT[1]]]);
   const [strX, strZ] = strPath(lt), strQ = at(strX, strZ);
-  const seated = false;
-  const strDonut = lt >= b('s4') + .25 && lt < EXIT_T() + .1;   // the hand is on the donut from the grab to the put-back
-  const hipG = [-262, 110, 1262], lookAtDonut = lt >= b('s4') + .3 && lt < b('s4') + .95;
-  const handL = vtrack([[0, [...hipG]], [b('s4') + .02, [...hipG]], [b('s4') + .26, [...TAKE], 'io'], [b('s4') + .6, [-300, 236, 1190], 'io'], [b('s4') + .9, [-300, 236, 1190]], [EXIT_T() - .3, [...TAKE], 'io'], [EXIT_T() - .02, [...TAKE]], [EXIT_T() + .25, [...hipG], 'io']]);
-  const hv = handL(lt);
-  const gL = gripAt(strQ, 'straw', hv[0], hv[1], hv[2]);
-  const strExpr = lt < b('a5') ? 'chill' : lt < b('s1') ? 'chill' : lt < b('s1') + 1.0 ? 'sour' : lt < 21.6 ? 'dead' : lt < b('s4') ? 'chill' : lt < EXIT_T() ? 'dead' : 'chill';
-  const strO = person(straw, strPath, lt, { lid: lt < 18.7 ? .3 : .5, look: lookAtDonut ? [-.4, .6] : lt < 23.1 ? [.35, 0] : [.2, 0],
-    expr: lt >= b('s4') + .9 && lt < EXIT_T() + .2 ? 'sour' : strExpr, lift: 0,
-    arms: { l: 'hold', r: 'rest' }, grip: { l: gL }, hand: { l: strDonut ? 'grip' : 'open' }, hold: strDonut ? { l: 'donut12' } : undefined,
+  const strQL = Object.assign({}, strQ, { lift: -11.8 * strQ.s });   // A11.straw lifts her body by 11.8 px a unit of scale
+  const hv = vtrack([[0, HIP], [bs('s4') + .02, HIP], [bs('s4') + .26, TAKE, 'io'], [bs('s4') + .6, UP, 'io'], [bs('s4') + .9, UP],
+    [bs('s4') + 1.16, TAKE, 'io'], [bs('s4') + 1.2, TAKE], [bs('s4') + 1.5, HIP, 'io'], [1e3, HIP]])(lt);
+  const gL = gripAt(strQL, 'straw', hv[0], hv[1], hv[2]);
+  const holdingDonut = lt >= bs('s4') + .25 && lt < RELEASE_T();
+  const lookDonut = lt >= bs('s4') + .3 && lt < bs('s4') + .95;
+  const strExpr = lt < bs('s1') ? 'chill' : lt < bs('s1') + 1.0 ? 'sour' : lt < 21.6 ? 'dead' : lt < bs('s4') + .9 ? 'chill' : lt < EXIT_T() + .2 ? 'sour' : 'chill';
+  const strO = person(straw, strPath, lt, { lid: lt < 18.7 ? .3 : .5, look: lookDonut ? [-.4, .6] : lt < 23.1 ? [.35, 0] : [.2, 0],
+    expr: strExpr, arms: { l: 'hold', r: 'rest' }, grip: { l: gL }, hand: { l: holdingDonut ? 'grip' : 'open' }, hold: holdingDonut ? { l: 'donut12' } : undefined,
     transit: lt > EXIT_T() - .1 });
-  add(strZ, strO);
-  // the background residents: clapping at the open and at the Newest Hire award (drawBg: soft and unaudited)
-  const bgClap = lt < 1.2 || (lt >= 12.8 && lt < 15.4) ? 'up' : 'rest';
-  const bgBanana = banana12(BGB, lt, bgClap), bgPine = pine12(BGP, lt, bgClap);
-  add(BGB[1], bgBanana.o, { bg: true });
-  add(BGP[1], bgPine.o, { bg: true });
-  C.mel = mel; C.lem = lem; C.mng = mng; C.clm = clmO; C.cr = cr; C.str = strO; C.crB = crB;
-  return C;
+  add(strZ, strO, { key: 'str' });
+  // the background residents: clapping at the open and at the Newest Hire award (drawn soft, unaudited)
+  const bgArm = lt < 1.2 || (lt >= 12.8 && lt < 15.4) ? 'up' : 'rest';
+  const bgA = at(BGB[0], BGB[1]), bgP = at(BGP[0], BGP[1]);
+  add(BGB[1], A7.banana({ x: bgA.x, y: bgA.y, s: bgA.s, who: null, expr: 'happy', arms: { l: bgArm, r: bgArm }, look: [.4, 0] }), { bg: true });
+  add(BGP[1], A7.pine({ x: bgP.x, y: bgP.y, s: bgP.s, who: null, expr: 'happy', arms: { l: bgArm, r: bgArm }, look: [-.3, 0] }), { bg: true });
+  return { items, mel, lem, mng, str: strO };
 }
-const banana12 = (XZ, lt, arms) => ({ o: A7.banana({ x: at(XZ[0], XZ[1]).x, y: at(XZ[0], XZ[1]).y, s: at(XZ[0], XZ[1]).s, who: null, expr: 'happy', arms: { l: arms, r: arms }, look: [.4, 0] }) });
-const pine12 = (XZ, lt, arms) => ({ o: A7.pine({ x: at(XZ[0], XZ[1]).x, y: at(XZ[0], XZ[1]).y, s: at(XZ[0], XZ[1]).s, who: null, expr: 'happy', arms: { l: arms, r: arms }, look: [-.3, 0] }) });
 
-// ---- the shots and the camera
+// ---- the shots
 function shot(lt) {
   const b = bs;
   if (lt < b('a1') - .03) return 'open';
   if (lt < b('l1') - .03) return 'two';
   if (lt < b('a2') - .03) return 'cuL';
-  if (lt < b('rep') - .03 || lt < 7.42 - .03) return 'two';
+  if (lt < REP_T() - .03) return 'two';
   if (lt < b('m1') - .03) return 'rep';
   if (lt < b('a3') - .03) return 'cuM';
   if (lt < b('gong') - .03) return 'two';
@@ -395,7 +396,7 @@ function shot(lt) {
   if (lt < b('m2') - .03) return 'two2';
   if (lt < b('a8') - .03) return 'cuM2';
   if (lt < b('s4') - .03) return 'cuA';
-  if (lt < be('end') + .0) return 'table';
+  if (lt < be('end') - .02) return 'table';
   return 'tail';
 }
 const SUBJ = { cuL: 'lem', cuM: 'mng', cuC2: 'clm', cuS1: 'str', no: 'str', cuM2: 'mng', cuA: 'mel', ask: 'str', table: 'str' };
@@ -406,43 +407,43 @@ window.__EP12_SCENES.award = {
   cam(lt) {
     V2.setCam(CAMP);
     const sh = shot(lt), c = cast(lt), F = o => faceC(o), fz = (o, z, up = 110) => faceZoom(o, z, up);
-    const m2 = (a, b2) => [(a[0] + b2[0]) / 2, (a[1] + b2[1]) / 2];
-    const shk = lt >= GONG_T() && lt < GONG_T() + .5 ? 14 * (1 - (lt - GONG_T()) / .5) : 0;
-    CAM.shake = shk;
-    if (sh === 'open') { zoomTo(540, 905, 1.0 + .05 * seg(lt, 0, 1.3)); }
-    else if (sh === 'two') { zoomTo(...m2(F(c.mel), F(c.lem)).map((v, i) => i ? v + 60 : v), 1.22); }
-    else if (sh === 'cuL') fz(c.lem, 2.2, 120);
+    const mid = (a, b2) => [(a[0] + b2[0]) / 2, (a[1] + b2[1]) / 2];
+    CAM.shake = lt >= GONG_T() && lt < GONG_T() + .5 ? 14 * (1 - (lt - GONG_T()) / .5) : 0;
+    if (sh === 'open') zoomTo(540, 905, 1.0 + .05 * seg(lt, 0, 1.3));
+    else if (sh === 'two') { const q = mid(F(c.mel), F(c.lem)); zoomTo(q[0], q[1] + 60, 1.22); }
+    else if (sh === 'cuL') fz(c.lem, 2.2);
     else if (sh === 'rep') zoomTo(540, 905, 1.0);
-    else if (sh === 'cuM') fz(c.mng, 2.2, 120);
-    else if (sh === 'gong') { const g = p2(GONG.x, GONG.y, GONG.z), q = m2(F(c.mel), g); zoomTo(q[0], q[1] + 60, 1.2); }
-    else if (sh === 'walk') { const q = m2(F(c.mel), F(c.clm)); zoomTo(q[0] + 40, q[1] + 60, 1.12); }
+    else if (sh === 'cuM') fz(c.mng, 2.2);
+    else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0], q[1] + 60, 1.2); }
+    else if (sh === 'walk') { const q = mid(F(c.mel), F(c.clm)); zoomTo(q[0] + 40, q[1] + 60, 1.12); }
     else if (sh === 'cuC2') fz(c.clm, 2.6, 130);
     else if (sh === 'back') zoomTo(600, 860, 1.05);
     else if (sh === 'cuS1') fz(c.str, 2.6, 130);
-    else if (sh === 'ask') { const z = lerp(1.3, 2.4, easeIO(seg(lt, 21.8, 23.05))); fz(c.str, z, 130); }
+    else if (sh === 'ask') fz(c.str, lerp(1.3, 2.4, easeIO(seg(lt, 21.8, 23.05))), 130);
     else if (sh === 'no') fz(c.str, 2.5, 130);
-    else if (sh === 'still') { const k = easeIO(seg(lt, bs('silence'), be('silence'))), f = F(c.str), z0 = 2.5, fy = f[1] + 130 / z0; zoomTo(lerp(f[0], 560, k), lerp(fy, 900, k), lerp(z0, 1.05, k)); }
-    else if (sh === 'two2') { const q = m2(F(c.mel), F(c.str)); zoomTo(q[0] + 20, q[1] + 40, 1.05); }
+    else if (sh === 'still') { const k = easeIO(seg(lt, bs('silence'), be('silence'))), f = F(c.str), fy = f[1] + 130 / 2.5; zoomTo(lerp(f[0], 560, k), lerp(fy, 900, k), lerp(2.5, 1.05, k)); }
+    else if (sh === 'two2') { const q = mid(F(c.mel), F(c.str)); zoomTo(q[0] + 20, q[1] + 40, 1.05); }
     else if (sh === 'cuM2') fz(c.mng, 2.3, 120);
     else if (sh === 'cuA') fz(c.mel, 2.0, 150);
-    else if (sh === 'table') { zoomTo(lerp(330, 300, seg(lt, be('s4') - .2, be('end'))), 880, 1.35); }
+    else if (sh === 'table') zoomTo(lerp(330, 300, seg(lt, be('s4') - .2, be('end'))), 880, 1.35);
     else if (sh === 'tail') { const k = easeIO(seg(lt, be('end') - .02, be('end') + .9)); zoomTo(lerp(300, 560, k), lerp(880, 900, k), lerp(1.35, 1.0, k)); }
   },
   draw(lt) {
     const sh = shot(lt);
-    if (sh === 'rep') { insRep(lt - 7.42); return; }
-    const c = cast(lt), subj = SUBJ[sh] || null, takenDonut = lt >= bs('s4') + .25 && lt < be('s4') + 1.2;
+    if (sh === 'rep') { insRep(lt - REP_T()); return; }
+    const c = cast(lt), subj = SUBJ[sh] || null, takenDonut = lt >= bs('s4') + .25 && lt < RELEASE_T();
     V2.setLight({ key: [-.35, -.8], keyColor: '#fff1cf', keyA: .26, rim: '#ffd9a0', rimA: .3, shadow: '#3a2a22', shadowA: .32, amb: '#ffe9c4', ambA: .1, bounce: '#ffd7a0', bounceA: .14 });
     V2.opts.reflect = false;
     V2.dof(subj ? 4 : 0, () => roomSet(lt, takenDonut));
     V2.addLight({ x: 300, y: 330, r: 1000, color: '255,220,160', a: .24 });
-    const g = GONG_T(), since = lt - g;
+    const since = lt - GONG_T();
     if (since > 0 && since < .6) { const [gx, gy] = p2(GONG.x, GONG.y, GONG.z); V2.ring(gx, gy, since / .9, { color: '255,236,170', r0: 60, r1: 1100, lw: 30, alpha: .7, bloom: .6 }); }
     V2.dust(40, 380, 1000, 1500, lt, { n: 26, alpha: .3, color: '255,236,190' });
-    const put = e => { if (e.pre) e.pre(); const soft = e.bg || (subj && !(subj === 'lem' ? e.o === c.lem : subj === 'mng' ? e.o === c.mng : subj === 'clm' ? e.o === c.clm : subj === 'str' ? e.o === c.str : subj === 'mel' ? e.o === c.mel : false));
-      if (soft) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o); if (e.post) e.post(); };
-    for (const e of C_sorted(c)) put(e);
-    if (lt >= 12.8 && lt < 13.6) { /* the rosette is up: no extra work */ }
+    for (const e of c.items.slice().sort((p, q) => q.z - p.z)) {
+      if (e.pre) e.pre();
+      if (e.bg || (subj && e.key !== subj)) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
+      if (e.post) e.post();
+    }
   },
   fx(lt) {
     const still = seg(lt, bs('s2') + .1, bs('silence') + .2) * (1 - seg(lt, be('silence') + .4, be('silence') + 1.3));
@@ -462,10 +463,8 @@ window.__EP12_SCENES.award = {
     sfxWord(lt, GONG_T() + .02, 'BONNNG!', 600, 400, { fill: '#ffe135', size: 150, hold: .9, rot: -.06 });
   },
 };
-// the back-to-front order of the cast (the far ones first)
-function C_sorted(c) { return c.items.slice().sort((a, b) => b.z - a.z); }
 
-// ---- the insert: page one of the report, bookmark in Lemon's handwriting
+// ---- the insert: page one of the report, the bookmark in Lemon's handwriting (blue ink on a yellow sticky)
 function insRep(lt) {   // lt: seconds since the insert began
   const k0 = easeBack(clamp(lt / .3)), y0 = lerp(700, 0, k0), sc = 1 + .025 * clamp(lt / 1.6);
   ctx.fillStyle = grad(0, 0, 0, H, [[0, '#f4e7c9'], [1, '#c6a77a']]); ctx.fillRect(0, 0, W, H);
@@ -476,19 +475,16 @@ function insRep(lt) {   // lt: seconds since the insert began
   text('FRUIT BOWL REHAB & NURSING', -350, -440, { size: 44, font: 'Bangers', weight: 400, fill: '#1d4fd8', align: 'left', spacing: 1.5 });
   text('SHIFT REPORT   3 TO 11', -350, -392, { size: 26, fill: '#333', align: 'left', spacing: 1 });
   ctx.strokeStyle = '#c1121f'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-350, -370); ctx.lineTo(350, -370); ctx.stroke();
-  const lines = ['Rm 4: call light on since 3:10.', 'Resolved by 3:11. Resolved means I walked past it.', 'Rm 9: Mr. Banana slipped (incident 47).', 'Med pass: 14 of 22. Other 8 are in the report.', 'Pizza: received. Pizza: funded.', 'Staff on shift: 3 of 9. One is per diem.'];
-  lines.forEach((s, i) => text(s, -350, -300 + i * 58, { size: 27, fill: '#222', align: 'left', weight: 900 }));
+  ['Rm 4: call light on since 3:10.', 'Resolved by 3:11. Resolved means I walked past it.', 'Rm 9: Mr. Banana slipped (incident 47).', 'Med pass: 14 of 22. Other 8 are in the report.', 'Pizza: received. Pizza: funded.', 'Staff on shift: 3 of 9. One is per diem.']
+    .forEach((s, i) => text(s, -350, -300 + i * 58, { size: 27, fill: '#222', align: 'left', weight: 900 }));
   text('L. Lemon, RN', -330, 400, { size: 34, font: 'Nunito', weight: 900, italic: true, fill: '#1d4fd8', align: 'left' });
   ctx.strokeStyle = '#1d4fd8'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-340, 418); ctx.bezierCurveTo(-240, 380, -160, 440, -60, 404); ctx.stroke();
-  // the bookmark: a yellow sticky, the handwriting in blue ink
-  ctx.save(); ctx.translate(290, -380); ctx.rotate(.07);
+  ctx.save(); ctx.translate(290, -380); ctx.rotate(.07);   // the bookmark: a yellow sticky over the corner
   ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 8;
   ctx.fillStyle = '#ffe066'; ctx.strokeStyle = 'rgba(120,90,20,.6)'; ctx.lineWidth = 2; rr(-130, -110, 260, 220, 8); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
-  const ink = ['GOOD CUFF:', 'SUPPLY CLOSET,', '2ND SHELF,', 'BEHIND', 'Q WORD SIGN'];
-  ink.forEach((s, i) => text(s, 0, -66 + i * 38, { size: 27, font: 'Nunito', weight: 900, italic: true, fill: '#1d4fd8', spacing: .3 }));
+  ['GOOD CUFF:', 'SUPPLY CLOSET,', '2ND SHELF,', 'BEHIND', 'Q WORD SIGN'].forEach((s, i) => text(s, 0, -66 + i * 38, { size: 27, font: 'Nunito', weight: 900, italic: true, fill: '#1d4fd8', spacing: .3 }));
   ctx.restore();
   ctx.restore();
-  // the report occupies 150..930 x 330..1330 (its sticky to 1000 x 300)
   reg('overlay', [150, 330 + y0, 1000, 1330 + y0], { id: 'rep-paper', group: 'rep', transit: lt < .3 });
 }
 })();
