@@ -46,7 +46,7 @@ const isIns = sh => sh === 'ins1' || sh === 'ins2';
 
 // ------------------------------------------------------------------ the cast: where everyone is, and what they do, at lt
 const SEAT = { clem: [-440, 1110], mango: [-180, 1110], lemon: [80, 1110], straw: [340, 1110] };
-const ADMIN = [520, 880];
+const ADMIN = [500, 880];
 const CART = { Z: R.LAY.pizza.Z };
 // Strawberry's walk: she stands up after "I'm an attendee" is over, and steps toward the door; she stops beside the table end
 const standK = lt => sk(lt, tS('a4') + .05, tS('a4') + .55);
@@ -57,10 +57,10 @@ const cartX = lt => { const a = tS('pizza') - .2, b = tS('pizza') + 1.05; return
 function bodyAdmin(lt) {
   const o = R.pt(ADMIN[0], 0, ADMIN[1]);
   const base = { x: o.x, y: o.y, s: o.s * 1.22, who: 'melon', expr: 'happy', look: [0, 0] };
-  if (lt >= tS('a3') - .02 && lt < tS('a4')) Object.assign(base, { arms: { l: 'hold', r: 'point' }, hold: { l: 'slice12' }, grip: { l: [-90, 52] } });
-  else if (lt >= tS('pizza') && lt < tS('a3') - .02) Object.assign(base, { arms: { l: 'hips', r: 'hold' }, hold: { r: 'remote12' }, grip: { r: [110, 30] }, look: [-.3, .1] });
+  if (lt >= tS('a3') - .02 && lt < tS('a4')) Object.assign(base, { arms: { l: 'hold', r: 'point' }, hold: { l: 'slice12' }, grip: { l: [-104, 118] } });
+  else if (lt >= tS('pizza') && lt < tS('a3') - .02) Object.assign(base, { arms: { l: 'hips', r: 'hold' }, hold: { r: 'remote12' }, grip: { r: [96, 30] }, look: [-.3, .1] });
   else if (lt >= tS('a4')) Object.assign(base, { expr: 'happy', arms: { l: 'hips', r: 'wave' } });
-  else Object.assign(base, { arms: { l: 'hips', r: 'hold' }, hold: { r: 'remote12' }, grip: { r: [110, 30] }, look: [-.2, 0] });
+  else Object.assign(base, { arms: { l: 'hips', r: 'hold' }, hold: { r: 'remote12' }, grip: { r: [96, 30] }, look: [-.2, 0] });
   return A9.melon(base);
 }
 function bodySeated(id, extra) {
@@ -70,13 +70,13 @@ function bodySeated(id, extra) {
 function bodyClem(lt) {
   let o;
   if (inB(lt, 'c1')) o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'up' }, look: [0, 0], sy: 1 - .04 * Math.sin((lt - tS('c1')) * 22) * (1 - seg(lt, tS('c1') + .3, beat('c1').e)) });
-  else if (lt >= tS('sign') - .05 && lt < beat('sign').e + .05) o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'hold' }, hold: { r: 'pen12' }, grip: { r: [40, 130] }, look: [0, .3] });
+  else if (lt >= tS('sign') - .05 && lt < beat('sign').e - .05) o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'hold' }, hold: { r: 'pen12' }, grip: { r: [40, 130] }, look: [0, .3] });
   else o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'rest' }, look: [0, 0] });
   return A10.clem(o);
 }
 function bodyMango(lt) {
   let o;
-  if (lt >= tS('m1') - .1 && lt < beat('m1').e + .1) o = bodySeated('mango', { expr: 'happy', arms: { l: 'hold', r: 'point' }, hold: { l: 'sign12' }, grip: { l: [-70, 60] }, look: [.6, 0] });
+  if (lt >= tS('m1') - .1 && lt < beat('m1').e + .1) o = bodySeated('mango', { expr: 'happy', arms: { l: 'hold', r: 'point' }, hold: { l: 'sign12' }, grip: { l: [-118, 50] }, look: [.6, 0] });
   else o = bodySeated('mango', { expr: 'happy', arms: { l: 'rest', r: 'rest' }, look: [.3, 0] });
   return A7.mango(o);
 }
@@ -87,7 +87,7 @@ function bodyLemon(lt) {
 function bodyStraw(lt) {
   const st = standK(lt);
   if (lt >= tS('a4') + .05) {
-    const k = walkK(lt), X = lerp(340, 470, k), Z = lerp(1110, 1186, k), q = R.pt(X, lerp(120, 0, st), Z);
+    const k = walkK(lt), X = lerp(340, 620, k), Z = lerp(1110, 1020, k), q = R.pt(X, lerp(120, 0, st), Z);
     return A11.straw({ x: q.x, y: q.y, s: q.s, noLegs: st < .5, lift: 0, expr: 'chill', look: [.4, 0], arms: { l: 'rest', r: 'rest' } });
   }
   let o;
@@ -95,7 +95,7 @@ function bodyStraw(lt) {
   else if (inB(lt, 's2')) o = bodySeated('straw', { expr: 'dead', arms: { l: 'shrug', r: 'rest' }, look: [.3, 0], lid: .5 });
   else if (inB(lt, 's3')) o = bodySeated('straw', { expr: 'chill', arms: { l: 'rest', r: 'rest' }, look: [-.2, 0], lid: .4 });
   else if (inB(lt, 's4')) o = bodySeated('straw', { expr: 'neutral', arms: { l: 'rest', r: 'rest' }, lid: .4 });
-  else if (lt >= tS('sign2') - .05 && lt < beat('sign2').e + .05) o = bodySeated('straw', { expr: 'sour', arms: { l: 'rest', r: 'hold' }, hold: { r: 'pen12' }, grip: { r: [40, 130] }, lid: .4, look: [0, .3] });
+  else if (lt >= tS('sign2') - .05 && lt < beat('sign2').e - .05) o = bodySeated('straw', { expr: 'sour', arms: { l: 'rest', r: 'hold' }, hold: { r: 'pen12' }, grip: { r: [40, 130] }, lid: .4, look: [0, .3] });
   else if (inB(lt, 's5')) o = bodySeated('straw', { expr: 'dead', arms: { l: 'rest', r: 'rest' }, lid: .5 });
   else o = bodySeated('straw', { expr: 'sour', arms: { l: 'rest', r: 'rest' } });
   return A11.straw(o);
@@ -165,7 +165,7 @@ function sheetOnTable(lt) {
 
 // ------------------------------------------------------------------ the world: the room, the staff, the Administrator, the pizza cart
 // which staff are in focus in each shot (null: everyone, a wide)
-const FOCUS = { cuC: ['clem'], two1: ['clem', 'mango'], cuS1: ['straw'], two2: ['straw'], cuS2: ['straw'], cuL: ['lemon'], cuS3: ['straw'], cuS4: ['straw'], cuS5: ['straw'] };
+const FOCUS = { cuC: ['clem'], two1: ['clem', 'mango'], cuS1: ['straw'], two2: ['straw', 'admin'], cuS2: ['straw'], cuL: ['lemon'], cuS3: ['straw'], cuS4: ['straw'], cuS5: ['straw'], pizza: ['cart'] };
 const WIDE = ['open', 'a1', 'wide3', 'last', 'end'];
 function world(lt, t) {
   R.cam();
@@ -194,6 +194,7 @@ function world(lt, t) {
   // in a close-up the staff who are not the subject are soft neighbours (drawn out of focus, left out of the audit)
   const sh = shotOf(lt), focus = FOCUS[sh];
   for (const id of ['clem', 'mango', 'lemon', 'straw']) {
+    if (sh === 'pizza') break;   /* the push-in on the boxes: the staff are out of the frame */
     if (id === 'straw' && standK(lt) > .01) continue;
     const o = bodyOf(id, lt);
     if (focus && !focus.includes(id)) V2.dof(7, () => { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, yEdge); ctx.clip(); H.drawBg(o); ctx.restore(); });
@@ -203,8 +204,8 @@ function world(lt, t) {
   sheetOnTable(lt);
   // Strawberry on her feet (drawn without the clip: she has left the table's edge)
   if (lt >= tS('a4') + .05) drawChar(bodyStraw(lt));
-  // the Administrator at the head, standing
-  drawChar(bodyAdmin(lt));
+  // the Administrator at the head, standing (a soft neighbour in a close-up of someone else)
+  { const ao = bodyAdmin(lt); if (focus && !focus.includes('admin')) V2.dof(7, () => { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, W * 2); ctx.clip(); H.drawBg(ao); ctx.restore(); }); else drawChar(ao); }
   // the empty near-side chairs (the camera's side of the table): only in the wides, they would cover the faces in a close-up
   if (WIDE.includes(sh)) for (const X of R.LAY.seats.xs) R.chair(X, R.LAY.seats.near, {});
 }

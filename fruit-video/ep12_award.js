@@ -372,7 +372,7 @@ function cast(lt) {
   const bgA = at(BGB[0], BGB[1]), bgP = at(BGP[0], BGP[1]);
   add(BGB[1], A7.banana({ x: bgA.x, y: bgA.y, s: bgA.s, who: null, expr: 'happy', arms: { l: bgArm, r: bgArm }, look: [.4, 0] }), { bg: true });
   add(BGP[1], A7.pine({ x: bgP.x, y: bgP.y, s: bgP.s, who: null, expr: 'happy', arms: { l: bgArm, r: bgArm }, look: [-.3, 0] }), { bg: true });
-  return { items, mel, lem, mng, str: strO };
+  return { items, mel, lem, mng, clm: clmO, str: strO };
 }
 
 // ---- the shots
