@@ -60,13 +60,13 @@ function actor(ctor, fn, lt, extra = {}, m = 1) { return person(ctor, fn, lt, Ob
 
 // ------------------------------------------------------------------ props (prefix drill12_)
 Object.assign(PROP_BOX, { drill12_mop: [-70, -330, 70, 330], drill12_fingers: [-30, -62, 30, 14] });
-// a mop held by the handle: a long wood shaft through the hand, a grey sponge head down by the floor
+// a mop held by the handle: a wood shaft through the hand, the grey sponge head resting on the floor (the floor is about 190 local px below the grip)
 EXT.prop.drill12_mop = (side, o, t) => {
   ctx.save(); ctx.rotate(side * -.04);
-  ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(0, -300); ctx.lineTo(0, 268); ctx.stroke();
-  ctx.strokeStyle = '#c99b6a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -298); ctx.lineTo(0, 266); ctx.stroke();
-  ctx.fillStyle = '#eceae2'; ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-64, 262, 128, 40, 12); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#a7aeb6'; ctx.lineWidth = 3; for (let i = -4; i <= 4; i++) { ctx.beginPath(); ctx.moveTo(i * 13, 294); ctx.lineTo(i * 13 + (i % 2 ? 5 : -5), 318); ctx.stroke(); }
+  ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(0, -300); ctx.lineTo(0, 196); ctx.stroke();
+  ctx.strokeStyle = '#c99b6a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -298); ctx.lineTo(0, 194); ctx.stroke();
+  ctx.fillStyle = '#eceae2'; ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-64, 188, 128, 34, 12); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#a7aeb6'; ctx.lineWidth = 3; for (let i = -4; i <= 4; i++) { ctx.beginPath(); ctx.moveTo(i * 13, 216); ctx.lineTo(i * 13 + (i % 2 ? 5 : -5), 236); ctx.stroke(); }
   ctx.restore();
 };
 // a raised hand for the priority list: o.fingers holds one value 0..1 per finger (1 = held up); the fist is drawn over the finger bases
@@ -187,13 +187,13 @@ function hallFixtures(lt) {
       }
     }
   }
-  // the MUSTER POINT sign above the closet door: its arrow points straight down at the door
-  { const [sx, sy] = p2(HW, 520, Z_DOOR), k = kz(Z_DOOR);
+  // the MUSTER POINT sign: hung from the ceiling mid-hall, its arrow pointing across at the closet door on the right wall (the sign is wrong: it sends them to the closet)
+  { const [sx, sy] = p2(160, 540, Z_DOOR), k = kz(Z_DOOR);
     ctx.save(); ctx.fillStyle = '#1a7a4a'; ctx.strokeStyle = 'rgba(10,30,20,.8)'; ctx.lineWidth = Math.max(2, 4 * k);
-    rr(sx - 170 * k, sy - 68 * k, 340 * k, 118 * k, 14 * k); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#eafff0'; ctx.font = `400 ${60 * k}px Bangers`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${2 * k}px`;
-    ctx.fillText('MUSTER POINT', sx, sy - 9 * k); ctx.letterSpacing = '0px';
-    ctx.fillStyle = '#fff6d6'; ctx.beginPath(); ctx.moveTo(sx - 30 * k, sy + 54 * k); ctx.lineTo(sx + 30 * k, sy + 54 * k); ctx.lineTo(sx + 30 * k, sy + 96 * k); ctx.lineTo(sx + 66 * k, sy + 96 * k); ctx.lineTo(sx, sy + 150 * k); ctx.lineTo(sx - 66 * k, sy + 96 * k); ctx.lineTo(sx - 30 * k, sy + 96 * k); ctx.closePath(); ctx.fill(); ctx.stroke();
+    rr(sx - 150 * k, sy - 62 * k, 262 * k, 118 * k, 14 * k); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#eafff0'; ctx.font = `400 ${52 * k}px Bangers`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${2 * k}px`;
+    ctx.fillText('MUSTER POINT', sx - 19 * k, sy - 6 * k); ctx.letterSpacing = '0px';
+    ctx.fillStyle = '#fff6d6'; ctx.beginPath(); ctx.moveTo(sx + 96 * k, sy - 30 * k); ctx.lineTo(sx + 96 * k, sy + 30 * k); ctx.lineTo(sx + 150 * k, sy + 30 * k); ctx.lineTo(sx + 150 * k, sy + 58 * k); ctx.lineTo(sx + 194 * k, sy); ctx.lineTo(sx + 150 * k, sy - 58 * k); ctx.lineTo(sx + 150 * k, sy - 30 * k); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.restore(); }
 }
 
