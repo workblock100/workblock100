@@ -429,7 +429,7 @@ window.__EP12_SCENES.award = {
     else if (sh === 'cuL') fz(c.lem, 2.2);
     else if (sh === 'rep') zoomTo(540, 905, 1.0);
     else if (sh === 'cuM') fz(c.mng, 2.2);
-    else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0] - 40, q[1] + 60, 1.2); }   // a little room on the left for his report as his arm comes up
+    else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0] - 214, q[1] + 60, 1.2); }   // room for Lemon's stack on the left, his report, the Administrator and the gong
     else if (sh === 'walk') { const q = mid(F(c.mel), F(c.clm)); zoomTo(q[0] + 40, q[1] + 60, 1.12); }
     else if (sh === 'cuC2') { const f = F(c.clm); zoomTo(f[0] + 70, f[1] + 130 / 2.6, 2.6); }   // her raised rosette stays in frame
     else if (sh === 'back') zoomTo(520, 880, 1.02);
