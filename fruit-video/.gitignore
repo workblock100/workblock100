@@ -48,3 +48,8 @@ build/ep11/*
 !build/ep11/audio.m4a
 !build/ep11/events.json
 __pycache__/
+!build/ep12/
+build/ep12/*
+!build/ep12/timeline.js
+!build/ep12/audio.m4a
+!build/ep12/events.json
