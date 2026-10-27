@@ -9,12 +9,14 @@
  * Copied, not imported (earlier episodes are private): the break-room kit and helpers from ep8_break.js, the balloons, bunch, banner and
  * sfxWord from ep10_party.js, the welcome banner's style from ep9_arrival.js, the table donut from ep10_days.js, Mrs. Cranberry's chair from ep7.js.
  * World coordinates: X right, Y up, Z forward; V2.at / V2.p2 project them. The Administrator is A9.melon at s 1.22; Strawberry is A11.straw.
+ * Depth: the room shell is drawn first; the set pieces (table, counter, lectern, gong, balloons, fridge) and the cast are sorted together
+ * far to near, so anything standing behind a set piece is covered by it.
  *
  * Shot list (scene-local seconds, from build/ep12/timeline.json; the shot name changes at every cut):
- *   0.00 open    wide. The crowd claps at 0.20. The Administrator at the podium, the trophy between him and Lemon.
+ *   0.00 open    wide. The crowd claps at 0.20. The Administrator at the lectern, the trophy between him and Lemon.
  *   1.27 two     a1 two-shot: Administrator and Lemon; he points at the trophy on "Most Reports Filed".
  *   4.06 cuL     l1 close-up Lemon, flat. "Nobody reads them."
- *   6.17 two     a2: he takes the report out from behind the podium and holds it up.
+ *   6.17 two     a2: he takes the report out from behind the lectern and holds it up.
  *   7.42 rep     insert, full frame: page one of the report, the yellow bookmark in Lemon's hand (GOOD CUFF ...).
  *   9.72 cuM     m1 close-up Mango, double take ("You knew?").
  *  10.47 two     a3 two-shot ("It's in your report.").
@@ -22,9 +24,9 @@
  *                the balloons jiggle, Mango flinches.
  *  12.80 walk    a4: Clementine walks up with the rosette while the Administrator points at her.
  *  14.90 cuC2    c2 close-up Clementine, bouncing ("Sure!").
- *  15.40 back    a5 wide of the back of the room: Strawberry by the door, Mango looking round at her ("Attended.").
+ *  15.40 back    a5 wide of the back of the room: Strawberry by the back wall on the far left, Mango looking round at her ("Attended.").
  *  18.60 cuS1    s1 close-up Strawberry, sour ("Under protest.").
- *  19.70 ask     a6: she walks forward; a slow push onto her face through "call-out".
+ *  19.70 ask     a6: she walks forward round the table; a slow push onto her face through "call-out".
  *  23.10 no      s2 close-up, held ("No.").
  *  23.80 still   silence, ticks at 23.81 / 24.31 / 24.81. The camera pulls out, the balloons freeze, Lemon lowers the stack an inch.
  *  25.20 two2    a7 two-shot ("Did you say...?") and s3 ("No.").
@@ -68,22 +70,22 @@ const ZB = 2100, HW = 520, CH = 620;                                  // back wa
 const CAMP = { f: 1400, cy: 330, hy: 860 };
 const WIN = { x0: 40, x1: 250, y0: 220, y1: 470 };                    // the window in the back wall
 const DOOR = { x0: -250, x1: -110, y1: 430 };                         // the sliding door to the hall
-const CLOCK = { x: -330, y: 390, r: 58 };                             // the wall clock, 4:52
+const CLOCK = { x: -60, y: 430, r: 58 };                              // the wall clock, 4:52, between the door and the window
 const BAN = { X0: -430, X1: 430, Y0: 506, Y1: 588 };                  // STAFF ENGAGEMENT AWARDS
-const CERT = { x0: 290, x1: 450, y0: 236, y1: 452 };                  // Strawberry's certificate (fades in at the end)
-const TABLE = { x: -400, z: 1420, w: 95, d: 300, h: 135 };            // the long table on the left
-const PODIUM = { x: 40, z: 1420, w: 80, d: 80, h: 150 };              // the lectern; the trophy on top
-const GONG = { x: 430, y: 300, z: 1500, r: 90 };                      // the gong on its frame, by the window side
-const COUNTER = { x0: 260, x1: 500, z0: 1650, z1: 1930, h: 200 };     // the counter, right
+const CERT = { x0: -440, x1: -300, y0: 292, y1: 472 };               // Strawberry's certificate, on the back wall where she stood, below the banner (fades in at the end)
+const TABLE = { x: -400, z: 1420, w: 95, d: 300, h: 135 };            // the long table on the left (front edge at Z 1120)
+const PODIUM = { x: -60, z: 1420, w: 80, d: 80, h: 110 };             // the lectern; the trophy on top (a low lectern keeps the trophy below Mango's face)
+const GONG = { x: 460, y: 300, z: 1640, r: 90 };                      // the gong on its frame, right of the Administrator's reach
+const COUNTER = { x0: 260, x1: 500, z0: 1650, z1: 1930, h: 200 };     // the counter, right (the microwave on it)
 const FRIDGE = { x0: 440, x1: 520, z0: 1990, z1: 2090, h: 470 };
-const BUNCH = [[-470, 1990], [470, 1600]];                            // balloon bunches on their floor weights
+const BUNCH = [[-200, 2060], [470, 1600]];                            // the balloon bunch on its floor weight (the second is the tail's floater's start)
 const PLATE = [-352, 1200], PLATE_R = 42;                             // the donut plate on the table
 const DONUTS = [[-366, 1186], [-340, 1184], [-352, 1212]];            // the last one is the one she takes
-const TAKE = [-352, 160, 1212], UP = [-330, 236, 1190], HIP = [-292, 100, 1262];
+const TAKE = [-352, 160, 1212], UP = [-330, 236, 1190];
 // ---- the cast: world X and Z
-const MEL = [250, 1450], LEM = [-190, 1400], MNG = [-40, 1700], CRN = [-380, 1790], BGB = [-250, 1975], BGP = [150, 1950];
-const CLM0 = [-40, 1900], CLM1 = [110, 1540];
-const STR0 = [-120, 1960], STR1 = [-240, 1262], STROUT = [-820, 1010];
+const MEL = [150, 1580], LEM = [-170, 1400], MNG = [-40, 1700], CRN = [330, 2000], BGB = [-40, 2060];
+const CLM0 = [-40, 1900], CLM1 = [-80, 1300];
+const STR0 = [-470, 1975], STR1 = [-200, 1262], STROUT = [-820, 1010];
 const GONG_T = () => bs('gong') + .1;                                  // the strike (the sound cue sits 0.10 into the gong beat)
 const REP_T = () => bs('a2') + 1.22;                                   // the insert of the report
 const EXIT_T = () => bs('s4') + 1.2;                                   // she starts for the door
@@ -160,13 +162,13 @@ EXT.prop.report12 = (side, o, t) => {   // the report the Administrator holds up
   ctx.restore();
 };
 Object.assign(PROP_BOX, { report12: [-60, -180, 62, 8] });
-EXT.prop.reports12 = (side, o, t) => {   // Lemon's stack of reports, a bookmark strip out of the top one
+EXT.prop.reports12 = (side, o, t) => {   // Lemon's stack of reports at his side, a bookmark strip out of the top one
   ctx.save(); ctx.lineJoin = 'round';
-  for (let i = 0; i < 4; i++) { ctx.fillStyle = i % 2 ? '#fbf6e6' : '#fffdf6'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.save(); ctx.translate(i * 1.5, -i * 9); rr(0, -100, 96, 124, 3); ctx.fill(); ctx.stroke(); ctx.restore(); }
-  ctx.fillStyle = '#ffd23a'; ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.fillRect(58, -132, 12, 58); ctx.strokeRect(58, -132, 12, 58);
+  for (let i = 0; i < 4; i++) { ctx.fillStyle = i % 2 ? '#fbf6e6' : '#fffdf6'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.save(); ctx.translate(i * 1.5, -i * 7); rr(0, -70, 96, 84, 3); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  ctx.fillStyle = '#ffd23a'; ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.fillRect(58, -80, 12, 40); ctx.strokeRect(58, -80, 12, 40);
   ctx.restore();
 };
-Object.assign(PROP_BOX, { reports12: [-6, -150, 110, 30] });
+Object.assign(PROP_BOX, { reports12: [-2, -88, 104, 26] });
 EXT.prop.rosette12 = (side, o, t) => {   // Newest Hire: a pleated rosette with two ribbon tails
   ctx.save(); ctx.translate(0, -40); ctx.lineJoin = 'round';
   ctx.fillStyle = '#ff7ac8'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
@@ -221,46 +223,8 @@ EXT.acc.sash12 = (o, k, t, layer) => {   // the Administrator's sash over the ch
   ctx.restore();
 };
 
-// ---- the set
-function gongSet(lt) {   // the gong on its frame, by the window side
-  const k = kz(GONG.z), [cx, cy] = p2(GONG.x, GONG.y, GONG.z);
-  ctx.strokeStyle = '#3a2a22'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(3, 9 * k);
-  for (const X of [GONG.x - 80, GONG.x + 80]) { const a = p2(X, 0, GONG.z), b = p2(X, 430, GONG.z); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
-  const t0 = p2(GONG.x - 80, 430, GONG.z), t1 = p2(GONG.x + 80, 430, GONG.z); ctx.beginPath(); ctx.moveTo(t0[0], t0[1]); ctx.lineTo(t1[0], t1[1]); ctx.stroke();
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); EXT.prop.gong12(1, null, lt); ctx.restore();
-}
-function trophySet(lt) {   // on the lectern's top, between the Administrator and Lemon
-  const [x, y] = p2(PODIUM.x, PODIUM.h, PODIUM.z), k = kz(PODIUM.z);
-  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); EXT.prop.pizzaTrophy12(1, null, lt); ctx.restore();
-}
-function discTop(X, Y, Z, rx, rz, fill, stroke, lw = 2) {   // a flat ellipse on a horizontal plane (table top, plate)
-  const pts = []; for (let i = 0; i < 28; i++) { const a = i / 28 * TAU; pts.push(p2(X + Math.cos(a) * rx, Y, Z + Math.sin(a) * rz)); }
-  ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
-  ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
-}
-function donutTop(X, Y, Z) {   // a donut seen from above on the plate: pink frosting, a hole, sprinkles
-  discTop(X, Y, Z, 19, 15, '#e8a06a', 'rgba(60,30,20,.5)', 1.4);
-  discTop(X, Y + .5, Z, 16, 12, '#ff7ac8');
-  discTop(X, Y + .8, Z, 6, 4.8, '#c9a26a');
-  for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + X * .1, rr2 = 11; const [sx, sy] = p2(X + Math.cos(a) * rr2, Y + 1, Z + Math.sin(a) * rr2 * .8); ctx.fillStyle = ['#ffd60a', '#50a5ff', '#5ae682', '#ffffff'][i % 4]; ctx.fillRect(sx - 2, sy - 1, 4, 2); }
-}
-function certSet(lt) {   // the framed certificate, hung at the back right; it fades in at the sting (the Administrator's ATTENDED, UNDER PROTEST)
-  const a = seg(lt, SEAT_T(), SEAT_T() + .34);
-  if (a <= 0) return;
-  const Z = ZB - 4, [cx, cy] = p2((CERT.x0 + CERT.x1) / 2, (CERT.y0 + CERT.y1) / 2, Z), k = kz(Z), w = (CERT.x1 - CERT.x0) * k, h = (CERT.y1 - CERT.y0) * k;
-  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy); ctx.scale(lerp(.96, 1, a), lerp(.96, 1, a));
-  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 14 * k; ctx.shadowOffsetY = 6 * k;
-  ctx.fillStyle = '#5a3a1e'; rr(-w / 2 - 10 * k, -h / 2 - 10 * k, w + 20 * k, h + 20 * k, 6); ctx.fill(); ctx.shadowColor = 'transparent';
-  ctx.fillStyle = '#fff8e6'; rr(-w / 2, -h / 2, w, h, 4); ctx.fill();
-  ctx.strokeStyle = '#c99a2e'; ctx.lineWidth = 3; rr(-w / 2 + 8 * k, -h / 2 + 8 * k, w - 16 * k, h - 16 * k, 4); ctx.stroke();
-  text('CERTIFICATE OF ATTENDANCE', 0, -h * .33, { size: 15 * k, font: 'Nunito', weight: 900, fill: '#7a5a2a', spacing: 1, maxW: w * .86 });
-  text('STRAWBERRY', 0, -h * .1, { size: 46 * k, font: 'Bangers', weight: 400, fill: '#1d1a22', spacing: 1, maxW: w * .86 });
-  text('ATTENDED', 0, h * .12, { size: 52 * k, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 2, maxW: w * .86 });
-  ctx.save(); ctx.rotate(-.1); ctx.strokeStyle = 'rgba(193,18,31,.9)'; ctx.lineWidth = 4 * k; rr(-w * .38, h * .25 - 17 * k, w * .76, 34 * k, 6); ctx.stroke();
-  text('UNDER PROTEST', 0, h * .25, { size: 24 * k, font: 'Bangers', weight: 400, fill: 'rgba(193,18,31,.9)', spacing: 1, maxW: w * .72 }); ctx.restore();
-  ctx.restore();
-}
-function roomSet(lt, takenDonut) {
+// ---- the room shell: floor, walls, ceiling and the back wall (window, banner, door, clock, certificate); drawn first
+function roomShell(lt) {
   S6.shell({ zb: ZB, hw: HW, ch: CH, wall: '#efe2c3', wain: '#4e8d95', floorA: '#d9c39b', floorB: '#a58d69', ceil: '#efe9da', fog: '#c4b08f', fogAmt: .22, tile: 120, bright: 1.02, rail: 110 });
   backWindow(ZB, { x0: WIN.x0, x1: WIN.x1, y0: WIN.y0, y1: WIN.y1, sky: ['#8ccaf0', '#fff1cf'], mull: 2, beam: '255,226,160', beamA: .16, beamLen: 900, beamDx: -200,
     draw: f => { const [fx0, fy0] = f[0], [fx1, fy1] = f[2], w = fx1 - fx0, h = fy0 - fy1;
@@ -277,35 +241,82 @@ function roomSet(lt, takenDonut) {
     const sa = .2 + ticks * (TAU / 60);   // the second hand steps on each tick of the silence
     ctx.save(); ctx.strokeStyle = '#d62a3a'; ctx.lineWidth = Math.max(1.4, 2 * kz(ZB)); ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx - Math.sin(sa) * R * .2, cy + Math.cos(sa) * R * .2); ctx.lineTo(cx + Math.sin(sa) * R, cy - Math.cos(sa) * R); ctx.stroke(); ctx.restore(); }
   certSet(lt);
-  // the back right: the counter, the microwave, the fridge with its sticky note
-  box3({ x0: COUNTER.x0, x1: COUNTER.x1, y1: COUNTER.h, z0: COUNTER.z0, z1: COUNTER.z1, color: '#c9d3d3', top: '#55606a', front: '#b9c4c6', side: '#98a6a8' });
-  microwave(380, 1700, { on: 0, display: '4:52' });
+  ceilingLamp(-200, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(170, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(-10, 1560, CH, 1, '255,240,210', 110, 170);
+}
+function certSet(lt) {   // the framed certificate, hung at the back right; it fades in at the sting (the Administrator's ATTENDED, UNDER PROTEST)
+  const a = seg(lt, SEAT_T(), SEAT_T() + .34);
+  if (a <= 0) return;
+  const Z = ZB - 4, [cx, cy] = p2((CERT.x0 + CERT.x1) / 2, (CERT.y0 + CERT.y1) / 2, Z), k = kz(Z), w = (CERT.x1 - CERT.x0) * k, h = (CERT.y1 - CERT.y0) * k;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy); ctx.scale(lerp(.96, 1, a), lerp(.96, 1, a));
+  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 14 * k; ctx.shadowOffsetY = 6 * k;
+  ctx.fillStyle = '#5a3a1e'; rr(-w / 2 - 10 * k, -h / 2 - 10 * k, w + 20 * k, h + 20 * k, 6); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.fillStyle = '#fff8e6'; rr(-w / 2, -h / 2, w, h, 4); ctx.fill();
+  ctx.strokeStyle = '#c99a2e'; ctx.lineWidth = 3; rr(-w / 2 + 8 * k, -h / 2 + 8 * k, w - 16 * k, h - 16 * k, 4); ctx.stroke();
+  text('CERTIFICATE', 0, -h * .33, { size: 12 * k, font: 'Nunito', weight: 900, fill: '#7a5a2a', spacing: 1, maxW: w * .8 });
+  text('STRAWBERRY', 0, -h * .1, { size: 24 * k, font: 'Bangers', weight: 400, fill: '#1d1a22', spacing: 1, maxW: w * .8 });
+  text('ATTENDED', 0, h * .12, { size: 30 * k, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 1, maxW: w * .8 });
+  ctx.save(); ctx.rotate(-.1); ctx.strokeStyle = 'rgba(193,18,31,.9)'; ctx.lineWidth = 4 * k; rr(-w * .38, h * .25 - 17 * k, w * .76, 34 * k, 6); ctx.stroke();
+  text('UNDER PROTEST', 0, h * .25, { size: 16 * k, font: 'Bangers', weight: 400, fill: 'rgba(193,18,31,.9)', spacing: 1, maxW: w * .7 }); ctx.restore();
+  ctx.restore();
+}
+
+// ---- the set pieces that stand in the room: each has a front depth (z) and is drawn in the same far-to-near order as the cast
+function fridgeSet() {
   box3({ x0: FRIDGE.x0, x1: FRIDGE.x1, y1: FRIDGE.h, z0: FRIDGE.z0, z1: FRIDGE.z1, color: '#e9eef2', top: '#f4f7fa', front: '#f4f7fa', side: '#c9d2d9' });
   onZ(FRIDGE.z0, 452, 504, 300, 352, '#ffe066', 'rgba(25,16,30,.55)', 1.6);
-  { const [nx, ny] = p2(478, 326, FRIDGE.z0), k = kz(FRIDGE.z0); text('TO SHARE', nx, ny, { size: 13 * k, font: 'Bangers', weight: 400, fill: '#2a1a0a', spacing: 1 }); }
-  // the balloons in their bunches (behind the gong and the table)
-  balloonBunch(BUNCH[0][0], BUNCH[0][1], lt, 0, calm(lt));
-  balloonBunch(BUNCH[1][0], BUNCH[1][1], lt, 3, calm(lt));
-  if (lt >= be('end') + .1) { const u = easeOut(seg(lt, be('end') + .1, be('end') + .6)); balloon3(480 + 14 * u, 350 + 160 * u, 1600, BCOL[5]); }   // one lets go and drifts up in the tail
-  // the lectern, its drawer, the trophy on top
+  const [nx, ny] = p2(478, 326, FRIDGE.z0), k = kz(FRIDGE.z0); text('TO SHARE', nx, ny, { size: 13 * k, font: 'Bangers', weight: 400, fill: '#2a1a0a', spacing: 1 });
+}
+function counterSet() {   // the counter along the right, the microwave on it
+  box3({ x0: COUNTER.x0, x1: COUNTER.x1, y1: COUNTER.h, z0: COUNTER.z0, z1: COUNTER.z1, color: '#c9d3d3', top: '#55606a', front: '#b9c4c6', side: '#98a6a8' });
+  microwave(380, 1700, { on: 0, display: '4:52' });
+}
+function tableSet(lt, takenDonut) {   // the long table on the left: the plate of donuts, the reports with their bookmarks, two cups
+  table3(TABLE.x, TABLE.z, { w: TABLE.w, d: TABLE.d, h: TABLE.h, color: '#c9a26a' });
+  const top = TABLE.h + 16;
+  discTop(PLATE[0], top, PLATE[1], PLATE_R, PLATE_R, '#fbfbf6', 'rgba(60,50,40,.35)', 2);
+  DONUTS.forEach(([X, Z], i) => { if (!(takenDonut && i === 2)) donutTop(X, top, Z); });
+  for (let i = 0; i < 5; i++) { const y = top + i * 3.2, X = -456, Z = 1480; poly([p2(X - 26, y, Z - 33), p2(X + 26, y, Z - 33), p2(X + 26, y, Z + 33), p2(X - 26, y, Z + 33)], i % 2 ? '#fbf6e6' : '#fffdf6', 'rgba(40,30,30,.55)', 1.4); }
+  [['#ff4f6d', 0], ['#ffd23a', 1], ['#4aa8ff', 2], ['#58c85a', 3]].forEach(([c, col]) => { const [x, y] = p2(-436 - col * 10, top + 10, 1513 + col * 2); ctx.fillStyle = c; ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.fillRect(x - 3, y - 14, 6, 20); ctx.strokeRect(x - 3, y - 14, 6, 20); });
+  for (const [X, Z] of [[-438, 1330], [-360, 1575]]) box3({ x0: X - 13, x1: X + 13, y0: top, y1: top + 34, z0: Z - 13, z1: Z + 13, color: '#fbf9f2', top: '#5a3a24', front: '#ece6d8', side: '#d8d0c0' });
+}
+function discTop(X, Y, Z, rx, rz, fill, stroke, lw = 2) {   // a flat ellipse on a horizontal plane (table top, plate)
+  const pts = []; for (let i = 0; i < 28; i++) { const a = i / 28 * TAU; pts.push(p2(X + Math.cos(a) * rx, Y, Z + Math.sin(a) * rz)); }
+  ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+}
+function donutTop(X, Y, Z) {   // a donut seen from above on the plate: pink frosting, a hole, sprinkles
+  discTop(X, Y, Z, 19, 15, '#e8a06a', 'rgba(60,30,20,.5)', 1.4);
+  discTop(X, Y + .5, Z, 16, 12, '#ff7ac8');
+  discTop(X, Y + .8, Z, 6, 4.8, '#c9a26a');
+  for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + X * .1, rr2 = 11; const [sx, sy] = p2(X + Math.cos(a) * rr2, Y + 1, Z + Math.sin(a) * rr2 * .8); ctx.fillStyle = ['#ffd60a', '#50a5ff', '#5ae682', '#ffffff'][i % 4]; ctx.fillRect(sx - 2, sy - 1, 4, 2); }
+}
+function podiumSet(lt) {   // the lectern, its drawer, and the trophy on top
   box3({ x0: PODIUM.x - 40, x1: PODIUM.x + 40, y0: 0, y1: PODIUM.h, z0: PODIUM.z - 40, z1: PODIUM.z + 40, color: '#7a5532', top: '#8d6b45', front: '#654427', side: '#4f3520' });
   onZ(PODIUM.z - 40, PODIUM.x - 32, PODIUM.x + 32, 26, 84, '#5b3d24', 'rgba(25,16,30,.6)', 2);
   onZ(PODIUM.z - 40, PODIUM.x - 8, PODIUM.x + 8, 50, 58, '#e9c34c', 'rgba(25,16,30,.6)', 1.6);
-  trophySet(lt);
-  // the long table on the left: the plate of donuts, the reports with their bookmarks, two cups
-  table3(TABLE.x, TABLE.z, { w: TABLE.w, d: TABLE.d, h: TABLE.h, color: '#c9a26a' });
-  discTop(PLATE[0], TABLE.h + 16, PLATE[1], PLATE_R, PLATE_R, '#fbfbf6', 'rgba(60,50,40,.35)', 2);
-  DONUTS.forEach(([X, Z], i) => { if (!(takenDonut && i === 2)) donutTop(X, TABLE.h + 16, Z); });
-  for (let i = 0; i < 5; i++) { const y = TABLE.h + 16 + i * 3.2, X = -456, Z = 1480; poly([p2(X - 26, y, Z - 33), p2(X + 26, y, Z - 33), p2(X + 26, y, Z + 33), p2(X - 26, y, Z + 33)], i % 2 ? '#fbf6e6' : '#fffdf6', 'rgba(40,30,30,.55)', 1.4); }
-  [['#ff4f6d', 0], ['#ffd23a', 1], ['#4aa8ff', 2], ['#58c85a', 3]].forEach(([c, col]) => { const [x, y] = p2(-436 - col * 10, TABLE.h + 26, 1513 + col * 2); ctx.fillStyle = c; ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.fillRect(x - 3, y - 14, 6, 20); ctx.strokeRect(x - 3, y - 14, 6, 20); });
-  for (const [X, Z] of [[-438, 1330], [-360, 1575]]) box3({ x0: X - 13, x1: X + 13, y0: TABLE.h + 16, y1: TABLE.h + 50, z0: Z - 13, z1: Z + 13, color: '#fbf9f2', top: '#5a3a24', front: '#ece6d8', side: '#d8d0c0' });
-  // the gong, on its frame
-  gongSet(lt);
-  // the counter's microwave and fridge are set; the ceiling: three fluorescent panels
-  ceilingLamp(-200, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(170, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(-10, 1560, CH, 1, '255,240,210', 110, 170);
+  const [x, y] = p2(PODIUM.x, PODIUM.h, PODIUM.z), k = kz(PODIUM.z) * .8;
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); EXT.prop.pizzaTrophy12(1, null, lt); ctx.restore();
+}
+function gongSet(lt) {   // the gong on its frame, by the window side
+  const k = kz(GONG.z), [cx, cy] = p2(GONG.x, GONG.y, GONG.z);
+  ctx.strokeStyle = '#3a2a22'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(3, 9 * k);
+  for (const X of [GONG.x - 55, GONG.x + 55]) { const a = p2(X, 0, GONG.z), b = p2(X, 430, GONG.z); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+  const t0 = p2(GONG.x - 55, 430, GONG.z), t1 = p2(GONG.x + 55, 430, GONG.z); ctx.beginPath(); ctx.moveTo(t0[0], t0[1]); ctx.lineTo(t1[0], t1[1]); ctx.stroke();
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k); EXT.prop.gong12(1, null, lt); ctx.restore();
+}
+function setPieces(lt, takenDonut) {   // { z: front depth, run } for everything in the room that is not the room shell or a character
+  return [
+    { z: BUNCH[0][1] + 40, run: () => balloonBunch(BUNCH[0][0], BUNCH[0][1], lt, 0, calm(lt)) },
+    { z: FRIDGE.z0, run: fridgeSet },
+    { z: COUNTER.z0, run: counterSet },
+    { z: TABLE.z + 1, run: () => tableSet(lt, takenDonut) },        // sorted by the table's middle: its right side is behind Strawberry at the front and in front of her at the back
+    { z: PODIUM.z + 1, run: () => podiumSet(lt) },
+    { z: GONG.z, run: () => gongSet(lt) },
+    { z: 1820, run: () => { if (lt >= be('end') + .1) { const u = easeOut(seg(lt, be('end') + .1, be('end') + .6)); balloon3(-60 + 10 * u, 300 + 160 * u, 1820, BCOL[5]); } } },   // one lets go and drifts up in the tail
+  ];
 }
 
-// ---- the cast: each character's options for the frame, and the order they are drawn in (the far ones first)
+// ---- the cast: each character's options for the frame, with its depth
 function cast(lt) {
   const b = bs, items = [], add = (z, o, extra = {}) => items.push(Object.assign({ z, o }, extra));
   // the Administrator: s 1.22, the sash and the nametag; his right hand holds the mallet, his left the report, then he points
@@ -321,9 +332,9 @@ function cast(lt) {
   add(MEL[1], mel, { key: 'mel' });
   // Lemon: flat; the stack in his left hand, in front of him, lowering an inch in the silence
   const lemB = at(LEM[0], LEM[1]);
-  const stackY = vtrack([[0, [176]], [be('silence') - 1.6, [176]], [bs('silence') + .4, [164], 'io']])(lt)[0];
+  const lemArm = vtrack([[0, [.1, .05]], [be('silence') - 1.6, [.1, .05]], [bs('silence') + .4, [.14, .1], 'io']]);   // the stack hangs at his side; it drops an inch in the silence
   const lem = lemon(Object.assign({}, lemB, { expr: lt > bs('l1') && lt < bs('l1') + 2.2 ? 'chill' : 'neutral', look: lt < 6.6 ? [.2, 0] : [.5, 0],
-    acc: ['readers', 'lanyard7'], hold: { l: 'reports12' }, grip: { l: gripAt(lemB, 'lemon', LEM[0] + 26, stackY, LEM[1] + 6) }, arms: { l: 'hold', r: 'rest' },
+    acc: ['readers', 'lanyard7'], hold: { l: 'reports12' }, arms: { l: lemArm(lt), r: 'rest' },
     lid: lt >= bs('silence') + .1 && lt < bs('silence') + .9 ? .35 : undefined }));
   add(LEM[1], lem, { key: 'lem' });
   // Mango: warm and loud, the work-wife; her hand goes to her mouth at "She said it."
@@ -333,32 +344,37 @@ function cast(lt) {
   const mngHop = [bs('gong') + .02].reduce((m, h) => { const k = (lt - h) / .3; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * Math.PI) * 44 * mngB.s) : m; }, 0);
   const mngArm = lt < 1.2 ? 'up' : lt < 9.7 ? 'cheer' : lt < 10.5 ? 'up' : 'rest';
   const mng = mango(Object.assign({}, mngB, { acc: ['badge7', 'gaitbelt7', 'keys7'], expr: mngExpr,
-    look: lt >= 9.7 && lt < 10.5 ? [.7, 0] : lt < 15 ? [.4, -.2] : [.1, -.2],
+    look: lt >= 9.7 && lt < 10.5 ? [.7, 0] : lt < 15 ? [.4, -.2] : lt < 26 ? [-.5, -.1] : [.1, -.2],
     arms: mngMouth ? { l: 'hold', r: 'rest' } : { l: mngArm, r: lt >= 9.7 && lt < 10.5 ? 'hips' : mngArm }, grip: mngMouth, hand: mngMouth ? { l: 'flat' } : undefined,
     lift: mngHop + (lt >= 12.8 && lt < 15 ? 6 * Math.abs(Math.sin(lt * 8)) : 0) }));
   add(MNG[1], mng, { key: 'mng' });
-  // Mrs. Cranberry, in her wheelchair at the side: clapping, then startled at the gong and at the No
+  // Mrs. Cranberry, in her wheelchair at the back right, behind the counter: clapping, then startled at the gong and at the No
   const crB = at(CRN[0], CRN[1]);
   const crJump = [bs('gong') + .02, bs('s2') + .05].reduce((m, h) => { const k = (lt - h) / .25; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * Math.PI) * 34 * crB.s) : m; }, 0);
-  const cr = cran({ x: crB.x, y: crB.y - 118 * crB.s, s: crB.s, noLegs: true, noShadow: true, look: [.7, 0], lift: crJump,
+  const cr = cran({ x: crB.x, y: crB.y - 118 * crB.s, s: crB.s, noLegs: true, noShadow: true, look: [-.7, 0], lift: crJump,
     expr: lt < b('gong') ? 'happy' : lt < b('s2') + .5 ? 'shock' : 'happy', arms: { l: lt < 1.2 ? 'up' : 'rest', r: lt < 1.2 ? 'up' : 'rest' } });
   add(CRN[1] + 70, cr, { pre: () => S7.wheelchairBack(crB.x, crB.y, crB.s), post: () => S7.wheelchairFront(crB.x, crB.y, crB.s) });
   // Clementine: hopeful at the back with the rosette; walks up for the Newest Hire award; "Sure!", bouncing
-  const clmPath = route([[0, CLM0[0], CLM0[1]], [12.7, CLM0[0], CLM0[1]], [13.4, -20, 1780, 'io'], [14.5, CLM1[0], CLM1[1], 'io'], [1e3, CLM1[0], CLM1[1]]]);
+  const clmPath = route([[0, CLM0[0], CLM0[1]], [12.7, CLM0[0], CLM0[1]], [13.4, -150, 1800, 'io'], [14.2, -200, 1640, 'io'], [14.9, CLM1[0], CLM1[1], 'io'], [1e3, CLM1[0], CLM1[1]]]);
   const [clmX, clmZ] = clmPath(lt), clmQ = at(clmX, clmZ);
   const clmLift = [bs('c2') + .02, bs('c2') + .24].reduce((m, h) => { const k = (lt - h) / .2; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * Math.PI) * 38 * clmQ.s) : m; }, 0);
-  const clmO = person(clem, clmPath, lt, { acc: ['steth', 'pricetag', 'badge7'], badgeText: 'NEW', expr: lt < be('c2') ? 'happy' : 'happy',
+  const clmO = person(clem, clmPath, lt, { acc: ['steth', 'pricetag', 'badge7'], badgeText: 'NEW', expr: 'happy', transit: lt >= 12.7 && lt < 14.95,
     look: lt < 12.7 ? [.1, 0] : [-.6, -.1], hold: { r: 'rosette12' },
     arms: { l: lt < 1.2 ? 'up' : (lt < 12.7 ? 'cheer' : 'rest'), r: lt < 1.2 ? 'up' : (lt < 12.8 ? 'rest' : 'up') },
     lift: clmLift + (lt >= 1.2 && lt < 12.7 ? 5 * Math.abs(Math.sin(lt * 9)) : 0) });
   add(clmZ, clmO, { key: 'clm' });
-  // Strawberry: by the door at the back, then forward; the donut; and out on the left
-  const strPath = route([[0, STR0[0], STR0[1]], [19.9, STR0[0], STR0[1]], [21.6, STR1[0], STR1[1], 'io'], [EXIT_T(), STR1[0], STR1[1]],
+  // Strawberry: at the back on the far left, behind the table; then forward round the table; the donut; and out on the left
+  const strPath = route([[0, STR0[0], STR0[1]], [19.9, STR0[0], STR0[1]], [20.9, -270, 1820, 'io'], [21.6, STR1[0], STR1[1], 'io'], [EXIT_T(), STR1[0], STR1[1]],
     [EXIT_T() + .42, -272, 1080, 'out'], [EXIT_T() + 1.3, STROUT[0], STROUT[1], 'io'], [1e3, STROUT[0], STROUT[1]]]);
   const [strX, strZ] = strPath(lt), strQ = at(strX, strZ);
   const strQL = Object.assign({}, strQ, { lift: -11.8 * strQ.s });   // A11.straw lifts her body by 11.8 px a unit of scale
-  const hv = vtrack([[0, HIP], [bs('s4') + .02, HIP], [bs('s4') + .26, TAKE, 'io'], [bs('s4') + .6, UP, 'io'], [bs('s4') + .9, UP],
-    [bs('s4') + 1.16, TAKE, 'io'], [bs('s4') + 1.2, TAKE], [bs('s4') + 1.5, HIP, 'io'], [1e3, HIP]])(lt);
+  // her hand hangs at her left side (it follows her on the walk); at the plate it reaches the donut, then returns to her side
+  const follow = [strX - 80, 100, strZ];
+  let hv;
+  if (lt < bs('s4') + .02) hv = follow;
+  else if (lt < RELEASE_T()) hv = vtrack([[bs('s4') + .02, follow], [bs('s4') + .26, TAKE, 'io'], [bs('s4') + .6, UP, 'io'], [bs('s4') + .9, UP],
+    [bs('s4') + 1.16, TAKE, 'io'], [bs('s4') + 1.2, TAKE]])(lt);
+  else { const k = easeIO(seg(lt, RELEASE_T(), RELEASE_T() + .3)); hv = [0, 1, 2].map(i => TAKE[i] + (follow[i] - TAKE[i]) * k); }
   const gL = gripAt(strQL, 'straw', hv[0], hv[1], hv[2]);
   const holdingDonut = lt >= bs('s4') + .25 && lt < RELEASE_T();
   const lookDonut = lt >= bs('s4') + .3 && lt < bs('s4') + .95;
@@ -369,9 +385,8 @@ function cast(lt) {
   add(strZ, strO, { key: 'str' });
   // the background residents: clapping at the open and at the Newest Hire award (drawn soft, unaudited)
   const bgArm = lt < 1.2 || (lt >= 12.8 && lt < 15.4) ? 'up' : 'rest';
-  const bgA = at(BGB[0], BGB[1]), bgP = at(BGP[0], BGP[1]);
+  const bgA = at(BGB[0], BGB[1]);
   add(BGB[1], A7.banana({ x: bgA.x, y: bgA.y, s: bgA.s, who: null, expr: 'happy', arms: { l: bgArm, r: bgArm }, look: [.4, 0] }), { bg: true });
-  add(BGP[1], A7.pine({ x: bgP.x, y: bgP.y, s: bgP.s, who: null, expr: 'happy', arms: { l: bgArm, r: bgArm }, look: [-.3, 0] }), { bg: true });
   return { items, mel, lem, mng, clm: clmO, str: strO };
 }
 
@@ -399,7 +414,7 @@ function shot(lt) {
   if (lt < be('end') - .02) return 'table';
   return 'tail';
 }
-const SUBJ = { cuL: 'lem', cuM: 'mng', cuC2: 'clm', cuS1: 'str', no: 'str', cuM2: 'mng', cuA: 'mel', ask: 'str', table: 'str' };
+const SUBJ = { cuL: 'lem', cuM: 'mng', cuC2: 'clm', cuS1: 'str', no: 'str', still: 'str', cuM2: 'mng', cuA: 'mel', ask: 'str', table: 'str' };
 
 window.__EP12_SCENES = window.__EP12_SCENES || {};
 window.__EP12_SCENES.award = {
@@ -409,7 +424,7 @@ window.__EP12_SCENES.award = {
     const sh = shot(lt), c = cast(lt), F = o => faceC(o), fz = (o, z, up = 110) => faceZoom(o, z, up);
     const mid = (a, b2) => [(a[0] + b2[0]) / 2, (a[1] + b2[1]) / 2];
     CAM.shake = lt >= GONG_T() && lt < GONG_T() + .5 ? 14 * (1 - (lt - GONG_T()) / .5) : 0;
-    if (sh === 'open') zoomTo(540, 905, 1.0 + .05 * seg(lt, 0, 1.3));
+    if (sh === 'open') zoomTo(560, 940, 1.08);
     else if (sh === 'two') { const q = mid(F(c.mel), F(c.lem)); zoomTo(q[0], q[1] + 60, 1.22); }
     else if (sh === 'cuL') fz(c.lem, 2.2);
     else if (sh === 'rep') zoomTo(540, 905, 1.0);
@@ -417,13 +432,13 @@ window.__EP12_SCENES.award = {
     else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0], q[1] + 60, 1.2); }
     else if (sh === 'walk') { const q = mid(F(c.mel), F(c.clm)); zoomTo(q[0] + 40, q[1] + 60, 1.12); }
     else if (sh === 'cuC2') fz(c.clm, 2.6, 130);
-    else if (sh === 'back') zoomTo(600, 860, 1.05);
-    else if (sh === 'cuS1') fz(c.str, 2.6, 130);
-    else if (sh === 'ask') fz(c.str, lerp(1.3, 2.4, easeIO(seg(lt, 21.8, 23.05))), 130);
-    else if (sh === 'no') fz(c.str, 2.5, 130);
-    else if (sh === 'still') { const k = easeIO(seg(lt, bs('silence'), be('silence'))), f = F(c.str), fy = f[1] + 130 / 2.5; zoomTo(lerp(f[0], 560, k), lerp(fy, 900, k), lerp(2.5, 1.05, k)); }
+    else if (sh === 'back') zoomTo(520, 880, 1.02);
+    else if (sh === 'cuS1') fz(c.str, 2.2, 130);
+    else if (sh === 'ask') fz(c.str, lerp(1.3, 2.2, easeIO(seg(lt, 21.8, 23.05))), 130);
+    else if (sh === 'no') fz(c.str, 2.2, 130);
+    else if (sh === 'still') { const k = easeIO(seg(lt, bs('silence'), be('silence'))), f = F(c.str), fy = f[1] + 130 / 2.2; zoomTo(lerp(f[0], 560, k), lerp(fy, 900, k), lerp(2.2, 1.05, k)); }
     else if (sh === 'two2') { const q = mid(F(c.mel), F(c.str)); zoomTo(q[0] + 20, q[1] + 40, 1.05); }
-    else if (sh === 'cuM2') fz(c.mng, 2.3, 120);
+    else if (sh === 'cuM2') fz(c.mng, 2.0, 120);
     else if (sh === 'cuA') fz(c.mel, 2.0, 150);
     else if (sh === 'table') zoomTo(lerp(330, 300, seg(lt, be('s4') - .2, be('end'))), 880, 1.35);
     else if (sh === 'tail') { const k = easeIO(seg(lt, be('end') - .02, be('end') + .9)); zoomTo(lerp(300, 560, k), lerp(880, 900, k), lerp(1.35, 1.0, k)); }
@@ -431,19 +446,39 @@ window.__EP12_SCENES.award = {
   draw(lt) {
     const sh = shot(lt);
     if (sh === 'rep') { insRep(lt - REP_T()); return; }
-    const c = cast(lt), subj = SUBJ[sh] || null, takenDonut = lt >= bs('s4') + .25 && lt < RELEASE_T();
+    const takenDonut = lt >= bs('s4') + .25 && lt < RELEASE_T(), subj = SUBJ[sh] || null;
     V2.setLight({ key: [-.35, -.8], keyColor: '#fff1cf', keyA: .26, rim: '#ffd9a0', rimA: .3, shadow: '#3a2a22', shadowA: .32, amb: '#ffe9c4', ambA: .1, bounce: '#ffd7a0', bounceA: .14 });
     V2.opts.reflect = false;
-    V2.dof(subj ? 4 : 0, () => roomSet(lt, takenDonut));
+    V2.dof(subj ? 4 : 0, () => roomShell(lt));
     V2.addLight({ x: 300, y: 330, r: 1000, color: '255,220,160', a: .24 });
     const since = lt - GONG_T();
     if (since > 0 && since < .6) { const [gx, gy] = p2(GONG.x, GONG.y, GONG.z); V2.ring(gx, gy, since / .9, { color: '255,236,170', r0: 60, r1: 1100, lw: 30, alpha: .7, bloom: .6 }); }
     V2.dust(40, 380, 1000, 1500, lt, { n: 26, alpha: .3, color: '255,236,190' });
-    for (const e of c.items.slice().sort((p, q) => q.z - p.z)) {
-      if (e.pre) e.pre();
-      if (e.bg || (subj && e.key !== subj)) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
-      if (e.post) e.post();
+    // which characters are sharp this frame: in a close-up only the subject; in a wide, a character is sharp when all of it is in the frame
+    // and no nearer sharp character stands over its face (a face under a nearer body is drawn soft, the way a neighbour is)
+    const c = cast(lt), closeUp = CAM.z > 1.7;
+    const toScreen = (x, y) => [W / 2 + (x - CAM.x) * CAM.z, H / 2 + (y - CAM.y) * CAM.z];
+    const bodyBox = o => { const k = KD(o.kind), s = o.s, leg = o.noLegs ? 0 : (k.leg || 90), rx = k.rx * 1.1 * s, top = o.y - (o.lift || 0) - (leg + k.ry * 1.9) * s;
+      const [x0, y0] = toScreen(o.x - rx, top), [x1, y1] = toScreen(o.x + rx, o.y + 12 * s); return [x0, y0, x1, y1]; };
+    const faceBox = o => { const k = KD(o.kind), s = o.s, [fx, fy] = faceC(o), fw = k.rx * .55 * s, fh = k.ry * .5 * s;
+      const [x0, y0] = toScreen(fx - fw, fy - fh), [x1, y1] = toScreen(fx + fw, fy + fh); return [x0, y0, x1, y1]; };
+    const overlaps = (a, b) => !(a[2] <= b[0] || a[0] >= b[2] || a[3] <= b[1] || a[1] >= b[3]);
+    const covers = [];   // the sharp bodies (and their props, generously) of the nearer characters drawn sharp so far
+    for (const e of c.items.filter(q => !q.bg).slice().sort((p, q) => p.z - q.z)) {
+      const bx = bodyBox(e.o), fb = faceBox(e.o);
+      const ext = e.o.hold ? 140 * e.o.s : 0;   // a held prop can reach past the body: keep that in the frame too
+      let sharp = bx[0] - ext >= 40 && bx[2] + ext <= W - 40 && bx[1] >= 16 && bx[3] <= H - 16 && (!closeUp || e.key === subj);
+      if (sharp && covers.some(b => overlaps(b, fb))) sharp = false;
+      e.sharp = sharp;
+      if (sharp) covers.push([bx[0] - 20, bx[1] - 40, bx[2] + 40, bx[3]]);
     }
+    const list = setPieces(lt, takenDonut).map(p => ({ z: p.z, run: p.run }))
+      .concat(c.items.map(e => ({ z: e.z, run: () => {
+        if (e.pre) e.pre();
+        if (e.bg || !e.sharp) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
+        if (e.post) e.post(); } })));
+    list.sort((p, q) => q.z - p.z);
+    for (const it of list) it.run();
   },
   fx(lt) {
     const still = seg(lt, bs('s2') + .1, bs('silence') + .2) * (1 - seg(lt, be('silence') + .4, be('silence') + 1.3));
@@ -467,7 +502,7 @@ window.__EP12_SCENES.award = {
 // ---- the insert: page one of the report, the bookmark in Lemon's handwriting (blue ink on a yellow sticky)
 function insRep(lt) {   // lt: seconds since the insert began
   const k0 = easeBack(clamp(lt / .3)), y0 = lerp(700, 0, k0), sc = 1 + .025 * clamp(lt / 1.6);
-  ctx.fillStyle = grad(0, 0, 0, H, [[0, '#f4e7c9'], [1, '#c6a77a']]); ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = grad(0, -400, 0, H + 400, [[0, '#f4e7c9'], [1, '#c6a77a']]); ctx.fillRect(-400, -400, W + 800, H + 800);
   ctx.save(); ctx.translate(540, 830 + y0); ctx.rotate(-.03); ctx.scale(sc, sc);
   ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 14;
   ctx.fillStyle = '#fffdf6'; rr(-390, -500, 780, 1000, 14); ctx.fill(); ctx.shadowColor = 'transparent';

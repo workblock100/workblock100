@@ -62,7 +62,7 @@ function actor(ctor, fn, lt, extra = {}, m = 1) { return person(ctor, fn, lt, Ob
 Object.assign(PROP_BOX, { drill12_mop: [-70, -330, 70, 330], drill12_fingers: [-30, -62, 30, 14] });
 // a mop held by the handle: a wood shaft through the hand, the grey sponge head resting on the floor (the floor is about 190 local px below the grip)
 EXT.prop.drill12_mop = (side, o, t) => {
-  ctx.save(); ctx.rotate(side * -.04);
+  ctx.save(); ctx.rotate(side * .25);
   ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(0, -300); ctx.lineTo(0, 196); ctx.stroke();
   ctx.strokeStyle = '#c99b6a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -298); ctx.lineTo(0, 194); ctx.stroke();
   ctx.fillStyle = '#eceae2'; ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-64, 188, 128, 34, 12); ctx.fill(); ctx.stroke();
@@ -104,22 +104,23 @@ const DECOR = [{ side: -1, z: 1100, c: '#e6a23c' }, { side: 1, z: 1400, c: '#6cc
 const STROBE_ON = .1, STROBE_OFF = 22.6;
 const strobe = lt => { if (lt < STROBE_ON || lt > STROBE_OFF) return 0; const p = ((lt - STROBE_ON) % .5) / .5; return Math.exp(-p * 9); };
 // the closet door: shut until Clementine hits it (7.05), then it swings into the closet over the next .4 s
-const doorOpen = lt => sk(lt, 7.05, 7.45);
+const doorOpen = lt => sk(lt, 7.05, 7.45) * (1 - sk(lt, 10.9, 11.25));
 
 // the camera track for the hall: [time, cx, zoom, cy, y0] keyframes; two equal times make a hard cut (blur is 1 on those frames)
 const TRK = [
-  [0, 0, 1.00, 360, 960], [1.5, 0, 1.04, 360, 960],
-  [2.6, -70, 1.14, 360, 900], [4.3, -70, 1.14, 360, 900], [4.9, -250, 1.40, 360, 770], [6.6, -250, 1.40, 360, 770],   // a1 -> l1: the Administrator, then Lemon
-  [7.1, 170, 1.12, 360, 840], [7.6, 150, 1.10, 360, 880],                                                              // the whip to the closet (blur on)
-  [8.33, 0, 1.00, 360, 960], [11.0, 0, 1.00, 360, 960],                                                                 // m1: the wide, Mango at the back right, Clementine at the closet
-  [11.04, 190, 1.90, 360, 808], [12.6, 190, 1.90, 360, 808], [12.61, 190, 1.90, 360, 808],                             // r1 -> m2: Mrs. Cranberry and Mango, tight
-  [14.56, 90, 1.45, 130, 900], [15.9, 90, 1.45, 130, 900],                                                              // r2: a low angle on the chair
-  [15.91, 0, 1.00, 360, 960], [16.86, 0, 1.05, 360, 960],                                                               // peel: the hall
-  [16.87, -310, 1.60, 360, 760], [18.9, -310, 1.60, 360, 760],                                                          // s1: Strawberry's list
-  [18.95, -70, 1.65, 360, 720], [20.1, -70, 1.65, 360, 720],                                                            // a2
-  [20.15, -310, 1.60, 360, 760], [20.8, -310, 1.60, 360, 760],                                                          // s2
-  [20.83, -70, 1.65, 360, 720], [21.6, -70, 1.65, 360, 720],                                                            // a3
-  [21.71, -310, 1.60, 360, 760], [22.79, -310, 1.60, 360, 760],                                                         // s3
+  [0, 0, 1.00, 360, 960], [1.5, 0, 1.04, 360, 960],                                                                    // alarm: a slow push
+  [2.6, -70, 1.14, 360, 900], [4.3, -70, 1.14, 360, 900],                                                              // a1: the Administrator
+  [4.9, -146, 2.20, 360, 830], [6.6, -146, 2.20, 360, 830], [6.7, -146, 2.20, 360, 830],                               // l1: Lemon, tight
+  [6.759, 310, 1.10, 360, 860], [7.6, 40, 1.00, 360, 960],                                                             // c1: a hard cut to the closet; then the scramble, wide
+  [8.33, 0, 1.00, 360, 960], [11.0, 0, 1.00, 360, 960], [11.04, 0, 1.00, 360, 960],                                    // m1: the wide two-shot by the closet
+  [11.041, 200, 1.90, 360, 840], [14.5, 200, 1.90, 360, 840],                                                          // r1 -> m2: Mrs. Cranberry and Mango, tight
+  [14.559, 130, 1.45, 130, 900], [15.9, 130, 1.45, 130, 900],                                                          // r2: a low angle on the chair
+  [15.91, 300, 1.00, 360, 960], [16.86, 300, 1.04, 360, 960],                                                          // peel: a cut to the far hall
+  [16.87, -310, 1.60, 360, 890], [18.9, -310, 1.60, 360, 890], [18.95, -310, 1.60, 360, 890],                          // s1: Strawberry's list
+  [18.951, 80, 1.65, 360, 850], [20.1, 80, 1.65, 360, 850], [20.15, 80, 1.65, 360, 850],                            // a2
+  [20.151, -310, 1.60, 360, 890], [20.8, -310, 1.60, 360, 890], [20.83, -310, 1.60, 360, 890],                         // s2
+  [20.831, 80, 1.65, 360, 850], [21.6, 80, 1.65, 360, 850], [21.71, 80, 1.65, 360, 850],                            // a3
+  [21.711, -310, 1.60, 360, 890], [22.79, -310, 1.60, 360, 890],                                                       // s3
 ];
 const trackAt = lt => {
   if (lt <= TRK[0][0]) return TRK[0].slice(1);
@@ -132,22 +133,28 @@ const trackAt = lt => {
 
 // ------------------------------------------------------------------ the cast: the hall positions (lateral X, depth D; the depth rides with the camera)
 const at = (X, D) => lt => [X, camZ(lt) + D];
-const P_STR = at(-310, 1480), P_ADM = at(-70, 1420), P_LEM = at(-260, 2050);
-const P_CLM = lt => [lerp(150, 300, sk(lt, 6.6, 7.1)) + (lt > 7.6 ? lerp(0, -100, sk(lt, 7.6, 8.1)) : 0), camZ(lt) + 1560];
+const P_STR = at(-310, 1480), P_LEM = at(-146, 2050);
+// the Administrator: centre front at the start; steps right during l1 so Lemon is clear of him, walks off left in the run and m1 (the pizza run),
+// is out of frame for the Mrs. Cranberry shots, and walks back in for the peel
+const admX = lt => lt < 4.3 ? -70 : lt < 5.0 ? lerp(-70, 80, easeIO(seg(lt, 4.3, 5.0))) : lt < 7.7 ? 80 : lt < 9.0 ? lerp(80, -330, easeIO(seg(lt, 7.7, 9.0))) : lt < 15.9 ? -330 : lt < 16.8 ? lerp(-330, 80, easeIO(seg(lt, 15.9, 16.8))) : 80;
+const P_ADM = lt => [admX(lt), camZ(lt) + 1420];
+// Clementine: in the group until 6.6, runs to the closet (skids in at 7.05, goes inside at 7.25), comes back out with the mop at 7.7, stands in the doorway, goes back in at 10.9 (hidden from 11.0)
+const P_CLM = lt => [lt < 7.1 ? lerp(150, 310, sk(lt, 6.6, 7.1)) : lt < 7.25 ? lerp(310, 340, sk(lt, 7.1, 7.25)) : lt < 7.7 ? 340 : lt < 10.8 ? lerp(340, 310, sk(lt, 7.7, 7.95)) : lerp(310, 340, sk(lt, 10.8, 11.0)), camZ(lt) + 1560];
+const clmVisible = lt => (lt < 7.25 || (lt >= 7.7 && lt < 11.0));
 const chairD = lt => lerp(2050, 1800, easeOut(seg(lt, 13.5, 14.5)));
-const P_CHAIR = lt => [90, camZ(lt) + chairD(lt)];
-const P_MNG = lt => [230, camZ(lt) + chairD(lt)];
-const P_BAN = at(60, 2600);
+const P_CHAIR = lt => [15, camZ(lt) + chairD(lt)];
+const P_MNG = lt => [215, camZ(lt) + chairD(lt)];
+const P_BAN = at(320, 2600);
 
 // the parking lot: the staff on their stalls at depth 1700 (no camera travel)
-const LOT_D = 1700, STALL = { adm: -475, lem: -285, mng: -95, str: 285, clm: 475 };   // stall at 95 is PERSIMMON, empty
+const LOT_D = 1700, STALL = { clm: -400, mng: -240, lem: -80, empty: 60, str: 200, adm: 452 };   // the stall at 80 is PERSIMMON, empty
 const lotAt = (X, D) => lt => [X, D];
 
 // Mr. Banana, far down the hall: he steps on the peel (16.11), slips over backwards, and bounces off the floor on the boing (16.31)
 function banana(lt) {
   const t0 = B('peel').s + .2, fall = sk(lt, t0, t0 + .36), boing = lt > t0 + .36 ? Math.sin(seg(lt, t0 + .36, t0 + .72) * PI) : 0;
   const q = V2.at(...P_BAN(lt)), s = q.s * .42, slipped = lt > t0;
-  return Object.assign(q, { s, rot: -fall * 1.35, lift: boing * 22 * s, expr: slipped ? 'panic' : 'happy', arms: slipped ? { l: 'up', r: 'up' } : { l: 'rest', r: 'rest' }, look: [0, -.2] });
+  return A7.banana(Object.assign(q, { s, rot: -fall * 1.35, lift: boing * 22 * s, expr: slipped ? 'panic' : 'happy', arms: slipped ? { l: 'up', r: 'up' } : { l: 'rest', r: 'rest' }, look: [0, -.2] }));
 }
 
 // the hall's fixtures, drawn after the corridor and before the cast
@@ -190,10 +197,10 @@ function hallFixtures(lt) {
   // the MUSTER POINT sign: hung from the ceiling mid-hall, its arrow pointing across at the closet door on the right wall (the sign is wrong: it sends them to the closet)
   { const [sx, sy] = p2(160, 540, Z_DOOR), k = kz(Z_DOOR);
     ctx.save(); ctx.fillStyle = '#1a7a4a'; ctx.strokeStyle = 'rgba(10,30,20,.8)'; ctx.lineWidth = Math.max(2, 4 * k);
-    rr(sx - 150 * k, sy - 62 * k, 262 * k, 118 * k, 14 * k); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#eafff0'; ctx.font = `400 ${52 * k}px Bangers`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${2 * k}px`;
-    ctx.fillText('MUSTER POINT', sx - 19 * k, sy - 6 * k); ctx.letterSpacing = '0px';
-    ctx.fillStyle = '#fff6d6'; ctx.beginPath(); ctx.moveTo(sx + 96 * k, sy - 30 * k); ctx.lineTo(sx + 96 * k, sy + 30 * k); ctx.lineTo(sx + 150 * k, sy + 30 * k); ctx.lineTo(sx + 150 * k, sy + 58 * k); ctx.lineTo(sx + 194 * k, sy); ctx.lineTo(sx + 150 * k, sy - 58 * k); ctx.lineTo(sx + 150 * k, sy - 30 * k); ctx.closePath(); ctx.fill(); ctx.stroke();
+    rr(sx - 130 * k, sy - 62 * k, 250 * k, 118 * k, 14 * k); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#eafff0'; ctx.font = `400 ${40 * k}px Bangers`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${1 * k}px`;
+    ctx.fillText('MUSTER POINT', sx - 5 * k, sy - 4 * k); ctx.letterSpacing = '0px';
+    ctx.fillStyle = '#fff6d6'; ctx.beginPath(); ctx.moveTo(sx + 118 * k, sy - 26 * k); ctx.lineTo(sx + 150 * k, sy - 26 * k); ctx.lineTo(sx + 150 * k, sy - 50 * k); ctx.lineTo(sx + 186 * k, sy); ctx.lineTo(sx + 150 * k, sy + 50 * k); ctx.lineTo(sx + 150 * k, sy + 26 * k); ctx.lineTo(sx + 118 * k, sy + 26 * k); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.restore(); }
 }
 
@@ -205,7 +212,7 @@ function fingerState(lt) {
 
 // the hall cast: which characters are focal (drawn sharp, held to the audit) in each shot; the rest are neighbours, drawn soft with drawBg
 const FOCAL = {
-  alarm: ['str', 'adm', 'clm'], a1: ['adm'], l1: ['lem'], c1: ['clm'], run: ['str', 'adm', 'clm'], m1: ['mng', 'clm'], r1: ['cran', 'mng'], m2: ['cran', 'mng'],
+  alarm: ['str', 'adm'], a1: ['adm'], l1: ['lem'], c1: ['clm'], run: ['str', 'adm', 'clm'], m1: ['mng'], r1: ['cran', 'mng'], m2: ['cran', 'mng'],
   r2: ['cran'], peel: [], s1: ['str'], a2: ['adm'], s2: ['str'], a3: ['adm'], s3: ['str'],
 };
 const shotHall = lt => lt < 1.5 ? 'alarm' : lt < 4.38 ? 'a1' : lt < 6.76 ? 'l1' : lt < 7.29 ? 'c1' : lt < 8.33 ? 'run' : lt < 11.04 ? 'm1' : lt < 12.70 ? 'r1' : lt < 14.56 ? 'm2' : lt < 15.91 ? 'r2' : lt < 16.86 ? 'peel' : lt < 18.95 ? 's1' : lt < 20.15 ? 'a2' : lt < 20.83 ? 's2' : lt < 21.71 ? 'a3' : lt < 22.79 ? 's3' : 'lot';
@@ -216,7 +223,7 @@ function hallCast(lt, sh) {
   const draw = (k, o) => (F.includes(k) ? drawChar(o) : near(o));
   const fingers = fingerState(lt);
   // far back: Lemon (left), Mrs. Cranberry in her chair and Mango (right, pulling to the threshold)
-  const lem = actor(A7.lemon, P_LEM, lt, { expr: 'dead', lid: .3, look: [.3, .1], hold: { l: 'clipboard6' }, grip: { l: [-100, 30] }, arms: { l: 'hold', r: 'rest' }, clipText: 'DRILL' }, 1);
+  const lem = actor(A7.lemon, P_LEM, lt, { expr: 'dead', lid: .3, look: [.3, .1], hold: { l: 'clipboard6' }, grip: { l: [-96, 96] }, arms: { l: 'hold', r: 'rest' }, clipText: 'DRILL' }, 1);
   const qC = V2.at(...P_CHAIR(lt));
   const cran = A7.cran({ x: qC.x, y: qC.y - 118 * qC.s, s: qC.s, noLegs: true, noShadow: true, look: [-.7, 0], expr: lt > 14.56 ? 'sour' : 'happy', arms: lt > 14.6 ? { l: [1.25, -2.0], r: [1.25, -2.0] } : { l: 'rest', r: 'rest' } });
   const mng = actor(A7.mango, P_MNG, lt, { look: [-.8, 0], expr: lt > 7.6 && lt < 8.4 ? 'panic' : 'happy', acc: ['badge7', 'gaitbelt7', 'keys7'], arms: { l: 'rest', r: lt > 13.2 && lt < 14.6 ? [2.0, .1] : 'reach' } }, 1);
@@ -230,14 +237,16 @@ function hallCast(lt, sh) {
   if (F.includes('mng')) drawChar(mng); else V2.dof(3, () => drawBg(mng));
   chairPass(cran);
   // Clementine: at the closet from 7.1, then out with a mop
-  const clm = actor(A10.clem, P_CLM, lt, { expr: lt > 7.2 && lt < 8.2 ? 'shock' : 'hopeful', look: [-.2, 0], hold: lt > 7.8 ? { r: 'drill12_mop' } : {}, grip: { r: [96, 40] }, arms: lt > 7.8 ? { l: 'rest', r: 'hold' } : { l: 'rest', r: 'rest' } }, 1);
-  draw('clm', clm);
+  if (clmVisible(lt)) {
+    const clm = actor(A10.clem, P_CLM, lt, { expr: lt > 7.2 && lt < 8.2 ? 'shock' : 'hopeful', look: [-.2, 0], hold: lt > 7.8 ? { r: 'drill12_mop' } : {}, grip: { r: [150, 60] }, arms: lt > 7.8 ? { l: 'rest', r: 'hold' } : { l: 'rest', r: 'rest' } }, 1);
+    draw('clm', clm);
+  }
   // Strawberry, front left, the calm one; her hand goes up for the list from 16.86
-  const str = actor(A11.straw, P_STR, lt, { expr: lt > 16.8 && lt < 22.6 ? 'dead' : 'chill', look: [.6, .05], arms: { l: 'rest', r: 'rest' }, hold: lt > 16.8 && lt < 22.6 ? { r: 'drill12_fingers' } : {}, hand: lt > 16.8 && lt < 22.6 ? { r: 'fist' } : {}, fingers: fingers }, 1);
-  if (lt > 16.8 && lt < 22.6) { const k = sk(lt, 16.8, 17.3) * (1 - sk(lt, 22.4, 22.7)); handTo(str, 1, str.x + 96 * str.s, str.y - 300 * str.s, k, [150, 90]); }
+  const str = actor(A11.straw, P_STR, lt, { expr: lt > 16.8 && lt < 22.6 ? 'dead' : 'chill', look: [-.6, .05], arms: { l: 'rest', r: 'rest' }, hold: lt > 16.8 && lt < 22.6 ? { l: 'drill12_fingers' } : {}, hand: lt > 16.8 && lt < 22.6 ? { l: 'fist' } : {}, fingers: fingers }, 1);
+  if (lt > 16.8 && lt < 22.6) { const k = sk(lt, 16.8, 17.3) * (1 - sk(lt, 22.4, 22.7)); handTo(str, -1, str.x - 96 * str.s, str.y - 300 * str.s, k, [-150, 90]); }
   draw('str', str);
   // the Administrator, front centre: his clipboard, his wave, his two reactions
-  const adm = actor(A9.melon, P_ADM, lt, { expr: lt > 18.95 && lt < 20.1 ? 'shock' : lt > 20.83 && lt < 21.7 ? 'sad' : 'happy', look: [.4, 0], hold: { l: 'clipboard6' }, grip: { l: [-100, 30] }, arms: { l: 'hold', r: lt < 3.0 ? 'wave' : 'rest' }, hand: { r: 'wave' }, clipText: 'DRILL' }, 1.22);
+  const adm = actor(A9.melon, P_ADM, lt, { expr: lt > 18.95 && lt < 20.1 ? 'shock' : lt > 20.83 && lt < 21.7 ? 'sad' : 'happy', look: [.4, 0], hold: { r: 'clipboard6' }, grip: { r: [110, 120] }, arms: { l: lt < 3.0 ? 'wave' : 'rest', r: 'hold' }, hand: lt < 3.0 ? { l: 'wave' } : {}, clipText: 'DRILL' }, 1.22);
   draw('adm', adm);
 }
 function hallScene(lt, sh) {
@@ -277,14 +286,14 @@ function lotNight(lt) {
   // the asphalt, then the painted stalls in true perspective
   { const yb = p2(0, 0, Zb)[1]; ctx.fillStyle = grad(0, yb - 2, 0, H, [[0, '#3a3e66'], [.5, '#22243e'], [1, '#12132a']]); ctx.fillRect(-300, yb - 2, W + 600, H - yb + 320); }
   ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineCap = 'butt';
-  for (const x of [-570, -380, -190, 0, 190, 380, 570]) { const a = p2(x, 0, 1450), b = p2(x, 0, 2000); ctx.lineWidth = Math.max(2, 9 * kz(1450)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
+  for (const x of [-480, -320, -160, 0, 160, 320, 480]) { const a = p2(x, 0, 1450), b = p2(x, 0, 2000); ctx.lineWidth = Math.max(2, 9 * kz(1450)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
   { const a = p2(-600, 0, 1450), b = p2(600, 0, 1450); ctx.lineWidth = Math.max(2, 9 * kz(1450)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
   car3(-820, 1880, { color: '#2c8f9a', brake: .1 }); car3(860, 1900, { color: '#5a3b8a', brake: .1, w: 160 });
   lampPost(-760, 1300, { h: 640, on: .7 }); lampPost(760, 1300, { h: 640, on: .7 });
 }
 // the outlined PERSIMMON stall, lettered on the ground (the letters are squashed by the ground's foreshortening, cy / depth)
 function persimmonSpace() {
-  const Zc = 1700, Xc = STALL.mng + 190, gz = V2.P.cy / Zc, kk = kz(Zc);
+  const Zc = 1700, Xc = STALL.empty, gz = V2.P.cy / Zc, kk = kz(Zc);
   ctx.save();
   const q = [p2(Xc - 84, 0, 1490), p2(Xc + 84, 0, 1490), p2(Xc + 84, 0, 1910), p2(Xc - 84, 0, 1910)];
   ctx.strokeStyle = 'rgba(255,240,200,.9)'; ctx.lineWidth = Math.max(3, 7 * kk); ctx.setLineDash([24 * kk, 14 * kk]);
@@ -305,14 +314,16 @@ function lotScene(lt, sh) {
   persimmonSpace();
   // the insert (28.5-28.95): only the painted stall, nobody standing in it or beside it
   if (lt >= 28.5 && lt < 28.95) return;
+  // the row, left to right. Props point outboard so nothing reaches a neighbour's face. A close-up on Strawberry (s4, s5) leaves the others soft.
+  const closeOnStr = sh === 's4' || sh === 's5';
   const cast = [
-    ['adm', actor(A9.melon, lotAt(STALL.adm, LOT_D), lt, { expr: 'happy', look: [.4, 0], hold: { l: 'clipboard6' }, grip: { l: [-100, 30] }, arms: { l: 'hold', r: 'rest' }, clipText: 'DRILL' }, 1.22)],
-    ['lem', actor(A7.lemon, lotAt(STALL.lem, LOT_D), lt, { expr: 'dead', lid: .3, hold: { l: 'clipboard6' }, grip: { l: [-100, 30] }, arms: { l: 'hold', r: 'rest' }, clipText: 'DRILL' }, 1)],
+    ['clm', actor(A10.clem, lotAt(STALL.clm, LOT_D), lt, { expr: 'hopeful', hold: { l: 'drill12_mop' }, grip: { l: [-150, 60] }, arms: { l: 'hold', r: 'rest' } }, 1)],
     ['mng', actor(A7.mango, lotAt(STALL.mng, LOT_D), lt, { expr: 'happy', acc: ['badge7', 'gaitbelt7', 'keys7'], arms: { l: 'hips', r: 'rest' } }, 1)],
+    ['lem', actor(A7.lemon, lotAt(STALL.lem, LOT_D), lt, { expr: 'dead', lid: .3, hold: { r: 'clipboard6' }, grip: { r: [90, 60] }, arms: { l: 'rest', r: 'hold' }, clipText: 'DRILL' }, 1)],
     ['str', actor(A11.straw, lotAt(STALL.str, LOT_D), lt, { expr: 'dead', look: sh === 's4' ? [-.9, 0] : [.2, 0], arms: { l: 'rest', r: 'rest' } }, 1)],
-    ['clm', actor(A10.clem, lotAt(STALL.clm, LOT_D), lt, { expr: 'hopeful', hold: { r: 'drill12_mop' }, grip: { r: [96, 40] }, arms: { l: 'rest', r: 'hold' } }, 1)],
+    ['adm', actor(A9.melon, lotAt(STALL.adm, LOT_D), lt, { expr: 'happy', look: [.4, 0], arms: { l: 'rest', r: 'rest' } }, 1.22)],
   ];
-  for (const [, c] of cast) drawChar(c);   // the lot is a wide: everybody is sharp
+  for (const [k, c] of cast) (!closeOnStr || k === 'str' ? drawChar(c) : V2.dof(4, () => drawBg(c)));
 }
 
 // ------------------------------------------------------------------ the scene
@@ -324,11 +335,11 @@ const SC = {
       V2.setCam({ cz: 0, cx: 0, cy: 360, hy: 860, f: 1400 });
       if (lt < 23.84) { zoomTo(540, 960, 1); return; }                                        // muster: the lot, still
       if (lt < 25.96) { zoomTo(540, 960, 1 + .04 * sk(lt, 23.84, 25.8)); return; }             // mo1: a slow push on the row and the Moon
-      if (lt < 26.87) { zoomTo(775, 760, 1.5); return; }                                      // s4: Strawberry
-      if (lt < 28.09) { zoomTo(540, 960, 1.12); return; }                                     // mo2: the two-shot, the Moon and Strawberry
-      if (lt < 28.5 || lt >= 28.95 && lt < 29.48) { zoomTo(775, 760, 1.5); return; }          // s5: Strawberry, around the insert
-      if (lt < 28.95) { zoomTo(621, 1167, 2.2); return; }                                     // the insert: the empty PERSIMMON stall on the ground
-      { const k = sk(lt, 29.48, 30.28); zoomTo(lerp(775, 540, k), lerp(760, 960, k), lerp(1.5, 1.0, k)); return; }   // the end: a pull-out to the wide lot
+      if (lt < 26.87) { zoomTo(705, 760, 1.5); return; }                                      // s4: Strawberry
+      if (lt < 28.09) { zoomTo(540, 960, 1.04); return; }                                     // mo2: the two-shot, the Moon and Strawberry
+      if (lt < 28.5 || lt >= 28.95 && lt < 29.48) { zoomTo(705, 760, 1.5); return; }          // s5: Strawberry, around the insert
+      if (lt < 28.95) { zoomTo(591, 1167, 2.2); return; }                                     // the insert: the empty PERSIMMON stall on the ground
+      zoomTo(540, 960, 1.0); return;   // the end: a cut to the wide lot, held for the sting   // the end: a pull-out to the wide lot
     }
     // the hall: the camera tracks with the group in the tracking shots (cz from camZ) and frames by the keyframe track
     const [cx, z, cy, y0] = trackAt(lt);
@@ -346,7 +357,7 @@ const SC = {
   },
   blur(lt) {
     for (const c of [1.5, 4.38, 6.76, 8.33, 11.04, 12.70, 14.56, 15.91, 16.86, 18.95, 20.15, 20.83, 21.71, 22.79, 23.84, 25.96, 26.87, 28.09, 28.5, 28.95]) if (Math.abs(lt - c) < .03) return 1;   // a cut frame: one sample only
-    if (lt > 7.1 && lt < 7.6) return 10;      // the whip to the closet
+    if (lt > 6.76 && lt < 7.6) return 10;      // the whip to the closet
     if (lt > 7.29 && lt < 8.3) return 10;     // the scramble
     if (lt < 7.1 && lt > 1.5) return 6;       // the tracking shots
     return 1;

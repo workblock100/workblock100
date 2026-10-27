@@ -18,10 +18,10 @@
  *   S12room.sfxWord, S12room.wordT, S12room.route, S12room.pulse, S12room.sk, S12room.lerpA   // the small helpers the scenes share (copied from ep9_floor.js and ep11_orient.js)
  *
  * LAYOUT (every number is a world coordinate; the sign-in scene and the slides scene use the same room):
- *   back wall   Z = LAY.zb (1320). Whiteboard at X -700..-440 (left), the cork board and the wall clock at X 640..900 (right), the pizza door at X 620..860.
- *   screen      Z = LAY.screen.z (1296), picture X -420..560. Bottom Y = 290 when down, Y 880 when up (rolled into the case above).
+ *   back wall   Z = LAY.zb (1320). The pizza door at X -700..-480 (left), the cork board and the wall clock above it, the whiteboard at X 620..860 (right).
+ *   screen      Z = LAY.screen.z (1296), picture X -400..400. Bottom Y = 337 when down, Y 900 when up (rolled into the case above).
  *   table       X -500..480, Z 760..1000, top Y 190. Chairs: far side at Z 1110 (X -440, -180, 80, 340), near side at Z 640 (same X).
- *   projector   on a cart at X -460, Z 980 (the shelf at Y 470, the lens at Y 510): its beam crosses the room to the screen.
+ *   projector   on a cart at X -680, Z 960 (the shelf at Y 470, the lens at Y 510): its beam crosses the room to the screen.
  *   camera      f 1100, cz -650, cy 700, hy 860 (LAY.cam). The room is seen from the near side of the table, so the far-side seats face the camera.
  */
 (() => {
@@ -32,16 +32,16 @@ const { box3, onZ, kz, lit } = S6;
 // ------------------------------------------------------------------ layout: every number is a world coordinate, shared with the scenes through S12room.LAY
 const LAY = {
   zb: 1320, hw: 1000, ch: 960, rail: 150,                         // back wall depth, half width, ceiling height, wainscot top
-  screen: { x0: -420, x1: 560, z: 1296, yBot: 290, yTop: 880, caseH: 40 },   // the picture: yBot when down, yTop when rolled up
-  board: { x0: -700, x1: -440, y0: 500, y1: 880, z: 1316 },        // the whiteboard on the back wall, left
-  clock: { X: 790, Y: 900, r: 46 },                               // the wall clock, right of the screen
-  cork: { x0: 640, x1: 900, y0: 580, y1: 820, z: 1316 },          // the cork board under the clock
-  door: { x0: 620, x1: 860, y1: 540, z: 1316 },                   // the pizza door, far right (its frame and glass panel)
+  screen: { x0: -400, x1: 400, z: 1296, yBot: 337, yTop: 900, caseH: 40 },   // the picture: yBot when down, yTop when rolled up
+  board: { x0: 610, x1: 860, y0: 500, y1: 880, z: 1316 },         // the whiteboard on the back wall, right
+  clock: { X: -590, Y: 900, r: 46 },                              // the wall clock, above the cork board on the left
+  cork: { x0: -700, x1: -480, y0: 580, y1: 820, z: 1316 },        // the cork board on the left, under the clock
+  door: { x0: -700, x1: -480, y1: 540, z: 1316 },                 // the pizza door, far left (its frame and glass panel)
   table: { x0: -500, x1: 480, z0: 760, z1: 1000, top: 190 },      // the long folding table
   seats: { far: 1110, near: 640, xs: [-440, -180, 80, 340] },    // chair rows: far side (behind the table) and near side (between camera and table)
-  projector: { X: -460, Z: 980, Y: 520 },
-  pizza: { X: 540, Z: 1230 },
-  cooler: { X: -700, Z: 1150 },
+  projector: { X: -680, Z: 960, Y: 520 },
+  pizza: { X: -560, Z: 1230 },
+  cooler: { X: 700, Z: 1200 },
   seatY: 120,                                                    // a seated body rests on this height (the chair seat)
   cam: { f: 1100, cz: -650, cy: 700, hy: 860 },
 };
@@ -98,14 +98,14 @@ function whiteboard(lt) {
   flat(cx, cy, b.z, w + 26, h + 26, 0, (x, y, ww, hh) => { ctx.fillStyle = '#c9ccd2'; rr(x, y, ww, hh, 8); ctx.fill(); });
   flat(cx, cy, b.z, w, h, 0, (x, y, ww, hh) => { ctx.fillStyle = '#fbfbf7'; rr(x, y, ww, hh, 4); ctx.fill(); });
   const L = (t, row, o = {}) => flat(cx, b.y1 - 40 - row * 72, b.z, w, 1, 0, (x, y) => text(t, x + 24, y, { size: o.size || 36, font: 'Nunito', weight: 900, fill: o.fill || '#2a3f8a', align: 'left', base: 'middle' }));
-  L('IN-SERVICE:', 0, { size: 38, fill: '#1d1a2a' });
-  L('DIGNITY FIRST', 1, { size: 40, fill: '#d6202e' });
-  L('1. Residents are people', 2, { size: 30, fill: '#2a3f8a' });
-  L('2. Breaks are optional', 3, { size: 30, fill: '#2a3f8a' });
-  L('3. Pizza is always funded', 4, { size: 30, fill: '#2a3f8a' });
-  // the one item crossed out: a red line through "Breaks are optional" (its text is drawn in the plane, so the line lands on it)
-  flat(cx, b.y1 - 40 - 3 * 72, b.z, w, 1, 0, (x, y) => { ctx.strokeStyle = '#d6202e'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 18, y - 1); ctx.lineTo(x + 330, y - 3); ctx.stroke(); });
-  flat(cx, b.y1 - 40 - 5 * 72, b.z, w, 1, 0, (x, y) => text('(all staff)', x + 24, y, { size: 26, font: 'Nunito', weight: 800, fill: '#6b6578', align: 'left' }));
+  L('IN-SERVICE:', 0, { size: 30, fill: '#1d1a2a' });
+  L('DIGNITY FIRST', 1, { size: 32, fill: '#d6202e' });
+  L('1. People first', 2, { size: 26, fill: '#2a3f8a' });
+  L('2. Breaks', 3, { size: 26, fill: '#2a3f8a' });
+  L('3. Pizza, funded', 4, { size: 26, fill: '#2a3f8a' });
+  // the one item crossed out: a red line through "2. Breaks" (drawn in the same plane, so the line lands on the text)
+  flat(cx, b.y1 - 40 - 3 * 72, b.z, w, 1, 0, (x, y) => { ctx.strokeStyle = '#d6202e'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 18, y - 1); ctx.lineTo(x + 170, y - 3); ctx.stroke(); });
+  flat(cx, b.y1 - 40 - 5 * 72, b.z, w, 1, 0, (x, y) => text('(all staff)', x + 24, y, { size: 22, font: 'Nunito', weight: 800, fill: '#6b6578', align: 'left' }));
   // marker tray
   flat(cx, b.y0 - 14, b.z, w * .6, 14, 0, (x, y, ww, hh) => { ctx.fillStyle = '#b8bcc4'; rr(x, y, ww, hh, 4); ctx.fill(); });
 }
@@ -141,7 +141,6 @@ function backWall(o = {}) {
 }
 // a water cooler: a white body, a blue bottle on top, a tap
 function cooler(X, Z) {
-  const k = kzP(Z);
   stand(X, 0, Z, () => {
     ctx.fillStyle = 'rgba(0,0,0,.2)'; ell(0, 4, 90, 16); ctx.fill();
     ctx.fillStyle = '#eef0f2'; ctx.strokeStyle = 'rgba(25,16,30,.6)'; ctx.lineWidth = 3; rr(-60, -360, 120, 360, 14); ctx.fill(); ctx.stroke();
@@ -151,7 +150,6 @@ function cooler(X, Z) {
     ctx.fillStyle = '#e8ecf2'; rr(-28, -210, 56, 14, 4); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#3a3f4c'; ell(-26, -196, 6, 6); ctx.fill(); ell(26, -196, 6, 6); ctx.fill();
   }, 1.0);
-  void k;
 }
 
 // ------------------------------------------------------------------ the projector screen: a white picture rolled into a case, and the picture's paint hook

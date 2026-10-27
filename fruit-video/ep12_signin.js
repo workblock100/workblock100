@@ -52,12 +52,12 @@ const CART = { Z: R.LAY.pizza.Z };
 const standK = lt => sk(lt, tS('a4') + .05, tS('a4') + .55);
 const walkK = lt => sk(lt, tS('a4') + .4, tS('a4') + 1.4);
 // the pizza cart: wheeled in from the back right, stops at X 700
-const cartX = lt => { const a = tS('pizza') - .2, b = tS('pizza') + 1.05; return lt < a ? 1260 : lerp(1260, R.LAY.pizza.X, easeOut(seg(lt, a, b))); };
+const cartX = lt => { const a = tS('pizza') - .2, b = tS('pizza') + 1.05; return lt < a ? -960 : lerp(-960, R.LAY.pizza.X, easeOut(seg(lt, a, b))); };
 
 function bodyAdmin(lt) {
   const o = R.pt(ADMIN[0], 0, ADMIN[1]);
   const base = { x: o.x, y: o.y, s: o.s * 1.22, who: 'melon', expr: 'happy', look: [0, 0] };
-  if (lt >= tS('a3') - .02 && lt < tS('a4')) Object.assign(base, { arms: { l: 'hold', r: 'point' }, hold: { l: 'slice12' }, grip: { l: [-104, 118] } });
+  if (lt >= tS('a3') - .02 && lt < tS('a4')) Object.assign(base, { arms: { l: 'hold', r: 'point' }, hold: { l: 'slice12' }, grip: { l: [-140, 120] } });
   else if (lt >= tS('pizza') && lt < tS('a3') - .02) Object.assign(base, { arms: { l: 'hips', r: 'hold' }, hold: { r: 'remote12' }, grip: { r: [96, 30] }, look: [-.3, .1] });
   else if (lt >= tS('a4')) Object.assign(base, { expr: 'happy', arms: { l: 'hips', r: 'wave' } });
   else Object.assign(base, { arms: { l: 'hips', r: 'hold' }, hold: { r: 'remote12' }, grip: { r: [96, 30] }, look: [-.2, 0] });
@@ -70,7 +70,7 @@ function bodySeated(id, extra) {
 function bodyClem(lt) {
   let o;
   if (inB(lt, 'c1')) o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'up' }, look: [0, 0], sy: 1 - .04 * Math.sin((lt - tS('c1')) * 22) * (1 - seg(lt, tS('c1') + .3, beat('c1').e)) });
-  else if (lt >= tS('sign') - .05 && lt < beat('sign').e - .05) o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'hold' }, hold: { r: 'pen12' }, grip: { r: [40, 130] }, look: [0, .3] });
+  else if (lt >= tS('sign') + .02 && lt < beat('sign').e - .05) o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'hold' }, hold: { r: 'pen12' }, grip: { r: [40, 130] }, look: [0, .3] });
   else o = bodySeated('clem', { expr: 'hopeful', arms: { l: 'rest', r: 'rest' }, look: [0, 0] });
   return A10.clem(o);
 }
@@ -87,7 +87,7 @@ function bodyLemon(lt) {
 function bodyStraw(lt) {
   const st = standK(lt);
   if (lt >= tS('a4') + .05) {
-    const k = walkK(lt), X = lerp(340, 620, k), Z = lerp(1110, 1020, k), q = R.pt(X, lerp(120, 0, st), Z);
+    const k = walkK(lt), X = lerp(340, 320, k), Z = lerp(1110, 1190, k), q = R.pt(X, lerp(120, 0, st), Z);
     return A11.straw({ x: q.x, y: q.y, s: q.s, noLegs: st < .5, lift: 0, expr: 'chill', look: [.4, 0], arms: { l: 'rest', r: 'rest' } });
   }
   let o;
@@ -173,7 +173,7 @@ function world(lt, t) {
   R.shell({ flick: t });
   R.back({ min: 58, hr: 2 });
   R.screen({ down: 0 });
-  R.projector({ t, beam: 0 });
+  // (the projector cart is for the slides scene: in this wide it would stand in front of Clementine)
   // the far-side chairs, behind the seated staff
   for (const X of R.LAY.seats.xs) R.chair(X, R.LAY.seats.far, {});
   // the pizza cart by the door: wheeled in on its beat; the top box lands on its tap; a slice rises from the top box
@@ -251,7 +251,7 @@ function insert(lt, who) {
     ctx.save(); ctx.beginPath(); ctx.rect(x2 - 10, yS - 80, (w / 2 - 40 - (x2 - 10)) * k + 1, 110); ctx.clip();
     text('Strawberry', x2 + 4, yS - 16, { size: 52, font: 'Nunito', weight: 900, italic: true, fill: '#d62a3a', align: 'left' });
     ctx.restore();
-    if (k2 > 0) { ctx.save(); ctx.beginPath(); ctx.rect(x2 + 230, yS - 40, (w / 2 - 40 - (x2 + 230)) * k2 + 1, 60); ctx.clip(); text('(under protest)', x2 + 240, yS - 18, { size: 26, font: 'Nunito', weight: 900, italic: true, fill: '#d62a3a', align: 'left' }); ctx.restore(); }
+    if (k2 > 0) { ctx.save(); ctx.beginPath(); ctx.rect(x2 + 4, yS + 6, (w / 2 - 40 - (x2 + 4)) * k2 + 1, 60); ctx.clip(); text('(under protest)', x2 + 8, yS + 28, { size: 24, font: 'Nunito', weight: 900, italic: true, fill: '#d62a3a', align: 'left' }); ctx.restore(); }
   }
   ctx.restore();
 }
@@ -274,7 +274,7 @@ const SC = {
     else if (sh === 'cuL') at('lemon', 2.5, 150);
     else if (sh === 'pizza') { const k = sk(lt, tS('pizza'), tS('pizza') + 1.2), [px, py] = p2(cartX(lt), 150, CART.Z); zoomTo(lerp(580, px, k), lerp(1060, py, k), lerp(1.2, 2.3, k)); }
     else if (sh === 'wide3') zoomTo(580, 1060, 1.2);
-    else if (sh === 'last') { const k = sk(lt, shotStart('last'), shotStart('last') + 1.8); zoomTo(lerp(580, 640, k), 1060, lerp(1.2, 1.26, k)); }
+    else if (sh === 'last') { const k = sk(lt, shotStart('last'), shotStart('last') + 1.8); zoomTo(lerp(580, 600, k), 1060, 1.2); }
     else zoomTo(580, 1060, 1.2);
   },
   draw(lt) {
