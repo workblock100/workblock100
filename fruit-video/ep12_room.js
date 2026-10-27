@@ -3,22 +3,22 @@
  * Used by the Episode 12 scenes `signin` (2:58 PM, the sign-in table) and `slides` (3:02 PM, the projected screen and the audience).
  *
  * HOW TO CALL IT (world units: X right, Y up, Z forward; the camera is yours: S12room.cam() sets the shared lens, shots zoom with zoomTo)
- *   S12room.cam({ cx, cy, cz })          // V2.setCam with the room lens (f 1400, hy 860); cx/cy/cz override the camera position
+ *   S12room.cam(extra)                   // V2.setCam with the room lens (f 1100, cz -650, cy 700, hy 860); extra overrides any of them
  *   S12room.light(extra)                 // the warm fluorescent preset (V2.setLight); call before drawChar
  *   S12room.shell({ flick })             // FIRST: walls, wainscot, floor tiles, ceiling and its two rows of panels (one row flickers with flick, default 0..1 seconds)
- *   S12room.back({ min, hr })            // the back wall: whiteboard, cork board with flyers, wall clock, the door and the cooler and plant
+ *   S12room.back({ min, hr })            // the back wall: whiteboard, cork board with flyers, wall clock (min, hr), the pizza door and the water cooler
  *   S12room.screen({ down, drawSlide, t })  // the projector screen on the far wall: down 0 = rolled up in its case, 1 = down. drawSlide(x, y, w, h, t) paints the picture in scene px
  *   S12room.projector({ t, beam })       // the projector on its cart at the left, its fan turning, and the light beam to the screen (beam 0..1)
  *   S12room.table({ t })                 // the long folding table (white cloth) across the room: draw it BEFORE anybody seated behind it
  *   S12room.chair(X, Z, { color })       // one folding chair (the seated character sits in it: lift = seat height in px, see S12room.seatPt)
- *   S12room.pizza({ boxes, t })          // the pizza cart near the door with a stack of boxes (boxes = how many are stacked, the top one may be lifted)
+ *   S12room.pizza({ at: {X, Z}, boxes, lift, tap })  // the pizza cart with a stack of boxes (lift = px the top box is raised, tap 0..1 = it has landed)
  *   S12room.seatPt(X, Z)                 // {x, y, s} of a seat at X, Z with the body on the seat (Y 120): pass it into a character's options
  *   S12room.pt(X, Y, Z)                  // the screen point of a world point, with its scale: {x, y, s}
  *   S12room.silhouettes(fn, col)         // draws whatever fn draws (characters, props) and fills all of it with one flat dark colour (an audience seen from behind)
  *   S12room.sfxWord, S12room.wordT, S12room.route, S12room.pulse, S12room.sk, S12room.lerpA   // the small helpers the scenes share (copied from ep9_floor.js and ep11_orient.js)
  *
  * LAYOUT (every number is a world coordinate; the sign-in scene and the slides scene use the same room):
- *   back wall   Z = LAY.zb (1320). The pizza door at X -700..-480 (left), the cork board and the wall clock above it, the whiteboard at X 620..860 (right).
+ *   back wall   Z = LAY.zb (1320). The pizza door at X -700..-480 (left), the cork board and the wall clock above it, the whiteboard at X 610..860 (right).
  *   screen      Z = LAY.screen.z (1296), picture X -400..400. Bottom Y = 337 when down, Y 900 when up (rolled into the case above).
  *   table       X -500..480, Z 760..1000, top Y 190. Chairs: far side at Z 1110 (X -440, -180, 80, 340), near side at Z 640 (same X).
  *   projector   on a cart at X -680, Z 960 (the shelf at Y 470, the lens at Y 510): its beam crosses the room to the screen.
@@ -131,12 +131,12 @@ function backWall(o = {}) {
   corkBoard();
   // the wall clock: the time on the clock matches the scene's clock pill (min and hr from the caller)
   S6.wallClock(LAY.clock.X, LAY.clock.Y, LAY.zb - 6, 1, o.min ?? 58, o.hr ?? 2, LAY.clock.r);
-  // the pizza door: a frame with a glass panel, far right on the back wall
+  // the pizza door: a frame with a glass panel, on the back wall, left
   const d = LAY.door, dw = d.x1 - d.x0, dx = (d.x0 + d.x1) / 2;
   flat(dx, (d.y1 + 0) / 2 + 0, d.z, dw + 24, d.y1 + 24, 0, (x, y, ww, hh) => { ctx.fillStyle = '#e8e2d2'; ctx.fillRect(x, y, ww, hh); });
   flat(dx, d.y1 / 2, d.z, dw, d.y1, 0, (x, y, ww, hh) => { ctx.fillStyle = '#9fb4bd'; ctx.fillRect(x, y, ww, hh); ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(x + 14, y + 14, ww - 28, hh * .6); ctx.strokeStyle = '#6c7f87'; ctx.lineWidth = 5; ctx.strokeRect(x + 6, y + 6, ww - 12, hh - 12); });
   flat(d.x1 - 40, d.y1 * .48, d.z, 10, 64, 0, (x, y, ww, hh) => { ctx.fillStyle = '#7b7b84'; rr(x, y, ww, hh, 4); ctx.fill(); });
-  // the water cooler and the plant in the back corners
+  // the water cooler in the back right corner
   cooler(LAY.cooler.X, LAY.cooler.Z);
 }
 // a water cooler: a white body, a blue bottle on top, a tap

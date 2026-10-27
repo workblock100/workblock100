@@ -162,13 +162,13 @@ EXT.prop.report12 = (side, o, t) => {   // the report the Administrator holds up
   ctx.restore();
 };
 Object.assign(PROP_BOX, { report12: [-60, -180, 62, 8] });
-EXT.prop.reports12 = (side, o, t) => {   // Lemon's stack of reports at his side, a bookmark strip out of the top one
-  ctx.save(); ctx.lineJoin = 'round';
+EXT.prop.reports12 = (side, o, t) => {   // Lemon's stack of reports, hung off his hand on the screen-left side (clear of his face), a bookmark strip out of the top one
+  ctx.save(); ctx.lineJoin = 'round'; ctx.translate(-96, 0);
   for (let i = 0; i < 4; i++) { ctx.fillStyle = i % 2 ? '#fbf6e6' : '#fffdf6'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.save(); ctx.translate(i * 1.5, -i * 7); rr(0, -70, 96, 84, 3); ctx.fill(); ctx.stroke(); ctx.restore(); }
-  ctx.fillStyle = '#ffd23a'; ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.fillRect(58, -80, 12, 40); ctx.strokeRect(58, -80, 12, 40);
+  ctx.fillStyle = '#ffd23a'; ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.fillRect(4, -80, 12, 40); ctx.strokeRect(4, -80, 12, 40);
   ctx.restore();
 };
-Object.assign(PROP_BOX, { reports12: [-2, -88, 104, 26] });
+Object.assign(PROP_BOX, { reports12: [-100, -88, 8, 26] });
 EXT.prop.rosette12 = (side, o, t) => {   // Newest Hire: a pleated rosette with two ribbon tails
   ctx.save(); ctx.translate(0, -40); ctx.lineJoin = 'round';
   ctx.fillStyle = '#ff7ac8'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
@@ -431,7 +431,7 @@ window.__EP12_SCENES.award = {
     else if (sh === 'cuM') fz(c.mng, 2.2);
     else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0], q[1] + 60, 1.2); }
     else if (sh === 'walk') { const q = mid(F(c.mel), F(c.clm)); zoomTo(q[0] + 40, q[1] + 60, 1.12); }
-    else if (sh === 'cuC2') fz(c.clm, 2.6, 130);
+    else if (sh === 'cuC2') { const f = F(c.clm); zoomTo(f[0] + 70, f[1] + 130 / 2.6, 2.6); }   // her raised rosette stays in frame
     else if (sh === 'back') zoomTo(520, 880, 1.02);
     else if (sh === 'cuS1') fz(c.str, 2.2, 130);
     else if (sh === 'ask') fz(c.str, lerp(1.3, 2.2, easeIO(seg(lt, 21.8, 23.05))), 130);
@@ -439,7 +439,7 @@ window.__EP12_SCENES.award = {
     else if (sh === 'still') { const k = easeIO(seg(lt, bs('silence'), be('silence'))), f = F(c.str), fy = f[1] + 130 / 2.2; zoomTo(lerp(f[0], 560, k), lerp(fy, 900, k), lerp(2.2, 1.05, k)); }
     else if (sh === 'two2') { const q = mid(F(c.mel), F(c.str)); zoomTo(q[0] + 20, q[1] + 40, 1.05); }
     else if (sh === 'cuM2') fz(c.mng, 2.0, 120);
-    else if (sh === 'cuA') fz(c.mel, 2.0, 150);
+    else if (sh === 'cuA') { const f = F(c.mel); zoomTo(f[0] + 60, f[1] + 150 / 2.0, 2.0); }   // his mallet arm stays in frame
     else if (sh === 'table') zoomTo(lerp(330, 300, seg(lt, be('s4') - .2, be('end'))), 880, 1.35);
     else if (sh === 'tail') { const k = easeIO(seg(lt, be('end') - .02, be('end') + .9)); zoomTo(lerp(300, 560, k), lerp(880, 900, k), lerp(1.35, 1.0, k)); }
   },
@@ -466,8 +466,8 @@ window.__EP12_SCENES.award = {
     const covers = [];   // the sharp bodies (and their props, generously) of the nearer characters drawn sharp so far
     for (const e of c.items.filter(q => !q.bg).slice().sort((p, q) => p.z - q.z)) {
       const bx = bodyBox(e.o), fb = faceBox(e.o);
-      const ext = e.o.hold ? 140 * e.o.s : 0;   // a held prop can reach past the body: keep that in the frame too
-      let sharp = bx[0] - ext >= 40 && bx[2] + ext <= W - 40 && bx[1] >= 16 && bx[3] <= H - 16 && (!closeUp || e.key === subj);
+      const ext = e.o.hold ? 140 * e.o.s * CAM.z : 0;   // a held prop can reach past the body on the right (screen px): keep that in the frame too
+      let sharp = bx[0] >= 40 && bx[2] + ext <= W - 40 && bx[1] >= 16 && bx[3] <= H - 16 && (!closeUp || e.key === subj);
       if (sharp && covers.some(b => overlaps(b, fb))) sharp = false;
       e.sharp = sharp;
       if (sharp) covers.push([bx[0] - 20, bx[1] - 40, bx[2] + 40, bx[3]]);

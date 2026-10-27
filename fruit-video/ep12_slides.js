@@ -12,10 +12,11 @@
  *  26.15 quiz1 clack: a push-in on the screen, QUIZ question 1 (the timer ring) | 37.13 quiz2 clack: question 2, the ticks (0.2, 0.7, 1.2)
  *  38.18 a10: INSERT on the answer bubbles (YES, YES, LET ME CHECK MY CONTRACT) | 43.81 s5 "Let me check my contract." (the bubble is struck)
  *  47.17 s6 "No.": Strawberry turns round (the turn at 46.9..47.15), a close-up on her face; 47.72..49.02 silence: hold on her face, her eyes move once to the Administrator (48.2)
- *  49.07 a12 "Excuse me?": the Administrator (close) | 49.95 the blank slide with the dash | 50.08 s7 "No.": Strawberry stands; a two-shot with the Administrator
+ *  49.07 a12 "Excuse me?": a two-shot (Strawberry seated, the Administrator shocked) | 49.95 the blank slide with the dash | 50.08 s7 "No.": Strawberry stands; the two-shot holds
  *  52.25 end: the screen goes dark (sting 0.1).
  * Layout (the room set S12room, the same room as signin): the audience row at Z 560: Lemon X -240 (clipboard), Mango X 0 (leaning in), Strawberry X 240 (front row),
- * Clementine X 480 (raised hand); an empty chair at X -480. The screen: X -400..440, picture Y 337..900, Z 1296. The Administrator stands at X 480, Z 1040, beside the screen.
+ * Clementine X 480 (raised hand); empty chairs at X -480 and X 480 are not in the audience. The screen: X -400..400, picture Y 337..900, Z 1296. The Administrator stands on a
+ * low platform (the riser, X 460..660, Z 1000..1120, 110 units high) at X 520, Z 1040, beside the screen's right edge, so his face stays clear of the audience's heads.
  */
 (() => {
 if (!window.TIMELINE_EP12) return;
@@ -106,7 +107,7 @@ function drawSlide(x, y, w, h, t) {
     // a clock icon: two o'clock, 2 minutes
     ctx.save(); ctx.translate(810, 480); ctx.fillStyle = '#ffffff'; ctx.strokeStyle = INK; ctx.lineWidth = 12; ell(0, 0, 112, 112); ctx.fill(); ctx.stroke();
     ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -80); ctx.moveTo(0, 0); ctx.lineTo(54, 20); ctx.stroke(); ctx.restore();
-    text('2 min', 810, 680, { size: 52, font: 'Nunito', weight: 900, fill: RED, align: 'center' });
+    text('2 min', 810, 680, { size: 58, font: 'Nunito', weight: 900, fill: RED, align: 'center' });
   } else if (idx === 2) {
     text('TEAMWORK.', 500, 190, { size: 124, font: 'Bangers', weight: 400, fill: RED, align: 'center', lw: 8, stroke: '#ffffff' });
     text('We are a family.', 500, 320, { size: 80, font: 'Nunito', weight: 900, fill: INK, align: 'center' });
@@ -123,11 +124,11 @@ function drawSlide(x, y, w, h, t) {
     text('97%', 340, 430, { size: 64, font: 'Bangers', weight: 400, fill: '#ffffff', align: 'center', lw: 6, stroke: INK });
     text('pizza', 340, 660, { size: 60, font: 'Nunito', weight: 900, fill: INK, align: 'center' });
     text('3%', 630, 400, { size: 64, font: 'Nunito', weight: 900, fill: INK, align: 'left' });
-    text('staff', 630, 470, { size: 50, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
-    text('budget', 630, 530, { size: 50, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
+    text('staff', 630, 470, { size: 58, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
+    text('budget', 630, 536, { size: 58, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
   } else if (idx === 4) {
     text('QUIZ', 500, 110, { size: 110, font: 'Bangers', weight: 400, fill: NAVY, align: 'center', lw: 6, stroke: '#ffffff' });
-    text('Question 1', 60, 210, { size: 52, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
+    text('Question 1', 60, 210, { size: 58, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
     text('You are on your break.', 60, 300, { size: 64, font: 'Nunito', weight: 900, fill: INK, align: 'left' });
     text('What do you do?', 60, 380, { size: 64, font: 'Nunito', weight: 900, fill: INK, align: 'left' });
     const left = clamp(1 - (lt - tS('quiz1')) / 5.0);
@@ -135,7 +136,7 @@ function drawSlide(x, y, w, h, t) {
     ['A', 'B', 'C'].forEach((L, i) => { const cx = 210 + i * 290, cy = 530; ctx.fillStyle = '#ffffff'; ctx.strokeStyle = INK; ctx.lineWidth = 6; ell(cx, cy, 100, 100); ctx.fill(); ctx.stroke(); text(L, cx, cy + 4, { size: 96, font: 'Bangers', weight: 400, fill: NAVY, align: 'center' }); });
   } else if (idx === 5) {
     text('QUIZ', 500, 110, { size: 110, font: 'Bangers', weight: 400, fill: NAVY, align: 'center', lw: 6, stroke: '#ffffff' });
-    text('Question 2', 60, 210, { size: 52, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
+    text('Question 2', 60, 210, { size: 58, font: 'Nunito', weight: 900, fill: GREY, align: 'left' });
     text('Stay late?', 60, 300, { size: 76, font: 'Nunito', weight: 900, fill: INK, align: 'left' });
     const ticks = [tS('quiz2') + .2, tS('quiz2') + .7, tS('quiz2') + 1.2];
     const nT = ticks.filter(tt => lt >= tt).length;
@@ -143,7 +144,7 @@ function drawSlide(x, y, w, h, t) {
     const hit = lt >= tS('s5') - .05;
     bubble(60, 380, 880, 92, 'YES');
     bubble(60, 500, 880, 92, 'YES');
-    bubble(60, 620, 880, 92, 'LET ME CHECK MY CONTRACT', { fill: hit ? '#ffe6e6' : '#ffffff', stroke: hit ? RED : INK, ink: hit ? RED : INK, size: 46 });
+    bubble(60, 620, 880, 92, 'LET ME CHECK MY CONTRACT', { fill: hit ? '#ffe6e6' : '#ffffff', stroke: hit ? RED : INK, ink: hit ? RED : INK, size: 54 });
     if (hit) { ctx.save(); ctx.strokeStyle = RED; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(90, 666); ctx.lineTo(910, 666); ctx.stroke(); ctx.restore(); }
   } else if (idx === 6) {
     text('—', 500, Hd / 2, { size: 180, font: 'Nunito', weight: 900, fill: '#b8b4c4', align: 'center' });
@@ -183,7 +184,7 @@ function world(lt) {
   }
 }
 // which of the cast is in focus in each shot (a soft neighbour is blurred and left out of the layout audit)
-const FOCUS = { cuC2: ['clem'], close: ['straw'], a12: ['admin'], s7: ['straw', 'admin'], chart: [], quiz1: [] };
+const FOCUS = { cuC2: ['clem'], close: ['straw'], a12: ['straw', 'admin'], s7: ['straw', 'admin'], chart: [], quiz1: [] };
 
 // ------------------------------------------------------------------ the inserts: the answer bubbles, large (flat, in place of the world)
 function insertBubbles(lt) {
@@ -221,8 +222,7 @@ const SC = {
     else if (sh === 'quiz1' || sh === 'push') { zoomTo(scr.x, scr.y - 40, 2.0); }
     else if (sh === 'bubbles') { zoomTo(540, 900, 1); }
     else if (sh === 'close') { const z = 2.4 + .08 * sk(lt, shotStart('close'), shotStart('close') + 2); const o = seatOf(AUD.straw); faceZoom({ kind: 'straw', x: o.x, y: o.y, s: o.s, noLegs: true, lift: 0 }, z, 150); }
-    else if (sh === 'a12') { const o = R.pt(ADMIN[0], 0, ADMIN[1]); faceZoom({ kind: 'melon', x: o.x, y: o.y, s: o.s * 1.22, lift: 0 }, 2.0, 180); }
-    else if (sh === 's7') { const a = faceC({ kind: 'melon', x: R.pt(ADMIN[0], 0, ADMIN[1]).x, y: R.pt(ADMIN[0], 0, ADMIN[1]).y, s: R.pt(ADMIN[0], 0, ADMIN[1]).s * 1.22 }), o = seatOf(AUD.straw); const b = faceC({ kind: 'straw', x: o.x, y: lerp(o.y, R.pt(AUD.straw, 0, AUD_Z).y, standK(lt)), s: o.s, noLegs: standK(lt) < .5, lift: 0 }); zoomTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 90, 1.55); }
+    else if (sh === 'a12' || sh === 's7') { const a = faceC({ kind: 'melon', x: R.pt(ADMIN[0], 0, ADMIN[1]).x, y: R.pt(ADMIN[0], 0, ADMIN[1]).y, s: R.pt(ADMIN[0], 0, ADMIN[1]).s * 1.22 }), o = seatOf(AUD.straw); const b = faceC({ kind: 'straw', x: o.x, y: lerp(o.y, R.pt(AUD.straw, 0, AUD_Z).y, standK(lt)), s: o.s, noLegs: standK(lt) < .5, lift: 0 }); zoomTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 90, 1.55); }
     else if (sh === 'end') zoomTo(560, 1200, 1.25);
     else zoomTo(560, 1200, 1.25);
   },

@@ -15,10 +15,10 @@
  *  15.76 pizza: the cart rolls in from the back right; push-in on the boxes, steam, a slice rises out of the top box
  *  17.06 wide3: the Administrator holds the slice and points at the cart | 19.38 cuS4: "Then I'm an attendee."
  *  20.66 sign2: INSERT, Strawberry's signature writes live, then "(under protest)"  | 21.71 cuS5: "Under protest." (flat)
- *  22.81 last: the Administrator smiles; Strawberry stands and steps toward the door, stops by the table (kept in frame)
+ *  22.81 last: the Administrator smiles; Strawberry stands and steps back, stays by the table at the far side (kept in frame; she does not leave)
  *  24.85 end: hold on the wide.
  * Layout (world units, the room set S12room): far-side seats at Z 1110, X -440 (Clementine), -180 (Mango), 80 (Lemon), 340 (Strawberry);
- * the Administrator at X 520, Z 880 (beside the table's head); the table X -500..480, Z 760..1000; the pizza cart at X 700, Z 1200 (by the door).
+ * the Administrator at X 500, Z 880 (beside the table's head); the table X -500..480, Z 760..1000; the pizza cart at X -560, Z 1230 (by the door, rolled in from the left).
  */
 (() => {
 if (!window.TIMELINE_EP12) return;

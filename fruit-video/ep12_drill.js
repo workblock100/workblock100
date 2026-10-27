@@ -2,33 +2,34 @@
 /* SHIFT HAPPENS, Episode 12: "The In-Service". Scene module: drill (THE FIRE DRILL, 30.73 s, clock 3:41 PM). Scene builder E12-C.
  *
  * SHOT LIST (scene-local seconds, from scene_info.py):
- *  alarm   0.00-1.50  HALL wide, camera still, a slow push. The strobe starts on the firebell (0.1), a flash about twice a second.
- *  a1      1.50-4.23  HALL tracking: the camera walks back at the group's pace, so the group holds still and the doors slide past. The Administrator, centre, clipboard, a wave.
- *  l1      4.38-6.56  tracking, a medium on Lemon at the back, walking straight, unbothered.
- *  c1      6.76-7.18  a whip to the supply closet on the right wall (the MUSTER POINT arrow above it). Clementine runs and skids in (SKRRRT), the door swings, she goes in.
- *  run     7.29-8.29  the scramble: the camera speeds up and shakes, Clementine comes out with a mop, the wheelchair rolls with Mango behind it, everyone stops at 8.6.
- *  m1      8.33-11.04 two-shot, Mango and Clementine by the closet ("The exit is that way.").
- *  r1      11.04-12.50 cut to a two-shot, Mrs. Cranberry in her chair and Mango ("Is this nineteen sixty-two?").
- *  m2      12.70-14.41 the same two-shot ("It's a drill, Mrs. C."); the chair rolls toward camera from 13.5 and stops dead on the fire-door threshold at 14.5.
- *  r2      14.56-15.71 cut to a low angle on the wheelchair at the threshold; Mrs. Cranberry folds her arms ("Then I am not going.").
- *  peel    15.91-16.81 cut to the hall, a slow push; Mr. Banana, far down the hall, slips on a peel (peel 0.2, boing 0.4). Background only.
- *  s1-s5   16.86-22.54 Strawberry's priority list (close-ups): one finger on "Residents", two on "second", three on "Third", four on "Pizza last"; the Administrator's two reactions (a2, a3) between.
- *  muster  22.79-23.79 hard cut to the parking lot at night (crickets at 0.2). The strobe is off.
- *  mo1     23.84-25.77 the lot, wide, the Moon in the top right corner ("I counted. Everyone is here.").
- *  s4      25.96-26.72 Strawberry, a medium, looks along the row ("Who's missing?").
- *  mo2     26.87-27.94 two-shot, the Moon and Strawberry, the Moon's face lit ("Persimmon.").
- *  s5      28.09-29.28 Strawberry; a short cut to the outlined PERSIMMON space painted on the asphalt (28.5-28.95), then back to her ("She's on another budget.").
- *  end     29.48-30.28 the lot held wide (sting at 0.1).
+ *  alarm   0.00-1.50  HALL wide, camera still, slow push. Strobe from the firebell (0.1): a red flash about twice a second until 22.6.
+ *  a1      1.50-4.23  HALL tracking: the camera walks back at the group's pace, so the doors slide past. The Administrator, centre, clipboard in his right hand.
+ *  l1      4.38-6.56  Lemon, tight, at the back left. The Administrator steps right (4.3-5.0) so he is clear of her.
+ *  c1      6.76-7.18  hard cut to the supply closet on the right wall (the MUSTER POINT sign hangs mid-hall, its arrow pointing at the door). Clementine skids in (SKRRRT!) and goes inside.
+ *  run     7.29-8.29  the scramble: the camera moves faster and shakes. The Administrator walks off to the left (7.0-9.0). Clementine comes out with a mop (7.7).
+ *  m1      8.33-11.04 wide: Mango at the back right by the chair, Clementine in the closet doorway ("Clementine. The exit is that way.").
+ *  r1      11.04-12.50 hard cut: a tight two-shot, Mrs. Cranberry in her chair and Mango ("Is this nineteen sixty-two?"). Clementine is back inside the closet.
+ *  m2      12.70-14.41 the same two-shot ("It's a drill, Mrs. C."); the chair rolls toward the camera from 13.5 and stops dead on the fire-door threshold at 14.5.
+ *  r2      14.56-15.71 hard cut: a low angle on the chair at the threshold ("Then I am not going."). Mrs. Cranberry folds her arms.
+ *  peel    15.91-16.81 hard cut to the far hall, the group at the left of the frame; Mr. Banana, far down the right wall, slips on a peel (peel 0.2, boing 0.4).
+ *  s1-s5   16.86-22.79 close-ups on Strawberry's list: one finger on "Residents", two on "second", three on "Third", four on "Pizza last". The Administrator's reactions (a2, a3) sit between.
+ *  muster  22.79-23.84 hard cut to the parking lot at night (crickets at 0.2). The strobe is off.
+ *  mo1     23.84-25.96 the lot, wide, the Moon in the top right ("I counted. Everyone is here.").
+ *  s4      25.96-26.87 Strawberry, close, looks along the row ("Who's missing?").
+ *  mo2     26.87-28.09 two-shot: the Moon and the row ("Persimmon.").
+ *  s5      28.09-29.48 Strawberry, close. A hard cut to the empty PERSIMMON stall on the asphalt (28.5-28.95, nobody drawn), then back to her ("She's on another budget.").
+ *  end     29.48-30.28 hard cut to the wide lot, held for the sting.
  *
- * Layout numbers: the hall is S6.corridor (HW 330, ceiling 700). The camera is V2.P (f 1400, cy 360, hy 860); a point at depth D (camera to point) is drawn at scale 1400 / D,
- * its floor line at y = 860 + 360 * 1400 / D. The group stands at depths 1420-2050; Strawberry is front left (X -310), the Administrator front centre (X -70), Clementine
- * at the closet (X 150-300, depth 1560), Mrs. Cranberry and Mango at the back right (X 90 and 230, depth 2050 pulling to 1800). Lemon stands at the back left (X -260).
- * Shots: a per-shot camera track of [time, cx, zoom, cy, y0] keyframes (a repeated time is a hard cut). cx pans the perspective (V2.setCam), zoom and y0 frame it (zoomTo).
- * The lot's stalls are painted on the ground at depth 1450-2000; the staff stand at depth 1700 (scale 0.82) on stall centres -475 ... 475 (stall 95 is PERSIMMON, empty).
- * Props: drill12_mop and drill12_fingers, registered through EXT.prop and PROP_BOX. Neighbours in a shot are drawn with drawBg (not held to the audit).
- *
- * Source notes: the hall is S6.corridor with S6 wall helpers (ep6_sets.js, ep6_rooms.js); the lot's night sky, building and asphalt follow ep9_exit.js lotNight; the painted stalls,
- * the ground lettering and the strobe are new; sfxWord and wordT are copies of the ep9 and ep10 helpers; handTo is a copy of ep10_days.js. */
+ * Layout: the hall is S6.corridor (HW 330, ceiling 700). The camera is V2.P (f 1400, cy 360, hy 860): a point at depth D is drawn at scale 1400 / D, its floor line at y = 860 + 360 * 1400 / D.
+ * Hall depths from the camera: Strawberry X -310 D 1480 (front left). The Administrator X -70 D 1420, X 80 from l1 on, X -330 for the Mrs. Cranberry shots, back at X 80 for the peel.
+ * Lemon X -146 D 2050 (back left). The chair X 15 and Mango X 215 at D 2050, pulling to 1800 (back right). Clementine X 150-340 at D 1560, at the closet on the right wall.
+ * Neighbours (not the focal character of a shot) are drawn with drawBg, soft inside V2.dof, and are not held to the audit. The camera track TRK holds [time, cx, zoom, cy, y0] keys; a repeated time is a hard cut
+ * (blur 1 on those frames). cx pans the perspective (V2.setCam) and zoom / y0 frame the shot (zoomTo(540, y0, z)).
+ * Lot (camera depth 0): the staff stand at depth 1700 on the stalls: Clementine X -400, Mango -240, Lemon -80, PERSIMMON 60 (empty), Strawberry 200, the Administrator 452. The stall lines and
+ * the ground lettering are painted in perspective (vertical squash = cy / depth).
+ * Props: drill12_mop and drill12_fingers, registered through EXT.prop and PROP_BOX.
+ * Source notes: the hall is S6.corridor with the S6 wall helpers (ep6_sets.js, ep6_rooms.js); the lot's sky, building and asphalt follow ep9_exit.js lotNight; sfxWord and wordT are copies of the
+ * ep9 and ep10 helpers; handTo is a copy of ep10_days.js. */
 (() => {
 if (!window.TIMELINE_EP12) return;
 const { zoomTo, drawBg, person, localOf, faceC } = window.H6;
@@ -136,7 +137,7 @@ const at = (X, D) => lt => [X, camZ(lt) + D];
 const P_STR = at(-310, 1480), P_LEM = at(-146, 2050);
 // the Administrator: centre front at the start; steps right during l1 so Lemon is clear of him, walks off left in the run and m1 (the pizza run),
 // is out of frame for the Mrs. Cranberry shots, and walks back in for the peel
-const admX = lt => lt < 4.3 ? -70 : lt < 5.0 ? lerp(-70, 80, easeIO(seg(lt, 4.3, 5.0))) : lt < 7.7 ? 80 : lt < 9.0 ? lerp(80, -330, easeIO(seg(lt, 7.7, 9.0))) : lt < 15.9 ? -330 : lt < 16.8 ? lerp(-330, 80, easeIO(seg(lt, 15.9, 16.8))) : 80;
+const admX = lt => lt < 4.3 ? -70 : lt < 5.0 ? lerp(-70, 80, easeIO(seg(lt, 4.3, 5.0))) : lt < 7.0 ? 80 : lt < 9.0 ? lerp(80, -330, easeIO(seg(lt, 7.0, 9.0))) : lt < 15.9 ? -330 : lt < 16.8 ? lerp(-330, 80, easeIO(seg(lt, 15.9, 16.8))) : 80;
 const P_ADM = lt => [admX(lt), camZ(lt) + 1420];
 // Clementine: in the group until 6.6, runs to the closet (skids in at 7.05, goes inside at 7.25), comes back out with the mop at 7.7, stands in the doorway, goes back in at 10.9 (hidden from 11.0)
 const P_CLM = lt => [lt < 7.1 ? lerp(150, 310, sk(lt, 6.6, 7.1)) : lt < 7.25 ? lerp(310, 340, sk(lt, 7.1, 7.25)) : lt < 7.7 ? 340 : lt < 10.8 ? lerp(340, 310, sk(lt, 7.7, 7.95)) : lerp(310, 340, sk(lt, 10.8, 11.0)), camZ(lt) + 1560];
@@ -170,7 +171,7 @@ function hallFixtures(lt) {
     const [lx, ly] = p2(-HW, 344, Z), r = 34 * k;
     ctx.save(); ctx.fillStyle = inten > .4 ? '#ff7a80' : `rgb(${150 + 60 * inten | 0},40,50)`; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, 3 * k);
     ctx.beginPath(); ctx.ellipse(lx, ly, r, r * .9, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
-    if (inten > .02) V2.glow(lx, ly, 300 * k, '255,40,50', .9 * inten, 'screen', .8);
+    if (inten > .02) { V2.glow(lx, ly, 300 * k, '255,40,50', .9 * inten, 'screen', .8); V2.glow(lx, ly, 1100 * k, '255,50,60', .45 * inten, 'screen', .5); }
     text('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', weight: 900, spacing: 2 }); }
   // the wall clock, reading 3:41 like the pill
   wallClock(-HW + 3, 470, Z_CLK, -1, 41, 3, 46);
@@ -212,7 +213,7 @@ function fingerState(lt) {
 
 // the hall cast: which characters are focal (drawn sharp, held to the audit) in each shot; the rest are neighbours, drawn soft with drawBg
 const FOCAL = {
-  alarm: ['str', 'adm'], a1: ['adm'], l1: ['lem'], c1: ['clm'], run: ['str', 'adm', 'clm'], m1: ['mng'], r1: ['cran', 'mng'], m2: ['cran', 'mng'],
+  alarm: ['str', 'adm'], a1: ['adm'], l1: ['lem'], c1: ['clm'], run: ['adm', 'clm'], m1: ['mng'], r1: ['cran', 'mng'], m2: ['cran', 'mng'],
   r2: ['cran'], peel: [], s1: ['str'], a2: ['adm'], s2: ['str'], a3: ['adm'], s3: ['str'],
 };
 const shotHall = lt => lt < 1.5 ? 'alarm' : lt < 4.38 ? 'a1' : lt < 6.76 ? 'l1' : lt < 7.29 ? 'c1' : lt < 8.33 ? 'run' : lt < 11.04 ? 'm1' : lt < 12.70 ? 'r1' : lt < 14.56 ? 'm2' : lt < 15.91 ? 'r2' : lt < 16.86 ? 'peel' : lt < 18.95 ? 's1' : lt < 20.15 ? 'a2' : lt < 20.83 ? 's2' : lt < 21.71 ? 'a3' : lt < 22.79 ? 's3' : 'lot';
@@ -353,7 +354,7 @@ const SC = {
   fx(lt) {
     if (lt >= 22.79) return { bloom: .55, vignette: .45, grain: .045, contrast: .15, sat: .05, tint: [['#27307a', .14, 'soft-light']] };
     const inten = strobe(lt);
-    return { bloom: .5 + .2 * inten, vignette: .4, grain: .045, contrast: .14, sat: .08, tint: [['#ffe6c0', .08, 'soft-light'], ['#3a4f7a', .08, 'multiply'], ['#ff2a3a', .16 * inten, 'screen']] };
+    return { bloom: .5 + .2 * inten, vignette: .4, grain: .045, contrast: .14, sat: .08, tint: [['#ffe6c0', .08, 'soft-light'], ['#3a4f7a', .08, 'multiply'], ['#ff2a3a', .22 * inten, 'screen']] };
   },
   blur(lt) {
     for (const c of [1.5, 4.38, 6.76, 8.33, 11.04, 12.70, 14.56, 15.91, 16.86, 18.95, 20.15, 20.83, 21.71, 22.79, 23.84, 25.96, 26.87, 28.09, 28.5, 28.95]) if (Math.abs(lt - c) < .03) return 1;   // a cut frame: one sample only
