@@ -337,7 +337,7 @@ function drawBoard(lt, st) {
   if (lt >= T_LAND && lt < T_LAND + 1.6) {   /* the landing: a column of light up the slot, a ring, sparks */
     const e = Math.exp(-(lt - T_LAND) / .5), cx = SLOT_X;
     ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = lg(0, BD.slotBot, 0, BD.slotBot - 460, [[0, `rgba(255,150,150,${.55 * e})`], [1, 'rgba(255,150,150,0)']]); ctx.fillRect(cx - 17, BD.slotBot - 460, 34, 460); ctx.restore();
-    V2.ring(cx, BD.slotBot - 12, c01((lt - T_LAND) / .7), { r0: 14, r1: 200, lw: 8, color: '255,130,130', alpha: .9 });
+    V2.ring(cx, BD.slotBot - 12, c01((lt - T_LAND + .03) / .7), { r0: 14, r1: 200, lw: 8, color: '255,130,130', alpha: .9 });
     V2.sparks(cx, BD.slotBot - 12, lt, T_LAND, { n: 34, speed: 520, life: .9, color: '255,214,150', g: 1300, size: 4, seed: 9 });
   }
   drawBell(lt, st.bell || 0); drawBeacon(lt, st.spin || 0, st.beacon || 0);
@@ -348,6 +348,7 @@ const PT = { star: [XS.star, 1120], kum: [XS.kum, 1190], lemon: [XS.lemon, 1110]
 const lookAt = (o, p, k = 280) => { if (!p) return [0, 0]; const [fx, fy] = faceC(o); return [Math.max(-1.15, Math.min(1.15, (p[0] - fx) / k * 1.5)), Math.max(-1.15, Math.min(1.15, (p[1] - fy) / k * 1.5))]; };
 /* a gaze track: keys [[t, point], ...] (a point or null for the lens), eased between keys; put two keys .1 s apart for a quick dart of the eyes */
 const gazeAt = (o, keys, lt) => { const pts = keys.map(([t, p]) => [t, p || [o.x, faceC(o)[1]]]); return lookAt(o, key(pts, lt, easeOut)); };
+const T_TH = snapT(CUE.thud), atTh = lt => lt >= T_TH - 1e-6;   /* the thud lands on this video frame */
 const SIT_DY = 36;
 const SIT_T = { lemon: CUE.sit[0], mango: CUE.sit[1], clem: CUE.sit[2], straw: CUE.sit[3], melon: CUE.chair };
 /* standing to seated, landing on the cue time tc: the body lowers over `dur`, lands with a small bounce and a squash (shoes planted) */
@@ -365,7 +366,7 @@ const EX = {   /* the faces, by beat (scene-local seconds) */
   mango: [[0, 'neutral'], [8.6, 'sour'], [13.4, 'shock'], [14.5, 'neutral'], [18.07, 'shock'], [19.1, 'panic'], [20.4, 'neutral'], [22.9, 'shock'], [25.9, 'neutral'], [28.4, 'sour'], [31.3, 'neutral'], [35.1, 'chill'], [35.63, 'shock'], [36.6, 'neutral']],
   clem: [[0, 'hopeful'], [8.6, 'shock'], [13.4, 'hopeful'], [18.07, 'shock'], [19.1, 'panic'], [20.4, 'hopeful'], [22.9, 'shock'], [25.9, 'hopeful'], [28.4, 'shock'], [31.3, 'hopeful'], [35.1, 'happy'], [35.63, 'shock'], [36.6, 'happy']],
   straw: [[0, 'dead'], [8.6, 'dead'], [18.07, 'dead'], [19.1, 'shock'], [20.4, 'dead'], [22.9, 'hopeful'], [25.2, 'happy'], [26.3, 'dead'], [28.4, 'sad'], [31.3, 'weak'], [32.2, 'sad'], [34.8, 'chill'], [35.63, 'shock'], [36.6, 'chill'], [37.95, 'happy']],
-  melon: [[0, 'happy'], [6.76, 'hopeful'], [8.6, 'panic'], [13.4, 'shock'], [16.7, 'sad'], [18.07, 'shock'], [19.2, 'panic'], [19.43, 'dead'], [25.98, 'shock'], [26.6, 'angry'], [27.4, 'sad'], [28.6, 'weak'], [33.6, 'weak'], [35.2, 'chill'], [35.7, 'shock'], [36.6, 'weak']],
+  melon: [[0, 'happy'], [6.76, 'hopeful'], [8.6, 'panic'], [13.4, 'shock'], [16.7, 'sad'], [18.07, 'shock'], [19.2, 'panic'], [19.424, 'dead'], [25.98, 'shock'], [26.6, 'angry'], [27.4, 'sad'], [28.6, 'weak'], [33.6, 'weak'], [35.2, 'chill'], [35.7, 'shock'], [36.6, 'weak']],
 };
 const exprOf = (id, lt) => hold(EX[id], lt);
 
@@ -395,15 +396,16 @@ function castStraw(lt) {
 }
 function castMelon(lt) {
   const sat = 34;   /* he sits a little lower than the others: a bigger chair, a smaller man */
-  const rise = sstep(lt, 13.3, 13.75), back = sstep(lt, 19.2, 19.425), up = sstep(lt, 25.985, 26.4), sit = seat(lt, SIT_T.melon, .7);
+  const rise = sstep(lt, 13.3, 13.75), back = Math.pow(c01((lt - 19.16) / (T_TH - 19.16)), 2.2), up = sstep(lt, 25.985, 26.4), sit = seat(lt, SIT_T.melon, .7);
   let dy = sat - (sat + 6) * rise;
-  dy = lt < 19.2 ? dy : lt < 25.985 ? lerp(-6, 62, back) : lt < 33.0 ? lerp(62, -6, up) : -6 + (sat - (-6)) * sit.k + 4 * (lt > SIT_T.melon ? pulse(lt, SIT_T.melon, 20, .09) : 0);
+  dy = lt < 19.16 ? dy : lt < 25.985 ? lerp(-6, 62, back) : lt < 33.0 ? lerp(62, -6, up) : -6 + (sat - (-6)) * sit.k + 4 * (lt > SIT_T.melon ? pulse(lt, SIT_T.melon, 20, .09) : 0);
   const o = A9.melon({ x: XS.melon, y: F + dy, s: SA * 1.22, plant: true, t: lt, expr: exprOf('melon', lt), arms: { l: 'rest', r: 'rest' } });
-  o.squash = lt >= 19.2 && lt < 25.985 ? .06 + .14 * Math.max(0, pulse(lt, CUE.thud, 24, .12)) : sit.sq * .6;
-  if (lt >= CUE.thud && lt < 25.985) o.lid = 1;
-  o.rot = lt >= 19.2 && lt < 25.985 ? .1 * back * (1 + .15 * pulse(lt, CUE.thud, 20, .1)) : 0;
+  const hit = atTh(lt) ? Math.exp(-(lt - T_TH) / .12) * Math.cos((lt - T_TH) * 24) : 0;   /* 1 on the contact frame, then a damped rebound */
+  o.squash = lt >= 19.16 && lt < 25.985 ? .06 + .2 * Math.max(0, hit) : sit.sq * .6;
+  if (atTh(lt) && lt < 25.985) o.lid = 1;
+  o.rot = lt >= 19.16 && lt < 25.985 ? .1 * back * (1 + .3 * hit) + (lt < T_TH ? .035 * Math.sin((lt - 19.05) * 38) * c01((lt - 19.05) / .1) : 0) : 0;
   o.acc = (o.acc || []).concat(['fp14v_pizza'], (lt < 19.3 || (lt > 25.9 && lt < 28.6)) ? ['sweat'] : []);
-  o.pizza = lt >= CUE.thud && lt < 29.9 ? 1 : 0; o.pizzaFall = sstep(lt, 29.0, 29.9);
+  o.pizza = atTh(lt) && lt < 29.9 ? 1 : 0; o.pizzaFall = sstep(lt, 29.0, 29.9);
   o.look = ballLook(o, lt);
   return o;
 }
@@ -575,8 +577,8 @@ const SHOTS = [
   { id: 'b4', t0: 17.35, t1: 18.2, cam: pcam(LCAM, [LCAM[0], LCAM[1] + 10, 2.7]) },
   { id: 'b5', t0: 18.2, t1: 18.55, pan: true, blur: 8, cam: (lt, u) => mixA([LCAM[0], LCAM[1] + 10, 2.7], [BD.cx + 70, 170, 1.7], easeIO(c01((lt - 18.2) / .22))) },
   { id: 'st4', t0: 18.55, t1: 18.925, cam: fcam('star', 5.2, 5.3, 190), dof: 10 },
-  { id: 'j1', t0: 18.925, t1: 19.40, cam: pcam([640, 900, 1.3], [640, 900, 1.34]) },
-  { id: 'j2', t0: 19.40, t1: 19.75, cam: fcam('melon', 4.4, 4.4, 150), dof: 10 },
+  { id: 'j1', t0: 18.925, t1: 19.358, cam: pcam([640, 960, 1.3], [640, 960, 1.34]) },
+  { id: 'j2', t0: 19.358, t1: 19.75, cam: fcam('melon', 4.4, 4.4, 150), dof: 10 },
   { id: 'j3', t0: 19.75, t1: 20.075, cam: pcam([560, 900, 1.0], [560, 900, 1.02]) },
   { id: 's5a', t0: 20.075, t1: 20.93, cam: fcam('star', 5.0, 5.4, 190), dof: 10 },
   { id: 'form2', t0: 20.93, t1: 24.45, type: 'form', form: 2, cam: fcam('star', 4.8, 4.8, 190), dof: 16 },
@@ -640,18 +642,18 @@ function drawStageBody(lt, sh) {
   const d = doorSt(lt); if (d.dome > .05) V2.ring(78, DOOR.y0 - 32, c01(((lt - snapT(CUE.ding)) * 1.1) % 1), { r0: 20, r1: 220, lw: 6, color: '255,60,70', alpha: .8 * d.dome, bloom: .3 });
 }
 function thudFx(lt) {
-  const t0 = snapT(CUE.thud), u = lt - t0;
-  if (u < 0 || u > 1.0) return;
+  const t0 = T_TH, u = lt - t0;
+  if (u < -1e-6 || u > 1.0) return;
   const ox = XS.melon, oy = TB.y0 + 10;
   for (let i = 0; i < 16; i++) {
-    const a = -PI / 2 + (hash(i * 3.1) - .5) * 2.3, v = 260 + 380 * hash(i * 5.7 + 2), x = ox + Math.cos(a) * v * u * .9, y = oy + Math.sin(a) * v * u + .5 * 1500 * u * u;
+    const uu = u + .03, a = -PI / 2 + (hash(i * 3.1) - .5) * 2.3, v = 260 + 380 * hash(i * 5.7 + 2), x = ox + Math.cos(a) * v * uu * .9, y = oy + Math.sin(a) * v * uu + .5 * 1500 * uu * uu;
     if (y > TB.y1 + 20) continue;
-    ctx.save(); ctx.translate(x, y); ctx.rotate(u * 9 * (hash(i) - .5));
+    ctx.save(); ctx.translate(x, y); ctx.rotate(uu * 9 * (hash(i) - .5));
     ctx.fillStyle = i % 3 === 0 ? '#b02a22' : i % 3 === 1 ? '#f2c03a' : '#e9cc98'; ctx.strokeStyle = 'rgba(40,10,6,.8)'; ctx.lineWidth = 1.6;
     if (i % 3 === 0) { ell(0, 0, 7, 7); ctx.fill(); ctx.stroke(); } else { rr(-6, -3, 12, 6, 2); ctx.fill(); ctx.stroke(); }
     ctx.restore();
   }
-  V2.ring(ox, oy, c01(u / .45), { r0: 20, r1: 150, lw: 7, color: '255,236,200', alpha: .8, bloom: 0 });
+  V2.ring(ox, oy, c01((u + .03) / .45), { r0: 20, r1: 150, lw: 7, color: '255,236,200', alpha: .8, bloom: 0 });
 }
 function drawCushion(lt) {   /* the little velvet cushion the ball waits on, on the floor beside the Kumquat */
   const x = CUSH.x, y = F + 2;
@@ -673,7 +675,7 @@ const rev = (lt, a, b) => c01((lt - a) / (b - a));
 function slam(lt, tHit, big = 2.3) {
   const age = lt - tHit;
   if (age < -.11) return null;
-  if (age < 0) { const u = (age + .11) / .11; return { k: lerp(big, 1, easeIn(u)), a: .25 + .65 * u, age }; }
+  if (age < -1e-6) { const u = (age + .11) / .11; return { k: lerp(big, 1, easeIn(u)), a: .25 + .65 * u, age }; }
   return { k: 1 - .05 * Math.max(0, pulse(lt, tHit, 26, .1)), a: .94, age };
 }
 function ink(rect, a) { return rgba('#1d2540', a); }
@@ -746,13 +748,13 @@ function drawForm(lt, which) {
   /* the stamps, in the SEVERITY column only (or, for NEW TAG, in the empty part of the paper under the table) */
   const sevCx = T.x + W3[0] + W3[1] + W3[2] / 2, rowCy = r => T.y + T.rowH * (r + .5);
   const sD = which === 0 ? slam(lt, F_.stamp, 2.3) : { k: 1, a: .94, age: 9 };
-  if (sD) { ctx.save(); ctx.translate(sevCx, rowCy(0)); ctx.scale(sD.k, sD.k); ctx.translate(-sevCx, -rowCy(0)); UI.stamp('D', sevCx, rowCy(0), { size: 84, color: '#1d2a5a', rot: -.11, alpha: sD.a, id: 'stampD' }); ctx.restore(); if (sD.age >= 0 && sD.age < .5) V2.ring(sevCx, rowCy(0), sD.age / .5, { r0: 40, r1: 170, lw: 7, color: '40,60,120', alpha: .8, bloom: 0 }); }
+  if (sD) { ctx.save(); ctx.translate(sevCx, rowCy(0)); ctx.scale(sD.k, sD.k); ctx.translate(-sevCx, -rowCy(0)); UI.stamp('D', sevCx, rowCy(0), { size: 84, color: '#1d2a5a', rot: -.11, alpha: sD.a, id: 'stampD' }); ctx.restore(); if (sD.age >= -1e-6 && sD.age < .5) V2.ring(sevCx, rowCy(0), (sD.age + .03) / .5, { r0: 40, r1: 170, lw: 7, color: '40,60,120', alpha: .8, bloom: 0 }); }
   if (which === 1) { UI.stamp('L', sevCx, rowCy(1), { size: 84, color: RED_F, rot: .08, alpha: .94, id: 'stampL' }); }
   if (which === 1) {
     const sN = slam(lt, F_.stamp, 2.6);
     if (sN) {
       const cxn = 540, cyn = 1166, sz = UI.sizeOf('NEW TAG', { size: 176, font: 'Bangers', lw: 8 }), pw_ = sz.w + 176, ph_ = sz.cap + 120;
-      if (sN.age >= 0) V2.glow(cxn, cyn, 760, '255,226,120', .55 * Math.exp(-sN.age / .7), 'screen', .9);
+      if (sN.age >= -1e-6) V2.glow(cxn, cyn, 760, '255,226,120', .55 * Math.exp(-sN.age / .7), 'screen', .9);
       ctx.save(); ctx.translate(cxn, cyn); ctx.scale(sN.k, sN.k); ctx.translate(-cxn, -cyn);
       /* the slab of ink under the letters: a deep green plate (it hides the pen under it), gold border and gold letters */
       ctx.save(); ctx.globalAlpha *= sN.a; ctx.translate(cxn, cyn); ctx.rotate(-.07);
@@ -761,7 +763,7 @@ function drawForm(lt, which) {
       if (sN.age > .05) { const g = c01((sN.age - .05) / .55), gx = lerp(-pw_ * .7, pw_ * .7, g); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = lg(gx - 70, -ph_, gx + 70, ph_, [[0, 'rgba(255,255,255,0)'], [.5, `rgba(255,248,200,${.55 * (1 - g)})`], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(-pw_ / 2, -ph_ / 2, pw_, ph_); }
       ctx.restore(); ctx.restore();
       UI.stamp('NEW TAG', cxn, cyn, { size: 176, color: '#f6d24a', ink: '#ffe57a', tstroke: '#0b4424', tlw: 8, lw: 14, rot: -.07, tilt: .2, alpha: sN.a, id: 'stampNEW' }); ctx.restore();
-      if (sN.age >= 0) { V2.ring(cxn, cyn, c01(sN.age / .7), { r0: 80, r1: 700, lw: 16, color: '255,226,120', alpha: .9 }); V2.ring(cxn, cyn, c01((sN.age - .08) / .8), { r0: 60, r1: 900, lw: 8, color: '120,255,170', alpha: .6 });
+      if (sN.age >= -1e-6) { V2.ring(cxn, cyn, c01((sN.age + .03) / .7), { r0: 80, r1: 700, lw: 16, color: '255,226,120', alpha: .9 }); V2.ring(cxn, cyn, c01((sN.age - .05) / .8), { r0: 60, r1: 900, lw: 8, color: '120,255,170', alpha: .6 });
         V2.sparks(cxn, cyn, lt, F_.stamp, { n: 46, speed: 760, life: 1.0, color: '255,230,140', g: 900, size: 5, seed: 4 }); } }
   }
   ctx.restore();
@@ -892,7 +894,7 @@ function drawOut(lt, sh) {
   if (wash > .01) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,226,170,${wash})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 }
 // ------------------------------------------------------------------ the scene: camera, grade, motion blur, overlays
-const shakeAt = lt => 12 * Math.exp(-Math.max(0, lt - CUE.thud) / .22) * (lt >= CUE.thud ? 1 : 0) + 16 * Math.exp(-Math.max(0, lt - snapT(CUE.stamp2)) / .25) * (lt >= snapT(CUE.stamp2) ? 1 : 0) + 6 * Math.exp(-Math.max(0, lt - snapT(CUE.stamp1)) / .18) * (lt >= snapT(CUE.stamp1) ? 1 : 0) + 5 * Math.exp(-Math.max(0, lt - T_LAND) / .2) * (lt >= T_LAND ? 1 : 0);
+const shakeAt = lt => 12 * Math.exp(-Math.max(0, lt - T_TH) / .22) * (atTh(lt) ? 1 : 0) + 16 * Math.exp(-Math.max(0, lt - snapT(CUE.stamp2)) / .25) * (lt >= snapT(CUE.stamp2) ? 1 : 0) + 6 * Math.exp(-Math.max(0, lt - snapT(CUE.stamp1)) / .18) * (lt >= snapT(CUE.stamp1) ? 1 : 0) + 5 * Math.exp(-Math.max(0, lt - T_LAND) / .2) * (lt >= T_LAND ? 1 : 0);
 function drawStage(lt, sh) {
   if (sh.type === 'form') { drawInsertBackdrop(lt, sh); drawForm(lt, sh.form === 1 ? 0 : 1); return; }
   if (sh.type === 'out') { drawOut(lt, sh); return; }

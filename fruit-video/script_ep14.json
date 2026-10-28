@@ -191,7 +191,15 @@
      "who": "narr",
      "say": "Forty residents. Four staff. One shower room. Do not open it.",
      "text": "Forty residents. Four staff. One shower room. Do not open it.",
-     "gap": 0.25
+     "gap": 0.25,
+     "sfx": [
+      [
+       "creak",
+       2.93,
+       0.3,
+       0.6
+      ]
+     ]
     },
     {
      "id": "n3",
@@ -416,6 +424,24 @@
        0.4,
        0.4,
        -0.3
+      ],
+      [
+       "stamp",
+       0.8,
+       0.4,
+       -0.2
+      ],
+      [
+       "stamp",
+       1.35,
+       0.4,
+       0
+      ],
+      [
+       "stamp",
+       1.9,
+       0.4,
+       0.2
       ]
      ]
     },
@@ -1355,6 +1381,12 @@
       [
        "theme7",
        0,
+       0.5,
+       0
+      ],
+      [
+       "stamp",
+       2.34,
        0.5,
        0
       ]

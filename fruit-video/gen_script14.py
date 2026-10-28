@@ -67,7 +67,7 @@ SCENES = [
     {'id': 'colony', 'clock': '3:02 PM', 'label': 'THE COLONY', 'head': 0.2, 'tail': 0.4, 'room': 'hall', 'amb': {'name': 'day', 'gain': 0.2}, 'beats': [
         P('open', 1.1, 0.1, [['birds', 0, .25, 0]]),
         L('n1', 'narr', 'Fruit Bowl Rehab and Nursing. Three oh two P M.', 0.2),
-        L('n2', 'narr', 'Forty residents. Four staff. One shower room. Do not open it.', 0.25),
+        L('n2', 'narr', 'Forty residents. Four staff. One shower room. Do not open it.', 0.25, sfx=[['creak', 2.93, .3, .6]]),
         L('n3', 'narr', 'Once a year, without warning, the State arrives.', 0.25, sfx=[['car', .9, .3, -.4], ['carclose', 2.6, .4, -.4]]),
         L('m1', 'mango', 'The State is in the lot.', 0.15),
         L('l1', 'lemon', 'Everyone act normal.', 0.15),
@@ -88,7 +88,7 @@ SCENES = [
         L('c1', 'clem', 'Sure!', 0.1),
         P('pop', 0.7, 0.05, [['crash', .1, .45, .3], ['clatter', .15, .35, .3]]),
         L('l1', 'lemon', 'It closes.', 0.25),
-        L('n3', 'narr', 'Charting. Three weeks, in nine minutes.', 0.15, sfx=[['typing', .4, .4, -.3]]),
+        L('n3', 'narr', 'Charting. Three weeks, in nine minutes.', 0.15, sfx=[['typing', .4, .4, -.3], ['stamp', .8, .4, -.2], ['stamp', 1.35, .4, 0], ['stamp', 1.9, .4, .2]]),
         L('n4', 'narr', 'Every insulin pen is born today.', 0.1),
         P('cam', 1.4, 0.05, [['shutter', .1, .4, 0], ['scribble', .3, .35, 0], ['shutter', 1.0, .4, 0]]),
         L('n5', 'narr', 'Call lights are answered in nine seconds. Staffing has not changed. Position has.', 0.2),
@@ -191,7 +191,7 @@ SCENES = [
 
     # ------------------------------------------------------------------ 9. the end card
     {'id': 'end', 'clock': '', 'label': 'THANKS FOR WATCHING', 'head': 0.1, 'tail': 0.3, 'room': 'hall', 'beats': [
-        P('card', 7.5, 0.1, [['theme7', 0, .5, 0]]),
+        P('card', 7.5, 0.1, [['theme7', 0, .5, 0], ['stamp', 2.34, .5, 0]]),
     ]},
 ]
 

@@ -604,7 +604,7 @@ function drawWorld(lt) {
     { z: 1600, fn: () => drawDeskBody(desk) },
     { z: 1599, fn: () => { drawDeskTop(desk, lt); drawBigBinder(lt, F.kq); } },
     { z: 1540, fn: drawCart },
-    { z: ROW, fn: () => { for (const id of ['le', 'ma', 'cl', 'sw']) if (shows(lt, id)) drawChar(F[id]); } },
+    { z: ROW, fn: () => { for (const id of ['le', 'ma', 'sw', 'cl']) if (shows(lt, id)) drawChar(F[id]); } },   /* (Clementine last: her NEW badge stays whole beside Strawberry's arm) */
     { z: PLANT[1], fn: () => { if (shotAt(lt).id !== 'lemon') drawPlant(lt); } },   /* (the close-up of Lemon is shot from where the plant is not) */
     { z: ST_ROUTE(lt)[1], fn: () => { if (lt >= 1.3 && shows(lt, 'st')) { drawChar(F.st); silhouette(F.st, 1 - sk(lt, 1.3, 1.75)); } } },
     { z: lt < 8.85 ? KQ_ROUTE(lt)[1] : 0, fn: () => { if (lt >= 1.3 && lt < 8.85 && shows(lt, 'kq')) { drawChar(F.kq); silhouette(F.kq, 1 - sk(lt, 1.3, 1.75)); } } },
@@ -635,13 +635,13 @@ shot('rise', 13.95, 14.9, lt => [0, 150], (lt, F) => face(F.st, lerp(1.9, 2.1, s
 // the binocular view: a sweep along the guard, one face at a time, then the slow whoosh to Strawberry and the lock on her badge
 const BINZ = 1.9;
 shot('binoc', 14.9, 17.43, lt => [0, 150], (lt, F) => {
-  const f = o => { const [x, y] = faceC(o); return [x, y + 40 / BINZ]; };
+  const CC = H / 2 - 800, f = o => { const [x, y] = faceC(o); return [x, y + CC / BINZ]; };   /* the circle's centre (800) is above the middle of the frame (960): the crop centres below the subject to put it in the reticle */
   const L = f(F.le), M = f(F.ma), C = f(F.cl), S = f(F.sw);
   const a = sk(lt, 15.5, 15.85), b = sk(lt, 16.0, 16.3), c = sk(lt, 16.48, 17.22);
   let x = lerp(lerp(lerp(L[0], M[0], a), C[0], b), S[0], c), y = lerp(lerp(lerp(L[1], M[1], a), C[1], b), S[1], c), z = BINZ;
   const lock = sk(lt, 17.28, 17.43);          /* the click: the HUD zooms in on the PER DIEM badge */
   const [sx0, sy0] = faceC(F.sw), bx = sx0 + 64 * F.sw.s, by = sy0 + 104 * F.sw.s;
-  return [lerp(x, bx, lock), lerp(y, by, lock), lerp(z, 4.4, lock)];
+  return [lerp(x, bx, lock), lerp(y, by + CC / 4.4, lock), lerp(z, 4.4, lock)];
 });
 shot('you', 17.43, 18.06, lt => [0, 150], (lt, F) => face(F.st, 2.3, 170));
 shot('straw1', 18.06, 19.56, lt => [0, 150], (lt, F) => face(F.sw, lerp(2.4, 2.5, sk(lt, 18.06, 19.56)), 160));

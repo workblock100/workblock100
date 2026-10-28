@@ -64,7 +64,7 @@ const U = (id, u) => R(id).x0 + u * R(id).w;
 const S = S14.S, KS = S14.S * .72;                                                   /* an adult, and the trainee */
 const STAGE = {
   // n1: the med room. Strawberry at the cart (the cart on her right, its handle toward her), the two observers close behind her on her left
-  sMed: 202, stMed: 128, kMed: 72, cartMed: 264,
+  sMed: 202, stMed: 116, kMed: 72, cartMed: 264,
   // the three call lights: where the handset lands (x, px above the floor) and where her hand is when it does (no. 3 sits on the left jamb of the shower door, whose leaf is x 890..978)
   light1: [402, 64], light2: [640, 62], light3: [880, 70],
   contact1: 346, hurdle: [8.46, 9.02], contact3: 796, halt: 826,
@@ -592,7 +592,7 @@ function autoTransit(o, lt) {
 /* the room options of this scene: ROOM 4 without its peel decal (Banana's own peel comes later), the med fridge with its 18 pens dated today (the adapt scene did it at 3:04), the shower room packed and bulging */
 const ROOMS = lt => ({
   r4: { peel: 0 }, med: { pens: 1 },
-  shower: { stash: 4, bulge: sstep(lt, 20, 26.5) * .55 + .4 * sstep(lt, 24.4, 26.8), door: 0 },
+  shower: { stash: 4, bulge: sstep(lt, 20, 26.5) * .55 + .45 * sstep(lt, 24.4, 26.8), door: 0 },
 });
 /* K's med cart (S14.cart) with a rattle while it rolls and a drawer that slides out on the shove and back in as it coasts */
 function drawMedCart(x, lt) {

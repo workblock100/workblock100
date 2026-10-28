@@ -559,9 +559,9 @@ function actBan(lt, sh) {
   const hop = inR(lt, 14.09, 16.1) ? 4 * Math.abs(Math.sin((lt - 14.09) * 7.2)) * (1 - sk(lt, 15.2, 15.5)) : 0;
   const o = A7.banana(Object.assign({ x: X.banana, y: BAN_FEET - hop, s: SR, who: 'banana', id: 'banana', seed: 41 }));
   o.acc = ['fp14v_cast']; o.cast = 1; o.expr = 'fp14v_beam';
-  const up = lt >= BAN_THUMB && lt < 16.55, wob = damp(lt, BAN_THUMB, 11, .34) * (1 - sk(lt, 16.3, 16.55));
+  const th = sk(lt, BAN_THUMB - .08, BAN_THUMB + .06) * (1 - sk(lt, 16.3, 16.55)), up = th > .5, wob = damp(lt, BAN_THUMB, 11, .34) * (1 - sk(lt, 16.3, 16.55));
   o.arms = { l: up ? 'thumb' : 'hold', r: 'hold' }; o.hand = { l: up ? 'thumb' : 'grip', r: 'grip' };
-  o.grip = { l: [-80, 38], r: [112, 38] };
+  o.grip = { l: [lerp(-80, -142, th), lerp(38, 2, th)], r: [112, 38] };   /* the left hand lets go of the walker and goes straight out to the side, thumb up (the engine's thumb points up when the forearm runs level) */
   o.rot = -.07 * wob + .01 * Math.sin(lt * 1.4);
   o.squash = up ? .1 * pulse(lt, BAN_THUMB, .22) : 0; o.plant = true;
   o.look = track([[0, [-.8, .1]], [14.0, [-.8, .1]], [15.4, [-.7, -.05]], [15.55, [-.2, -.1]], [16.2, [-.6, 0]], [18.5, [-.75, .05]]], lt);
