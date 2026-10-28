@@ -213,7 +213,7 @@ function strawO(lt) {
     if (lt >= CUT.door) {                                                                                                                      /* at the door */
       look = lt < bs('s5') ? [-.85, .05] : lt < bs('st7') ? [0, 0] : [.95, .1]; lid = .42; expr = 'dead';
       const kn = SDOOR(lt).knob, k = sstep(lt, bs('st7') + .1, bs('st7') + .6);
-      if (k > 0) { const tg = gripAt(p0, 1, kn[0] - 3, kn[1] - 11, .98); arms = { l: 'none', r: 'hold' }; grip = { r: [lerp(86, tg[0], k), lerp(10, tg[1], k)] }; hand = { r: 'grip' }; }
+      if (k > 0) { const tg = gripAt(p0, 1, kn[0] - 2, kn[1] - 6.5, .98); arms = { l: 'none', r: 'hold' }; grip = { r: [lerp(86, tg[0], k), lerp(10, tg[1], k)] }; hand = { r: 'grip' }; }
     }
   }
   const sp = Math.abs(v), A = strideAt(sp), moving = (sp / S > 9 || churnRate(lt) > 0) && !air;

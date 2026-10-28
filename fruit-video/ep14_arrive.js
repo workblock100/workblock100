@@ -356,7 +356,7 @@ function drawDeskTop(st = {}, lt = 0) {
     ctx.fillStyle = '#b9bfc8'; ctx.strokeStyle = 'rgba(30,34,44,.85)'; ctx.lineWidth = 2.4; ell(0, -2, 26, 7); ctx.fill(); ctx.stroke();
     ctx.fillStyle = V2.grad(-20, 0, 20, 0, [[0, '#8f98a6'], [.4, '#f4f6fa'], [1, '#7d8696']]); ctx.beginPath(); ctx.moveTo(-22, -4); ctx.quadraticCurveTo(-22, -34, 0, -34); ctx.quadraticCurveTo(22, -34, 22, -4); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#d6203a'; ell(0, -38, 4.5, 4.5); ctx.fill();
-    if (j > .05) { ctx.strokeStyle = `rgba(255,255,255,${j * .9})`; ctx.lineWidth = 3; for (const sd of [-1, 1]) for (const rr2 of [34, 46]) { ctx.beginPath(); ctx.arc(0, -22, rr2, sd < 0 ? PI * 1.12 : -PI * .38, sd < 0 ? PI * 1.38 : -PI * .12); ctx.stroke(); } }
+    if (j > .05) { for (const [col, lw] of [[`rgba(30,40,70,${j * .85})`, 7], [`rgba(255,255,255,${j * .95})`, 3.4]]) { ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'round'; for (const sd of [-1, 1]) for (const rr2 of [36, 50]) { ctx.beginPath(); ctx.arc(0, -22, rr2, sd < 0 ? PI * 1.12 : -PI * .38, sd < 0 ? PI * 1.38 : -PI * .12); ctx.stroke(); } } }   /* the ding: arcs either side, dark under light so they show on the cream wall */
     ctx.restore(); }
   // the pen cup and the sign-in clipboard on the ledge
   { const [x, y] = b(420, top, z + 70), s = K(z + 70); ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.fillStyle = '#33527a'; ctx.strokeStyle = 'rgba(14,20,36,.85)'; ctx.lineWidth = 2.4; rr(-16, -34, 32, 34, 5); ctx.fill(); ctx.stroke();
@@ -503,7 +503,7 @@ function melonO(lt) {
   if (lt >= 7.5 && !landed) {   /* bends, comes up with the binder in both hands, drops it */
     const gl = toLocal(o0, bl[0], bl[1]);
     if (lt >= 7.9 && held) { arms = { l: 'hold', r: 'rest' }; grip = { l: gl }; }
-    else if (lt >= 8.7) { arms = { l: 'rest', r: 'up' }; }
+    else if (lt >= 8.7) { arms = { l: 'up', r: 'rest' }; }   /* the hand that let go flicks up */
   }
   if (landed) { arms = { l: 'rest', r: 'rest' }; expr = 'happy'; }
   if (lt >= wordT('a1', 'binder', 8.67) - .05) expr = 'happy';
@@ -662,7 +662,7 @@ const TAGS = [
   { id: 'tagK', t0: 4.35, t1: 6.2, w: 560, h: 214, x: 330, y: 420, who: 'kq', lines: ['THE KUMQUAT', 'Citrus japonica', 'TRAINEE'], behind: true, anchor: .2, bend: -.2 },
   { id: 'tagF', t0: 18.15, t1: 19.5, w: 560, h: 214, x: 540, y: 380, who: 'sw', lines: ['STRAWBERRY', 'Fragaria per diem', 'NURSE · UNSCHEDULED'] },
 ];
-const NOTE = { t0: 13.1, t1: 14.5, rect: [250, 290, 580, 310] };
+const NOTE = { t0: 13.1, t1: 14.5, rect: [250, 290, 580, 284] };
 const CIRC = { t0: 22.3, t1: 23.2, rect: [500, 280, 540, 330] };
 const THUD = { t: 8.84, x: 330, y: 1190 };
 const STING = 23.2;                                                   /* the hard cut to her face */
@@ -678,8 +678,9 @@ HIDE = (lt, own = '') => {
   if (lt >= CIRC.t0 && lt < CIRC.t1) out.push([CIRC.rect[0] - 20, CIRC.rect[1] - 20, CIRC.rect[0] + CIRC.rect[2] + 20, CIRC.rect[1] + CIRC.rect[3] + 20]);
   if (lt >= THUD.t && lt < THUD.t + .9) out.push([THUD.x - 260, THUD.y - 130, THUD.x + 260, THUD.y + 130]);
   if (lt >= 7.9 && own !== 'bigbinder') {   /* the big binder hides the labels of the binders behind it */
-    const by = binderY(lt), { x, z, w, h } = BIND, pts = [p2(x - w / 2 - 6, by - 4, z - 70), p2(x + w / 2 + 6, by + h + 6, z + 70)].map(([a, b]) => toScreen(a, b));
-    out.push([Math.min(pts[0][0], pts[1][0]) - 2, Math.min(pts[0][1], pts[1][1]) - 2, Math.max(pts[0][0], pts[1][0]) + 2, Math.max(pts[0][1], pts[1][1]) + 2]);
+    const by = binderY(lt), { x, z, w, h } = BIND, pts = [];
+    for (const X of [x - w / 2 - 6, x + w / 2 + 6]) for (const Y of [by - 4, by + h + 6]) for (const Z of [z - 70, z + 70]) pts.push(toScreen(...p2(X, Y, Z)));   /* all eight corners of the box */
+    out.push([Math.min(...pts.map(q => q[0])) - 2, Math.min(...pts.map(q => q[1])) - 2, Math.max(...pts.map(q => q[0])) + 2, Math.max(...pts.map(q => q[1])) + 2]);
   }
   return out;
 };

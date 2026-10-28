@@ -704,20 +704,39 @@ function stationBackdrop(lt) {
   seg1(x + 120, y + 70, x + 120, y + 42, '#2a2630', 4); seg1(x + 120, y + 70, x + 142, y + 82, '#2a2630', 4);
   ctx.fillStyle = 'rgba(232,248,244,.28)'; ctx.fillRect(x - 20, y - 20, w + 40, h + 40);   /* cool fluorescent light over all of it */
 }
+/* Strawberry behind the glass, alone, with nothing to do with her hands: she mimes the clipboard she has not got (20.35), straightens her cap (20.8), puts a tumbler to the glass and her ear to the tumbler (21.2), hears nothing, checks her watch (21.9); the blind comes down over all of it. */
+EXT.prop.fp14v_watch = (side, o, t) => {   /* a little wrist watch: leather strap, round white face, two hands; drawn at the wrist (toward the elbow from the hand) */
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(29,26,34,.95)'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(6, 14); ctx.lineTo(16, 30); ctx.stroke();
+  ctx.strokeStyle = '#8a5a34'; ctx.lineWidth = 5.4; ctx.beginPath(); ctx.moveTo(6, 14); ctx.lineTo(16, 30); ctx.stroke();
+  ctx.fillStyle = '#c3cad4'; ctx.strokeStyle = 'rgba(29,26,34,.95)'; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.arc(11, 22, 10.5, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#fbf6e8'; ctx.beginPath(); ctx.arc(11, 22, 7.6, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#2a2630'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(11, 22); ctx.lineTo(11, 16.4); ctx.moveTo(11, 22); ctx.lineTo(14.6, 24); ctx.stroke();
+  ctx.restore();
+};
+PROP_BOX.fp14v_watch = [-4, 8, 28, 36];
+const SD_ = [20.35, 20.8, 21.2, 21.85, 22.35];   /* clipboard mime | cap | ear | (hearing nothing) | watch */
 function actStrawDoor(lt) {
   const o = A11.straw(Object.assign({ x: lerp(540, 560, sk(lt, 20.5, 21)) + 190 * sk(lt, 22.3, 22.85), y: 690, s: 1.25, who: 'straw', id: 'straw' }, SEATED));
   o.lift = 0;
-  const hear = sk(lt, 20.85, 21.1) * (1 - sk(lt, 21.95, 22.15)), tilt = -.15 * hear;   /* the text gate allows 12 degrees on her badge: this is 8.6 plus the badge's own tilt */
-  o.rot = tilt + .05 * sk(lt, 22.1, 22.3) * (1 - sk(lt, 22.3, 22.8));
-  o.expr = lt < 20.9 ? 'fp14v_flat' : lt < 21.95 ? 'fp14v_hear' : 'fp14v_flat';
-  o.look = track([[20.5, [.2, -.5]], [20.9, [.55, -.4]], [21.95, [.6, -.45]], [22.1, [0, .05]], [22.45, [0, .05]], [22.8, [.9, .1]]], lt);
-  o.mouthOpen = inR(lt, 21.0, 21.9) ? .1 + .05 * Math.sin(lt * 9) : 0;
-  o.shake = inR(lt, 21.0, 21.9) ? 1.4 : 0;
-  const cap = inR(lt, 20.5, 20.98);   /* straightens her cap, then both hands to the tumbler */
+  const mime = lt < SD_[1], cap = inR(lt, SD_[1], SD_[2]), eEar = sk(lt, SD_[2], SD_[2] + .22) * (1 - sk(lt, SD_[3] + .1, SD_[3] + .28)), eWatch = sk(lt, SD_[3] + .02, SD_[3] + .18) * (1 - sk(lt, SD_[4], SD_[4] + .15));
+  const hear = eEar, tilt = -.15 * hear;
+  o.rot = tilt + .05 * sk(lt, 22.1, 22.3) * (1 - sk(lt, 22.3, 22.8)) + (mime ? .02 * Math.sin(lt * 7) : 0);
+  o.expr = lt < SD_[0] + .3 ? 'fp14v_stiff' : lt < SD_[0] + .46 ? 'fp14v_hear' : lt < SD_[2] ? 'fp14v_stiff' : lt < SD_[3] ? 'fp14v_hear' : 'fp14v_flat';
+  o.look = track([[20.35, [.1, .75]], [20.6, [.1, .75]], [20.7, [.3, -.1]], [20.95, [.35, -.5]], [21.2, [.6, -.2]], [21.3, [.55, -.4]], [21.85, [.6, -.45]], [21.98, [-.45, .5]], [22.3, [-.45, .5]], [22.45, [0, .05]], [22.8, [.9, .1]]], lt);
+  o.mouthOpen = inR(lt, SD_[2] + .1, SD_[3]) ? .1 + .05 * Math.sin(lt * 9) : inR(lt, SD_[3] + .2, SD_[4]) ? .22 * Math.sin((lt - SD_[3] - .2) / (SD_[4] - SD_[3] - .2) * PI) : 0;   /* held breath at the glass, then a sigh at the watch */
+  o.shake = inR(lt, SD_[2] + .1, SD_[3]) ? 1.4 : 0;
   o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: cap ? 'open' : 'grip' };
-  const tx = o.x - 118, ty = o.y + 8;
-  o.grip = { l: gripTo(o, -1, tx + 6, ty), r: cap ? gripTo(o, 1, o.x + 40, o.y - 150 + 8 * Math.sin((lt - 20.5) * 14)) : gripTo(o, 1, tx + 10, ty + 26) };
-  o.tx = tx; o.ty = ty;
+  // the tumbler: carried up from her side at 21.2, then held to the glass beside her cheek
+  const up = sk(lt, SD_[2] - .15, SD_[2] + .15), tx = o.x - 118, ty = lerp(o.y + 100, o.y + 8, up);
+  const lx = lerp(-32, -118 / o.s, up) * o.s + o.x, ly = lerp(o.y + 62, ty, up);
+  const wr = Math.sin(lt * 21) * 7 * (lt > 20.45 && lt < 20.7 ? 1 : 0);   /* the right hand "writes" on the board that is not there */
+  let rx = o.x + 38, ry = o.y + 78 + wr * .3;                             /* right hand: on the invisible board */
+  if (cap) { rx = o.x + 40; ry = o.y - 150 + 8 * Math.sin((lt - SD_[1]) * 14); }
+  else if (lt >= SD_[2]) { rx = lerp(tx + 10, o.x + 70, eWatch); ry = lerp(ty + 26, o.y - 6, eWatch); }
+  o.hold = { r: eWatch > .3 ? 'fp14v_watch' : undefined };
+  o.grip = { l: gripTo(o, -1, lx + 6 * up, ly), r: gripTo(o, 1, rx + wr, ry) };
+  o.tx = tx; o.ty = ty; o.tumbler = up;
   return o;
 }
 function doorWall() { return art('doorwall', WW, WH, 1.25, () => { ctx.translate(-WX0, 0); paintWall(); paintFloor(); }); }
@@ -730,7 +749,9 @@ function drawBlind(lt, r, tilt) {
   return bottom;
 }
 function drawDoor(lt, sh) {
+  ctx.fillStyle = C.ceil; ctx.fillRect(-700, -1500, W + 1400, 1500 + DFLOOR - 944 + 2);   /* the ceiling carries on above the cached wall (the camera pushes in) */
   ctx.save(); ctx.translate(0, DFLOOR - 944); ctx.drawImage(doorWall(), WX0, 0, WW, WH); ctx.restore();
+  ctx.fillStyle = vgrad(-260, 640, 'rgba(26,12,6,.86)', 'rgba(26,12,6,0)'); ctx.fillRect(-700, -1500, W + 1400, 2140 + 260);   /* the light falls off up there */
   const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(255,200,120,0)'); g.addColorStop(1, 'rgba(255,196,110,.34)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, DFLOOR);   /* the afternoon sun from the right */
   // the door: a cream frame, a wood leaf, hinges, a kick plate, a lever handle, a brass plaque; the pane is cut out of the leaf
   rbox(DR.x - 30, DR.y - 30, DR.w + 60, DR.h + 30, '#fff7ec', { r: 8, lw: 3 }); rbox(DR.x, DR.y, DR.w, DR.h, vgrad(DR.y, DR.y + DR.h, '#c39662', '#a9784a'), { r: 4, lw: 3 });
@@ -749,7 +770,7 @@ function drawDoor(lt, sh) {
   V2.setLight({ key: [-.1, -.8], keyColor: '#e8f8ff', keyA: .24, rim: '#bfe8ff', rimA: .4, shadow: '#203038', shadowA: .3, bounce: '#dff6f0', bounceA: .12, amb: '#e8f8f4', ambA: .08 });
   drawChar(so);
   // the tumbler pressed to the glass beside her cheek: a clear drinking glass seen end-on (its rim, a thick base)
-  { const r = 40; ctx.save(); ctx.translate(so.tx, so.ty); ctx.fillStyle = 'rgba(214,236,250,.34)'; disc(0, 0, r, r); ctx.strokeStyle = 'rgba(244,252,255,.9)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.stroke();
+  if (so.tumbler > .01) { const r = 40; ctx.save(); ctx.globalAlpha *= so.tumbler; ctx.translate(so.tx, so.ty); ctx.fillStyle = 'rgba(214,236,250,.34)'; disc(0, 0, r, r); ctx.strokeStyle = 'rgba(244,252,255,.9)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.stroke();
     ctx.strokeStyle = 'rgba(90,130,160,.8)'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(0, 0, r - 7, 0, TAU); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.55)'; disc(-r * .4, -r * .4, 9, 5); ctx.restore(); }
   const r = blindRaise(lt), tilt = lerp(.12, 1, sk(lt, D_CLOSE, D_CLOSE + .12));
   const bottom = drawBlind(lt, r, tilt);
@@ -927,7 +948,7 @@ const SHOTS = [
   { id: 'st3', a: 16.282, b: 17.75, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 300], cam: (lt, u) => camOn('star', lt, lerp(3.0, 3.25, u), 500, 700) },
   { id: 'goji', a: 17.75, b: 18.593, show: ['goji'], dof: 9, bgDy: 110, chairsBg: true, halo: ['goji', .26, 320], cam: (lt, u) => camOn('goji', lt, lerp(3.0, 3.15, u), 560, 740) },
   { id: 'ra4', a: 18.593, b: 20.35, show: ['cran', 'pear', 'goji', 'banana'], dof: 5, bgDy: 70, chairsBg: true, glow: 1.3, cam: (lt, u) => zoomTo(690, lerp(1052, 1044, u), lerp(1.45, 1.62, easeIO(u))) },
-  { id: 'door', a: 20.35, b: 22.903, view: 'door', show: [], cam: () => zoomTo(540, 960, 1) },
+  { id: 'door', a: 20.35, b: 22.903, view: 'door', show: [], cam: (lt, u) => zoomTo(lerp(585, 612, u), lerp(800, 770, u), lerp(1.05, 1.3, easeIO(u))) },
   { id: 'st4', a: 22.903, b: 23.5, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 320], cam: (lt, u) => camOn('star', lt, lerp(3.1, 3.25, u), 480, 740) },
   { id: 'clip', a: 23.5, b: 24.7, view: 'clip', show: [], cam: (lt, u) => zoomTo(lerp(540, 575, u), lerp(1010, 1130, u), lerp(1.0, 1.22, u)) },
 ];

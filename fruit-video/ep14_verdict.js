@@ -233,7 +233,7 @@ function drawTableDressing(lt, o = {}) {
   const y = TB.y0 + 32;
   binderStack(533, y, 3, 1); binderStack(639, y, 2, 3); binderStack(745, y - 2, 3, 7);
   ctx.fillStyle = '#fbf8ee'; ctx.strokeStyle = 'rgba(60,50,30,.5)'; ctx.lineWidth = 1.6; for (let i = 0; i < 3; i++) { rr(838 + i * 2, y - 3 - i * 3, 52, 4, 1); ctx.fill(); ctx.stroke(); }   /* sign-in sheets */
-  pizzaBox(o.boxX ?? XS.melon, y - 2, o.boxOpen ?? 1);
+  pizzaBox(o.boxX ?? XS.melon, y - 2 + (o.boxDy || 0), o.boxOpen ?? 1);
   /* a water jug and two glasses */
   ctx.fillStyle = 'rgba(190,225,250,.85)'; ctx.strokeStyle = 'rgba(30,50,80,.8)'; ctx.lineWidth = 2.5; rr(1030, y - 52, 26, 52, 5); ctx.fill(); ctx.stroke();
   ctx.fillStyle = 'rgba(120,180,235,.6)'; ctx.fillRect(1033, y - 36, 20, 30);
@@ -396,7 +396,7 @@ function castStraw(lt) {
 }
 function castMelon(lt) {
   const sat = 34;   /* he sits a little lower than the others: a bigger chair, a smaller man */
-  const rise = sstep(lt, 13.3, 13.75), back = Math.pow(c01((lt - 19.16) / (T_TH - 19.16)), 2.2), up = sstep(lt, 25.985, 26.4), sit = seat(lt, SIT_T.melon, .7);
+  const rise = sstep(lt, 13.3, 13.75), back = Math.pow(c01((lt - 19.16) / (T_TH - 19.16)), 2.2), up = sstep(lt, 25.985, 26.4), sit = seat(lt, SIT_T.melon, .3);
   let dy = sat - (sat + 6) * rise;
   dy = lt < 19.16 ? dy : lt < 25.985 ? lerp(-6, 62, back) : lt < 33.0 ? lerp(62, -6, up) : -6 + (sat - (-6)) * sit.k + 4 * (lt > SIT_T.melon ? pulse(lt, SIT_T.melon, 20, .09) : 0);
   const o = A9.melon({ x: XS.melon, y: F + dy, s: SA * 1.22, plant: true, t: lt, expr: exprOf('melon', lt), arms: { l: 'rest', r: 'rest' } });
@@ -412,7 +412,9 @@ function castMelon(lt) {
 /* Melon's eyes follow the ball while it falls (14.36 to 18.1), with a dart on every plink; otherwise the staff, the surveyor, the board */
 function ballLook(o, lt) {
   if (lt >= PLINK[0] - .25 && lt < CUE.plinkland + .35) { const b = ballAt(Math.max(PLINK[0] - .3, lt - .05)); return lookAt(o, [b.x, b.y], 200); }
-  return gazeAt(o, [[0, PT.star], [6.7, PT.star], [8.6, PT.star], [13.3, PT.top], [14.0, PT.top], [18.1, PT.star], [18.9, PT.top], [25.9, PT.star], [27.4, PT.star], [31, PT.straw], [35.6, PT.door]], lt);
+  const g = gazeAt(o, [[0, PT.star], [6.7, PT.star], [8.6, PT.star], [13.3, PT.top], [14.0, PT.top], [18.1, PT.star], [18.9, PT.top], [25.9, PT.star], [27.4, PT.star], [31, PT.straw], [35.6, PT.door]], lt);
+  const dz = lt > 27.4 && lt < 35.5 ? .5 * sstep(lt, 27.4, 28.4) * (1 - sstep(lt, 34.9, 35.45)) : 0;   /* still dazed: the eyes drift in slow circles until he is down */
+  return dz > .01 ? [g[0] + dz * Math.sin((lt - 27) * 3.1), g[1] + dz * .7 * Math.cos((lt - 27) * 2.6)] : g;
 }
 const KUM_RUN = [[0, XS.kum], [10.4, XS.kum], [11.0, CUSH.x], [15.2, CUSH.x], [16.0, XS.kum], [36.85, XS.kum], [38.2, 146], [38.5, 92]];   /* the Kumquat steps to the ball, comes back, and trots after Stateman */
 const KK = () => KINDS.kumquat || KINDS.clem;
@@ -633,7 +635,7 @@ function drawStageBody(lt, sh) {
   }
   for (const [id, o, show] of list) if (show && id !== 'star' && id !== 'kum') drawChair(XS[id], chairOpts(XS[id], lt));
   for (const [id, o, show] of list) if (show) drawChar(o);
-  drawTableTop(lt); drawTableDressing(lt, { boxOpen: 1 }); drawTableFront(lt);
+  drawTableTop(lt); drawTableDressing(lt, { boxOpen: 1 - sstep(lt, 34.82, 34.97), boxDy: 62 * sstep(lt, 34.97, 35.12) - 14 * Math.sin(PI * c01((lt - 34.8) / .2)) }); drawTableFront(lt);
   drawCushion(lt); thudFx(lt);
   const b = ballAt(lt);
   if (b.phase === 'rest' || lt < TOSS.tr) { const [hx, hy] = heldBall(lt, kumO); drawBallAt(hx, hy, { sq: 0 }); } else drawBall(lt);
