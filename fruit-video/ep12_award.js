@@ -11,6 +11,9 @@
  * World coordinates: X right, Y up, Z forward; V2.at / V2.p2 project them. The Administrator is A9.melon at s 1.22; Strawberry is A11.straw.
  * Depth: the room shell is drawn first; the set pieces (table, counter, lectern, gong, balloons, fridge) and the cast are sorted together
  * far to near, so anything standing behind a set piece is covered by it.
+ * Alignment repair: every shot names its cast (CASTS below): the speaker and the one he speaks to are always in; nobody is drawn soft, half cut or under a nearer body, so a wide shows
+ * only the people whose faces stay clear, and a close-up shows only its subject (the set that stands nearer the camera than she does is left out of it). Clementine ends at X -175 so her raised
+ * rosette clears the Administrator's face; the banner, the certificate and every other lettered object are drawn whole (UI kit) or not at all.
  *
  * Shot list (scene-local seconds, from build/ep12/timeline.json; the shot name changes at every cut):
  *   0.00 open    wide. The crowd claps at 0.20. The Administrator at the lectern, the trophy between him and Lemon.
@@ -35,11 +38,11 @@
  *  29.10 table   s4: she reaches to the plate, takes a donut (29.36), looks at it, puts it back (30.27), walks out left
  *                (the sting at 31.04; she is off the frame by then).
  *  30.90 tail    the last 0.55 s (the scene has no more room after `end`): the room holds on the empty space where she was,
- *                the Administrator and Lemon look at each other, a balloon drifts up, the certificate has faded in (from 31.04).
+ *                a balloon drifts up, the certificate has faded in on the wall (from 31.04), nobody standing in front of it.
  */
 (() => {
 if (!window.TIMELINE_EP12) return;
-const { person, zoomTo, faceZoom, faceC, drawBg } = window.H6;
+const { person, zoomTo, faceZoom, faceC } = window.H6;
 const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, A12 = window.A12, S6 = window.S6, S7 = window.S7;
 const { p2, poly, grad } = V2;
 const { box3, onZ, kz, ceilingLamp, table3, wallClock, microwave, backWindow } = S6;
@@ -78,7 +81,7 @@ const PLATE = [-352, 1200], PLATE_R = 42;                             // the don
 const DONUTS = [[-366, 1186], [-340, 1184], [-352, 1212]];            // the last one is the one she takes
 const TAKE = [-352, 160, 1212], UP = [-330, 236, 1190];
 // ---- the cast: world X and Z
-const MEL = [150, 1580], LEM = [-170, 1400], MNG = [-40, 1700], CRN = [330, 2000], BGB = [-40, 2060];
+const MEL = [150, 1580], LEM = [-170, 1400], MNG = [-40, 1700], CRN = [330, 2000];
 const CLM0 = [-40, 1900], CLM1 = [-175, 1300];                       // Clementine ends left of the Administrator: her raised rosette stays clear of his face
 const STR0 = [-470, 1975], STR1 = [-200, 1262], STROUT = [-820, 1010];
 const GONG_T = () => bs('gong') + .1;                                  // the strike (the sound cue sits 0.10 into the gong beat)
@@ -384,10 +387,6 @@ function cast(lt) {
     expr: strExpr, arms: { l: 'hold', r: 'rest' }, grip: { l: gL }, hand: { l: holdingDonut ? 'grip' : 'open' }, hold: holdingDonut ? { l: 'donut12' } : undefined,
     transit: lt > EXIT_T() - .1 });
   add(strZ, strO, { key: 'str' });
-  // the background residents: clapping at the open and at the Newest Hire award (drawn soft, unaudited)
-  const bgArm = lt < 1.2 || (lt >= 12.8 && lt < 15.4) ? 'up' : 'rest';
-  const bgA = at(BGB[0], BGB[1]);
-  add(BGB[1], A7.banana({ x: bgA.x, y: bgA.y, s: bgA.s, who: null, expr: 'happy', arms: { l: bgArm, r: bgArm }, look: [.4, 0] }), { bg: true });
   return { items, mel, lem, mng, clm: clmO, str: strO };
 }
 
@@ -479,14 +478,13 @@ window.__EP12_SCENES.award = {
     const wholeness = e => { const b = bodyBox(e.o), r = REACH[e.key] || [0, 0], s = e.o.s * CAM.z; return Math.min(b[0] - r[0] * s, W - b[2] - r[1] * s, b[1], H - b[3]); };
     const list = closeUp ? [subj] : (CASTS[sh] ? CASTS[sh](lt, zz) : []);
     for (const e of c.items) {
-      if (e.bg) { e.draw = false; continue; }
       let a = list.includes(e.key) ? 1 : 0;
       if (a && !closeUp && !e.o.transit && FADE.has(sh)) a = clamp((wholeness(e) - 4) / 24);   // a camera pull-out: he comes in as he comes whole
       e.draw = a > .01; e.o.alpha = a < 1 ? a : undefined;
     }
     const runCast = e => () => {
       if (e.pre) e.pre();
-      if (e.bg) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
+      drawChar(e.o);
       if (e.post) e.post(); };
     const sets = setPieces(lt, takenDonut).map(p => ({ z: p.z, run: p.run })).sort((p, q) => q.z - p.z);
     const castList = c.items.filter(e => e.draw).map(e => ({ z: e.z, run: runCast(e), key: e.key }));

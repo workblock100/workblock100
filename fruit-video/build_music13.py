@@ -434,11 +434,12 @@ def cue_plan13(T, t0, d, beats, D):
         if n >= 1:
             T.put(kick13(.7), tc[i], .12, 0)
     mand = M10.wt("l13", "mandatory")
-    T.put(brass([57, 60, 64, 69], .2, .008, .1, 1900), mand - .02, .05, 0)                 # 'mandatory': a stab...
-    T.put(timp(55, .7), mand - .02, .12)
-    T.put(brass([45, 52, 57, 60, 64], .32, .008, .15, 2000), stab_at, .1, 0)                # '...in-service.': the big one
-    T.put(timp(55, 1.2), stab_at, .24)
-    T.put(crash(.5), stab_at, .05, .1)
+    slam = mand + .04                                                                      # the picture slams MANDATORY IN-SERVICE onto the plan 0.04 s into 'mandatory' (38.83 s): shake, shockwave, flash
+    T.put(brass([45, 52, 57, 60, 64], .32, .008, .15, 2000), slam - .01, .1, 0)             # the big one, on the slam
+    T.put(timp(55, 1.2), slam - .01, .24)
+    T.put(crash(.5), slam - .01, .05, .1)
+    T.put(brass([57, 60, 64, 69], .2, .008, .1, 1900), stab_at, .05, 0)                    # '...in-service.': the answer, lighter
+    T.put(timp(55, .7), stab_at, .1)
     T.fade(e0[0] - .02, e0[0] + .34, 1, 0)                                                 # the hologram collapses: the band is sucked out with it
     MUTES.append((e0[0] + .36, t0 + d))
 
@@ -501,9 +502,10 @@ def cue_crew13(T, t0, d, beats, D):
     # --- the flash montage: a snare roll that tightens into the first freeze, a reverse cymbal
     n1 = starts[0]
     T.put(revcym(n1 - op[0] - .1, 2000, 8000), op[0] + .05, .22)
-    for j in range(16):
-        at = op[0] + .2 + (n1 - op[0] - .25) * (j / 16) ** .8
-        T.put(snare13(.3 + .6 * j / 16, ghost=True), at, .12 + .2 * j / 16, -.2 + .4 * (j % 2))
+    for j, fl in enumerate((.30, .40, .50, .60, .70, .80)):                                 # the six silhouettes of the flash montage, a tenth of a second each: a hit on every flash
+        T.put(snare13(.3 + .12 * j, ghost=(j < 3)), t0 + fl, .12 + .05 * j, -.2 + .4 * (j % 2))
+    for j, fl in enumerate((.85, .88, .91)):                                                # and a last little roll into the first freeze
+        T.put(snare13(.8 + .07 * j, ghost=True), t0 + fl, .2 + .04 * j, -.2 + .2 * j)
     for i, (cid, root, chord) in enumerate(CREW_CARDS):
         a = starts[i]
         b = starts[i + 1] - .06 if i + 1 < len(starts) else beats["end"][0] - .05
@@ -546,12 +548,14 @@ def cue_crew13(T, t0, d, beats, D):
 
 
 # ================================================================ hall: the lasers, in slow motion
-def _slowmo(buf, a, b, r_end=.5, ramp=.55):
+def _slowmo(buf, a, b, r_end=.5, ramp=.55, release=0.0):
     """Replace the span a..b seconds of a stereo buffer with a slowed-down read of the material that was playing there: the tape drags, the read speed falls from 1 to r_end over `ramp`
-    seconds and stays there, so everything in it pitches down and stretches."""
+    seconds and stays there, so everything in it pitches down and stretches; with `release` it speeds back up to 1 over the last `release` seconds."""
     i, j = int(a * SR), int(b * SR)
     t = np.arange(j - i) / SR
     rate = 1 - (1 - r_end) * ss(t / ramp)
+    if release > 0:
+        rate = rate + (1 - rate) * ss((t - ((j - i) / SR - release)) / release)
     pos = np.cumsum(rate)
     src = buf[:, i:i + int(pos[-1]) + 4].copy()
     idx = np.arange(src.shape[1])
@@ -573,8 +577,10 @@ def cue_hall13(T, t0, d, beats, D):
         T.put(heart(.25), at + .02, .12, 0)
     for at in (op[0] + .1, op[0] + .35, op[0] + .6):                                         # the three countdown beeps get a tick
         T.put(tick(), at, .08, .3)
+    for k, m in enumerate((69, 72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96)):                # the twelve beams arm one after another from 0.52 s, 62 ms apart, right and left along the hall
+        T.put(glass(m, .6, .01, .5), t0 + .52 + .062 * k + .02, .03, .5 if k % 2 == 0 else -.5)
     T.gate(op[0], op[1], .6, .2)                                                             # in the opening pause the three beeps and the beams lead
-    _slowmo(T.buf, ls[0] - .02, ls[1] + .0, .5, .55)
+    _slowmo(T.buf, ls[0] - .02, ls[1] + .0, .5, .55, .6)                                    # the picture's clock eases back to 1x over the last 0.6 s (7.36 to 7.96)
     T.gate(ls[0] - .05, ls[1] - .06, .45, .3)                                                # the slowed bed sits well under the heartbeat and the beams
     # --- the heart of the slow motion: the score's own kettle drum on the sound effect's three lub-dubs (build_audio13.HEART_BEATS), so the two are one pulse
     for at, sl_ in HEART_BEATS:
@@ -619,8 +625,9 @@ CROSS_CUTS = (.95, 3.00, 3.86, 5.43, 6.57, 8.50, 10.02, 10.97, 11.80, 13.54, 15.
 def cue_cross13(T, t0, d, beats, D):
     """7:15 PM. An upbeat caper at 155 bpm, a swinging eighth (the offbeat falls 62 percent into the beat): an upright walking Fmaj7, D7, Gm7, C7 (a bar is two chords), a ride cymbal and
     a brush on two and four, a jazz organ comping on the offbeats and brass stabs. The grid is placed so that the slide, the badge, the slip and the end all land on the beat. It is
-    tighter and busier than the noir groove: a stab goes on every cut (the start of every line and of every pause), the slide drops the band into stop-time, the badge reader's green
-    light and the clunks sit in a held organ chord that explodes into the groove again, a slide whistle falls with the banana and a rim shot catches him."""
+    tighter and busier than the noir groove: a stab goes on every one of the finished picture's 22 cuts (CROSS_CUTS), exactly at the cut and not on the nearest swung eighth, with the
+    band clearing a 70 ms hole around it so that it never flams with a bass note; the slide drops the band into stop-time, the badge reader's green light and the clunks sit in a
+    held organ chord that explodes into the groove again on the cut back to Lemon (17.37), a slide whistle falls with the banana and a rim shot catches him where he lands (21.96)."""
     b = 60 / CROSS_BPM
     g0 = t0 + CROSS_G0
 
@@ -634,7 +641,9 @@ def cue_cross13(T, t0, d, beats, D):
     sl, bd, sp_ = beats["slide"], beats["badge"], beats["slip"]
     end0 = beats["end"][0]
     stops = [(q(sl[0]) - .02, q(sl[1] + .02)), (q(bd[0]) - .02, q(bd[1] + .02)), (q(sp_[0]) - .02, q(sp_[1] + .02))]
-    in_stop = lambda t: any(a <= t < c for a, c in stops)
+    CUT_SKIP = (16.56, 22.05)                                                              # the clunk's own woodblock is 60 ms after the first; the rim shot lands 90 ms before the second
+    hits = [t0 + c for c in CROSS_CUTS if c not in CUT_SKIP] + [sp_[0] + .92, t0 + 17.37]    # every stab, the landing and the badge explosion
+    in_stop = lambda t: any(a <= t < c for a, c in stops) or any(-.05 <= t - h <= .02 for h in hits)   # the band clears a hole around each hit, so a hit never flams with a bass note
     n_e = int((end0 - g0) / (b / 2)) + 1
     for e in range(0, n_e, 2):                                                       # one pass per beat
         beat = e // 2
@@ -671,9 +680,8 @@ def cue_cross13(T, t0, d, beats, D):
             T.put(vib(m + 12, ln * b * .5 * 2.2, .7), t, .03, -.2)
     # the stabs: one on every cut of the finished picture, at the cut itself (not on the nearest swung eighth: a hit that is a tenth of a second off its cut is worse than one off the grid)
     big = [t0 + c for c in (10.02, 16.02, 21.04, 25.70)]                                   # the slide, the badge, the slip and the end
-    skip = (16.56, 22.05)                                                                  # the clunk's own woodblock is 60 ms after the first, and the rim shot lands 90 ms before the second
     for c in CROSS_CUTS:
-        if c in skip:
+        if c in CUT_SKIP:
             continue
         tc = t0 + c
         k = int(((tc - g0) // (4 * b)) % 2) * 2 + int(((tc - g0) % (4 * b)) // (2 * b))
@@ -787,10 +795,10 @@ def cue_vault13(T, t0, d, beats, D):
     MUTES.append((mo1[0] - .04, fz[0] + .02, .1))                                                           # and the room's own tail goes with it: this is dead silence, 2.6 s of it
     # --- the red crash
     r0 = fz[0] + .3
-    D.put(roll(70, .55, 22), r0, .07, -.1)
+    D.put(roll(70, .68, 27), r0, .063, -.1)                                                              # builds with the 32 domes (27.48 to 28.16 s); the same hits per second as before: this roll's level depends on their spacing, so 27 hits, not 22
     for k in range(10):                                                                                  # the two-tone alarm on low brass
         D.put(brass([68 if k % 2 else 63, 56 if k % 2 else 51], .15, .008, .05, 1800), r0 + .02 + k * .13, .035, -.3 + .06 * k)
-    hit = r0 + .6
+    hit = r0 + .68                                                                                      # the last dome lights at 28.16 s: the whole building is red
     D.put(brass([45, 51, 57, 63, 69], .5, .01, .2, 2300), hit, .05, 0)
     D.put(timp(50, 1.2), hit, .07)
     D.put(taiko(60, .9), hit, .06)
@@ -822,6 +830,8 @@ def cue_vault13(T, t0, d, beats, D):
     T.put(cello(48, 1.7, 1.0, a=.2, r=.9), n0, .12, 0)
     T.put(strings([60], 1.7, .25, .9, 5.0, 1800), n0 + .02, .05)
     T.gate(e0[0] + .45, t0 + d, 0.0, .1)
+    T.put(glass(84, 1.8, .01, 1.0), e0[0] + .76, .05, 0)                                                 # the card pops on (34.10 s: ON BREAK / BACK IN 30 MIN / RELIEF: PENDING): one soft bell after the door
+    T.put(glass(91, 1.8, .01, 1.0), e0[0] + .80, .035, .2)
     T.fade(t0 + d - .5, t0 + d, 1, 0)
 
 

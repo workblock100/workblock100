@@ -8,16 +8,24 @@ It changes the defaults (script, output folder, timeline variable, music module)
 Nothing is sampled: every sound is a few lines of numpy. The score (build_music13.py) shares two things with this file: the click times of the vault dial and the beats of the
 slow-motion heart, so the music can lock to them.
 
-Where a sound has a shape of its own inside its cue, it is written to the picture the scene builders committed to (scene-local seconds as of the last check; if a scene module changes
-one of these, change the matching number here and rebuild):
-  title  the dial clicks are build_music13.dial_times(), copied into ep13_title.js as DIAL_CLICKS (26 clicks, the 5th, 10th ... and the last heavy); the lock is at 2.4 s.
-  plan   32 rooms light 0.028 s apart from the pips cue (ep13_plan.js PT().pips and age()), clockwise from the lobby: sfx_pips pans each pip to its room (_room_x).
-  hall   the camera pulses (ep13_hall.js heartAt) are lubs at 0.30, 1.15 and 2.00 s and dubs 0.20 s after, into the lasers beat: HEART_BEATS / HEART_DUB; countdown beeps at 0.30, 0.55, 0.80.
-  open   the far dome lights for 0 to 0.3 s and 0.5 to 0.9 s after the phonering cue and the phone's lamp blinks for 1.25 s (ep13_station.js ping, ep13_open.js phoneRing); the
-         scene module starts them at scene time 0.25 but the cue lands at 0.45 (the open beat starts at 0.2): sfx_phonering is written for the cue.
-  vault  the door eases open from 0.04 to 2.0 s after its cue (doorcreak); the tube flickers on at the chair cue +0.04, +0.18, +0.30 and stays on at +0.37 (chair); the wrapper is opened
-         from +0.02 to +0.45 (wrapper); the bite is 0 to 0.2 s after the munch cue and the mouth shuts on the first chew at +0.55 (munch); the Q sign lands on 0 at the callcascade cue
-         and 32 domes light 0.022 s apart, the left panel first, 4 x 4 each (callcascade); the door slams shut 0.02 s after its doorclose cue.
+Where a sound has a shape of its own inside its cue, it is written to the finished picture (scene-local seconds, from the scene builders' reports and code; if a scene module changes one
+of these, change the matching number here and rebuild). Cue offsets are from the START OF THE BEAT, and the open beat of most scenes starts at 0.2 s.
+  title  the picture's dial clicks are build_music13.dial_times() (copied into ep13_title.js as DIAL_CLICKS: 0.244 ... 2.470, 26 clicks, the 5th, 10th ... and the last heavy);
+         lock flash and clunk at 2.60, textding 2.70, THE FLOAT POOL lands at 3.18.
+  open   far dome, desk lamp and Lemon's phone flick start at 0.45, which is where the phonering cue lands (dome lit 0.45 to 0.75 and 0.95 to 1.35, lamp to 1.70): sfx_phonering.
+  plan   32 rooms light 0.028 s apart from 2.90 (sfx_pips pans each pip to its room: _room_x); MANDATORY IN-SERVICE slams at 38.83 (the score's big hit); the hologram
+         collapses 40.35 to 40.72.
+  crew   hard cuts on the narrator's first word (0.95, 3.967, 5.964, 9.053, 10.622, 12.652), the stamp lands 0.07 s after each; six silhouette flashes 0.30 ... 0.80 every 0.1 s.
+  hall   beeps 0.30, 0.55, 0.80; twelve beams arm at 0.52 + 0.062 k; heartbeat pulses are lubs at 4.68, 5.53, 6.38 and dubs 0.20 later (HEART_BEATS / HEART_DUB); crossings
+         5.177, 5.977, 6.777 (laserpass); the clock eases back 7.36 to 7.96 (the bed's tape release); sting flash 10.719.
+  cross  22 cuts (build_music13.CROSS_CUTS), a stab on each; slide lands 10.02; badge swipe and reader beep 16.12, clunks 16.62 and 16.87, cut back to Lemon 17.37; peel 21.185,
+         boing 21.435, Banana lands about 21.96; sting flash 25.80.
+  vault  door eases open 0.34 to 2.3 (doorcreak); crack 20.25; Brenda's six footfalls 21.226 ... 21.760 are in events.json and sfx_steps lays the slippers on them (STEP_TIMES; the
+         build also halves the generic footfalls there); tube tinks 22.34, 22.48, 22.60 and hum on at 22.67 (chair); wrapper opened about 22.95 to 23.55; bite 23.90 and first chew 24.45
+         (munch); Q digits roll 27.30 to 27.48 and land with the cascade (callcascade: 32 domes 22 ms apart from 27.48, the left 4 x 4 panel first); red strobe from 27.58; the
+         crash's hit at 28.16; crew dash from 32.3; door slams 33.84; the card pops on at 34.10 (a bell in the score).
+The animation's footsteps (build/ep13/events.json, passed with --events) are turned into events.tuned.json in the output folder by _tune_events (per-scene level, the crew's rush
+spread out, Brenda's exit halved) and the mixer reads that; events.json itself is never touched.
 
 Usage: python3 build_audio13.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--out build/ep13_sound]
 """
@@ -642,25 +650,25 @@ def sfx_steps():
         place2(out, _lp4(clip, 4200 - 200 * i, 2), f - dd + .005, 1.0 - .07 * i, .04 * (i - 2))
     sw = _bp4(noise6(d, 1460), 700, 2600) * np.interp(t, [0, .12, .4, .8, 1.1], [0, .5, .9, .6, 0]) * (.6 + .4 * np.sin(2 * np.pi * 8.5 * t)) * .22
     out += np.stack([sw, np.roll(sw, 90)])
-    return norm6(_edge(out, .002, .1), .4)
+    return norm6(_edge(out, .002, .1), .25)
 
 
 def sfx_wrapper():
-    """A granola bar wrapper, opened to the picture (the vault scene unwraps it from 0.02 to 0.45 s after the cue and lifts it to her mouth, so it is all over by 0.6 s): film crinkle is
+    """A granola bar wrapper, opened to the picture (the finished vault scene unwraps it from -0.15 to 0.45 s around the cue and lifts it to her mouth, so it is all over by 0.6 s): film crinkle is
     a dense, irregular rain of tiny fractures (0.8 to 3.5 ms each, 2 to 11 kHz, each its own band), which come in four gestures: a squeeze as she grips it, a smaller turn, and the
-    long tearing open (the densest, loudest, brightest, 0.25 to 0.45 s), then the last rustle of the foil peeling back. About 300 crackles in 0.6 s, with a soft rustle underneath."""
+    long tearing open (the densest, loudest, brightest, 0.30 to 0.50 s, where the wrapper comes away), then the last rustle of the foil peeling back. About 300 crackles in 0.6 s, with a soft rustle underneath."""
     d = .7
     n = int(d * SR)
     t = tarr(d)
     r = rng6(1450)
     x = np.zeros(n)
-    for s, L, dens, lv in ((.00, .11, 260, .5), (.13, .09, 200, .38), (.25, .20, 520, 1.0), (.48, .09, 170, .3)):
+    for s, L, dens, lv in ((.00, .11, 260, .5), (.13, .09, 200, .38), (.30, .20, 520, 1.0), (.52, .08, 170, .3)):
         for i in range(int(L * dens)):
             at = s + r.uniform(0, L)
             lo = r.uniform(2200, 4500)
             hi = min(lo * r.uniform(1.8, 2.6), 11000)
             _place(x, _burst(int(at * 1e5) + i, .012, lo, hi, r.uniform(.0008, .0035)), at, lv * r.uniform(.15, 1.0) ** 1.6)
-    env = np.interp(t, [0, .03, .1, .13, .22, .25, .4, .46, .57, .62, .7], [0, .5, .5, .3, .3, .5, 1, .6, .3, .1, 0])
+    env = np.interp(t, [0, .03, .1, .13, .22, .3, .45, .5, .6, .64, .7], [0, .5, .5, .3, .3, .5, 1, .6, .3, .1, 0])
     x += _bp4(noise6(d, 1455), 900, 3500) * env * .06
     return norm6(_edge(x, .001, .05), .4)
 
@@ -704,7 +712,7 @@ def _call_ding(f, tau, ratio_dong=0.0):
 def sfx_callcascade():
     """Every call light in the building at once, as a stereo return, played to the picture: the vault scene lights its 32 domes one every 22 ms (two panels of 4 x 4 either side of the
     door, the left panel first, each row left to right), so there are 32 call-light chimes 22 ms apart, each panned to where its dome hangs (-0.76 to -0.36 for the left panel, +0.36
-    to +0.76 for the right), the four columns a rising run of notes and every row a step higher than the one before, louder as the building catches fire; first a clack as the Q sign's
+    to +0.76 for the right), the four columns a rising run of notes and every row a step higher than the one before, louder as the building catches fire; first a clunk as the Q sign's
     digits land on 0. From 0.5 s a wall of 110 more small ones and a bright wash of chime noise piles on, peaks about 0.7 s and dies away by 1.3 s (low-passed as it goes) so that the
     next line, a second later, is clear. Stereo, 1.6 s."""
     d = 1.6
@@ -719,8 +727,10 @@ def sfx_callcascade():
         wx = (-450.0 if panel == 0 else 160.0) + 72.5 * (col + .5)              # the dome's x on the wall (world units, the room is 920 wide)
         f = pitches[min(7, col + row + panel)]
         place2(out, _call_ding(f, r.uniform(.13, .2)), .002 + i * .022, (.34 + .5 * i / 31) * r.uniform(.85, 1.0), .85 * wx / 460.0)
-    clack = _burst(1495, .05, 1200, 6500, .0015) * .8 + np.sin(2 * np.pi * 310 * tarr(.05)) * np.exp(-tarr(.05) / .012) * .6
-    place2(out, clack, 0.0, .5, 0.0)
+    clunk = np.zeros(int(.2 * SR))                                                 # the Q sign's digits land on 0 (the picture rolls them 99 to 0 from 27.30 to 27.48 s): a steel clunk
+    _place(clunk, _bolt(700, 1495), 0.0, 1.0)
+    _place(clunk, _thump(170, 95, .15, .045), 0.0, .7)
+    place2(out, clunk, 0.0, .6, 0.0)
     for i in range(110):
         at = .5 + r.uniform(0, .3)
         f = pitches[int(r.integers(0, 8))] * (2 if r.random() < .15 else 1)
@@ -894,7 +904,19 @@ def _tuned_events_path(src, out_dir):
     return dst
 
 
+_make_step = A6.make_step
+
+
+def _make_step_or_slippers(seed, foot):
+    """A6.main() sends every cue whose NAME STARTS WITH 'step' to make_step with the name's last letter as the foot (that is how the animation's 'stepL' and 'stepR' arrive). The script's
+    'steps' cue (Brenda's slippers) therefore arrived as foot 's', one generic footfall with a low thump, and sfx_steps never played; here it is routed to the effect."""
+    if foot == "s":
+        return BA.SFX["steps"]()
+    return _make_step(seed, foot)
+
+
 def main():
+    A6.make_step = _make_step_or_slippers
     argv = sys.argv[1:]
     for k, v in (("--script", "script_ep13.json"), ("--out", "build/ep13"), ("--var", "TIMELINE_EP13"), ("--music", "build_music13")):
         if k not in argv:

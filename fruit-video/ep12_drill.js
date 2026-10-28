@@ -208,8 +208,10 @@ function hallFixtures(lt) {
     ctx.save(); ctx.fillStyle = inten > .4 ? '#ff7a80' : `rgb(${150 + 60 * inten | 0},40,50)`; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, 3 * k);
     ctx.beginPath(); ctx.ellipse(lx, ly, r, r * .9, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
     if (inten > .02) { V2.glow(lx, ly, 300 * k, '255,40,50', .9 * inten, 'screen', .8); V2.glow(lx, ly, 1100 * k, '255,50,60', .45 * inten, 'screen', .5); }
-    { const fb = A12.box(lx - 30 * k, ly + 44 * k - 14 * k, lx + 30 * k, ly + 44 * k + 14 * k);
-      if (A12.whole(fb, 16) && !behindSomeone(fb)) UI.label('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', spacing: 2, hero: false }); } }
+    { const fb = A12.box(lx - 30 * k, ly + 44 * k - 14 * k, lx + 30 * k, ly + 44 * k + 14 * k), pa = p2(-HW, 276, Z - 32), pb = p2(-HW, 222, Z + 32),
+        plate = A12.box(Math.min(pa[0], pb[0]), pa[1], Math.max(pa[0], pb[0]), pb[1]), tw = UI.sizeOf('FIRE', { size: 24 * k, spacing: 2 }).w;
+      /* the wall is seen edge-on near the camera: the word (never sheared) is drawn only when the plate under it is wide enough to carry it */
+      if (A12.whole(fb, 16) && !behindSomeone(fb) && plate[2] - plate[0] >= tw + 10) UI.label('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', spacing: 2, hero: false }); } }
   // the wall clock, reading 3:41 like the pill
   wallClock(-HW + 3, 470, Z_CLK, -1, 41, 3, 46);
   // the supply closet on the right wall: the door swings into the closet, the dark room behind it with shelves, and the QUIET sign with its Q crossed out
@@ -229,7 +231,7 @@ function hallFixtures(lt) {
         wallQ(1, 304, 362, zf + 10, z1 - 10, '#fffdf6', 'rgba(25,16,30,.55)', 1.6);
         /* the plaque is set dressing on the wall: its word and the red slash through the Q are drawn only when the whole plaque is in the frame (never sliced by an edge) */
         const [qa, qb] = [p2(HW, 362, zf + 10), p2(HW, 304, z1 - 10)], qbox = A12.box(Math.min(qa[0], qb[0]), qa[1], Math.max(qa[0], qb[0]), qb[1]);
-        if (A12.whole(qbox, 20)) {
+        if (A12.whole(qbox, 20) && qbox[2] - qbox[0] >= UI.sizeOf('QUIET', { size: 34 * kk, font: 'Bangers' }).w + 12) {   /* the plaque is wide enough on the screen to carry the word */
           UI.label('QUIET', qx, qy, { size: 34 * kk, font: 'Bangers', fill: '#2b2530', hero: false });
           ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 3 * kk; ctx.beginPath(); ctx.moveTo(qx - 30 * kk, qy - 13 * kk); ctx.lineTo(qx - 14 * kk, qy + 14 * kk); ctx.stroke();
         }
@@ -258,7 +260,7 @@ function fingerState(lt) {
 // The wides carry the whole group; a character walking in or out of the frame (the Administrator in the run and the peel) is a transit and may be cut by the edge.
 const FOCAL = {
   alarm: ['str', 'adm'], a1: ['str', 'adm'], l1: ['lem'], c1: ['clm'], run: ['adm', 'clm'], m1: ['mng', 'clm', 'cran'], r1: ['cran', 'mng'], m2: ['cran', 'mng'],
-  r2: ['cran'], peel: ['lem', 'cran', 'mng'], s1: ['str'], a2: ['adm'], s2: ['str'], a3: ['adm'], s3: ['str'],
+  r2: ['cran'], peel: ['lem', 'cran'], s1: ['str'], a2: ['adm'], s2: ['str'], a3: ['adm'], s3: ['str'],
 };
 const shotHall = lt => lt < 1.5 ? 'alarm' : lt < 4.38 ? 'a1' : lt < 6.76 ? 'l1' : lt < 7.29 ? 'c1' : lt < 8.33 ? 'run' : lt < 11.04 ? 'm1' : lt < 12.70 ? 'r1' : lt < 14.56 ? 'm2' : lt < 15.91 ? 'r2' : lt < 16.86 ? 'peel' : lt < 18.95 ? 's1' : lt < 20.15 ? 'a2' : lt < 20.83 ? 's2' : lt < 21.71 ? 'a3' : lt < 22.79 ? 's3' : 'lot';
 function hallCast(lt, sh) {

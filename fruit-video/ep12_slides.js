@@ -106,6 +106,7 @@ function drawSlide(x, y, w, h, t) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
   ctx.fillStyle = '#fdfbf4'; ctx.fillRect(0, 0, 1000, Hd);
   if (idx === 7) { ctx.fillStyle = '#05060a'; ctx.fillRect(0, 0, 1000, Hd); ctx.restore(); return; }
+  if (!whole) { ctx.restore(); return; }   /* the frame would slice the picture: the screen is a plain lit sheet, with no half of a timer ring or a clock on it */
   const rolling = SLT.down < 1;   /* while the screen is still coming down its picture is revealed from the top: the text is cut by the roll on purpose */
   const L = (str, cx, cy, o = {}) => { if (whole) UI.label(str, cx, cy, Object.assign({ fill: INK, maxW: 900, crop: rolling }, o)); };
   const left = (str, cy, o = {}) => L(str, 60, cy, Object.assign({ align: 'left' }, o));
