@@ -281,26 +281,142 @@ function drawHall(lt, ctt, states) {
   }
 }
 
+// ================================================================== Strawberry on the radio: the earpiece with a short coiled wire (accessory fp13_ear)
+EXT.acc.fp13_ear = (o, k, t, layer) => {
+  if (layer !== 'front') return;
+  const sd = o.earSide ?? -1, rx = k.rx, ry = k.ry, led = clamp01(o.earLed || 0);
+  ctx.save(); ctx.scale(sd, 1);   /* drawn for the screen-right side, mirrored for the left */
+  // the coiled cord: from the bud down the edge of the body to the push-to-talk clip on her chest
+  const x0 = rx * .93, y0 = -ry * .12, x1 = rx * .56, y1 = ry * .36;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  const N = 34;
+  for (let i = 0; i <= N; i++) {
+    const u = i / N, bx = lerp(x0, x1, u * u * (3 - 2 * u)) + Math.sin(u * 3) * 8, by = lerp(y0, y1, u);
+    const co = Math.sin(u * 62) * 5.2;
+    i ? ctx.lineTo(bx + co * .5, by + co) : ctx.moveTo(bx, by);
+  }
+  ctx.strokeStyle = 'rgba(8,10,20,.92)'; ctx.lineWidth = 4.6; ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,140,190,.45)'; ctx.lineWidth = 1.6; ctx.stroke();
+  // the clip
+  ctx.save(); ctx.translate(x1, y1 + 8); ctx.rotate(-.12);
+  ctx.fillStyle = '#12151f'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; rr(-9, -4, 18, 28, 4); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = led > .05 ? `rgba(77,227,255,${.5 + .5 * led})` : '#1d4a58'; ell(0, 4, 3.2, 3.2); ctx.fill();
+  ctx.fillStyle = '#2a3042'; rr(-5, 11, 10, 8, 2); ctx.fill();
+  ctx.restore();
+  // the bud: a dark capsule on the side of her head with a little cyan light
+  ctx.save(); ctx.translate(rx * .985, y0 + 2); ctx.rotate(.18);
+  ctx.fillStyle = '#10131d'; ctx.strokeStyle = INK; ctx.lineWidth = 3.2; rr(-7, -17, 15, 34, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#2c3347'; rr(-3, -13, 6, 12, 3); ctx.fill();
+  ctx.fillStyle = led > .05 ? `rgba(77,227,255,${.6 + .4 * led})` : '#1d4a58'; ell(0, 9, 2.8, 2.8); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+};
+
+// ================================================================== Strawberry's path and the slow-motion walk
+const STRAW_ACC = ['steth', 'bandage7', 'perdiem9', 'fp13_ear'];
+const V0 = 290, STRIDE = 48, Z_START = 1300;
+const herZ = lt => { const c0 = B('lasers').s; return lt <= c0 ? Z_START : Z_START + V0 * (ct(lt) - c0); };
+const herGait = lt => { const c0 = B('lasers').s; return lt <= c0 ? 0 : V0 * (ct(lt) - c0); };
+const herX = lt => 0;
+/* where a character standing at world (X, Z) is drawn: feet position and scale */
+function placeAt(X, Z) { const p = P3(X, 0, Z); return p ? { x: p[0], y: p[1], s: p[2], depth: p[3] } : null; }
+
+/* the camera: a point to look at, the angle around it (0 = straight ahead of her, looking back along the hall), distance, height, focal length, and where on the frame the point lands */
+function orbit(px, py, pz, theta, d, h, F, sx, sy) {
+  const cx = px + Math.sin(theta) * d, cz = pz + Math.cos(theta) * d;
+  const yaw = Math.atan2(px - cx, pz - cz), dh = Math.hypot(px - cx, pz - cz), pitch = Math.atan2(h - py, dh);
+  return { x: cx, y: h, z: cz, yaw, pitch, F, cx: sx, cy: sy };
+}
+const D2R = Math.PI / 180;
+
+// ================================================================== shots
+const wordT = (id, word, fb = 0) => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id), w = l && l.words.find(x => x[0].toLowerCase().replace(/[^a-z]/g, '').includes(word)); return w ? l.s - CUR.start + w[1] : fb; };
+const CUTS = () => { const L = B('lasers'); return { lr1: B('lr1').s, sr1: B('sr1').s - .04, l1: L.s, l2: L.s + 1.1, l3: L.s + 2.15, lr2: B('lr2').s - .03, sr2: B('sr2').s - .05, end: B('end').s - .02 }; };
+function shotId(lt) {
+  const c = CUTS();
+  return lt < c.lr1 ? 'open' : lt < c.sr1 ? 'lr1' : lt < c.l1 ? 'sr1' : lt < c.l2 ? 'L1' : lt < c.l3 ? 'L2' : lt < c.lr2 ? 'L3' : lt < c.sr2 ? 'lr2' : lt < c.end ? 'sr2' : 'end';
+}
+/* the whole camera for a moment: { view, roll, zoom, shot, ... } */
+function viewFor(lt) {
+  const dbg = window.__HALLDBG; if (dbg && dbg.view) return Object.assign({ shot: 'dbg', roll: 0, zoom: 1, dof: 0, sil: 0, reflect: false }, dbg);
+  const sh = shotId(lt), c = CUTS(), L = B('lasers'), zH = herZ(lt), u = lt - L.s;
+  const v = { shot: sh, roll: 0, zoom: 1, dof: 0, sil: 0, reflect: true };
+  switch (sh) {
+    case 'open': {
+      const k = easeIO(clamp01(lt / c.lr1));
+      v.view = { x: 0, y: 330, z: lerp(-300, -90, k), yaw: 0, pitch: .02, F: 1400, cx: W / 2, cy: 800 }; v.sil = 1; break;
+    }
+    case 'lr1': {
+      const k = clamp01((lt - c.lr1) / (c.sr1 - c.lr1));
+      v.view = orbit(0, 226, zH, -14 * D2R, lerp(620, 540, easeIO(k)), 205, 1400, 560, 760); v.dof = 9; v.roll = -.012; break;
+    }
+    case 'sr1': {
+      const k = clamp01((lt - c.sr1) / (c.l1 - c.sr1));
+      v.view = orbit(0, 226, zH, 11 * D2R, lerp(500, 430, easeOut(k)), 215, 1400, 520, 760); v.dof = 10; v.roll = .03; break;
+    }
+    case 'L1': {
+      const k = clamp01((lt - c.l1) / (c.l2 - c.l1));
+      v.view = orbit(0, 200, zH, lerp(-30, -12, easeIO(k)) * D2R, lerp(640, 600, k), 70, 1000, 540, 800); v.dof = 3; v.roll = lerp(-.035, -.01, k); break;
+    }
+    case 'L2': {
+      const k = clamp01((lt - c.l2) / (c.l3 - c.l2));
+      v.view = orbit(-40, 190, zH, lerp(58, 74, easeIO(k)) * D2R, 430, 120, 760, 540, 790); v.roll = lerp(.06, .02, k); v.side = true; break;
+    }
+    case 'L3': {
+      const k = clamp01((lt - c.l3) / (c.lr2 - c.l3));
+      v.view = orbit(0, 150, zH, lerp(34, 14, easeIO(k)) * D2R, lerp(1500, 1100, easeIO(k)), lerp(380, 250, easeIO(k)), 1400, 540, lerp(740, 800, k)); v.roll = lerp(-.02, 0, k); v.reflect = false; break;
+    }
+    case 'lr2': {
+      const k = clamp01((lt - c.lr2) / (c.sr2 - c.lr2));
+      v.view = orbit(0, 205, zH, lerp(-9, 6, k) * D2R, 760, 165, 1300, 540, 790); v.dof = 2; break;
+    }
+    case 'sr2': {
+      const k = clamp01((lt - c.sr2) / (c.end - c.sr2));
+      v.view = orbit(0, 226, zH, -6 * D2R, lerp(600, 520, easeIO(k)), 210, 1400, 540, 760); v.dof = 9; break;
+    }
+    default: {
+      const k = clamp01((lt - c.end) / (CUR.dur - c.end));
+      v.view = { x: 0, y: 300, z: lerp(-500, -380, k), yaw: 0, pitch: .01, F: lerp(2100, 2400, easeIO(k)), cx: W / 2, cy: 790 }; v.sil = 1; break;
+    }
+  }
+  return v;
+}
+
 // ================================================================== the scene
-const DBG = () => window.__HALLDBG || null;
 const SC = {
-  shot: lt => 'wide',
+  shot: lt => shotId(lt),
   cam(lt) {
-    const dbg = DBG();
-    setView(dbg && dbg.view ? dbg.view : { x: 0, y: 330, z: -180, yaw: 0, pitch: 0, F: 1400, cx: W / 2, cy: 800 });
+    const v = viewFor(lt);
+    setView(v.view);
+    CAM.r = v.roll; CAM.z = v.zoom;
   },
   draw(lt) {
-    const ctt = ct(lt), dbg = DBG(), states = BEAMS.map(b => beamState(b, dbg && dbg.lt != null ? dbg.lt : lt, ctt));
+    const ctt = ct(lt), v = viewFor(lt), states = BEAMS.map(b => beamState(b, lt, ctt));
     ctx.fillStyle = '#07050d'; ctx.fillRect(-200, -200, W + 400, H + 400);
-    drawHall(lt, ctt, states);
-    for (const b of BEAMS) { const st = states[b.i]; if (!st.on) continue; drawBeamPart(b, 0, st.ext, st.I, { mirror: true, k: .35, n: 6 }); }
-    for (const b of BEAMS) { const st = states[b.i]; if (!st.on) continue; drawBeamPart(b, 0, st.ext, st.I); drawBeamPackets(b, st.I, ctt, st.ext); }
+    V2.dof(v.dof, () => {
+      drawHall(lt, ctt, states);
+      for (const b of BEAMS) { const st = states[b.i]; if (st.on) drawBeamPart(b, 0, st.ext, st.I, { mirror: true, k: .22, n: 6 }); }
+    });
+    // her
+    const zH = herZ(lt), pl = placeAt(herX(lt), zH);
+    V2.setLight({ key: [.4, -.7], keyColor: '#ff7a88', keyA: .3, rim: '#4de3ff', rimA: .55, shadow: '#0a0618', shadowA: .5, amb: '#2a2f6a', ambA: .12, bounce: '#ff3b4e', bounceA: .22 });
+    V2.opts.reflect = v.reflect;
+    for (const b of BEAMS) { const st = states[b.i]; if (st.on) drawBeamPart(b, 0, st.ext, st.I); }
+    if (pl) drawStraw(lt, ctt, v, pl);
     drawDust(ctt, states);
   },
-  fx: lt => ({ bloom: .8, vignette: .55, grain: .05, contrast: .22 }),
+  fx: lt => ({ bloom: .85, vignette: .56, grain: .05, contrast: .22, tint: [['#28306a', .22, 'soft-light']] }),
   blur: lt => 1,
   over(lt) {},
 };
+function drawStraw(lt, ctt, v, pl) {
+  const L = B('lasers'), walking = lt >= L.s, gait = herGait(lt);
+  const o = A11.straw({ x: pl.x, y: pl.y, s: pl.s, id: 'straw', who: 'straw', acc: STRAW_ACC, expr: 'dead', t: ctt, stride: STRIDE, look: [0, .04], earSide: -1 });
+  if (walking) { o.gaitW = gait; o.axis = v.side ? 'x' : 'z'; o.dir = 1; }
+  if (v.sil) o.noFace = true;
+  drawChar(o);
+}
 window.__EP13_SCENES = window.__EP13_SCENES || {};
 window.__EP13_SCENES.hall = SC;
 })();

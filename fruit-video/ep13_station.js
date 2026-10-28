@@ -75,14 +75,14 @@ const PAL = {
 const LAY = {
   zb: 1900, hw: 820, ch: 1000, rail: 120,
   cam: { f: 1400, cy: 360, hy: 720 },
-  doorway: { x0: -690, x1: -380, y1: 560 },
-  hallw: { cx: -535, hw: 330, ch: 700, z1: 6400 },             /* the hall beyond the doorway: centred at X -535, running away from the back wall */
-  qsign: { x0: -690, x1: -380, y0: 800, y1: 930 },
-  score: { x0: -250, x1: 270, y0: 770, y1: 970 },
-  clock: { X: 500, Y: 880, r: 70 },
-  board: { x0: -310, x1: 320, y0: 410, y1: 740 },              /* the schedule whiteboard: also the projection wall */
-  call: { x0: 380, x1: 670, y0: 590, y1: 760 },
-  win: { x0: 360, x1: 690, y0: 150, y1: 540 },
+  doorway: { x0: -690, x1: -310, y1: 570 },
+  hallw: { cx: -500, hw: 330, ch: 700, z1: 6400 },             /* the hall beyond the doorway: centred at X -500, running away from the back wall */
+  qsign: { x0: -690, x1: -390, y0: 800, y1: 920 },
+  score: { x0: -340, x1: 180, y0: 770, y1: 970 },
+  call: { x0: 230, x1: 520, y0: 800, y1: 960 },
+  clock: { X: 612, Y: 880, r: 60 },
+  board: { x0: -250, x1: 270, y0: 420, y1: 740 },              /* the schedule whiteboard: also the projection wall */
+  win: { x0: 330, x1: 690, y0: 150, y1: 560 },
   counter: { x0: -120, x1: 720, z0: 1380, z1: 1520, top: 190 },
   seatLemon: { X: 340, Z: 1600, seat: 150 },
   cartAt: { X: -150, Z: 1260 },
@@ -120,18 +120,18 @@ const clipPoly = pts => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.li
 function sky(f, t, k, sunk) {
   /* f = the four corners [bottom-left, bottom-right, top-right, top-left] of the glass, the clip is already set */
   const [bx, by] = f[0], [rx] = f[1], [, ty] = f[2], w = rx - bx, h = by - ty;
-  const top = mixh('#5c78c8', '#1c2358', sunk), mid = mixh('#ffb36a', '#8a4a8a', sunk), low = mixh('#ffe2a0', '#ff8a5a', sunk), hor = mixh('#fff0c8', '#ffb070', sunk);
-  ctx.fillStyle = grad(0, ty, 0, by, [[0, top], [.45, mid], [.8, low], [1, hor]]); ctx.fillRect(bx - 4, ty - 4, w + 8, h + 8);
-  const sx = bx + w * .34, sy = by - h * (.3 - .12 * sunk);
-  V2.glow(sx, sy, h * 1.1, sunk > .5 ? '255,170,110' : '255,226,160', .7 - .25 * sunk, 'screen', 1.2);
-  ctx.fillStyle = `rgba(255,${244 - 60 * sunk | 0},${200 - 80 * sunk | 0},${.95 - .2 * sunk})`; ctx.beginPath(); ctx.arc(sx, sy, h * .07, 0, TAU); ctx.fill();
-  A7.clouds(t, ty + h * .12, ty + h * .55, { n: 4, tint: '255,200,150', belly: '150,90,130', a: .55, speed: 3, seed: 5, scale: .42 });
+  const S0 = [[0, '#34428c'], [.32, '#8a58a0'], [.58, '#ff8a5a'], [.82, '#ffb070'], [1, '#ffd9a0']], S1 = [[0, '#10163e'], [.34, '#34306e'], [.62, '#9a4878'], [.86, '#ff6a4a'], [1, '#ff8a5a']];
+  ctx.fillStyle = grad(0, ty, 0, by, S0.map(([o, c], i) => [o, mixh(c, S1[i][1], sunk)])); ctx.fillRect(bx - 4, ty - 4, w + 8, h + 8);
+  const sx = bx + w * .3, sy = by - h * (.3 - .1 * sunk);
+  V2.glow(sx, sy, h * .9, sunk > .5 ? '255,150,100' : '255,206,140', .55 - .2 * sunk, 'screen', 1.0);
+  ctx.fillStyle = `rgba(255,${240 - 70 * sunk | 0},${196 - 90 * sunk | 0},${.95 - .2 * sunk})`; ctx.beginPath(); ctx.arc(sx, sy, h * .065, 0, TAU); ctx.fill();
+  A7.clouds(t, ty + h * .2, ty + h * .6, { n: 4, tint: '255,196,140', belly: '150,80,120', a: .6, speed: 3, seed: 5, scale: .42 });
   // the lot across the way: a roofline, a tree line, two parked cars
   ctx.fillStyle = mixh('#5a3a4a', '#24204a', sunk); ctx.beginPath(); ctx.moveTo(bx, by - h * .17);
   for (let i = 0; i <= 14; i++) ctx.lineTo(bx + w * i / 14, by - h * (.17 + .06 * Math.sin(i * 1.9) + .035 * Math.sin(i * 4.3)));
   ctx.lineTo(rx, by); ctx.lineTo(bx, by); ctx.fill();
   ctx.fillStyle = mixh('#3a2a3a', '#161434', sunk); ctx.fillRect(bx, by - h * .11, w, h * .11);
-  for (const [cx, cw, c] of [[.18, .2, '#9a2d46'], [.62, .24, '#2c6f9a']]) { ctx.fillStyle = mixh(c, '#1a1030', .45 + .3 * sunk); rr(bx + w * cx, by - h * .17, w * cw, h * .1, h * .03); ctx.fill(); }
+  for (const [cx, cw, c] of [[.12, .3, '#9a2d46'], [.58, .32, '#2c6f9a']]) { ctx.fillStyle = mixh(c, '#1a1030', .45 + .3 * sunk); rr(bx + w * cx, by - h * .17, w * cw, h * .1, h * .03); ctx.fill(); }
 }
 function windowDusk(t, o = {}) {
   const { x0, x1, y0, y1 } = LAY.win, zb = LAY.zb, sunk = cl01(o.sky ?? 0), k = kzP(zb);
@@ -147,7 +147,7 @@ function windowDusk(t, o = {}) {
   ctx.restore();
   onZ(zb, x0 - 30, x1 + 30, y0 - 34, y0 - 12, '#e4dac6', INKC, 2);
   const c = p2((x0 + x1) / 2, (y0 + y1) / 2, zb);
-  V2.glow(c[0], c[1], 520 * k, '255,190,120', .34 * (1 - .5 * sunk) * (o.glow ?? 1), 'screen', .9);
+  V2.glow(c[0], c[1], 420 * k, '255,170,100', .2 * (1 - .5 * sunk) * (o.glow ?? 1), 'screen', .9);
 }
 
 // ------------------------------------------------------------------ the boards on the back wall
@@ -157,7 +157,7 @@ function scoreboard(cx, cy, w, h, value = 0, o = {}) {
   UI.panel([x, y, w, h], { fill: ['#1b1d26', '#0f1118'], stroke: '#cfd3da', lw: Math.max(2, h * .03), r: h * .1, shadow: h * .1, id, kind: 'sign', pad: h * .08 });
   // the title block on the left: two lines, left aligned on one margin
   const tw = w * .56, tx = x + h * .12;
-  UI.lines(['BREAKS TAKEN', 'TODAY'], tx + tw / 2, cy - h * .06, { align: 'center', size: h * .21, weight: 900, fill: '#f6f3e8', spacing: h * .012, lh: 1.22, v: 'mid', hero, cid: id, center: false, maxW: tw });
+  UI.lines(['BREAKS TAKEN', 'TODAY'], tx + tw / 2, cy - h * .06, { align: 'center', size: h * .225, weight: 900, fill: '#f6f3e8', spacing: h * .012, lh: 1.22, v: 'mid', hero, cid: id, center: false, maxW: tw });
   // the number card on the right: a dark card with a hinge line and the digit rolling inside it
   const cw = h * .66, ch2 = h * .8, cxx = x + w - h * .1 - cw / 2, cyy = cy;
   ctx.save(); rr(cxx - cw / 2, cyy - ch2 / 2, cw, ch2, h * .07); ctx.fillStyle = grad(0, cyy - ch2 / 2, 0, cyy + ch2 / 2, [[0, '#3b3f4d'], [.5, '#2a2d38'], [.5, '#1d2029'], [1, '#2a2d38']]); ctx.fill();
@@ -232,18 +232,18 @@ for (let i = 0; i < 12; i++) HDOORS.push({ z: 2330 + i * 400, c: ['#9d6b74', '#6
 const PING_DOOR = 3;                                                  /* the door whose dome dings in the first shot */
 function hallBeyond(t, o = {}) {
   const D = LAY.doorway, H = LAY.hallw, zb = LAY.zb, XL = H.cx - H.hw, XR = H.cx + H.hw, CH = H.ch, zE = H.z1, rgbF = '184,196,218', fogC = '#b8c4da';
-  const fa = .5, fz = z => Math.pow(cl01((z - zb) / (zE - zb)), .8) * fa, fogc = (c, z) => rgba(mix(c, fogC, fz(z)), 1);
+  const fa = .42, fz = z => Math.pow(cl01((z - zb) / (zE - zb)), .8) * fa, fogc = (c, z) => rgba(mix(c, fogC, fz(z)), 1);
   const wq = (y0, y1, z0, z1, fill, st, lw) => poly([p2(XL, y0, z0), p2(XL, y1, z0), p2(XL, y1, z1), p2(XL, y0, z1)], fill, st, lw);
   const wg = (y, base, boost = 1) => { const xa = p2(XL, y, zb)[0], xb = p2(XL, y, zE)[0], g = ctx.createLinearGradient(xa, 0, xb, 0); for (let i = 0; i <= 8; i++) { const z = lerp(zb, zE, i / 8), off = cl01((p2(XL, y, z)[0] - xa) / ((xb - xa) || 1)); g.addColorStop(off, rgba(mix(mix(base, '#ffffff', 0), fogC, fz(z)).map(v => Math.min(255, v * boost)), 1)); } return g; };
   ctx.save(); clipPoly(wallPoly(zb, D.x0, 0, D.x1, D.y1));
   ctx.fillStyle = fogC; ctx.fillRect(-100, -100, W + 200, H + 200);
   // end wall, ceiling, floor
-  onZ(zE, XL, XR, 0, CH, fogc('#e9e0cb', zE));
+  onZ(zE, XL, XR, 0, CH, fogc('#dfe4ee', zE));
   quad3([XL, CH, zb], [XR, CH, zb], [XR, CH, zE], [XL, CH, zE], grad(0, p2(0, CH, zb)[1], 0, p2(0, CH, zE)[1], [[0, '#f2f2ee'], [1, fogc('#e6e4e0', zE)]]));
-  quad3([XL, 0, zb], [XR, 0, zb], [XR, 0, zE], [XL, 0, zE], grad(0, p2(0, 0, zb)[1], 0, p2(0, 0, zE)[1], [[0, '#d6ccb9'], [1, fogc('#a89e8b', zE)]]));
+  quad3([XL, 0, zb], [XR, 0, zb], [XR, 0, zE], [XL, 0, zE], grad(0, p2(0, 0, zb)[1], 0, p2(0, 0, zE)[1], [[0, '#bcc3d2'], [1, fogc('#9aa3b8', zE)]]));
   // the left wall: wall above the rail, wainscot below, rail and baseboard
-  wq(110, CH, zb, zE, wg(CH * .55, '#efe6d0'));
-  wq(0, 110, zb, zE, wg(55, '#4f8c93'));
+  wq(110, CH, zb, zE, wg(CH * .55, '#e4e9f2'));
+  wq(0, 110, zb, zE, wg(55, '#3f7f88'));
   wq(104, 116, zb, zE, wg(110, '#b98a5a')); wq(0, 22, zb, zE, wg(11, '#7d6a5a'));
   ctx.strokeStyle = 'rgba(255,240,210,.35)'; ctx.lineWidth = 2; { const a = p2(XL + 16, 170, zb), b = p2(XL + 16, 170, zE); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }   /* the handrail */
   // doors and domes, far to near
@@ -404,7 +404,7 @@ function station(lt, o = {}) {
   hallBeyond(t, { ping: o.ping });
   windowDusk(t, { sky: sunk });
   whiteboard(o.board || 'schedule');
-  const sb = wallBox(zb, L.score.x0, L.score.y0, L.score.x1, L.score.y1), hs = sb[3] * .21 * scr >= 31;
+  const sb = wallBox(zb, L.score.x0, L.score.y0, L.score.x1, L.score.y1), hs = sb[3] * .225 * scr >= 31;
   scoreboard(sb[0] + sb[2] / 2, sb[1] + sb[3] / 2, sb[2], sb[3], o.breaks ?? 0, { roll: o.breaksRoll, hero: hs });
   const qf = qSign(o.hours ?? 41, { flash: o.qFlash ?? 0, flicker: o.qFlicker ?? 1 });
   wallClock(L.clock.X, L.clock.Y, zb - 6, 0, o.min ?? 2, o.hr ?? 7, L.clock.r);
@@ -413,7 +413,8 @@ function station(lt, o = {}) {
   callBoard(cb[0], cb[1], cb[2], cb[3], lit_, { t, hero: false });
   // the low sun: a warm wash on the wall, the window thrown across the floor in front of the counter, a soft shaft and dust motes in it
   const sun = (o.sun ?? 1) * (1 - .55 * sunk), wc = wc0;
-  V2.glow(wc[0], wc[1] + 60, 760 * kzP(zb), sunk > .5 ? '255,130,90' : '255,170,100', .2 * (1 - .3 * sunk), 'screen', .3);
+  V2.glow(wc[0], wc[1] + 60, 700 * kzP(zb), sunk > .5 ? '255,130,90' : '255,170,100', .12 * (1 - .3 * sunk), 'screen', .3);
+  V2.addLight({ x: wc[0], y: wc[1], r: 1100, color: sunk > .5 ? '255,130,90' : '255,170,100', a: .62 * (1 - .4 * sunk) });
   if (sun > .01) {
     const fl = (X, Y) => p2(X - Y * 1.0, 0, zb - Y * 2.1);   /* where the point (X, Y) of the glass lands on the floor: left and toward the camera, longer for higher points */
     sunPatch([fl(L.win.x0, L.win.y1 * .9), fl(L.win.x1, L.win.y1 * .9), fl(L.win.x1, L.win.y0), fl(L.win.x0, L.win.y0)], .34 * sun, sunk > .5 ? '255,140,100' : '255,190,112', 6);

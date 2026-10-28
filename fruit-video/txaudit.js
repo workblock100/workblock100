@@ -158,8 +158,10 @@ const TXA = (() => {
       if (x0 < rx0 + pad - tol || x1 > rx1 - pad + tol || y0 < ry0 + pad - tol || y1 > ry1 - pad + tol) V.push(`text ${nm(r)} runs outside its ${c.kind} "${r.o.cid}"`);
       else if (r.o.center) {
         const dx = ((x0 + x1) / 2 - (rx0 + rx1) / 2) * sc;
-        const my = r.capH ? (r.ref.y - r.capH / 2) : (y0 + y1) / 2;   // a baseline-placed label is centred on its cap band, not on its descenders
-        const dy = r.capH ? (my - (ry0 + ry1) / 2) * sc : ((y0 + y1) / 2 - (ry0 + ry1) / 2) * sc;
+        /* a baseline-placed label is centred on its cap band, not on its descenders; ref.y is in the text's own frame (text() moves the origin to the label), so the cap-band centre is carried through the run's transform into the container's frame */
+        let my = (y0 + y1) / 2;
+        if (r.capH) { const f = r.ref, m = f.m, u = f.x, v = f.y - r.capH / 2; my = inv([m[0] * u + m[2] * v + m[4], m[1] * u + m[3] * v + m[5]])[1]; }
+        const dy = (my - (ry0 + ry1) / 2) * sc;
         if (Math.abs(dx) > 2.5 || (r.o.centerY !== false && Math.abs(dy) > 3.5)) V.push(`text ${nm(r)} is off centre in its ${c.kind} "${r.o.cid}" [${dx.toFixed(1)},${dy.toFixed(1)}]`);
       }
     }

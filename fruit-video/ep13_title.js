@@ -51,6 +51,7 @@ function sched() {
 /* the dial reading in ticks (decreasing: the dial turns clockwise); the index at the top reads this number */
 function dialVal(lt) {
   const S = sched();
+  lt = Math.max(lt, S.t0);   /* the dial waits until the sound starts */
   if (lt < S.tB0) {
     const s = seg(lt, S.t0, S.tB0), DA = S.wB * (S.tB0 - lt) + (S.w0 - S.wB) * S.T_A * Math.pow(1 - s, 3) / 3;
     return LOCK_AT + S.M + DA;

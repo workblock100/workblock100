@@ -166,38 +166,42 @@ def sfx_vaultdial():
 
 
 def sfx_clunk():
-    """A steel bolt shot home. A hard strike (broadband, 2 ms) as the bolt end meets the keeper, the keeper ringing like a plate (five inharmonic modes, 330 to 3000 Hz, the high
-    ones dying first), the door frame answering in the low mids (150 to 200 Hz, so a phone can play it) and, 40 ms later, the second small knock of the bolt seating. The first call
-    (the title: the vault dial locking) is the heavy one, with a longer ring and a low weight under it; the other two (the badge reader's locks) are lighter and a little higher."""
+    """A steel bolt shot home. A hard strike (broadband, 2 ms) as the bolt end meets the keeper, the keeper housing ringing like a plate (five inharmonic modes between 640 Hz and
+    5 kHz, the high ones dying first, so it is metal and not a drum), the door frame answering in the low mids (150 to 200 Hz, short, so a phone can play it without a boom) and,
+    40 ms later, the second small knock of the bolt seating. The first call (the title: the vault dial locking) is the heavy one, with a longer ring and a low weight under it; the
+    other two (the badge reader's locks) are lighter and a little higher."""
     k = _nth("clunk")
     r = rng6(1320 + k)
     heavy = k == 0
     d = 1.0 if heavy else .6
     t = tarr(d)
-    f0 = (330 if heavy else 470) * r.uniform(.97, 1.04)
-    modes = ((1.0, 1.0, .10), (2.28, .78, .075), (3.74, .52, .052), (5.45, .34, .035), (7.9, .18, .022))
-    ring = _ring(f0, modes, d, 1.9 if heavy else 1.0, k)
+    sh = r.uniform(.97, 1.04)
+    if heavy:
+        modes = ((640, 1.0, .16), (1480, .85, .12), (2390, .75, .09), (3500, .5, .06), (5000, .3, .04))
+    else:
+        modes = ((820, 1.0, .09), (1870, .8, .065), (3000, .65, .045), (4400, .4, .03))
+    ring = sum(a * np.sin(2 * np.pi * f * sh * t + 1.7 * i + k) * np.exp(-t / tau) for i, (f, a, tau) in enumerate(modes))
     strike = _burst(1330 + k, d, 800, 8000, .0025) * 1.1 + _burst(1335 + k, d, 2500, 9500, .0009) * .5
     fb = 150 if heavy else 205
-    body = np.sin(2 * np.pi * np.cumsum(fb * (1 + .2 * np.exp(-t / .02))) / SR) * np.exp(-t / (.06 if heavy else .035)) * (.7 if heavy else .55)
-    x = strike + ring * .75 + body
+    body = np.sin(2 * np.pi * np.cumsum(fb * (1 + .2 * np.exp(-t / .02))) / SR) * np.exp(-t / (.05 if heavy else .03)) * (.4 if heavy else .3)
+    x = strike + ring * (.7 if heavy else .65) + body
     seat = int(.04 * SR)                                              # the bolt seating: a smaller, lower knock
-    tail = (_burst(1340 + k, d, 600, 5000, .003) * .55 + _ring(f0 * .74, modes[:3], d, 1.0, k + 3) * .4)[:len(x) - seat]
+    tail = (_burst(1340 + k, d, 600, 5000, .003) * .55 + sum(a * np.sin(2 * np.pi * f * .74 * t + i) * np.exp(-t / (tau * .8)) for i, (f, a, tau) in enumerate(modes[:3])) * .35)[:len(x) - seat]
     x[seat:] += tail
     if heavy:
-        x += np.sin(2 * np.pi * np.cumsum(_glide(74, 52, d)) / SR) * np.exp(-t / .2) * .5 * np.minimum(1, t / .004)
+        x += np.sin(2 * np.pi * np.cumsum(_glide(74, 52, d)) / SR) * np.exp(-t / .16) * .22 * np.minimum(1, t / .004)
     return norm6(_fade_end(x, int(.12 * SR)), .85)
 
 
 def _scratch_source(seed):
-    """The 'record' that gets scratched: a bar of dry funk (a bass note, a dominant-nine stab of saws, a hat on every eighth), long enough to be read back and forth."""
+    """The 'record' that gets scratched: a bar of dry funk (an A minor stab of saws that has a clear pitch to bend, a hat on every eighth), long enough to be read back and forth."""
     L = 1.4
     t = tarr(L)
     x = np.zeros(len(t))
-    for m, a in ((40, 1.0), (52, .5), (64, .55), (68, .45), (71, .45), (74, .4)):
+    for m, a in ((45, .8), (57, 1.0), (64, .55), (69, .35)):
         f = midi(m)
         x += a * (2 * ((f * t) % 1) - 1) + a * .6 * (2 * ((f * 1.004 * t) % 1) - 1)
-    x = _lp4(x, 3600, 2) * (.65 + .35 * np.sign(np.sin(2 * np.pi * 4.0 * t + 1)))
+    x = _lp4(x, 3600, 2) * (.8 + .2 * np.sign(np.sin(2 * np.pi * 4.0 * t + 1)))
     for k in range(int(L / .125)):
         _place(x, _burst(seed + k, .03, 5500, 12000, .006), k * .125, .45)
     return x / np.abs(x).max()
@@ -313,12 +317,12 @@ def sfx_cardslam():
     r = rng6(1340 + k)
     d = .36
     t = tarr(d)
-    slap = _burst(1341 + k, d, 700, 6500, .0075) * 1.0
-    snap = _burst(1342 + k, d, 3000, 9000, .0014) * .45
-    f1 = 190 * r.uniform(.94, 1.06)
-    knock = (np.sin(2 * np.pi * f1 * t) * np.exp(-t / .045) + .5 * np.sin(2 * np.pi * f1 * 2.17 * t) * np.exp(-t / .025)) * .6
-    weight = _sin_of(_glide(150, 78, d)) * np.exp(-t / .07) * .7
-    puff = _lp4(noise6(d, 1343 + k), 1400, 2) * np.exp(-t / .035) * .22
+    slap = _burst(1341 + k, d, 700, 6500, .0075) * 2.4
+    snap = _burst(1342 + k, d, 3000, 9000, .0014) * 1.0
+    f1 = 200 * r.uniform(.94, 1.06)
+    knock = (np.sin(2 * np.pi * f1 * t) * np.exp(-t / .04) + .7 * np.sin(2 * np.pi * f1 * 2.17 * t) * np.exp(-t / .025) + .35 * np.sin(2 * np.pi * f1 * 3.4 * t) * np.exp(-t / .015)) * .5
+    weight = _sin_of(_glide(150, 78, d)) * np.exp(-t / .06) * .34
+    puff = _lp4(noise6(d, 1343 + k), 1400, 2) * np.exp(-t / .035) * .3
     x = slap + snap + knock + weight + puff
     for j, (at, g) in enumerate(((.058, .13), (.11, .08))):
         _place(x, _burst(1344 + 7 * k + j, .02, 900, 4500, .004), at, g)
@@ -336,10 +340,10 @@ def sfx_laserhum():
     L = int(round(SR / 412))
     a = np.zeros(L + 1)
     a[0], a[L] = 1.0, -.975
-    wire = _bp4(signal.lfilter([1.0], a, _bp4(noise6(d, 1391), 250, 3500)), 300, 3000)
+    wire = _bp4(signal.lfilter([1.0], a, _bp4(noise6(d, 1391), 250, 3500)), 300, 2200)
     whine = np.sin(2 * np.pi * 2431 * t + .5 * np.sin(2 * np.pi * .4 * t)) + np.sin(2 * np.pi * 2491 * t)
     swell = np.interp(t, [0, .32, 1.0, 1.5], [0, 1, .85, 0]) * (1 + .1 * np.sin(2 * np.pi * 6.5 * t))
-    x = (mains / np.abs(mains).max() * .55 + wire / np.abs(wire).max() * .3 + whine * .07) * swell
+    x = (mains / np.abs(mains).max() * .55 + wire / np.abs(wire).max() * .26 + whine * .07) * swell
     return norm6(x, .4)
 
 
@@ -361,17 +365,17 @@ def sfx_laserpass():
     return norm6(_edge(x, .0005, .05), .5)
 
 
-def _hb_thump(f0, f1, d, tau, seed, knock=.3):
+def _hb_thump(f0, f1, d, tau, seed, knock=.5):
     """One half of a heartbeat heard through a chest: a sine that sags from f0 to f1, a little saturation (the harmonics a phone speaker can play) and a muffled knock."""
     t = tarr(d)
     body = np.sin(2 * np.pi * np.cumsum(_glide(f0, f1, d)) / SR) * np.exp(-t / tau)
-    body = np.tanh(1.7 * body) / np.tanh(1.7)
-    thump = _lp4(noise6(d, seed), 320, 2) * np.exp(-t / (tau * .5)) * knock
+    body = np.tanh(3.2 * body) / np.tanh(3.2)
+    thump = _lp4(noise6(d, seed), 480, 2) * np.exp(-t / (tau * .5)) * knock
     return _edge(body + thump, .003, .02)
 
 
 def sfx_heartbeat():
-    """Three heartbeats in slow motion, muffled (nothing above 420 Hz), each lub-dub later and longer and lower than the one before as if the tape were dragging (the beats are
+    """Three heartbeats in slow motion, muffled (nothing above 560 Hz), each lub-dub later and longer and lower than the one before as if the tape were dragging (the beats are
     build_music13.HEART_BEATS, the score pulses on them): the lub is a 100 Hz thump that sags to 54 Hz, the dub a shorter, higher one, with a breath of blood between them."""
     d = 3.0
     n = int(d * SR)
@@ -383,7 +387,7 @@ def sfx_heartbeat():
         w = int(HEART_DUB * s * SR)
         sw = _lp4(noise6(HEART_DUB * s, 1430 + i), 220, 2) * np.hanning(w) * .1
         _place(x, sw, at + .03 * s, 1.0)
-    x = _lp4(x, 420, 3)
+    x = _lp4(x, 560, 3)
     return norm6(_edge(x, .004, .15), .7)
 
 
@@ -433,7 +437,7 @@ def sfx_radioclick():
     for _ in range(2):
         at = r.uniform(.008, .04)
         _place(x, _burst(int(at * 1e5) + k, .006, 1000, 3300, .0012), at, r.uniform(.3, .55))
-    return norm6(_edge(x, .0003, .012), .5)
+    return norm6(_edge(_bp4(x, 320, 3300, 3), .0003, .012), .5)
 
 
 def sfx_doorcreak():
@@ -447,12 +451,15 @@ def sfx_doorcreak():
     r = rng6(1380)
     knots_t = [0, .12, .45, .95, 1.25, 1.55, 1.95, 2.3]
     knots_f = [90, 150, 215, 330, 205, 150, 270, 118]
-    f = np.interp(t, knots_t, knots_f) * (1 + .09 * _smooth_rand(d, 1381, 7) + .02 * _smooth_rand(d, 1382, 55))
+    f = np.interp(t, knots_t, knots_f) * (1 + .09 * _smooth_rand(d, 1381, 7) + .02 * _smooth_rand(d, 1382, 55) + .045 * _smooth_rand(d, 1388, 180))
     ph = np.cumsum(f) / SR
     cyc = np.floor(ph).astype(int)
     ragged = r.uniform(.55, 1.0, cyc.max() + 2)[cyc]
     saw = (2 * (ph % 1) - 1) * ragged
     body = _bp4(saw, 330, 560) + .9 * _bp4(saw, 700, 1150) + .5 * _bp4(saw, 1250, 1800) + .22 * _bp4(saw, 1900, 2600)
+    u = np.interp(t, [0, .45, .95, 1.25, 1.55, 1.95, 2.3], [.1, .45, .9, .4, .2, .7, .15])
+    sq = _tv_filter(saw, 620 + 1100 * u, 6.5, "bp")                  # a resonance that slides up and down: the 'eee' in a creak
+    body = body / np.abs(body).max() * .7 + sq / np.abs(sq).max() * .55
     body = _lp4(body, 2800, 3)
     move = np.interp(t, [0, .06, .3, .62, .95, 1.15, 1.3, 1.5, 1.8, 2.05, 2.2], [0, .85, .7, 1.0, .9, .25, .1, .7, 1.0, .6, 0])
     move = move * (.85 + .15 * _smooth_rand(d, 1383, 9))
@@ -481,7 +488,7 @@ def sfx_wind():
         b2 = _tv_filter(src, fc2, 9.0, "bp")
         low = _lp4(src, 260, 2)
         x = b1 / (np.std(b1) + 1e-9) + .55 * b2 / (np.std(b2) + 1e-9) + .35 * low / (np.std(low) + 1e-9)
-        out[ch] = x * (.55 + .45 * (.5 + .5 * np.sin(2 * np.pi * .43 * t + ch))) * ar(d, .45, .7)
+        out[ch] = _lp4(x, 3000, 2) * (.55 + .45 * (.5 + .5 * np.sin(2 * np.pi * .43 * t + ch))) * ar(d, .45, .7)
     return norm6(out, .35)
 
 
@@ -516,7 +523,10 @@ def sfx_gasp():
         att = (r.uniform(.035, .06) if k == 0 else r.uniform(.07, .11))
         src = noise6(.4, 1410 + 10 * k + v)
         f1, f2, f3 = r.uniform(520, 760), r.uniform(1100, 1500), r.uniform(2300, 3100)
-        y = _bp4(src, f1 * .85, f1 * 1.15) + .8 * _bp4(src, f2 * .88, f2 * 1.12) + .5 * _bp4(src, f3 * .9, f3 * 1.1) + .2 * _hp4(src, 4500, 2)
+        form = _bp4(src, f1 * .85, f1 * 1.15) + .8 * _bp4(src, f2 * .88, f2 * 1.12) + .5 * _bp4(src, f3 * .9, f3 * 1.1)
+        broad = _bp4(src, 450, 5200, 2)
+        sib = _bp4(src, 5000, 8500, 2)
+        y = .6 * form / (np.std(form) + 1e-9) + .55 * broad / (np.std(broad) + 1e-9) + .1 * sib / (np.std(sib) + 1e-9)
         tt = tarr(.4)
         env = np.interp(tt, [0, att, L * .8, L, L + (.035 if k == 0 else .06)], [0, 1, .9, .5, 0])
         _place(x, y * env, r.uniform(0, .06), r.uniform(.6, 1.0) / voices ** .5)
@@ -527,8 +537,8 @@ def sfx_gasp():
 
 
 def sfx_bonecreak():
-    """An old prune standing up, all of it dry wood and no wet (nothing under 400 Hz). A stiff 'tk' of the knee, then a slow rising creak in three pushes (stick-slip at 38 to 70
-    pulses a second through a 700 to 1.5 kHz hinge resonance), then the back going: three pops 4 ms apart that ring at 840 Hz, a second quick pair, and last a small rubber
+    """An old prune standing up, all of it dry wood and no wet (nothing under 400 Hz). A stiff 'tk' of the knee, then a rising creak in three short squeals (a stick-slip saw gliding
+    150 to 330 Hz through a 650 Hz to 2.3 kHz wooden-hinge resonance, each squeal a little higher), then the back going: three pops 4 ms apart that ring at 840 Hz, a second quick pair, and last a small rubber
     squeak, like a shoe, as she gets upright. 1.25 s."""
     d = 1.25
     n = int(d * SR)
@@ -542,12 +552,12 @@ def sfx_bonecreak():
         _place(x, np.sin(2 * np.pi * f * tt * (1 + .12 * np.exp(-tt / .008))) * np.exp(-tt / tau), at, g * .6)
 
     pop(0.0, 560, .5, .014)
-    f = np.interp(t, [.08, .5], [38, 70])
-    saw = 2 * ((np.cumsum(f) / SR) % 1) - 1
-    rag = r.uniform(.5, 1.0, int(f.max() * d) + 4)[(np.cumsum(f) / SR).astype(int)]
-    creak = _bp4(saw * rag, 700, 1500) + .5 * _bp4(saw * rag, 1500, 2600)
-    push = np.interp(t, [.08, .12, .24, .27, .31, .4, .43, .5, .53], [0, 1, .9, 0, .9, 1, 0, .8, 0]) * ((t >= .08) & (t < .53))
-    x += creak / np.abs(creak).max() * push * .5
+    for j, (at, dur, f0, f1) in enumerate(((.08, .16, 150, 230), (.27, .15, 190, 290), (.45, .12, 240, 330))):
+        ff = _glide(f0, f1, dur) * (1 + .03 * _smooth_rand(dur, 1417 + j, 90))
+        ph = np.cumsum(ff) / SR
+        sw = (2 * (ph % 1) - 1) * r.uniform(.55, 1.0, int(ph.max()) + 3)[ph.astype(int)]
+        sq = _bp4(sw, 650, 1300) + .6 * _bp4(sw, 1400, 2300)
+        _place(x, sq / np.abs(sq).max() * np.hanning(len(sq)) ** .8, at, .5)
     for j, at in enumerate((.56, .564, .572)):
         pop(at, 840, 1.0 if j == 0 else .6, .02)
     pop(.70, 620, .55, .016)
@@ -634,11 +644,11 @@ def sfx_munch():
     for i in range(14):
         at += r.uniform(.004, .011)
         _place(x, _burst(1480 + 20 * k + i, .02, r.uniform(1400, 2600), r.uniform(4000, 7500), r.uniform(.002, .005)), at, (1 - i / 18) * r.uniform(.3, 1) * .8)
-    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(190, 130, .1)) / SR) * np.exp(-tarr(.1) / .035), .06, .5)
+    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(190, 130, .1)) / SR) * np.exp(-tarr(.1) / .035), .06, .3)
     _place(x, _burst(1500 + k, .03, 1500, 5000, .004) * .4, .21)
     for j in range(5):
         _place(x, _burst(1510 + j, .012, 1800, 4800, .002), .215 + j * .008, .22 * r.uniform(.4, 1))
-    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(170, 120, .08)) / SR) * np.exp(-tarr(.08) / .03), .22, .25)
+    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(170, 120, .08)) / SR) * np.exp(-tarr(.08) / .03), .22, .15)
     return norm6(_edge(x, .0003, .08), .6)
 
 
@@ -686,16 +696,15 @@ def sfx_callcascade():
 
 # ---------------------------------------------------------------- names redefined for this episode only (the cue list needs something else under these names)
 def sfx_alarm():
-    """The building's alarm panel (replaces the old 3.4 s siren for this episode): a two-tone electronic warble, 740 and 988 Hz alternating every 0.11 s, a square-ish wave
-    rounded off at 3 kHz so it is not harsh, that holds for half a second and dies away by 1.1 s, so it is gone when the next line begins."""
+    """The building's alarm panel (replaces the old 3.4 s siren for this episode): a two-tone electronic warble, 740 and 988 Hz alternating every 0.11 s, a sine with a little square
+    in it, rounded off at 2.4 kHz so it is not harsh, that holds for half a second and dies away by 1.1 s, so it is gone when the next line begins."""
     d = 1.1
     t = tarr(d)
     ph = (t / .11).astype(int) % 2
     f = np.where(ph == 0, 740.0, 988.0)
-    x = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * .55 + np.sin(2 * np.pi * np.cumsum(f) / SR)
-    x = _lp4(x, 3000, 2)
-    gate = np.convolve((ph == 0) | (ph == 1), np.ones(1))
-    x = x * (.8 + .2 * np.sin(2 * np.pi * t / .22)) * np.interp(t, [0, .01, .5, 1.1], [0, 1, .85, 0])
+    s1 = np.sin(2 * np.pi * np.cumsum(f) / SR)
+    x = _lp4(np.sign(s1) * .25 + s1, 2400, 2)
+    x = x * np.interp(t, [0, .01, .5, 1.1], [0, 1, .85, 0])
     return norm6(_edge(x, .002, .08), .55)
 
 
@@ -747,7 +756,8 @@ def sfx_doorclose():
     n = int(d * SR)
     t = tarr(d)
     x = np.zeros(n)
-    body = _sin_of(_glide(160, 90, d)) * np.exp(-t / .055) * .9 + _lp4(noise6(d, 1540), 900, 2) * np.exp(-t / .03) * .7
+    body = _sin_of(_glide(160, 90, d)) * np.exp(-t / .055) * .55 + _lp4(noise6(d, 1540), 900, 2) * np.exp(-t / .03) * .7
+    body += (np.sin(2 * np.pi * 260 * t) * np.exp(-t / .03) * .55 + np.sin(2 * np.pi * 410 * t) * np.exp(-t / .022) * .4 + np.sin(2 * np.pi * 690 * t) * np.exp(-t / .015) * .25)
     x += body
     _place(x, _burst(1541, .03, 1500, 5000, .003) * .9 + np.sin(2 * np.pi * 2300 * tarr(.03)) * np.exp(-tarr(.03) / .008) * .3, .014)
     _place(x, _burst(1542, .02, 1200, 4500, .0025) * .45, .062)
