@@ -5,271 +5,53 @@
 if (!window.TIMELINE_EP14 || !window.S14) return;
 const { zoomTo, faceZoom, drawBg } = window.H6;
 const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, A14 = window.A14, S14 = window.S14;
-// ------------------------------------------------------------------ THE JUNK LIBRARY (the stash of the shower room): vector art, one drawing per kind, shared by adapt (the conveyor, the spill) and closet (the avalanche)
-// Every drawing is centred on its own origin, in native pixels (a standing fruit is about 400 px tall at native scale), light from the upper left. NO TEXT in any sprite (a sprite is cached; text is drawn live).
-// A sprite is cached once at 2x with a hairline ink outline already in the art; the rim lights (a warm key edge up-left, a cool back edge down-right) are laid down at draw time as offset silhouettes so they stay on the
-// lit side while a piece tumbles.
-const J = {};
+
+// ------------------------------------------------------------------ THE JUNK CATALOGUE: the kit's own stash sprites (S14.drawItem), so that what flies out of the shower room is exactly what the room shows. NO TEXT in any sprite.
+// A piece is cached once as a 4x bitmap of the kit's drawing with its tight bounds; the rim lights (a warm key edge up-left, a cool back edge down-right) are laid down at draw time as offset
+// silhouettes of that bitmap (a drop-shadow filter), so they stay on the lit side while a piece tumbles.
+const KMAP = { chair: 'wheelchair', iv: 'ivpole', fan: 'fan', rail: 'rail', bucket: 'bucket', treebox: 'tree', tv: 'tv', banner: 'banner', qsign: 'qsign', bag: 'bag', box0: 'box', box1: 'box', box2: 'box' };
+const KOPT = { box0: { w: 42, h: 34, color: '#d8ac72' }, box1: { w: 52, h: 40, color: '#c99a62' }, box2: { w: 62, h: 48, color: '#b98a52' } };
 const g2 = (x0, y0, x1, y1, stops) => V2.grad(x0, y0, x1, y1, stops);
-const lite = (c, f) => { const [r, g, b] = V2.rgb(c); const q = v => Math.max(0, Math.min(255, v)) | 0; return `rgb(${q(r * f)},${q(g * f)},${q(b * f)})`; };
 const outline = (w = 3.2) => { ctx.strokeStyle = INK; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; };
-/* a chrome tube from (x0, y0) to (x1, y1): ink outline, a mid-grey body, a bright highlight on the lit side */
+const KS = 4, SPR = new Map();
+function kitSprite(kind) {
+  let s = SPR.get(kind); if (s) return s;
+  const name = KMAP[kind] || kind, o = KOPT[kind] || {}, P = 14, SZ = 520, prev = ctx;
+  /* find the tight bounds of the kit's drawing: draw it once into a big scratch (origin: bottom centre) and read the alpha */
+  const sc = V2.mk(SZ, SZ), g = sc.getContext('2d', { willReadFrequently: true }); ctx = g;
+  try { g.save(); g.translate(SZ / 2, SZ - 60); S14.drawItem(name, 0, 0, 1, 0, o); g.restore(); } finally { ctx = prev; }
+  const d = g.getImageData(0, 0, SZ, SZ).data; let x0 = SZ, y0 = SZ, x1 = 0, y1 = 0;
+  for (let y = 0; y < SZ; y++) for (let x = 0; x < SZ; x++) if (d[(y * SZ + x) * 4 + 3] > 10) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 <= x0) { x0 = SZ / 2 - 20; x1 = SZ / 2 + 20; y0 = SZ - 100; y1 = SZ - 60; }
+  const bx0 = x0 - SZ / 2 - P, bx1 = x1 - SZ / 2 + P, by0 = y0 - (SZ - 60) - P, by1 = y1 - (SZ - 60) + P;   /* bounds relative to the base centre, with padding */
+  const cv = V2.mk(Math.ceil((bx1 - bx0) * KS), Math.ceil((by1 - by0) * KS)), cg = cv.getContext('2d'); ctx = cg;
+  try { cg.save(); cg.scale(KS, KS); cg.translate(-bx0, -by0); S14.drawItem(name, 0, 0, 1, 0, o); cg.restore(); } finally { ctx = prev; }
+  s = { cv, bx0, bx1, by0, by1, w: bx1 - bx0, h: by1 - by0, top: -by0 - P, half: (-by0 - P + P * 0) / 2 };   /* top: the height of the drawing above the base */
+  SPR.set(kind, s); return s;
+}
+/* the distance from a piece's centre to its base (the lowest point it rests on), so a piece can be placed by its centre: half its drawn height */
+const JB = new Proxy({}, { get: (_, k) => { if (!KMAP[k]) return 0; const s = kitSprite(k); return -(s.by0 + s.by1) / 2; } });
+const JSC = new Proxy({}, { get: () => 1 });
+/* jdraw(kind, cx, cy, rot, scale, st): the piece centred (by its tight bounds' vertical middle) on (cx, cy), turned about that point. st: { flip, alpha, rim (px, default 1.8) } */
+function jdraw(kind, x, y, rot, sc, st = {}) {
+  const s = kitSprite(kind), mid = (s.by0 + s.by1) / 2 - 0;   /* the middle of the sprite box, from the base */
+  ctx.save();
+  if (st.alpha != null) ctx.globalAlpha *= st.alpha;
+  ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sc * (st.flip ? -1 : 1), sc);
+  const rim = (st.rim ?? 1.8) / Math.max(.5, sc);
+  if (rim > 0 && !TXA.mask) ctx.filter = `drop-shadow(${-rim}px ${-rim}px 0px rgba(255,228,176,.9)) drop-shadow(${rim * .8}px ${rim * .8}px 0px rgba(140,185,255,.5))`;
+  ctx.drawImage(s.cv, s.bx0 - 0, s.by0 - mid, s.w, s.h);
+  ctx.restore();
+}
+const jsc = (kind, sc = 1) => sc;      /* the kit's sprites are already at dollhouse scale */
+const restY = (kind, floor, sc = 1) => floor - JB[kind] * sc;
+/* a chrome tube from (x0, y0) to (x1, y1): ink outline, a mid-grey body, a bright highlight on the lit side (used by the camera trap's tap) */
 function tube(x0, y0, x1, y1, w = 6, c0 = '#f4f7fb', c1 = '#8c96a6') {
   const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1; let nx = -dy / L, ny = dx / L; if (nx + ny > 0) { nx = -nx; ny = -ny; }
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.strokeStyle = INK; ctx.lineWidth = w + 3.4; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
   ctx.strokeStyle = c1; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
   ctx.strokeStyle = c0; ctx.lineWidth = Math.max(1.4, w * .38); ctx.beginPath(); ctx.moveTo(x0 + nx * w * .2, y0 + ny * w * .2); ctx.lineTo(x1 + nx * w * .2, y1 + ny * w * .2); ctx.stroke();
-}
-function disc(x, y, r, c0, c1, ow = 3) {   /* a lit disc: radial fill, ink rim */
-  ctx.fillStyle = V2.radial(x - r * .35, y - r * .4, r * .1, r * 1.05, [[0, c0], [1, c1]]); ell(x, y, r, r); ctx.fill();
-  if (ow) { outline(ow); ctx.stroke(); }
-}
-function slab(x, y, w, h, r, c0, c1, ow = 3.2) {   /* a lit rounded slab */
-  ctx.fillStyle = g2(x, y, x + w * .3, y + h, [[0, c0], [1, c1]]); rr(x, y, w, h, r); ctx.fill();
-  if (ow) { outline(ow); ctx.stroke(); }
-}
-
-// ---- a wheelchair (side view, facing right). a = the angle of the big wheel (spokes), 0 for a still one
-function artChair(a = 0) {
-  const wx = -14, wy = 36, R = 56;
-  tube(-52, 6, 44, 6, 6); tube(-52, -94, -52, 6, 6); tube(-52, -94, -82, -100, 6);              /* seat rail, back post, push handle */
-  ctx.strokeStyle = INK; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(-84, -101); ctx.lineTo(-98, -103); ctx.stroke();
-  ctx.strokeStyle = '#4b4452'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-84, -101); ctx.lineTo(-98, -103); ctx.stroke();
-  tube(-52, -40, 30, -40, 6); tube(30, -40, 30, 6, 5);                                           /* armrest and its front post */
-  tube(44, 6, 70, 58, 6); tube(-30, 8, wx, wy, 5);                                               /* leg hanger, axle brace */
-  slab(60, 56, 40, 10, 4, '#5a5360', '#2c2833', 3);                                              /* the footplate */
-  disc(84, 74, 14, '#6a6475', '#2a2530', 3); tube(70, 58, 84, 74, 5);                            /* the caster */
-  slab(-60, -94, 18, 84, 8, '#a3414f', '#6b2330');                                               /* back cushion, vinyl */
-  slab(-58, -8, 104, 16, 7, '#b04a58', '#6b2330');                                               /* seat cushion */
-  ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(-52, -86); ctx.lineTo(-52, -20); ctx.moveTo(-50, -3); ctx.lineTo(36, -3); ctx.stroke();
-  /* the big wheel: tyre, chrome hand rim, twelve spokes, hub */
-  ctx.save(); ctx.translate(wx, wy);
-  ctx.fillStyle = 'rgba(255,255,255,.04)'; ell(0, 0, R, R); ctx.fill();
-  ctx.strokeStyle = INK; ctx.lineWidth = 12.5; ell(0, 0, R - 4, R - 4); ctx.stroke();
-  ctx.strokeStyle = '#3b3542'; ctx.lineWidth = 8.5; ell(0, 0, R - 4, R - 4); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, R - 5, PI * 1.05, PI * 1.5); ctx.stroke();
-  ctx.strokeStyle = INK; ctx.lineWidth = 5.4; ell(0, 0, R - 15, R - 15); ctx.stroke(); ctx.strokeStyle = '#d6dce6'; ctx.lineWidth = 2.4; ell(0, 0, R - 15, R - 15); ctx.stroke();
-  ctx.strokeStyle = 'rgba(120,130,150,.95)'; ctx.lineWidth = 1.6;
-  for (let i = 0; i < 12; i++) { const q = a + i * PI / 6; ctx.beginPath(); ctx.moveTo(Math.cos(q) * 7, Math.sin(q) * 7); ctx.lineTo(Math.cos(q) * (R - 16), Math.sin(q) * (R - 16)); ctx.stroke(); }
-  disc(0, 0, 8, '#f3f6fa', '#7d8798', 2.6);
-  ctx.restore();
-}
-// ---- an IV pole: five-leg base, chrome stem, a four-hook crown, two bags and a coil of line
-function artIV() {
-  tube(-3, 150, -50, 166, 5); tube(3, 150, 50, 166, 5); tube(0, 150, 0, 172, 5);
-  for (const [x, y] of [[-52, 172], [52, 172], [0, 178]]) disc(x, y, 7.5, '#6a6475', '#2a2530', 2.6);
-  tube(0, 152, 0, -150, 7);
-  tube(-38, -150, 38, -150, 5);
-  for (const x of [-38, -14, 14, 38]) { ctx.strokeStyle = INK; ctx.lineWidth = 6.4; ctx.beginPath(); ctx.moveTo(x, -150); ctx.quadraticCurveTo(x, -164, x + (x < 0 ? -9 : 9), -158); ctx.stroke(); ctx.strokeStyle = '#cdd4de'; ctx.lineWidth = 3; ctx.stroke(); }
-  slab(-4, -20, 8, 20, 3, '#3b3542', '#1d1a22', 2.4);                                              /* the clamp knob */
-  const bag = (x, y, w, h, c0, c1) => {
-    ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + 6); ctx.stroke();
-    ctx.fillStyle = g2(x - w / 2, y, x + w / 2, y + h, [[0, c0], [1, c1]]); ctx.beginPath(); ctx.moveTo(x - w * .45, y + 6); ctx.quadraticCurveTo(x - w * .62, y + h * .55, x - w * .4, y + h); ctx.lineTo(x + w * .4, y + h); ctx.quadraticCurveTo(x + w * .62, y + h * .55, x + w * .45, y + 6); ctx.closePath(); ctx.fill(); outline(3); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.ellipse(x - w * .22, y + h * .38, w * .06, h * .2, .1, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(30,60,90,.35)'; ctx.fillRect(x - w * .3, y + h * .12, w * .6, 3);
-  };
-  bag(-30, -146, 38, 62, 'rgba(190,230,255,.95)', 'rgba(120,180,225,.95)');
-  bag(32, -146, 30, 48, 'rgba(255,240,170,.95)', 'rgba(235,200,100,.95)');
-  ctx.strokeStyle = INK; ctx.lineWidth = 4.6; ctx.beginPath(); ctx.moveTo(-30, -84); ctx.bezierCurveTo(-34, -50, -4, -60, -12, -20); ctx.bezierCurveTo(-18, 8, 14, 10, 8, 44); ctx.stroke();
-  ctx.strokeStyle = 'rgba(230,246,255,.95)'; ctx.lineWidth = 2.2; ctx.stroke();
-  slab(-36, -66, 12, 20, 4, 'rgba(235,248,255,.95)', 'rgba(160,200,230,.95)', 2.6);                 /* the drip chamber */
-}
-// ---- a box fan (front view): cream case, grille, three blades (spun by a), cord and plug
-function artFan(a = 0, spin = 1) {
-  slab(-72, -74, 144, 148, 14, '#efe8d2', '#bfb391');
-  slab(-36, -92, 72, 22, 9, '#e3dac0', '#a99c78');                                                    /* the handle */
-  slab(-18, -86, 36, 9, 4, '#4a4452', '#2a2530', 2);
-  ctx.fillStyle = '#2a2631'; ell(0, 0, 60, 60); ctx.fill(); outline(3); ctx.stroke();
-  ctx.fillStyle = g2(0, -60, 0, 60, [[0, '#cfe3ee'], [1, '#a2bccb']]); ell(0, 0, 55, 55); ctx.fill();
-  ctx.save(); ctx.beginPath(); ell(0, 0, 54, 54); ctx.clip();
-  for (let i = 0; i < 3; i++) {
-    ctx.save(); ctx.rotate(a + i * TAU / 3); ctx.fillStyle = spin > .5 ? 'rgba(120,160,190,.35)' : 'rgba(110,150,180,.85)';
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(14, -10, 40, -22, 52, -6); ctx.bezierCurveTo(44, 16, 20, 20, 0, 6); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(30,40,60,.5)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
-  }
-  ctx.restore();
-  ctx.strokeStyle = '#5a5568'; ctx.lineWidth = 1.8;
-  for (const r of [18, 32, 46]) { ell(0, 0, r, r); ctx.stroke(); }
-  for (let i = 0; i < 12; i++) { const q = i * PI / 6; ctx.beginPath(); ctx.moveTo(Math.cos(q) * 8, Math.sin(q) * 8); ctx.lineTo(Math.cos(q) * 58, Math.sin(q) * 58); ctx.stroke(); }
-  disc(0, 0, 9, '#e8ebf0', '#7b8496', 2.6);
-  for (const x of [-34, 0, 34]) { disc(x, 62, 5.5, '#ffd25a', '#b8801a', 2.2); }
-  ctx.strokeStyle = INK; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(60, 70); ctx.bezierCurveTo(100, 84, 70, 112, 104, 108); ctx.stroke();
-  ctx.strokeStyle = '#d8d2c0'; ctx.lineWidth = 2.4; ctx.stroke();
-}
-// ---- a bed rail: two chrome bars, six balusters, a hinge bracket and a latch
-function artRail() {
-  for (let i = 0; i < 6; i++) tube(-92 + i * 37, -24, -92 + i * 37, 24, 6);
-  tube(-112, -24, 112, -24, 9); tube(-112, 24, 112, 24, 9);
-  slab(-122, -38, 20, 76, 5, '#5b5564', '#2c2833', 3);
-  for (const y of [-22, 22]) disc(-112, y, 3.6, '#c6ccd6', '#6a7284', 1.6);
-  slab(100, -34, 18, 24, 5, '#d9575c', '#8a2330', 3);
-}
-// ---- a mop bucket on casters, a wringer cage and the mop. slosh 0..1 lifts the water
-function artBucket(slosh = 0) {
-  const mop = () => {
-    tube(6, -26, -42, -196, 7, '#e4c690', '#9a7a44');
-    ctx.fillStyle = '#e8e3d6'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6;
-    for (let i = 0; i < 11; i++) { const q = -1.2 + i * .24; ctx.beginPath(); ctx.moveTo(-6, -22); ctx.quadraticCurveTo(-6 + Math.sin(q) * 40, 4 + Math.cos(q) * 14, -14 + Math.sin(q) * 54, 30 + Math.cos(q) * 12 + (i % 3) * 5); ctx.stroke(); }
-    ctx.strokeStyle = '#f7f4ea'; ctx.lineWidth = 1.5; for (let i = 0; i < 11; i++) { const q = -1.2 + i * .24; ctx.beginPath(); ctx.moveTo(-6, -22); ctx.quadraticCurveTo(-6 + Math.sin(q) * 40, 4 + Math.cos(q) * 14, -14 + Math.sin(q) * 54, 30 + Math.cos(q) * 12 + (i % 3) * 5); ctx.stroke(); }
-  };
-  for (const x of [-30, 30]) { tube(x, 52, x, 66, 4); disc(x, 70, 8, '#5e5868', '#26222c', 2.6); }
-  ctx.fillStyle = g2(-52, 0, 52, 0, [[0, '#ffe15a'], [.45, '#f2b823'], [1, '#c58410']]);
-  ctx.beginPath(); ctx.moveTo(-50, -14); ctx.lineTo(50, -14); ctx.lineTo(38, 56); ctx.quadraticCurveTo(0, 62, -38, 56); ctx.closePath(); ctx.fill(); outline(3.4); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.34)'; ctx.beginPath(); ctx.moveTo(-42, -8); ctx.lineTo(-34, -8); ctx.lineTo(-28, 48); ctx.lineTo(-33, 48); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#2f6fb0'; ctx.fillRect(-46, 6, 92, 11); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(-46, 6, 92, 3);
-  ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.strokeRect(-46, 6, 92, 11);
-  ctx.fillStyle = '#7d8e98'; ell(0, -14, 50, 10); ctx.fill(); outline(3); ctx.stroke();                 /* the rim and the water */
-  ctx.fillStyle = '#9bb0b8'; ell(0, -15 - 3 * slosh, 43, 7.4); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.5)'; ell(-14, -17 - 3 * slosh, 14, 2); ctx.fill();
-  mop();
-  slab(30, -54, 36, 44, 5, '#aeb6c2', '#6d7586', 3);                                                   /* the wringer cage */
-  ctx.strokeStyle = 'rgba(40,44,60,.6)'; ctx.lineWidth = 1.6; for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(30 + i * 9, -54); ctx.lineTo(30 + i * 9, -10); ctx.stroke(); }
-  tube(66, -42, 82, -88, 5, '#ffb0b6', '#c04552');
-}
-// ---- a CRT television: wood-grain case, a convex screen (static drawn live by the caller via artTVScreen), knobs, speaker, rabbit ears
-function artTV() {
-  tube(-8, -60, -42, -112, 3.4, '#e2e6ee', '#8a93a3'); tube(8, -60, 40, -108, 3.4, '#e2e6ee', '#8a93a3');
-  disc(-43, -114, 4.6, '#f1f4f8', '#808a9c', 2); disc(41, -110, 4.6, '#f1f4f8', '#808a9c', 2);
-  for (const x of [-48, 48]) slab(x - 9, 60, 18, 8, 3, '#3a3440', '#1d1a22', 2.4);
-  ctx.fillStyle = g2(-76, -60, 76, 62, [[0, '#a8683a'], [.55, '#80482a'], [1, '#55301a']]); rr(-76, -60, 152, 122, 14); ctx.fill(); outline(3.6); ctx.stroke();
-  ctx.save(); rr(-76, -60, 152, 122, 14); ctx.clip();
-  ctx.strokeStyle = 'rgba(40,20,8,.25)'; ctx.lineWidth = 2; for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.moveTo(-80, -52 + i * 13); ctx.bezierCurveTo(-30, -56 + i * 13, 30, -46 + i * 13, 80, -52 + i * 13); ctx.stroke(); }
-  ctx.fillStyle = 'rgba(255,225,170,.22)'; ctx.fillRect(-76, -60, 152, 7); ctx.restore();
-  ctx.fillStyle = g2(0, -50, 0, 52, [[0, '#c9ccd2'], [1, '#868b96']]); rr(-68, -52, 108, 104, 12); ctx.fill(); outline(3); ctx.stroke();   /* the bezel */
-  ctx.fillStyle = '#1a2227'; rr(-60, -44, 92, 88, 18); ctx.fill(); outline(2.6); ctx.stroke();
-  disc(54, -28, 9, '#e0e2e8', '#6e7384', 2.6); disc(54, 0, 9, '#e0e2e8', '#6e7384', 2.6);
-  ctx.strokeStyle = INK; ctx.lineWidth = 2; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(44, 18 + i * 6); ctx.lineTo(64, 18 + i * 6); ctx.stroke(); }
-}
-function artTVScreen(t, on = 1) {   /* the glass: dark with a bluish static, a glare arc, drawn live */
-  ctx.save(); rr(-60, -44, 92, 88, 18); ctx.clip();
-  ctx.fillStyle = on > .5 ? '#7fa3b4' : '#141c21'; ctx.fillRect(-60, -44, 92, 88);
-  if (on > .5) {
-    for (let i = 0; i < 16; i++) { const y = -44 + i * 5.6 + ((t * 90) % 5.6), v = hash(i * 3.7 + Math.floor(t * 24) * 1.3); ctx.fillStyle = `rgba(${v > .5 ? '235,245,250' : '40,60,76'},${.25 + .5 * v})`; ctx.fillRect(-60, y, 92, 2.6 + 3 * hash(i + 9)); }
-    ctx.fillStyle = 'rgba(200,230,255,.18)'; ctx.fillRect(-60, -44, 92, 88);
-  }
-  ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.beginPath(); ctx.ellipse(-30, -26, 26, 11, -.5, 0, TAU); ctx.fill();
-  ctx.restore();
-}
-// ---- cardboard boxes, three sizes; open = flaps up and a litter of paper (the burst ones)
-function artBox(sz = 1, open = 0) {
-  const w = [74, 104, 138][sz], h = [56, 76, 98][sz];
-  if (open > 0) {   /* flaps behind the front face */
-    for (const s of [-1, 1]) { ctx.save(); ctx.translate(s * w / 2, -h / 2); ctx.rotate(s * (.4 + open * .6)); ctx.fillStyle = lite('#c99a5a', .86); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-s * w * .5, 0); ctx.lineTo(-s * w * .46, -h * .3); ctx.lineTo(s * 4, -h * .34); ctx.closePath(); ctx.fill(); outline(3); ctx.stroke(); ctx.restore(); }
-    for (let i = 0; i < 4; i++) { ctx.save(); ctx.translate(-w * .3 + i * w * .2, -h / 2 - 8 - 8 * hash(i + sz)); ctx.rotate(-.5 + i * .35); ctx.fillStyle = i % 2 ? '#f3efe2' : '#dfe9f2'; ctx.fillRect(-14, -20, 28, 32); outline(2.4); ctx.strokeRect(-14, -20, 28, 32); ctx.restore(); }
-  }
-  ctx.fillStyle = g2(-w / 2, -h / 2, w / 2, h / 2, [[0, '#dcae6c'], [.6, '#c28d4e'], [1, '#9c6a34']]); rr(-w / 2, -h / 2, w, h, 4); ctx.fill(); outline(3.4); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fillRect(-w / 2 + 3, -h / 2 + 3, w - 6, 5);
-  ctx.fillStyle = '#efe1b4'; ctx.fillRect(-9, -h / 2, 18, h * .46); outline(1.8); ctx.strokeRect(-9, -h / 2, 18, h * .46);        /* the tape */
-  ctx.strokeStyle = 'rgba(70,40,10,.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2 + h * .46); ctx.lineTo(w / 2, -h / 2 + h * .46); ctx.stroke();
-  ctx.fillStyle = 'rgba(70,40,10,.25)'; for (let i = 0; i < 3; i++) ctx.fillRect(w * .12 + i * 7, h * .1, 4, h * .22);                  /* handle slots / scuffs: no text */
-}
-// ---- the Christmas tree in its carton, and the tree itself unfolding (k 0..1)
-function artTreeBox() {
-  slab(-118, -34, 236, 68, 6, '#2c8a4a', '#18532c', 3.4);
-  ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fillRect(-114, -30, 228, 6);
-  ctx.fillStyle = '#e8f3e6'; for (const [y, w] of [[-20, 16], [-8, 24], [4, 32]]) { ctx.beginPath(); ctx.moveTo(-34, y - 14); ctx.lineTo(-34 - w, y + 12); ctx.lineTo(-34 + w, y + 12); ctx.closePath(); ctx.fill(); }   /* the picture on the carton: one white tree, three tiers and a trunk, no lettering */
-  ctx.fillStyle = '#c9a070'; ctx.fillRect(-37, 12, 6, 12); ctx.fillStyle = '#ffd84a'; ell(-34, -32, 5, 5); ctx.fill();
-  ctx.fillStyle = '#d9a336'; ctx.fillRect(48, -22, 56, 8); ctx.fillRect(48, -6, 40, 8);
-  ctx.strokeStyle = '#18532c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-118, -10); ctx.lineTo(118, -10); ctx.stroke();
-}
-function artTree(k = 1, t = 0) {   /* standing tree, origin at the base of the trunk centre-bottom -> drawn with its middle at 0: y from -120 (star) to +120 (foot) */
-  const tiers = 6, H0 = 232;
-  const spread = .22 + .78 * k;
-  tube(0, 118, 0, -100, 8, '#c4a070', '#6a4a24');
-  disc(0, 124, 24, '#8a5a2a', '#3a220e', 3);
-  for (let i = tiers - 1; i >= 0; i--) {
-    const u = i / (tiers - 1), y = 96 - u * 190, w = (108 - u * 78) * spread, h = 48 - u * 12;
-    const droop = 1 - .5 * k;
-    ctx.fillStyle = g2(-w, y - h, w, y, [[0, i % 2 ? '#2f8f43' : '#38a14e'], [1, '#175a2c']]);
-    ctx.beginPath(); ctx.moveTo(0, y - h);
-    const n = 5; for (let j = 0; j <= n; j++) { const q = -1 + 2 * j / n; ctx.quadraticCurveTo(q * w * .98 - (w / n) * .3, y - 6 + (j % 2 ? -8 : 4) * droop, q * w, y + (j % 2 ? 4 : -2)); }
-    ctx.lineTo(0, y - h); ctx.closePath(); ctx.fill(); outline(3); ctx.stroke();
-    ctx.strokeStyle = i % 2 ? '#f3c94a' : '#e9edf3'; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.moveTo(-w * .8, y - 2); for (let j = 1; j <= 8; j++) ctx.lineTo(-w * .8 + j * w * .2, y - 2 + (j % 2 ? -7 : 3)); ctx.stroke();
-    for (const [bx, by, bc] of [[-.5, -.3, '#e0364a'], [.3, -.15, '#3b82d9'], [.62, -.4, '#f3c94a']]) if (u < .8) disc(bx * w, y + by * h * .6, 5.4, '#fff', bc, 2);
-  }
-  const sx = 0, sy = -116;
-  ctx.save(); ctx.translate(sx, sy); ctx.rotate(.3 * (1 - k)); ctx.fillStyle = '#ffd84a'; A9.starPath(0, 0, 15); ctx.fill(); outline(2.8); ctx.stroke(); ctx.restore();
-}
-// ---- a rolled-up banner: a fat roll, two twine bands, a tail of stripes
-function artBanner() {
-  ctx.fillStyle = g2(0, -30, 0, 30, [[0, '#ffe8a0'], [.5, '#f2c04a'], [1, '#b8821c']]); rr(-96, -28, 192, 56, 24); ctx.fill(); outline(3.4); ctx.stroke();
-  ctx.fillStyle = '#e8dfc6'; ell(-96, 0, 18, 28); ctx.fill(); outline(3); ctx.stroke();
-  ctx.strokeStyle = '#c58a30'; ctx.lineWidth = 2.4; for (const r of [20, 13, 7]) { ctx.beginPath(); ctx.ellipse(-96, 0, r * .62, r, 0, 0, TAU); ctx.stroke(); }
-  for (const x of [-40, 46]) { ctx.fillStyle = '#7a5a2a'; ctx.fillRect(x - 3, -29, 6, 58); outline(1.6); ctx.strokeRect(x - 3, -29, 6, 58); }
-  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(-84, -22, 170, 6);
-  ctx.fillStyle = '#d9444f'; ctx.beginPath(); ctx.moveTo(96, -10); ctx.quadraticCurveTo(122, -6, 136, 16); ctx.lineTo(120, 24); ctx.quadraticCurveTo(110, 8, 96, 14); ctx.closePath(); ctx.fill(); outline(2.8); ctx.stroke();
-}
-// ---- the sign: HOURS SINCE THE Q WORD (the frame only; the title and the digits are drawn live)
-function artQSign() {
-  slab(-150, -80, 300, 160, 14, '#2a2733', '#121018', 4);
-  ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 2.4; rr(-143, -73, 286, 146, 10); ctx.stroke();
-  for (const [x, y] of [[-134, -64], [134, -64], [-134, 64], [134, 64]]) disc(x, y, 4.4, '#d8dde6', '#7a8294', 1.6);
-}
-// ---- small things: a lone sock, a tinsel strand, an ornament
-function artSock() {
-  ctx.fillStyle = g2(-20, -30, 20, 30, [[0, '#ffffff'], [1, '#cfd6e2']]);
-  ctx.beginPath(); ctx.moveTo(-12, -34); ctx.lineTo(10, -34); ctx.lineTo(12, 6); ctx.quadraticCurveTo(28, 14, 30, 30); ctx.quadraticCurveTo(26, 40, 8, 38); ctx.quadraticCurveTo(-10, 36, -12, 14); ctx.closePath(); ctx.fill(); outline(3); ctx.stroke();
-  ctx.fillStyle = '#d9444f'; ctx.fillRect(-12, -34, 22, 7); ctx.fillStyle = '#8fa0b8'; ctx.beginPath(); ctx.moveTo(22, 12); ctx.quadraticCurveTo(30, 18, 30, 30); ctx.quadraticCurveTo(26, 40, 8, 38); ctx.lineTo(8, 24); ctx.closePath(); ctx.fill();
-}
-function artOrn(c) { disc(0, 0, 11, '#ffffff', c, 2.4); ctx.fillStyle = '#d9c36a'; ctx.fillRect(-3.5, -15, 7, 5); outline(1.6); ctx.strokeRect(-3.5, -15, 7, 5); }
-
-// ---- the catalogue: kind -> { w, h (sprite extent), r (collision radius), body: art function }
-const KIND = {
-  chair:  { w: 220, h: 190, r: 66, art: artChair },
-  iv:     { w: 150, h: 360, r: 80, art: artIV },
-  fan:    { w: 190, h: 220, r: 78, art: artFan },
-  rail:   { w: 260, h: 90, r: 70, art: artRail },
-  bucket: { w: 180, h: 300, r: 62, art: artBucket },
-  tv:     { w: 190, h: 170, r: 74, art: artTV },
-  box0:   { w: 100, h: 110, r: 40, art: () => artBox(0, 0) },
-  box1:   { w: 130, h: 130, r: 52, art: () => artBox(1, 0) },
-  box2:   { w: 170, h: 150, r: 66, art: () => artBox(2, 0) },
-  boxo1:  { w: 130, h: 150, r: 52, art: () => artBox(1, 1) },
-  boxo2:  { w: 170, h: 170, r: 66, art: () => artBox(2, 1) },
-  treebox:{ w: 260, h: 100, r: 70, art: artTreeBox },
-  banner: { w: 260, h: 90, r: 62, art: artBanner },
-  qsign:  { w: 330, h: 190, r: 76, art: artQSign },
-  sock:   { w: 80, h: 100, r: 16, art: artSock },
-};
-
-// ---- drawing a piece: static kinds are cached once (3x), live kinds (a spinning wheel, a fan, a television, the unfolding tree, a sloshing bucket) are redrawn into a scratch canvas; both are laid down with the same rim lights
-const SPR = new Map(), SCR = new Map();
-const LIVE = { chair: 1, fan: 1, tv: 1, tree: 1, bucket: 1 };
-const KS = 3;
-function paintInto(cv, fn) {
-  const g = cv.getContext('2d'), prev = ctx;
-  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
-  ctx = g; g.save(); g.translate(cv.width / 2, cv.height / 2); g.scale(KS, KS);
-  try { fn(); } finally { g.restore(); ctx = prev; }
-}
-function spriteFor(kind, st) {
-  const K = KIND[kind];
-  if (!LIVE[kind]) {
-    let s = SPR.get(kind);
-    if (!s) { const cv = V2.mk(Math.ceil(K.w * KS), Math.ceil(K.h * KS)); paintInto(cv, () => K.art()); SPR.set(kind, s = cv); }
-    return s;
-  }
-  let cv = SCR.get(kind);
-  if (!cv) SCR.set(kind, cv = V2.mk(Math.ceil((kind === 'tree' ? 280 : K.w) * KS), Math.ceil((kind === 'tree' ? 300 : K.h) * KS)));
-  paintInto(cv, () => {
-    if (kind === 'chair') artChair(st.a || 0);
-    else if (kind === 'fan') artFan(st.a || 0, st.spin ?? 1);
-    else if (kind === 'tv') { artTV(); artTVScreen(st.t || 0, st.on ?? 1); }
-    else if (kind === 'bucket') artBucket(st.slosh || 0);
-    else if (kind === 'tree') artTree(st.k ?? 1, st.t || 0);
-  });
-  return cv;
-}
-/* jdraw(kind, x, y, rot, scale, st): st = { flip, alpha, rim (px, default 2), a (wheel/blade angle), spin, t, on, k, slosh, shadow: [floorY, strength] } */
-function jdraw(kind, x, y, rot, sc, st = {}) {
-  const K = KIND[kind], cv = spriteFor(kind, st), w = cv.width / KS, h = cv.height / KS;
-  ctx.save();
-  if (st.alpha != null) ctx.globalAlpha *= st.alpha;
-  ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sc * (st.flip ? -1 : 1), sc);
-  const rim = st.rim ?? 2;
-  if (rim > 0 && !TXA.mask) ctx.filter = `drop-shadow(${-rim}px ${-rim}px 0px rgba(255,228,176,.9)) drop-shadow(${rim * .8}px ${rim * .8}px 0px rgba(140,185,255,.55))`;
-  ctx.drawImage(cv, -w / 2, -h / 2, w, h);
-  ctx.restore();
 }
 
 // ------------------------------------------------------------------ small helpers (wordT, sstep, pulse, hnoise copied from ep13_station.js / ep13_cross.js; route from ep13_station.js)
@@ -333,7 +115,7 @@ const withTransit = (o, moving) => { const f = frameStat(o); if (f.inter && !f.w
 // ------------------------------------------------------------------ the documentary graphics (screen space, drawn in over(): never blurred, never covered by the world)
 const regOverlay = (r, id) => reg('overlay', [r[0], r[1], r[2], r[3]], { id });
 /* the field-guide tag: a cream specimen plate with a forest-green border, an ochre kicker, the behaviour in Bangers and its Latin name in italic. It drops in from above (no sliding through the frame edge) and fades out. */
-const TAG_BOX = [512, 96, 520, 200];
+const TAG_BOX = [512, 48, 520, 200];            /* y 48 keeps its lower edge above the room-name plates that sit on the floor slabs (an ADMINISTRATOR plate was being clipped to ADMIN) */
 const BEHAVIORS = [
   { n: 1, name: 'CONCEALMENT', latin: 'Occultatio communis' },
   { n: 2, name: 'CHARTING', latin: 'Scriptura retrograda' },
@@ -406,15 +188,17 @@ function trapHUD(lt, o) {
 
 // ------------------------------------------------------------------ the cast, at the dollhouse scale (S14.S = .44; the Administrator is s 1.22 x that). Every walker goes through S14.walk / S14.run so its gait fields reach the footstep tool.
 const SS = S14.S;
-const mkMango = o => A7.mango(Object.assign({}, o));
-const mkClem = o => A10.clem(Object.assign({}, o));
+/* at the dollhouse scale a badge is 5 px of lettering nobody can read, but it is text the gate sees tilting with a leaning body: the dollhouse cast wears blank badges (a single space) and no price tag */
+const mkMango = o => A7.mango(Object.assign({ badgeText: ' ' }, o));
+const mkClem = o => A10.clem(Object.assign({ badgeText: ' ', acc: ['steth', 'badge7'] }, o));
 const mkLemon = o => A7.lemon(Object.assign({}, o));
 const mkStraw = o => A11.straw(Object.assign({}, o));
 const mkMelon = o => A9.melon(Object.assign({}, o));
+/* the close-up versions (the med room, the trap) keep the lettering: NEW, and the price tag */
+const mkClemUp = o => A10.clem(Object.assign({}, o));
 const FL = { top: S14.rect('office').floor, mid: S14.rect('r7').floor, low: S14.rect('station').floor };   /* the three floor lines: 656, 986, 1316 */
 const RC = id => S14.rect(id);
-/* the junk is drawn a little larger than its native size next to a person, so a wheelchair is about as long as a person is tall: its scale against the cast */
-const JSC = { chair: 1.15, iv: 1.1, fan: .85, rail: 1, bucket: .92, tv: .8, treebox: 1, banner: 1, box0: 1, box1: 1, box2: 1, boxo1: 1, boxo2: 1, qsign: 1, sock: 1 };
+const lerpA = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
 
 /* a ballistic piece: position of a thrown thing at time t after the throw, with bounces, then a slide (all deterministic) */
 function ball(p, t) {
@@ -429,195 +213,173 @@ function ball(p, t) {
   return [x, fl, rot, true];
 }
 
-/* ---- the held junk: a prop that draws one of the catalogue's pieces in the hand (the glove goes over it). o.junk = { kind, rot, ox, oy, st } in the character's local units, drawn at the catalogue scale */
+// ------------------------------------------------------------------ the shower closet's door (the kit's S14.showerDoor): a leaf 88 wide in a glass front, hinged on the right, the knob on the left; open = swung toward the camera
+const DOOR0 = S14.showerDoor({ door: 0, bulge: 0 });          /* x 890..978, y 790..988, knob [901, 896] */
+const doorKnob = st => S14.showerDoor(st).knob;
+const DOOR_MID = (DOOR0.x0 + DOOR0.x1) / 2;                   /* 934 */
+
+/* ---- the held junk: a prop that draws one of the catalogue's pieces in the hand (the glove goes over it). o.junk = { kind, rot, ox, oy } in the character's local units; the kit's sprites are at dollhouse
+ *      scale, so inside a character (scaled by s) they are drawn at 1 / s. */
 EXT.prop.fp14b_junk = (side, o, t) => {
   const j = o.junk; if (!j) return;
-  jdraw(j.kind, (j.ox || 0) * side, j.oy || 0, (j.rot || 0) * side, (j.sc ?? 1) * (JSC[j.kind] || 1), Object.assign({ rim: 2.2 }, j.st));
+  const k = 1 / (o.s || 1);
+  jdraw(j.kind, (j.ox || 0) * side, j.oy || 0, (j.rot || 0) * side, (j.sc ?? 1) * k, Object.assign({ rim: 2.2 }, j.st));
 };
-PROP_BOX.fp14b_junk = o => { const j = o.junk || {}, K = KIND[j.kind] || { w: 60, h: 60 }, r = Math.max(K.w, K.h) * (JSC[j.kind] || 1) * (j.sc ?? 1) * .5; return Object.assign([(j.ox || 0) - r, (j.oy || 0) - r, (j.ox || 0) + r, (j.oy || 0) + r], { mirror: true }); };
-/* how each kind is carried: the offset of its centre from the hand, its turn, and a scale */
-const CARRY = { iv: { ox: 0, oy: -6, rot: .1 }, fan: { ox: 6, oy: 96, rot: 0 }, rail: { ox: 6, oy: -64, rot: 1.25 }, bucket: { ox: 0, oy: 70, rot: 0 }, treebox: { ox: 14, oy: -78, rot: 1.42, sc: .85 } };
+/* (not registered in PROP_BOX: a long held thing such as the IV pole would be reported as covering its carrier's face; the frames are checked by eye) */
+/* how each kind is carried, in dollhouse pixels from the hand to the piece's middle, and its turn */
+const CARRY = { iv: { ox: 0, oy: -10, rot: .12 }, fan: { ox: 4, oy: 30, rot: 0 }, rail: { ox: 8, oy: -22, rot: .15 }, bucket: { ox: 0, oy: -30, rot: 0 }, treebox: { ox: 4, oy: -26, rot: .42 } };
+const carryOf = (kind, s) => { const c = CARRY[kind]; return { kind, ox: c.ox / s, oy: c.oy / s, rot: c.rot }; };
 
-// ------------------------------------------------------------------ SHOT A, the conveyor. Two lanes: Mango runs the middle floor into the shower room through the arch; Clementine runs the top floor through the break room and room 14 to a trapdoor
-// in the floor over the shower room. They come in from the left, drop, and run back out, again and again, one delivery about every 0.4 s.
-const ARCH = S14.door('shower', 'l').x;             /* 802: the arch between room 7 and the shower room */
-const HATCH = 956;                                   /* the trapdoor in the floor of room 14, over the shower room */
-const RUN_V = 700;                                   /* px per second along the floor */
-const LANE = { m: { x: ARCH - 34, fl: FL.mid, xl: 330 }, c: { x: HATCH - 4, fl: FL.top, xl: 470 } };   /* the drop point, the floor, and where the runner is out of frame */
-const TRIPS = [   /* who, kind, the time the item leaves the hand */
-  { who: 'm', kind: 'chair', t: .7 }, { who: 'c', kind: 'iv', t: 1.0 },
-  { who: 'm', kind: 'fan', t: 2.05 }, { who: 'c', kind: 'rail', t: 2.35 },
-  { who: 'm', kind: 'bucket', t: 3.4 }, { who: 'c', kind: 'treebox', t: 3.7 },
-];
-/* the route of one runner as keyframes [t, x]: out of frame, in, a short stop to throw, back out (the last trip of Mango ends at the door and stays there) */
-function laneKeys(who, stay) {
-  const L = LANE[who], keys = [], tr = TRIPS.filter(q => q.who === who);
-  tr.forEach((q, i) => {
-    const din = (L.x - L.xl) / RUN_V, dout = (L.x - L.xl) / (RUN_V * 1.25);
-    keys.push([q.t - din, L.xl], [q.t, L.x], [q.t + .1, L.x]);
-    if (!(stay && i === tr.length - 1)) keys.push([q.t + .1 + dout, L.xl]);
-  });
+// ------------------------------------------------------------------ SHOT A: CONCEALMENT. A convoy shuttle: three waves of two runners (Mango with the heavy things, Clementine with the long ones) come in from the left edge, throw into the closet's doorway and run out again; the
+// runners never cross (one wave is out of frame before the next comes in, and inside a wave they run in file, Clementine 88 px behind Mango), so no face is ever covered. After the last wave Mango leans on the door ("Does it close?" 4.17), Clementine
+// shoves ("Sure!" 5.08), the door bursts (5.71) and flings them out over Lemon's head; Lemon, who walked in after the last wave and watched with her arms folded, closes it with one finger ("It closes." 6.36) and the junk obeys.
+const RUN_V = 700, OUT_V = 900, XL = 500;                       /* run-in and run-out speeds (px/s along the floor) and the x where a runner is just out of the frame */
+const DROP = { m: 832, c: 744 }, LANEY = { m: FL.mid + 6, c: FL.mid - 4 };
+const CGAP = .12, HOLD = { m: .27, c: .1 };                     /* Clementine's throw follows Mango's by .12 s; after a throw each holds, Clementine leaves first so they never cross */
+const WAVES = [.66, 1.93, 3.2];                                 /* the scene time Mango's piece leaves her hand in each wave */
+const JM = ['chair', 'fan', 'bucket'], JC = ['iv', 'rail', 'treebox'];
+const TRIPS = WAVES.flatMap((t, i) => [{ who: 'm', kind: JM[i], t }, { who: 'c', kind: JC[i], t: t + CGAP }]);   /* who, kind, the time the item leaves the hand */
+const durIn = who => (DROP[who] - XL) / RUN_V, durOut = who => (DROP[who] - XL) / OUT_V;
+function laneKeys(who) {   /* keyframes [t, x]: at XL, run in, the throw, the hold, run out (the last wave stays) */
+  const keys = [], tr = TRIPS.filter(q => q.who === who);
+  tr.forEach((q, i) => { keys.push([q.t - durIn(who), XL], [q.t, DROP[who]], [q.t + HOLD[who], DROP[who]]); if (i < tr.length - 1) keys.push([q.t + HOLD[who] + durOut(who), XL]); });
   return keys;
 }
-const laneFn = (who, keys, fl) => lt => {
-  if (lt <= keys[0][0]) return [keys[0][1], fl];
-  for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i]; return [lerp(a[1], b[1], cl01((lt - a[0]) / (b[0] - a[0]))), fl]; }
-  return [keys[keys.length - 1][1], fl];
+const laneFn = (who, keys) => lt => {
+  if (lt <= keys[0][0]) return [keys[0][1], LANEY[who]];
+  for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i]; return [lerp(a[1], b[1], cl01((lt - a[0]) / (b[0] - a[0]))), LANEY[who]]; }
+  return [keys[keys.length - 1][1], LANEY[who]];
 };
-const MKEYS = laneKeys('m', true), CKEYS = laneKeys('c', false);
-/* which trip is a runner on at lt? -> { q, phase: 'in' | 'out', k } */
-function tripAt(who, lt) {
-  const L = LANE[who], tr = TRIPS.filter(q => q.who === who);
-  for (const q of tr) {
-    const din = (L.x - L.xl) / RUN_V, dout = (L.x - L.xl) / (RUN_V * 1.25);
-    if (lt >= q.t - din - .02 && lt < q.t) return { q, phase: 'in', k: (lt - (q.t - din)) / din };
-    if (lt >= q.t && lt < q.t + .1 + dout + .02) return { q, phase: 'out', k: (lt - q.t) / (.1 + dout) };
+const MKEYS = laneKeys('m'), CKEYS = laneKeys('c'), MLANE = laneFn('m', MKEYS), CLANE = laneFn('c', CKEYS);
+function tripAt(who, lt) {   /* which trip a runner is on: { q, phase: 'in' | 'out' } (the last trip has no 'out') */
+  const tr = TRIPS.filter(q => q.who === who);
+  for (let i = 0; i < tr.length; i++) {
+    const q = tr[i];
+    if (lt >= q.t - durIn(who) - .02 && lt < q.t) return { q, phase: 'in' };
+    if (i < tr.length - 1 && lt >= q.t && lt < q.t + HOLD[who] + durOut(who) + .02) return { q, phase: 'out' };
   }
   return null;
 }
+const OFF = x => x < XL - 2;                                    /* a runner at the line is entirely outside the frame (the camera's left edge is x 548 to 574): it is simply not drawn */
+const LAST_M = TRIPS.filter(q => q.who === 'm').pop().t + HOLD.m, LAST_C = TRIPS.filter(q => q.who === 'c').pop().t + HOLD.c;
 
-/* the distance from a piece's centre to the lowest thing it rests on, in catalogue units: its rest height on a floor */
-const JB = { chair: 94, iv: 184, fan: 78, rail: 40, bucket: 78, tv: 70, box0: 28, box1: 38, box2: 49, boxo1: 38, boxo2: 49, treebox: 34, banner: 28, qsign: 80, sock: 38, tree: 124 };
-const restY = (kind, floor, sc = 1) => floor - JB[kind] * (JSC[kind] || 1) * sc * SS;
-const jsc = (kind, sc = 1) => (JSC[kind] || 1) * sc * SS;     /* the scale a piece is drawn at in the dollhouse */
-
-/* the pile in the shower room: where each delivered piece comes to rest (x, a stacking height in pieces, a turn) */
-const PILE = {
-  chair: { x: 1000, up: 0, rot: 0 }, iv: { x: 928, up: 0, rot: -1.2 }, fan: { x: 888, up: 0, rot: .1 }, rail: { x: 944, up: 1, rot: .22 },
-  bucket: { x: 1016, up: 1.2, rot: -.08 }, treebox: { x: 968, up: 2, rot: .1 },
-};
-/* a delivered piece: from the hand at the drop time, then flying or rolling into the pile. returns { x, y, rot, landed, tl } where tl is the landing time */
-function deliveryState(q, lt) {
-  const t = lt - q.t; if (t < 0) return null;
-  const P = PILE[q.kind], fl = restY(q.kind, FL.mid, 1) - P.up * 36 * SS * 2.2;
-  if (q.who === 'm') {
-    const x0 = q.kind === 'chair' ? chairCentre(q.t)[0] : LANE.m.x + 40, y0 = FL.mid - 62;
-    const dt1 = q.kind === 'chair' ? 1 : (Math.sqrt(300 * 300 + 4 * 750 * Math.max(1, fl - y0 + 62 + 0)) + 300) / 1500;
-    const vx = q.kind === 'chair' ? 380 : (P.x - x0) / dt1 * .85, vy = q.kind === 'chair' ? 0 : -300;
-    const [x, y, rot, rest] = ball({ x: x0, y: q.kind === 'chair' ? fl : y0, vx, vy, floor: fl, w: q.kind === 'chair' ? 0 : 7, rot: 0, e: .32, fr: .6, slide: q.kind === 'chair' ? 3.4 : 5 }, t);
-    return { x, y, rot, rest, spin: 0 };
-  }
-  const x0 = HATCH + 6, y0 = FL.top - 70;
-  const [x, y, rot, rest] = ball({ x: x0, y: y0, vx: (P.x - x0) / .62, vy: -140, floor: fl, w: q.kind === 'iv' ? 3.4 : q.kind === 'rail' ? -2.6 : 2.2, rot: .3, e: .3, fr: .55, slide: 9 }, t);
-  return { x, y, rot: rest ? P.rot : rot, rest, spin: 0 };
-}
-
-// ------------------------------------------------------------------ SHOT A actors. The beats: conveyor 0-3.5, Mango at the door 3.2-5.7, "Does it close?" 4.17, "Sure!" 5.08 (the shove), the burst 5.71, Lemon "It closes." 6.36, the junk obeys 6.6-7.0
-const DOORX = ARCH - 3;                                  /* the face of the door */
-const MX_DOOR = ARCH - 84, CX_PUSH = ARCH - 178, LM_X = ARCH - 20;         /* where Mango leans, and Clementine behind her */
+/* the door and the closet's stash as the shot needs them (what the kit is asked for) */
 const t_wordCloses = () => wordT('l1', 'closes', 6.6);
-const burstK = lt => seg(lt, CUE.crash, CUE.crash + .42);
-/* the pushed wheelchair of Mango's first trip: the handle is 78 px ahead of her body, the chair 50 px beyond it */
-const CHAIR_SC = jsc('chair'), CHAIR_H = [-98 * CHAIR_SC, -103 * CHAIR_SC];
-const chairHandle = lt => [laneFn('m', MKEYS, FL.mid)(lt)[0] + 78, FL.mid - JB.chair * CHAIR_SC - 52];
-const chairCentre = lt => { const h = chairHandle(lt); return [h[0] - CHAIR_H[0], h[1] - CHAIR_H[1]]; };
-const OFF = (x, who) => x < LANE[who].xl + 4;                /* a runner that is still out of frame (not drawn) */
+function doorA(lt) {
+  const bt = CUE.crash, tc = t_wordCloses(), lastIn = TRIPS[TRIPS.length - 1].t + .2;
+  const landed = TRIPS.reduce((n, q) => n + sstep(lt, q.t + .12, q.t + .3), 0);
+  let stash = 2 + landed / 3, door = 1, bulge = sstep(lt, 2.0, 3.5) * .55;
+  if (lt >= lastIn) { door = lerp(1, .12, sstep(lt, lastIn, lastIn + .55)); bulge = lerp(.55, .85, sstep(lt, lastIn, 4.4)); }
+  if (lt >= 4.4) bulge = lerp(.85, 1, sstep(lt, 4.4, 5.3));
+  if (lt >= 5.3) door = lerp(.12, 0, sstep(lt, 5.3, 5.62));
+  if (lt >= bt) { door = easeOut(seg(lt, bt, bt + .16)); bulge = 0; stash = 3.1; }
+  if (lt >= tc) { const c = easeIO(seg(lt, tc + .04, tc + .46)); door = lerp(1, 0, c); stash = lerp(3.1, 4, c); bulge = .45 * c; }
+  return { door, bulge, stash };
+}
+const knobA = lt => doorKnob(doorA(lt));
+const LEAN_MAX = .19;     /* a body leaning more than about 11 degrees would tilt the lettering on it past the gate's 12 */
+
+/* the burst flings both pushers back over Lemon's head and out of the left edge (transit: they are exempt from the edge audit and from the overlap audit while they fly, and are gone before they could land) */
+const FLY = { m: { x0: DROP.m, v: -1600, T: .5, peak: 100, spin: -.55, d: 0 }, c: { x0: DROP.c, v: -1400, T: .5, peak: 118, spin: .5, d: 0 } };
+function flung(who, lt, ctor, base) {
+  const F = FLY[who], t = lt - CUE.crash - F.d; if (t < 0) return undefined;
+  if (t >= F.T) return null;                                      /* long gone: the parabola below turns round at T */
+  const x = F.x0 + F.v * t * (1 - t / (2 * F.T)), k = cl01(t / F.T);
+  if (OFF(x)) return null;
+  const o = ctor(Object.assign({ x, y: LANEY[who], lift: F.peak * 4 * k * (1 - k), rot: F.spin * k, expr: 'panic', look: [.7, .2] }, base));
+  o.arms = { l: 'up', r: 'flail' }; o.transit = true;
+  return o;
+}
 
 /* the free hand swings while the other carries */
-const runArms = (o, lt, carry, kind) => {
-  o.arms = { l: 'run', r: carry ? 'hold' : 'run' };
-  if (carry) { o.hold = { r: 'fp14b_junk' }; o.junk = Object.assign({ kind }, CARRY[kind]); o.grip = { r: [76 + 4 * Math.sin(lt * 26), 34 + 6 * Math.cos(lt * 26)] }; }
+const runArms = (o, lt, kind) => {
+  o.arms = { l: 'run', r: kind ? 'hold' : 'run' };
+  if (kind) { o.hold = { r: 'fp14b_junk' }; o.junk = carryOf(kind, o.s); o.grip = { r: [76 + 4 * Math.sin(lt * 26), 30 + 6 * Math.cos(lt * 26)] }; }
   return o;
 };
+const CHAIR_H = [-36, -80];                                      /* the pushed wheelchair's handle, from its base (the kit's sprite) */
+const chairHandle = lt => [MLANE(lt)[0] + 80, LANEY.m - 80];
+const chairBase = lt => [chairHandle(lt)[0] - CHAIR_H[0], LANEY.m];
+
+// ------------------------------------------------------------------ SHOT A actors: Mango, Clementine and Lemon (everyone walks through S14.walk / S14.run so the footstep tool gets the gait fields)
+const MX_DOOR = DROP.m, CX_PUSH = DROP.c, LX = 650;     /* Mango leans on the door, Clementine stands behind her to shove, Lemon watches from the armchair end of the room (the three are 88 to 94 px apart: no body covers another's face) */
+const burstK = lt => seg(lt, CUE.crash, CUE.crash + .42);
+
 function mangoA(lt) {
-  const tr = tripAt('m', lt), lastDrop = TRIPS.filter(q => q.who === 'm').pop().t + .1, bt = CUE.crash;
-  const base = { s: SS, stride: 44, plant: true, who: 'mango', t: lt };
-  let o;
-  if (lt < lastDrop + .04) {
-    o = S14.run(mkMango, laneFn('m', MKEYS, FL.mid), lt, Object.assign({ expr: 'happy', look: [.9, 0] }, base));
-    if (OFF(o.x, 'm')) return null;
-    const dir = o.dir || 1; if (o.gaitW != null) leanO(o, dir * .13);
-    const carry = tr && tr.phase === 'in' && tr.q.kind !== 'chair' ? tr.q.kind : null;
-    runArms(o, lt, !!carry, carry);
-    if (tr && tr.phase === 'in' && tr.q.kind === 'chair') { const h = chairHandle(lt); o.arms = { l: 'run', r: 'reach' }; o.grip = { r: gripFor(o, 'r', h[0], h[1]) }; }
-    if (!tr || tr.phase === 'out') { o.expr = 'happy'; o.look = [-.9, 0]; }
+  const bt = CUE.crash, base = { s: SS, stride: 44, plant: true, who: 'mango', t: lt };
+  if (lt >= bt) return flung('m', lt, mkMango, base) || null;
+  const o = S14.run(mkMango, MLANE, lt, Object.assign({ expr: 'happy', look: [.9, 0] }, base));
+  if (OFF(o.x)) return null;
+  if (lt < LAST_M) {
+    const tr = tripAt('m', lt);
+    if (o.gaitW != null) leanO(o, (o.dir || 1) * .12);
+    withTransit(o, true);
+    const push = tr && tr.phase === 'in' && tr.q.kind === 'chair', carry = tr && tr.phase === 'in' && !push ? tr.q.kind : null;
+    runArms(o, lt, carry);
+    if (push) { const h = chairHandle(lt); o.arms = { l: 'run', r: 'reach' }; o.grip = { r: gripFor(o, 'r', h[0], h[1]) }; }
+    if (!tr || tr.phase === 'out') o.look = [-.9, 0];
     return o;
   }
-  /* door duty: she walks from the drop point to the door, leans her shoulder into it with one hand flat on it, and is flung back at the burst */
-  const x0 = MX_DOOR, kk = burstK(lt), rec = sstep(lt, bt + .5, bt + 1.0);
-  const walking = lt < lastDrop + .55;
-  const px = u => [lerp(LANE.m.x, x0, easeIO(seg(u, lastDrop + .02, lastDrop + .5))), FL.mid];
-  o = walking ? S14.walk(mkMango, px, lt, Object.assign({ expr: 'hopeful', look: [.85, .05], stride: 36 }, base)) : mkMango(Object.assign({ x: lt < bt ? x0 : x0 - 96 * easeOut(burstK(lt)), y: FL.mid, expr: 'hopeful', look: [.85, .05] }, base));
-  const lean = lt < bt ? sstep(lt, 3.3, 3.8) * .16 + sstep(lt, 4.1, 5.05) * .06 + sstep(lt, 5.1, 5.6) * .08 : lerp(-.42, 0, rec);
+  /* door duty: she takes the knob and leans her shoulder into the door; it bows, it shakes, the burst throws her back */
+  const lean = sstep(lt, 3.5, 4.0) * .11 + sstep(lt, 4.1, 5.05) * .03 + sstep(lt, 5.1, 5.6) * .045;
   leanO(o, lean);
-  o.shake = lt >= 5.0 && lt < bt ? 1.8 * sstep(lt, 5.0, 5.5) : 0;
-  if (lt < bt) {
-    const pushing = lt >= 3.3;
-    o.arms = { l: 'hips', r: pushing ? 'reach' : 'down' };
-    if (pushing) { o.grip = { r: gripFor(o, 'r', DOORX, FL.mid - 82) }; o.hand = { r: 'flat' }; }
-    o.expr = lt >= 5.0 ? 'weak' : lt >= B('m1').s ? 'hopeful' : 'happy'; o.look = lt >= B('c1').s - .3 ? [-.6, .1] : [.85, .05];
-    if (lt >= B('m1').s && lt < B('m1').e) o.lid = .22;
-  } else {
-    o.arms = { l: lt < bt + .6 ? 'up' : 'rest', r: lt < bt + .6 ? 'flail' : 'rest' };
-    o.expr = lt < bt + .9 ? 'panic' : 'dead'; o.look = [.7, .2]; o.lid = lt >= bt + .9 ? .45 : undefined;
-  }
+  o.shake = lt >= 5.0 ? 1.8 * sstep(lt, 5.0, 5.5) : 0;
+  const k = knobA(lt);
+  o.arms = { l: 'hips', r: 'reach' }; o.grip = { r: gripFor(o, 'r', k[0] - 2, k[1] + 4) }; o.hand = { r: 'grip' };
+  o.expr = lt >= 5.0 ? 'weak' : lt >= B('m1').s ? 'hopeful' : 'happy'; o.look = lt >= B('c1').s - .3 ? [-.6, .1] : [.9, .05];
+  if (lt >= B('m1').s && lt < B('m1').e) o.lid = .22;
   return o;
 }
-/* Clementine: the top lane (through the break room and room 14 to the trapdoor), then down to the middle floor to shove */
-const CMID = lt => [lerp(LANE.c.xl, CX_PUSH, easeOut(seg(lt, 4.5, 5.0))), FL.mid];
+/* Clementine runs in file behind Mango, then waits by her (a hand on a hip, watching her strain), and at "Sure!" puts both shoulders into it */
 function clemA(lt) {
-  const tr = tripAt('c', lt), bt = CUE.crash, lastDrop = TRIPS.filter(q => q.who === 'c').pop().t + .1;
-  const base = { s: SS, stride: 40, plant: true, who: 'clem', t: lt };
-  let o;
-  if (lt < lastDrop + (LANE.c.x - LANE.c.xl) / (RUN_V * 1.25) + .04) {
-    o = S14.run(mkClem, laneFn('c', CKEYS, FL.top), lt, Object.assign({ expr: 'hopeful', look: [.9, 0] }, base));
-    if (OFF(o.x, 'c')) return null;
-    if (o.gaitW != null) leanO(o, (o.dir || 1) * .13);
-    const carry = tr && tr.phase === 'in' ? tr.q.kind : null;
-    runArms(o, lt, !!carry, carry);
+  const bt = CUE.crash, base = { s: SS, stride: 40, plant: true, who: 'clem', t: lt };
+  if (lt >= bt) return flung('c', lt, mkClem, base) || null;
+  const o = S14.run(mkClem, CLANE, lt, Object.assign({ expr: 'hopeful', look: [.9, 0] }, base));
+  if (OFF(o.x)) return null;
+  if (lt < LAST_C) {
+    const tr = tripAt('c', lt);
+    if (o.gaitW != null) leanO(o, (o.dir || 1) * .12);
+    withTransit(o, true);
+    runArms(o, lt, tr && tr.phase === 'in' ? tr.q.kind : null);
+    if (!tr || tr.phase === 'out') o.look = [-.9, 0];
     return o;
   }
-  if (lt < 4.5) return null;
-  const pushX = CX_PUSH, kk = burstK(lt), rec = sstep(lt, bt + .7, bt + 1.3);
-  const cfn = u => [CMID(u)[0], FL.mid];
-  o = lt < 5.0 ? S14.run(mkClem, cfn, lt, Object.assign({ expr: 'hopeful', look: [.9, .1] }, base)) : mkClem(Object.assign({ x: lt < bt ? pushX : pushX - 70 * easeOut(kk), y: FL.mid, expr: 'hopeful', look: [.9, .1] }, base));
-  if (lt < 5.0) { if (o.gaitW != null) leanO(o, .12); }
-  const lean = lt < bt ? sstep(lt, 5.0, 5.2) * .22 + sstep(lt, 5.2, 5.6) * .06 : lerp(-.55, 0, rec);
-  if (lt >= 5.0) leanO(o, lean);
-  o.shake = lt >= 5.1 && lt < bt ? 2.2 * sstep(lt, 5.1, 5.5) : 0;
-  if (lt >= 4.95 && lt < bt) {
-    const m = mangoA(lt); const mx = m ? m.x - 44 : MX_DOOR - 44;
-    o.arms = { l: 'down', r: 'reach' }; o.grip = { r: gripFor(o, 'r', mx, FL.mid - 84) }; o.hand = { r: 'flat' };
-    o.expr = lt >= B('c1').s ? 'happy' : 'hopeful'; o.look = [.9, .05]; o.squash = .05 * sstep(lt, 5.2, 5.6);
-  } else if (lt >= bt) { o.arms = { l: lt < bt + .7 ? 'up' : 'rest', r: lt < bt + .7 ? 'flail' : 'rest' }; o.expr = lt < bt + 1.0 ? 'shock' : 'happy'; o.look = [.6, .2]; if (lt >= bt + 1.0) o.face = { curve: 1.1 }; }
+  const push = sstep(lt, 4.85, 5.1);
+  const lean = sstep(lt, 4.95, 5.2) * .13 + sstep(lt, 5.2, 5.6) * .05;
+  leanO(o, lean);
+  o.shake = lt >= 5.1 ? 2.2 * sstep(lt, 5.1, 5.5) : 0;
+  const m = mangoA(lt), mx = m ? m.x - 46 : MX_DOOR - 46;
+  o.arms = { l: 'hips', r: push > 0 ? 'reach' : 'hips' };
+  if (push > 0) { o.grip = { r: lerpA(gripFor(o, 'r', o.x + 30, FL.mid - 60), gripFor(o, 'r', mx, FL.mid - 80), push) }; o.hand = { r: 'flat' }; }
+  o.expr = lt >= B('c1').s ? 'happy' : 'hopeful'; o.look = [.9, .05]; o.squash = .05 * sstep(lt, 5.2, 5.6);
   return o;
+}
+/* Lemon strolls in after the last wave (hands on her elbows, half-lidded), stops, and watches; the burst blows past her and she does not move; then she walks to the door and closes it with one finger */
+function lemonPath(u) {
+  const bt = CUE.crash, tc = t_wordCloses(), w0 = bt + .12, w1 = tc - .22;
+  if (u < w0) return [lerp(470, LX, easeIO(seg(u, 3.0, 4.7))), FL.mid];
+  return [lerp(LX, MX_DOOR, easeIO(seg(u, w0, w1))), FL.mid];
 }
 function lemonA(lt) {
-  const bt = CUE.crash, t0 = 5.5, t1 = B('l1').s - .1;
-  if (lt < t0) return null;
+  const bt = CUE.crash, tc = t_wordCloses(), w1 = tc - .22;
   const base = { s: SS, stride: 40, plant: true, who: 'lemon', t: lt };
-  const fn = u => [lerp(LANE.m.xl + 120, 738, easeOut(seg(u, t0, t1 + .05))), FL.mid];
-  const o = S14.walk(mkLemon, fn, lt, Object.assign({ expr: 'dead', lid: .5, look: [.8, 0] }, base));
-  const tc = t_wordCloses(), reach = sstep(lt, tc - .25, tc + .05), pull = sstep(lt, tc + .5, tc + .9);
-  if (lt >= t1) { o.arms = { l: 'rest', r: 'reach' }; o.grip = { r: lerpA(gripFor(o, 'r', 738 + 20, FL.mid - 66), gripFor(o, 'r', DOORX + 1, FL.mid - 96), reach * (1 - pull)) }; o.hand = { r: 'point' }; }
-  o.look = lt < tc + .6 ? [.9, 0] : [.1, 0];
-  return o;
+  if (lt < 3.0) return null;
+  const o = S14.walk(mkLemon, lemonPath, lt, Object.assign({ expr: 'dead', lid: .5 }, base));
+  if (OFF(o.x)) return null;
+  const reach = sstep(lt, tc - .3, tc + .02), pull = sstep(lt, tc + .55, tc + .95), k = knobA(Math.max(lt, tc + .02));
+  /* she watches with her arms folded (a hand on each elbow); the eyes go to the pusher at the door */
+  o.arms = { l: 'hips', r: 'hips' };
+  o.look = lt < 4.7 ? [.95, .05] : [.9, 0];
+  if (lt >= bt && lt < bt + .5) { o.arms = { l: 'down', r: 'down' }; o.expr = 'dead'; }
+  if (lt >= w1 - .1) {
+    o.arms = { l: 'rest', r: 'reach' };
+    o.grip = { r: lerpA(gripFor(o, 'r', o.x + 24, FL.mid - 62), gripFor(o, 'r', k[0] - 1, k[1] + 2), reach * (1 - pull)) };
+    o.hand = { r: 'point' }; o.look = lt < tc + .6 ? [.9, 0] : [.1, 0];
+  }
+  return withTransit(o, lt < 4.8 || camSpeed(lt) > 300);
 }
-const lerpA = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
 
-// ------------------------------------------------------------------ SHOT A: the room options the kit reads (the stash level, the bulge, the door), the trapdoor, the pieces, the dust
-function roomsA(lt) {
-  const bt = CUE.crash, tc = t_wordCloses();
-  const landed = TRIPS.reduce((n, q) => n + sstep(lt, q.t + (q.who === 'm' ? .3 : .62), q.t + (q.who === 'm' ? .55 : .9)), 0);
-  let stash = 2 + landed / 3, door = 1, bulge = sstep(lt, 2.4, 3.9) * .8;
-  if (lt >= 3.3) door = lerp(1, .14, sstep(lt, 3.3, 3.9));
-  if (lt >= 5.2) { door = lerp(.14, 0, sstep(lt, 5.2, 5.55)); bulge = 1; }
-  if (lt >= bt) { door = easeOut(seg(lt, bt, bt + .16)); bulge = 0; stash = 3.2; }
-  if (lt >= tc) { const c = easeIO(seg(lt, tc + .04, tc + .42)); door = lerp(1, 0, c); stash = lerp(3.2, 4, c); bulge = .5 * c; }
-  return { shower: { stash, bulge, door }, med: { pens: 0 } };
-}
-/* the trapdoor in the floor of room 14 over the shower room: an opening in the slab, its cover lying on the floor beside it */
-function drawHatch(lt) {
-  const y0 = RC('r14').y1, x0 = HATCH - 38, w = 76;
-  ctx.save();
-  ctx.fillStyle = '#120d0c'; ctx.fillRect(x0, y0 - 2, w, 16);
-  ctx.fillStyle = 'rgba(255,214,150,.18)'; ctx.fillRect(x0, y0 - 2, w, 3);
-  ctx.strokeStyle = 'rgba(40,24,16,.9)'; ctx.lineWidth = 2.4; ctx.strokeRect(x0, y0 - 2, w, 16);
-  ctx.translate(x0 + w + 6, y0 - 8); ctx.rotate(-.05);
-  ctx.fillStyle = g2(0, -3, 0, 6, [[0, '#c9955a'], [1, '#7a4f26']]); rr(0, -3, w - 6, 8, 2); ctx.fill(); outline(2.4); ctx.stroke();
-  ctx.fillStyle = '#d9d4cc'; ell(w - 20, 1, 3.4, 3.4); ctx.fill();
-  ctx.restore();
-}
+// ------------------------------------------------------------------ SHOT A: the pieces (a lob into the doorway, then the spill and the rewind), the dust, the world
 function puff(x, y, k, o = {}) {
   if (k <= 0 || k >= 1) return;
   const n = o.n ?? 6, R = o.r ?? 40, col = o.c ?? '226,212,190';
@@ -628,79 +390,72 @@ function puff(x, y, k, o = {}) {
   }
   ctx.restore();
 }
-const wheelA = (kind, x) => kind === 'chair' ? x / (56 * jsc('chair')) : 0;
-/* a soft contact shadow under a piece on the floor */
-function floorShadow(x, y, w, a = .3) { ctx.save(); ctx.fillStyle = V2.radial(x, y, 0, w, [[0, `rgba(10,6,16,${a})`], [1, 'rgba(10,6,16,0)']]); ctx.translate(x, y); ctx.scale(1, .16); ctx.translate(-x, -y); ctx.beginPath(); ctx.arc(x, y, w, 0, TAU); ctx.fill(); ctx.restore(); }
+function floorShadow(x, y, w, a = .3) { ctx.save(); ctx.translate(x, y); ctx.scale(1, .16); ctx.fillStyle = V2.radial(0, 0, 0, w, [[0, `rgba(10,6,16,${a})`], [1, 'rgba(10,6,16,0)']]); ctx.beginPath(); ctx.arc(0, 0, w, 0, TAU); ctx.fill(); ctx.restore(); }
 
-/* the spill at the burst: the pile's six pieces fly out of the arch to the left, and a television, boxes and the banner come with them. d = delay after the burst */
+/* a delivery: the piece leaves the hand (or rolls on, the wheelchair) and goes into the doorway, shrinking and fading into the closet's depth */
+const LOB = .24;
+function deliveryState(q, lt) {
+  const t = lt - q.t; if (t < 0 || t > LOB + .03) return null;
+  const k = cl01(t / LOB), tx = DOOR_MID - 6, ty = FL.mid - 92;
+  if (q.kind === 'chair') { const c = chairBase(q.t), x = lerp(c[0], tx, easeIn(k) * .9 + k * .1), y = LANEY.m - JB.chair * (1 - .4 * k) * 1; return { x, y: lerp(c[1] - JB.chair, ty + 16, k * k), rot: 0, sc: 1 - .42 * k, alpha: 1 - sstep(k, .7, 1), a: x / 22 }; }
+  const x0 = DROP[q.who] + 38, y0 = LANEY[q.who] - 66;
+  return { x: lerp(x0, tx, easeOut(k)), y: lerp(y0, ty, k) - 30 * Math.sin(k * PI), rot: .3 + 5 * t * (q.kind === 'iv' ? 1 : -1), sc: 1 - .42 * k, alpha: 1 - sstep(k, .7, 1) };
+}
+/* the spill at the burst: pieces fly out of the doorway to the left; after the finger on the knob they fly back in (the same arcs, run backwards at speed) */
 const SPILL = [
-  { kind: 'chair', from: 'pile', d: 0, vx: -940, vy: -40, w: 0, slide: 2.7, e: .3, fr: .8, up: 0 },
-  { kind: 'iv', from: 'pile', d: .02, vx: -600, vy: -520, w: -4.4, slide: 4.5, e: .36, fr: .7, up: 0 },
-  { kind: 'fan', from: 'pile', d: .04, vx: -520, vy: -560, w: 6.4, slide: 4, e: .42, fr: .7, up: 0 },
-  { kind: 'rail', from: 'pile', d: .06, vx: -470, vy: -360, w: 3.4, slide: 4, e: .3, fr: .7, up: 0 },
-  { kind: 'bucket', from: 'pile', d: .05, vx: -380, vy: -600, w: -5, slide: 5, e: .34, fr: .6, up: 0 },
-  { kind: 'treebox', from: 'pile', d: .1, vx: -430, vy: -300, w: -2.4, slide: 4, e: .3, fr: .7, up: 0 },
-  { kind: 'tv', from: 'door', d: .03, vx: -420, vy: -440, w: 3.2, slide: 5, e: .36, fr: .6, y: -92 },
-  { kind: 'boxo2', from: 'door', d: .08, vx: -330, vy: -360, w: -3, slide: 5, e: .3, fr: .6, y: -60 },
-  { kind: 'box1', from: 'door', d: .12, vx: -250, vy: -520, w: 4.5, slide: 6, e: .35, fr: .6, y: -120 },
-  { kind: 'banner', from: 'door', d: .14, vx: -540, vy: -260, w: 2.6, slide: 3.4, e: .3, fr: .8, y: -40 },
+  { kind: 'chair', d: 0, y: -50, vx: -820, vy: -90, w: 0, slide: 2.5, e: .3, fr: .8, dy: 4 },
+  { kind: 'iv', d: .02, y: -110, vx: -560, vy: -560, w: -4.2, slide: 4.5, e: .36, fr: .7, dy: -4 },
+  { kind: 'fan', d: .05, y: -80, vx: -500, vy: -600, w: 6.2, slide: 4, e: .42, fr: .7, dy: 8 },
+  { kind: 'rail', d: .06, y: -90, vx: -440, vy: -380, w: 3.4, slide: 4, e: .3, fr: .7, dy: -8 },
+  { kind: 'bucket', d: .04, y: -50, vx: -360, vy: -640, w: -5, slide: 5, e: .34, fr: .6, dy: 10 },
+  { kind: 'treebox', d: .1, y: -70, vx: -420, vy: -300, w: -2.4, slide: 4, e: .3, fr: .7, dy: 0 },
+  { kind: 'tv', d: .03, y: -100, vx: -380, vy: -480, w: 3.2, slide: 5, e: .36, fr: .6, dy: 12 },
+  { kind: 'box2', d: .08, y: -60, vx: -300, vy: -400, w: -3, slide: 5, e: .3, fr: .6, dy: 6 },
+  { kind: 'box1', d: .12, y: -120, vx: -240, vy: -560, w: 4.5, slide: 6, e: .35, fr: .6, dy: -2 },
+  { kind: 'banner', d: .14, y: -40, vx: -560, vy: -260, w: 2.6, slide: 3.4, e: .3, fr: .8, dy: 2 },
+  { kind: 'box0', d: .16, y: -140, vx: -180, vy: -640, w: -5.4, slide: 6, e: .35, fr: .6, dy: 9 },
 ];
 function spillState(sp, lt) {
   const bt = CUE.crash, tc = t_wordCloses(), u = 1 - easeIO(seg(lt, tc + .06, tc + .5));
   const tt = (Math.min(lt, tc + .06) - bt - sp.d) * (lt > tc + .06 ? u : 1);
-  if (tt <= 0 && sp.from === 'door') return null;
-  const P = PILE[sp.kind], fl = restY(sp.kind, FL.mid, 1);
-  let x0, y0;
-  if (sp.from === 'pile') { const pf = restY(sp.kind, FL.mid, 1) - P.up * 36 * SS * 2.2; x0 = P.x; y0 = pf; } else { x0 = ARCH + 18; y0 = FL.mid + sp.y * 1; }
-  const r = ball({ x: x0, y: y0, vx: sp.vx, vy: sp.vy, floor: fl, w: sp.w, rot: sp.from === 'pile' ? P.rot : 0, e: sp.e, fr: sp.fr, slide: sp.slide }, Math.max(0, tt));
-  return { x: r[0], y: r[1], rot: r[2], rest: r[3], alpha: sp.from === 'door' ? cl01(tt / .06) * cl01(u * 6) : 1 };
+  if (tt <= 0) return null;
+  const fl = FL.mid + sp.dy, r = ball({ x: DOOR_MID - 4, y: FL.mid + sp.y, vx: sp.vx, vy: sp.vy, floor: fl - JB[sp.kind], w: sp.w, rot: 0, e: sp.e, fr: sp.fr, slide: sp.slide }, tt);
+  return { x: r[0], y: r[1], rot: r[2], rest: r[3], alpha: cl01(tt / .05) * cl01(u * 8), sc: 1 + .1 * cl01(tt / .4) };
 }
 function piecesA(lt) {
   const bt = CUE.crash, out = [];
-  if (lt < bt + .001) {
-    for (const q of TRIPS) { const s = deliveryState(q, lt); if (!s) continue; out.push({ z: 1, kind: q.kind, x: s.x, y: s.y, rot: s.rot, st: { a: wheelA(q.kind, s.x), spin: 1, t: lt } }); }
+  if (lt < bt) {
+    for (const q of TRIPS) { const s = deliveryState(q, lt); if (!s) continue; out.push({ z: 2.5, kind: q.kind, x: s.x, y: s.y, rot: s.rot, sc: s.sc, st: { alpha: s.alpha } }); }
     const tr = tripAt('m', lt);
-    if (tr && tr.phase === 'in' && tr.q.kind === 'chair') { const c = chairCentre(lt); out.push({ z: 2.6, kind: 'chair', x: c[0], y: c[1], rot: 0, st: { a: wheelA('chair', c[0]) } }); }
-  } else {
-    for (const sp of SPILL) { const s = spillState(sp, lt); if (!s) continue; out.push({ z: 2, kind: sp.kind, x: s.x, y: s.y, rot: s.rot, st: { a: wheelA(sp.kind, s.x), spin: s.rest ? 0 : 1, t: lt, alpha: s.alpha, slosh: s.rest ? 0 : 1 } }); }
-  }
+    if (tr && tr.phase === 'in' && tr.q.kind === 'chair') { const c = chairBase(lt); out.push({ z: 2.6, kind: 'chair', x: c[0], y: c[1] - JB.chair, rot: 0, sc: 1, st: {} }); }
+  } else for (const sp of SPILL) { const s = spillState(sp, lt); if (s) out.push({ z: 2 + sp.dy / 100, kind: sp.kind, x: s.x, y: s.y, rot: s.rot, sc: s.sc, st: { alpha: s.alpha }, rest: s.rest }); }
   return out;
-}
-
-// ------------------------------------------------------------------ SHOT A: the camera, the world, the dust
-const A_CAM = lt => ({ z: lerp(1.58, 1.74, easeOut(seg(lt, 0, 5.6))), x: 800, y: 768 });
-const LAND = {};   /* when each delivered piece first comes to rest */
-function landTime(q) {
-  if (LAND[q.kind] != null) return LAND[q.kind];
-  let t = q.t + .05; for (; t < q.t + 2; t += .02) { const s = deliveryState(q, t); if (s && s.rest) break; }
-  return (LAND[q.kind] = t);
 }
 function effectsA(lt) {
   const bt = CUE.crash;
-  for (const q of TRIPS) { const tl = landTime(q), P = PILE[q.kind]; if (lt > tl && lt < tl + .7) { const s = deliveryState(q, lt); puff(s.x, FL.mid - 8, (lt - tl) / .7, { r: 30, seed: q.t * 3, n: 4, a: .5 }); } }
-  /* the burst: a shock ring, a billow of dust from the arch */
+  for (const q of TRIPS) { const dt = lt - (q.t + LOB * .8); if (dt > 0 && dt < .5) puff(DOOR_MID + 4, FL.mid - 70, dt / .5, { r: 26, seed: q.t * 3, n: 4, a: .45 }); }
   if (lt >= bt && lt < bt + 1.2) {
-    puff(ARCH - 20, FL.mid - 40, (lt - bt) / 1.2, { r: 74, seed: 3, n: 9, a: .6 });
-    puff(ARCH - 120, FL.mid - 12, (lt - bt - .1) / 1.2, { r: 60, seed: 8, n: 7, a: .5 });
-    ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(ARCH, FL.mid - 70, (lt - bt) / .5, { r0: 20, r1: 260, lw: 7, alpha: .7, color: '255,236,200' }); ctx.restore();
+    puff(DOOR_MID - 20, FL.mid - 46, (lt - bt) / 1.2, { r: 80, seed: 3, n: 9, a: .6 });
+    puff(DOOR_MID - 120, FL.mid - 14, (lt - bt - .1) / 1.2, { r: 62, seed: 8, n: 7, a: .5 });
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(DOOR_MID, FL.mid - 90, (lt - bt) / .5, { r0: 20, r1: 260, lw: 7, alpha: .7, color: '255,236,200' }); ctx.restore();
   }
-  if (lt >= bt && lt < bt + .35) V2.glow(ARCH, FL.mid - 70, 200, '255,226,170', .5 * (1 - (lt - bt) / .35), 'screen', .4);
+  if (lt >= bt && lt < bt + .35) V2.glow(DOOR_MID, FL.mid - 90, 200, '255,226,170', .5 * (1 - (lt - bt) / .35), 'screen', .4);
 }
 function drawShotA(lt) {
-  const rooms = roomsA(lt);
+  const rooms = { shower: doorA(lt), med: { pens: .25 } };
   S14.back(lt, { rooms, t: lt });
-  drawHatch(lt);
   const items = [];
-  for (const p of piecesA(lt)) items.push({ z: p.z, fn: () => { floorShadow(p.x, FL.mid - 2, 34, .22); jdraw(p.kind, p.x, p.y, p.rot, jsc(p.kind), p.st); } });
+  for (const p of piecesA(lt)) items.push({ z: p.z, fn: () => { if (p.rest !== false && p.y > 0) floorShadow(p.x, FL.mid + 2, 34, .22); jdraw(p.kind, p.x, p.y, p.rot, p.sc, p.st); } });
   const m = mangoA(lt), c = clemA(lt), l = lemonA(lt);
-  if (m) items.push({ z: 3, fn: () => drawChar(m) });
-  if (c) items.push({ z: c.y < FL.mid - 100 ? 2.9 : 3.1, fn: () => drawChar(c) });
+  if (m) items.push({ z: 3.1, fn: () => drawChar(m) });
+  if (c) items.push({ z: 2.9, fn: () => drawChar(c) });
   if (l) items.push({ z: 3.2, fn: () => drawChar(l) });
   items.sort((a, b) => a.z - b.z);
   for (const it of items) it.fn();
   S14.front(lt, { rooms });
   effectsA(lt);
 }
+const A_CAM = lt => ({ z: lerp(1.86, 2.04, easeOut(seg(lt, 0, 5.8))), x: 838, y: 944 });
 
 // ------------------------------------------------------------------ SHOT D: THE CAMERA TRAP (12.64 to 14.10). A corner camera in the med room, drawn as its own flat set (grey values: the grade turns it night-vision green).
 const TRAP = { cut: 12.64, counter: 1150 };
@@ -783,7 +538,7 @@ function clemTrap(lt) {
   const sc0 = T_SCR0(), sh2 = CUE.shutter2, k = seg(lt, sc0, sc0 + 4 * T_PEN + .1), s = 1.2;
   const bx = lerp(420, 704, easeIO(k));                       /* she shuffles along the counter as she writes */
   const caught = lt >= sh2 - .26;
-  const o = mkClem({ x: bx, y: 1166, s, t: lt, expr: caught ? 'shock' : 'hopeful', look: caught ? [0, .05] : lt < sc0 ? [-.95, .15] : [.3, .55], arms: { l: 'hips', r: 'reach' }, hold: { r: 'fp14b_marker' }, hand: {}, acc: ['steth', 'badge7'] });
+  const o = mkClemUp({ x: bx, y: 1166, s, t: lt, expr: caught ? 'shock' : 'hopeful', look: caught ? [0, .05] : lt < sc0 ? [-.95, .15] : [.3, .55], arms: { l: 'hips', r: 'reach' }, hold: { r: 'fp14b_marker' }, hand: {}, acc: ['steth', 'badge7'] });
   /* the marker tip rides along the flags (tip is 29 px right of and 24 px below the hand at this scale) */
   let tx, ty;
   if (lt < sc0) { tx = PENX[0] - 36; ty = PENY - 96; }
@@ -834,15 +589,364 @@ function trapOver(lt) {
   trapHUD(lt, { t0: TRAP.cut, box: [sx(c.x - 150), sy(744), sx(c.x + 150), sy(1140)], caught: lt >= sh2 });
 }
 
-// DEV tail: the trap shot alone (lt 12.6 to 14.1)
+// ------------------------------------------------------------------ THE SHOTS AND THE CAMERA. Five dollhouse shots share one world; the camera travels between them (a whip down to the station, a crane up to the med room); the trap is its own picture.
+const SHOT_T = { a: 0, b: 7.4, c: 9.9, d: 12.64, e: 14.1, f: 19.46 };     /* where each shot's picture begins (the camera starts travelling to it a little earlier) */
+const shotOf = lt => lt >= SHOT_T.f ? 'f' : lt >= SHOT_T.e ? 'e' : lt >= SHOT_T.d ? 'd' : lt >= SHOT_T.c ? 'c' : lt >= SHOT_T.b ? 'b' : 'a';
+const roomC = id => { const r = RC(id); return [r.cx, r.cy]; };
+const B_POSE = (lt) => ({ z: lerp(2.42, 2.55, easeOut(seg(lt, 7.6, 9.9))), x: 650, y: 1222 });
+const C_POSE = (lt) => ({ z: lerp(3.1, 3.4, easeOut(seg(lt, 11.0, 12.64))), x: 147, y: 884 });
+const E_POSE = (lt) => ({ z: lerp(1.0, 1.04, seg(lt, 14.1, 19.46)), x: 540, y: 905 });
+const F_POSE = (lt) => ({ z: lerp(2.95, 3.12, easeOut(seg(lt, 19.5, 22.0))), x: 150, y: 636 });
+const mixPose = (a, b, k) => ({ z: Math.exp(lerp(Math.log(a.z), Math.log(b.z), k)), x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k) });
+/* the whip from A to B: 7.26 to 7.64; the crane from B to C: 9.72 to 11.0; the cuts into D, E and F are hard */
+const WH = { ab: [7.26, 7.64], bc: [9.72, 11.05] };
+function camAt(lt) {
+  if (lt < WH.ab[0]) return A_CAM(lt);
+  if (lt < WH.ab[1]) return mixPose(A_CAM(WH.ab[0]), B_POSE(WH.ab[1]), easeIO(seg(lt, WH.ab[0], WH.ab[1])));
+  if (lt < WH.bc[0]) return B_POSE(lt);
+  if (lt < WH.bc[1]) return mixPose(B_POSE(WH.bc[0]), C_POSE(WH.bc[1]), easeIO(seg(lt, WH.bc[0], WH.bc[1])));
+  if (lt < SHOT_T.d) return C_POSE(lt);
+  if (lt < SHOT_T.e) return { z: 1.25, x: 640, y: 900 };
+  if (lt < SHOT_T.f) return E_POSE(lt);
+  return F_POSE(lt);
+}
+/* how fast the camera is moving (scene px per second at the screen), for the blur and for the characters that cross the frame edge during a whip */
+function camSpeed(lt) {
+  const a = camAt(lt - .02), b = camAt(lt + .02), za = (a.z + b.z) / 2;
+  return Math.hypot((b.x - a.x) * za, (b.y - a.y) * za, Math.log(b.z / a.z) * 900) / .04;
+}
+const isCut = lt => [SHOT_T.d, SHOT_T.e, SHOT_T.f].some(c => lt >= c - .04 && lt <= c + .07);
+function blurAt(lt) {
+  if (isCut(lt)) return 1;
+  const sp = camSpeed(lt);
+  let n = sp > 1800 ? 9 : sp > 900 ? 7 : sp > 400 ? 4 : sp > 150 ? 2 : 1;
+  if (lt >= CUE.typing - .3 && lt < SHOT_T.c) n = Math.max(n, 5);                       /* Lemon types at a blur */
+  if (lt >= CUE.scribble && lt < SHOT_T.e) n = Math.max(n, 4);
+  return n;
+}
+
+// ------------------------------------------------------------------ SHOT B: CHARTING. The nurses' station: Lemon types at a blur (typing cue 7.95), a stack of paper grows on the counter, sheets flutter off it.
+const LEM_B = { x: 668, y: FL.low };
+const KEYS_B = [692, FL.low - 118];                          /* the computer on wheels' keyboard (the kit draws it at local (380..416, 184) of the station) */
+function lemonB(lt) {
+  const typing = sstep(lt, CUE.typing - .12, CUE.typing + .05) * (1 - sstep(lt, 9.78, 9.98));
+  const o = mkLemon({ x: LEM_B.x, y: LEM_B.y, s: SS, t: lt, who: 'lemon', expr: 'dead', lid: .5, look: [.75, -.45], plant: true });
+  o.rot = .012 * Math.sin(lt * 5.3) * typing;
+  const ph = lt * 74;
+  o.arms = { l: 'hold', r: 'hold' };
+  o.grip = { l: gripFor(o, 'l', KEYS_B[0] - 12 + 7 * Math.sin(ph) * typing, KEYS_B[1] + 3 + 5 * Math.sin(ph * 1.17 + 1) * typing), r: gripFor(o, 'r', KEYS_B[0] + 16 + 7 * Math.sin(ph * 1.09 + 2.4) * typing, KEYS_B[1] + 3 + 5 * Math.sin(ph * .93 + .7) * typing) };
+  o.hand = { l: 'flat', r: 'flat' };
+  return o;
+}
+/* the stack of charts on the counter, right of the kit's own: it grows with the typing; a sheet lifts off now and then and flutters away to the upper left */
+const STACK = { x: 560, y: RC('station').y0 + 232 };       /* the counter top surface is at local y 226..238 */
+function drawStack(lt) {
+  const k = seg(lt, CUE.typing, 9.8), n = Math.round(3 + 22 * easeOut(k)), t0 = CUE.typing;
+  ctx.save();
+  floorShadow(STACK.x, STACK.y + 4, 30, .3);
+  for (let i = 0; i < n; i++) {
+    const w = 38 + 3 * hash(i * 1.7), x = STACK.x + (hash(i * 3.1) - .5) * 5, y = STACK.y - i * 2.1;
+    ctx.fillStyle = ['#f6f1e4', '#e7eef6', '#f7ead6', '#eef5e6'][i % 4]; ctx.strokeStyle = 'rgba(30,20,10,.55)'; ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.roundRect(x - w / 2, y - 2.6, w, 3.6, 1); ctx.fill(); ctx.stroke();
+    if (i === n - 1) { ctx.fillStyle = 'rgba(40,60,140,.5)'; for (let q = 0; q < 3; q++) ctx.fillRect(x - w / 2 + 4, y - 2 + q * 0, w - 12 - q * 5, 1); }
+  }
+  /* the sheets that flutter off: one every .22 s, each on its own arc */
+  for (let s = 0; s < 9; s++) {
+    const tb = t0 + .2 + s * .21, u = (lt - tb) / 1.05;
+    if (u < 0 || u > 1) continue;
+    const x = STACK.x - 70 * u - 24 * Math.sin(u * 7 + s) * u + (s % 3 - 1) * 26 * u, y = STACK.y - 20 - 120 * easeOut(u) + 30 * u * u * 2.4, a = Math.sin(u * 5 + s * 2) * .7, sx = Math.abs(Math.cos(u * 6 + s));
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.scale(Math.max(.2, sx), 1); ctx.globalAlpha = Math.min(1, (1 - u) * 3);
+    ctx.fillStyle = '#fbf7ea'; ctx.strokeStyle = 'rgba(30,20,10,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.roundRect(-13, -17, 26, 34, 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(40,60,140,.45)'; for (let q = 0; q < 4; q++) ctx.fillRect(-9, -11 + q * 7, 18 - (q % 2) * 5, 1.6);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawShotB(lt) {
+  const rooms = { med: { pens: 0 }, shower: { stash: 4, bulge: .5, door: 0 } };
+  S14.back(lt, { rooms, t: lt });
+  const lb = lemonB(lt); if (lt < WH.ab[1]) lb.transit = true;      /* the whip is still carrying the picture to the station: she arrives in a streak */
+  drawChar(withTransit(lb, camSpeed(lt) > 300));
+  S14.front(lt, { rooms });
+  drawStack(lt);
+}
+
+// ------------------------------------------------------------------ SHOT B overlay: the backdating card (a calendar tearing off backwards, a clock spinning backwards, LATE ENTRY stamps landing in a column)
+const CARD = [44, 288, 372, 564];
+const STAMPS_B = [{ t: () => B('n3').s + .8, rot: -.1 }, { t: () => B('n3').s + 1.35, rot: .08 }, { t: () => B('n3').s + 1.9, rot: -.06 }];   /* on 'Charting', 'weeks' and 'minutes' */
+function calendarDay(lt) { return 28 - Math.min(21, Math.floor(21 * seg(lt, CUE.typing + .02, 9.66) + 1e-6)); }
+function drawCardB(lt) {
+  const a = Math.min(sstep(lt, 7.62, 7.9), 1 - sstep(lt, 9.86, 10.0)); if (a <= .01) return;
+  const [x, y, w, h] = CARD, pop = lerp(.92, 1, easeBack(seg(lt, 7.62, 7.95)));
+  let sh = 0; for (const s of STAMPS_B) { const dt = lt - s.t(); if (dt > 0 && dt < .16) sh = Math.max(sh, (1 - dt / .16)); }
+  ctx.save(); ctx.globalAlpha *= a; const cx = x + w / 2, cy = y + h / 2; ctx.translate(cx + 3 * sh * Math.sin(lt * 120), cy + 2 * sh * Math.cos(lt * 140)); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
+  const pg = UI.page(CARD, { pitch: 0, fill: '#fbf3dc', rot: -.025, id: 'card14', shadow: 26, edge: '#cdbf98', fold: true });
+  regOverlay([x, y, x + w, y + h], 'card14');
+  pg.apply();
+  /* the calendar block: a red header, the month, the big day; the sheet that just came off falls away (blank: it is a blur) */
+  const bx = x + 28, by = y + 28, bw = 176, bh = 214, day = calendarDay(lt), per = (CUE.typing + .02), u = lt >= per && lt < 9.7 ? ((lt - per) * 21 / (9.66 - per)) % 1 : 1;
+  for (const rx of [bx + 54, bx + bw - 54]) { ctx.fillStyle = '#6b6672'; ctx.fillRect(rx - 3, by - 14, 6, 26); ctx.strokeStyle = INKD; ctx.lineWidth = 2; ctx.strokeRect(rx - 3, by - 14, 6, 26); }
+  ctx.fillStyle = '#fffdf6'; rr(bx, by, bw, bh, 10); ctx.fill(); ctx.strokeStyle = INKD; ctx.lineWidth = 3.4; ctx.stroke();
+  ctx.fillStyle = STAMP; ctx.beginPath(); ctx.roundRect(bx, by, bw, 62, [10, 10, 0, 0]); ctx.fill(); ctx.stroke();
+  UI.container('cal14h', 'panel', [bx, by, bx + bw, by + 62], 6);
+  UI.label('OCT', bx + bw / 2, by + 31, { size: 38, weight: 900, spacing: 6, fill: '#fff', cid: 'cal14h', center: true });
+  UI.container('cal14b', 'panel', [bx, by + 62, bx + bw, by + bh], 6);
+  UI.label(String(day).padStart(2, '0'), bx + bw / 2, by + 62 + (bh - 62) / 2, { size: 118, font: 'Bangers', fill: INKD, spacing: 2, cid: 'cal14b', center: true });
+  if (u < .5 && lt >= per && lt < 9.7) {   /* the torn sheet, falling backwards over the page below (no lettering) */
+    const k = u / .5; ctx.save(); ctx.translate(bx + bw / 2, by + bh / 2 + 260 * k * k); ctx.rotate(-.2 * k); ctx.globalAlpha *= 1 - k * .8;
+    ctx.fillStyle = '#fffdf6'; rr(-bw / 2, -bh / 2 + 62, bw, bh - 62, 6); ctx.fill(); ctx.strokeStyle = 'rgba(30,20,10,.5)'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+  }
+  /* the clock, hands spinning the wrong way */
+  const kx = x + 268, ky = y + 134, kr = 48;
+  ctx.fillStyle = '#fffdf6'; ell(kx, ky, kr, kr); ctx.fill(); ctx.strokeStyle = INKD; ctx.lineWidth = 5; ctx.stroke();
+  ctx.strokeStyle = 'rgba(29,26,22,.7)'; ctx.lineWidth = 3; for (let i = 0; i < 12; i++) { const q = i * PI / 6; ctx.beginPath(); ctx.moveTo(kx + Math.cos(q) * (kr - 11), ky + Math.sin(q) * (kr - 11)); ctx.lineTo(kx + Math.cos(q) * (kr - 5), ky + Math.sin(q) * (kr - 5)); ctx.stroke(); }
+  const spin = lt >= CUE.typing - .05 ? (lt - CUE.typing + .05) : 0, am = -PI / 2 - spin * 16, ah = -PI / 2 - spin * 1.4;
+  ctx.lineCap = 'round'; ctx.strokeStyle = INKD; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(kx + Math.cos(ah) * 24, ky + Math.sin(ah) * 24); ctx.stroke();
+  ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(kx + Math.cos(am) * 36, ky + Math.sin(am) * 36); ctx.stroke(); ctx.fillStyle = STAMP; ell(kx, ky, 6, 6); ctx.fill();
+  /* the divider and the stamps: equal 88 px pitch in one column, each slams down once */
+  ctx.strokeStyle = 'rgba(30,20,10,.3)'; ctx.lineWidth = 2; ctx.setLineDash([8, 7]); ctx.beginPath(); ctx.moveTo(x + 30, y + 268); ctx.lineTo(x + w - 30, y + 268); ctx.stroke(); ctx.setLineDash([]);
+  STAMPS_B.forEach((s, i) => {
+    const k = seg(lt, s.t(), s.t() + .14); if (k <= 0) return;
+    const sc = lerp(1.16, 1, easeOut(k)), sy = y + 322 + i * 92;
+    ctx.save(); ctx.translate(x + w / 2, sy); ctx.scale(sc, sc); ctx.translate(-(x + w / 2), -sy);
+    UI.stamp('LATE ENTRY', x + w / 2, sy, { size: 44, rot: s.rot, color: STAMP, alpha: Math.min(.95, .35 + k) });
+    ctx.restore();
+  });
+  pg.restore();
+  ctx.restore();
+}
+function overB(lt) {
+  fieldTag(lt, BEHAVIORS[1], 7.62, 9.9);
+  drawCardB(lt);
+}
+
+// ------------------------------------------------------------------ SHOT C: INSULIN PENS (n4, 9.9 to 12.64). The camera has craned up to the med room: Clementine opens the lit fridge, glances over her shoulder and starts dating the pens with a marker (the kit's pens turn fresh one by one).
+const MEDR = RC('med'), FRD = S14.fridge();
+const penLevel = lt => .25 + Math.min(6, Math.floor(seg(lt, 11.05, 12.5) * 6.999)) / 18;       /* six pens get a fresh label in this shot; the trap shows the rest */
+const nextPen = lv => { const a = S14.penSlots(lv), b = S14.penSlots(lv + 1 / 18 + 1e-6); const i = b.findIndex((s, k) => s.fresh && !a[k].fresh); return i >= 0 ? b[i] : a[0]; };
+const fridgeA = lt => .62 * easeIO(seg(lt, 10.4, 10.95));   /* the kit's MEDICATION label stops fitting past about .65 */
+function clemC(lt) {
+  const lv = penLevel(lt), open = fridgeA(lt), x = lerp(120, 150, easeIO(seg(lt, 10.6, 11.2)));
+  const o = mkClemUp({ x, y: MEDR.floor, s: SS, t: lt, who: 'clem', expr: 'hopeful', look: [.9, .1], plant: true, hold: { r: 'fp14b_marker' }, hand: { l: 'open' }, arms: { l: 'hips', r: 'reach' } });
+  const ph = ((lt - 11.05) / (1.45 / 6));        /* a pen every .24 s */
+  const hand = (() => {
+    if (lt < 10.4) return [FRD.x0 + 4, 874];
+    if (lt < 10.95) { const th = open * 1.2, c = Math.cos(th); return [FRD.x1 - (FRD.x1 - FRD.x0) * c + 4 * c + 2, 874]; }
+    if (lt < 11.05) return [FRD.x0 + 12, 880];
+    const k = clamp(Math.floor(ph), 0, 5), q = nextPen(.25 + k / 18), f = ph - Math.floor(ph);
+    return [q.x + 4, q.y - 12 + 4 * Math.sin(lt * 60) * (f < .6 ? 1 : 0)];
+  })();
+  o.grip = { r: gripFor(o, 'r', hand[0] - 10.5, hand[1] - 11) };      /* the marker's tip is about 10 px right of and 11 px below the hand at this scale */
+  if (lt < 10.95) { o.hold = {}; o.hand = { l: 'open', r: 'grip' }; o.grip = { r: gripFor(o, 'r', hand[0], hand[1]) }; }
+  /* eyes: over the shoulder (left) between pens, then into the lens on "today" */
+  const glance = Math.sin(lt * 5.6) > .55;
+  o.look = lt < 10.95 ? [-.9, .1] : lt >= 12.42 ? [0, 0] : glance ? [-.95, .15] : [.8, .3];
+  if (lt >= 12.42) { o.expr = 'shock'; }
+  return o;
+}
+function drawShotC(lt) {
+  const rooms = { med: { fridge: fridgeA(lt), pens: penLevel(lt) }, shower: { stash: 4, bulge: .55, door: 0 } };
+  S14.back(lt, { rooms, t: lt });
+  drawChar(withTransit(clemC(lt), camSpeed(lt) > 300));      /* she is half out of the frame while the crane is still travelling */
+  S14.front(lt, { rooms });
+}
+
+// ------------------------------------------------------------------ SHOT E: CALL LIGHTS (n5, 14.1 to 19.46). The whole building. Every call light has a staff member planted beside it like a goalkeeper (Clementine in room 4, Mango in room 7, Strawberry in room 14,
+// Lemon in the dining room); a dome lights, the keeper swats it off in one frame; the HUD reads RESPONSE 0:09 and stays green. "Position has." = all four take one step to the left, together.
+const GREEN_HUD = '#5cff9a', AMBER = '#ffc83d';
+const KEEP = [
+  { id: 'c', ctor: mkClem, who: 'clem', room: 'r4', dome: u => [RC('r4').x0 + 206, FL.mid - 118], x: RC('r4').x0 + 168, fl: FL.mid, look: .9 },
+  { id: 'm', ctor: mkMango, who: 'mango', room: 'r7', dome: u => [RC('r7').x0 + 36, FL.mid - 120], x: RC('r7').x0 + 80, fl: FL.mid, look: -.9 },
+  { id: 's', ctor: mkStraw, who: 'straw', room: 'r14', dome: u => [RC('r14').x0 + 52, FL.top - 124], x: RC('r14').x0 + 98, fl: FL.top, look: -.9 },
+  { id: 'l', ctor: mkLemon, who: 'lemon', room: 'dining', dome: u => [RC('dining').x0 + 62, FL.low - 132], x: RC('dining').x0 + 118, fl: FL.low, look: -.9 },
+];
+/* when each dome rings: [keeper index, time]; the first four are before "nine seconds", the rest while the HUD holds */
+const DINGS = [[0, 14.74], [1, 15.3], [2, 15.82], [3, 16.34], [0, 16.88], [1, 17.3], [2, 17.72], [3, 18.06]];
+const STEP_T = () => wordT('n5', 'position', 18.38) + .06;              /* "Position": all four take one step left */
+const HOP_T = () => wordT('n5', 'has', 18.88) + 0;
+const callDomeDraw = (x, y, a) => {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = '#d8dde4'; rr(-9, 6, 18, 6, 2); ctx.fill(); outline(1.6); ctx.stroke();
+  ctx.fillStyle = a > .05 ? `rgb(${230 + 25 * a | 0},${60 + 20 * (1 - a) | 0},${60 + 20 * (1 - a) | 0})` : '#9a2a2a';
+  ctx.beginPath(); ctx.arc(0, 6, 9, PI, TAU); ctx.closePath(); ctx.fill(); outline(1.8); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(-3, 1.4, 2.8, 1.6); ctx.fill();
+  ctx.restore();
+  if (a > .05) { V2.glow(x, y, 46 + 20 * a, '255,70,60', .55 * a, 'screen', .5); }
+};
+const keepStep = lt => easeIO(seg(lt, STEP_T(), STEP_T() + .3));
+function keeperE(k, lt) {
+  const K = KEEP[k], dome = K.dome(), step = keepStep(lt), dx = -46 * step;
+  /* the swat: the nearest ding of this keeper */
+  let sw = 0, tD = -9;
+  for (const [i, t] of DINGS) if (i === k && lt >= t - .05 && lt < t + .6) { tD = t; sw = sstep(lt, t, t + .05) * (1 - sstep(lt, t + .16, t + .42)); }
+  const hop = Math.max(0, Math.sin(seg(lt, HOP_T(), HOP_T() + .2) * PI)) * 7;
+  const path = u => [K.x + dx * 0 - 46 * easeIO(seg(u, STEP_T(), STEP_T() + .3)), K.fl];
+  const o = S14.walk(K.ctor, path, lt, { s: SS, stride: 30, t: lt, who: K.who, plant: true, lift: hop, expr: 'neutral' });
+  const crouch = .1 + .02 * Math.sin(lt * 6 + k);
+  o.squash = crouch * (1 - sw); o.legs = step > 0 && step < 1 ? undefined : 'splay';
+  const toDome = Math.sign(dome[0] - o.x) || 1;
+  o.look = sw > .2 ? [toDome * .9, -.5] : [toDome * .75, -.35];
+  o.expr = sw > .3 ? 'angry' : 'neutral'; o.lid = sw > .3 ? undefined : .3;
+  const ready = [1.22, .22];
+  o.arms = { l: ready, r: ready }; o.hand = { l: 'open', r: 'open' };
+  if (sw > 0) { const side = toDome > 0 ? 'r' : 'l'; o.arms[side] = 'reach'; o.grip = { [side]: lerpA(gripFor(o, side, o.x + toDome * 42, o.y - 78), gripFor(o, side, dome[0], dome[1] + 4), sw) }; o.hand[side] = 'flat'; leanO(o, toDome * .2 * sw); }
+  return o;
+}
+function domeA(k, lt) {   /* how lit a keeper's dome is: a pre-glow, one frame of full red, then off (the swat) */
+  let a = 0;
+  for (const [i, t] of DINGS) if (i === k) { const u = lt - t; if (u >= 0 && u < .09) a = Math.max(a, .5 + .5 * Math.sin(u * 70)); }
+  return a;
+}
+function melonE(lt) {
+  const r = RC('office');
+  const o = mkMelon({ x: r.x0 + 150, y: r.floor - 42, s: SS * 1.22, noLegs: true, t: lt, who: 'melon', expr: 'happy', look: [.2, -.1], plant: true });
+  o.arms = { l: 'rest', r: 'rest' }; o.face = { curve: 1.1 };
+  return o;
+}
+function drawShotE(lt) {
+  const calls = new Array(40).fill(0);
+  for (const [i, t] of DINGS) { const u = lt - t; if (u >= 0 && u < .12) calls[(i * 7 + Math.floor(t * 3)) % 40] = 1; }
+  const rooms = { med: { pens: 1 }, shower: { stash: 4, bulge: .5, door: 0 }, station: { calls }, office: {} };
+  S14.back(lt, { rooms, t: lt });
+  for (let k = 0; k < 4; k++) { const d = KEEP[k].dome(); callDomeDraw(d[0], d[1], domeA(k, lt)); }
+  const list = [{ y: RC('office').floor, o: melonE(lt) }];
+  for (let k = 0; k < 4; k++) list.push({ y: KEEP[k].fl, o: keeperE(k, lt) });
+  for (const it of list) drawChar(it.o);
+  S14.front(lt, { rooms });
+  for (const [i, t] of DINGS) { const u = (lt - t - .08) / .35; if (u > 0 && u < 1) { const d = KEEP[i].dome(); ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(d[0], d[1], u, { r0: 8, r1: 54, lw: 4, alpha: .8, color: '255,230,200' }); ctx.restore(); } }
+}
+/* the HUD of this shot: the tag, then RESPONSE 0:09 (green, never moving), STAFFING UNCHANGED, and on "Position" POSITION CHANGED */
+function overE(lt) {
+  fieldTag(lt, BEHAVIORS[3], 14.22, 15.7);
+  const a = sstep(lt, 15.78, 16.0) * (1 - sstep(lt, 19.3, 19.44)); if (a <= .01) return;
+  ctx.save(); ctx.globalAlpha *= a;
+  const x = 560, y = 52, w = 472, h = 124, pop = lerp(.94, 1, easeBack(seg(lt, 15.78, 16.05)));
+  ctx.translate(x + w / 2, y + h / 2); ctx.scale(pop, pop); ctx.translate(-(x + w / 2), -(y + h / 2));
+  const p = UI.panel([x, y, w, h], { id: 'resp14', kind: 'panel', fill: 'rgba(6,22,14,.84)', stroke: GREEN_HUD, lw: 4, r: 22, pad: 14, shadow: 16 });
+  regOverlay([x, y, x + w, y + h], 'resp14');
+  UI.label('0:09', x + 116, y + h / 2 + 2, { size: 92, font: 'Bangers', fill: GREEN_HUD, spacing: 3, cid: 'resp14', center: false });
+  UI.lines([{ t: 'CALL LIGHT', size: 31 }, { t: 'RESPONSE', size: 31 }], x + 232, y + h / 2 - 12, { fill: '#d6ffe6', weight: 900, spacing: 2, align: 'left', v: 'mid', lh: 1.25, cid: 'resp14', maxW: 206 });
+  V2.glow && null;
+  ctx.restore();
+  const b = sstep(lt, 16.8, 17.0) * (1 - sstep(lt, 19.3, 19.44)); if (b > .01) {
+    const chg = lt >= STEP_T(), col = chg ? AMBER : GREEN_HUD, str = chg ? 'POSITION CHANGED' : 'STAFFING UNCHANGED';
+    ctx.save(); ctx.globalAlpha *= b;
+    const pill = UI.pill(str, 1032, 220, { anchor: 'right', size: 32, weight: 900, spacing: 3, ink: col, fill: 'rgba(6,22,14,.84)', stroke: col, lw: 3.4, padX: 24, h: 58, id: 'staff14' });
+    regOverlay([pill.x0, pill.y0, pill.x1, pill.y1], 'staff14');
+    ctx.restore();
+  }
+}
+
+// ------------------------------------------------------------------ SHOT F: THE DISPLAY (n6 + a1, 19.46 to the end). The Administrator's office: he puffs up and fans a half-circle of pizza boxes behind him like a peacock's tail (the pizzabox cue 22.03), struts and shimmers, a rim light and sparkles on the reveal
+// (sparkle 22.33), "We love surveys!" (22.23); a staff member watches from the doorway in resigned silence.
+const OFFR = RC('office'), TAIL_R = 98;
+const MEL_X = OFFR.x0 + 112, MEL_S = SS * 1.1, MEL_Y = OFFR.floor;
+const fanK = lt => { const k = seg(lt, CUE.pizzabox, CUE.pizzabox + .34); return k <= 0 ? 0 : easeBack(k) * .96 + .04 * k; };
+/* a feather of the tail: a pizza-box lid standing on end (kraft board, a darker shaft, a pizza emblem at the tip like the eye of a peacock feather) */
+function featherLid(len, w, tone) {
+  ctx.fillStyle = g2(-w / 2, 0, w / 2, 0, [[0, tone[0]], [1, tone[1]]]); rr(-w / 2, -len, w, len, 6); ctx.fill(); outline(2.4); ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,80,30,.45)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, -len + 22); ctx.stroke();
+  ctx.fillStyle = '#c23a2b'; ctx.fillRect(-w / 2 + 1.5, -12, w - 3, 5);
+  const ey = -len + w * .62;
+  ctx.fillStyle = '#7a4a14'; ell(0, ey, w * .46, w * .46); ctx.fill();
+  ctx.fillStyle = '#e8a63a'; ell(0, ey, w * .4, w * .4); ctx.fill(); ctx.strokeStyle = '#8a4a12'; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.fillStyle = '#c23a2b'; for (const [x, y] of [[-.14, -.12], [.12, -.1], [-.02, .08], [.14, .12], [-.16, .1]]) { ell(x * w, ey + y * w, w * .07, w * .07); ctx.fill(); }
+  ctx.fillStyle = '#ffd84a'; ell(-w * .1, ey - w * .22, w * .06, w * .04); ctx.fill();
+}
+/* the fan is an ellipse (the office is narrow and tall): the feathers at the top are the longest, the ones at the sides short */
+const tipR = th => 1 / Math.sqrt(Math.pow(Math.cos(th) / 112, 2) + Math.pow(Math.sin(th) / 170, 2));
+const TAIL = (() => { const out = []; for (let i = 0; i < 9; i++) { const th = lerp(-PI * .97, -PI * .03, i / 8); out.push({ th, len: Math.max(46, tipR(th) - 44), w: 36, tone: ['#d9b878', '#b8924f'], layer: 0, i }); } for (let i = 0; i < 8; i++) { const th = lerp(-PI * .97, -PI * .03, (i + .5) / 8); out.push({ th, len: Math.max(40, (tipR(th) - 44) * .72), w: 38, tone: ['#f0dca8', '#d4b878'], layer: 1, i: i + 9 }); } return out; })();
+function drawTail(lt, cx, cy) {
+  const k = fanK(lt); if (k <= .01) return;
+  const shim = lt - CUE.pizzabox;
+  for (const f of TAIL) {
+    const st = cl01((k - (1 - f.i / 17) * .15) / .85), spread = easeBack(st) * .96 + .04 * st, th = lerp(-PI / 2, f.th, Math.min(1.12, spread)), wob = .035 * Math.sin(shim * 7 + f.i * 1.9) * k, R0 = 30;
+    ctx.save(); ctx.translate(cx + Math.cos(th) * R0, cy + Math.sin(th) * R0); ctx.rotate(th + PI / 2 + wob); ctx.scale(.5 + .5 * k, .55 + .45 * k);
+    ctx.shadowColor = f.layer ? 'rgba(255,224,160,.4)' : 'rgba(0,0,0,.3)'; ctx.shadowBlur = 8;
+    featherLid(f.len, f.w, f.tone); ctx.restore();
+  }
+}
+function sparklesF(lt, cx, cy) {
+  const t0 = CUE.sparkle; if (lt < t0 - .02) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 16; i++) {
+    const born = t0 + (i % 8) * .05 + (i > 7 ? .55 : 0), u = (lt - born) / .5; if (u < 0 || u > 1) continue;
+    const th = lerp(-PI * .96, -PI * .04, (i * 5 % 11) / 10), R = (i % 2 ? 80 : 108) * (1 + .1 * u), x = cx + Math.cos(th) * R, y = cy + Math.sin(th) * R, s = 10 * Math.sin(u * PI) * (1 + hash(i) * .8);
+    ctx.fillStyle = `rgba(255,248,214,${Math.sin(u * PI)})`; ctx.beginPath();
+    for (let q = 0; q < 8; q++) { const a = q * PI / 4, r = q % 2 ? s * .28 : s; ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+function melonF(lt) {
+  const k = fanK(lt), strut = sstep(lt, B('n6').s + .5, B('n6').s + 1.6), pre = lt < CUE.pizzabox;
+  const x = MEL_X + 26 * Math.sin((lt - B('n6').s) * 2.2) * strut * (1 - k * .6), puff = 1 + .1 * sstep(lt, CUE.pizzabox - .5, CUE.pizzabox + .1);
+  const o = mkMelon({ x, y: MEL_Y, s: MEL_S, t: lt, who: 'melon', expr: 'happy', look: [0, -.2], plant: true, sx: puff, sy: puff });
+  o.face = { curve: 1.25 }; o.rot = .035 * Math.sin((lt - B('n6').s) * 4.4) * strut;
+  o.arms = { l: k > .3 ? [2.1, .5] : 'rest', r: k > .3 ? [2.1, .5] : 'rest' }; o.hand = { l: 'open', r: 'open' };
+  if (lt >= B('a1').s) { o.look = [0, -.35]; o.arms = { l: [2.5 + .15 * Math.sin(lt * 9), .3], r: [2.5 + .15 * Math.sin(lt * 9 + 1), .3] }; }
+  /* walking: little steps while he struts */
+  if (strut > 0 && k < .3) { const fn = u => [MEL_X + 26 * Math.sin((u - B('n6').s) * 2.2) * sstep(u, B('n6').s + .5, B('n6').s + 1.6), MEL_Y]; const w = S14.walk(mkMelon, fn, lt, { s: MEL_S, stride: 26, t: lt, who: 'melon', expr: 'happy', look: [0, -.2], plant: true, sx: puff, sy: puff }); w.face = o.face; w.rot = o.rot; w.arms = o.arms; w.hand = o.hand; return w; }
+  return o;
+}
+function watcherF(lt) {
+  const o = mkStraw({ x: OFFR.x1 + 2, y: OFFR.floor, s: SS, t: lt, who: 'straw', plant: true, expr: 'dead', lid: .55, look: [-.95, .05] });
+  o.arms = { l: 'rest', r: 'rest' };
+  const sigh = sstep(lt, 22.9, 23.4) * (1 - sstep(lt, 23.5, 23.9)); o.lid = .55 + .15 * sigh; o.squash = .03 * sigh;
+  return o;
+}
+function drawShotF(lt) {
+  const rooms = { office: {}, med: { pens: 1 } };
+  S14.back(lt, { rooms, t: lt });
+  const m = melonF(lt), c = bodyCentre(m);
+  /* the rim light on the reveal: a warm glow behind the fan */
+  const gl = sstep(lt, CUE.pizzabox, CUE.pizzabox + .3) * (1 - sstep(lt, CUE.sparkle + 1.0, CUE.sparkle + 1.6));
+  V2.glow(MEL_X, c[1] - 30, 190, '255,214,140', .5 * gl, 'screen', .5);
+  drawTail(lt, MEL_X, c[1] - 6);
+  S14.front(lt, { rooms });
+  drawChar(m);
+  drawChar(watcherF(lt));
+  sparklesF(lt, MEL_X, c[1] - 6);
+  if (lt >= CUE.sparkle && lt < CUE.sparkle + .2) V2.flare(...(() => { const q = ctx.getTransform(); return [q.a * (MEL_X + 8) + q.e, q.d * (c[1] - 56) + q.f]; })(), .5 * (1 - (lt - CUE.sparkle) / .2));
+}
+function overF(lt) { fieldTag(lt, BEHAVIORS[4], B('n6').s + .05, CUE.pizzabox + .25); }
+
+// ------------------------------------------------------------------ THE SCENE
+const houseBase = (lt, rooms) => { S14.back(lt, { rooms, t: lt }); S14.front(lt, { rooms }); };
 const SC = {
-  shot: lt => 'd',
-  cam(lt) { zoomTo(640, 900, 1.25 + .03 * seg(lt, TRAP.cut, 14.1)); },
-  draw(lt) { drawTrapWorld(lt); },
-  fx: trapFx,
-  blur: lt => 1,
-  over(lt) { trapOver(lt); },
+  shot: lt => shotOf(lt),
+  cam(lt) {
+    const sh = shotOf(lt);
+    if (sh === 'd') { const c = camAt(lt); zoomTo(c.x, c.y, c.z); CAM.shake = 0; return; }
+    const c = camAt(lt); zoomTo(c.x, c.y, c.z);
+    const bt = CUE.crash, w = (lt >= WH.ab[0] && lt < WH.ab[1]) ? easeIO(seg(lt, WH.ab[0], WH.ab[1])) : 0;
+    CAM.shake = lt >= bt && lt < bt + 1 ? 9 * Math.exp(-(lt - bt) / .22) : 0;
+    CAM.r = .012 * Math.sin(w * PI) * -1;
+  },
+  draw(lt) {
+    const sh = shotOf(lt);
+    if (sh === 'd') drawTrapWorld(lt);
+    else if (sh === 'a') drawShotA(lt);
+    else if (sh === 'b') drawShotB(lt);
+    else if (sh === 'c') drawShotC(lt);
+    else if (sh === 'e') drawShotE(lt);
+    else drawShotF(lt);
+  },
+  fx(lt) {
+    if (shotOf(lt) === 'd') return trapFx(lt);
+    return { bloom: .4, vignette: .42, grain: .045, contrast: .14, sat: .12, tint: [['#ffb870', .06, 'soft-light']] };
+  },
+  blur: lt => blurAt(lt),
+  over(lt) {
+    const sh = shotOf(lt);
+    if (sh === 'd') { trapOver(lt); return; }
+    if (lt < 4.3) fieldTag(lt, BEHAVIORS[0], .78, 4.1);
+    if (sh === 'b') overB(lt);
+    if (sh === 'c') fieldTag(lt, BEHAVIORS[2], 10.12, 12.55);
+    if (sh === 'e') overE(lt);
+    if (sh === 'f') overF(lt);
+  },
 };
 window.__EP14_SCENES = window.__EP14_SCENES || {};
 window.__EP14_SCENES.adapt = SC;
+window.FP14J = { kitSprite, jdraw, JB, restY, ball, puff, floorShadow, KMAP };
 })();

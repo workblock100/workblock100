@@ -26,6 +26,26 @@ major it is the tonic triad and as noble as a bugle; over A minor (the series st
   end      cue_end7's reprise with HT on top
 Instruments come from build_music6 / 7 / 9 / 10 / 13 plus the ones below (a french horn, a harp, a celesta, a xylophone, a bassoon, a trumpet, a bass drum, a tam-tam, tremolo strings);
 nothing is sampled.
+
+FITTED NUMBERS (scene-local seconds; the timeline is frozen, so these are literals; where a scene builder's code decides the picture, the file it came from is named; if one of those moves,
+change the matching number here and rebuild):
+  title   the sting lands 2.4 (cue_title7: 0.2 + 2.2; ep14_title.js CREST 2.42), the lettering and textding 2.7, the horn theme at 2.72, 3.22 and 3.78
+  colony  the car door 11.879 (a script cue), the freeze 21.80 to 23.20 (n4 ends 21.789, n5 begins 23.239), the sting 25.891 (a script cue; the fanfare is cut dead at 25.84)
+  adapt   the door bursts 5.71 (a script cue), the LATE ENTRY stamps 8.351, 8.901 and 9.451 (ep14_adapt.js STAMPS_B: n3 + 0.8, 1.35, 1.9), the camera trap's shutters 12.788 and 13.688
+          (script cues), the pizza boxes 22.032 and the sparkle 22.332 (script cues), the polka's downbeat on 22.032
+  arrive  the doors 0.3 and the bass drum 1.1 (the second chime of slidedoor lands 1.1), the binder 8.841 (ep14_arrive.js: the desk bounces 8.84, the bell 8.88), the three binocular ticks
+          16.55, 16.85, 17.15, the lock-on 17.277 (the HUD zoom 17.28 to 17.43), the cut 23.17 (sting 23.204)
+  tracer  the chase grid is anchored on the end of 'Run.' (6.558); the three call lights 7.758, 8.758, 9.558 (beats 3, 5.5 and 7.5 of the grid), the last chord 10.158 (beat 9), the peel
+          19.026, the boing 19.276 and Banana's landing 19.926 (ep14_tracer.js BAN.land = the start of b1); the door pedal from 22.8
+  closet  the reversed cymbal 1.70 into the first crash 2.274; the second crash 3.274; the plucked sad trombone 9.78 to 10.44
+  voices  the lullaby's bars: 2.4124 s, bar 3 on 6.731 (cr1), bar 8 on 18.793 (ra1); the radio opens into the score between 10.6 and 14.0 (ep14_voices.js: the radio is on the table from
+          6.73, Mrs. Cranberry's close-up; Mr. Pear from 10.62)
+  verdict the D stamp 4.1; 'Sufficient' (the game show) 12.0; the vamp is cut 14.29; the pegs 14.363 to 16.513 and the hang from 16.55; plinkland 18.066; the siren 19.025; Melon's face
+          19.425; the silent beat 20.03 to 20.9; the NEW TAG stamp 23.075; no music 25.89 to 27.37; the horn theme on the three words of 'It is now.'; the sit in the picture's order
+          (ep14_verdict.js SIT_T: Lemon 33.879, Mango 34.179, Clementine 34.479, Strawberry 34.779 after a 1.1 s descent, Melon 35.079 on his pizza box); the call light 35.629; the horn
+          theme on 'Don't mind me.' (36.479); the sting 39.863
+  end     the six counter ticks 1.00, 1.32, 1.62, 1.88, 2.10 and 2.30, the downbeat 2.30 and the MANDATORY stamp that lands 2.44 (ep14_title.js E_TICKS, E_BOOM + .14), the three spots 0.14,
+          0.24 and 0.34, the teaser pill 3.4 to 3.85
 """
 import numpy as np
 from scipy import signal
@@ -61,7 +81,7 @@ def swell_pad(T, notes, at, d, g, a=1.0, r=1.0, bright=1300, pan=0.0):
 
 
 # ================================================================ new instruments
-def horn(m, d=1.0, vel=.8, a=.07, r=.25, vd=.0032, swell=True):
+def horn(m, d=1.0, vel=.8, a=.07, r=.25, vd=.0032, swell=True, bright=1.0):
     """A solo french horn: a round, warm tone (partials 1 to 10 falling away like a horn's, a gentle formant near 450 Hz), a faint scoop up into the note, a vibrato that arrives after
     a third of a second, a puff of lip at the start and, when `swell` is on, a filter that opens as the note gets louder (a horn gets brighter as it gets louder), so a held note blooms."""
     t = tarr(d)
@@ -72,9 +92,9 @@ def horn(m, d=1.0, vel=.8, a=.07, r=.25, vd=.0032, swell=True):
     x = x + .6 * bp(x, 330, 620, 1)
     env = ar(d, a, min(r, d * .45))
     if swell:
-        x = tvf(x, 650 + (900 + 1500 * vel) * env ** 1.3, .9, "lp")
+        x = tvf(x, 650 + (900 + 1500 * vel) * bright * env ** 1.3, .9, "lp")
     else:
-        x = lp(x, 1300 + 1500 * vel, 2)
+        x = lp(x, (1300 + 1500 * vel) * bright, 2)
     x = x + hp(_noise(d), 1500) * np.exp(-t / .02) * .02
     return _fit_rms(x, .25) * env * (.45 + .55 * vel)
 
@@ -167,6 +187,24 @@ def gliss_cello(m0, m1, d, a=.3, r=.5, vel=1.0):
     return _fit_rms(y) * ar(d, a, min(r, d * .45)) * vel
 
 
+def radio_fx(x, seed=1962):
+    """A mono signal as a 1962 table radio plays it: band-limited to 350 Hz to 3.2 kHz, a little saturation, wow (about half a millisecond of slow pitch wander) and flutter, a wash of hiss and
+    the odd crackle."""
+    n = len(x)
+    t = np.arange(n) / SR
+    y = signal.sosfilt(signal.butter(4, [350 / (SR / 2), 3200 / (SR / 2)], "band", output="sos"), x)
+    pk = np.abs(y).max() + 1e-9
+    y = np.tanh(2.5 * y / pk) * pk
+    wow = 40 * np.sin(2 * np.pi * .5 * t) + 6 * np.sin(2 * np.pi * 7 * t)
+    y = np.interp(np.arange(n) + wow, np.arange(n), y)
+    r = np.random.default_rng(seed)
+    y = y + signal.sosfilt(signal.butter(2, [1000 / (SR / 2), 5000 / (SR / 2)], "band", output="sos"), r.uniform(-1, 1, n)) * .004 * pk
+    for _ in range(int(n / SR * 10)):
+        i = int(r.integers(0, max(1, n - 40)))
+        y[i:i + 30] += r.uniform(-1, 1, len(y[i:i + 30])) * r.uniform(.004, .02) * pk
+    return y
+
+
 def hornline(T, notes, at, gain=.1, pan=.2, vel=.7, **kw):
     """Play a horn line: notes are (midi, start offset, duration) tuples placed from `at`."""
     for m, off, dd in notes:
@@ -195,11 +233,11 @@ def cue_colony14(T, t0, d, beats, D):
     st = W("n3", "State")
     wa = W("l2", "watching")
     # --- the pastoral
-    T.put(strings([36, 43, 48, 52, 59, 62], n2[0] - op[0] + .3, 1.2, 1.0, 4.8, 1500), op[0], .09)
-    T.put(strings([29, 41, 48, 52, 57, 60, 64], st - n2[0] + .15, 1.0, .45, 4.8, 1500), n2[0] - .15, .09)
+    T.put(strings([36, 43, 48, 52, 59, 62], n2[0] - op[0] + .3, 1.2, 1.0, 4.8, 1500), op[0], .11)
+    T.put(strings([29, 41, 48, 52, 57, 60, 64], st - n2[0] + .15, 1.0, .45, 4.8, 1500), n2[0] - .15, .11)
     for chord, a, b in (((48, 55, 59, 62, 64, 62, 59, 55), op[0] + .15, n2[0] - .05), ((41, 48, 52, 57, 60, 57, 52, 48), n2[0] - .05, st - .2)):
         for k, at in enumerate(grid(a, b, 54, 1.0)):
-            T.put(harp(chord[k % 8], 2.0, .5), at, .09, -.3 + .15 * (k % 5))
+            T.put(harp(chord[k % 8], 2.0, .5), at, .11, -.3 + .15 * (k % 5))
     for m, off, dd in ((64, .3, 1.0), (62, 1.35, 1.2), (60, 2.6, 2.4)):                       # AN, very soft
         T.put(horn(m, dd, .55, a=.2, r=.6), t0 + off, .06, .2)
     for at, m in ((n1[1] + .1, 88), (n2[1] - .1, 91), (st - .6, 96)):
@@ -280,6 +318,9 @@ def cue_adapt14(T, t0, d, beats, D):
         if k % 4 == 2:
             D.put(tick(), at, .04, .3)
     D.put(bell(midi(96), 1.2) * .6, n3[1], .06, .3)                                                  # the carriage bell
+    for at in (8.351, 8.901, 9.451):                                                                  # the picture's LATE ENTRY stamps (on 'Charting', 'weeks' and 'minutes')
+        D.put(kick13(.8), t0 + at, .09, 0)
+        D.put(woodblock(), t0 + at, .08, .3)
     for k, at in enumerate(grid(n4[0] - .05, cam[0] - .25, 120, 1.0)):                               # born today
         T.put(ubass(walk[k % 8], .4, .8), hum(at, -.006, .004), .17, -.1)
         T.put(marimba(midi((69, 72, 74, 72)[k % 4]), .14), at + .25, .055, .3 if k % 2 else -.3)
@@ -289,9 +330,9 @@ def cue_adapt14(T, t0, d, beats, D):
     T.put(strings([33, 40, 45], cam[1] - cam[0] + .45, .35, .6, 4.5, 500), cam[0] - .15, .08)        # the camera trap
     T.put(glass(103, 1.6, .3, .8), cam[0] + .1, .015, .4)
     for at in (t0 + 12.788, t0 + 13.688):
-        D.put(heart(.3), at, .16, 0)
-        D.put(heart(.25), at + .2, .11, 0)
-        D.put(tick(), at + .01, .04, 0)
+        D.put(heart(.3), at, .12, 0)
+        D.put(heart(.25), at + .2, .085, 0)
+        D.put(tick(), at + .01, .03, 0)
     ps = W("n5", "Position")
     for k, at in enumerate(grid(n5[0] + .02, ps - .05, 120, 1.0)):                                   # the metronome
         D.put(woodblock(), at, .06, .3 if k % 2 else -.3)
@@ -314,7 +355,7 @@ def cue_adapt14(T, t0, d, beats, D):
     T.put(crash(1.2), pb, .06, .1)
     T.put(timp(65, 1.0), pb, .16)
     for k, m in enumerate((72, 76, 79, 84, 88, 91)):                                                  # the sparkle
-        T.put(harp(m, 1.2, .6), t0 + 22.33 + .045 * k, .07, -.4 + .15 * k)
+        T.put(harp(m, 1.2, .6), t0 + 22.33 + .045 * k, .05, -.4 + .15 * k)
     sv = W("a1", "surveys")
     T.put(brass([60, 64, 67, 72], .35, .01, .15, 2400), sv, .08, 0)
     T.put(tuba(36, .35), sv, .17, 0)
@@ -361,7 +402,7 @@ def cue_arrive14(T, t0, d, beats, D):
     for at in (t0 + 16.55, t0 + 16.85, t0 + 17.15):
         D.put(tick(), at, .09, .2)
         D.put(woodblock(), at, .05, -.2)
-    T.put(bell(midi(88), 2.6) * .6, sc[1] - .1, .12, .1)                                              # the lock-on: one bell
+    T.put(bell(midi(88), 2.6) * .6, sc[1] - .1, .06, .1)                                              # the lock-on: one bell
     T.put(strings([38, 45, 50, 53], st6[0] - st4[0] + .3, .6, .6, 5.0, 800), st4[0] - .05, .07)       # a held low chord
     T.put(cello(38, st6[0] - st4[0] + .3, .9, a=.6, r=.5), st4[0] - .05, .08, 0)
     for at in (t0 + 19.0, t0 + 20.6):
@@ -374,7 +415,7 @@ def cue_arrive14(T, t0, d, beats, D):
 
 
 CUES["arrive"] = cue_arrive14
-LEVEL14["arrive"] = 1.0
+LEVEL14["arrive"] = 1.2
 TAIL14["arrive"] = .3
 DIP14["arrive"] = .55
 REVERB14["arrive"] = (.45, 1.5)
@@ -389,7 +430,7 @@ def cue_tracer14(T, t0, d, beats, D):
     tune over D minor and A seventh (D4 to F5); each of the three call lights (7.758, 8.758, 9.558: beats 3, 5.5 and 7.5) gets a brass stab on D seven, at the instant of the ding;
     the last chord is on beat 9 (10.158) and the music is then cut dead for the surveyors' arrival (10.23 to 11.78: 'Everything is perfect.' is in silence). 'It is suspicious.' gets
     a deadpan clarinet, E, D, C (AN, falling: one note to a word). The pen investigation is a sparse pizzicato at 100 bpm with a bassoon 'bup' after each retort; 'June.' gets a
-    celesta ping and 'It's a long day.' a clarinet's sigh. The slip (19.03) is a slide whistle that falls from G7 to A4 over 0.85 s, and Banana lands (19.83) on a bass drum, a snare, a
+    celesta ping and 'It's a long day.' a clarinet's sigh. The slip (19.03) is a slide whistle that falls from G7 to A4 over 0.85 s, and Banana lands (19.926, the start of 'Forty-nine!') on a bass drum, a snare, a
     little crash and a tuba. The door is a held low D (D1, A1, D2) with a pitch that climbs from 23.1 s to the end under a bass drum heartbeat; it fades at the last frame so the
     closet can take the same chord over."""
     op, n1, st1, s1, run, k1, st2, st3, s2, st4, s3, slip, b1, st6, en = (beats[k] for k in ("open", "n1", "st1", "s1", "run", "k1", "st2", "st3", "s2", "st4", "s3", "slip", "b1", "st6", "end"))
@@ -416,14 +457,16 @@ def cue_tracer14(T, t0, d, beats, D):
             CD.put(snare13(.85), t, .08, .1)
     for e in range(18):                                                                               # eighths
         t = b0 + e * bl / 2
-        C.put(ubass((38, 45)[e % 2] if (e // 8) % 2 == 0 else (33, 40)[e % 2] + 12 if False else (45, 40)[e % 2], .16, .7), t, .1, -.1)
+        C.put(ubass((38, 45)[e % 2] if (e // 8) % 2 == 0 else (45, 40)[e % 2], .16, .7), t, .1, -.1)
         if e % 2 == 1:
             CD.put(snare13(.45, ghost=True), t, .035, .1)
     for e, m, ln in ((0, 69, 1), (1, 72, 1), (2, 74, 2), (4, 72, 1), (5, 69, 1), (6, 65, 2), (8, 69, 1), (9, 72, 1), (10, 74, 2), (12, 76, 1), (13, 77, 1), (14, 76, 1), (15, 74, 1), (16, 72, 2)):
+        if any(-.05 <= b0 + e * bl / 2 - (t0 + dg) <= .22 for dg in (7.758, 8.758, 9.558)):            # the tune makes way for each call light
+            continue
         C.put(trumpet(m, ln * bl / 2 * .85, .9), b0 + e * bl / 2, .06, .25)
     for at in (t0 + 7.758, t0 + 8.758, t0 + 9.558):                                                   # a stab on every call light
-        C.put(brass([50, 54, 57, 60], .13, .006, .05, 2200), at, .1, 0)
-        CD.put(woodblock(), at, .06, .3)
+        C.put(brass([50, 54, 57, 60], .13, .006, .05, 2200), at, .07, 0)
+        CD.put(woodblock(), at, .04, .3)
     C.put(brass([50, 57, 62, 65, 69], .4, .01, .12, 2200), b0 + 8 * bl, .1, 0)
     CD.put(bdrum(.9, .8), b0 + 8 * bl, .12, 0)
     T.buf += C.buf * 1.7
@@ -439,18 +482,21 @@ def cue_tracer14(T, t0, d, beats, D):
     T.put(celesta(88, 1.2, .8), W("st4", "June") + .02, .07, .3)
     T.put(clarinet(69, .3), s3[1] + .02, .08, .2)
     T.put(clarinet(65, .6, a=.05), s3[1] + .3, .08, .2)
+    for k, at in enumerate(grid(t0 + 21.92, t0 + 22.9, 100, 1.0)):                                  # a sneak again, as the door comes into view
+        T.put(ubass((38, 41, 45, 41)[k % 4], .4, .7), hum(at, -.006, .004), .1, -.1)
+        D.put(woodblock(), at + .3, .03, .3 if k % 2 else -.3)
     sl = t0 + 19.03                                                                                   # the slip
-    T.put(slide_whistle(103, 69, .85), sl, .2, .1)
-    land = t0 + 19.83
+    T.put(slide_whistle(103, 69, .9), sl, .2, .1)
+    land = t0 + 19.926                                                                                # he lands on his back as 'Forty-nine!' begins
     D.put(bdrum(.8, .8), land, .14, 0)
     D.put(snare13(1.0), land, .1, .1)
     T.put(crash(.6), land, .04, .1)
     T.put(tuba(38, .4), land, .16, 0)
-    T.put(strings([26, 33, 38], en[1] - st6[0] + 1.6, 1.5, .5, 4.6, 450), st6[0] - .2, .1)           # the door
-    T.put(sub_bass(midi(26), en[1] - st6[0] + .5), st6[0] - .1, .1)
-    T.put(rising(38, 62, t0 + d - st6[0] - .8), st6[0] + .2, .07, .2)
+    T.put(strings([38, 45, 50], en[1] - st6[0] + 1.6, 1.5, .5, 4.6, 500), st6[0] - .2, .09)          # the door
+    T.put(sub_bass(midi(26), en[1] - st6[0] + .5), st6[0] - .1, .05)
+    T.put(rising(38, 62, t0 + d - st6[0] - .8), st6[0] + .2, .055, .2)
     for at in grid(st6[0] + .5, t0 + d - .3, 60, 1.0):
-        D.put(bdrum(.4, .7), at, .07, 0)
+        D.put(bdrum(.4, .7), at, .055, 0)
     T.fade(t0 + d - .4, t0 + d, 1, 0)
 
 
@@ -470,17 +516,18 @@ def cue_closet14(T, t0, d, beats, D):
     to 3.8: the fall in slow motion); a second, lower timpani hits on the second crash (3.27); a harp falls through the tinsel (3.7). 'Concealment is not a strategy.' gets a single
     bassoon note, D2, held for the line and fading, and nothing else. The Kumquat is crushed by a plucked sad trombone (B flat, A, A flat, G, the last one slow) after 'It is a tag.'"""
     op, s1, sl, n1, k1, st1, en = (beats[k] for k in ("open", "s1", "slide", "n1", "k1", "st1", "end"))
-    T.put(strings([26, 33, 38], sl[0] - op[0] + .3, .4, .35, 4.6, 450), t0, .1)
-    T.put(sub_bass(midi(26), sl[0] - op[0]), t0 + .05, .08)
+    T.put(strings([38, 45, 50], sl[0] - op[0] + .3, .4, .35, 4.6, 500), t0, .1)
+    T.put(sub_bass(midi(26), sl[0] - op[0]), t0 + .05, .05)
+    T.gate(s1[0] - .05, s1[1] + .05, .55, .1)                                                          # 'Stand back.' is one short line: the pedal sits under it
     T.put(revcym(.57, 1500, 8000), t0 + 1.70, .08)
-    T.put(roll(48, .5, 14), t0 + 1.77, .08, 0)
+    T.put(roll(65, .5, 14), t0 + 1.77, .08, 0)
     c1, c2 = t0 + 2.274, t0 + 3.274
-    T.put(timp(48, 2.0), c1, .26)
-    T.put(lp(crash(2.0), 3500), c1, .08, .1)
+    T.put(timp(65, 2.0), c1, .2)
+    T.put(lp(crash(2.0), 3500), c1, .06, .1)
     T.put(brass([38, 45, 50, 53, 56], 1.2, .02, .6, 1300), c1, .1, 0)
-    T.put(strings([26, 33, 38, 44, 50, 56], 2.2, .15, 1.4, 4.8, 900), c1, .1)
+    T.put(strings([38, 45, 50, 56, 62, 68], 2.2, .15, 1.4, 4.8, 900), c1, .1)
     T.put(gliss_cello(59, 35, 1.95, .2, .5), t0 + 1.85, .1, -.1)
-    T.put(timp(41, 1.6), c2, .22)
+    T.put(timp(55, 1.6), c2, .22)
     T.put(brass([38, 44, 50, 53], .9, .02, .5, 1200), c2, .08, 0)
     for k, m in enumerate((96, 93, 88, 84, 79, 72)):
         T.put(harp(m, 1.2, .5), t0 + 3.7 + .06 * k, .05, .4 - .15 * k)
@@ -497,6 +544,188 @@ TAIL14["closet"] = .4
 DIP14["closet"] = .6
 REVERB14["closet"] = (.55, 1.8)
 DIPS14.update({"creak": (3, .4, .3), "slowmo": (4, .8, .4), "rumble": (3, 1.2, .5)})
+
+
+# ================================================================ voices: the residents, interviewed without staff
+LULLABY_MEL = (((0, 67, 1), (1, 72, 1), (2, 76, 4)), ((0, 74, 2), (2, 72, 2), (4, 69, 2)), ((0, 67, 1), (1, 72, 1), (2, 76, 3), (5, 77, 1)), ((0, 76, 2), (2, 74, 2), (4, 71, 2)),
+               ((0, 72, 3), (3, 67, 3)), ((0, 69, 2), (2, 72, 2), (4, 76, 2)), ((0, 74, 3), (3, 71, 3)), ((0, 72, 1), (1, 76, 1), (2, 79, 4)), ((0, 76, 2), (2, 72, 2)),
+               ((0, 67, 1), (1, 72, 1), (2, 76, 6)))                                                   # the horn theme as a lullaby, one bar of 6/8 each
+LULLABY_LH = ((48, 55, 64), (45, 52, 60), (41, 48, 57), (43, 50, 59), (48, 55, 64), (41, 48, 57), (43, 50, 60), (48, 55, 64), (45, 52, 60), (48, 55, 64))
+LULLABY_STR = ((48, 55, 60, 64, 67), (45, 52, 60, 64, 67), (41, 48, 57, 60, 65), (43, 50, 59, 62, 65), (48, 55, 60, 64, 67), (41, 48, 57, 60, 64), (43, 50, 55, 60, 62),
+               (36, 48, 55, 60, 64, 67, 74), (45, 52, 57, 60, 64), (36, 48, 55, 64, 67, 72))
+
+
+def cue_voices14(T, t0, d, beats, D):
+    """3:40 PM, the dining room: the heart of the episode. Everything is a lullaby version of the horn theme in 6/8 on a solo piano and a string quartet, in C major, very soft, and nothing
+    is in the way of the voices. The bars are fitted so that bar 3 begins on Mrs. Cranberry's first word (6.73 s) and bar 8 on the residents' chorus (18.79 s): 2.41 s a bar. Until she
+    speaks there is only a warm, faint pad. The lullaby then begins as the radio on her dresser (the picture's 'radio from 1962'): the same piano and strings, mono, band-limited to
+    350 Hz to 3.2 kHz, with hiss, crackle and wow, from 6.73 s; when the camera leaves her (10.6 s) the radio opens up into the full score (full by 14.0 s). On 'Give her a break.' the
+    strings swell from 17.9 s and the piano's melody rises to G5 (the chorus); the tender chord (Cmaj9, wide) is held and then fades under the narrator, where a single low C (a cello,
+    2.6 s) is all there is for 'The State is not known to be moved.'; the piano and strings are not heard again until 'Noted.' (22.9 s), after which the horn theme is played one last time
+    (G4, C5, E5, the E held to the end of the scene) over a C major chord."""
+    op, st1, st2, cr1, pr1, b1, b2, st3, ra1, n2, st4, en = (beats[k] for k in ("open", "st1", "st2", "cr1", "pr1", "b1", "b2", "st3", "ra1", "n2", "st4", "end"))
+    L = (ra1[0] - cr1[0]) / 5.0
+    e = L / 6
+    bar0 = cr1[0] - 2 * L
+    T.put(strings([48, 55, 64, 67], cr1[0] - st1[0] + .4, 1.5, 1.2, 4.6, 900), st1[0], .03)             # a faint pad until she speaks
+    Lt = Track(T.N)
+    for k in range(2, 10):
+        bar = bar0 + k * L
+        if k == 9:                                                                                      # the tenth bar is not played: after the chorus the room is left to the narrator
+            continue
+        for j, m in enumerate(LULLABY_LH[k]):                                                           # the left hand rocks: root, fifth, third, fifth, third, fifth
+            Lt.put(piano((LULLABY_LH[k][0], LULLABY_LH[k][1], LULLABY_LH[k][2], LULLABY_LH[k][1], LULLABY_LH[k][2], LULLABY_LH[k][1])[j % 6], L / 6 * 1.8, .4), bar + j * e, .09, -.15)
+        for j in range(3, 6):
+            Lt.put(piano((LULLABY_LH[k][0], LULLABY_LH[k][1], LULLABY_LH[k][2], LULLABY_LH[k][1], LULLABY_LH[k][2], LULLABY_LH[k][1])[j % 6], L / 6 * 1.8, .35), bar + j * e, .08, -.15)
+        for pos, m, ln in LULLABY_MEL[k]:
+            Lt.put(piano(m, ln * e * 1.15, .5 + .2 * (k == 7)), bar + pos * e, .13 + .03 * (k == 7), .15)
+        Lt.put(strings(list(LULLABY_STR[k]), L + .5, .5, .9, 5.0, 1400), bar, .07 + .02 * min(3, k - 2) + .05 * (k == 7))
+        Lt.put(cello(LULLABY_STR[k][0] if LULLABY_STR[k][0] >= 36 else 36, L + .3, .9, a=.4, r=.7), bar, .09, -.1)
+    full_a, full_b = cr1[0] - .1, ra1[1] + 1.0                                                           # the span the lullaby lives in (until the chorus has rung)
+    i, j = int(full_a * SR), int(min(T.N, full_b * SR))
+    seg = Lt.buf[:, i:j].copy()
+    tt = np.arange(j - i) / SR + full_a
+    gr = np.clip((14.0 - (tt - t0)) / (14.0 - 10.6), 0, 1)                                              # the radio: 1 until 10.6 s, 0 by 14.0 s
+    gr = np.where(tt - t0 < 10.6, 1.0, gr)
+    radio = radio_fx(seg.mean(axis=0))
+    D.buf[0, i:j] += radio * gr * .9
+    D.buf[1, i:j] += radio * gr * .9
+    T.buf[:, i:j] += seg * (1 - gr)[None, :]
+    sw = ra1[0] - .9                                                                                     # the chorus: a swell and a held tender chord
+    T.put(strings([36, 48, 55, 60, 64, 67, 74], ra1[1] - sw + .9, .9, 1.2, 5.0, 2000), sw, .07)
+    T.put(violin(79, ra1[1] - ra1[0] + .6, a=.2, r=.6), ra1[0] + .05, .07, .1)
+    T.put(violin(76, ra1[1] - ra1[0] + .6, a=.2, r=.6), ra1[0] + .05, .05, -.1)
+    T.gate(ra1[1] + .1, st4[0] - .12, 0.0, .3)                                                           # the chord is let go: the room rings on a moment, then nothing
+    T.put(cello(36, n2[1] - n2[0] + .3, .9, a=.3, r=1.0), n2[0] + .02, .14, 0)                         # one low note for 'The State is not known to be moved.'
+    nb = st4[0] - .02
+    T.put(strings([36, 48, 55, 64, 67, 72], t0 + d - nb + .4, .5, 1.5, 5.0, 1800), nb, .05)
+    for m, off, dd, vel in ((67, 0.0, .6, .5), (72, .6, .6, .55), (76, 1.2, 2.6, .6)):                    # the horn theme, once more, as a piano
+        T.put(piano(m, dd, vel), nb + .45 + off, .08, .1)
+    T.fade(t0 + d - .5, t0 + d, 1, 0)
+
+
+CUES["voices"] = cue_voices14
+LEVEL14["voices"] = 1.0
+TAIL14["voices"] = .5
+DIP14["voices"] = .5
+REVERB14["voices"] = (.4, 1.4)
+
+
+# ================================================================ verdict: the exit conference (part one: the findings, the board, the alarm)
+def _verdict_a(T, t0, d, beats, D):
+    """0 to 20.0 s. The findings are a courtroom in A minor: a low string pedal (A1, E2, A2) and a clock (a woodblock and a tick once a second); the D stamp (4.1) gets a brass stab, a
+    timpani and a bass drum; 'It is the same pen.' is answered by a dry bassoon. 'Sufficient nursing staff' is the game show: from 'Sufficient' (12.0 s) a xylophone arpeggio (C, E, G, E) at
+    120 bpm with a pizzicato bass and a ghost snare that grows until the last word, and then it is cut dead at 14.29 so the pegs have the air. The ball (14.36 to 16.66) is a low C pedal
+    and a low timpani roll that builds with the pegs: nothing above 250 Hz, because the plinks are the rhythm and the melody; at the last peg (16.55 to 16.70) everything stops, and
+    'We had five nurses.' has only a held low pedal. 'You had one.' is bare. IMMEDIATE JEOPARDY (19.03) is the red alarm crash: a cymbal, a timpani and a brass blast on tritones (B flat and E)
+    with a two-tone riff low in the brass, a tuba and a falling trombone where Melon's face hits the pizza box (19.43), and then the music is cut dead at 20.03 for 'However.'"""
+    op, st1, a1, st2, st3, ball, a2, st4, jp, st5 = (beats[k] for k in ("open", "st1", "a1", "st2", "st3", "ball", "a2", "st4", "jeopardy", "st5"))
+    T.put(strings([33, 40, 45], st3[0] - op[0] + .2, .9, .6, 4.6, 520), op[0], .08)
+    for k, at in enumerate(grid(st1[0] + .4, st3[0] + 1.0, 60, 1.0)):                                  # the clock
+        D.put(woodblock(), at, .035, .3 if k % 2 else -.3)
+        D.put(tick(), at, .035, -.3 if k % 2 else .3)
+    sp = t0 + 4.1                                                                                      # the D stamp
+    T.put(brass([45, 52, 57, 60], .25, .01, .12, 1800), sp, .08, -.3)
+    D.put(timp(55, .9), sp, .2, 0)
+    D.put(bdrum(.8, .8), sp, .12, 0)
+    D.put(bassoon(45, .15, .9, a=.012, r=.05), st2[1] + .05, .13, 0)                                   # 'It is the same pen.'
+    gs, ve = W("st3", "Sufficient"), st3[1] + .03
+    for k, at in enumerate(grid(gs, ve, 120, .5)):                                                     # the game show
+        lvl = .5 + .5 * (at - gs) / (ve - gs)
+        D.put(xylo((84, 88, 91, 88)[k % 4], .15, .8), at, .05 * lvl, -.3 + .2 * (k % 4))
+        if k % 2 == 0:
+            D.put(pizz(midi((48, 55)[(k // 2) % 2]), .2), at, .13 * lvl, 0)
+        if k % 4 == 2:
+            D.put(snare13(.5, ghost=True), at, .03 * lvl, .1)
+    D.gate(ve - .005, ve + 1.5, 0.0, .005)
+    T.put(strings([36, 43], ball[1] - ball[0] + .1, .4, .1, 4.6, 400), ball[0], .06)                  # the ball: low, so the pegs have the air
+    D.put(roll(65, 2.0, 26), ball[0] + .02, .05, 0)
+    T.gate(t0 + 16.55, a2[0] - .01, 0.0, .01)
+    D.gate(t0 + 16.55, a2[0] - .01, 0.0, .01)
+    T.put(strings([36, 43], st4[0] - a2[0] + .3, .3, .3, 4.6, 400), a2[0], .04)
+    j0 = t0 + 19.025                                                                                   # IMMEDIATE JEOPARDY
+    D.put(crash(1.4), j0, .07, .1)
+    D.put(timp(45, 1.6), j0, .2, 0)
+    T.put(brass([34, 40, 46, 52], .5, .01, .2, 1700), j0, .07, 0)
+    for k in range(6):
+        T.put(brass([68 if k % 2 else 63, 56 if k % 2 else 51], .13, .008, .05, 1800), j0 + .02 + k * .13, .03, -.3 + .1 * k)
+    D.put(tuba(38, .4), t0 + 19.425, .18, 0)
+    T.put(slide_brass(62, 38, .55, 800), t0 + 19.43, .1, 0)
+    MUTES.append((t0 + 20.03, W("st5", "F") - .03, .02))                                               # a silent beat on 'However.'
+
+
+# ================================================================ verdict (part two: the new tag, the sit, the help)
+def _verdict_b(T, t0, d, beats, D):
+    """20.9 s to the end. After the silent beat on 'However.' the music turns to C major: a low C pedal, a string that climbs two octaves (C3 to C5) and a timpani roll that grows, 2.15 s from
+    'F nine nine nine.' to the NEW TAG stamp (23.075), and on the stamp the full, triumphant and tender hit (the strings in nine voices over C2 to C5, the brass, the choir on 'ah', a timpani,
+    a bass drum, a tam-tam, a crash, a harp glissando up three octaves and four bell glints), which fades under 'failed to cover its staff.' and is allowed to die in the room: from 25.89 to
+    27.37 (Melon's 'That is not a real tag.') there is no music at all. 'It is now.' is the horn theme alone, one note to a word (G3 on 'It', C4 on 'is', E4 on 'now', held for 1.7 s):
+    everything else is silent. A low pedal creeps in under 'Seated. Mandatory.' and goes under 'Can I sit?' (a lone high harmonic); 'It is mandatory.' opens the strings, and then the
+    sit is built one voice at a time, a voice to a sitter: a cello on C at 33.88, a cello on G at 34.18, a violin on E at 34.48, a violin on C at 34.78 and, on the chair (35.08), a violin
+    on D that falls to C (the resolution), a harp arpeggio and the whole string section; the call light (35.63) is heard over the held chord. 'Don't mind me.' is the horn theme (G3, C4, E4),
+    and on 'help.' the horn climbs to G4 as the strings and a soft choir swell to the last chord, which is held through the sting and fades with the scene."""
+    st5, a3, st6, st7, s1, st8, sit, ring, st9, en = (beats[k] for k in ("st5", "a3", "st6", "st7", "s1", "st8", "sit", "ring", "st9", "end"))
+    f0 = W("st5", "F")
+    stp = t0 + 23.075
+    T.put(strings([36, 43], stp - f0 + .2, .6, .1, 4.6, 600), f0, .075)
+    T.put(rising(48, 72, stp - f0 - .15), f0 + .1, .08, .2)
+    D.put(roll(65, stp - f0 - .25, 34), f0 + .25, .08, 0)
+    h = stp + .01                                                                                      # the NEW TAG: triumphant but tender
+    T.put(strings([36, 43, 48, 52, 55, 60, 64, 67, 72], 1.1, .02, .9, 5.0, 2600), h, .105)
+    T.put(strings([36, 43, 48, 52, 55, 60, 64, 67, 72], 2.6, .3, 2.0, 5.0, 1800), h, .04)
+    T.put(brass([48, 55, 60, 64, 67, 72], 1.6, .02, .9, 2400), h, .085, 0)
+    T.put(choir([60, 64, 67, 72], 1.2, "a", .05, .9), h, .105)
+    T.put(choir([60, 64, 67, 72], 2.2, "a", .3, 1.8), h, .04)
+    D.put(timp(55, 2.6), h, .3, 0)
+    D.put(bdrum(1.0, 1.6), h, .2, 0)
+    T.put(tamtam(2.4, 110), h, .16, 0)
+    T.put(crash(2.2), h, .08, .1)
+    for k, m in enumerate((60, 62, 64, 67, 69, 72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96)):
+        T.put(harp(m, 1.6, .75), h + .02 * k, .05, -.6 + .08 * k)
+    for j, m in enumerate((96, 100, 103, 108)):
+        T.put(bell(midi(m), 2.0) * .6, h + .1 + .08 * j, .05, -.3 + .2 * j)
+    MUTES.append((st5[1] + .05, W("st6", "It") - .02, .45))                                            # no music for 'That is not a real tag.'
+    T.put(horn(55, .22, .7, a=.03, r=.04, bright=.6), W("st6", "It"), .40, 0)                                    # 'It is now.': the horn theme, alone
+    T.put(horn(60, .22, .75, a=.03, r=.04, bright=.6), W("st6", "is"), .40, 0)
+    T.put(horn(64, 1.15, .8, a=.05, r=.7, bright=.6), W("st6", "now") - .02, .42, 0)
+    pe = t0 + 29.3                                                                                     # a pedal creeps in under 'Seated. Mandatory.'
+    T.put(strings([36, 43], s1[0] - pe + .3, 1.2, .6, 4.6, 450), pe, .06)
+    T.gate(s1[0] - .05, s1[1] + .05, .3, .1)
+    T.put(glass(88, 1.3, .5, .6), s1[0] + .1, .035, .3)                                                # 'Can I sit?': one tiny harmonic
+    T.put(strings([48, 55, 60, 64], 2.2, 1.0, .8, 5.0, 1300), W("st8", "mandatory") - .3, .06)
+    for at, kind, m, g in ((33.879, "c", 48, .09), (34.179, "c", 55, .08), (34.479, "v", 64, .07)):                                        # Lemon, Mango, Clementine
+        dur = t0 + d - (t0 + at) + .3
+        T.put(cello(m, dur, .9, a=.3, r=1.5) if kind == "c" else violin(m, 4.0, a=.3, r=1.2), t0 + at, g, -.2 if kind == "c" else .2)
+    ss_ = t0 + 34.779                                                                                  # Strawberry, last and slowly: the solo violin sings AN (E, D, C), which resolves
+    T.put(violin(76, .62, a=.1, r=.12), ss_, .09, .1)
+    T.put(violin(74, .55, a=.08, r=.12), ss_ + .6, .09, .1)
+    T.put(violin(72, 3.4, a=.12, r=1.4), ss_ + 1.15, .09, .1)
+    sc = t0 + 35.079                                                                                   # Melon on his pizza box: the whole room is seated, and the strings bloom
+    for k, m in enumerate((60, 64, 67, 72, 76, 79)):
+        T.put(harp(m, 1.8, .6), sc + .03 + .09 * k, .045, -.3 + .12 * k)
+    T.put(strings([36, 43, 48, 52, 55, 60, 64, 67, 72], t0 + d - sc + .2, 1.0, 1.4, 5.0, 1800), sc, .07)
+    T.put(horn(55, .3, .7, a=.04, r=.05, bright=.65), W("st9", "Don't"), .34, 0)                                  # 'Don't mind me.': the horn theme
+    T.put(horn(60, .35, .75, a=.04, r=.05, bright=.65), W("st9", "mind"), .34, 0)
+    T.put(horn(64, 1.1, .8, a=.05, r=.4, bright=.65), W("st9", "me"), .34, 0)
+    T.put(strings([36, 43, 48, 52, 55, 60, 64, 67, 72], 3.8, 1.4, 1.5, 5.0, 2000), t0 + 37.6, .045)  # 'I'm just going to help.'
+    T.put(choir([60, 64, 67], 3.0, "o", 1.5, 1.2), t0 + 37.7, .04)
+    T.put(horn(67, 1.3, .8, a=.1, r=.9, bright=.65), W("st9", "help") - .02, .28, .1)
+    T.fade(t0 + d - .8, t0 + d, 1, 0)
+
+
+def cue_verdict14(T, t0, d, beats, D):
+    """4:48 PM, the exit conference: see _verdict_a (the findings, the board, the alarm) and _verdict_b (the new tag, the sit, the help)."""
+    _verdict_a(T, t0, d, beats, D)
+    _verdict_b(T, t0, d, beats, D)
+
+
+CUES["verdict"] = cue_verdict14
+LEVEL14["verdict"] = 1.0
+TAIL14["verdict"] = .6
+DIP14["verdict"] = .55
+REVERB14["verdict"] = (.5, 1.8)
+DIPS14.update({"stamp": (2, .15, .2), "plink": (3, .12, .12), "plinkland": (6, .8, .4), "siren": (4, .8, .3), "klaxon": (4, .8, .3), "sit": (2, .3, .3), "chair": (3, .5, .3),
+               "ding1": (4, .5, .3), "sting": (3, .6, .5), "drumroll": (2, .5, .3)})
 
 
 # ================================================================ title and end: the overture and its reprise
@@ -525,24 +754,56 @@ def cue_title14(T, t0, d, beats, D=None):
 
 
 def cue_end14(T, t0, d, beats, D=None):
-    """The end card (8.0 s): cue_end7's reprise of the series theme (strings, brass, a bass and a kick on Am, F, C, G, Am; the crash, timpani and choir at 2.55; the teaser's drum and bells
-    at 4.25) with the horn theme on top, twice, and a harp that climbs the same A minor ninth as the title. The first statement (G4 at 3.4, C5 at 3.88, E5 at 4.4) rises over the F chord and
-    lands on the C chord at 4.75, held; the second (G4 at 6.0, C5 at 6.45, E5 at 6.9) ends on the open fifth of the last A minor chord, neither major nor minor, which is
-    the right way to say 'next time'. The horn is laid in before cue_end7 so its fade covers it."""
+    """The end card (8.0 s): the series theme's reprise, copied from build_music7.cue_end7 (strings, brass, a bass, a marimba and a kick on Am, F, C, G, Am; a crash, a timpani, the choir and
+    a run of bells on the downbeat) with its times moved to the finished picture, which counts six breaks and lands the downbeat at 2.30 s (the theme7 effect's own landing; the old cue
+    sounded 0.25 s later): the chords change at 0.0, 2.30, 4.70, 6.20 and 7.40 s; the six counter ticks of BREAKS TAKEN TODAY (1.00, 1.32, 1.62, 1.88, 2.10 and 2.30 s, speeding up) are a celesta
+    climbing C6, D6, E6, G6, A6, C7 (the last one is the downbeat), the red MANDATORY stamp (it lands at 2.44, a flam after the downbeat) gets a bass drum, the three ceiling spots (0.14, 0.24, 0.34) a tick each, and the
+    teaser pill (3.4 s) a timpani and two bells. The horn theme is on top, twice: G4, C5, E5 from 3.4 (it rises over the F chord with the teaser and lands on the C chord at 4.7, held),
+    and again from 6.0, ending on E5, the open fifth of the last A minor chord, neither major nor minor, which is the right way to say 'next time'. A harp climbs the same A minor
+    ninth as the title in the first second."""
+    c0 = t0
+    b = 60 / 96
+    plan = (("Am", 0.0, 2.3), ("F", 2.3, 2.4), ("C", 4.7, 1.5), ("G", 6.2, 1.2), ("Am", 7.4, 1.2))
+    from build_music7 import CH7, up7
+    from build_music6 import kick, clap
+    for ch, a, dd in plan:
+        T.put(strings(up7(ch, 12), dd + .4, .12, .5, 5.5, 2800), c0 + a, .14)
+        T.put(brass(up7(ch, 0), dd, .03, .3, 1500), c0 + a, .10, 0)
+        T.put(sub_bass(midi(CH7[ch][0] - 12), dd), c0 + a, .26)
+        for k in range(int(dd / (.5 * b))):
+            T.put(marimba(midi(CH7[ch][k % 3] + 24), .3), c0 + a + k * .5 * b, .09, -.3 + .2 * (k % 4))
+        for k in range(int(dd / b)):
+            T.put(kick(), c0 + a + k * b, .34 if k % 2 == 0 else .2)
+            if k % 2 == 1:
+                T.put(clap(), c0 + a + k * b, .2)
+    for k, n in enumerate((84, 88, 91, 96, 91, 88)):
+        T.put(bell(midi(n), 1.2) * .6, c0 + 2.3 + k * .17, .12, -.6 + .24 * k)
+    T.put(crash(2.4), c0 + 2.3, .33)
+    T.put(timp(65, 1.4), c0 + 2.3, .33)
+    T.put(choir([57, 60, 64], 2.2, "a", .1, 1.2), c0 + 2.3, .12)
+    for tk, m in zip((1.00, 1.32, 1.62, 1.88, 2.10, 2.30), (84, 86, 88, 91, 93, 96)):                  # BREAKS TAKEN TODAY: one note a break (ep14_title.js E_TICKS)
+        T.put(celesta(m, .9, .85), t0 + tk, .08, -.4 + .16 * (m - 84) / 2)
+        D.put(woodblock(), t0 + tk, .05, 0)
+    D.put(bdrum(.9, .8), t0 + 2.44, .16, 0)                                                            # the MANDATORY stamp lands (E_BOOM + .14, a flam after the downbeat)
+    for at in (.14, .24, .34):                                                                         # the ceiling spots
+        D.put(tick(), t0 + at, .06, .2)
+    T.put(timp(55, .9), t0 + 3.4, .3)                                                                   # the teaser pill
+    for k, n in enumerate((88, 93)):
+        T.put(bell(midi(n), 1.2) * .6, t0 + 3.4 + k * .15, .12, .3)
+    for k, m in enumerate((57, 60, 64, 67, 69, 72)):
+        T.put(harp(m, 1.6, .5 + .03 * k), t0 + .25 + .11 * k, .08, -.3 + .12 * k)
     T.put(horn(67, .45, .75, a=.05, r=.1), t0 + 3.4, .15, .15)
     T.put(horn(72, .5, .8, a=.05, r=.1), t0 + 3.88, .15, .15)
     T.put(horn(76, 2.0, .85, a=.12, r=1.0), t0 + 4.4, .16, .15)
     T.put(horn(67, .45, .75, a=.05, r=.1), t0 + 6.0, .15, .15)
     T.put(horn(72, .5, .8, a=.05, r=.1), t0 + 6.45, .15, .15)
     T.put(horn(76, 1.4, .85, a=.1, r=.9), t0 + 6.9, .16, .15)
-    for k, m in enumerate((57, 60, 64, 67, 69, 72)):
-        T.put(harp(m, 1.6, .5 + .03 * k), t0 + .25 + .11 * k, .08, -.3 + .12 * k)
-    cue_end7(T, t0, d, beats)
+    T.fade(t0 + d - 1.2, t0 + d, 1, 0)
 
 
 CUES["title"] = cue_title14
 CUES["end"] = cue_end14
-LEVEL14.update({"title": 1.0, "end": 1.0})
+LEVEL14.update({"title": .8, "end": 1.0})
 TAIL14.update({"title": .2, "end": 3.0})
 DIP14.update({"title": 1.0, "end": 1.0})
 REVERB14.update({"title": (.55, 1.6), "end": (.55, 1.6)})

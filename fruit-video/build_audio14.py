@@ -7,7 +7,11 @@ a rubber stamp and a very large rubber stamp, five people finally sitting down, 
 section) because the cue list asks for something the old sound cannot be: the registry is rebuilt in every process, so Episodes 6 to 13 are untouched.
 It changes the defaults (script, output folder, timeline variable, music module) and runs the same loudness trim, peak limiter and AAC guard as Episodes 10 to 13.
 Nothing is sampled: every sound is a few lines of numpy. Where a name is used more than once with a different job (birds, crash, clatter, thud, stamp, ding1, sting, squeak, buzz,
-plink ...), the effect takes its variation from _nth, the count of how many times it has been asked for; the mixer asks for cues in script order, so a build is deterministic.
+plink ...), the effect asks _ctx which cue it is: the mixer asks for the cues in script order, so the n-th call is the n-th cue of that name in script_ep14.json, and _ctx reads the script
+to turn that into (scene, index within the scene). The sound is chosen from the scene and the index (birds: the title's chorus or daylight; crash and clatter: the adapt scene's door or
+the closet's two slow-motion slides; thud: the binder in arrive, a head on a pizza box anywhere else; stamp: the rubber stamp, except the verdict's second, the NEW TAG; ding1: the
+tracer's three, or the hall's; sting: colony, arrive, verdict), so adding, moving or removing a cue in another scene never changes how an existing cue sounds. A call that is not a
+script cue (a foley event of the same name) falls back to the order of the calls. A build is deterministic.
 
 Usage: python3 build_audio14.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--out build/ep14_sound] [--events build/ep14/events.json]
 """
@@ -54,6 +58,41 @@ def _stereo(x, pan=0.0):
 
 def _wood_tick(seed, d=.03, lo=900, hi=4200, tau=.004):
     return _burst(seed, d, lo, hi, tau)
+
+
+_CUE_TAB = {}
+
+
+def _cue_table():
+    """{effect name: [(scene id, index among that scene's cues of the name, cue gain), ...]} in the order the mixer asks for them (scene, beat, cue: the order of the script), read from
+    the script this build was given (--script). It lets an effect know WHICH cue it is playing, so that adding, moving or removing a cue in another scene never changes what a cue sounds like."""
+    if not _CUE_TAB:
+        import json
+        argv = sys.argv
+        path = argv[argv.index("--script") + 1] if "--script" in argv else "script_ep14.json"
+        try:
+            script = json.load(open(os.path.join(A6.HERE, path)))
+        except (OSError, ValueError):
+            script = {"scenes": []}
+        for sc in script["scenes"]:
+            seen = {}
+            for b in sc["beats"]:
+                for cue in b.get("sfx", []):
+                    i = seen.get(cue[0], 0)
+                    seen[cue[0]] = i + 1
+                    _CUE_TAB.setdefault(cue[0], []).append((sc["id"], i, cue[2]))
+        _CUE_TAB.setdefault("", [])
+    return _CUE_TAB
+
+
+def _ctx(name):
+    """(k, scene id, index within the scene) of this call of the effect `name`: k counts the calls, scene and index come from the script (None, k when the call is not a script cue, as
+    with a foley event of the same name: the effect then falls back to the order of the calls, as Episodes 10 to 13 do)."""
+    k = _nth(name)
+    tab = _cue_table().get(name, [])
+    if k < len(tab):
+        return k, tab[k][0], tab[k][1]
+    return k, None, k
 
 
 # ================================================================ the colony: dawn, a car on gravel, phones, meerkats
@@ -117,10 +156,11 @@ def _coo(d=.9):
 
 
 def sfx_birds():
-    """The first call (the title, 4.9 s) is a dawn chorus that wakes up: a far dove, then a thrush's whistled phrases, a trill, sparrow chirps, each placed somewhere in the stereo
-    field and a little duller the further away it is, thickening for three seconds and thinning as the horn comes in. The second (the colony's opening pause, 1.3 s) is the same
+    """The title's cue (4.9 s) is a dawn chorus that wakes up: a far dove, then a thrush's whistled phrases, a trill, sparrow chirps, each placed somewhere in the stereo
+    field and a little duller the further away it is, thickening for three seconds and thinning as the horn comes in. Any other cue (the colony's opening pause, 1.3 s) is the same
     place in daylight: a dove, two phrases and a chirp. High and thin on purpose (nothing below 400 Hz but the dove), so the horn and the narrator have the middle."""
-    k = _nth("birds")
+    k, scene, i = _ctx("birds")
+    k = (0 if scene == "title" else 1 + (i if scene else 0)) if scene else k           # the title's chorus is the first; every other cue is the daylight one
     r = rng6(1601 + k)
     if k == 0:
         d = 4.95
@@ -232,8 +272,8 @@ def sfx_buzz():
     motor (about 170 Hz) 60 ms apart, but the thing it sits on answers differently: (1) a wooden desk, warm, the table top booming at 210 and 390 Hz with a soft rattle; (2) a
     laminate counter, harder, the case chattering at 55 Hz in the upper mids; (3) a metal tray, ringing (four inharmonic modes between 0.86 and 3.4 kHz that outlast the buzz);
     (4) a phone in a hand, muffled, nothing above 700 Hz; (5) a mug on a table, a glassy ring at 1.9 kHz. About 0.5 s each, kept out of the narrator's consonants."""
-    k = _nth("buzz")
-    s = k % 5
+    k, scene, i = _ctx("buzz")
+    s = i % 5
     r = rng6(1680 + s)
     d = .62
     n = int(d * SR)
@@ -267,7 +307,8 @@ def sfx_squeak():
     """A meerkat popping up, played by a rubber toy: a reed that squeals up a third in 35 ms and slides back down over 100 ms, bright and nasal (the odd harmonics, a resonance near 2.2 kHz),
     a quiver of 38 Hz in the level, a puff of air at the start. Four different animals at (nearly) the same instant: Lemon, Strawberry, Clementine (the smallest, the highest)
     and Mango (the biggest, the lowest). 0.16 s."""
-    k = _nth("squeak")
+    k, scene, i = _ctx("squeak")
+    k = i
     f0 = (1500.0, 1850.0, 2300.0, 1300.0)[k % 4]
     d = .17
     t = tarr(d)
@@ -317,23 +358,23 @@ def _junk_hit(kind, seed, pitch=1.0, stretch=1.0, crack=1.0, d=None):
     sk = stretch
     if kind == "chair":
         x += _ping(480 * pitch * r.uniform(.95, 1.05), d, .1 * sk, (1.0, 2.32, 3.9, 5.7), (1.0, .65, .4, .22), (1.0, .7, .45, .3)) * .7
-        x += _thump(95 * pitch, 55 * pitch, d, .05 * sk) * .8
+        x += _thump(95 * pitch ** .5, 55 * pitch ** .5, d, .05 * sk) * .8
         x += _burst(seed + 1, d, 500, 4000, .006 * sk) * .8 * crack
         for j in range(3):
             _place(x, _ping(r.uniform(1200, 2200) * pitch, .12 * sk, .03 * sk, (1.0, 2.7), (1.0, .4), (1.0, .5)), (.04 + .06 * j + r.uniform(0, .03)) * sk, .22)
     elif kind == "pole":
         x += _ping(760 * pitch * r.uniform(.96, 1.04), d, .2 * sk, (1.0, 2.76, 5.4), (1.0, .5, .25), (1.0, .55, .3)) * .55
         x += _burst(seed + 2, d, 700, 5000, .004 * sk) * .7 * crack
-        x += _thump(130 * pitch, 90 * pitch, d, .03 * sk) * .5
+        x += _thump(130 * pitch ** .5, 90 * pitch ** .5, d, .03 * sk) * .5
     elif kind == "bucket":
         x += np.sin(2 * np.pi * 210 * pitch * t) * np.exp(-t / (.035 * sk)) + .5 * np.sin(2 * np.pi * 480 * pitch * t) * np.exp(-t / (.02 * sk))
         x += _burst(seed + 3, d, 400, 1500, .008 * sk) * .6
     elif kind == "box":
         x += _lp4(noise6(d, seed + 4), 700 * pitch ** .5, 2) * np.exp(-t / (.035 * sk)) * 1.0
-        x += np.sin(2 * np.pi * 105 * pitch * t) * np.exp(-t / (.05 * sk)) * .8
+        x += np.sin(2 * np.pi * 105 * pitch ** .5 * t) * np.exp(-t / (.05 * sk)) * .8
         x += _burst(seed + 5, d, 700, 3000, .06 * sk) * .3 * (.4 + .6 * crack)
     elif kind == "tv":
-        x += _sin_of(_glide(70 * pitch, 40 * pitch, d)) * np.exp(-t / (.14 * sk)) * 1.2
+        x += _sin_of(_glide(70 * pitch ** .5, 40 * pitch ** .5, d)) * np.exp(-t / (.14 * sk)) * 1.2
         x += _burst(seed + 6, d, 600, 2800, .01 * sk) * .7 * crack
         x += _ping(2400 * pitch, d, .05 * sk, (1.0, 2.3), (1.0, .5), (1.0, .6)) * .25
         x += np.sin(2 * np.pi * 170 * pitch * t) * np.exp(-t / (.04 * sk)) * .5
@@ -370,12 +411,14 @@ def _rolling(d, p0, p1, seed, f=150.0, tau=.012, gain=1.0):
 
 
 def sfx_crash():
-    """Three crashes in two jobs, told apart by how many times they have been asked for. The first is the adapt scene's door bursting, in real time: the stash leans on a door that has
+    """Three crashes in two jobs, told apart by the scene they are in (adapt: the door; closet: the first and the second slide). The first is the adapt scene's door bursting, in real time: the stash leans on a door that has
     held for years, so a crack of wood and a hinge's snap, a deep push (60 to 32 Hz), and then everything in the room comes out at once: a wheelchair, an IV pole, a mop bucket, a
     box, a box fan, a second chair, a bed rail ringing (1.5 s). The other two are the closet's landslide in slow motion (the picture runs it at about a third speed), so everything is
     lower and longer and the hard edge is rounded off: first the wheelchairs and an IV pole, then the Christmas tree and the television (a deep, dull 'whump' with the glass
     rustling in it). Never harsh: closed off at 2.8 kHz."""
-    k = _nth("crash")
+    k, scene, i = _ctx("crash")
+    if scene:
+        k = 1 + min(i, 1) if scene == "closet" else 0                                     # the adapt scene's door; the closet's two slow-motion crashes
     if k == 0:
         d = 1.55
         x = np.zeros(int(d * SR))
@@ -392,13 +435,13 @@ def sfx_crash():
         x = np.zeros(int(d * SR))
         for at, kind, sd, g, pi in ((0.0, "chair", 1830, 1.0, .58), (.14, "pole", 1831, .8, .55), (.42, "chair", 1832, .6, .5), (.7, "bucket", 1833, .45, .5)):
             _place(x, _junk_hit(kind, sd, pi, 1.8, .25), at, g)
-        x += _sin_of(_glide(60, 34, d)) * np.exp(-tarr(d) / .35) * .55
+        x += _sin_of(_glide(75, 48, d)) * np.exp(-tarr(d) / .35) * .3
         return norm6(_edge(_lp4(x, 2800, 2), .003, .3), .85)
     d = 1.55
     x = np.zeros(int(d * SR))
     for at, kind, sd, g, pi in ((0.0, "tv", 1840, 1.0, .6), (.07, "tree", 1841, .8, .55), (.3, "box", 1842, .6, .5), (.45, "rail", 1843, .45, .5)):
         _place(x, _junk_hit(kind, sd, pi, 1.8, .25), at, g)
-    x += _sin_of(_glide(55, 32, d)) * np.exp(-tarr(d) / .3) * .5
+    x += _sin_of(_glide(70, 45, d)) * np.exp(-tarr(d) / .3) * .3
     return norm6(_edge(_lp4(x, 2800, 2), .003, .3), .85)
 
 
@@ -407,7 +450,9 @@ def sfx_clatter():
     after it. The other two are the landslide's slow-motion tail: an IV pole pinwheeling over the floor (a soft, pitched-down 'tonk' every revolution, slowing) with the mop buckets
     bonking; then the boxes bursting open, the HOURS SINCE THE Q WORD sign flipping over and a cloud of old tinsel settling (a soft shimmer that goes on after the last box). The
     last one is gone by 0.75 s so the narrator's line is clear. (From the fourth call on it is the old skitter, which is what the ambience beds ask for.)"""
-    k = _nth("clatter")
+    k, scene, i = _ctx("clatter")
+    if scene:
+        k = 0 if scene == "adapt" else 1 + i if scene == "closet" else 3
     if k >= 3:
         return A6.sfx_clatter()
     if k == 0:
@@ -470,18 +515,19 @@ def sfx_typing():
             w, wl = 0, int(r.integers(4, 8))
     for at, g in ((1.4, .5),):
         _place(x, _burst(1960, .02, 1500, 5000, .003) * .8 + np.sin(2 * np.pi * 900 * tarr(.02)) * np.exp(-tarr(.02) / .004) * .2, at, g)   # a mouse click
-    _place(x, _key(1970) * 1.4, 1.84, 1.0)                                                                                              # Enter
+    _place(x, _key(1970) * 1.1, 1.84, 1.0)                                                                                              # Enter
     _place(x, _thump(220, 120, .05, .015) * .4, 1.84, 1.0)
-    _place(x, _key(1971) * 1.7, 1.905, 1.0)
+    _place(x, _key(1971) * 1.25, 1.905, 1.0)
     _place(x, _thump(200, 100, .06, .02) * .6, 1.905, 1.0)
-    return norm6(_edge(_lp4(x, 4500, 2), .001, .03), .5)
+    return norm6(_edge(_lp4(x, 4500, 2), .001, .03), .8)
 
 
 def sfx_shutter():
     """A trail camera's shutter, twice (0.9 s apart): the relay's 'kchk' (a hard click and a knock of the housing at 320 Hz), 50 ms later the infrared cut filter flipping over (softer,
     lower), and as the flash charges a thin whine climbs from 3 to 6.5 kHz and falls away (very quiet) with a last tick when the capacitor is full. The second one is a little duller:
     the batteries are not what they were. 0.8 s."""
-    k = _nth("shutter")
+    k, scene, i = _ctx("shutter")
+    k = min(i, 1)
     d = .8
     t = tarr(d)
     x = np.zeros(len(t))
@@ -490,7 +536,7 @@ def sfx_shutter():
     wh = _sin_of(np.interp(t, [0, .5, .7], [3000, 6500, 5200])) * np.interp(t, [0, .06, .35, .7], [0, 1, .5, 0]) * .05
     x += _bp4(wh, 2500, 7000)
     _place(x, _burst(1904 + k, .01, 2500, 8000, .002) * .3, .62)
-    return norm6(_edge(_lp4(x, 7000 - 800 * k, 2), .0005, .05), .7)
+    return norm6(_edge(_lp4(x, 7000 - 800 * k, 2), .0005, .05), .85)
 
 
 def sfx_scribble():
@@ -509,7 +555,7 @@ def sfx_scribble():
         _place(x, (sq + scr) * np.sin(np.pi * t / sd) ** .7, at, r.uniform(.6, 1.0))
         at += sd + r.uniform(.015, .04)
     _place(x, _burst(1930, .03, 700, 2800, .005) + np.sin(2 * np.pi * 520 * tarr(.03)) * np.exp(-tarr(.03) / .008) * .4, at + .02, .6)
-    return norm6(_edge(x, .002, .06), .4)
+    return norm6(_edge(x, .002, .06), .6)
 
 
 def sfx_pizzabox():
@@ -551,11 +597,13 @@ def sfx_slidedoor():
 
 
 def sfx_thud():
-    """Two soft landings, told apart by how many times they have been asked for. The first is the entrance conference's binder, the size of a cinder block, put on a wooden desk
+    """Two soft landings, told apart by the scene they are in (arrive: the binder; anywhere else: the Administrator's face). The first is the entrance conference's binder, the size of a cinder block, put on a wooden desk
     (1.4 s): a push of air as the slab comes down, the desk top booming (105 Hz sagging to 55 Hz, and its second mode at 190 Hz), a slap of paper, the pen cup and the stapler
     rattling, and 40 ms after it the desk bell, jolted by the blow, goes 'ting' (2.35 kHz with a bell's overtones, a quick decay) and, rocking, a smaller second 'ting' 0.3 s later.
     The second is the Administrator's face on a pizza box (0.6 s): a hollow, soft 'foomp' of cardboard giving way, a wet little squish, a flap of the lid."""
-    k = _nth("thud")
+    k, scene, i = _ctx("thud")
+    if scene:
+        k = 0 if scene == "arrive" else 1                                                 # the binder; anywhere else a head on a pizza box
     if k == 0:
         d = 1.4
         t = tarr(d)
@@ -595,7 +643,7 @@ def sfx_slowwhoosh():
         servo[m] = np.sin(2 * np.pi * fq * t[m]) * (.6 + .4 * np.sin(2 * np.pi * 80 * t[m])) * np.sin(np.pi * (t[m] - a) / (b - a)) ** .5
     x = air + cloth + _bp4(servo, 1200, 3500) * .09
     _place(x, _burst(2032, .02, 1200, 5000, .003) * .25, .62)
-    return norm6(_edge(x, .004, .1), .5)
+    return norm6(_edge(x, .004, .1), .7)
 
 
 def sfx_click():
@@ -603,11 +651,11 @@ def sfx_click():
     d = .35
     x = np.zeros(int(d * SR))
     _place(x, _burst(2040, .01, 1800, 6000, .002) * .5, 0.0)
-    for at, f, dd, tau in ((.012, 1568.0, .06, .05), (.07, 2093.0, .26, .09)):
+    for at, f, dd, tau in ((.012, 1568.0, .045, .035), (.06, 2093.0, .2, .05)):
         t = tarr(dd)
         tri = 2 * np.abs(2 * ((f * t) % 1) - 1) - 1
         _place(x, (tri + .3 * np.sin(4 * np.pi * f * t)) * np.exp(-t / tau) * ar(dd, .004, .02), at, .9)
-    return norm6(_edge(_lp4(x, 6500, 2), .0005, .04), .5)
+    return norm6(_edge(_lp4(x, 6500, 2), .0005, .04), .42)
 
 
 # ================================================================ tracer: a run, three call lights, a banana peel
@@ -624,7 +672,7 @@ def sfx_whoosh():
     low = _thump(130, 70, d, .08) * np.minimum(1, t / .01) * .35
     out += np.stack([low * .7, low * .7])
     out = np.stack([_lp4(out[0], 6000, 2), _lp4(out[1], 6000, 2)])
-    return norm6(_edge(out, .002, .12), .6)
+    return norm6(_edge(out, .002, .12), .8)
 
 
 def _foley_cloth(seed, d, lo=300, hi=2200, peak=.5):
@@ -673,13 +721,15 @@ def sfx_ding1():
     The first three are the tracer's (Strawberry puts a call button within reach of Mr. Banana, of Mrs. Cranberry, and at the shower room door; each is a test of the button, so it
     is short and close and a little brighter every time: 1.0 s). The fourth is the exit conference's, from the hall into a room full of people who have just sat down for the first
     time in years: the same two notes, rounder, with the dong a little longer and the hall's echo coming back 0.13 s later, duller (1.4 s)."""
-    k = _nth("ding1")
+    k, scene, i = _ctx("ding1")
+    if scene:
+        k = min(i, 2) if scene == "tracer" else 3                                         # the tracer's three test dings; anywhere else the hall's
     if k < 3:
         d = 1.0
         x = np.zeros(int(d * SR))
         _place(x, _call_ding(880, .15), 0.0, 1.0)
         _place(x, _call_ding(659, .17), .3, .85)
-        return norm6(_edge(_lp4(x, (3800, 4800, 6500)[k], 2), .0005, .08), .6)
+        return norm6(_edge(_lp4(x, (3800, 4800, 6500)[k], 2), .0005, .08), .95)
     d = 1.4
     x = np.zeros(int(d * SR))
     _place(x, _call_ding(880, .2), 0.0, 1.0)
@@ -743,7 +793,7 @@ def sfx_slowmo():
     air = air / (np.abs(air).max() + 1e-9) * np.interp(t, [0, .15, .5, 1.5], [0, 1, .6, 0]) * .8
     tone = _sin_of(_glide(420, 60, d)) + .35 * _sin_of(_glide(840, 120, d))
     x = air + tone * np.interp(t, [0, .2, .8, 1.5], [0, .6, .4, 0])
-    x += np.sin(2 * np.pi * 42 * t) * np.interp(t, [0, .3, 1.0, 1.5], [0, .5, .35, 0])
+    x += np.sin(2 * np.pi * 46 * t) * np.interp(t, [0, .3, 1.0, 1.5], [0, .22, .16, 0])
     swell = _band(2141, d, 600, 3500) * np.interp(t, [0, .6, .65, 1.5], [0, 1, .2, 0]) ** 1.5 * .25
     return norm6(_edge(_lp4(x + swell, 4200, 2), .004, .2), .6)
 
@@ -755,10 +805,10 @@ def sfx_rumble():
     d = 2.45
     t = tarr(d)
     env = np.interp(t, [0, .25, .8, 1.5, 2.1, 2.45], [0, .3, 1.0, .75, .2, 0])
-    low = _unit(_lp4(noise6(d, 2150), 110, 3)) * env
+    low = _unit(_lp4(noise6(d, 2150), 150, 3)) * env
     beat = .6 + .4 * np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, d], [7, 3.5])) / SR)
-    roll = _unit(_band(2151, d, 70, 320)) * env * beat * .55
-    sub = np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, d], [42, 33])) / SR) * env * .6
+    roll = _unit(_band(2151, d, 70, 320)) * env * beat * .8
+    sub = np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, d], [46, 38])) / SR) * env * .25
     x = low + roll + sub
     r = rng6(2152)
     for j in range(12):
@@ -768,6 +818,19 @@ def sfx_rumble():
         at = r.uniform(.4, 1.8)
         _place(x, _ping(r.uniform(350, 620), .5, .2, (1.0, 2.4, 4.1), (1.0, .4, .2), (1.0, .6, .4)), at, .045)
     return norm6(_edge(_lp4(x, 900, 2), .003, .25), .65)
+
+
+
+def sfx_sparkle():
+    """The glitter on the Administrator's display, 1.0 s: nine small sine pings between 2.4 and 4.4 kHz (the old effect went up to 5.2 kHz and sat on the consonants of 'We love surveys!'), each
+    ringing for 80 ms, a little over a second in all, about 3 dB softer than before."""
+    out = np.zeros(int(1.0 * SR))
+    r = rng6(2420)
+    for k in range(9):
+        d = .35
+        f = r.uniform(2400, 4400)
+        BA.place(out, osc("sine", f, d) * np.exp(-tarr(d) / .08) * ar(d, .002, .05), k * .06 + r.uniform(0, .03), r.uniform(.4, 1.0))
+    return norm6(out, .32)
 
 
 # ================================================================ verdict: a snare roll, two stamps, a Plinko board
@@ -794,7 +857,9 @@ def sfx_drumroll():
     """A quiet snare roll under the exit conference, twice. The first (0.82 s) is the room holding its breath before the surveyor speaks: it swells from nothing and is cut off at the
     end of the beat, so the first word is clean. The second (3.15 s) is the build to the Plinko ball: it starts as he reads 'F seven twenty-five', grows through the whole line, and is
     cut dead 50 ms before the first peg, so the pegs have the air to themselves. Strokes between 0.9 and 5 kHz, closed off at 5 kHz and kept low: it is a tension, not a drum solo."""
-    k = _nth("drumroll")
+    k, scene, i = _ctx("drumroll")
+    if scene:
+        k = 1 if (scene == "verdict" and i >= 1) else 0                                   # the second of the exit conference is the long build to the ball
     if k == 0:
         d = .82
         x = _roll(d, 26, .1, .7, 2400)
@@ -811,7 +876,9 @@ def sfx_stamp():
     in the film so far (2.3 s): a deep boom (120 Hz falling to 38 Hz and a 60 Hz sub under it), the slam of a very large stamp on a very large table (900 Hz and a hard crack), the
     floor answering, and then a bell in C major: partials at 1, 1.5, 2, 2.5 and 3 times 523 Hz, the highest dying first, and a handful of glints (G7, B7, D8) that are the gold in
     green-and-gold. Light and a swell: the score does the swell, this is the hit."""
-    k = _nth("stamp")
+    k, scene, i = _ctx("stamp")
+    if scene:
+        k = 1 if (scene == "verdict" and i == 1) else 0                                   # the NEW TAG is the verdict's second stamp; any other stamp is the rubber one
     if k == 0:
         d = .45
         t = tarr(d)
@@ -843,7 +910,8 @@ def sfx_plink():
     level is corrected a little for the ear. The twelfth is the last peg, where the ball hangs and trembles: the same D7, but 1.5 s long, its pitch wobbling and its level beating at a
     rate that slows from 13 to 4.5 times a second, a tick-tick-tick of the ball settling that speeds up and stops, and a level that falls away so the Administrator's 'We had five
     nurses.' (0.2 s later) is not buried."""
-    k = _nth("plink") % 12
+    k, scene, i = _ctx("plink")
+    k = i % 12
     f = PLINK_F[k]
     if k < 11:
         d = .42
@@ -853,12 +921,12 @@ def sfx_plink():
         _place(x, _glass(f * 2.0, .2, tau * .5, .0015, .3), 0.0, .12)
         _place(x, _burst(2300 + k, .02, 1500, 4200, .003) * .55 + np.sin(2 * np.pi * 360 * tarr(.02)) * np.exp(-tarr(.02) / .01) * .25, 0.0)
         x *= (f / 1000.0) ** -.25
-        return norm6(_edge(x, .0003, .06), .7)
+        return norm6(_edge(x, .0003, .06), .85)
     d = 1.5
     t = tarr(d)
     wob = 1 + .004 * np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, 1.2, d], [14, 5, 5])) / SR)
     ph = 2 * np.pi * np.cumsum(f * wob) / SR
-    env = np.interp(t, [0, .004, .22, .5, d], [0, 1, .75, .3, 0])
+    env = np.interp(t, [0, .004, .2, .45, d], [0, 1, .5, .15, 0])
     trem = 1 + .35 * np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, 1.2, d], [13, 4.5, 4.5])) / SR)
     x = (np.sin(ph) + .16 * np.sin(2.76 * ph) * np.exp(-t / .12) + .1 * np.sin(2 * ph) * np.exp(-t / .2)) * env * trem
     at = .03
@@ -867,29 +935,34 @@ def sfx_plink():
         at += iv
     _place(x, _burst(2320, .02, 1500, 4200, .003) * .55 + np.sin(2 * np.pi * 360 * tarr(.02)) * np.exp(-tarr(.02) / .01) * .25, 0.0)
     x *= (f / 1000.0) ** -.25
-    return norm6(_edge(x, .0003, .2), .7)
+    return norm6(_edge(x, .0003, .2), .85)
 
 
 def sfx_plinkland():
-    """The ball drops into slot L, the worst one, 1.6 s (mono: the script pans it hard right, to the slot): a hollow wooden clunk (a body that sags from 200 to 120 Hz, a 330 Hz
-    resonance of the slot, a dull knock), then, 70 ms behind it, a rising game-show bell that celebrates the worst news of the afternoon: C6, E6, G6 and a long C7 (a bell's
-    overtones at 2.76 and 5.4 times, the last note ringing for 0.4 s), a red lamp beginning to turn (a 70 Hz motor and a soft swish at 1.8 times a second that swells in from 0.4 s)
-    and a handful of glints. The clunk and the first bell fall under the surveyor's 'You had one.', which is the joke; the bright part is short."""
+    """The ball drops into slot L, the worst one, 1.6 s (mono: the script pans it hard right, to the slot): a hollow wooden clunk (a body that sags from 200 to 120 Hz, a 330 Hz resonance of
+    the slot, a dull knock), then a rising game-show bell that celebrates the worst news of the afternoon. The surveyor says 'You had one.' over the first 0.76 s, in a soft voice, so
+    the bell starts as a hint under him (C5, E5, G5 and C6 at 0.06, 0.16, 0.26 and 0.40 s, dark and about 10 dB down, a bell's overtones at 2.76 and 5.4 times, which a person hears as
+    a bell being struck softly in the next room) and the bright note arrives the instant his line is over: a long C7 with E7 and G7 glints at 0.78 s, ringing for 0.45 s, and
+    the glints after it. A red lamp begins to turn (a 70 Hz motor and a soft swish at 1.8 times a second that swells in from 0.4 s). The dark bell and the clunk fall under his
+    voice, which is the joke; the bright part is after it."""
     d = 1.6
     t = tarr(d)
     x = np.zeros(len(t))
     ct = tarr(.25)
-    clunk = _sin_of(_glide(200, 120, .25)) * np.exp(-ct / .06) + np.sin(2 * np.pi * 330 * ct) * np.exp(-ct / .1) * .4 + _burst(2400, .25, 400, 1400, .02) * .5
+    clunk = _sin_of(_glide(200, 120, .25)) * np.exp(-ct / .06) + np.sin(2 * np.pi * 330 * ct) * np.exp(-ct / .1) * .4 + _burst(2400, .25, 400, 1400, .02) * .3
     _place(x, clunk, 0.0, 1.0)
     bt = tarr(.9)
-    for at, f, g, tau in ((.07, 1046.5, .55, .2), (.17, 1318.5, .65, .2), (.27, 1568.0, .75, .2), (.40, 2093.0, 1.0, .4)):
-        bell = (np.sin(2 * np.pi * f * bt) + .45 * np.sin(2 * np.pi * 2.76 * f * bt) * np.exp(-bt / (tau * .5)) + .2 * np.sin(2 * np.pi * 5.4 * f * bt) * np.exp(-bt / (tau * .25)))
+    for at, f, g, tau, dark in ((.06, 523.25, .22, .16, True), (.16, 659.25, .26, .16, True), (.26, 784.0, .30, .16, True), (.40, 1046.5, .34, .2, True), (.78, 2093.0, 1.0, .45, False)):
+        up = .12 if dark else .45
+        bell = (np.sin(2 * np.pi * f * bt) + up * np.sin(2 * np.pi * 2.76 * f * bt) * np.exp(-bt / (tau * .5)) + up * .45 * np.sin(2 * np.pi * 5.4 * f * bt) * np.exp(-bt / (tau * .25)))
         _place(x, bell * np.exp(-bt / tau) * np.minimum(1, bt / .002), at, g)
+    for at, f, g in ((.80, 2637.0, .45), (.84, 3136.0, .3)):
+        _place(x, _glass(f, .5, .2, .002), at, g)
     lamp = (np.sin(2 * np.pi * 70 * t) * .5 + _band(2401, d, 400, 1600) * (.5 + .5 * np.sin(2 * np.pi * 1.8 * t - 1.2)) ** 2 * 1.4) * np.interp(t, [0, .3, .6, 1.3, 1.6], [0, 0, .22, .18, 0])
     x += lamp
     r = rng6(2402)
     for j in range(8):
-        _place(x, _glass(r.uniform(4000, 7000), .3, .08, .002), .5 + j * .07 + r.uniform(0, .03), .1)
+        _place(x, _glass(r.uniform(4000, 7000), .3, .08, .002), .9 + j * .07 + r.uniform(0, .03), .1)
     return norm6(_edge(x, .0004, .25), .8)
 
 
@@ -923,12 +996,35 @@ def sfx_klaxon():
 
 
 def sfx_sit():
-    """Somebody sitting down in a conference chair, four times (0.6 s each), a little different: the cushion lets go of its air (a low-passed sigh that falls from 1.1 kHz to 300 Hz),
-    the body (120 Hz sagging to 70 Hz), the frame creaks (a short stick-slip note from 150 Hz to 112 Hz through 600 Hz to 1.4 kHz), the back of the chair knocks (230 Hz and a dull
-    burst) and clothing rustles. The weights are 0.85, 1.1, 0.65 and 0.95; the heavy one (the second) creaks longer and squeaks on a wheel, the light one (the third) bounces once.
-    Nobody has sat in this building for years, so none of it is hurried."""
-    k = _nth("sit") % 4
-    w = (.85, 1.1, .65, .95)[k]
+    """Somebody sitting down, four times, one per nurse (the picture's order: Lemon 33.88, Mango 34.18, Clementine 34.48 and, last, Strawberry at 34.78; each cue is the instant the sitter's
+    weight lands). Lemon (0.6 s) is crisp and upright, Mango heavy, with the frame creaking longer and a wheel that squeaks, Clementine light, with one small bounce. Each is the same
+    little machine: the cushion lets go of its air (a low-passed sigh that falls from 1.1 kHz to 300 Hz), the body (120 Hz sagging to 70 Hz), the frame creaks (a short stick-slip note
+    from 150 Hz to 112 Hz through 600 Hz to 1.4 kHz), the back of the chair knocks (230 Hz and a dull burst) and clothing rustles.
+    The fourth (1.0 s) is Strawberry, who has been lowering herself for 1.1 s into a chair that has been waiting for her (the picture's slowest sit): so the landing is the gentlest of
+    the four (a body of 110 Hz sagging to 65, a third of the others' weight), the cushion lets go of its air for 0.7 s, the vinyl creaks slowly (a stick-slip note that falls from 150
+    Hz to 105 Hz over half a second and is the loudest creak of the four), the frame settles with a soft knock at 0.35 s and, over all of it, she breathes out: a long breath through
+    three vowel resonances (650 Hz, 1.1 kHz, 2.5 kHz), rising for 0.2 s and falling for 0.5 s. It is the one sit that is allowed to be beautiful; it is over before the call light."""
+    k, scene, i = _ctx("sit")
+    k = i % 4
+    if k == 3:
+        d = 1.0
+        t = tarr(d)
+        x = np.zeros(len(t))
+        sigh = _tv_filter(noise6(d, 2513), np.interp(t, [0, .7, d], [1000, 240, 200]), 1.1, "lp") * np.interp(t, [0, .02, .12, .45, .75], [0, .8, 1, .4, 0])
+        x += _unit(sigh) * .6
+        x += _sin_of(_glide(110, 65, d)) * np.exp(-t / .07) * .35
+        cd = .5
+        cph = np.cumsum(np.interp(tarr(cd), [0, cd], [150, 105])) / SR
+        cr = _bp4(2 * (cph % 1) - 1, 500, 1200) * np.sin(np.pi * np.linspace(0, 1, len(cph))) ** 1.3
+        _place(x, _unit(cr), .04, .32)
+        _place(x, _sum(np.sin(2 * np.pi * 200 * tarr(.12)) * np.exp(-tarr(.12) / .03) * .6, _burst(2514, .12, 500, 2200, .01) * .4), .35, .2)
+        bd = .7
+        bn = noise6(bd, 2515)
+        breath = _bp4(bn, 500, 800) + .8 * _bp4(bn, 900, 1300) + .4 * _bp4(bn, 2200, 2800)
+        _place(x, _unit(breath) * np.interp(tarr(bd), [0, .2, bd], [0, 1, 0]) * .3, .08)
+        _place(x, _band(2516, .25, 1200, 4000) * np.hanning(int(.25 * SR)), .0, .1)
+        return norm6(_edge(x, .001, .15), .6)
+    w = (.85, 1.1, .65)[k]
     d = .6
     t = tarr(d)
     x = np.zeros(len(t))
@@ -949,25 +1045,20 @@ def sfx_sit():
 
 
 def sfx_chair():
-    """The last chair, the long one (0.9 s): the cushion takes her weight slowly (the air sighs out for half a second, a low-passed noise that falls from 1.4 kHz to 260 Hz), the vinyl
-    creaks as it gives (a slow stick-slip note, 120 Hz to 95 Hz, a little louder than the others), the frame settles with a soft knock at 0.46 s and, over it, a long breath out:
-    noise through three vowel resonances (650 Hz, 1.1 kHz, 2.5 kHz), rising for 0.12 s and falling for 0.3 s. Replaces the old chair squeak for this episode. It is the sit
-    that matters; the call light, 0.55 s later, has to be heard, so the breath is over by 0.6 s."""
-    d = .9
+    """The Administrator sits, still dazed, on his pizza box (the picture's last sit, 35.08 s; the old chair squeak is replaced for this episode), 0.7 s: the box takes his weight with a
+    soft, hollow 'fump' (a low-passed burst and a body that sags from 100 to 60 Hz), the cardboard crumples (a rustle between 600 Hz and 2.8 kHz that lasts a quarter of a second and
+    a few small crackles), the air goes out of it in a short wheeze (1.5 kHz falling) and the frame of the chair gives one small squeak. Nothing in it is bright, so the call light 0.55 s
+    later is the next thing anyone hears."""
+    d = .7
     t = tarr(d)
-    x = np.zeros(len(t))
-    sigh = _tv_filter(noise6(d, 2540), np.interp(t, [0, .5, d], [1400, 260, 200]), 1.1, "lp") * np.interp(t, [0, .06, .2, .55, d], [0, .6, 1, .35, 0])
-    x += _unit(sigh) * .6
-    cd = .42
-    cph = np.cumsum(np.interp(tarr(cd), [0, cd], [120, 95])) / SR
-    cr = _bp4(2 * (cph % 1) - 1, 500, 1100) * np.sin(np.pi * np.linspace(0, 1, len(cph))) ** 1.3
-    _place(x, _unit(cr), .05, .3)
-    _place(x, _sum(np.sin(2 * np.pi * 200 * tarr(.12)) * np.exp(-tarr(.12) / .03) * .6, _burst(2541, .12, 500, 2200, .01) * .4), .46)
-    bd = .6
-    bn = noise6(bd, 2542)
-    breath = _bp4(bn, 500, 800) + .8 * _bp4(bn, 900, 1300) + .4 * _bp4(bn, 2200, 2800)
-    _place(x, _unit(breath) * np.interp(tarr(bd), [0, .12, .3, bd], [0, 1, .6, 0]) * .26, .08)
-    _place(x, _band(2543, .25, 1200, 4000) * np.hanning(int(.25 * SR)), .0, .08)
+    x = _lp4(noise6(d, 2540), 700, 2) * np.interp(t, [0, .015, .1, .3], [0, 1, .4, 0]) * .8
+    x += _sin_of(_glide(100, 60, d)) * np.exp(-t / .08) * .6
+    _place(x, _burst(2541, .25, 600, 2800, .06) * .5, .01)
+    r = rng6(2542)
+    for j in range(5):
+        _place(x, _burst(2543 + j, .02, 1200, 3500, .004), .05 + r.uniform(0, .2), .12)
+    _place(x, _tv_filter(noise6(.25, 2548), _glide(1500, 400, .25), 1.1, "lp") * np.interp(tarr(.25), [0, .03, .25], [0, 1, 0]) * .35, .06)
+    _place(x, _sin_of(_glide(900, 1250, .08)) * np.hanning(int(.08 * SR)), .22, .06)
     return norm6(_edge(x, .001, .15), .55)
 
 
@@ -989,7 +1080,8 @@ def sfx_sting():
     before the next scene's narrator: two brass hits and a long chord that falls a semitone (D minor to C sharp minor for the colony; a fifth higher for the surveyor's 'Perfect.').
     The third (the last frame of the story, 1.7 s) is the same gesture turned to the major: three horn-and-brass hits on the notes of the horn theme (G, C, E: the top voice of each
     chord) and a long, warm C major chord with a ninth, a soft drum and three bell glints (E6, G6, C7). The surveyor has been kind; the sting says so."""
-    k = _nth("sting") % 3
+    k, scene, i = _ctx("sting")
+    k = {"colony": 0, "arrive": 1, "verdict": 2}.get(scene, k % 3)
     if k == 0:
         d = 1.5
         out = _sting_core([38, 45, 50, 53], [37, 44, 49, 52], d, .85)

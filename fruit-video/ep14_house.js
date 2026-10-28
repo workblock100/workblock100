@@ -1,6 +1,7 @@
 'use strict';
-/* KIT STATUS: v1 (every room is drawn; the building, doorways and room lamps are in. Still coming, in this order, each saved as it lands: the roof, sky, lot and the State's car; the live options of every room
- * (call lights, fridge and pens, the shower room's stash, glass front and door, alert pulses, bubbles); the front layers (counters, desks, tables); then polish. The geometry and every name below are final.)
+/* KIT STATUS: v1. Every room is drawn with its live parts and front layers; the building, roof (with the hero sign), sky and lot are in; the shower room has its glass front, door, tape, sign, sock and stash; the
+ * med room its lit fridge with 18 pens. Still to land, each saved as it arrives: the State's car (o.car, o.carDoor), the alert pulses and chat bubbles (o.rooms[id].alert, .bubble), room name plates, polish.
+ * The geometry and every name below are final.
  * SHIFT HAPPENS, Episode 14: the dollhouse kit, window.S14. The building at Fruit Bowl Rehab & Nursing as a cutaway: a dollhouse seen straight on, one room per cell, every room lit
  * and furnished on its own. Shared by the colony, adapt, tracer and closet scenes (and the title and end card if they want the building).
  *
@@ -23,10 +24,14 @@
  *   S14.at(id, u, dy = 0)    -> [x, y]       a standing spot: u 0..1 across the room (0 left wall, 1 right wall), y = floor + dy
  *   S14.door(id, side)       -> { x, y0, y1, w } the arch in the wall to the 'l' or 'r' of the room (x = the wall's centre line; null on the building's outer walls)
  *   S14.S                    the scale of a standing adult inside a room (0.44: about 160 px tall); children and trainees are smaller
+ *   S14.LOT                  the lot's numbers: { y0 (the plinth), curb, asphalt, bayY0, bayY1, bays: [[x0, x1], [x0, x1]], lane (the car's wheels when it is on the lane), dash }
  *   S14.who(id, ctor, u, extra) -> the drawChar options for ctor placed in a room: Object.assign({ x, y: floor, s: S14.S }, extra) passed through ctor
  *   S14.zoomRoom(id, z, dy = 0)  aims the camera at a room (zoomTo(cx, cy + dy, z)); z 3.4 fits a 250 px room across the frame, z 1 shows the whole building
- *   S14.back(lt, o)          draws the sky, roof, lot, car and every room as it is behind the characters. o: { t (the animation clock, default lt), rooms: { id: {...} }, only: [ids], noSky, noLot, noRoof, noCar, car }
+ *   S14.back(lt, o)          draws the sky, roof, lot, car and every room as it is behind the characters. o: { t (the animation clock, default lt), rooms: { id: {...} }, only: [ids], noSky, noLot, noRoof, noCar, car, carDoor, carLeaf, lotSign, plates }
  *                            Rooms and scenery the camera cannot see are skipped. Call V2.setLight (or your own light) BEFORE S14.back: the rooms add their lamps as V2 lights for the characters.
+ *   o.car = { x, k, door } (or a number x): the State's white sedan on the lot (x its centre, k 0 on the lane .. 1 pulled into the Administrator's reserved bay, door 0..1 the driver's door; o.carDoor overrides door).
+ *                            o.carLeaf = 'front' leaves the open door leaf to S14.front, so a person stepping out of the car is drawn between the car and its door. S14.carGeom(car) -> { x, y, s, k, door, exit: [x, y] }.
+ *                            o.lotSign: the RESERVED / ADMINISTRATOR sign is drawn only while the camera is aimed at the lot (camera y > 1380) unless you force it with true / false. o.plates false hides the room name plates.
  *   S14.front(lt, o)         draws what sits in front of the characters (counter fronts, desks, tables, blankets, armchair arms, bubbles). Call it after the characters; same o as back.
  *   S14.GEOM                 the numbers: { T, RW, RH, X0, Y0, COL, ROW }
  *   S14.walk(ctor, pathFn, lt, extra)       a walker: the drawChar options of ctor at pathFn(lt) = [x, y] in WORLD (scene) coordinates (y = the floor line, S14.rect(id).floor; s defaults to S14.S).
@@ -35,8 +40,36 @@
  *   S14.run(ctor, pathFn, lt, extra, rate = 300)   a runner, like H6.runner: legs cycle at gaitW = lt * rate whatever the speed; vx clamped to +-1400.
  *   S14.move(t0, t1, a, b, ease = easeIO)   a pathFn gliding from [x, y] a to b (H6.move)
  *
- * Per-room options, o.rooms[id] = { ... } (every one optional):
- *   any room:  lamp 0..1 (the ceiling light's strength; default 1, the locked break room 'rest' defaults to .6), flicker 0..1 (the lamp stutters)
+ * Per-room options, o.rooms[id] = { ... } (every one optional; pass the same o to S14.back and S14.front):
+ *   any room   lamp 0..1 (the ceiling light's strength; default 1, the locked break room 'rest' defaults to .6), flicker 0..1 (the lamp stutters),
+ *              alert 0..1 (the alarm call: a yellow wash and rim on the room, a ring from alertAt [x, y] (room coordinates, default the middle), a phone buzzing at phoneAt [x, y] (default top right);
+ *              1 at the buzz, falling to 0 as the ring expands), bubble 'text' | { t, k (the pop 0..1, 1 = settled), dx, dy, at ('top' default, inside the room's top | 'above', entirely above the room | 'bottom'), tail (x of the tail in room coordinates) }:
+ *              a blue chat bubble inside the top of the room; its text is 32 px at zoom 1 and about 34 px at any zoom above that (the bubble scales down as the camera comes in), and it is kept whole inside the safe frame.
+ *   office     desk (false leaves the Administrator's desk out of S14.front). He sits behind it: noLegs, x = x0 + 150, y = floor - 42; the desk top is at y0 + 226.
+ *   r4         peel 0..1 (the banana peel decal on the floor, default 1 = shown; 0 hides it. The tracer draws its own peel: pass peel: 0).
+ *   r7         the ARMCHAIR is fixed: its centre is x = rect('r7').x0 + 80 (= 626), the cushion's top is 50 px above the floor line (y = floor - 50). Seat Mrs. Cranberry with noLegs at
+ *              x0 + 80, y = floor - 50: the chair back and wings are in S14.back, the cushion and both arms in S14.front, so she tucks in.
+ *   r14        the blanket and the bed rail are in S14.front (a resident sits up in the bed: noLegs, x about x0 + 168, y about floor - 58).
+ *   med        cart 0..1 (default 0: NO cart is drawn, so the tracer's own cart is the only one; 1 parks the kit's cart at x0 + 112), cartDrawer 0..1;
+ *              fridge 0..1 (how far the glass door of the med fridge is open, default 0), pens 0..1 (the share of the 18 insulin pens whose open-date label is fresh, default .25: the rest still
+ *              carry old, scribbled labels). S14.penSlots(pens) -> [{ i, row, col, x, y (foot), fresh }] in world coordinates, S14.fridge() -> { x0, y0, x1, y1 }.
+ *              S14.cart(x, floorY, o) draws a med cart anywhere (o: s scale, drawer 0..1, color, accent).
+ *   shower     stash 0..4 (default 2; 0 empty, 1 a few items, 2 half full, 3 full, 4 packed to the ceiling; fractional values bring items in one by one with a little pop),
+ *              bulge 0..1 (the door bows, its panels crack, the tape strains and frays, the glass cracks, dust leaks at the edges; the door shakes a pixel or so when bulge > .45),
+ *              door 0..1 (0 shut, 1 swung wide toward the camera; the tape snaps the moment it starts to move), junk(t, rect, items) (a hook called in WORLD coordinates after the stash is drawn and
+ *              before the glass and the door, with S14.stashItems(stash): the closet's avalanche draws its falling pieces from here).
+ *              THE DOOR (all of it, with the OUT OF ORDER tape, the DO NOT OPEN sign and the sock, is drawn in S14.back, behind the characters; nothing of the shower room is in S14.front):
+ *                S14.showerDoor(st) -> { x0, y0, x1, y1 (the closed leaf: 88 wide, 198 tall, x 890..978, y 790..988), knob: [x, y] (the brass knob on the LEFT edge, about [901, 896] when shut; it follows the leaf as it swings),
+ *                hinge: 'r', knobSide: 'l', cx, floor, w, h, open, bulge, tape: [[y0, y1], [y0, y1]] (the two strips, y 824..840 and 908..924), sign: [x, y, w, h] (DO NOT OPEN, [906, 794, 56, 28]), sock: [x, y] }
+ *                st is the same object as o.rooms.shower ({ door, bulge }). A character standing to the left of the door reaches the knob; the sign is above the heads (y 794..822).
+ *              The room is a glass-fronted closet: a steel-framed glass front (cracks at bulge) with the brown-framed door set in it; the stash is seen through the glass.
+ *              S14.stashItems(level) -> [{ id, kind, x, y (the base), w, h, rot, z, at, o }] in world coordinates (what the room shows at that level), S14.drawItem(kind, x, y, s, rot, o) draws one sprite
+ *              (kinds in S14.itemKinds: box wheelchair ivpole fan tree tv bucket rail banner qsign bag; x, y = the bottom centre).
+ *   station    calls [0..1 x 40] (the call-light domes, row by row, 8 per row; 1 = lit and pulsing, a fraction = a steady glow), qHours (the number on the Q sign, default 41), qFlicker 0..1, time 'H:MM'
+ *              (the wall clock; default: the scene's clock string, so it ticks with the pill), counter (false leaves the counter out of S14.front). The staff stand behind the counter at y = floor; the
+ *              counter hides everything below y0 + 252 (their legs and bellies), heads and shoulders show above it; to hide a whole character (the meerkats crouching) push it down with S14.at('station', u, +70).
+ *   lobby      desk (false leaves the front desk out of S14.front); Mango stands behind it at u .72. car 0..1: the white sedan seen through the glass doors, rolling in from the left.
+ *   dining     table (false leaves the table out of S14.front); residents sit behind it (noLegs, y about floor - 38).
  * Text in the kit goes through the UI kit: dressing (wall charts, calendars, plates) is hero:false + crop:true; a sign that is big enough on screen, whole and clear of the clock pill and the
  * captions is automatically held to the hero rules (so a character in front of it is reported by the gate). No text is ever drawn into a cache.
  */
@@ -169,14 +202,35 @@ function heroNow(x0, y0, x1, y1, sizePx) {
   if (!S.noChyron && b.x1 > 44 && b.x0 < 506 && b.y1 > 110 && b.y0 < 250) return false;
   return true;
 }
+/* The gate lets set dressing be cut by the frame, run under the captions or the clock pill and hide behind things (crop: true), but a viewer still reads a half-sliced word at the frame edge,
+ * or a menu board running through the caption words, as broken text. So dressing lettering (and a dressing sign as a whole) fades out before it reaches the frame edge, the caption zone
+ * or the clock pill: the room art stays, the lettering goes. Returns 0..1 for the screen box of a local rectangle: 1 while the box keeps the hero margins (44 px from the edge, clear of
+ * the caption zone and the pill), falling to 0 over 40 px of intrusion. */
+function dressGuard(x0, y0, x1, y1) {
+  const b = screenOf(x0, y0, x1, y1), S = scrFrame();
+  let d = Math.min(b.x0 - 44, b.y0 - 44, W - 44 - b.x1, H - 44 - b.y1);
+  if (!S.noScrim) d = Math.min(d, Math.max(1374 - b.y1, b.y0 - 1706));
+  if (!S.noChyron) d = Math.min(d, Math.max(44 - b.x1, b.x0 - 506, 110 - b.y1, b.y0 - 250));
+  return d >= 0 ? 1 : clamp01(1 + d / 40);
+}
 /* dressing text: a centred label that never complains; the room's wall charts, calendars, name plates */
 function dress(str, cx, cy, size, o = {}) {
+  const w = Math.min(o.maxW || 1e9, UI.sizeOf(str, { size, weight: o.weight, spacing: o.spacing, font: o.font, italic: o.italic }).w), hw = o.align === 'left' ? [0, w] : o.align === 'right' ? [-w, 0] : [-w / 2, w / 2];
+  const a = dressGuard(cx + hw[0], cy - size * .6, cx + hw[1], cy + size * .6);
+  if (a < .02) return;
+  if (a < 1) { ctx.save(); ctx.globalAlpha *= a; }
   UI.label(str, cx, cy, Object.assign({ size, hero: false, crop: true, fill: '#2a2230' }, o));
+  if (a < 1) ctx.restore();
 }
-/* a sign or plate with centred text, as dressing unless it is hero-sized and whole (then the gate holds it to the full rules) */
+/* a sign or plate with centred text, as dressing unless it is hero-sized and whole (then the gate holds it to the full rules); a dressing sign fades out as a whole near the edge, the captions and the pill */
 function plate(box, lines, o = {}) {
   const [x, y, w, h] = box, size = o.size ?? 20, hero = o.hero !== false && heroNow(x, y, x + w, y + h, o.heroSize ?? size);
-  return UI.sign(box, lines, Object.assign({ fill: '#f2e8cf', ink: '#2a2230', stroke: '#2a2230', lw: 2, size, hero, crop: !hero }, o, { hero, crop: !hero }));
+  const a = hero || o.guard === false ? 1 : dressGuard(x, y, x + w, y + h);
+  if (a < .02) return null;
+  if (a < 1) { ctx.save(); ctx.globalAlpha *= a; }
+  const r = UI.sign(box, lines, Object.assign({ fill: '#f2e8cf', ink: '#2a2230', stroke: '#2a2230', lw: 2, size, hero, crop: !hero }, o, { hero, crop: !hero }));
+  if (a < 1) ctx.restore();
+  return r;
 }
 
 // ================================================================================================ the room box: a shallow one-point perspective (back wall, two side walls, ceiling, floor)
@@ -810,17 +864,18 @@ S14.front = (lt, o = {}) => {
 
 // ================================================================================================ the world around the building: sky, hills, roof, sign, chimney, weathervane, lot
 const A7K = window.A7;
-let HILLC = null;
-function hillsDraw() {
-  /* two ridges of far hills behind the building, with round trees along the near one (static) */
-  const ridge = (base, amp, f, ph, c0, c1, y1) => { ctx.beginPath(); ctx.moveTo(-760, y1); for (let x = -760; x <= 1840; x += 20) ctx.lineTo(x, base + amp * Math.sin(x * f + ph) + amp * .5 * Math.sin(x * f * 2.7 + ph * 2)); ctx.lineTo(1840, y1); ctx.closePath(); ctx.fillStyle = vg(base - amp, y1, c0, c1); ctx.fill(); };
-  ridge(318, 26, .0052, 1.2, '#b6d6cf', '#8dbfae', 1342);
-  ridge(352, 16, .0085, 3.1, '#8fc29d', '#5f9f78', 1342);
-  const r = rnd(8); for (let x = -740; x < 1820; x += 34 + r() * 30) { const y = 352 + 16 * Math.sin(x * .0085 + 3.1) + 8 * Math.sin(x * .0085 * 2.7 + 6.2) + 4, rr0 = 12 + r() * 10; ell(x, y - rr0 * .6, rr0, rr0 * 1.1, vg2(y - rr0 * 1.8, y, '#6eb277', '#4a8a5a'), null); }
-}
 function vg2(y0, y1, c0, c1) { return vg(y0, y1, c0, c1); }
+function hillsDraw() {
+  /* the country behind the building: the horizon is low (y about 1000), two ridges of hills with round trees, then a meadow down to the building's foot */
+  const ridge = (base, amp, f, ph, c0, c1, y1) => { ctx.beginPath(); ctx.moveTo(-1200, y1); for (let x = -1200; x <= 4000; x += 20) ctx.lineTo(x, base + amp * Math.sin(x * f + ph) + amp * .5 * Math.sin(x * f * 2.7 + ph * 2)); ctx.lineTo(4000, y1); ctx.closePath(); ctx.fillStyle = vg(base - amp, y1, c0, c1); ctx.fill(); };
+  ridge(930, 70, .0021, 1.2, '#b9d8d4', '#8fc0b4', 1342);
+  ridge(1010, 46, .0034, 3.1, '#8fc29d', '#6aa583', 1342);
+  const r = rnd(8); for (let x = -1180; x < 3980; x += 30 + r() * 34) { const y = 1010 + 46 * Math.sin(x * .0034 + 3.1) + 23 * Math.sin(x * .0034 * 2.7 + 6.2) + 6, rr0 = 12 + r() * 14; ell(x, y - rr0 * .7, rr0, rr0 * 1.15, vg(y - rr0 * 2, y, '#6eb277', '#3f8a52'), null); ln(x, y - rr0 * .2, x, y + 4, '#5a4630', 3); }
+  ridge(1112, 20, .0052, .5, '#86c26d', '#5aa24a', 1342);
+  const q = rnd(19); for (let i = 0; i < 90; i++) { const x = -1200 + q() * 5200, y = 1130 + q() * 190; ell(x, y, 5 + q() * 9, 2 + q() * 3, `rgba(${q() > .5 ? '255,236,150' : '255,255,255'},.5)`, null); }   /* flowers in the meadow */
+}
 SCENERY.sky = (t, o, V) => {
-  ctx.fillStyle = vg(-1600, 780, '#1e56ae', '#7bbaee', '#fbe7c2'); ctx.fillRect(-760, -1600, 2600, 2420);
+  ctx.fillStyle = vg(-1600, 1020, '#1e56ae', '#7bbaee', '#fbe7c2'); ctx.fillRect(-1200, -1600, 5200, 3000);
   ctx.save();
   /* the low gold sun, upper left, with a few long soft rays */
   V2.glow(90, 90, 1100, '255,226,160', .5, 'screen', .35);
@@ -828,8 +883,6 @@ SCENERY.sky = (t, o, V) => {
   if (A7K) { A7K.clouds(t, -1100, -150, { n: 6, a: .85, speed: 7, seed: 12, scale: 1.3, tint: '255,250,240', belly: '170,190,225' }); A7K.clouds(t, 10, 250, { n: 4, a: .92, speed: 9, seed: 2, scale: 1.05, tint: '255,248,235', belly: '200,200,220' }); A7K.birds(t, 90, 300, { n: 5, seed: 3, speed: 46, size: 1.1 }); }
   ctx.restore();
   hillsDraw();
-  /* the ground beside and behind the building */
-  ctx.fillStyle = vg(1320, 1342, '#6aa86a', '#4f8f5a'); ctx.fillRect(-760, 1320, 2600, 26);
 };
 
 /* ---- the roof: terracotta tiles, a ridge, a fascia, a chimney; cached at 2x (no text) */
@@ -890,16 +943,18 @@ SCENERY.roof = (t, o, V) => {
   ctx.drawImage(c.cv, c.x0, c.y0, c.w, c.h);
   chimneySmoke(t); weathervane(t);
   /* the sign (hero text when it is whole on screen and clear of the pill and the captions) and its marquee bulbs */
-  const bx = 200, by = 250, bw = 680, bh = 80;
+  const bx = 200, by = 250, bw = 680, bh = 80, ga = heroNow(bx, by, bx + bw, by + bh, 34) ? 1 : dressGuard(bx - 8, by - 10, bx + bw + 8, by + bh + 10);
+  ctx.save(); ctx.globalAlpha *= ga;
   for (let i = 0; i <= 24; i++) { const x = bx + 8 + i * (bw - 16) / 24, on = (Math.floor(t * 2.5 + i * .5) % 2) === 0; for (const y of [by - 6, by + bh + 6]) { ell(x, y, 3, 3, on ? '#ffe9a8' : '#c8a860', 'rgba(60,30,10,.6)', .8); if (on) V2.glow(x, y, 16, '255,226,150', .5, 'screen', .2); } }
-  plate([bx, by, bw, bh], 'FRUIT BOWL REHAB & NURSING', { fill: '#24402e', stroke: '#d9b45a', lw: 5, ink: '#f2e8cf', size: 38, spacing: 1.5, pad: 10, r: 14, shadow: 12, id: 'k14.roofsign' });
+  plate([bx, by, bw, bh], 'FRUIT BOWL REHAB & NURSING', { fill: '#24402e', stroke: '#d9b45a', lw: 5, ink: '#f2e8cf', size: 38, spacing: 1.5, pad: 10, r: 14, shadow: 12, id: 'k14.roofsign', heroSize: 34, guard: false });
+  ctx.restore();
 };
 
 // ------------------------------------------------------------------------------------------------ the lot: plinth, sidewalk, curb, asphalt, the bays, a tree, a bench, the RESERVED sign
 const LOT = { y0: 1342, curb: 1406, asphalt: 1420, bayY0: 1436, bayY1: 1524, bays: [[24, 474], [534, 984]], lane: 1590, dash: 1690 };
 S14.LOT = LOT;
 SCENERY.lot = (t, o, V) => {
-  const y0 = LOT.y0, X = -760, WW = 2600;
+  const y0 = LOT.y0, X = -1200, WW = 5200;
   if (V.y1 < y0) return;
   /* plinth of stone blocks */
   ctx.fillStyle = vg(y0, y0 + 24, '#a09b92', '#7d796f'); ctx.fillRect(X, y0, WW, 24);
@@ -927,9 +982,83 @@ SCENERY.lot = (t, o, V) => {
   for (const dx of [-52, 52]) { ln(bxx + dx, byy, bxx + dx, byy - 22, '#3a3340', 5); }
   rb(bxx - 62, byy - 40, 124, 10, '#4f9a5a', { r: 3, lw: 1.6 }); rb(bxx - 62, byy - 26, 124, 10, '#4f9a5a', { r: 3, lw: 1.6 }); rb(bxx - 62, byy - 58, 124, 12, '#5fae6a', { r: 3, lw: 1.6 });
   /* the sign on its short post: RESERVED, ADMINISTRATOR (the best bay) */
-  const sx = 516, sy = 1342, sw = 168, sh = 82;
+  const sx = 516, sy = 1342, sw = 168, sh = 82, camY = CAM ? CAM.y : 960, show = o.lotSign != null ? !!o.lotSign : camY > 1380;   /* at the wide and room shots it would sit under the speaker chip, so by default it is drawn only when the camera is aimed at the lot */
+  if (!show) return;
   fsh(sx, 1488, 44, .3, 6); rb(sx - 6, sy + sh - 4, 12, 142 - sh + 4, '#6a6f7a', { r: 3, lw: 1.6 });
-  plate([sx - sw / 2, sy, sw, sh], [{ t: 'RESERVED', size: 24 }, { t: 'ADMINISTRATOR', size: 16.5, weight: 800 }], { fill: '#1f4fa0', stroke: '#ffffff', lw: 4, ink: '#ffffff', r: 8, pad: 8, heroSize: 16, id: 'k14.reserved' });
+  plate([sx - sw / 2, sy, sw, sh], [{ t: 'RESERVED', size: 24 }, { t: 'ADMINISTRATOR', size: 16.5, weight: 800 }], { fill: '#1f4fa0', stroke: '#ffffff', lw: 4, ink: '#ffffff', r: 8, pad: 8, heroSize: 15, id: 'k14.reserved' });
+};
+
+// ================================================================================================ the State's car: a white sedan seen from the side, a slate-blue door panel and a star
+/* S14.carGeom(car) -> where the car is: { x, y (the wheels' contact line), s, k, door, exit: [x, y] (where a character stands when stepping out of the driver's door), doorX, nose, tail }.
+ * car = a number (x, parked) or { x, k (0 on the lane .. 1 pulled into the bay), door (0..1) }; the bay is the Administrator's RESERVED one (x 24..474), which is where the State parks. */
+S14.carGeom = (car) => {
+  const c = typeof car === 'number' ? { x: car, k: 1 } : (car || {}), k = clamp01(c.k ?? 1), x = c.x ?? 225, e = easeIO(k), y = lerp(LOT.lane, 1500, e), s = lerp(1.06, 1, e), door = clamp01(c.door ?? 0);
+  return { x, y, s, k, door, exit: [x + 44 * s, y + 38 * s], doorX: x + 38 * s, nose: x + 196 * s, tail: x - 196 * s };
+};
+function carBody() {
+  ctx.beginPath(); ctx.moveTo(-186, -24); ctx.quadraticCurveTo(-196, -28, -196, -42); ctx.lineTo(-195, -60); ctx.quadraticCurveTo(-193, -70, -170, -72); ctx.lineTo(-114, -75);
+  ctx.quadraticCurveTo(-96, -92, -72, -120); ctx.quadraticCurveTo(-66, -127, -56, -127); ctx.lineTo(30, -127); ctx.quadraticCurveTo(42, -127, 52, -116); ctx.lineTo(92, -77);
+  ctx.quadraticCurveTo(100, -73, 112, -72); ctx.lineTo(168, -66); ctx.quadraticCurveTo(190, -62, 194, -46); ctx.quadraticCurveTo(197, -30, 186, -24); ctx.closePath();
+}
+function carWheel(cx, spin) {
+  ell(cx, -27, 33, 33, '#26222c'); ell(cx, -27, 27, 27, '#1d1a22', '#0c0a10', 1.4); ell(cx, -27, 17, 17, vg(-44, -10, '#e6ebf0', '#9aa4ae'), '#6a727c', 1.2);
+  for (let i = 0; i < 5; i++) { const a = spin + i * TAU / 5; ln(cx, -27, cx + Math.cos(a) * 15, -27 + Math.sin(a) * 15, 'rgba(70,78,88,.8)', 2.6, 'round'); } ell(cx, -27, 4, 4, '#c9d0d8', '#5a626c', 1);
+}
+function carLeaf(door) {
+  const th = door * 1.05, c = Math.cos(th), sn = Math.sin(th), hx = 88, w = 98, xf = hx - w * c;
+    const q = [[xf, -118 - 10 * sn], [hx, -118], [hx, -26], [xf, -22 + 12 * sn]];
+    poly(q, hg(xf, hx, '#c9cfd6', '#eef1f3'), OUT, 2);
+    poly([[xf + (hx - xf) * .08, -108 - 8 * sn], [xf + (hx - xf) * .86, -108], [xf + (hx - xf) * .86, -82], [xf + (hx - xf) * .08, -82]], vg(-110, -80, '#b4e0f8', '#5a8ec0'), 'rgba(20,24,34,.85)', 1.6);
+    poly([[xf, -66 - 5 * sn], [hx, -66], [hx, -38], [xf, -36 + 6 * sn]], '#33527a', 'rgba(255,255,255,.7)', 1.2);
+}
+/* o.leaf: 'all' (default) draws the whole car, 'none' leaves the open driver's door leaf out, 'only' draws just that leaf (the scene draws it over the person stepping out) */
+function drawCar(x, y, s, o = {}) {
+  const door = clamp01(o.door ?? 0), spin = x / 27, leaf = o.leaf || 'all';
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  if (leaf === 'only') { if (door > .02) carLeaf(door); ctx.restore(); return; }
+  fsh(0, 3, 440, .42, 16);
+  carWheel(-120, spin); carWheel(118, spin);                                  /* the far side is hidden by the body; these are the near wheels, drawn over the arches below */
+  ctx.save(); carBody(); ctx.fillStyle = vg(-127, -22, '#ffffff', '#cfd5da'); ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 2.6; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.clip();
+  ctx.fillStyle = 'rgba(0,0,0,.10)'; ctx.fillRect(-200, -34, 400, 12); ln(-196, -73, 194, -66, 'rgba(255,255,255,.9)', 1.6);
+  ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.moveTo(-60, -125); ctx.lineTo(20, -125); ctx.lineTo(-4, -80); ctx.lineTo(-84, -80); ctx.fill();
+  ctx.restore();
+  /* wheel arches over the wheels */
+  for (const cx of [-120, 118]) { ctx.save(); ctx.beginPath(); ctx.rect(cx - 36, -66, 72, 40); ctx.clip(); ctx.beginPath(); ctx.arc(cx, -27, 34, PI, TAU); ctx.fillStyle = '#26222c'; ctx.fill(); ctx.restore(); }
+  carWheel(-120, spin); carWheel(118, spin);
+  /* the slate-blue door panel with the white star (the lettering is live) */
+  const doorOpen = door > .02;
+  rb(-100, -66, 188, 28, '#33527a', { r: 4, lw: 1.6, flat: true }); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.roundRect(-97, -63, 182, 22, 3); ctx.stroke();
+  star(-82, -52, 9, 4, '#ffffff', null);
+  if (!doorOpen) dress('STATE SURVEY AGENCY', 4, -51.6, 11, { fill: '#ffffff', maxW: 138, spacing: 1 });
+  /* windows and door seams */
+  const glass = pts => { poly(pts, vg(-120, -78, '#b4e0f8', '#5a8ec0'), 'rgba(20,24,34,.85)', 2); ctx.fillStyle = 'rgba(255,255,255,.34)'; ctx.beginPath(); ctx.moveTo(pts[1][0] - 12, pts[1][1]); ctx.lineTo(pts[1][0] - 2, pts[1][1]); ctx.lineTo(pts[0][0] + 8, pts[0][1]); ctx.lineTo(pts[0][0] - 2, pts[0][1]); ctx.fill(); };
+  glass([[-108, -79], [-72, -118], [-20, -118], [-18, -79]]);
+  if (!doorOpen) glass([[-9, -79], [-7, -118], [31, -118], [50, -108], [86, -79]]);
+  for (const sx of [-110, -14]) ln(sx, -76, sx, -26, 'rgba(20,24,34,.6)', 1.5, 'butt');
+  if (!doorOpen) { ln(88, -76, 88, -26, 'rgba(20,24,34,.6)', 1.5, 'butt'); rb(70, -72, 14, 4, '#9aa4ae', { r: 2, lw: 1, flat: true }); }
+  rb(-34, -72, 14, 4, '#9aa4ae', { r: 2, lw: 1, flat: true }); rb(88, -102, 12, 9, '#e6ebf0', { r: 3, lw: 1.3 });
+  /* the front: grille, bumper, headlight, and the tail light */
+  rb(176, -38, 20, 14, '#2a2f38', { r: 4, lw: 1.5 }); ell(186, -56, 8, 5, '#fffbe0', 'rgba(60,50,20,.7)', 1.2); rb(-197, -64, 6, 14, '#d8342c', { r: 2, lw: 1.1 }); rb(-198, -34, 12, 9, '#2a2f38', { r: 3, lw: 1.3 });
+  if (o.lights) V2.glow(x + 190 * s, y - 56 * s, 70 * s, '255,240,190', .5, 'screen', .6);
+  /* the driver's door, swung open toward us: the opening shows the dark cabin and a seat, the leaf narrows with the angle and stands taller at its free edge */
+  if (doorOpen) {
+    poly([[-9, -79], [-7, -118], [31, -118], [50, -108], [86, -79], [88, -26], [-12, -26]], '#252b36');
+    rb(20, -92, 30, 40, '#4a5262', { r: 6, lw: 1.4 }); rb(10, -112, 16, 26, '#59627a', { r: 6, lw: 1.4 });
+  }
+  if (doorOpen && leaf === 'all') carLeaf(door);
+  ctx.restore();
+}
+SCENERY.car = (t, o, V) => {
+  if (o.car == null || o.car === false) return;
+  const c = typeof o.car === 'number' ? { x: o.car, k: 1 } : o.car, g = S14.carGeom(Object.assign({}, c, { door: o.carDoor ?? c.door }));
+  if (!seen(V, g.tail - 60, g.y - 140 * g.s, g.nose + 60, g.y + 40)) return;
+  drawCar(g.x, g.y, g.s, { door: g.door, lights: (c.k ?? 1) < 1 || o.carLights, leaf: o.carLeaf === 'front' ? 'none' : 'all' });
+};
+S14._carLeafFront = (o, V) => {
+  if (o.car == null || o.car === false || o.carLeaf !== 'front') return;
+  const c = typeof o.car === 'number' ? { x: o.car, k: 1 } : o.car, g = S14.carGeom(Object.assign({}, c, { door: o.carDoor ?? c.door }));
+  if (g.door > .02 && seen(V, g.tail - 60, g.y - 140 * g.s, g.nose + 60, g.y + 40)) drawCar(g.x, g.y, g.s, { door: g.door, leaf: 'only' });
 };
 
 // ================================================================================================ live layers: dressing text, animated bits; and the front layers (desks, counters, tables)
@@ -980,7 +1109,11 @@ LIVE.r4 = (r, t, st) => inRoom(r, () => {
   ctx.restore(); }
 });
 LIVE.r7 = (r) => inRoom(r, () => { dress('1962', 67, 84, 9.5, { fill: '#7a2a2a' }); });
-LIVE.lobby = (r) => inRoom(r, () => { dress('WELCOME BACK STRAWBERY', 129, 42.5, 11.5, { fill: '#8a2a20', maxW: 184, spacing: .5 }); });
+LIVE.lobby = (r, t, st) => inRoom(r, () => {
+  dress('WELCOME BACK STRAWBERY', 129, 42.5, 11.5, { fill: '#8a2a20', maxW: 184, spacing: .5 });
+  const k = clamp01(st.car ?? 0);   /* the white sedan seen through the glass doors on the lot (rooms.lobby.car 0..1: how far it has rolled in from the left) */
+  if (k > 0) { ctx.save(); ctx.beginPath(); ctx.rect(31, 71, 98, 200); ctx.clip(); drawCar(lerp(-10, 80, easeOut(k)), 262, .17, { leaf: 'none' }); ctx.restore(); }
+});
 LIVE.dining = (r) => inRoom(r, () => {
   const c = '#f2f0e0'; dress("TODAY'S MENU", 91, 51, 8.4, { fill: c, spacing: 1 }); ln(44, 57.5, 138, 57.5, 'rgba(242,240,224,.5)', 1);
   dress('PUREED MEATLOAF', 91, 71, 10.5, { fill: c, maxW: 104 }); dress('(SHAPE OF THE MOLD)', 91, 88, 7.6, { fill: 'rgba(242,240,224,.85)', maxW: 104 });
@@ -1020,11 +1153,11 @@ FRONT.office = (r, t, st) => {
     /* the pizza box, open, a slice gone */
     poly([[74, 214], [126, 214], [131, 221], [69, 221]], '#e6cf9c', OUT, 1.3); ell(100, 217.4, 24, 3.8, '#f0a43a', '#8b4a12', 1); for (const x of [90, 100, 110, 96, 106]) ell(x, 217.4 + (x % 3 - 1) * .8, 2.4, 1.2, '#c23a2b'); poly([[100, 217.4], [111, 214.6], [114, 218.6]], '#e6cf9c');
     poly([[76, 214], [124, 214], [122, 197], [78, 197]], '#fbf3e0', OUT, 1.4); ell(100, 206, 8, 6, '#c23a2b', null); ell(100, 206, 5.4, 3.8, '#f6d68a', null); ln(80, 200, 120, 200, '#c23a2b', 1.4);
-    /* the banker's lamp */
-    ell(152, 214, 8, 2.4, '#b8903a', OUT, 1.2); ln(152, 214, 152, 202, '#b8903a', 2.4); rb(142, 190, 20, 12, '#2f7a54', { r: 5, lw: 1.5 }); ctx.fillStyle = 'rgba(255,236,170,.5)'; ctx.fillRect(145, 192, 14, 8);
+    /* the banker's lamp, at the right end of the desk, clear of the sitter's face */
+    ell(188, 215, 8, 2.4, '#b8903a', OUT, 1.2); ln(188, 215, 188, 203, '#b8903a', 2.4); rb(178, 191, 20, 12, '#2f7a54', { r: 5, lw: 1.5 }); ctx.fillStyle = 'rgba(255,236,170,.5)'; ctx.fillRect(181, 193, 14, 8);
     /* the landline */
-    rb(198, 206, 28, 9, '#e6dcc4', { r: 3, lw: 1.4 }); rb(196, 199, 32, 7, '#d8ccb0', { r: 3.4, lw: 1.3 }); for (let i = 0; i < 6; i++) ell(204 + (i % 3) * 7, 209.4 + Math.floor(i / 3) * 2.6, 1.2, 1, '#8a7a5a'); ctx.strokeStyle = '#6a5a3a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(228, 203); ctx.quadraticCurveTo(240, 210, 232, 218); ctx.stroke();
-    V2.glow(152, 196, 70, '255,226,160', .32, 'screen', .25);
+    rb(208, 207, 26, 9, '#e6dcc4', { r: 3, lw: 1.4 }); rb(206, 200, 30, 7, '#d8ccb0', { r: 3.4, lw: 1.3 }); for (let i = 0; i < 6; i++) ell(213 + (i % 3) * 7, 210.4 + Math.floor(i / 3) * 2.6, 1.2, 1, '#8a7a5a'); ctx.strokeStyle = '#6a5a3a'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(236, 204); ctx.quadraticCurveTo(246, 212, 238, 220); ctx.stroke();
+    V2.glow(188, 198, 70, '255,226,160', .32, 'screen', .25);
   });
 };
 /* the lobby's front desk, with the sign-in binder and the bell. o.rooms.lobby.desk === false leaves it out */
@@ -1048,17 +1181,17 @@ FRONT.lobby = (r, t, st) => {
 FRONT.station = (r, t, st) => {
   if (st.counter === false) return;
   inRoom(r, () => {
-    const w = r.w, x0 = 14, x1 = w - 14;
+    const w = r.w, x0 = 14, x1 = w - 14, CT = 240;       /* CT: the back edge of the counter top; its front edge is 12 px lower, at v 252 */
     fsh(w / 2, 312, w - 20, .34, 9);
-    poly([[x0 + 4, 226], [x1 - 4, 226], [x1 + 6, 238], [x0 - 6, 238]], vg(226, 238, '#f2e8c8', '#dccfa0'), OUT, 1.8);
-    rb(x0 - 6, 238, x1 - x0 + 12, 70, '#bf935c', { r: 3, lw: 2 });
-    for (let x = x0 + 6; x < x1 - 14; x += 34) { ctx.strokeStyle = 'rgba(80,50,20,.38)'; ctx.lineWidth = 1.4; ctx.strokeRect(x, 246, 28, 52); ctx.strokeStyle = 'rgba(255,230,190,.25)'; ctx.lineWidth = 1; ctx.strokeRect(x + 1.4, 247.4, 25.2, 49.2); }
-    rb(x0 - 6, 300, x1 - x0 + 12, 12, '#3a2a22', { r: 2, lw: 1.6 }); ln(x0 - 6, 238.6, x1 + 6, 238.6, '#d9b45a', 2.4, 'butt');
-    plate([w / 2 - 66, 252, 132, 28], "NURSES' STATION", { fill: '#d9b45a', stroke: '#7a5a1a', lw: 1.6, ink: '#3a2a10', size: 13.5, r: 4, pad: 3, hero: false });
+    poly([[x0 + 4, CT], [x1 - 4, CT], [x1 + 6, CT + 12], [x0 - 6, CT + 12]], vg(CT, CT + 12, '#f2e8c8', '#dccfa0'), OUT, 1.8);
+    rb(x0 - 6, CT + 12, x1 - x0 + 12, 58, '#bf935c', { r: 3, lw: 2 });
+    for (let x = x0 + 6; x < x1 - 14; x += 34) { ctx.strokeStyle = 'rgba(80,50,20,.38)'; ctx.lineWidth = 1.4; ctx.strokeRect(x, CT + 20, 28, 40); ctx.strokeStyle = 'rgba(255,230,190,.25)'; ctx.lineWidth = 1; ctx.strokeRect(x + 1.4, CT + 21.4, 25.2, 37.2); }
+    rb(x0 - 6, 300, x1 - x0 + 12, 12, '#3a2a22', { r: 2, lw: 1.6 }); ln(x0 - 6, CT + 12.6, x1 + 6, CT + 12.6, '#d9b45a', 2.4, 'butt');
+    plate([w / 2 - 66, CT + 22, 132, 26], "NURSES' STATION", { fill: '#d9b45a', stroke: '#7a5a1a', lw: 1.6, ink: '#3a2a10', size: 13, r: 4, pad: 3, hero: false });
     /* on the counter: the phone, a stack of charts, a mug, a call bell */
-    rb(72, 214, 24, 9, '#2a2f38', { r: 3, lw: 1.3 }); rb(70, 208, 28, 7, '#3a4150', { r: 3.4, lw: 1.2 });
-    for (let i = 0; i < 5; i++) rb(112 + i * .8, 220 - i * 2.2, 36, 3, ['#f4efe0', '#e9f0f7', '#f7ead8', '#eef4e6', '#f4efe0'][i], { r: 1, lw: 1, flat: true });
-    rb(w - 130, 214, 9, 11, '#e7e2d6', { r: 2, lw: 1.2 }); ell(w - 100, 224, 8, 2.6, '#b8903a', OUT, 1.1); ell(w - 100, 221.6, 6, 4, '#f0d66a', OUT, 1.1);
+    rb(72, CT - 12, 24, 9, '#2a2f38', { r: 3, lw: 1.3 }); rb(70, CT - 18, 28, 7, '#3a4150', { r: 3.4, lw: 1.2 });
+    for (let i = 0; i < 5; i++) rb(112 + i * .8, CT - 5 - i * 2.2, 36, 3, ['#f4efe0', '#e9f0f7', '#f7ead8', '#eef4e6', '#f4efe0'][i], { r: 1, lw: 1, flat: true });
+    rb(w - 130, CT - 12, 9, 11, '#e7e2d6', { r: 2, lw: 1.2 }); ell(w - 100, CT - 2, 8, 2.6, '#b8903a', OUT, 1.1); ell(w - 100, CT - 4.4, 6, 4, '#f0d66a', OUT, 1.1);
   });
 };
 /* the dining table: gingham cloth, place settings, a vase of flowers; the residents sit behind it. o.rooms.dining.table === false leaves it out */
@@ -1168,6 +1301,17 @@ const STASH = [
   { id: 'bag2', kind: 'bag', x: 206, v: 96, rot: -.06, z: 8.2, at: 3.95, w: 36, h: 48 },
   { id: 'box11', kind: 'box', x: 122, v: 30, rot: .02, z: 1.7, at: 4.0, w: 54, h: 40, o: { w: 54, h: 40, color: '#b98a52' } },
   { id: 'box12', kind: 'box', x: 58, v: 68, rot: .03, z: 6.1, at: 4.0, w: 44, h: 34, o: { w: 44, h: 34, color: '#d8ac72' } },
+  /* behind the door (hidden while it is shut; the closet's avalanche pours out of here) */
+  { id: 'cbox1', kind: 'box', x: 98, v: 298, rot: .02, z: 4, at: 1.1, w: 50, h: 40, o: { w: 50, h: 40, color: '#c99a62' } },
+  { id: 'cbox2', kind: 'box', x: 148, v: 298, rot: -.02, z: 4, at: 1.4, w: 50, h: 40, o: { w: 50, h: 40, color: '#b98a52' } },
+  { id: 'wheelchair2', kind: 'wheelchair', x: 124, v: 296, rot: .03, z: 4.5, at: 2.6, w: 76, h: 76 },
+  { id: 'cbox3', kind: 'box', x: 100, v: 258, rot: -.03, z: 3.8, at: 2.9, w: 44, h: 36, o: { w: 44, h: 36, color: '#d8ac72' } },
+  { id: 'cbox4', kind: 'box', x: 148, v: 258, rot: .03, z: 3.8, at: 3.1, w: 46, h: 38, o: { w: 46, h: 38, color: '#c99a62' } },
+  { id: 'cbag', kind: 'bag', x: 124, v: 226, rot: .04, z: 3.6, at: 3.3, w: 36, h: 48 },
+  { id: 'cbox5', kind: 'box', x: 104, v: 220, rot: .04, z: 3.4, at: 3.5, w: 46, h: 38, o: { w: 46, h: 38, color: '#b98a52' } },
+  { id: 'cbox6', kind: 'box', x: 148, v: 218, rot: -.04, z: 3.4, at: 3.6, w: 46, h: 36, o: { w: 46, h: 36, color: '#d8ac72' } },
+  { id: 'cbox7', kind: 'box', x: 122, v: 182, rot: .02, z: 3.2, at: 3.7, w: 50, h: 40, o: { w: 50, h: 40, color: '#c99a62' } },
+  { id: 'cbox8', kind: 'box', x: 126, v: 142, rot: -.03, z: 3.1, at: 3.8, w: 48, h: 38, o: { w: 48, h: 38, color: '#b98a52' } },
 ];
 /* S14.stashItems(level) -> the items the room shows at that stash level, in WORLD coordinates: { id, kind, x, y (the base), w, h, rot, z, at, o } (S14.drawItem(kind, x, y, 1, rot, o) draws one) */
 S14.stashItems = (level = 4) => {
@@ -1201,9 +1345,11 @@ function glassFront(r, t, st, b) {
     ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip(); ctx.fillStyle = 'rgba(255,255,255,.16)'; for (const o of [.2, .62]) { ctx.beginPath(); ctx.moveTo(x0 + (x1 - x0) * o, y0); ctx.lineTo(x0 + (x1 - x0) * (o + .12), y0); ctx.lineTo(x0 + (x1 - x0) * (o - .5), y1); ctx.lineTo(x0 + (x1 - x0) * (o - .62), y1); ctx.fill(); } ctx.restore();
     ctx.strokeStyle = '#9aa8b2'; ctx.lineWidth = 3; ctx.strokeRect(x0 + 1.5, y0 + 1.5, x1 - x0 - 3, y1 - y0 - 3);
   }
-  if (b > .3) {   /* the glass is cracking under the pile */
+  if (b > .3) {   /* the glass is cracking under the pile (the cracks stay inside the panes) */
+    ctx.save(); ctx.beginPath(); ctx.rect(1, 15, SD.x0 - 10, 302); ctx.rect(SD.x1 + 9, 15, 240, 302); ctx.rect(SD.x0 - 7, 15, SD.x1 - SD.x0 + 14, SD.top - 24); ctx.clip();
     ctx.strokeStyle = `rgba(255,255,255,${.75 * clamp01((b - .3) / .5)})`; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
     for (const [cx, cy, n, sd] of [[40, 130, 6, 1], [214, 182, 7, 2], [126, 60, 5, 3]]) { const rr = rnd(sd); for (let i = 0; i < n; i++) { const a = i / n * TAU + rr() * .5; let x = cx, y = cy; ctx.beginPath(); ctx.moveTo(x, y); for (let k = 0; k < 3; k++) { x += Math.cos(a + (rr() - .5) * .6) * (10 + rr() * 16); y += Math.sin(a + (rr() - .5) * .6) * (10 + rr() * 16); ctx.lineTo(x, y); } ctx.stroke(); } }
+    ctx.restore();
   }
 }
 function showerDoorDraw(r, t, st) {
@@ -1217,13 +1363,14 @@ function showerDoorDraw(r, t, st) {
   const pj = (u, v, ex = 0) => { const topf = lerp(SD.top - 14 * s, SD.top, u), botf = lerp(SD.bot + 10 * s, SD.bot, u); return [xf + (SD.x1 - xf) * u + ex, lerp(topf, botf, v)]; };
   /* the leaf, bowed by the pressure behind it */
   ctx.save(); ctx.translate(jit, jy);
-  const bow = b * 7;
+  const bow = b * 11;
   ctx.beginPath(); const p0 = pj(0, 0), p1 = pj(1, 0), p2 = pj(1, 1), p3 = pj(0, 1);
   ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo((p0[0] + p1[0]) / 2, p0[1] - bow * .9, p1[0], p1[1]); ctx.quadraticCurveTo(p1[0] + bow * .55, (p1[1] + p2[1]) / 2, p2[0], p2[1]); ctx.quadraticCurveTo((p2[0] + p3[0]) / 2, p2[1] + bow * .9, p3[0], p3[1]); ctx.quadraticCurveTo(p3[0] - bow * .75, (p3[1] + p0[1]) / 2, p0[0], p0[1]); ctx.closePath();
   const dim = 1 - .32 * s;
   ctx.fillStyle = hg(p0[0], p1[0], shade('#f2ead6', dim * .92), shade('#e4d9bd', dim)); ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 2; ctx.stroke();
   ctx.save(); ctx.clip();
-  if (b > 0) { ctx.fillStyle = rg((p0[0] + p1[0]) / 2, (p0[1] + p3[1]) / 2, 6, 120, [[0, `rgba(255,255,255,${.34 * b})`], [1, `rgba(60,30,10,${.34 * b})`]]); ctx.fillRect(p0[0] - 20, SD.top - 24, 140, 230); }
+  if (b > 0) { ctx.fillStyle = rg((p0[0] + p1[0]) / 2 - 6, (p0[1] + p3[1]) / 2 - 10, 4, 118, [[0, `rgba(255,255,255,${.5 * b})`], [.55, `rgba(255,255,255,${.0 * b})`], [1, `rgba(50,24,8,${.5 * b})`]]); ctx.fillRect(p0[0] - 20, SD.top - 24, 140, 230);
+    ctx.strokeStyle = `rgba(30,14,4,${.5 * b})`; ctx.lineWidth = 7; ctx.stroke(); }
   for (const [v0, v1] of [[.1, .42], [.52, .94]]) { const q = [pj(.14, v0), pj(.86, v0), pj(.86, v1), pj(.14, v1)]; poly(q, 'rgba(0,0,0,.05)', 'rgba(70,50,20,.45)', 1.5); ln(q[0][0] + 1.6, q[0][1] + 1.6, q[1][0] - 1.6, q[1][1] + 1.6, 'rgba(255,255,255,.55)', 1.1); }
   ctx.restore();
   if (b > .4) { ctx.strokeStyle = `rgba(50,24,10,${.8 * clamp01((b - .4) / .4)})`; ctx.lineWidth = 1.5; ctx.lineCap = 'round'; for (const [cx, cy, sd] of [[104, 176, 1], [152, 262, 2], [118, 288, 3]]) { const rr = rnd(sd); let x = cx, y = cy; ctx.beginPath(); ctx.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rr() - .5) * 12; y -= 6 + rr() * 8; ctx.lineTo(x, y); } ctx.stroke(); } }
@@ -1252,7 +1399,7 @@ function showerDoorBits(r, t, st) {
   const sx = (xf + SD.x1) / 2 - 28 + (SD.x0 + 16 - xf) * 0, sy = 112, sw = 56, sh = 28, hero = d < .02;
   ctx.save(); ctx.translate(sx + sw / 2, sy + sh / 2); ctx.rotate(-.03 + b * .04); if (d > .01) ctx.scale(Math.max(.2, c), 1); ctx.translate(-(sx + sw / 2), -(sy + sh / 2));
   rb(sx + 1.5, sy + 2.5, sw, sh, 'rgba(0,0,0,.25)', { r: 3, lw: 0, flat: true });
-  plate([sx, sy, sw, sh], [{ t: 'DO NOT', size: 11.6 }, { t: 'OPEN', size: 11.6 }], { fill: '#c9302a', stroke: '#ffffff', lw: 2, ink: '#ffffff', r: 3, pad: 2.5, heroSize: 11.6, hero, id: 'k14.donotopen', spacing: .6 });
+  plate([sx, sy, sw, sh], [{ t: 'DO NOT', size: 11.6 }, { t: 'OPEN', size: 11.6 }], { fill: '#c9302a', stroke: '#ffffff', lw: 2, ink: '#ffffff', r: 3, pad: 2.5, heroSize: 10.4, hero, id: 'k14.donotopen', spacing: .6 });
   for (const [tx, ty] of [[sx, sy], [sx + sw, sy], [sx, sy + sh], [sx + sw, sy + sh]]) { ctx.save(); ctx.translate(tx, ty); ctx.rotate(.8); ctx.fillStyle = 'rgba(238,226,190,.85)'; ctx.fillRect(-5, -2, 10, 4); ctx.restore(); }
   ctx.restore();
   ctx.restore();
@@ -1280,4 +1427,149 @@ LIVE.shower = (r, t, st, o, lamp) => {
     if (b > .5 && d < .05) for (let i = 0; i < 8; i++) { const ph = ((t * .7 + i / 8) % 1), x = i % 2 ? SD.x1 + 8 : SD.x0 - 8, y = 120 + (i * 53 % 170), a = .4 * b * Math.sin(ph * PI); ctx.fillStyle = rg(x + (i % 2 ? 1 : -1) * ph * 10, y + ph * 30, 0, 7, [[0, `rgba(220,212,196,${a})`], [1, 'rgba(220,212,196,0)']]); ctx.fillRect(x - 12, y - 8, 30, 50); }
   });
 };
+
+// ================================================================================================ the med room: the lit fridge with its insulin pens, the tap, the cart
+const FR = { x0: 170, x1: 226, top: 112, bot: 270 };            /* the fridge (room coordinates) */
+const PEN_ROWS = [150, 187, 224], PEN_COLS = 6;                  /* shelf heights (the pens stand on them) and pens per shelf */
+const PEN_PERM = (() => { const a = Array.from({ length: PEN_ROWS.length * PEN_COLS }, (_, i) => i), r = rnd(77); for (let i = a.length - 1; i > 0; i--) { const j = (r() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; })();
+/* the pens' slots in WORLD coordinates: { i, x, y (the foot of the pen), fresh (given the pens level 0..1) } (the camera-trap insert dates exactly these) */
+S14.penSlots = (pens = .25) => {
+  const r = S14.rect('med'), n = PEN_ROWS.length * PEN_COLS, nf = Math.round(clamp01(pens) * n), out = [];
+  PEN_ROWS.forEach((v, row) => { for (let c = 0; c < PEN_COLS; c++) { const i = row * PEN_COLS + c; out.push({ i, row, col: c, x: r.x0 + FR.x0 + 9 + c * 7.6 + (c > 2 ? 0 : 0), y: r.y0 + v, fresh: PEN_PERM[i] < nf }); } });
+  return out;
+};
+S14.fridge = () => { const r = S14.rect('med'); return { x0: r.x0 + FR.x0, y0: r.y0 + FR.top, x1: r.x0 + FR.x1, y1: r.y0 + FR.bot }; };
+function penDraw(x, y, fresh, i) {
+  const cap = ['#2b5fc2', '#e8903a', '#59b36b', '#8a4cb8', '#d8584a', '#3aa6ad'][i % 6];
+  rb(x - 2.1, y - 19, 4.2, 19, '#f6f8fa', { r: 1.4, lw: .9, flat: true }); rb(x - 2.4, y - 21.4, 4.8, 5.4, cap, { r: 1.4, lw: .9, flat: true });
+  rb(x - 2.1, y - 10, 4.2, 5.6, fresh ? '#ffe94a' : '#cfd2d6', { r: .5, lw: .6, flat: true });
+  if (fresh) { ctx.strokeStyle = '#1d6a2a'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(x - 1.2, y - 7.2); ctx.lineTo(x - .3, y - 5.8); ctx.lineTo(x + 1.3, y - 8.8); ctx.stroke(); }
+  else { ctx.strokeStyle = '#d8342c'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(x - 1.6, y - 5.6); ctx.lineTo(x - .6, y - 9); ctx.lineTo(x + .6, y - 5.6); ctx.lineTo(x + 1.6, y - 9); ctx.stroke(); }
+}
+function fridgeDraw(r, t, st) {
+  const open = clamp01(st.fridge ?? 0), pens = st.pens ?? .25, nf = Math.round(clamp01(pens) * PEN_ROWS.length * PEN_COLS), { x0, x1, top, bot } = FR;
+  rb(x0, top, x1 - x0, bot - top, '#eef2f4', { r: 6, lw: 2.2 });
+  /* the lit inside */
+  const ix = x0 + 4, iy = top + 6, iw = x1 - x0 - 8, ih = bot - top - 12;
+  ctx.save(); ctx.beginPath(); ctx.roundRect(ix, iy, iw, ih, 3); ctx.clip();
+  ctx.fillStyle = vg(iy, iy + ih, '#f4fcff', '#c9e4f2'); ctx.fillRect(ix, iy, iw, ih);
+  ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(ix, iy, 5, ih); ctx.fillStyle = 'rgba(0,40,70,.1)'; ctx.fillRect(ix + iw - 5, iy, 5, ih);
+  PEN_ROWS.forEach((v, row) => {
+    ctx.fillStyle = 'rgba(170,210,230,.7)'; ctx.fillRect(ix, v + 1, iw, 3.4); ln(ix, v + 4.6, ix + iw, v + 4.6, 'rgba(60,100,130,.5)', .9, 'butt');
+    for (let c = 0; c < PEN_COLS; c++) { const i = row * PEN_COLS + c; penDraw(x0 + 9 + c * 7.6, v, PEN_PERM[i] < nf, i); }
+  });
+  rb(ix + 3, 233, iw - 6, 26, '#e6eef2', { r: 2, lw: 1, flat: true }); for (let i = 0; i < 3; i++) rb(ix + 6 + i * 13, 237, 10, 18, ['#f6d68a', '#d8e6d0', '#f0c9c0'][i], { r: 1.5, lw: .8, flat: true });
+  ctx.restore();
+  rb(x0 + 14, top - 6, 28, 6, '#2a2f38', { r: 2, lw: 1.2 }); ctx.fillStyle = '#ff5a48'; ctx.font = '900 5px Nunito'; ctx.fillRect(x0 + 17, top - 4.6, 3, 3.2); ctx.fillRect(x0 + 21.4, top - 4.6, 3, 3.2); ctx.fillRect(x0 + 25.8, top - 4.6, 3, 3.2);   /* the red temperature display */
+  /* the glass door: a see-through leaf hinged on the right; it swings toward us when open */
+  const th = open * 1.2, c = Math.cos(th), s = Math.sin(th), w = x1 - x0, xf = x1 - w * c;
+  const q = [[xf, top - 8 * s], [x1, top], [x1, bot], [xf, bot + 8 * s]];
+  ctx.beginPath(); ctx.moveTo(...q[0]); for (let i = 1; i < 4; i++) ctx.lineTo(...q[i]); ctx.closePath();
+  ctx.fillStyle = `rgba(190,226,246,${.2 + .1 * open})`; ctx.fill(); ctx.strokeStyle = 'rgba(235,242,246,.95)'; ctx.lineWidth = 4.4; ctx.lineJoin = 'round'; ctx.stroke(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.save(); ctx.clip(); ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.moveTo(xf + w * c * .18, top - 10); ctx.lineTo(xf + w * c * .4, top - 10); ctx.lineTo(xf + w * c * .1, bot + 10); ctx.lineTo(xf - w * c * .1, bot + 10); ctx.fill(); ctx.restore();
+  rb(xf + 4 * c, top + 52, 4.4 * Math.max(.4, c), 56, '#c9d2da', { r: 2, lw: 1.3 });   /* the handle, on the left edge of the door */
+  dress('MEDICATION', (xf + x1) / 2, top + 11.5, 5.8, { fill: 'rgba(40,70,90,.9)', maxW: Math.max(14, (x1 - xf) - 10), spacing: .5 });
+  V2.glow(r.x0 + (x0 + x1) / 2, r.y0 + 190, 120, '200,235,255', .22 + .22 * open, 'screen', .3);
+  if (open > .05) { ctx.fillStyle = vg(bot, 318, `rgba(200,235,255,${.3 * open})`, 'rgba(200,235,255,0)'); ctx.beginPath(); ctx.moveTo(x0 - 14, 276); ctx.lineTo(x1 + 4, 276); ctx.lineTo(x1 + 18, 318); ctx.lineTo(x0 - 30, 318); ctx.closePath(); ctx.fill(); }
+}
+/* a rolling med cart anywhere: S14.cart(x, floorY, o) with o { s (scale, default 1), color, drawer 0..1 (a drawer slid out), cups } */
+S14.cart = (x, y, o = {}) => {
+  const s = o.s ?? 1, c = o.color ?? '#e9f3f1', accent = o.accent ?? '#4fb3b0';
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  fsh(0, 1, 74, .3, 5);
+  for (const dx of [-22, 22]) { ln(dx, -8, dx, -3, '#5a6670', 3); ell(dx, -1, 4.6, 4.2, '#2a2630', OUT, 1.2); }
+  rb(-29, -78, 58, 70, c, { r: 4, lw: 1.9 });
+  for (let i = 0; i < 3; i++) { const dy = -72 + i * 21, out = i === 1 ? clamp01(o.drawer ?? 0) * 14 : 0; rb(-26 - out * .0, dy, 52, 18, i === 1 ? mixc(c, accent, .25) : c, { r: 2.5, lw: 1.5 }); rb(-9, dy + 6, 18, 3.4, '#8f99a6', { r: 1.7, lw: 1 }); if (out) ln(-26, dy + 18, 26, dy + 18 + out * .5, 'rgba(0,0,0,.25)', 3); }
+  rb(-31, -86, 62, 9, accent, { r: 3.5, lw: 1.7 });
+  for (let i = 0; i < 5; i++) { const cx = -22 + i * 11; ctx.beginPath(); ctx.moveTo(cx - 4, -86); ctx.lineTo(cx + 4, -86); ctx.lineTo(cx + 3, -95); ctx.lineTo(cx - 3, -95); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1; ctx.stroke(); ell(cx, -91, 1.6, 1.6, ['#f0a43a', '#e0583d', '#4c7bd9', '#59b36b', '#c25fa0'][i]); }
+  ln(-29, -60, -36, -60, '#8f99a6', 3); ln(-36, -60, -36, -30, '#8f99a6', 3); ln(-36, -30, -29, -30, '#8f99a6', 3);
+  ctx.restore();
+};
+LIVE.med = (r, t, st) => {
+  inRoom(r, () => {
+    dress('NARCOTICS', 145, 133, 6.4, { fill: '#8a1a14', spacing: .5 }); dress('SHARPS', 144, 190, 6.2, { fill: '#7a1710', spacing: .5 });
+    /* a drop swells at the tip of the tap, falls into the sink and rings */
+    const ph = (t * .75) % 1, dy = ph < .8 ? 177 + 26 * Math.pow(ph / .8, 2) : 203;
+    if (ph < .8) { ctx.save(); ctx.translate(76, dy); ctx.beginPath(); ctx.moveTo(0, -4.4 * (ph < .3 ? ph / .3 : 1)); ctx.quadraticCurveTo(3, 0, 0, 2.2); ctx.quadraticCurveTo(-3, 0, 0, -4.4 * (ph < .3 ? ph / .3 : 1)); ctx.fillStyle = 'rgba(120,190,235,.95)'; ctx.fill(); ctx.restore(); }
+    else { const k = (ph - .8) / .2; ctx.strokeStyle = `rgba(160,210,240,${.8 * (1 - k)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(76, 205, 3 + k * 9, 1 + k * 2, 0, 0, TAU); ctx.stroke(); }
+    fridgeDraw(r, t, st);
+    if ((st.cart ?? 0) > 0) { ctx.save(); ctx.globalAlpha *= clamp01(st.cart); S14.cart(112, 296, { drawer: st.cartDrawer }); ctx.restore(); }
+  });
+};
+
+// ================================================================================================ the alarm call: alert pulses, buzzing phones, chat bubbles; and the brass name plates on the floor slabs
+/* o.rooms[id].alert 0..1: the strength of the pulse at this moment (1 at the buzz, falling to 0): a yellow rim and wash on the room, a ring from the phone, the phone buzzing. alertAt: [x, y] in room coordinates (default the middle of the room, y 170)
+ * o.rooms[id].bubble: 'text' or { t, k (the pop 0..1; 1 = settled), dx, dy (nudge, px), at ('top' (default) | 'bottom'), tail (x of the tail tip in room coordinates; default the middle) }: a chat bubble inside the top of the room (kept 44 px inside the frame) */
+function alertBack(r, t, st) {
+  const a = clamp01(st.alert || 0); if (a <= 0) return;
+  ctx.save(); ctx.beginPath(); ctx.rect(r.x0, r.y0, r.w, r.h); ctx.clip();
+  ctx.fillStyle = `rgba(255,226,80,${.2 * a})`; ctx.fillRect(r.x0, r.y0, r.w, r.h);
+  ctx.strokeStyle = `rgba(255,224,60,${.9 * a})`; ctx.lineWidth = 8; ctx.strokeRect(r.x0 + 4, r.y0 + 4, r.w - 8, r.h - 8);
+  const at = st.alertAt || [r.w / 2, 170];
+  V2.ring(r.x0 + at[0], r.y0 + at[1], 1 - a, { r0: 16, r1: Math.min(r.w, 300) * .9, color: '255,226,70', lw: 9, alpha: .95, bloom: .5 });
+  ctx.restore();
+  V2.glow(r.cx, r.cy, r.w * .7, '255,226,70', .22 * a, 'screen', .45);
+}
+function phoneFront(r, t, st) {
+  const a = clamp01(st.alert || 0); if (a <= 0.02) return;
+  const at = st.alertAt || [r.w / 2, 170], sh = Math.sin(t * 90) * 2.6 * a, rot = Math.sin(t * 76) * .22 * a;
+  ctx.save(); ctx.translate(r.x0 + (st.phoneAt ? st.phoneAt[0] : r.w - 34) + sh, r.y0 + (st.phoneAt ? st.phoneAt[1] : 40)); ctx.rotate(rot); ctx.globalAlpha *= clamp01(a * 2.4);
+  rb(-9, -16, 18, 32, '#1d2230', { r: 4, lw: 1.6 }); ctx.fillStyle = vg(-13, 12, '#8fd0ff', '#3a7fd0'); ctx.beginPath(); ctx.roundRect(-7, -13, 14, 24, 2); ctx.fill(); rb(-5, -9, 10, 4, '#fff', { r: 1.4, lw: 0, flat: true }); rb(-5, -3, 10, 3, 'rgba(255,255,255,.7)', { r: 1, lw: 0, flat: true });
+  for (const sgn of [-1, 1]) for (let i = 0; i < 2; i++) { ctx.strokeStyle = `rgba(255,226,70,${.85 - i * .3})`; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, 0, 18 + i * 6, sgn * .55 - 1.57 + (sgn < 0 ? 3.14 : 0) - .45, sgn * .55 - 1.57 + (sgn < 0 ? 3.14 : 0) + .45); ctx.stroke(); }
+  V2.glow(0, -2, 26, '140,200,255', .6, 'screen', .4);
+  ctx.restore();
+}
+function bubbleFront(r, t, st) {
+  if (!st.bubble) return;
+  const B = typeof st.bubble === 'string' ? { t: st.bubble } : st.bubble, k = clamp01(B.k ?? 1);
+  if (k <= 0) return;
+  /* the bubble keeps a constant size on screen once the camera is in close (its text is 32 px at zoom 1 and about 34 px at any zoom above that), and is kept whole inside the safe frame */
+  const z = CAM && CAM.z || 1, sc = Math.min(1, 1.05 / z), size = 32 * sc;
+  const lines = UI.wrap(String(B.t), 270 * sc, { size, weight: 900 }), L = lines.length, lw = Math.max(...lines.map(s => UI.sizeOf(s, { size, weight: 900 }).w));
+  const bw = Math.max(120 * sc, lw + 44 * sc), bh = L * size * 1.18 + 30 * sc, inset = (bw - lw) / 2, cam = CAM || { x: W / 2, y: H / 2 };
+  const sx0 = cam.x - (W / 2 - 46) / z, sx1 = cam.x + (W / 2 - 46) / z, sy0 = cam.y - (H / 2 - 252) / z, sy1 = cam.y + (1370 - H / 2) / z;
+  let bx = r.cx - bw / 2 + (B.dx || 0), by = (B.at === 'bottom' ? r.y1 - bh - 30 * sc : B.at === 'above' ? r.y0 - bh - 22 * sc : r.y0 + 16 * sc) + (B.dy || 0);
+  bx = Math.max(sx0 - inset, Math.min(sx1 - inset - lw, bx)); by = Math.max(sy0, Math.min(sy1 - bh - 16 * sc, by));
+  const tx = Math.max(bx + 20 * sc, Math.min(bx + bw - 20 * sc, r.x0 + (B.tail ?? r.w / 2))), pop = k >= 1 ? 1 : easeBack(k), ox = tx, oy = by + bh + 14 * sc;
+  ctx.save(); ctx.translate(ox, oy); ctx.scale(pop, pop); ctx.translate(-ox, -oy);
+  const hero = k >= 1 && heroNow(bx, by, bx + bw, by + bh, size);
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 12 * sc; ctx.shadowOffsetY = 4 * sc;
+  poly([[tx - 14 * sc, by + bh - 2 * sc], [tx + 14 * sc, by + bh - 2 * sc], [tx + (tx < bx + bw / 2 ? -5 : 5) * sc, by + bh + 16 * sc]], '#2b6fe0', '#ffffff', 3.5 * sc);
+  ctx.restore();
+  UI.sign([bx, by, bw, bh], lines.map(s => ({ t: s })), { fill: '#2b6fe0', stroke: '#ffffff', lw: 4 * sc, ink: '#ffffff', size, weight: 900, r: 22 * sc, pad: 14 * sc, shadow: 12 * sc, hero, crop: !hero, id: 'k14.bubble.' + r.id, spacing: .6 * sc });
+  ctx.restore();
+}
+function platesDraw(o, V) {
+  for (const id of S14.ids) {
+    if (o.only && !o.only.includes(id)) continue;
+    const r = S14.rect(id);
+    if (!seen(V, r.x0, r.y1 - 2, r.x1, r.y1 + 14)) continue;
+    const pw = UI.sizeOf(NAMES[id], { size: 7.4, spacing: .4 }).w + 12, pa = dressGuard(r.cx - pw / 2, r.y1 + .8, r.cx + pw / 2, r.y1 + 11.2);
+    if (pa < .02) continue;
+    ctx.save(); ctx.globalAlpha *= pa;
+    UI.pill(NAMES[id], r.cx, r.y1 + 6, { size: 7.4, h: 10.4, padX: 5, pad: .5, fill: '#d9b45a', ink: '#3a2a10', stroke: '#7a5a1a', lw: .9, hero: false, crop: true, spacing: .4, id: 'k14.plate.' + id });
+    ctx.restore();
+  }
+}
+/* hook the pieces into back() and front(): alert washes behind the characters, plates on the slabs; phones and bubbles over everything */
+{
+  const back0 = S14.back, front0 = S14.front;
+  S14.back = (lt, o = {}) => {
+    back0(lt, o);
+    const t = o.t ?? lt, V = view(120), rs = o.rooms || {};
+    ctx.save();
+    for (const id of S14.ids) { if (!rs[id] || !rs[id].alert || (o.only && !o.only.includes(id))) continue; const r = S14.rect(id); if (seen(V, r.x0, r.y0, r.x1, r.y1)) guard('alert ' + id, () => alertBack(r, t, rs[id])); }
+    if (o.plates !== false) guard('plates', () => platesDraw(o, V));
+    ctx.restore();
+  };
+  S14.front = (lt, o = {}) => {
+    front0(lt, o);
+    const t = o.t ?? lt, V = view(120), rs = o.rooms || {};
+    ctx.save();
+    guard('car leaf', () => S14._carLeafFront(o, V));
+    for (const id of S14.ids) { if (!rs[id] || (o.only && !o.only.includes(id))) continue; const r = S14.rect(id); if (!seen(V, r.x0, r.y0, r.x1, r.y1)) continue; if (rs[id].alert) guard('phone ' + id, () => phoneFront(r, t, rs[id])); }
+    for (const id of S14.ids) { if (!rs[id] || !rs[id].bubble || (o.only && !o.only.includes(id))) continue; const r = S14.rect(id); if (seen(V, r.x0, r.y0 - 40, r.x1, r.y1)) guard('bubble ' + id, () => bubbleFront(r, t, rs[id])); }
+    ctx.restore();
+  };
+}
 })();

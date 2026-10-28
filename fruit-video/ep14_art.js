@@ -539,7 +539,7 @@ EXT.prop.fp14_napkin = (side, o, t) => {
   ctx.fillStyle = 'rgba(200,60,40,.8)'; ell(4, -8, 7, 5, .4); ctx.fill(); ell(-8, 2, 4, 3); ctx.fill(); ctx.fillStyle = 'rgba(246,190,70,.75)'; ell(12, 2, 4, 3); ctx.fill();
   ctx.restore();
 };
-PROP_BOX.fp14_napkin = [-26, -32, 28, 20];
+PROP_BOX.fp14_napkin = Object.assign([-26, -32, 28, 20], { nearFace: true });
 // a picture frame held round the face: for somebody pretending to be a portrait. The face shows through it; registered nearFace. o.frameA 0..1 raises it
 EXT.prop.fp14_frame = (side, o, t) => {
   const k = KINDS[o.kind] || KINDS.lemon, g = (o.grip && o.grip.l) || [0, 0], a = clamp(o.frameA ?? 1);
