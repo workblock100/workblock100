@@ -55,7 +55,7 @@ function wallQ(side, y0, y1, z0, z1, fill, stroke, lw) { poly([p2(side * HW, y0,
 function actor(ctor, fn, lt, extra = {}, m = 1) { return person(ctor, fn, lt, Object.assign({ s: kz(fn(lt)[1]) * m }, extra)); }
 
 // ------------------------------------------------------------------ props (prefix drill12_)
-Object.assign(PROP_BOX, { drill12_mop: [-18, -330, 18, 330], drill12_fingers: [-30, -62, 30, 14] });   /* the mop is audited as its shaft (the sponge head rests on the floor) */
+Object.assign(PROP_BOX, { drill12_mop: [-9, -330, 9, 330], drill12_fingers: [-30, -62, 30, 14] });   /* the mop is audited as its shaft (the sponge head rests on the floor) */
 // a mop held by the handle: a wood shaft through the hand, the grey sponge head resting on the floor (the floor is about 190 local px below the grip)
 EXT.prop.drill12_mop = (side, o, t) => {
   ctx.save(); ctx.rotate(side * .07);
@@ -349,7 +349,7 @@ function lotScene(lt, sh) {
   // the row, left to right. Props point outboard so nothing reaches a neighbour's face. A close-up on Strawberry (s4, s5) shows only her.
   const closeOnStr = sh === 's4' || sh === 's5';
   const cast = [
-    ['clm', actor(A10.clem, lotAt(STALL.clm, LOT_D), lt, { expr: 'hopeful', hold: { r: 'drill12_mop' }, grip: { r: [74, 60] }, arms: { l: 'rest', r: 'hold' } }, 1)],
+    ['clm', actor(A10.clem, lotAt(STALL.clm, LOT_D), lt, { expr: 'hopeful', hold: { r: 'drill12_mop' }, grip: { r: [90, 60] }, arms: { l: 'rest', r: 'hold' } }, 1)],
     ['mng', actor(A7.mango, lotAt(STALL.mng, LOT_D), lt, { expr: 'happy', acc: ['badge7', 'gaitbelt7', 'keys7'], arms: { l: 'hips', r: 'rest' } }, 1)],
     ['lem', actor(A7.lemon, lotAt(STALL.lem, LOT_D), lt, { expr: 'dead', lid: .3, hold: { r: 'clipboard6' }, grip: { r: [90, 60] }, arms: { l: 'rest', r: 'hold' }, clipText: 'DRILL' }, 1)],
     ['str', actor(A11.straw, lotAt(STALL.str, LOT_D), lt, { expr: 'dead', look: sh === 's4' ? [-.9, 0] : [.2, 0], arms: { l: 'rest', r: 'rest' } }, 1)],
