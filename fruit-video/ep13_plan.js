@@ -1,6 +1,31 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 13: scene `plan` (7:09 PM, THE BRIEFING), Charge Nurse Lemon briefs the crew over a hologram blueprint of the facility.
- * WORK IN PROGRESS (v0: blueprint only).
+/* SHIFT HAPPENS, Episode 13: scene `plan` (41.646 s, clock 7:09 PM, label THE BRIEFING). Charge Nurse Lemon briefs the crew in the med room turned war room (one swinging lamp, a holo-table);
+ * registered as window.__EP13_SCENES.plan. The blueprint is the hero: it is drawn live from one plan model and appears twice, as a full-frame flat graphic and as the hologram above the table.
+ *
+ * SHOTS (scene-local seconds; ROOM shots keep every character sharp and complete, PLAN shots are the flat blueprint)
+ *   wide0   0.00- 1.20  the dark room powers up: pen-light, lamp swing, hologram grid draws; the first frames come up from black
+ *   dive    1.20- 2.05  camera pushes over the table into the hologram (characters dissolve, the plan unfolds and fills the frame; the outline traces itself)
+ *   plan    2.05- 8.30  l1 outline + parking lot + entrance ping, l2 the 32 rooms light one by one (numbers, counter, two nurse tiles, CALLED OUT stamp), l3 the vault (gold, padlock, route)
+ *   mango1  8.30- 9.50  "Why is it locked?" hand up like a student                          plan 9.50-11.42  POLICY 14.3 plate slams on (held to about 12.0)
+ *   clem1  11.42-12.04  "Sure!" nod, fist, sparks                                          plan 12.04-14.30 OBSTACLE 1 / CALL LIGHTS: red beams across the east hall, staff marker trips them
+ *   clem2  14.30-15.74  "I can't ignore a call light." red call-light blink off to the side
+ *   straw1 15.74-18.58  spotlight finds Strawberry: "Nobody can. Except her." / "Per diem."
+ *   plan   18.58-23.33  BADGE SCAN card (BADGE PER DIEM / SYSTEM NO MATCH), her marker walks the beams untouched; OBSTACLE 2 / THE ADMINISTRATOR, the patrol loop, melon marker
+ *   mango2 23.33-24.46  "I'll talk to him."        plan 24.46-26.60  ring timer 00:00 to 14:00 around the loop (lap 2 fast, afterimages)
+ *   mango3 26.60-27.55  "I can hold him for forty."        plan 27.55-29.50  the ring stretches to 40:00 (gold), ON HOLD, OBSTACLE 3 / ???
+ *   quiet  29.50-30.55  silent: the room goes quiet, red wash from the Q-word sign, a slow pan from Mango and Clementine to the sign and Strawberry and Lemon, dutch roll
+ *   lemon1 30.55-31.74  "The Q word."   clem3 31.74-32.40 "What's the..."   shh 32.40-33.62 Mango leaps and clamps a hand over Clementine's mouth, whip to Lemon and Strawberry, fingers to lips
+ *   lemon2 33.62-34.42  "Moon. You're on the window."   whip 34.42-35.17 whip pan to the window, the Moon rises   moon 35.17-36.80 "I see everything." (eye roll)
+ *   straw2 36.80-37.80  "And if we're caught?"   lemon3 37.80-38.70 "Then it was a..."   plan 38.70-39.70 MANDATORY IN-SERVICE stamp slams (shake, shockwave, sparks)
+ *   undive 39.70-40.30  the plan folds back into the hologram, the crew is revealed   end 40.30-41.70 the hologram collapses to a point, the room goes dark (fade to black)
+ *
+ * LAYOUT (plan coordinates (u, v): origin at the drawing's centre, v south; flat shot screen = (540 + u, 820 + v); usable area x 60..1020, y 280..1360, all labels above y 1370)
+ *   building 908 x 776 (x 86..994, y 308..1084), parking lot to y 1340, courtyard 620 x 488 centred (0, -124); rooms 68 wide, 30 px numbers, one size, offset away from each door arc
+ *   plates (OBSTACLE 1/2/3): one size 440 x 120 at one slot (0, -288), dark glass, accent edge, corner brackets, leader line ending in a ring exactly on its target (hall / patrol loop)
+ *   POLICY 14.3 plate 600 x 288 and the BADGE SCAN card 500 x 272 are centred on the courtyard; about 40 px of padding on all four sides of the policy plate
+ * TEXT: every string goes through the UI kit (ui.js); nothing is drawn into a cached canvas; the text layer fades before the plan folds into the hologram (tilted text is never drawn).
+ * CHARACTERS: A7.lemon (pen-light prop fp13_penlight), A11.straw, A7.mango, A10.clem (fp13_tag: the price tag whose price dissolves into the caption zone), the Moon in the window (A7.moon).
+ * Gate notes: o.transit exempts a character crossing the frame edge; o.fast (cast drawn unaudited) is used only for the 0.25 s of a whip pan that is faster than the text gate can follow.
  */
 (() => {
 if (!window.TIMELINE_EP13) return;
@@ -277,7 +302,7 @@ function drawDressing(a) {
 
 // ------------------------------------------------------------------ plates: dark glass with an accent edge, drawn through the UI kit
 const PLATE = { w: 440, h: 120 };   /* the three OBSTACLE plates share one size */
-const SLOT = { top: [0, -296], mid: [0, -124] };   /* where plates sit in the courtyard */
+const SLOT = { top: [0, -288], mid: [0, -124] };   /* where plates sit in the courtyard */
 function plateIn(lt, t0, t1) { return seg(lt, t0, t0 + .14) * (1 - seg(lt, t1, t1 + .18)); }
 function drawPlate(lt, o) {
   const a = plateIn(lt, o.t0, o.t1);
@@ -428,7 +453,7 @@ function drawPlan(lt, map, o = {}) {
       const g = age(r.n); if (g < 0) continue;
       const flash = Math.exp(-g / .22);
       rectP(r.x0 + 2, r.y0 + 2, r.x1 - 2, r.y1 - 2); ctx.fillStyle = `rgba(${CYR},${.075 + .22 * flash})`; ctx.fill();
-      if (g < .3) { const [x, y] = mp(r.cx, r.cy); ctx.strokeStyle = `rgba(200,250,255,${.8 * (1 - g / .3)})`; ctx.lineWidth = 3 * M.s; ctx.beginPath(); ctx.arc(x, y, (8 + 34 * easeOut(g / .3)) * M.s, 0, TAU); ctx.stroke(); }
+      if (g < .3) { const [x, y] = mp(r.cx, r.cy); ctx.strokeStyle = `rgba(200,250,255,${.8 * (1 - g / .3)})`; ctx.lineWidth = 3 * M.s; ctx.beginPath(); ctx.arc(x, y, (24 + 10 * easeOut(g / .3)) * M.s, 0, TAU); ctx.stroke(); }   /* the ping ripples out from just beyond the number and stays inside its own room (68 wide), so it never crosses a digit */
     }
   });
   // lasers across the call-light hall (the east corridor)
@@ -475,9 +500,9 @@ function drawPlan(lt, map, o = {}) {
   const dS = ROUTE_LEN * seg(lt, T.staff0, T.staff1), dP = ROUTE_LEN * easeIO(seg(lt, T.straw0, T.straw1));
   if (lt >= T.staff0 - .15 && lt < T.staff1 + .9) { const p = pathAt(PG.route, dS); staffMarker(p[0], p[1], Math.max(0, ...trig)); }
   if (lt >= T.straw0 - .15 && lt < T.straw1 + 1.2) { const p = pathAt(PG.route, dP); strawMarker(p[0], p[1]); }
-  // the stamp's slab (its text exists on the flat plan only)
+  // the stamp's slab (its text exists on the flat plan only, so the slab dissolves with it as the plan folds back into the hologram)
   if (lt >= T.final) saved(() => {
-    const k = seg(lt, T.final, T.final + .08), c = Math.cos(-.1), sn = Math.sin(-.1), pts = [[-300, -130], [300, -130], [300, 130], [-300, 130]].map(([x, y]) => [x * c - y * sn, -124 + x * sn + y * c]);
+    const k = seg(lt, T.final, T.final + .08) * clamp01((map.k - .9) / .1), c = Math.cos(-.1), sn = Math.sin(-.1), pts = [[-300, -130], [300, -130], [300, 130], [-300, 130]].map(([x, y]) => [x * c - y * sn, -124 + x * sn + y * c]);
     trace(pts, true); ctx.fillStyle = `rgba(60,6,14,${.8 * k})`; ctx.fill(); ink(RED, 8, k); ctx.stroke();
   });
   // a scan band sweeps down the drawing now and then
@@ -516,8 +541,8 @@ function drawPlanText(lt, T, age, ta) {
       const [x, y] = mp(0, -124), sc = 1 + .5 * (1 - easeOut(k));
       ctx.globalAlpha *= a; ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y);
       V2.glow(x, y, 360, GOLDR, .22, 'screen', .3);
-      UI.sign([x - 300, y - 150, 600, 300], [{ t: 'POLICY 14.3', size: 104, font: 'Bangers', weight: 400, spacing: 4, fill: GOLD }, { t: 'STAFF MAY NOT USE THIS ROOM', size: 33, spacing: .5, fill: '#fff', gap: 10 }, { t: 'DURING THE SHIFT', size: 33, spacing: .5, fill: '#fff', gap: 2 }],
-        { fill: GLASS, stroke: GOLD, lw: 5, r: 18, pad: 22, id: 'plate-policy' });
+      UI.sign([x - 300, y - 144, 600, 288], [{ t: 'POLICY 14.3', size: 104, font: 'Bangers', weight: 400, spacing: 4, fill: GOLD }, { t: 'STAFF MAY NOT USE THIS ROOM', size: 31, spacing: .5, fill: '#fff', gap: 10 }, { t: 'DURING THE SHIFT', size: 31, spacing: .5, fill: '#fff', gap: 2 }],
+        { fill: GLASS, stroke: GOLD, lw: 5, r: 18, pad: 38, id: 'plate-policy' });   /* about 40 px of padding on all four sides */
     }); }
   // OBSTACLE 1 / CALL LIGHTS (leader to the east hall)
   drawPlate(lt, { t0: T.ob1, t1: T.ob1Out, u: SLOT.top[0], v: SLOT.top[1], lines: [{ t: 'OBSTACLE 1', size: 30, spacing: 6, fill: '#ff7684' }, { t: 'CALL LIGHTS', size: 64, font: 'Bangers', weight: 400, spacing: 3, fill: '#fff', gap: 4 }], leader: { from: [PLATE.w / 2, SLOT.top[1]], to: [MID_E, SLOT.top[1]] }, id: 'plate-ob1' });
@@ -539,7 +564,7 @@ function drawPlanText(lt, T, age, ta) {
   // the ring timer: the Administrator's loop as a 40 minute dial (14:00 is one lap; Mango stretches it to 40:00)
   { const a = seg(lt, T.timer, T.timer + .2) * (1 - sstep(lt, T.final - .03, T.final + .05));
     if (a > 0) saved(() => {
-      const mins = lt < T.forty ? 14 * sstep(lt, T.lap2a, T.lap2b) : lerp(14, 40, easeOut(seg(lt, T.forty, T.forty + .55))), [cx, cy] = mp(0, -96), R = 100, lwR = 18, rr0 = R - lwR / 2, gold = lt >= T.forty;
+      const mins = lt < T.forty ? 14 * sstep(lt, T.lap2a, T.lap2b) : lerp(14, 40, easeOut(seg(lt, T.forty, T.forty + .55))), [cx, cy] = mp(0, -96), R = 92, lwR = 17, rr0 = R - lwR / 2, gold = lt >= T.forty;
       ctx.globalAlpha *= a;
       ctx.fillStyle = 'rgba(8,10,20,.74)'; ctx.beginPath(); ctx.arc(cx, cy, R + 10, 0, TAU); ctx.fill();
       UI.ring(cx, cy, R, 0, { text: String(Math.floor(mins + 1e-6)).padStart(2, '0') + ':00', size: 80, font: 'Bangers', weight: 400, spacing: 2, ink: gold ? '#ffe9a6' : '#ffffff', lw: lwR, track: 'rgba(77,227,255,.22)', id: 'timer' });
@@ -550,7 +575,7 @@ function drawPlanText(lt, T, age, ta) {
       for (let i = 0; i < 8; i++) { const an = a0 + TAU * i / 8, l = i === 0 ? 16 : 9; ctx.moveTo(cx + Math.cos(an) * (R + 6), cy + Math.sin(an) * (R + 6)); ctx.lineTo(cx + Math.cos(an) * (R + 6 + l), cy + Math.sin(an) * (R + 6 + l)); }
       ctx.stroke();
       const ta2 = a0 + TAU * .35; ctx.strokeStyle = CY; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx + Math.cos(ta2) * (R - 26), cy + Math.sin(ta2) * (R - 26)); ctx.lineTo(cx + Math.cos(ta2) * (R + 18), cy + Math.sin(ta2) * (R + 18)); ctx.stroke();
-      label('ADMIN LOOP', 0, 36, { size: 30, weight: 900, spacing: 8, fill: gold ? '#ffe9a6' : '#7fe6ff' });
+      label('ADMIN LOOP', 0, 33, { size: 30, weight: 900, spacing: 6, fill: gold ? '#ffe9a6' : '#7fe6ff' });
     }); }
   // ON HOLD: Mango has stopped him
   { const a = seg(lt, T.forty + .3, T.forty + .45) * (1 - sstep(lt, T.final - .03, T.final + .05)), [hx, hy] = mp(190, 152);
@@ -742,8 +767,7 @@ let ROOMLIGHTS = [];   /* lights a shot adds on top of the room's own (the red c
 function lightFor(lt, o, power, extra) {
   const hc = holoScene(0, 0), lp = lampPose(lt).head;
   const fx = hc[0] - o.x, d = Math.max(1, Math.abs(fx) + 140);
-  const DBG = window.__LT || {};
-  V2.setLight(Object.assign({ key: [clamp(fx / d, -.9, .9) * .75, .68], keyColor: '#8ff0ff', keyA: (DBG.keyA ?? .85) * power, rim: '#ffac62', rimA: DBG.rimA ?? .9, shadow: '#030812', shadowA: DBG.shadowA ?? .45, bounce: '#3fc8ff', bounceA: (DBG.bounceA ?? .45) * power, amb: DBG.amb ?? '#0e1a38', ambA: DBG.ambA ?? .08, back: null }, extra));
+  V2.setLight(Object.assign({ key: [clamp(fx / d, -.9, .9) * .75, .68], keyColor: '#8ff0ff', keyA: .85 * power, rim: '#ffac62', rimA: .9, shadow: '#030812', shadowA: .45, bounce: '#3fc8ff', bounceA: .45 * power, amb: '#0e1a38', ambA: .08, back: null }, extra));
   V2.addLight({ x: hc[0], y: hc[1], r: 720, color: CYR, a: .72 * power });
   V2.addLight({ x: lp[0], y: lp[1], r: 900, color: '255,190,110', a: .5 });
   const rk = redK(lt); if (rk > 0) { const sp = SIGNPT(); V2.addLight({ x: sp[0], y: sp[1], r: 1200, color: REDR, a: .85 * rk }); }
@@ -863,7 +887,7 @@ function actClem(lt) {
   const t = TX().L, B = TX().B, base = castO('clem');
   let expr = 'hopeful', look = gaze(base, ...HOLOPT()), arms = { l: 'rest', r: 'rest' }, hand = {}, grip = {}, squash = 0, rot = 0, face = null, sparkle = false;
   // c1 "Sure!": a bright nod and a fist at her chest
-  if (lt >= t.c1.s - .2 && lt < t.c1.e + .5) { const k = bump(lt, t.c1.s - .05, t.c1.e + .25); face = lerpE('hopeful', 'happy', .8); sparkle = true; squash += .12 * bump(lt, t.c1.s, t.c1.s + .2) + .06 * bump(lt, t.c1.s + .2, t.c1.s + .4); look = [-.2, -.05]; arms = { l: 'rest', r: 'hold' }; grip.r = [lerp(95, 40, sstep(lt, t.c1.s - .05, t.c1.s + .12)), lerp(30, 40, sstep(lt, t.c1.s - .05, t.c1.s + .12))]; hand.r = 'fist'; }
+  if (lt >= t.c1.s - .2 && lt < t.c1.e + .5) { const k = bump(lt, t.c1.s - .05, t.c1.e + .25); face = lerpE('hopeful', 'happy', .8); sparkle = true; squash += .12 * bump(lt, t.c1.s, t.c1.s + .2) + .06 * bump(lt, t.c1.s + .2, t.c1.s + .4); look = [-.2, -.05]; arms = { l: 'hold', r: 'rest' }; grip.l = [lerp(-95, -34, sstep(lt, t.c1.s - .05, t.c1.s + .12)), lerp(30, 74, sstep(lt, t.c1.s - .05, t.c1.s + .12))]; hand.l = 'fist'; }
   // c2 "I can't ignore a call light.": earnest, eyes catching the red blink off to the side, hands clasped
   if (lt >= t.c2.s - .15 && lt < t.c2.e + .3) { face = lerpE('hopeful', 'sad', .6); look = lt < t.c2.s + .6 ? [-.5, -.15] : [-.2, .1]; arms = { l: 'hold', r: 'hold' }; const k = sstep(lt, t.c2.s - .1, t.c2.s + .2); grip.l = [lerp(-100, -20, k), lerp(20, 40, k)]; grip.r = [lerp(100, 20, k), lerp(20, 40, k)]; hand = { l: 'grip', r: 'grip' }; squash += .04 * stress(lt, 'c2', 3); rot = -.03; }
   // q: looks at the sign; c3 "What's the...": leaning in, mouth open; then Mango's hand
@@ -948,7 +972,7 @@ const SHOTS = [
   [0.00, 1.20, 'wide0'], [1.20, 2.05, 'dive'], [2.05, 8.30, 'plan'], [8.30, 9.50, 'mango1'], [9.50, 11.42, 'plan'], [11.42, 12.04, 'clem1'], [12.04, 14.30, 'plan'], [14.30, 15.74, 'clem2'],
   [15.74, 18.58, 'straw1'], [18.58, 23.33, 'plan'], [23.33, 24.46, 'mango2'], [24.46, 26.60, 'plan'], [26.60, 27.55, 'mango3'], [27.55, 29.50, 'plan'], [29.50, 30.55, 'quiet'],
   [30.55, 31.74, 'lemon1'], [31.74, 32.40, 'clem3'], [32.40, 33.62, 'shh'], [33.62, 34.42, 'lemon2'], [34.42, 35.17, 'whip'], [35.17, 36.80, 'moon'], [36.80, 37.80, 'straw2'],
-  [37.80, 38.70, 'lemon3'], [38.70, 39.35, 'plan'], [39.35, 40.20, 'undive'], [40.20, 41.70, 'end'],
+  [37.80, 38.70, 'lemon3'], [38.70, 39.70, 'plan'], [39.70, 40.30, 'undive'], [40.30, 41.70, 'end'],
 ];
 function shotAt(lt) { for (const sh of SHOTS) if (lt < sh[1]) return { t0: sh[0], t1: sh[1], id: sh[2] }; const l = SHOTS[SHOTS.length - 1]; return { t0: l[0], t1: l[1], id: l[2] }; }
 const isCut = lt => SHOTS.some(([a]) => a > 0 && Math.abs(lt - a) < .04);
@@ -1004,6 +1028,17 @@ function planFrame(lt, a) {
   ctx.restore();
 }
 
+/* a wall call-light dome (the red lamp over a resident's door), lit by k 0..1: a dark housing, a half-dome lens, a hot core, short rays; drawn in screen space */
+function callLight(x, y, k) {
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#262b39'; ctx.strokeStyle = '#0b0e18'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x - 62, y, 124, 24, 9); ctx.fill(); ctx.stroke();
+  const g = ctx.createRadialGradient(x, y - 20, 4, x, y - 14, 56);
+  g.addColorStop(0, `rgb(255,${150 + 90 * k | 0},${150 + 80 * k | 0})`); g.addColorStop(.45, `rgb(${185 + 70 * k | 0},${24 + 40 * k | 0},${36 + 34 * k | 0})`); g.addColorStop(1, 'rgb(70,8,20)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, 52, 50, 0, PI, TAU); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.globalCompositeOperation = 'screen'; ctx.strokeStyle = `rgba(255,120,130,${.8 * k})`; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  for (let i = 0; i < 7; i++) { const a = PI + (i + .5) / 7 * PI, r0 = 66, r1 = 66 + 22 * k; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0 * .96); ctx.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1 * .96); ctx.stroke(); }
+  ctx.restore();
+}
 const SCENE = {
   shot(lt) { return shotAt(lt).id; },
   cam(lt) { camFor(lt, shotAt(lt)); },
@@ -1036,7 +1071,7 @@ const SCENE = {
       if (id === 'clem2') {
         const f = faceC(castO('clem')), blink = Math.max(0, Math.sin(lt * 15.7)) * (.5 + .5 * sstep(lt, t.c2.s, t.c2.s + .3));
         ROOMLIGHTS = [{ x: f[0] - 300, y: f[1] - 60, r: 1000, color: REDR, a: .95 * blink }];
-        o.mid = () => { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); V2.glow(-40, 760, 620, REDR, .55 * blink, 'screen', .9); ctx.fillStyle = `rgba(255,${60 + 60 * blink | 0},${70 + 50 * blink | 0},${.9 * blink})`; ctx.beginPath(); ctx.arc(70, 760, 26 + 6 * blink, 0, TAU); ctx.fill(); ctx.restore(); };
+        o.mid = () => { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); V2.glow(100, 330, 720, REDR, .5 * blink, 'screen', .9); V2.dof(4, () => callLight(100, 352, blink)); ctx.restore(); };
       }
       if (id === 'straw1') {
         o.noHolo = true; o.noTable = true;

@@ -54,9 +54,10 @@ def dial_speed(t):
     return np.clip(1.0 - np.asarray(t, dtype=float) / DIAL_STOP, 0.0, 1.0)
 
 
-# the slow-motion heartbeat: (time of the 'lub' in seconds from the cue, how much the tape has slowed by then). The 'dub' follows the lub by HEART_DUB * slowdown.
-HEART_BEATS = ((0.10, 1.0), (1.14, 1.16), (2.36, 1.34))
-HEART_DUB = .27
+# the slow-motion heartbeat: (time of the 'lub' in seconds from the cue, how much the tape has slowed by then: a stretch of the beat's body, not of its timing). The 'dub' follows the lub
+# by HEART_DUB. The beats sit where the hall's own camera pulses sit (ep13_hall.js heartAt: lubs 0.30, 1.15 and 2.00 s into the lasers beat, dubs 0.20 s after each; the cue starts 0.2 s in).
+HEART_BEATS = ((0.10, 1.0), (0.95, 1.16), (1.80, 1.34))
+HEART_DUB = .20
 
 R13 = np.random.default_rng(2613)
 RH = np.random.default_rng(1313)   # the humaniser's own generator (so the timing feel does not depend on how many noise bursts the instruments drew)
@@ -578,7 +579,7 @@ def cue_hall13(T, t0, d, beats, D):
     # --- the heart of the slow motion: the score's own kettle drum on the sound effect's three lub-dubs (build_audio13.HEART_BEATS), so the two are one pulse
     for at, sl_ in HEART_BEATS:
         T.put(timp(48 / sl_ ** .5, .7 * sl_), ls[0] + .2 + at, .07, 0)
-        T.put(timp(55 / sl_ ** .5, .5 * sl_), ls[0] + .2 + at + HEART_DUB * sl_, .045, 0)
+        T.put(timp(55 / sl_ ** .5, .5 * sl_), ls[0] + .2 + at + HEART_DUB, .045, 0)
     # --- the long reversed swell and the snap back
     T.put(strings([45, 52, 57, 64, 69], ls[1] - ls[0] - .05, ls[1] - ls[0] - .35, .05, 5.0, 2000), ls[0] + .05, .07)
     T.put(revcym(ls[1] - ls[0] - .1, 800, 6500), ls[0] + .05, .05)

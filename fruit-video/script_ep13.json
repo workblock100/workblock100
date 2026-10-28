@@ -953,7 +953,15 @@
      "who": "strawr",
      "say": "Nobody can.",
      "text": "Nobody can.",
-     "gap": 0.15
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
     },
     {
      "id": "end",

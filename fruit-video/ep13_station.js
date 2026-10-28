@@ -469,14 +469,15 @@ function station(lt, o = {}) {
   ctx.fillRect(-100, -100, W + 200, H + 200); ctx.restore();
   hallBeyond(t, { ping: o.ping });
   windowDusk(t, { sky: sunk });
-  whiteboard(o.board || 'schedule');
+  /* o.bare: a plain wall for a shot where a projected slide or a sign lies over it: no whiteboard writing, no scoreboard, no Q sign, no call-light board (no text under the slide) */
+  whiteboard(o.bare ? 'blank' : (o.board || 'schedule'));
   const sb = wallBox(zb, L.score.x0, L.score.y0, L.score.x1, L.score.y1);
-  scoreboard(sb[0] + sb[2] / 2, sb[1] + sb[3] / 2, sb[2], sb[3], o.breaks ?? 0, { roll: o.breaksRoll });
-  const qf = qSign(o.hours ?? 41, { flash: o.qFlash ?? 0, flicker: o.qFlicker ?? 1 });
+  if (!o.bare) scoreboard(sb[0] + sb[2] / 2, sb[1] + sb[3] / 2, sb[2], sb[3], o.breaks ?? 0, { roll: o.breaksRoll });
+  const qf = o.bare ? wallPoly(zb, L.qsign.x0, L.qsign.y0, L.qsign.x1, L.qsign.y1) : qSign(o.hours ?? 41, { flash: o.qFlash ?? 0, flicker: o.qFlicker ?? 1 });
   wallClock(L.clock.X, L.clock.Y, zb - 6, 0, o.min ?? 2, o.hr ?? 7, L.clock.r);
   const cb = wallBox(zb, L.call.x0, L.call.y0, L.call.x1, L.call.y1), pg = o.ping ?? -1, dingOn = pg >= 0 && pg < 1.3 && (pg < .3 || (pg > .5 && pg < .9));
   const lit_ = o.calls || ((i) => (i === 11 && dingOn ? [CALLCOL.amber, 1] : null));
-  callBoard(cb[0], cb[1], cb[2], cb[3], lit_, { t, hero: false });
+  if (!o.bare) callBoard(cb[0], cb[1], cb[2], cb[3], lit_, { t, hero: false });
   // the low sun: a warm wash on the wall, the window thrown across the floor in front of the counter, a soft shaft and dust motes in it
   const sun = (o.sun ?? 1) * (1 - .55 * sunk), wc = wc0;
   V2.glow(wc[0], wc[1] + 60, 700 * kzP(zb), sunk > .5 ? '255,130,90' : '255,170,100', .12 * (1 - .3 * sunk), 'screen', .3);
@@ -649,7 +650,7 @@ function foyer(o = {}) {
   const t = o.t ?? 0, zb = FOY.zb;
   S6.shell({ zb, hw: FOY.hw, ch: FOY.ch, rail: 108, wall: '#d9dde6', wain: '#3f7a82', floorA: '#b4bac8', floorB: '#8b92a6', ceil: '#e6e9f0', fog: '#aab6d0', fogAmt: .3, tile: 120 });
   const on = o.lampsOn ?? 1;
-  for (const z of [300, 800]) for (const X of [-230, 230]) ceilingLamp(X, z, FOY.ch, on, '215,230,255', 100, 170);
+  for (const z of [300, 800]) if (z > V2.P.cz + 220) for (const X of [-230, 230]) ceilingLamp(X, z, FOY.ch, on, '215,230,255', 100, 170);   /* a lamp the dolly has passed is skipped */
   // a light fixture over the door, a framed certificate and a fire extinguisher: the corner of a building nobody goes to
   const cert = wallBox(zb, -470, 380, -330, 470);
   ctx.save(); rr(cert[0], cert[1], cert[2], cert[3], 4); ctx.fillStyle = '#6a4a2e'; ctx.fill(); ctx.restore();

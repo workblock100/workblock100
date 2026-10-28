@@ -123,7 +123,7 @@ SCENES = [
         L('sr1', 'strawr', 'Copy.', 0.15, sfx=[['radioclick', -.05, .3, 0]]),
         P('lasers', 3.6, 0.05, [['slowmo', 0, .55, 0], ['heartbeat', .2, .55, 0], ['laserpass', .8, .4, -.3], ['laserpass', 1.6, .4, .3], ['laserpass', 2.4, .4, 0]]),
         L('lr2', 'lemonr', "The lights can't see you.", 0.15, sfx=[['radioclick', -.05, .3, 0]]),
-        L('sr2', 'strawr', 'Nobody can.', 0.15),
+        L('sr2', 'strawr', 'Nobody can.', 0.15, sfx=[['radioclick', -.05, .3, 0]]),
         P('end', 0.8, 0.05, [['sting', .1, .35, 0]]),
     ]},
 

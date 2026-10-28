@@ -1,12 +1,33 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 13: The Float Pool. Scene module E13-A (2 of 2): the scene `crew` (registered on window.__EP13_SCENES.crew).
- * (placeholder header: the shot list is written at the end of the build)
+/* SHIFT HAPPENS, Episode 13: The Float Pool. Scene module E13-A (2 of 2): the scene `crew` (17.0 s, registered on window.__EP13_SCENES.crew).
+ * Six heist-movie crew cards, ONE layout function for all six (the data is CARDS, the card comes out). Every card is a hard cut on the narrator's first word (u = 0 at the start of the narrator line,
+ * freezesnap +0.0 and cardslam +0.02): the character is caught FROZEN mid-action with a thick white die-cut sticker outline; at the character's own quip they UNFREEZE and act the line; the card stays.
+ *   shot list, scene-local seconds:
+ *   0.00-0.25  hologram remnants: nine cyan scanlines collapsing on dark (the plan from the briefing going out).
+ *   0.25-0.95  open: record scratch (cue 0.05) and a camera-roll wobble, then the six silhouettes slammed up on their colour blocks, 0.1 s each, hard cuts at blur 1 (Lemon .30, Strawberry .40, Mango .50,
+ *              Clementine .60, Banana .70, Moon .80), a white shutter flash at .55 (freezesnap .35). Black from .90 to the first freeze.
+ *   card k = narrator line start: n1 .95 Brains (Lemon, quip l1 1.96) | n2 3.97 Ghost (Strawberry, s1 4.92) | n3 5.96 Talker (Mango, m1 6.95) | n4 9.05 Muscle (Clementine, c1 10.00) |
+ *              n5 10.62 Distraction (Mr. Banana, b1 11.78) | n6 12.65 Eye in the Sky (the Moon, mo1 14.33). The times are read from the timeline (B('nN').s), not typed.
+ *     u = 0          full white flash frame, the previous card is gone (nothing lingers under the next one).
+ *     u .034-.14     the hex shutter iris opens (R 300 -> 1350 px, turning) while the flash falls .6 -> .25 -> 0 (flash frames are 1, .6, .25 of white).
+ *     u 0-.07        the codename stamp (UI.stamp on a dark tag) slams from 1.5x to 1.0 on the cardslam cue, rings (7% overshoot), camera shake 11 px on the hit.
+ *     u .16-.42      the big name rises with an overshoot (Bangers 156).   u .34-.64  the rap-sheet line is typed in (gold prefix, then the charge).
+ *     u .44-1.3      three stat rows slide in 0.11 s apart and fill (the counters count up; Banana INCIDENTS reads 46 and turns into 47 at his quip + .25).
+ *     frozen         the figure is held in a strong pose: Lemon mid-stride, finger up (eureka), the plan on a clipboard; Strawberry on tiptoe, finger to her lips, side-eye, a ghost trail behind her
+ *                    (she is hard to see); Mango arms wide, mid-sentence, speech bubbles; Clementine mid-jump in a double-biceps flex, sweating; Banana mid-slip with a peel; the Moon smug in a porthole
+ *                    under a targeting reticle that follows his eyes. Viewfinder corner brackets, slow push 1.0 -> 1.018 across the card.
+ *     quip start q   UNFREEZE: a tiny flash (.4 / .18), an expanding ring, a squash pop, then the body acts the line (jabs on the stressed words, a thumbs-up hop, a landing squash) and the mouth moves.
+ *   16.16-16.55  end beat: the iris closes to dark (R 1350 -> 0, turning); black until the scene ends at 17.0.
+ * Layout (the same numbers for every card; 8 px grid; centred on x 540; everything between y 130 and 1370, above the caption zone): ground line y 948 (colour block above, dark base below), the figure
+ *   570-610 px tall on x 540; stamp cy 196 (Bangers 80 on a tag padded 40 px each side); name cy 1044 (Bangers 156, max width 940); rap line cy 1140 (Nunito 900 34, shrunk to 940 px if longer);
+ *   three stat rows at y 1184 / 1240 / 1296, each 50 px high, x 64..1016 (label 292 | bar 470 | value 190, right aligned). No card text is tilted. Blur is 1 on every cut and unfreeze frame, 2 elsewhere.
+ * All text is drawn live through the UI kit (UI.stamp, UI.label, UI.write, UI.table, UI.panel). The caches hold flat art without text (colour blocks, sticker outlines, ghost silhouettes).
  */
 (() => {
 if (!window.TIMELINE_EP13) return;
 const { zoomTo } = window.H6;
 const A7 = window.A7, A10 = window.A10, A11 = window.A11;
-const E = window.E13A || {};
+const E = window.E13A || {};   /* helpers from ep13_title.js (loaded first); the fallbacks below keep this module working on its own */
 window.__EP13_SCENES = window.__EP13_SCENES || {};
 
 const CYAN = '#4de3ff', ALARM = '#ff3b4e', GOLD = '#ffc83d', INKC = '#15111a', BASE = '#130e27';
@@ -18,6 +39,11 @@ function intoCv(cv, fn) {
   ctx = g; g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
   try { fn(g); } finally { g.restore(); ctx = prev; }
 }
+if (!E.charTo) E.charTo = (cv, ox, oy, o) => intoCv(cv, g => {
+  REG.suppress++;
+  try { g.translate(ox, oy); drawChar(Object.assign({}, o, { x: 0, y: 0, noShadow: true, noReflect: true, transit: false })); } finally { REG.suppress--; }
+});
+if (!E.flatten) E.flatten = (cv, color) => intoCv(cv, g => { g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, cv.width, cv.height); });
 /* run fn about a pivot: scale (sx, sy), shift dy, faded by a */
 function popAbout(cx, cy, sx, sy, dy, a, fn) { ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy + dy); ctx.scale(sx, sy); ctx.translate(-cx, -cy); fn(); ctx.restore(); }
 const bump = x => x < 0 ? 0 : (Math.exp(-x / .13) - Math.exp(-x / .035)) * 1.9;   /* a quick jab: up fast, back slower, peak ~1 */

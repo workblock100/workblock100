@@ -1,6 +1,38 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 13: The Float Pool. Scene module E13-A (1 of 2): the scenes `title` and `end` (registered on window.__EP13_SCENES).
- * (placeholder header: the shot lists are written at the end of the build)
+/* SHIFT HAPPENS, Episode 13: The Float Pool. Scene module E13-A (1 of 2): the scenes `title` (5.2 s) and `end` (8.0 s), registered on window.__EP13_SCENES.
+ * Exports on window.E13A (this file loads first): charTo(cv, ox, oy, o) and flatten(cv, color) (used by ep13_crew.js), and titleClicks (the scene-local times of the dial's ratchet clicks).
+ * All text goes through the UI kit (UI.stack / UI.write / UI.pill / UI.sign / UI.panel / UI.label), drawn live; the caches hold flat art only (wall, door, fog, silhouettes, shadows).
+ *
+ * TITLE (noChyron, noScrim): a heist-film title. A huge steel combination dial on a vault door, in a dark teal room under a hard spotlight and haze. World 1080x1920, dial and door centred on (540, 960).
+ *   shot list, scene-local seconds (cues: vaultdial 0.2, clunk 2.6, textding 2.7, theme7 0.2):
+ *   0.00-0.10  fade in from black.   0.10-0.34  the spotlight stutters on: on .10, out .17, on .23, dim .30, steady .34 (the room goes dark between).
+ *   0.20       the dial is spun hard and coasts. It steps 4 numbered ticks at each of the 26 ratchet clicks the score builds (build_music13.dial_times: 44 ms apart at first, 185 ms near the end, the last at
+ *              0.2 + 2.27 = 2.47), so every click is a visible step; the red index pawl flicks on each click (every fifth and the last, the heavy teeth, harder). Shutter 10 samples while it is fast.
+ *   2.47-2.60  the dial stands on 30 (thirty minutes) for a held breath.
+ *   2.60       clunk: three-frame white flash (.85 / .5 / .2), chromatic aberration burst, camera shake 14 px and roll, a cyan shock ring, twelve bolts withdraw 78 px (staggered, easeBack), sparks at every
+ *              bolt, gold light leaks out of the empty sockets and round the rim, the 30 lights up cyan.
+ *   2.70       textding: UI.stack (centre x 540, top y 150, max width 960): SHIFT HAPPENS pops 1.3 -> 1.0 (Bangers 132, gold), the EPISODE 13 pill drops in 2.90-3.25 with a bounce (Bangers 58 on a red 88 px pill),
+ *              THE FLOAT POOL rises from 130 px below with a stretch and a squash landing at 3.02-3.18 (Bangers 190, white, never wider than 1.03x), a ring of gold light behind it 3.18-3.70,
+ *              the gold shine sweeps across it 3.92-4.92, the tagline "Every nurse deserves thirty minutes." rises 3.55-3.95 (Nunito 900 46).
+ *   2.74-4.00  camera pull-back and tilt down (zoom 1.0 -> 0.74, centre y 960 -> 730) that finds the crew: five silhouettes (Lemon, Strawberry, Mango, Clementine, Mr. Banana) on one floor line
+ *              (y 1850, UI.rowX(5, 40, 1040, w 200): equal centres), rim-lit gold from behind, rising in 3.15-4.21, 0.09 s apart.
+ *   3.00-3.60  a lens flare from the lamp above the frame.   3.80-4.80  a sheen of light crosses the steel.   4.00-5.20  a slow push (+1.8%).
+ *   Blur: 1 sample to 0.2, 10 to 1.5, 6 to the lock, 5 to 4.2, then 2.
+ *
+ * END (noChyron, noScrim, label THANKS FOR WATCHING): a police lineup in front of a height-chart wall: pale green cinder block, lit by a hard overhead lamp on a ceiling conduit (lamp at (540, 622), the wall
+ *   dark outside the cone). Six characters on one floor line (y 1330, UI.rowX(6, 84, 996, w 152) so equal centres, one scale .88 for all): Lemon, Strawberry, Mango, Clementine, Mr. Banana, Brenda. Each holds an
+ *   equal 144x120 placard (UI.sign, Bangers 31) in front of their feet on one baseline: LEMON / CONSPIRACY TO HYDRATE, STRAWBERRY / ATTEMPTED SITTING, MANGO / LOITERING (TALKING), CLEMENTINE / SAID SURE,
+ *   MR. BANANA / SLIPPING (48), BRENDA / TIME SERVED. Height chart: a line every inch from 4'0" to 6'0" (58 px per foot), labelled every six inches at x 56 and x 1028 (set dressing). A gilt frame on a nail
+ *   top right holds the Moon (eyes wander, smirks every 5 s); a wall clock reads 7:44; yellow tape marks and the numbers 1-6 on the floor; soft wall shadows behind the six (cached silhouettes).
+ *   0.00-0.36  fade in; the lamp flickers on (on .12, out .20, on .26, dim .31, steady .36).
+ *   0.22-0.78  UI.stack (centre x 540, top y 128, max width 960): THANKS FOR WATCHING slides up (.22), SHIFT HAPPENS pops 1.3 -> 1.0 (.34), THE FLOAT POOL comes down on a stamp with a squash and spring (.62).
+ *   0.90-1.8   the six raise their placards into their hands one after another, 0.11 s apart, with an overshoot. Idle: engine bob, blinks, gaze; Banana shifts his feet (2.6-3.5, 5.2-6.1) and slips at 3.6-4.4
+ *              (hop, kick, shock; his placard goes with him); Brenda shakes the dust off herself at 2.0 and 5.1 (puffs, her dust falls .55 -> .29) and smiles from 5.2 (time served).
+ *   1.15, 2.30, 3.45, 4.60, 5.75, 6.90  the photographer's flash: everyone squints, a white wash over the lineup that fades out above and below (it never reaches the lettering); confetti from 1.15, only
+ *              between the conduit and the gag line.
+ *   3.00-3.34  BREAKS TAKEN TODAY: 0 pops in (Nunito 900 58, yellow, centred on x 540 at y 1548); 4.25-4.60 the 0 turns into a 1 with a ring of light.
+ *   4.90-5.35  the teaser pill rises in: NEXT: EPISODE 14 / THE SURVEY (clipboard icon, y 1726, 168 px high).
+ *   7.60-8.00  fade to dark. Camera: a slow push 1.0 -> 1.012 over the whole scene. Blur 1 (nothing moves fast).
  */
 (() => {
 if (!window.TIMELINE_EP13) return;
@@ -538,7 +570,7 @@ function buildEndArt() {
 
 // the Moon, framed: a gilt frame hung from a nail by a wire, a little crooked
 function moonFrame(lt) {
-  const cx = 800, top = 706, w = 214, h = 262, sway = .035 + .006 * Math.sin(lt * .9);
+  const cx = 800, top = 672, w = 214, h = 262, sway = .035 + .006 * Math.sin(lt * .9);
   ctx.save(); ctx.translate(cx, top - 40); ctx.rotate(sway);
   ctx.strokeStyle = '#2a2a2e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-w * .36, 52); ctx.moveTo(0, 0); ctx.lineTo(w * .36, 52); ctx.stroke();
   ctx.fillStyle = '#1c1c20'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, TAU); ctx.fill();
@@ -577,7 +609,7 @@ function chartLines() {
   for (let q = 0; q <= 24; q++) {                    // inches above 4'0"
     const inch = 48 + q, y = E_FEET - inch / 12 * E_PX_FT, major = q % 6 === 0;
     ctx.strokeStyle = major ? 'rgba(18,52,38,.82)' : 'rgba(18,52,38,.4)'; ctx.lineWidth = major ? 4 : 2;
-    ctx.beginPath(); ctx.moveTo(14, y); ctx.lineTo(major ? 1066 : 54, y); if (!major) { ctx.moveTo(1026, y); ctx.lineTo(1066, y); } ctx.stroke();
+    ctx.beginPath(); if (major) { ctx.moveTo(14, y); ctx.lineTo(1066, y); } else { ctx.moveTo(64, y); ctx.lineTo(100, y); ctx.moveTo(980, y); ctx.lineTo(1016, y); } ctx.stroke();
   }
   ctx.restore();
 }
@@ -614,7 +646,7 @@ function lineupOpts(i, lt, xs) {
     const sl = lt - 3.6; if (sl > 0 && sl < .8) { const k2 = Math.sin(seg(sl, 0, .8) * PI); o.lift = 24 * k2; o.legs = 'kick'; o.expr = 'panic'; o.rot = -.07 * Math.sin(seg(sl, 0, .8) * PI * 2); }
     if (sl >= .8 && sl < 1.6) o.expr = 'shock';
   }
-  if (L.id === 'brenda' && lt > 5.2) o.expr = 'happy';       // time served
+  if (L.id === 'brenda' && lt > 5.2) o.expr = A13.expr('relief');       // time served
   if (L.id === 'mango') o.look = [.5 * Math.sin(lt * .8), .1];
   // the flash: everyone squints
   o.lid = Math.max(o.lid ?? 0, .85 * fl);
@@ -726,7 +758,7 @@ function drawEndWorld(lt) {
   ctx.save();
   ctx.fillStyle = V2.grad(0, PIPE_Y, 0, PIPE_Y + 28, [[0, '#6f8a7e'], [.35, '#2c3d36'], [1, '#0d1512']]); ctx.fillRect(-20, PIPE_Y, 1120, 28);
   ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(-20, PIPE_Y + 2, 1120, 3);
-  for (const x of [120, 540, 960]) { ctx.fillStyle = '#16201b'; rr(x - 22, PIPE_Y - 8, 44, 44, 6); ctx.fill(); ctx.strokeStyle = '#050807'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#8fa89b'; ctx.beginPath(); ctx.arc(x - 10, PIPE_Y + 4, 3.4, 0, TAU); ctx.arc(x + 10, PIPE_Y + 4, 3.4, 0, TAU); ctx.fill(); }
+  for (const x of [120, 540, 960]) { ctx.fillStyle = '#16201b'; rr(x - 22, PIPE_Y - 8, 44, 44, 6); ctx.fill(); ctx.strokeStyle = '#050807'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#8fa89b'; ctx.beginPath(); for (const [sx, sy] of [[-15, -3], [15, -3], [-15, 27], [15, 27]]) { ctx.moveTo(x + sx + 3.2, PIPE_Y + sy); ctx.arc(x + sx, PIPE_Y + sy, 3.2, 0, TAU); } ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 2; rr(x - 12, PIPE_Y + 3, 24, 18, 3); ctx.stroke(); }
   ctx.translate(LAMP[0], LAMP[1]);
   ctx.fillStyle = '#18221d'; ctx.fillRect(-7, -78, 14, 20);
   ctx.strokeStyle = '#0a0f0d'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, PIPE_Y + 34 - LAMP[1]); ctx.lineTo(0, -74); ctx.stroke();

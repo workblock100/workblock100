@@ -8,6 +8,17 @@ It changes the defaults (script, output folder, timeline variable, music module)
 Nothing is sampled: every sound is a few lines of numpy. The score (build_music13.py) shares two things with this file: the click times of the vault dial and the beats of the
 slow-motion heart, so the music can lock to them.
 
+Where a sound has a shape of its own inside its cue, it is written to the picture the scene builders committed to (scene-local seconds as of the last check; if a scene module changes
+one of these, change the matching number here and rebuild):
+  title  the dial clicks are build_music13.dial_times(), copied into ep13_title.js as DIAL_CLICKS (26 clicks, the 5th, 10th ... and the last heavy); the lock is at 2.4 s.
+  plan   32 rooms light 0.028 s apart from the pips cue (ep13_plan.js PT().pips and age()), clockwise from the lobby: sfx_pips pans each pip to its room (_room_x).
+  hall   the camera pulses (ep13_hall.js heartAt) are lubs at 0.30, 1.15 and 2.00 s and dubs 0.20 s after, into the lasers beat: HEART_BEATS / HEART_DUB; countdown beeps at 0.30, 0.55, 0.80.
+  open   the far dome lights for 0 to 0.3 s and 0.5 to 0.9 s after the phonering cue and the phone's lamp blinks for 1.25 s (ep13_station.js ping, ep13_open.js phoneRing); the
+         scene module starts them at scene time 0.25 but the cue lands at 0.45 (the open beat starts at 0.2): sfx_phonering is written for the cue.
+  vault  the door eases open from 0.04 to 2.0 s after its cue (doorcreak); the tube flickers on at the chair cue +0.04, +0.18, +0.30 and stays on at +0.37 (chair); the wrapper is opened
+         from +0.02 to +0.45 (wrapper); the bite is 0 to 0.2 s after the munch cue and the mouth shuts on the first chew at +0.55 (munch); the Q sign lands on 0 at the callcascade cue
+         and 32 domes light 0.022 s apart, the left panel first, 4 x 4 each (callcascade); the door slams shut 0.02 s after its doorclose cue.
+
 Usage: python3 build_audio13.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--out build/ep13_sound]
 """
 import os
@@ -276,10 +287,26 @@ def sfx_holoblip():
     return norm6(_edge(x, .0005, .01), .36)
 
 
+def _room_x(n):
+    """Centre x, in plan pixels (the building is 908 wide), of room n = 1..32 on the briefing plan (ep13_plan.js PG.rooms): they are numbered clockwise from the lobby, 1-4 along the
+    south-west row, 5-11 up the west column, 12-21 along the north row, 22-28 down the east column and 29-32 back along the south-east row."""
+    if n <= 4:
+        return -102.0 - 68.0 * (n - .5)
+    if n <= 11:
+        return -414.0
+    if n <= 21:
+        return -374.0 + 68.0 * (n - 12 + .5)
+    if n <= 28:
+        return 414.0
+    return 374.0 - 68.0 * (n - 29 + .5)
+
+
 def sfx_pips():
-    """Thirty-two rooms lighting up on the plan: 32 glass pips in four runs of eight up a major pentatonic (each run a whole step higher), 30 ms apart, panned left to right along
-    each run like a scan line, a little louder as they go, and a longer glint on the last one. Stereo."""
-    d = 1.3
+    """Thirty-two rooms lighting up on the plan: 32 glass pips in four runs of eight up a major pentatonic (each run a whole step higher), a little louder as they go, and a longer
+    glint on the last one. They fall 28 ms apart, on the plan's own room lights (room n lights 0.028 (n - 1) s after the cue), and each is panned to where its room is on the plan,
+    so the ear follows the ring: out to the left along the south-west row, up the west side, across the north row to the right, down the east side and home along the south-east
+    row to the middle. Stereo."""
+    d = 1.45
     n = int(d * SR)
     out = np.zeros((2, n))
     r = rng6(1352)
@@ -287,11 +314,11 @@ def sfx_pips():
     for i in range(32):
         row, col = divmod(i, 8)
         f = 880 * pent[col] * 2 ** (row * 2 / 12)
-        at = .01 + i * .0305
-        place2(out, _glass(f, .09, .014, .0015, .6), at, (.38 + .5 * i / 31) * r.uniform(.85, 1.0), -.75 + 1.5 * col / 7)
-    last = .01 + 31 * .0305
-    place2(out, _glass(3520, .5, .16, .002), last, .45, 0.0)
-    place2(out, _glass(5274, .4, .09, .002), last + .012, .22, .2)
+        at = .004 + i * .028
+        place2(out, _glass(f, .09, .014, .0015, .6), at, (.38 + .5 * i / 31) * r.uniform(.85, 1.0), .8 * _room_x(i + 1) / 454.0)
+    last = .004 + 31 * .028
+    place2(out, _glass(3520, .5, .16, .002), last, .45, .8 * _room_x(32) / 454.0)
+    place2(out, _glass(5274, .4, .09, .002), last + .012, .22, .8 * _room_x(32) / 454.0 + .1)
     return norm6(_edge(out, .0004, .04), .36)
 
 
@@ -378,14 +405,15 @@ def _hb_thump(f0, f1, d, tau, seed, knock=.5):
 
 
 def sfx_heartbeat():
-    """Three heartbeats in slow motion, muffled (nothing above 560 Hz), each lub-dub later and longer and lower than the one before as if the tape were dragging (the beats are
-    build_music13.HEART_BEATS, the score pulses on them): the lub is a 100 Hz thump that sags to 54 Hz, the dub a shorter, higher one, with a breath of blood between them."""
+    """Three heartbeats in slow motion, muffled (nothing above 560 Hz), each lub-dub longer and lower than the one before as if the tape were dragging. They fall 0.85 s apart, on the
+    hall's camera pulses (lubs 0.30, 1.15, 2.00 s into the lasers beat, dubs 0.20 s after; build_music13.HEART_BEATS, and the score pulses on them): the lub is a 100 Hz thump that
+    sags to 54 Hz, the dub a shorter, higher one, with a breath of blood between them."""
     d = 3.0
     n = int(d * SR)
     x = np.zeros(n)
     for i, (at, s) in enumerate(HEART_BEATS):
         _place(x, _hb_thump(100 / s, 54 / s, .27 * s, .06 * s, 1410 + i), at, 1.0)
-        dub_at = at + HEART_DUB * s
+        dub_at = at + HEART_DUB
         _place(x, _hb_thump(130 / s, 70 / s, .2 * s, .045 * s, 1420 + i), dub_at, .66)
         w = int(HEART_DUB * s * SR)
         sw = _lp4(noise6(HEART_DUB * s, 1430 + i), 220, 2) * np.hanning(w) * .1
@@ -446,8 +474,9 @@ def sfx_radioclick():
 def sfx_doorcreak():
     """A door that has not moved since 2019: a long, rusty creak. The hinge is a stick-slip oscillator whose rate IS the pitch, and the pitch wanders (90 to 330 Hz, up, down, hesitating
     and up again); every stick-slip cycle is a little different in strength, which is the rust. It is shaped by four wooden-hinge resonances (430, 900, 1.5 kHz and 2.2 kHz) and
-    closed off at 2.8 kHz so it can never go shrill. The door moves in pushes with a pause in the middle; a crack at the start (the seal breaking, a sprinkle of dust) and a soft
-    wooden knock at 2.1 s where it reaches its stop. 2.35 s."""
+    closed off at 2.8 kHz so it can never go shrill. The door moves in pushes: it is loudest and highest while the picture's door is moving fastest (0.9 to 1.15 s after the cue; the
+    vault scene eases it open from 0.04 to 2.0 s), with only a shallow hesitation at 1.3 s; a crack at the start (the seal breaking, a sprinkle of dust) and a soft wooden knock at
+    2.1 s where it reaches its stop. 2.35 s."""
     d = 2.35
     n = int(d * SR)
     t = tarr(d)
@@ -464,7 +493,7 @@ def sfx_doorcreak():
     sq = _tv_filter(saw, 620 + 1100 * u, 6.5, "bp")                  # a resonance that slides up and down: the 'eee' in a creak
     body = body / np.abs(body).max() * .7 + sq / np.abs(sq).max() * .55
     body = _lp4(body, 2800, 3)
-    move = np.interp(t, [0, .06, .3, .62, .95, 1.15, 1.3, 1.5, 1.8, 2.05, 2.2], [0, .85, .7, 1.0, .9, .25, .1, .7, 1.0, .6, 0])
+    move = np.interp(t, [0, .06, .3, .62, .95, 1.15, 1.3, 1.6, 1.8, 2.05, 2.2], [0, .85, .6, .9, 1.0, 1.0, .55, .8, .6, .3, 0])
     move = move * (.85 + .15 * _smooth_rand(d, 1383, 9))
     x = body / np.abs(body).max() * move
     x += _bp4(noise6(d, 1384), 1200, 4500) * move * .1
@@ -616,42 +645,46 @@ def sfx_steps():
 
 
 def sfx_wrapper():
-    """A granola bar wrapper: film crinkle is a dense, irregular rain of tiny fractures (0.8 to 3.5 ms each, 2 to 11 kHz, each its own band), which come in four gestures: a
-    squeeze, a smaller turn, a pinch at the notch, and the long tearing open (the densest, loudest, brightest). About 300 crackles in 1 s, with a soft rustle underneath."""
-    d = 1.0
+    """A granola bar wrapper, opened to the picture (the vault scene unwraps it from 0.02 to 0.45 s after the cue and lifts it to her mouth, so it is all over by 0.6 s): film crinkle is
+    a dense, irregular rain of tiny fractures (0.8 to 3.5 ms each, 2 to 11 kHz, each its own band), which come in four gestures: a squeeze as she grips it, a smaller turn, and the
+    long tearing open (the densest, loudest, brightest, 0.25 to 0.45 s), then the last rustle of the foil peeling back. About 300 crackles in 0.6 s, with a soft rustle underneath."""
+    d = .7
     n = int(d * SR)
     t = tarr(d)
     r = rng6(1450)
     x = np.zeros(n)
-    for s, L, dens, lv in ((.00, .22, 260, .5), (.28, .18, 200, .38), (.52, .1, 160, .3), (.66, .3, 520, 1.0)):
+    for s, L, dens, lv in ((.00, .11, 260, .5), (.13, .09, 200, .38), (.25, .20, 520, 1.0), (.48, .09, 170, .3)):
         for i in range(int(L * dens)):
             at = s + r.uniform(0, L)
             lo = r.uniform(2200, 4500)
             hi = min(lo * r.uniform(1.8, 2.6), 11000)
             _place(x, _burst(int(at * 1e5) + i, .012, lo, hi, r.uniform(.0008, .0035)), at, lv * r.uniform(.15, 1.0) ** 1.6)
-    env = np.interp(t, [0, .05, .2, .28, .45, .52, .62, .66, .96, 1.0], [0, .5, .5, .3, .3, .2, .2, 1, .5, 0])
+    env = np.interp(t, [0, .03, .1, .13, .22, .25, .4, .46, .57, .62, .7], [0, .5, .5, .3, .3, .5, 1, .6, .3, .1, 0])
     x += _bp4(noise6(d, 1455), 900, 3500) * env * .06
     return norm6(_edge(x, .001, .05), .4)
 
 
 def sfx_munch():
-    """One satisfying bite of a granola bar: a crisp crack (1.2 to 6.5 kHz, 3.5 ms), the bar giving way in a dozen small fractures over the next 100 ms, the jaw closing (a muffled
-    190 Hz 'mmp' through the skull) and, 0.2 s later, the first small chew. 0.4 s."""
+    """One satisfying bite of a granola bar, to the picture (in the vault scene the bar reaches her mouth at the cue, the bite takes 0.2 s, and the first chew opens her mouth at 0.2 s and
+    shuts it at 0.55 s): the teeth meet at 0.05 s with a crisp crack (1.2 to 6.5 kHz, 3.5 ms), the bar gives way in a dozen small fractures over the next 100 ms, the jaw closes (a
+    muffled 190 Hz 'mmp' through the skull) and, at 0.55 s as her mouth shuts again, the first small chew. 0.8 s."""
     k = _nth("munch")
     r = rng6(1470 + k)
-    d = .4
+    d = .8
     n = int(d * SR)
     x = np.zeros(n)
-    _place(x, _burst(1471 + k, .03, 1200, 6500, .0035) * 1.0, 0.0)
-    at = .004
+    b = .05                                                           # the bite
+    _place(x, _burst(1471 + k, .03, 1200, 6500, .0035) * 1.0, b)
+    at = b + .004
     for i in range(14):
         at += r.uniform(.004, .011)
         _place(x, _burst(1480 + 20 * k + i, .02, r.uniform(1400, 2600), r.uniform(4000, 7500), r.uniform(.002, .005)), at, (1 - i / 18) * r.uniform(.3, 1) * .8)
-    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(190, 130, .1)) / SR) * np.exp(-tarr(.1) / .035), .06, .3)
-    _place(x, _burst(1500 + k, .03, 1500, 5000, .004) * .4, .21)
+    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(190, 130, .1)) / SR) * np.exp(-tarr(.1) / .035), b + .06, .3)
+    c = .55                                                           # the first chew
+    _place(x, _burst(1500 + k, .03, 1500, 5000, .004) * .4, c)
     for j in range(5):
-        _place(x, _burst(1510 + j, .012, 1800, 4800, .002), .215 + j * .008, .22 * r.uniform(.4, 1))
-    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(170, 120, .08)) / SR) * np.exp(-tarr(.08) / .03), .22, .15)
+        _place(x, _burst(1510 + j, .012, 1800, 4800, .002), c + .005 + j * .008, .22 * r.uniform(.4, 1))
+    _place(x, np.sin(2 * np.pi * np.cumsum(_glide(170, 120, .08)) / SR) * np.exp(-tarr(.08) / .03), c + .01, .15)
     return norm6(_edge(x, .0003, .08), .5)
 
 
@@ -668,22 +701,25 @@ def _call_ding(f, tau, ratio_dong=0.0):
 
 
 def sfx_callcascade():
-    """Every call light in the building at once, as a stereo return. Forty dings, the first ones 80 ms apart and then faster and faster (the gap shrinks to about 6 ms) so the
-    floor seems to catch fire from left to right (each one's pan walks from the left end of the hall to the right with scatter), each one a call-light chime at one of eight
-    pitches from 659 Hz to 1.76 kHz, getting louder; at 0.55 s a wall of 110 more small ones and a bright wash of chime noise piles on, peaks at about 0.7 s, and then dies away
-    by 1.3 s (low-passed as it goes) so that the next line, a second later, is clear. Stereo, 1.6 s."""
+    """Every call light in the building at once, as a stereo return, played to the picture: the vault scene lights its 32 domes one every 22 ms (two panels of 4 x 4 either side of the
+    door, the left panel first, each row left to right), so there are 32 call-light chimes 22 ms apart, each panned to where its dome hangs (-0.76 to -0.36 for the left panel, +0.36
+    to +0.76 for the right), the four columns a rising run of notes and every row a step higher than the one before, louder as the building catches fire; first a clack as the Q sign's
+    digits land on 0. From 0.5 s a wall of 110 more small ones and a bright wash of chime noise piles on, peaks about 0.7 s and dies away by 1.3 s (low-passed as it goes) so that the
+    next line, a second later, is clear. Stereo, 1.6 s."""
     d = 1.6
     n = int(d * SR)
     t = tarr(d)
     out = np.zeros((2, n))
     r = rng6(1490)
     pitches = (659.0, 740.0, 880.0, 988.0, 1175.0, 1319.0, 1568.0, 1760.0)
-    for i in range(40):
-        u = i / 39
-        at = .01 + .62 * u ** 2.0
-        pan = np.clip(-.9 + 1.8 * u + r.uniform(-.3, .3), -1, 1)
-        f = pitches[int(r.integers(0, 8))]
-        place2(out, _call_ding(f, r.uniform(.12, .2), .75 if r.random() < .3 else 0.0), at, (.28 + .55 * u) * r.uniform(.8, 1.0), pan)
+    for i in range(32):
+        panel, j = divmod(i, 16)
+        row, col = divmod(j, 4)
+        wx = (-450.0 if panel == 0 else 160.0) + 72.5 * (col + .5)              # the dome's x on the wall (world units, the room is 920 wide)
+        f = pitches[min(7, col + row + panel)]
+        place2(out, _call_ding(f, r.uniform(.13, .2)), .002 + i * .022, (.34 + .5 * i / 31) * r.uniform(.85, 1.0), .85 * wx / 460.0)
+    clack = _burst(1495, .05, 1200, 6500, .0015) * .8 + np.sin(2 * np.pi * 310 * tarr(.05)) * np.exp(-tarr(.05) / .012) * .6
+    place2(out, clack, 0.0, .5, 0.0)
     for i in range(110):
         at = .5 + r.uniform(0, .3)
         f = pitches[int(r.integers(0, 8))] * (2 if r.random() < .15 else 1)
@@ -728,8 +764,9 @@ def sfx_vmbeep():
 
 def sfx_chair():
     """Strawberry sits, and the room wakes up (replaces the old squeak for this episode). The cushion lets its air go (a low-passed sigh that falls from 1.2 kHz to 300 Hz), the
-    vinyl creaks once as it takes her weight, the frame gives a small wooden knock, and then the fluorescent tube over her head stutters on: three 'tink's closer and closer
-    (at 0.10, 0.18, 0.25 s) and the ballast's hum (100 Hz, its harmonics and a faint fizz) that fades in at 0.30 s, which is where the harp cue lands. 1.9 s."""
+    vinyl creaks once as it takes her weight, the frame gives a small wooden knock, and then the fluorescent tube over her head stutters on, as the vault scene draws it: three 'tink's
+    (at 0.04, 0.18 and 0.30 s, each a little brighter, the last with the harp cue) and the ballast's hum (100 Hz, its harmonics and a faint fizz) that fades in at 0.35 s, when the light
+    stays on (0.37 s). 1.9 s."""
     d = 1.9
     n = int(d * SR)
     t = tarr(d)
@@ -741,12 +778,12 @@ def sfx_chair():
     cr_s = _bp4(saw, 650, 1500) * np.sin(np.pi * np.linspace(0, 1, int(.2 * SR))) ** 1.5
     _place(x, cr_s / np.abs(cr_s).max(), .02, .26)
     _place(x, np.sin(2 * np.pi * 230 * tarr(.1)) * np.exp(-tarr(.1) / .02) + _burst(1531, .1, 500, 2500, .006) * .6, .12, .32)
-    for at, g in ((.10, .5), (.18, .45), (.25, .55)):
+    for at, g in ((.04, .4), (.18, .5), (.30, .6)):
         tt = tarr(.12)
         _place(x, np.sin(2 * np.pi * 3300 * tt) * np.exp(-tt / .006) + _burst(int(at * 1e4) + 1532, .12, 2500, 9000, .003) * .8, at, g)
     hum = (np.sin(2 * np.pi * 100 * t) + .55 * np.sin(2 * np.pi * 200 * t + 1) + .3 * np.sin(2 * np.pi * 300 * t + 2) + .14 * np.sin(2 * np.pi * 500 * t)) * (.85 + .15 * np.sin(2 * np.pi * 7 * t))
     hum = hum + .12 * _bp4(noise6(d, 1533), 2500, 6000) * (.6 + .4 * np.sin(2 * np.pi * 5 * t))
-    hum = _lp4(hum, 4000, 2) * np.interp(t, [0, .30, .38, 1.3, 1.9], [0, 0, 1, .7, 0])
+    hum = _lp4(hum, 4000, 2) * np.interp(t, [0, .34, .42, 1.3, 1.9], [0, 0, 1, .7, 0])
     x += hum / np.abs(hum).max() * .1
     return norm6(_edge(x, .001, .1), .5)
 
@@ -771,23 +808,29 @@ def sfx_doorclose():
 
 
 def sfx_phonering():
-    """A phone ringing at the far end of the hall, and a call light answering it (replaces the old office-landline burr for this episode): the two-tone burr twice, closed off at 1.7 kHz
-    and given a little hall echo so it is clearly somewhere else, then, 0.5 s after the second ring, a distant 'ding-dong' of a call light (880 and 659 Hz, the series' chime, soft). Quiet:
-    it is the nurses' station at 7 PM and nobody is answering anything. 2.0 s."""
+    """Two things going off at the nurses' station at dusk while nobody answers either (replaces the old office-landline burr for this episode). On the right, where the phone sits on the
+    counter, the desk phone: the two-tone burr twice (0 to 0.42 s and 0.62 to 1.22 s, so it covers the time the lamp blinks), closed off at 1.7 kHz with a little room echo. On the left, down
+    the hall through the doorway, a call light's 'ding-dong' (880 Hz, then 659 Hz at 0.5 s, the series' chime) soft and far, with the dome lit for the ding at 0 to 0.3 s and for the dong at
+    0.5 to 0.9 s on the picture (the open scene's far dome). Stereo, so the script's pan is ignored; quiet. 2.0 s."""
     d = 2.0
     n = int(d * SR)
-    x = np.zeros(n)
-    for at in (0.0, .62):
-        dd = .42
+    out = np.zeros((2, n))
+    ph = np.zeros(n)
+    for at, dd in ((0.0, .42), (.62, .6)):
         t = tarr(dd)
         ring = (np.sin(2 * np.pi * 440 * t) + np.sin(2 * np.pi * 480 * t)) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 20 * t)))
-        _place(x, np.tanh(ring * 1.4) * ar(dd, .006, .02), at, .6)
-    x = _lp4(x, 1700, 2)
+        _place(ph, np.tanh(ring * 1.4) * ar(dd, .006, .02), at, .6)
+    ph = _lp4(ph, 1700, 2)
     echo = int(.07 * SR)
-    x[echo:] += x[:-echo] * .3
-    _place(x, _lp4(_call_ding(880, .2), 2600, 2), 1.2, .5)
-    _place(x, _lp4(_call_ding(659, .22), 2600, 2), 1.62, .4)
-    return norm6(_edge(x, .003, .08), .5)
+    ph[echo:] += ph[:-echo] * .3
+    ch = np.zeros(n)
+    _place(ch, _lp4(_call_ding(880, .2), 2600, 2), 0.0, .5)
+    _place(ch, _lp4(_call_ding(659, .22), 2600, 2), .5, .4)
+    far = int(.11 * SR)
+    ch[far:] += ch[:-far] * .22                                        # the hall's answer: it is a long way off
+    place2(out, ph, 0.0, 1.0, .6)
+    place2(out, ch, 0.0, 1.0, -.6)
+    return norm6(_edge(out, .003, .08), .5)
 
 
 def sfx_drone():
