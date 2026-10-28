@@ -16,9 +16,10 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 9: The Agency Nurse | [`shift-happens-ep9.mp4`](shift-happens-ep9.mp4) | 2:13 |
 | 10: Two Weeks' Notice | [`shift-happens-ep10.mp4`](shift-happens-ep10.mp4) | 2:30 |
 | 11: Welcome Back | [`shift-happens-ep11.mp4`](shift-happens-ep11.mp4) | 2:13 |
+| 13: The Float Pool | [`shift-happens-ep13.mp4`](shift-happens-ep13.mp4) | 2:52 |
 
 To play an episode live in the browser, start a local server in this directory and open
-`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 11 for other episodes):
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 13 for other episodes):
 
 ```bash
 python3 -m http.server 8000
@@ -167,6 +168,20 @@ resident cards that build a leaning house of cards in front of Clementine; a tru
 time-lapse across both panels and a glass-shatter merge; an invoice, a vault with a coin avalanche, god rays and a moth; an LED countdown to
 11:00:00; and a parking-lot chaos montage with eight hits keyed to eight sound cues.
 
+## Episode 13: The Float Pool
+
+Hour four of eight, and Strawberry's break has said "pending" since the merger. "That's not a break. That's a heist." The float pool, the people no schedule can find,
+plans to steal thirty minutes: a hologram blueprint of the facility (thirty-two rooms, two nurses, one called out), a freeze-frame crew intro (the Brains, the Ghost,
+the Talker, the Muscle, the Distraction, the Eye in the Sky), and three obstacles: the call lights, which become a red laser grid that cannot see a per diem badge
+(a slow-motion walk through the beams, "BADGE: PER DIEM / NO MATCH"); the Administrator, who loops every fourteen minutes and can be held for forty with slides;
+and the Q word. The break room is locked by policy 14.3 (staff may not enter during a shift), and Strawberry is per diem, so she is not staff. Behind the door,
+found by penlight, is Brenda, a prune in scrubs who went on break in 2019: "Nobody covered." Strawberry says "I've got it. Go." Brenda: "Nobody ever said that."
+Strawberry sits and takes one bite; the Moon, on lookout, says "It's quiet out here"; every call light in the building goes off; and the crew takes over:
+"We've got it. Sit." The last word is "Pending."
+
+Episode 13 is the first built under the text gate and the UI kit (see Layout audit), with a new look: a hologram plan, comic-book crew cards with die-cut sticker figures,
+a laser hall with a time-warped walk, radio HUD tags, a break room lit only by penlights, a police-lineup end card and a score of its own (heist funk that turns tender).
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -190,7 +205,7 @@ time-lapse across both panels and a glass-shatter merge; an invoice, a vault wit
 | Fig | The Scheduler (Ep. 3) | Makes you an offer you can't refuse. Texts "hey :)" at 3 AM |
 | Doris | Cranberry sauce (Ep. 3) | Mrs. Cranberry's cousin. She was jellied |
 | Clementine | New grad (Ep. 4), the replacement (Ep. 10, 11) | Passed at 85 questions. Says "Sure!" to everyone. Becomes marmalade. Takes twenty-eight residents without a contract |
-| Moon | Night-shift narrator (Ep. 5, 7) | Keeps score whenever someone blames him for a problem. Ep. 7: he would like it noted that he has not said anything |
+| Moon | Night-shift narrator (Ep. 5, 7, 13) | Keeps score whenever someone blames him for a problem. Ep. 7: he would like it noted that he has not said anything |
 | Sun | Day-shift counterpart (Ep. 5) | Takes credit for a quiet day, then claims sundowning |
 | Mango | CNA (Ep. 5) | Knows the legend of the good blood pressure cuff |
 | Mr. Pear | Resident (Ep. 5) | Still honors the paid-break clause in his old contract |
@@ -201,27 +216,43 @@ time-lapse across both panels and a glass-shatter merge; an invoice, a vault wit
 | Goji | Resident, Room 14 (Ep. 7) | Is the wolf. Has not had water since lunch. It is a UTI |
 | Mr. Lime | Day nurse (Ep. 8; a resident who hears chirps in Ep. 6) | Arrives at 7:00 with a 7-3 mug and asks how the night was |
 | Persimmon | Agency nurse, per diem (Ep. 9, 11) | Orientation is four minutes. Helping is not in her contract. Leaves at 11:00:00 with the keys. Welcomes Strawberry to the club |
+| Brenda | Prune nurse, the break room (Ep. 13) | Went on break in 2019. Nobody covered. "Nobody ever said that." First one out the door when the call lights ring |
 
 ## Layout audit
 
 `node render.js audit` checks every on-screen box (faces, hands, props, captions, HUD, cards) for anything covered, cut off
-or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 11 are checked at 30 frames per second and the command
-exits non-zero on any issue, so it works as a release gate (`EP=11 node render.js audit 0.0333333333`).
+or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 13 are checked at 30 frames per second and the command
+exits non-zero on any issue, so it works as a release gate (`EP=13 node render.js audit 0.0333333333`).
+
+### The text gate (Episode 13 onward)
+
+The box audit never looked at text drawn into the world, so upside-down sheets, names printed over each other and posters sliced by the frame edge got through.
+`txaudit.js` hooks `fillText` on every canvas and records every string with its true on-screen quad (camera, rotation and mirroring included). Every audit of an episode with
+`textGate: true` fails mirrored, upside-down, tilted, skewed, cut-off, overlapping, covered and container-breaking text; a second render of each frame with every string painted in a
+flat key colour measures how much of each string's ink really reaches the picture. Text the viewer must read ("hero" text) is held to 30 px, a 40 px margin, the caption zone and the clock
+pill; set dressing gets informational `NOTE` lines that do not fail the audit. `TEXTGATE=1 EP=11 node render.js audit 0.25` holds an older episode to the same rules, and
+`EP=13 node render.js textinv` lists every distinct string with where it is most visible. `ui.js` (guide: `GUIDE_UI.md`) is the drawing kit that makes the rules easy to meet: text is placed by its
+measured ink and cap height, so labels centre in their pills and handwriting sits on the rules of a page by construction. `bash tools_gate_selftest.sh` re-proves the gate and the kit on a
+test episode (`ep99.js`) that contains deliberate violations.
 
 ## How it's made
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep11.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep13.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
-  Episodes 6 to 11 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music11.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
+  Episodes 6 to 13 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music13.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 5; `ep1.js` to `ep11.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
+  Episodes 2 to 5; `ep1.js` to `ep13.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
-  Episodes 6 to 11 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
+  Episodes 6 to 13 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
   with two-bone arms and real hands) that Episodes 1 to 5 never touch. Episode 7's art, sets and inserts are `ep7_art.js`, `ep7_sets.js` and `ep7_ins.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
+- Episode 12 is `ep12_title.js` (title and end card), `ep12_room.js` (the conference room), `ep12_signin.js`, `ep12_slides.js`, `ep12_drill.js` and `ep12_award.js`. Episode 13 is
+  `ep13_title.js` (title and police-lineup end card), `ep13_crew.js` (freeze-frame cards), `ep13_open.js`, `ep13_plan.js` (the hologram blueprint), `ep13_hall.js` (the laser hall),
+  `ep13_cross.js` and `ep13_vault.js` (the break room) on the kits `ep13_station.js` (`window.S13`: the nurses' station, the hall, the break room door) and `ep13_art.js` (`window.A13`: Brenda).
+  `txaudit.js` is the text gate and `ui.js` the text layout kit (above).
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
 ```bash
@@ -336,3 +367,17 @@ EP=11 FMT=image/png CRF=21 node render.js video shift-happens-ep11.mp4
 
 `script_ep11.json` holds the scenes, lines, voices and sound cues; `build_audio11.py` and `build_music11.py` are thin additions on the Episode 10 files (they import them, so each pair must stay together);
 the scenes reuse Episode 10's office set (`ep10_set.js`) for the vault and Episode 9's lobby, lounge and hall by copy.
+
+## Episode 13 build and release gate
+
+```bash
+python3 gen_script13.py script_ep13.json                                     # the script (scenes, lines, voices, sound cues)
+python3 build_audio13.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin   # voices, stereo mix, score, lip-sync -> build/ep13/audio.wav, timeline.js
+EP=13 node render.js events 15                                               # footsteps from the animation -> build/ep13/events.json (then run build_audio13.py again with --events build/ep13/events.json)
+EP=13 node render.js audit 0.0333333333                                      # hard gate, text gate included (textGate: true): exits non-zero on any layout or text issue
+bash tools_gate_selftest.sh                                                  # re-proves the text gate and the UI kit on the test episode
+ffmpeg -y -i build/ep13/audio.wav -c:a aac -b:a 192k build/ep13/audio.m4a     # browser playback and CI
+EP=13 FMT=image/png CRF=21 node render.js video shift-happens-ep13.mp4
+```
+
+`build_audio13.py` and `build_music13.py` are thin additions on the Episode 12 files (they import them); the scene modules, the station kit (`ep13_station.js`) and Brenda (`ep13_art.js`) are listed above.
