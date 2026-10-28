@@ -73,13 +73,13 @@ const PODIUM = { x: -60, z: 1420, w: 80, d: 80, h: 110 };             // the lec
 const GONG = { x: 460, y: 300, z: 1640, r: 90 };                      // the gong on its frame, right of the Administrator's reach
 const COUNTER = { x0: 260, x1: 500, z0: 1650, z1: 1930, h: 200 };     // the counter, right (the microwave on it)
 const FRIDGE = { x0: 440, x1: 520, z0: 1990, z1: 2090, h: 470 };
-const BUNCH = [[-200, 2060], [470, 1600]];                            // the balloon bunch on its floor weight (the second is the tail's floater's start)
+const BUNCH = [[-110, 2060], [470, 1600]];                            // the balloon bunch on its floor weight (the second is the tail's floater's start)
 const PLATE = [-352, 1200], PLATE_R = 42;                             // the donut plate on the table
 const DONUTS = [[-366, 1186], [-340, 1184], [-352, 1212]];            // the last one is the one she takes
 const TAKE = [-352, 160, 1212], UP = [-330, 236, 1190];
 // ---- the cast: world X and Z
 const MEL = [150, 1580], LEM = [-170, 1400], MNG = [-40, 1700], CRN = [330, 2000], BGB = [-40, 2060];
-const CLM0 = [-40, 1900], CLM1 = [-80, 1300];
+const CLM0 = [-40, 1900], CLM1 = [-175, 1300];                       // Clementine ends left of the Administrator: her raised rosette stays clear of his face
 const STR0 = [-470, 1975], STR1 = [-200, 1262], STROUT = [-820, 1010];
 const GONG_T = () => bs('gong') + .1;                                  // the strike (the sound cue sits 0.10 into the gong beat)
 const REP_T = () => bs('a2') + 1.22;                                   // the insert of the report
@@ -172,7 +172,7 @@ EXT.prop.rosette12 = (side, o, t) => {   // Newest Hire: a pleated rosette with 
   ctx.beginPath(); ctx.moveTo(8, 14); ctx.lineTo(24, 58); ctx.lineTo(12, 52); ctx.lineTo(2, 66); ctx.lineTo(-4, 16); ctx.closePath(); ctx.fill(); ctx.stroke();
   for (let i = 0; i < 10; i++) { ctx.save(); ctx.rotate(i / 10 * TAU); ctx.fillStyle = i % 2 ? '#ffd60a' : '#ff7ac8'; ctx.beginPath(); ctx.ellipse(0, -24, 10, 24, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
   ctx.fillStyle = '#fff8dc'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, TAU); ctx.fill(); ctx.stroke();
-  UI.label('NEW', 0, 0, { size: 14, font: 'Bangers', fill: '#c1121f', spacing: 1, hero: false });
+  UI.label('NEW', 0, 0, { size: 14, font: 'Bangers', fill: '#c1121f', spacing: 1, hero: false, crop: true });   /* a prop in motion: it crosses other things on purpose */
   ctx.restore();
 };
 Object.assign(PROP_BOX, { rosette12: [-40, -112, 40, 72] });
@@ -252,10 +252,10 @@ function certSet(lt) {   // the framed certificate, hung at the back left; it fa
   UI.panel([-w / 2, -h / 2, w, h], { fill: '#fff8e6', r: 4, id: 'cert', kind: 'board', pad: 18 });
   ctx.strokeStyle = '#c99a2e'; ctx.lineWidth = 3; rr(-w / 2 + 10, -h / 2 + 10, w - 20, h - 20, 4); ctx.stroke();
   const o = { cid: 'cert', maxW: w - 52 };
-  UI.label('CERTIFICATE', 0, -112, Object.assign({ size: 24, fill: '#7a5a2a', spacing: 3, hero: false }, o));
-  UI.label('STRAWBERRY', 0, -58, Object.assign({ size: 48, font: 'Bangers', fill: '#1d1a22', spacing: 1, hero: false }, o));
-  UI.label('ATTENDED', 0, 10, Object.assign({ size: 58, font: 'Bangers', fill: '#c1121f', spacing: 1 }, o));
-  UI.sign([-92, 52, 184, 96], ['UNDER', 'PROTEST'], { fill: false, stroke: 'rgba(193,18,31,.9)', lw: 5, r: 8, rot: -.1, size: 40, font: 'Bangers', spacing: 1, ink: 'rgba(193,18,31,.92)', pad: 8, id: 'cert-stamp' });
+  UI.label('CERTIFICATE', 0, -124, Object.assign({ size: 24, fill: '#7a5a2a', spacing: 3, hero: false }, o));
+  UI.label('STRAWBERRY', 0, -76, Object.assign({ size: 48, font: 'Bangers', fill: '#1d1a22', spacing: 1, hero: false }, o));
+  UI.label('ATTENDED', 0, -14, Object.assign({ size: 58, font: 'Bangers', fill: '#c1121f', spacing: 1 }, o));
+  UI.sign([-92, 20, 184, 108], ['UNDER', 'PROTEST'], { fill: false, stroke: 'rgba(193,18,31,.9)', lw: 5, r: 8, rot: -.1, size: 46, font: 'Bangers', spacing: 1, ink: 'rgba(193,18,31,.92)', pad: 8, id: 'cert-stamp' });   /* two lines at 46 units: 31 px or more on the screen at the tail's zoom */
   ctx.restore();
 }
 
@@ -354,7 +354,7 @@ function cast(lt) {
   const crJump = [bs('gong') + .02, bs('s2') + .05].reduce((m, h) => { const k = (lt - h) / .25; return k > 0 && k < 1 ? Math.max(m, Math.sin(k * Math.PI) * 34 * crB.s) : m; }, 0);
   const cr = cran({ x: crB.x, y: crB.y - 118 * crB.s, s: crB.s, noLegs: true, noShadow: true, look: [-.7, 0], lift: crJump,
     expr: lt < b('gong') ? 'happy' : lt < b('s2') + .5 ? 'shock' : 'happy', arms: { l: lt < 1.2 ? 'up' : 'rest', r: lt < 1.2 ? 'up' : 'rest' } });
-  add(CRN[1] + 70, cr, { pre: () => S7.wheelchairBack(crB.x, crB.y, crB.s), post: () => S7.wheelchairFront(crB.x, crB.y, crB.s) });
+  add(CRN[1] + 70, cr, { key: 'crn', pre: () => S7.wheelchairBack(crB.x, crB.y, crB.s), post: () => S7.wheelchairFront(crB.x, crB.y, crB.s) });
   // Clementine: hopeful at the back with the rosette; walks up for the Newest Hire award; "Sure!", bouncing
   const clmPath = route([[0, CLM0[0], CLM0[1]], [12.7, CLM0[0], CLM0[1]], [13.4, -150, 1800, 'io'], [14.2, -200, 1640, 'io'], [14.9, CLM1[0], CLM1[1], 'io'], [1e3, CLM1[0], CLM1[1]]]);
   const [clmX, clmZ] = clmPath(lt), clmQ = at(clmX, clmZ);
@@ -416,6 +416,20 @@ function shot(lt) {
   return 'tail';
 }
 const SUBJ = { cuL: 'lem', cuM: 'mng', cuC2: 'clm', cuS1: 'str', no: 'str', still: 'str', cuM2: 'mng', cuA: 'mel', ask: 'str', table: 'str' };
+// who stands in each shot (see draw): the speaker and the one spoken to first; the others only where their faces stay clear (checked by the audit at every frame)
+const CASTS = {
+  open: () => ['str', 'lem', 'mel'],
+  two: () => ['str', 'lem', 'mel'],
+  gong: () => ['lem', 'mel'],
+  walk: () => ['clm', 'lem', 'mel'],      // Clementine walks up in front of Lemon (a transit: she is on the move)
+  back: () => ['str', 'clm', 'mel'],
+  ask: () => ['str', 'mel'],              // Clementine and Lemon stand behind Strawberry as she steps up
+  still: (lt, z) => ['str', 'mel'],
+  two2: () => ['str', 'mel'],
+  table: () => ['str'],                  // Mango stands behind the lectern and its trophy (it would cover her mouth)
+  tail: () => ['str', 'mel'],             // the certificate goes up on the wall behind nobody: Clementine and Lemon stand out of this frame
+};
+const FADE = new Set(['still', 'ask', 'tail']);   // the shots whose camera moves enough to bring a character in or out of the frame
 
 window.__EP12_SCENES = window.__EP12_SCENES || {};
 window.__EP12_SCENES.award = {
@@ -426,16 +440,16 @@ window.__EP12_SCENES.award = {
     const mid = (a, b2) => [(a[0] + b2[0]) / 2, (a[1] + b2[1]) / 2];
     CAM.shake = lt >= GONG_T() && lt < GONG_T() + .5 ? 14 * (1 - (lt - GONG_T()) / .5) : 0;
     if (sh === 'open') zoomTo(560, 940, 1.08);
-    else if (sh === 'two') { const q = mid(F(c.mel), F(c.lem)); zoomTo(q[0], q[1] + 60, 1.22); }
+    else if (sh === 'two') { const q = mid(F(c.mel), F(c.lem)); zoomTo(q[0] + 16, q[1] + 60, 1.22); }   // Lemon with his stack, the Administrator with his mallet, Strawberry behind: all whole
     else if (sh === 'cuL') fz(c.lem, 2.2);
     else if (sh === 'rep') zoomTo(540, 905, 1.0);
     else if (sh === 'cuM') fz(c.mng, 2.2);
-    else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0] - 214, q[1] + 60, 1.2); }   // room for Lemon's stack on the left, his report, the Administrator and the gong
+    else if (sh === 'gong') { const q = mid(F(c.mel), p2(GONG.x, GONG.y, GONG.z)); zoomTo(q[0] - 225, q[1] + 60, 1.2); }   // room for Lemon's stack on the left, his report, the Administrator and the gong
     else if (sh === 'walk') { const q = mid(F(c.mel), F(c.clm)); zoomTo(q[0] + 40, q[1] + 60, 1.12); }
     else if (sh === 'cuC2') { const f = F(c.clm); zoomTo(f[0] + 70, f[1] + 130 / 2.6, 2.6); }   // her raised rosette stays in frame
     else if (sh === 'back') zoomTo(520, 880, 1.02);
     else if (sh === 'cuS1') fz(c.str, 2.2, 130);
-    else if (sh === 'ask') { const m = F(c.mel); zoomTo(m[0] - 90, m[1] + 150, lerp(1.2, 1.45, easeIO(seg(lt, 19.7, 23.05)))); }   // the Administrator speaks from the right; Strawberry walks in from the left beside him
+    else if (sh === 'ask') { const m = F(c.mel); zoomTo(m[0] - 113, m[1] + 150, lerp(1.2, 1.3, easeIO(seg(lt, 19.7, 23.05)))); }   // the Administrator speaks from the right; Strawberry walks in from the left beside him and stands whole
     else if (sh === 'no') fz(c.str, 2.2, 130);
     else if (sh === 'still') { const k = easeIO(seg(lt, bs('silence'), be('silence'))), f = F(c.str), fy = f[1] + 130 / 2.2; zoomTo(lerp(f[0], 560, k), lerp(fy, 900, k), lerp(2.2, 1.05, k)); }
     else if (sh === 'two2') { const q = mid(F(c.mel), F(c.str)); zoomTo(q[0] + 20, q[1] + 40, 1.05); }
@@ -455,35 +469,31 @@ window.__EP12_SCENES.award = {
     const since = lt - GONG_T();
     if (since > 0 && since < .6) { const [gx, gy] = p2(GONG.x, GONG.y, GONG.z); V2.ring(gx, gy, since / .9, { color: '255,236,170', r0: 60, r1: 1100, lw: 30, alpha: .7, bloom: .6 }); }
     V2.dust(40, 380, 1000, 1500, lt, { n: 26, alpha: .3, color: '255,236,190' });
-    // which characters are sharp this frame: in a close-up only the subject; in a wide, a character is sharp when all of it is in the frame
-    // and no nearer sharp character stands over its face (a face under a nearer body is drawn soft, the way a neighbour is)
-    const c = cast(lt), closeUp = CAM.z > 1.7;
+    // who is in this frame. Every shot names its cast (CASTS): the speaker and the one he speaks to are always in, the others only where their faces stay clear of every nearer body.
+    // A close-up shows only its subject. Nobody is drawn soft, half cut or under a nearer body: a character is sharp and whole, or out of the shot (the shots with a moving camera fade a character in as he comes whole into the frame).
+    const c = cast(lt), closeUp = CAM.z > 1.7, zz = CAM.z;
     const toScreen = (x, y) => [W / 2 + (x - CAM.x) * CAM.z, H / 2 + (y - CAM.y) * CAM.z];
     const bodyBox = o => { const k = KD(o.kind), s = o.s, leg = o.noLegs ? 0 : (k.leg || 90), rx = k.rx * 1.1 * s, top = o.y - (o.lift || 0) - (leg + k.ry * 1.9) * s;
       const [x0, y0] = toScreen(o.x - rx, top), [x1, y1] = toScreen(o.x + rx, o.y + 12 * s); return [x0, y0, x1, y1]; };
-    const faceBox = o => { const k = KD(o.kind), s = o.s, [fx, fy] = faceC(o), fw = k.rx * .55 * s, fh = k.ry * .5 * s;
-      const [x0, y0] = toScreen(fx - fw, fy - fh), [x1, y1] = toScreen(fx + fw, fy + fh); return [x0, y0, x1, y1]; };
-    const overlaps = (a, b) => !(a[2] <= b[0] || a[0] >= b[2] || a[3] <= b[1] || a[1] >= b[3]);
-    const covers = [];   // the sharp bodies (and their props, generously) of the nearer characters drawn sharp so far
-    for (const e of c.items.filter(q => !q.bg).slice().sort((p, q) => p.z - q.z)) {
-      const bx = bodyBox(e.o), fb = faceBox(e.o);
-      const ext = e.o.hold ? 140 * e.o.s * CAM.z : 0;   // a held prop can reach past the body on the right (screen px): keep that in the frame too
-      let sharp = bx[0] >= 40 && bx[2] + ext <= W - 40 && bx[1] >= 16 && bx[3] <= H - 16 && (!closeUp || e.key === subj);
-      if (sharp && covers.some(b => overlaps(b, fb))) sharp = false;
-      e.sharp = sharp;
-      if (sharp) covers.push([bx[0] - 20, bx[1] - 40, bx[2] + 40, bx[3]]);
+    const REACH = { mel: [0, 106], lem: [102, 0], clm: [0, 90] };   // what a held prop adds on each side of the body (world units a unit of scale)
+    const wholeness = e => { const b = bodyBox(e.o), r = REACH[e.key] || [0, 0], s = e.o.s * CAM.z; return Math.min(b[0] - r[0] * s, W - b[2] - r[1] * s, b[1], H - b[3]); };
+    const list = closeUp ? [subj] : (CASTS[sh] ? CASTS[sh](lt, zz) : []);
+    for (const e of c.items) {
+      if (e.bg) { e.draw = false; continue; }
+      let a = list.includes(e.key) ? 1 : 0;
+      if (a && !closeUp && !e.o.transit && FADE.has(sh)) a = clamp((wholeness(e) - 4) / 24);   // a camera pull-out: he comes in as he comes whole
+      e.draw = a > .01; e.o.alpha = a < 1 ? a : undefined;
     }
     const runCast = e => () => {
       if (e.pre) e.pre();
-      if (e.bg || !e.sharp) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
+      if (e.bg) V2.dof(6, () => drawBg(e.o)); else drawChar(e.o);
       if (e.post) e.post(); };
     const sets = setPieces(lt, takenDonut).map(p => ({ z: p.z, run: p.run })).sort((p, q) => q.z - p.z);
-    const castList = c.items.map(e => ({ z: e.z, run: runCast(e), key: e.key, sharp: e.sharp }));
+    const castList = c.items.filter(e => e.draw).map(e => ({ z: e.z, run: runCast(e), key: e.key }));
     if (closeUp) {
-      // a close-up: the set and the other characters are behind, the subject is drawn last so nothing stands over her face
+      // a close-up: the set is behind, the subject is drawn last so nothing stands over her face
       for (const it of sets) it.run();
-      castList.filter(q => !(q.sharp && q.key === subj)).sort((p, q) => q.z - p.z).forEach(q => q.run());
-      castList.filter(q => q.sharp && q.key === subj).forEach(q => q.run());
+      castList.forEach(q => q.run());
     } else {
       const list = sets.concat(castList);
       list.sort((p, q) => q.z - p.z);
@@ -510,26 +520,28 @@ window.__EP12_SCENES.award = {
 };
 
 // ---- the insert: page one of the report, the bookmark in Lemon's handwriting (blue ink on a yellow sticky)
+// A ruled page (UI.page, pitch 58): the heading sits above the first rule, every line of the report sits ON a rule (baseline = rule - .24 pitch, so the descenders clear it) and the signature on the last one.
+// The long lines are broken at their full stops so each one is a line of its own, at 34 px or more. The sticky is a sign (its text is centred in it and shrunk to fit), turned a few degrees.
 function insRep(lt) {   // lt: seconds since the insert began
   const k0 = easeBack(clamp(lt / .3)), y0 = lerp(700, 0, k0), sc = 1 + .025 * clamp(lt / 1.6);
   ctx.fillStyle = grad(0, -400, 0, H + 400, [[0, '#f4e7c9'], [1, '#c6a77a']]); ctx.fillRect(-400, -400, W + 800, H + 800);
-  ctx.save(); ctx.translate(540, 830 + y0); ctx.rotate(-.03); ctx.scale(sc, sc);
-  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 14;
-  ctx.fillStyle = '#fffdf6'; rr(-390, -500, 780, 1000, 14); ctx.fill(); ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = 'rgba(40,60,110,.22)'; ctx.lineWidth = 2; for (let i = 0; i < 16; i++) { ctx.beginPath(); ctx.moveTo(-350, -150 + i * 46); ctx.lineTo(350, -150 + i * 46); ctx.stroke(); }
-  text('FRUIT BOWL REHAB & NURSING', -350, -440, { size: 44, font: 'Bangers', weight: 400, fill: '#1d4fd8', align: 'left', spacing: 1.5 });
-  text('SHIFT REPORT   3 TO 11', -350, -392, { size: 26, fill: '#333', align: 'left', spacing: 1 });
-  ctx.strokeStyle = '#c1121f'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-350, -370); ctx.lineTo(350, -370); ctx.stroke();
-  ['Rm 4: call light on since 3:10.', 'Resolved by 3:11. Resolved means I walked past it.', 'Rm 9: Mr. Banana slipped (incident 47).', 'Med pass: 14 of 22. Other 8 are in the report.', 'Pizza: received. Pizza: funded.', 'Staff on shift: 3 of 9. One is per diem.']
-    .forEach((s, i) => text(s, -350, -300 + i * 58, { size: 27, fill: '#222', align: 'left', weight: 900 }));
-  text('L. Lemon, RN', -330, 400, { size: 34, font: 'Nunito', weight: 900, italic: true, fill: '#1d4fd8', align: 'left' });
-  ctx.strokeStyle = '#1d4fd8'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-340, 418); ctx.bezierCurveTo(-240, 380, -160, 440, -60, 404); ctx.stroke();
-  ctx.save(); ctx.translate(290, -380); ctx.rotate(.07);   // the bookmark: a yellow sticky over the corner
-  ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 8;
-  ctx.fillStyle = '#ffe066'; ctx.strokeStyle = 'rgba(120,90,20,.6)'; ctx.lineWidth = 2; rr(-130, -110, 260, 220, 8); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
-  ['GOOD CUFF:', 'SUPPLY CLOSET,', '2ND SHELF,', 'BEHIND', 'Q WORD SIGN'].forEach((s, i) => text(s, 0, -66 + i * 38, { size: 27, font: 'Nunito', weight: 900, italic: true, fill: '#1d4fd8', spacing: .3 }));
+  ctx.save(); ctx.translate(540, 830 + y0); ctx.scale(sc, sc);
+  const PW = 860, PH = 1000;
+  const pg = UI.page([-PW / 2, -PH / 2, PW, PH], { pitch: 58, top: 262, rot: -.03, fill: '#fffdf6', rule: 'rgba(40,60,110,.3)', shadow: 30, id: 'report' });
+  const lines = ['Rm 4: call light on since 3:10.', 'Resolved by 3:11.', 'Resolved means I walked past it.', 'Rm 9: Mr. Banana slipped (incident 47).', 'Med pass: 14 of 22.', 'Other 8 are in the report.', 'Pizza: received. Pizza: funded.', 'Staff on shift: 3 of 9.', 'One is per diem.'];
+  const entering = lt < .34;   /* the page slides up through the caption zone in its first third of a second: that is a fast entrance, declared */
+  lines.forEach((str, i) => UI.onRule(str, pg.inner[0] + 4, i, pg, { size: 36, italic: false, weight: 900, fill: '#222', zone: entering }));
+  pg.apply();
+  UI.label('FRUIT BOWL REHAB & NURSING', pg.inner[0] + 4, -428, { align: 'left', size: 46, font: 'Bangers', fill: '#1d4fd8', spacing: 1.5, cid: 'report', maxW: 520, zone: entering });
+  UI.label('SHIFT REPORT   3 TO 11', pg.inner[0] + 4, -372, { align: 'left', size: 32, fill: '#333', spacing: 1, cid: 'report', maxW: 520, zone: entering });
+  ctx.strokeStyle = '#c1121f'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(pg.inner[0], -340); ctx.lineTo(pg.inner[0] + pg.inner[2], -340); ctx.stroke();
+  // the signature, on the last rule, with its underline stroke
+  const sg = UI.onRule('L. Lemon, RN', pg.inner[0] + 14, pg.n - 1, pg, { size: 42, italic: true, weight: 900, fill: '#1d4fd8', zone: entering });
+  { const by = pg.base(pg.n - 1) + 12; ctx.strokeStyle = '#1d4fd8'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(pg.inner[0] + 4, by + 4); ctx.bezierCurveTo(pg.inner[0] + 100, by - 26, pg.inner[0] + 190, by + 30, pg.inner[0] + 290, by - 6); ctx.stroke(); }
+  // the bookmark: a yellow sticky over the top right corner of the page
+  UI.sign([190, -520, 310, 250], ['GOOD CUFF:', 'SUPPLY CLOSET,', '2ND SHELF,', 'BEHIND', 'Q WORD SIGN'], { fill: '#ffe066', stroke: 'rgba(120,90,20,.6)', lw: 2, r: 8, rot: .07, shadow: 16, size: 32, weight: 900, italic: true, ink: '#1d4fd8', spacing: .3, pad: 16, id: 'sticky', text: { zone: entering } });
+  pg.restore();
   ctx.restore();
-  ctx.restore();
-  reg('overlay', [150, 330 + y0, 1000, 1330 + y0], { id: 'rep-paper', group: 'rep', transit: lt < .3 });
+  reg('overlay', [100, 320 + y0, 980, 1340 + y0], { id: 'rep-paper', group: 'rep', transit: lt < .3 });
 }
 })();

@@ -1,12 +1,24 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 13: ep13_vault (work in progress: room and light test) */
+/* SHIFT HAPPENS, Episode 13, scene `vault` (35.394 s, 7:19 PM, THE BREAK ROOM): the break room nobody has opened since 2019, Brenda the prune nurse, penlight beams, the Q word crash.
+ * Registers window.__EP13_SCENES.vault. Everything is a pure function of the scene time `lt`.
+ *
+ * HOW IT IS BUILT
+ *   Three views of the same room. N: the camera at the door wall looking north (most shots). S: the camera at the table end looking back at the door wall (the exit, the freeze frame, the dash).
+ *   D: through the doorway from the hall (the opening and the end), the foyer and S13.breakDoor drawn at the scale that puts the door's opening exactly where the room's door is, the room drawn clipped to that opening.
+ *   Light: the room is drawn "as lit" and then multiplied by a half-size light map (the room's own level, warm penlight spots, face keys, hall spill, the vending glass); the light in the air (cones, motes, bulbs, tube, red domes) is added afterwards,
+ *   so a light is never dimmed by the map. The state of the lights (dark / tube / red strobe) is state(lt).
+ *   Text: all through the UI kit. Dressing lettering (banner, calendar, SNACKS, Q sign title, call panel titles) goes through lab13(), which fades a string out before it would touch the frame or leave the door opening.
+ *
+ * SHOT LIST (scene-local seconds; see SHOTS below): door 0-2.85 (view D, the door swings in, the cobweb strands snap, four penlights sweep banner / calendar / clock / vending machine), cuS1 2.85, cuM1 3.72, tbl 4.45 (the find, stab at 5.18),
+ *   cuL1 6.38, cuC1 7.32, l2a 8.18, ins 9.15 (clock and calendar), l2b 10.15, cuM2 10.58, cuL3 11.8, chair 12.3, cuB1 13.22 (Brenda wakes), gasp 15.36, two 16.2 (the held two-shot), rise 19.98, out 20.95 (view S, Brenda leaves),
+ *   sit 22.0 (the tube comes on), unwrap 22.95, cuS3 23.85, moon1 24.62, dreadL/M/C/S 26.0-27.18, freeze 27.18 (view S, red strobe, Q sign rolls to 0, 32 domes), cuL4 28.8, moon2 29.55, l5 30.62, cuC2 31.98, run 32.3 (view S, the dash),
+ *   cuS4 32.59, end 33.34 (view D, pull back through the doorway, the door shuts, the two cards, fade). */
 (() => {
 if (!window.TIMELINE_EP13) return;
 const { person, zoomTo, faceC, faceZoom, drawBg, runner } = window.H6;
 const A7 = window.A7, A10 = window.A10, A11 = window.A11, A13 = window.A13, S6 = window.S6, S7 = window.S7;
 const { p2, poly, quad3, grad, radial, rgba } = V2;
-const { box3, onZ, kz, lit, table3, chair3, wallClock, ceilingLamp, backWindow } = S6;
-const bs = id => B(id).s, be = id => B(id).e;
+const { box3, onZ, kz, lit, table3, wallClock, ceilingLamp } = S6;
 const sr = (i, s = 0) => hash(i * 3.17 + s * 11.3 + 1.3);
 const cl01 = x => Math.max(0, Math.min(1, x));
 const sk = (t, a, b) => { const k = cl01((t - a) / (b - a)); return k * k * (3 - 2 * k); };
@@ -579,7 +591,7 @@ const keyRoute = keys => lt => {
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = seg(lt, a[0], b[0]), e = b[3] === 'io' ? easeIO(k) : b[3] === 'out' ? easeOut(k) : k; return [lerp(a[1], b[1], e), lerp(a[2], b[2], e)]; }
   const l = keys[keys.length - 1]; return [l[1], l[2]];
 };
-const TWO_X = [-198, 1302];   // where Strawberry stands for the two-shot: at the left-hand end of the table, her hand out to Brenda
+const TWO_X = [-212, 1302];   // where Strawberry stands for the two-shot: at the left-hand end of the table, her hand out to Brenda
 const STRAW_PATH = keyRoute([[0, WIDE.straw[0], WIDE.straw[1]], [15.95, WIDE.straw[0], WIDE.straw[1]], [16.9, TWO_X[0], TWO_X[1], 'io'], [21.1, TWO_X[0], TWO_X[1]], [21.75, -150, 1498, 'io'], [22.0, -100, 1510], [22.27, SEATP[0] - 6, SEATP[1] - 16, 'io']]);
 const SIT_T = 22.28;
 function actStraw(lt, ex = {}, pos = null, seatPos = null) {
@@ -606,7 +618,7 @@ function actStraw(lt, ex = {}, pos = null, seatPos = null) {
   // pen and hands
   const pen = penPlan('straw', lt);
   if (lt < 15.95 && !ex.noPen) withPen(o, -1, [-148, -42], pen.tgt ? p2(pen.tgt[0], pen.tgt[1], pen.tgt[2]) : null, pen.a > .05 ? 1 : 0);
-  if (inR(lt, 15.95, 20.0)) { const k = ph(lt, 16.0, 16.6); o.grip.r = [lerp(120, 214, k), lerp(30, 20, k)]; o.arms.r = 'hold'; o.hand.r = 'open'; }   // her hand out to Brenda, palm up
+  if (inR(lt, 15.95, 20.0)) { const k = ph(lt, 16.0, 16.6); o.grip.r = [lerp(120, 148, k), lerp(30, 80, k)]; o.arms.r = 'hold'; o.hand.r = 'open'; o.grip.l = [lerp(-140, -96, k), lerp(70, 62, k)]; o.arms.l = 'hold'; o.hand.l = 'open'; }   /* the free hand rests at her side, inside the frame */   // her hand out to Brenda, palm up
   if (inR(lt, 20.0, 22.0)) { o.cap = false; o.hold = { l: 'fp13_cap' }; o.grip.l = [-34, 74]; o.arms.l = 'hold'; o.grip.r = [40, 76]; o.arms.r = 'hold'; o.hand.r = 'flat'; }   // hat off, held to her chest
   if (seated && lt < 23.1) { o.arms = { l: 'rest', r: 'rest' }; o.hold = {}; o.grip = {}; }
   if (lt >= 22.0 && lt < 23.1) { o.cap = true; }
@@ -657,6 +669,7 @@ function actBrenda(lt, ex = {}, pos = null, route = null) {
   o.web = lt < 20.6 ? (lt > 14.8 ? 1 - ph(lt, 14.6, 15.0) : 1) : 0;
   o.webT = lt < wsnap ? -1 : lt - wsnap;
   o.tear = ph(lt, 17.62, 19.5) * (lt < 20.4 ? 1 : 1 - ph(lt, 20.4, 20.8));
+  o.tearSide = 1; o.tearX = 3; o.tearLen = 44; o.tearAmp = 2; o.tearWob = 6; o.tearScale = .85;   /* the tear runs down the cheek the two-shot shows (Strawberry stands in front of her left one) and stops above the badge */
   // the body: upright and still; she draws a breath at the wake; head lifts; hands folded low on the table edge with cobwebs between the fingers
   const lift = ph(lt, first, first + .5) * 7 - 4 * pulse(lt, 14.2, 1.0);
   o.y -= lift * o.s * .5;
@@ -831,12 +844,13 @@ function trimPen(o) {
 // ------------------------------------------------------------------ lamps: the beams of the penlights, the faces a penlight is catching, the light under the door
 const PR = { banner: 120, cal: 95, clock: 85, vend: 105, win: 125, plate: 62, tent: 58, brenda: 112, chair: 95, floorB: 92, floorL: 88, floorR: 88, ceil: 150 };
 const PEN_COL = '255,240,212';
-function penLamps(lt, ST, cast, show) {
+function penLamps(lt, ST, cast, show, noBrenda) {   /* noBrenda: the shot hides her, so the beams the crew keep on her are left out too (they would light an empty chair) */
   const L = [];
   if (lt > 22.34) return L;
   for (const who of ['lemon', 'straw', 'mango', 'clem']) {
     const c = cast[who]; if (!c || !c._pen || !c.penPlan || !c._pen.on) continue;
     const pl = c.penPlan; if (pl.a < .03) continue;
+    if (noBrenda && pl.name === 'brenda') continue;
     const T0 = p2(pl.tgt[0], pl.tgt[1], pl.tgt[2]), kk = kz(pl.tgt[2]), flat = pl.name.startsWith('floor') || pl.name === 'chair', r = PR[pl.name] * kk;
     const j = pl.shake, T = [T0[0] + Math.sin(lt * 47 + who.length * 3) * j * 7, T0[1] + Math.cos(lt * 41 + who.length) * j * 6];
     const shown = !!(show && show[who]) && c._pen.shown !== false;
@@ -911,6 +925,7 @@ function faceKeys(lt, ST, cast, speaker, subj) {
     const o = cast[id]; if (!o) continue;
     const [fx, fy] = faceC(o), sp = id === speaker, base = id === 'brenda' ? (lt > 13.3 ? .6 : .2) : .32;
     let a = Math.min(1, (sp ? 1.0 : base) * (id === subj ? 1.0 : .8));
+    if (id === subj) a = Math.max(a, .8);   /* the face a close-up is on keeps a penlight on it through the silent half second at either end of the line */
     if (id === 'brenda') a *= ph(lt, 5.1, 5.3);   // she stays in the dark until the beams find her
     if ((id === 'straw' || id === 'brenda') && lt >= 15.6 && lt < 20.9) a = Math.max(a, .85);
     if (a < .05) continue;
@@ -956,7 +971,7 @@ function sceneN(lt, ST, sh) {
   charLight(lt, ST, 'N');
   const show = {};
   for (const id of Object.keys(cast)) { const o = cast[id]; show[id] = (id === subj || faceInside(o)) && !(sh.hide || []).includes(id); if (show[id]) trimPen(o); }
-  const L = sh.lampsFn ? sh.lampsFn(lt) : penLamps(lt, ST, cast, show);
+  const L = sh.lampsFn ? sh.lampsFn(lt) : penLamps(lt, ST, cast, show, (sh.hide || []).includes('brenda'));
   const zS = subj ? cast[subj].z : 0, bg = sh.dof || 0;
   const items = [{ z: 99999, fn: () => roomBack(lt, ST) }];
   if (!sh.noFront) items.push({ z: TBL.z, fn: () => roomFront(lt, ST) });
@@ -1208,14 +1223,14 @@ const SHOTS = [
   { id: 'cuL1', a: 6.38, b: 7.32, subj: 'lemon', dof: 9, cam: (lt, u, c) => faceZoom(c.lemon, lerp(2.3, 2.42, u), 90) },
   { id: 'cuC1', a: 7.32, b: 8.18, subj: 'clem', dof: 9, cam: (lt, u, c) => faceZoom(c.clem, lerp(2.45, 2.55, u), 90) },
   { id: 'l2a', a: 8.18, b: 9.15, subj: 'lemon', dof: 8, cam: (lt, u, c) => faceZoom(c.lemon, lerp(1.85, 1.95, u), 70) },
-  { id: 'ins', a: 9.15, b: 10.15, hide: ['brenda'], noSeat: true, noChair: true, cam: (lt, u) => { const A = sc(CLOCK.x, CLOCK.y, ZB - 4), B = sc(10, 384, ZB - 5), k = easeIO(seg(lt, 9.5, 9.85)); zoomTo(lerp(A[0], B[0], k), lerp(A[1], B[1], k) - 40, lerp(3.2, 3.4, u)); } },
+  { id: 'ins', a: 9.15, b: 10.15, hide: ['brenda'], noSeat: true, noChair: true, cam: (lt, u) => { const A = sc(CLOCK.x, CLOCK.y, ZB - 4), B = sc(10, 384, ZB - 5), k = easeIO(seg(lt, 9.5, 9.85)); zoomTo(lerp(A[0], B[0], k), lerp(A[1], B[1], k) + 30, lerp(3.2, 3.4, u)); } },
   { id: 'l2b', a: 10.15, b: 10.58, subj: 'lemon', dof: 8, cam: (lt, u, c) => faceZoom(c.lemon, lerp(1.95, 2.02, u), 70) },
   { id: 'cuM2', a: 10.58, b: 11.8, subj: 'mango', dof: 9, cam: (lt, u, c) => faceZoom(c.mango, lerp(2.4, 2.52, u), 90) },
   { id: 'cuL3', a: 11.8, b: 12.3, subj: 'lemon', dof: 9, cam: (lt, u, c) => faceZoom(c.lemon, lerp(2.5, 2.66, u), 90) },
   { id: 'chair', a: 12.3, b: 13.22, hide: ['lemon', 'straw', 'mango', 'clem'], cam: (lt, u) => zoomTo(lerp(625, 610, u), 1040, lerp(1.95, 2.1, u)) },
   { id: 'cuB1', a: 13.22, b: 15.36, subj: 'brenda', dof: 9, cam: (lt, u, c) => faceZoom(c.brenda, lerp(2.15, 2.7, easeIO(u)), 75) },
   { id: 'gasp', a: 15.36, b: 16.2, cam: (lt, u) => zoomTo(520, 968, lerp(1.35, 1.4, u)) },
-  { id: 'two', a: 16.2, b: 19.98, hide: hideCrew, cam: (lt, u) => zoomTo(lerp(396, 402, easeIO(u)), lerp(990, 976, easeIO(u)), lerp(1.7, 1.92, easeIO(u))) },
+  { id: 'two', a: 16.2, b: 19.98, hide: hideCrew, cam: (lt, u) => zoomTo(lerp(436, 470, easeIO(u)), lerp(990, 976, easeIO(u)), lerp(1.7, 1.9, easeIO(u))) },
   { id: 'rise', a: 19.98, b: 20.95, cam: (lt, u) => zoomTo(540, lerp(990, 962, u), lerp(1.26, 1.32, u)) },
   { id: 'out', a: 20.95, b: 22.0, view: 'S', ex: Object.assign({}, NOPEN, { brenda: { noFace: true, acc: ['fp13_scrubs', 'fp13_wrinkles', 'fp13_dust', 'fp13_cap'] } }), pos: Object.assign({}, S_OUT, { brendaRoute: BR_S }), cam: () => zoomTo(540, 960, 1) },
   { id: 'sit', a: 22.0, b: 22.95, hide: hideCrew.concat(hideGone), cam: (lt, u) => zoomTo(540, 975, lerp(1.25, 1.4, u)) },
@@ -1295,35 +1310,6 @@ function sfx(lt, t0, str, x, y, o = {}) {
 // ------------------------------------------------------------------ the scene
 window.__EP13_SCENES = window.__EP13_SCENES || {};
 window.__EP13_SCENES.vault = {
-  __vis(lt) {   // which characters a shot draws at scene time lt
-    const sh = shotAt(lt); this.cam(lt);
-    const vis = {};
-    if (sh.view === 'D') return { shot: sh.id, vis };
-    const cast = castAll(sh.freezeLt ?? lt, sh.pos || {}, sh.ex || {});
-    for (const id of Object.keys(cast)) { const o = cast[id]; vis[id] = !(sh.hide || []).includes(id) && (sh.view === 'S' ? faceInside(o) : (id === sh.subj || faceInside(o))); }
-    return { shot: sh.id, vis };
-  },
-  __lamps(lt) {
-    const sh = shotAt(lt), ST = state(lt); this.cam(lt);
-    const clt = sh.freezeLt ?? lt, cast = castAll(clt, sh.pos || {}, sh.ex || {}), show = {};
-    for (const id of Object.keys(cast)) { const o = cast[id]; show[id] = (id === sh.subj || faceInside(o)) && !(sh.hide || []).includes(id); if (show[id]) trimPen(o); }
-    return penLamps(lt, ST, cast, show).map(l => ({ who: l.who, from: l.from.map(Math.round), to: l.to.map(Math.round), r: Math.round(l.r), a: +l.a.toFixed(2), shown: l.shown }));
-  },
-  __geo(lt) {   // layout probe: the D-view door geometry at scene time lt
-    const sh = shotAt(lt); if (sh.view !== 'D') return null;
-    const c = sh.d(lt), kR = c.czR < -70 ? 1400 / -c.czR : 0, kd = kR * DWR / 370;
-    return { czR: +c.czR.toFixed(1), kR: +kR.toFixed(3), kd: +kd.toFixed(3), x0: +(540 + (DOORX - c.cxR) * kR).toFixed(1), y0: +(860 + c.cyR * kR).toFixed(1), ajar: +c.ajar.toFixed(3) };
-  },
-  __dbg(lt) {   // layout probe for the builder: which faces a shot shows
-    const sh = shotAt(lt); this.cam(lt);
-    const out = { shot: sh.id, cam: [CAM.x, CAM.y, CAM.z].map(v => +v.toFixed(1)), faces: {} };
-    if (sh.view === 'D') return out;
-    lensN(); const cast = castAll(sh.freezeLt ?? lt, sh.pos || {}, sh.ex || {}); this.cam(lt);
-    const fr = frameRect(0);
-    for (const id of Object.keys(cast)) { const o = cast[id], r = faceRect(o); out.faces[id] = { x: +o.x.toFixed(0), z: +o.z.toFixed(0), inside: faceInside(o), rect: r.map(v => +v.toFixed(0)) }; }
-    out.frame = fr.map(v => +v.toFixed(0));
-    return out;
-  },
   shot: lt => shotAt(lt).id,
   cam(lt) {
     const sh = shotAt(lt), u = seg(lt, sh.a, sh.b);

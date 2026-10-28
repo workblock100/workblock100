@@ -4,13 +4,12 @@
  *
  *   A13.brenda(o)            Brenda, RN: a prune nurse who went on break in 2019 and was never relieved. Options on top of the usual drawChar ones:
  *                            dust (0..1, how much dust she still wears, default .55), web (0..1 the cobweb across her mouth, default 0), webT (seconds since the web snapped, -1 = intact), handWeb (0..1 threads between her two folded hands) and handHang (0..1 threads hanging from raised hands): both need o.grip.l and o.grip.r,
- *                            tear (0..1 a dusty tear running down her cheek), specsDrop (0..1 how far the glasses have slid, default .7), capOff (hide the cap), look / expr / arms as always.
- *   A13.expr(name)           the face presets used for her (also registered on EXPR as brenda_weak, brenda_tear, brenda_relief)
- *   A13.penDir               the angle the held penlight points (o.penAim, radians, in the character's own frame)
- *   A13.cobweb(...)          a procedural spider web in a corner or across an opening, with a tear parameter
- *   A13.motes(...)           lit dust motes inside a cone
- *   A13.bar                  the wrapped granola bar (prop fp13_bar)
- * Props:  fp13_pen (a penlight, aimed with o.penAim), fp13_bar (the granola bar from the first scene, o.barOpen 0..1 unwrapped), fp13_cap (a scrub cap held to the chest). */
+ *                            tear (0..1 a dusty tear running down her cheek; tearSide -1 = screen left, +1 = right; tearX, tearLen, tearAmp, tearWob, tearScale shape its path), specsDrop (0..1 how far the glasses have slid, default .7), capOff (hide the cap), look / expr / arms as always.
+ *                            Eyes: o.shut 0..1 closes them (o.shutStyle 'sleep' a relaxed U with lashes, or 'happy' an upside-down U); o.noFace (a back view) drops every face-side detail (wrinkles, glasses, web, tear) and draws the scrubs as a collar band and a centre seam.
+ *   A13.expr(name)           the face presets used for her (also registered on EXPR as brenda_weak, brenda_tear, brenda_wake, brenda_relief)
+ *   A13.cobweb(kind, a, o)   a procedural spider web: 'corner' [x, y, ux, uy, vx, vy, R], 'orb' [cx, cy, R], 'curtain' [x0, y0, x1, y1] (tear 0..1 snaps threads progressively)
+ *   A13.motes(S, T, r0, r1, t, o)   lit dust motes inside a cone from S to T
+ * Props:  fp13_pen (a penlight, aimed with o.penAim), fp13_bar (a granola bar, o.barOpen 0..1 unwrapped, o.barBite 0..1, o.barRot raises it to the mouth; the same look as S13's fp13_granola), fp13_cap (a scrub cap held to the chest). */
 (() => {
 const A = window.A13 = {};
 const bodyClip = (o, k) => ctx.clip(PATHS[o.kind] || (PATHS[o.kind] = bodyPath(k)));
@@ -289,8 +288,8 @@ EXT.acc.fp13_webs = (o, k, t, layer) => {
 EXT.acc.fp13_tear = (o, k, t, layer) => {
   const p = o.tear ?? 0;
   if (layer !== 'front' || p <= 0) return;
-  const side = o.tearSide ?? -1, x0 = side * (k.eyeX + 14), y0 = k.eyeY + 12;
-  const path = u => [x0 + side * (4 + 12 * Math.sin(u * 2.4)), y0 + 20 + u * 78];
+  const side = o.tearSide ?? -1, x0 = side * (k.eyeX + (o.tearX ?? 14)), y0 = k.eyeY + 12, len = o.tearLen ?? 78, amp = o.tearAmp ?? 4, wob = o.tearWob ?? 12, ts = o.tearScale ?? 1;
+  const path = u => [x0 + side * (amp + wob * Math.sin(u * 2.4)), y0 + 20 + u * len];
   const u = easeIO(clamp(p));
   ctx.save(); ctx.lineCap = 'round';
   // the clean track, widest where the drop has been longest
@@ -300,8 +299,9 @@ EXT.acc.fp13_tear = (o, k, t, layer) => {
   ctx.beginPath(); for (let i = 0; i <= 20; i++) { const [x, y] = path(u * i / 20); i ? ctx.lineTo(x + 3, y) : ctx.moveTo(x + 3, y); } ctx.stroke();
   const [hx, hy] = path(u);
   ctx.fillStyle = 'rgba(205,230,255,.95)'; ctx.strokeStyle = 'rgba(60,90,130,.8)'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(hx, hy - 12); ctx.quadraticCurveTo(hx + 9, hy + 2, hx, hy + 8); ctx.quadraticCurveTo(hx - 9, hy + 2, hx, hy - 12); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.9)'; ell(hx - 2.4, hy - 2, 2, 3.4); ctx.fill();
+  ctx.save(); ctx.translate(hx, hy); ctx.scale(ts, ts);
+  ctx.beginPath(); ctx.moveTo(0, -12); ctx.quadraticCurveTo(9, 2, 0, 8); ctx.quadraticCurveTo(-9, 2, 0, -12); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.9)'; ell(-2.4, -2, 2, 3.4); ctx.fill(); ctx.restore();
   ctx.restore();
 };
 
