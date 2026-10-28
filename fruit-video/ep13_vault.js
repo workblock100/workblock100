@@ -661,12 +661,13 @@ function actBrenda(lt, ex = {}, pos = null, route = null) {
   const lift = ph(lt, first, first + .5) * 7 - 4 * pulse(lt, 14.2, 1.0);
   o.y -= lift * o.s * .5;
   o.rot = .02 * Math.sin(lt * .8) - .03 * ph(lt, first, first + .6) + (lt > 17.6 && lt < 19.9 ? .012 * Math.sin(lt * 7) : 0);
-  if (lt < 20.15) { o.grip = { l: [-34, 76], r: [34, 80] }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' }; }
+  if (lt < 20.15) { o.grip = { l: [-34, 76], r: [34, 80] }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' }; o.handWeb = lt < 15.0 ? 1 : 1 - ph(lt, 15.0, 15.4); }
   // she stands: a crouch, a stretch (arms up, a long breath), a wobble; the N view only sees her get up, the S view sees the first steps
   if (lt >= 20.15) {
     const k = lt - 20.15, crouch = pulse(lt, 20.15, .35) * .28, stretch = ph(lt, 20.5, 20.85) * (1 - ph(lt, 20.85, 21.2));
     o.squash = crouch - .2 * stretch; if (up) o.plant = true;
-    o.arms = { l: stretch > .05 ? 'up' : 'rest', r: stretch > .05 ? 'up' : 'rest' }; o.hand = { l: 'open', r: 'open' }; o.grip = {};
+    o.arms = { l: 'rest', r: 'rest' }; o.hand = { l: 'open', r: 'open' }; o.grip = {};
+    if (stretch > .02) { const hy = lerp(30, -94, stretch); o.grip = { l: [-110, hy], r: [110, hy] }; o.arms = { l: 'hold', r: 'hold' }; o.handHang = clamp(1.25 - ph(lt, 20.6, 21.3) * 1.25) * clamp(stretch * 3); }
     o.shake = lt < 20.45 ? 2.4 : 0;
     o.rot = .05 * Math.sin(k * 9) * Math.exp(-k * 1.2);
   }
@@ -1139,8 +1140,8 @@ function drawD(lt, ST, sh, cfg) {
     const kk = kd / FOYER_K;
     V2.setCam({ f: kk * S13.FOY.zb, cx: -(x0 - 540) / kk, cy: 330, hy: y0 - 330 * kk, cz: 0 });   /* the foyer is seen from where it was built (cz 0), with a longer lens, so its lamps stay in front of the camera */
     S13.light('foyer');
-    guardLines(() => S13.foyer({ t: lt, lampsOn: 1 }));
-    S13.breakDoor(x0, y0, kd, { t: lt, ajar, locks: ALL_OPEN, dust: .6 * (1 - ajar * .5), noReader: true, hero: ajar < .04 ? undefined : false, plaque: false, sign: !sh.cards });
+    guardLines(() => S13.foyer({ t: lt, lampsOn: 1, ext: false }));
+    S13.breakDoor(x0, y0, kd, { t: lt, ajar, locks: ALL_OPEN, dust: .6 * (1 - ajar * .5), noReader: true, noWet: true, hero: ajar < .04 ? undefined : false, plaque: false, sign: !sh.cards });
     if (sh.cards) { const T0 = endFitTime(), fa = ph(lt, T0 - .02, T0 + .2); plaque13(x0, y0, kd, fa); sign13(x0, y0, kd, fa); } else plaque13(x0, y0, kd, 1);
     ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = `rgb(${96 + 40 * ST.tubeShow | 0},${112 + 40 * ST.tubeShow | 0},${130 + 36 * ST.tubeShow | 0})`; ctx.fillRect(0, 0, W, H); ctx.restore();
     const cs = Math.cos(ajar * 1.4), xr = -185 + 370 * cs, tp = (1 - cs) * 22;
@@ -1200,7 +1201,7 @@ const NOPEN = { lemon: { noPen: true }, mango: { noPen: true }, clem: { noPen: t
 const hideGone = ['brenda'], hideAll = ['brenda', 'lemon', 'mango', 'clem'], hideCrew = ['lemon', 'mango', 'clem'];
 const winCam = (lt, u, z0, z1) => { const c = sc((WIN.x0 + WIN.x1) / 2, (WIN.y0 + WIN.y1) / 2, ZB); zoomTo(c[0] + 48, c[1] - 62, lerp(z0, z1, u)); };   // the window, a little right of centre so the calendar stays out of shot
 const SHOTS = [
-  { id: 'door', a: 0, b: 2.85, view: 'D', curtain: true, lampsFn: dPens, hide: ['lemon', 'straw', 'mango', 'clem', 'brenda'], d: lt => { const u = seg(lt, 0, 2.85); return { czR: lerp(-790, -520, easeOut(u)), cxR: DOORX, cyR: 215, ajar: .95 * easeIO(seg(lt, .34, 2.3)) }; } },
+  { id: 'door', a: 0, b: 2.85, view: 'D', curtain: true, lampsFn: dPens, hide: ['lemon', 'straw', 'mango', 'clem', 'brenda'], d: lt => { const u = seg(lt, 0, 2.85); return { czR: lerp(-700, -520, easeOut(u)), cxR: DOORX, cyR: 215, ajar: .95 * easeIO(seg(lt, .34, 2.3)) }; } },
   { id: 'cuS1', a: 2.85, b: 3.72, subj: 'straw', dof: 9, cam: (lt, u, c) => faceZoom(c.straw, lerp(2.25, 2.42, u), 95) },
   { id: 'cuM1', a: 3.72, b: 4.45, subj: 'mango', dof: 9, cam: (lt, u, c) => faceZoom(c.mango, lerp(2.35, 2.5, u), 95) },
   { id: 'tbl', a: 4.45, b: 6.38, noChair: true, hide: ['lemon', 'straw', 'mango', 'clem'], cam: (lt, u) => zoomTo(lerp(540, 520, u), lerp(1010, 990, u), lerp(1.8, 2.3, easeIO(u)) + .1 * damp(lt, 5.18, 16, .15)) },

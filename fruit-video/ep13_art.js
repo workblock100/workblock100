@@ -3,7 +3,7 @@
  * Owner of changes: the vault builder (Brenda and her props). Constructors return the options object for drawChar, like A7 / A10 / A11.
  *
  *   A13.brenda(o)            Brenda, RN: a prune nurse who went on break in 2019 and was never relieved. Options on top of the usual drawChar ones:
- *                            dust (0..1, how much dust she still wears, default .55), web (0..1 the cobweb across her mouth, default 0), webT (seconds since the web snapped, -1 = intact),
+ *                            dust (0..1, how much dust she still wears, default .55), web (0..1 the cobweb across her mouth, default 0), webT (seconds since the web snapped, -1 = intact), handWeb (0..1 threads between her two folded hands) and handHang (0..1 threads hanging from raised hands): both need o.grip.l and o.grip.r,
  *                            tear (0..1 a dusty tear running down her cheek), specsDrop (0..1 how far the glasses have slid, default .7), capOff (hide the cap), look / expr / arms as always.
  *   A13.expr(name)           the face presets used for her (also registered on EXPR as brenda_weak, brenda_tear, brenda_relief)
  *   A13.penDir               the angle the held penlight points (o.penAim, radians, in the character's own frame)
@@ -238,6 +238,26 @@ EXT.acc.fp13_webs = (o, k, t, layer) => {
     // a tuft on the cap's far side
     ctx.strokeStyle = `rgba(235,235,232,${.6 * Math.min(1, d * 1.6)})`;
     for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(94, -86); ctx.quadraticCurveTo(110 + i * 4, -70 + i * 6 + sw * .3, 116 + i * 6, -52 + i * 12); ctx.stroke(); }
+  }
+  // a few fine threads strung between her two folded hands (the hands are drawn over this layer, so only the gap between the gloves shows); they let go when she moves
+  const hwb = o.handWeb ?? 0;
+  if (hwb > .02 && o.grip && o.grip.l && o.grip.r) {
+    const [ax, ay] = o.grip.l, [bx, by] = o.grip.r, sg = Math.sin(t * 1.4) * 1.2;
+    ctx.strokeStyle = `rgba(244,244,240,${.62 * hwb})`; ctx.lineWidth = 1.5;
+    for (let i = 0; i < 4; i++) { const y0 = ay - 12 + i * 8, y1 = by - 12 + i * 8; ctx.beginPath(); ctx.moveTo(ax + 6, y0); ctx.quadraticCurveTo((ax + bx) / 2, (y0 + y1) / 2 + 7 + 3 * i + sg, bx - 6, y1); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(ax - 4, ay + 12); ctx.quadraticCurveTo(ax - 12, ay + 26, ax - 6, ay + 40 + sg); ctx.moveTo(bx + 4, by + 12); ctx.quadraticCurveTo(bx + 12, by + 26, bx + 6, by + 40 - sg); ctx.stroke();
+  }
+  // when she lifts her hands (the stretch), threads hang and sway from her fingertips and snap off one by one (handHang 0..1 = how many are still there)
+  const hh = o.handHang ?? 0;
+  if (hh > .02 && o.grip && o.grip.l && o.grip.r) {
+    for (const [side, g] of [[-1, o.grip.l], [1, o.grip.r]]) {
+      for (let i = 0; i < 4; i++) {
+        const keep = clamp(hh * 4.6 - i * .9); if (keep <= .02) continue;
+        const len = (34 + 16 * i) * (.55 + .45 * keep), x0 = g[0] + side * (6 + i * 5) * -1, y0 = g[1] + 14, sw = Math.sin(t * 3 + i * 1.7 + side) * 5;
+        ctx.strokeStyle = `rgba(244,244,240,${.7 * keep})`; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + side * 9 + sw, y0 + len * .5, x0 + side * 3 + sw * 1.4, y0 + len); ctx.stroke();
+      }
+    }
   }
   // the mouth: a few fine threads from the lips to the cheeks and chin, drawn taut across a closed mouth and stretched thin as it opens
   if (web > .02) {

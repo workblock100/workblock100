@@ -18,7 +18,8 @@
  *                       whiteboard writing, scoreboard, Q sign or call board, for a shot with a slide or a sign over it).
  *   S13.callBoard(x, y, w, h, lit, o)   the 32-dome board, flat in the current space: lit(i, t) -> null | level | [rgb 'r,g,b', level]; o { t, title, labels, hero, dim }
  *   S13.scoreboard(cx, cy, w, h, value, o)  the flip-digit BREAKS TAKEN TODAY board, flat: value, o { roll 0..1 (value-1 rolls into value), hero }
- *   S13.hall(o)         the long hall (S6.corridor) with domes on every door and, at the far end, the break room door. o: { doors, fog, lampOn, bright, door: {...breakDoor options} }
+ *   S13.hall(o)         the long hall (S6.corridor) with a dome over every door and, at the far end, the break room door. o: { t, lit(i, t) -> null | [rgb 'r,g,b', level] (the domes, i counts from the camera), fog, fogAmt, wall, wain,
+ *                       lampOn, bright, noEndDoor, endSign (false: no sign on the far door), doorState: {...breakDoor options} }. Returns { x, y, k } of the far door.
  *   S13.foyer(o)        the dead end in front of the break room door (a wider vestibule): returns the door's screen frame. o { t, lampsOn, ext (false: no fire extinguisher) }
  *   S13.breakDoor(x, y, k, o)   the steel door in elevation: x centre, y floor line, k px per world unit. o { locks: {reader, tape, wet, bolt1, bolt2, padlock, chain} each 0 locked .. 1 released,
  *                       ajar 0..1 (swing), t, reader: {state 'idle'|'read'|'ok', k}, sign (true by default), dust 0..1, hero (true when the sign is big enough), noReader, noWet, shake {x, y}, boltT [t1, t2] (the bolts' shake) }
