@@ -6,7 +6,7 @@
  * with an untouched granola bar, Lemon seated behind the counter with a chart, Mango who arrives out of the hall.
  *
  * SHOT LIST (scene-local seconds; every cut is a hard cut with blur 1 on its frame)
- *   0.00-5.84   open, n1   WIDE establishing: a real dolly-in (the camera moves, so the foreground gains on the wall), fade up from black, the far dome dings (0.25), the desk phone lamp blinks, the
+ *   0.00-5.84   open, n1   WIDE establishing: a real dolly-in (the camera moves, so the foreground gains on the wall), fade up from black, the far dome dings (0.45, the phonering cue), the desk phone lamp blinks, the
  *                          clock ticks to 7:02 on "Seven oh two", Strawberry sags on "Hour four".
  *   5.84-7.50   s1         CU Strawberry (a dolly CU: the neighbours are out of frame), a slow push: "I haven't sat down since three." Her eyes go to the chair on "sat down".
  *   7.50-8.70   l1         CU Lemon, flat: "You have a break." She looks up over her readers and does not blink.
@@ -54,14 +54,15 @@ const SHOTS = [
   { id: 'l4', t0: 18.50, t1: 20.32 }, { id: 'chair', t0: 20.32, t1: 21.22 }, { id: 'm2', t0: 21.22, t1: 23.40 }, { id: 'three', t0: 23.40, t1: 24.89 }, { id: 'freeze', t0: 24.89, t1: 99 },
 ];
 const shotAt = lt => SHOTS.find(s => lt < s.t1) || SHOTS[SHOTS.length - 1];
-const FREEZE_T = SHOTS[SHOTS.length - 1].t0;                        /* every animation clock stops here */
+const FREEZE_T = SHOTS[SHOTS.length - 1].t0;                        /* every animation clock stops here (the record scratch is the end beat + 0.05 = 24.892, the sting + 0.3) */
+const PR = B('open').s + .25;                                       /* the phone rings: the sound cue phonering is +0.25 into the open beat (0.2), so 0.45; the far dome, the desk lamp and the glances follow it */
 const ftime = lt => Math.min(lt, FREEZE_T);
 
 // ------------------------------------------------------------------ the characters' acting (options for drawChar, in the camera that is set when this runs)
 function strawO(lt) {
   const t = ftime(lt), b = id => B(id), [X, Z] = SROUTE(lt), q = V2.at(X, Z);
   const reading = lt >= b('l2').e - .25 && lt < b('l3').s;                                   /* she holds the printout while she reads it */
-  const glance = lt >= .25 && lt < 1.2, sat = inB(lt, 's1') && lt > wordT('s1', 'sat', 6.3) - .1;
+  const glance = lt >= PR && lt < PR + .75, sat = inB(lt, 's1') && lt > wordT('s1', 'sat', 6.3) - .1;
   const darts = inB(lt, 's2') ? [Math.sin(seg(lt, b('s2').s, b('s2').e) * 9.4) * .95, -.05 + .15 * Math.sin(lt * 20)] : null;
   let look = [-.15, .35], expr = 'dead', lid = .5;
   if (glance) look = [-.9, -.1];
@@ -91,8 +92,8 @@ function lemonO(lt) {
   const [X, Z] = walking ? LROUTE(lt) : POS.lemon, q = V2.at(X, Z);
   const stand = sk(lt, b('l3').s - .2, b('l3').s + .25), pop = Math.sin(seg(lt, b('l3').s - .2, b('l3').s + .45) * PI);
   let look = [-.5, .75], expr = 'neutral', lid = .15;
-  if (lt < .25) look = [-.35, .8];
-  if (lt >= .25 && lt < .55) look = [-.2, .9];                                                   /* a flick at the phone, then she ignores it */
+  if (lt < PR) look = [-.35, .8];
+  if (lt >= PR && lt < PR + .3) look = [-.2, .9];                                                   /* a flick at the phone, then she ignores it */
   if (lt >= b('l1').s - .05) { look = [-.7, .05]; lid = .3; }                                    /* up over the readers, flat */
   if (inB(lt, 'l2')) { look = [-.75, .02]; lid = .28; }
   if (lt >= b('l2').e) { look = [-.85, .05]; lid = .3; }
@@ -199,7 +200,7 @@ function drawScene(lt) {
   const dofPx = id === 'wide' || id === 'three' || id === 'freeze' ? 0 : id === 'two' ? 5 : 13;
   S13.light('evening', { keyA: .34, shadowA: .42, rimA: .5, back: { color: '255,176,110', a: .28, w: 12 }, frontDark: .05 });
   V2.opts.reflect = true;
-  const sky = .35 * seg(t, 0, 5.84) + .27 * seg(t, 5.84, 25), ping = t > .25 ? t - .25 : -1;
+  const sky = .35 * seg(t, 0, 5.84) + .27 * seg(t, 5.84, 25), ping = t > PR ? t - PR : -1;
   const tw = wordT('n1', 'two', 3.9), min = 1 + easeBack(seg(t, tw, tw + .2));
   const S = strawO(lt), L = lemonO(lt), M = mangoO(lt);
   const hide = o => { const f = inFrame(o); return !f.inter || !f.whole; };
@@ -209,7 +210,7 @@ function drawScene(lt) {
     const st = S13.station(lt, { t, sky, ping, breaks: 0, min, hr: 7, board: 'schedule', sun: 1 });
     if (mangoInHall) { ctx.save(); S13.clipPoly(S13.wallPoly(S13.LAY.zb, S13.LAY.doorway.x0, 0, S13.LAY.doorway.x1, S13.LAY.doorway.y1)); drawBg(M); ctx.restore(); }
     if (!lemonShot && !LWALK(lt) && !hide(L)) (dofPx ? drawBg : drawChar)(L);
-    if (!lemonShot) S13.counter({ t, phoneRing: t > .25 && t < 1.5 ? 1 : 0, plaque: false });
+    if (!lemonShot) S13.counter({ t, phoneRing: t > PR && t < PR + 1.25 ? 1 : 0, plaque: false });
     S13.medCart(POS.cart[0], POS.cart[1], { t });
     S13.chair(POS.chair[0], POS.chair[1]);
     S13.lightMap({ lights: st.lights });

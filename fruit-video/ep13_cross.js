@@ -43,6 +43,8 @@ const hnoise = (t, f, s = 0) => vnoise(t * f + s * 17.3);
 const c01 = x => Math.max(0, Math.min(1, x));
 const sstep = (t, a, b) => { const k = c01((t - a) / (b - a)); return k * k * (3 - 2 * k); };
 const CYAN = '#4de3ff', RED = '#ff3b4e', GOLD = '#ffc83d', GLASS = 'rgba(8,10,20,.78)';
+// sound cues are relative to their BEAT (the audio spec): beep3 +0.05 into open, clack +0.05 into slide, vmbeep +0.1 and the two clunks +0.6 / +0.85 into badge, peel +0.15 and boing +0.4 into slip, sting +0.1 into end
+const CUE = { beep3: B('open').s + .05, clack: B('slide').s + .05, vmbeep: B('badge').s + .1, clunk1: B('badge').s + .6, clunk2: B('badge').s + .85, peel: B('slip').s + .15, boing: B('slip').s + .4, sting: B('end').s + .1 };
 
 // ------------------------------------------------------------------ the shots
 const SHOTS = [
@@ -62,7 +64,7 @@ function whip(lt) {
     const a = lt >= tc - .07 && lt < tc ? easeIn(seg(lt, tc - .07, tc)) : lt >= tc && lt < tc + .09 ? 1 - easeOut(seg(lt, tc, tc + .09)) : 0;
     if (a > px) { px = a; dir = d; }
   }
-  return { px: 300 * px, dir };
+  return { px: 230 * px, dir };
 }
 
 // ------------------------------------------------------------------ helpers: gait, group framing, culling
@@ -131,23 +133,23 @@ function adminA(lt) {
   if (inB(lt, 'a1')) look = glance ? [-.2, .55] : [-.7, .0];
   if (lt >= 10.4) look = [-.2, 0];
   const o = A9.melon(Object.assign(q, { s: q.s * 1.22, t: lt, look, expr, who: 'melon', plant: true, hold: { l: 'clipboard6', r: pj > .02 ? 'fp13_projector' : undefined }, projOn: on, clipText: 'LOOP',
-    arms: { l: 'hold', r: pj > .02 ? 'hold' : 'rest' }, grip: { l: [-104, 74], r: [lerp(88, 104, pj), lerp(110, 30, pj)] } }));
+    arms: { l: 'hold', r: pj > .02 ? 'hold' : 'rest' }, grip: { l: [-104, 74], r: [lerp(88, 108, pj), lerp(110, 66, pj)] } }));
   if (walking) gait(o, AROUTE, 0, lt);
   return o;
 }
 // ------------------------------------------------------------------ the slide projected on the back wall (A7), and the beam to it
-const SLIDE = { x0: -300, x1: 380, y0: 600, y1: 1000 };
+const SLIDE = { x0: -330, x1: 390, y0: 600, y1: 1000 };
 function drawSlide(lt, adm) {
-  const k = sstep(lt, 9.5, 9.7), fl = .9 + .1 * Math.sin(lt * 61) * (1 - sstep(lt, 9.7, 10.0)), pop = pulse(lt, 10.07, 28, .1);
+  const k = sstep(lt, 9.5, 9.7), fl = .9 + .1 * Math.sin(lt * 61) * (1 - sstep(lt, 9.7, 10.0)), pop = pulse(lt, CUE.clack, 28, .1);
   if (k <= .01) return;
   const zb = S13.LAY.zb, r = S13.wallBox(zb, SLIDE.x0, SLIDE.y0, SLIDE.x1, SLIDE.y1);
   // the beam from the projector in his hand to the wall, with dust in it, then the picture itself: light on the wall
-  const hp = handAt(adm, [104, 30]);
+  const hp = handAt(adm, [108, 66]);
   ctx.save(); ctx.globalAlpha *= k;
   V2.beam(hp[0] - 20, hp[1] - 10, r[0] + r[2] * .5, r[1] + r[3] * .55, 40, r[2] * 1.15, '170,225,255', .22 * fl, 'screen');
   V2.dust(Math.min(hp[0], r[0]) - 40, r[1] + r[3] * .4, Math.max(hp[0], r[0] + r[2]) + 40, hp[1], lt, { n: 46, alpha: .7, size: 3, speed: 12, color: '200,235,255', seed: 21 });
   ctx.translate(r[0] + r[2] / 2, r[1] + r[3] / 2); ctx.scale(1 + .025 * pop, 1 + .025 * pop); ctx.translate(-(r[0] + r[2] / 2), -(r[1] + r[3] / 2));
-  const s = UI.sign([r[0], r[1], r[2], r[3]], [{ t: 'SCHEDULES: A JOURNEY', size: 42, weight: 900, fill: '#0f2a4a', gap: 18 }, { t: '3 TO 11', size: 34, weight: 800, fill: '#1c4a7c' }, { t: 'BREAK: PENDING', size: 34, weight: 800, fill: '#b02a37' }, { t: 'DOUBLE SHIFT', size: 34, weight: 800, fill: '#1c4a7c' }],
+  const s = UI.sign([r[0], r[1], r[2], r[3]], [{ t: 'SCHEDULES: A JOURNEY', size: 38, weight: 900, fill: '#0f2a4a', gap: 18 }, { t: '3 TO 11', size: 37, weight: 800, fill: '#1c4a7c' }, { t: 'BREAK: PENDING', size: 37, weight: 800, fill: '#b02a37' }, { t: 'DOUBLE SHIFT', size: 37, weight: 800, fill: '#1c4a7c' }],
     { fill: ['#f6fbff', '#d6e9fa'], stroke: '#9fd2ff', lw: 5, r: 10, pad: 22, shadow: 40, shadowColor: 'rgba(150,220,255,.7)', id: 'slide13', alpha: fl });
   for (const b of s.boxes.slice(1)) { ctx.fillStyle = '#1c4a7c'; ell(b.x0 - 24, b.base - b.size * .36, 6, 6); ctx.fill(); }
   ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = grad(r[0], r[1], r[0], r[1] + r[3], [[0, 'rgba(160,220,255,.22)'], [1, 'rgba(160,220,255,.05)']]); ctx.fillRect(r[0], r[1], r[2], r[3]);
@@ -166,8 +168,8 @@ function drawA(lt, sh) {
   const hide = o => { const f = inFrame(o); return !f.inter || !f.whole; };
   const lemonCU = id !== 'a0' && lemonShot;
   const bg = () => {
-    const st = S13.station(lt, { t, sky: .78, ping: -1, min: 15, hr: 7, board: 'schedule', sun: .4, bare: onSlide });
-    if (!lemonCU && !(dofPx && hide(L))) (dofPx ? drawBg : drawChar)(L);
+    const st = S13.station(lt, { t, sky: .78, ping: -1, min: 15, hr: 7, board: 'schedule', sun: .4, bare: onSlide || id === 'a6' });
+    if (!lemonCU && id !== 'a3' && id !== 'a6' && id !== 'a7' && !(dofPx && hide(L))) (dofPx ? drawBg : drawChar)(L);
     if (!lemonCU) S13.counter({ t, phoneRing: 0, plaque: false });
     S13.lightMap({ ambient: 'rgb(98,92,130)', lights: st.lights });
   };
@@ -182,17 +184,17 @@ function drawA(lt, sh) {
 }
 
 // ------------------------------------------------------------------ PLACE B: the break room door
-const FOYS = [-330, 1280];                                                                    /* Strawberry stands left of the door, in the foyer */
+const FOYS = [-330, 1400];                                                                    /* Strawberry stands left of the door, in the foyer */
 function doorOpts(lt) {
-  const rel = (a, d) => seg(lt, a, a + d);
-  const ok = lt >= 16.12;
-  return { t: lt, locks: { reader: rel(16.12, .45), wet: rel(16.50, .30), tape: rel(16.46, .34), bolt1: rel(16.62, .12), bolt2: rel(16.66, .12), padlock: rel(16.87, .1), chain: rel(16.9, .36) }, boltT: [16.62, 16.66],
-    shake: { x: 3.2 * pulse(lt, 16.62, 46, .06) + 3.2 * pulse(lt, 16.87, 46, .06), y: 2 * pulse(lt, 16.62, 38, .06) + 2 * pulse(lt, 16.87, 38, .06) },
-    ajar: lt >= 17.0 ? .06 + .05 * sstep(lt, 17.0, 17.37) + .12 * sstep(lt, 25.8, 26.6) : 0, dust: sstep(lt, 16.95, 17.3) * (lt < 25.7 ? 1 : 1), rd: { state: lt < 16.06 ? 'idle' : lt < 16.12 ? 'read' : 'ok', k: rel(16.14, .42) } };
+  const rel = (a, d) => seg(lt, a, a + d), vb = CUE.vmbeep, c1 = CUE.clunk1, c2 = CUE.clunk2;
+  return { t: lt, locks: { reader: rel(vb, .45), wet: rel(c1 - .12, .3), tape: rel(c1 - .16, .34), bolt1: rel(c1, .12), bolt2: rel(c1 + .04, .12), padlock: rel(c2, .1), chain: rel(c2 + .03, .36) }, boltT: [c1, c1 + .04],
+    shake: { x: 3.2 * pulse(lt, c1, 46, .06) + 3.2 * pulse(lt, c2, 46, .06), y: 2 * pulse(lt, c1, 38, .06) + 2 * pulse(lt, c2, 38, .06) },
+    ajar: lt >= c2 + .12 ? .06 + .05 * sstep(lt, c2 + .12, c2 + .5) + .2 * sstep(lt, CUE.sting, CUE.sting + .9) : 0, dust: sstep(lt, c2 + .08, c2 + .42), noReader: shotAt(lt).id === 'b5',
+    rd: { state: lt < vb - .06 ? 'idle' : lt < vb ? 'read' : 'ok', k: rel(vb + .02, .42) } };
 }
 function strawB(lt, who) {
   const q = V2.at(FOYS[0], FOYS[1]);
-  const sr = radioS(lt), badge = sstep(lt, 15.2, 15.45) * (1 - sstep(lt, 16.0, 16.02)), gust = sstep(lt, 25.85, 26.2);
+  const sr = radioS(lt), badge = sstep(lt, 15.2, 15.45) * (1 - sstep(lt, 16.0, 16.02)), gust = sstep(lt, CUE.sting + .05, CUE.sting + .4);
   let look = [.2, 0], expr = 'dead', lid = .42;
   if (inB(lt, 'sr1')) look = lt < wordT('sr1', 'policy', 11.8) ? [.35, .1] : [.55, -.35];     /* the sign: up and to the right */
   if (inB(lt, 'sr2')) { look = [.1, 0]; lid = .5; }
@@ -215,61 +217,58 @@ function drawB(lt, sh) {
   if (id === 'b1b' || id === 'b2' || id === 'b5') drawChar(strawB(lt));
 }
 function drawReaderMacro(lt) {
-  const u = lt - 16.02, okk = seg(lt, 16.14, 16.56);
+  const vb = CUE.vmbeep, okk = seg(lt, vb + .02, vb + .44);
   // the wall around the plate, the door frame at the left edge, the cold light
   ctx.fillStyle = grad(0, 0, 0, H, [[0, '#33404c'], [1, '#1d252e']]); ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = 'rgba(255,255,255,.04)'; for (let y = 0; y < H; y += 120) ctx.fillRect(0, y, W, 3);
   ctx.fillStyle = grad(0, 0, 150, 0, [[0, '#5f6674'], [1, '#383d49']]); ctx.fillRect(0, 0, 150, H); ctx.fillStyle = 'rgba(15,12,24,.8)'; ctx.fillRect(146, 0, 5, H);
   V2.glow(540, 700, 700, '120,170,255', .16, 'screen', .4);
-  const sh = pulse(lt, 16.62, 46, .06);
-  S13.reader(560 + 3 * sh, 800, 3.3, { t: lt, state: lt < 16.06 ? 'idle' : lt < 16.12 ? 'read' : 'ok', k: okk });
-  // the badge swipes through the slot (left to right) held by a glove from the lower left
-  const slotY = 800 + 56 * 3.3, sw = sstep(lt, 16.04, 16.13), bx = lerp(250, 760, sw), by = slotY - 40;
-  const gl = sstep(lt, 16.02, 16.05);
+  const sh = pulse(lt, CUE.clunk1, 46, .06);
+  S13.reader(560 + 3 * sh, 800, 3.3, { t: lt, state: lt < vb - .06 ? 'idle' : lt < vb ? 'read' : 'ok', k: okk });
+  // the badge swipes through the slot (left to right), held by a glove from the lower left
+  const slotY = 800 + 56 * 3.3, sw = sstep(lt, vb - .08, vb + .01), bx = lerp(250, 760, sw), by = slotY - 40, gl = sstep(lt, vb - .1, vb - .07);
   ctx.save(); ctx.globalAlpha *= gl; ctx.translate(bx, by); ctx.scale(3.3, 3.3);
   V2C.limb([[-2, 52], [-34, 100], [-80, 175]], [12.5, 14.5, 17], LIMB);
   EXT.prop.fp13_badge(1, {}, lt);
   ctx.save(); ctx.translate(2, 40); ctx.rotate(-PI / 2 - .3); ctx.fillStyle = '#4a4258'; ctx.beginPath(); ctx.roundRect(-18, -8.5, 10, 17, 3); ctx.fill(); V2C.hand('grip', 1, {}); ctx.restore();
   ctx.restore();
-  // the beep: a ring from the lamp
-  V2.ring(560, 800 - 118 * 3.3, seg(lt, 16.12, 16.5), { r0: 20, r1: 260, lw: 5, alpha: .8, color: '90,255,140' });
+  V2.ring(560, 800 - 118 * 3.3, seg(lt, vb, vb + .4), { r0: 20, r1: 260, lw: 5, alpha: .8, color: '90,255,140' });   /* the beep, as a ring from the lamp */
 }
 
 // ------------------------------------------------------------------ PLACE C: the hall. Banana, the peel, the Administrator.
-const PEEL = [95, 1500], SLIP = { peel: 21.185, boing: 21.435, land: 21.96 };
+const PEEL = [95, 1500], SLIP = { peel: CUE.peel, boing: CUE.boing, land: CUE.boing + .525 };
 const BROUTE = route([[0, 205, 1650], [20.28, 205, 1650], [21.185, 98, 1520, 'io']]);
-const ADROUTE = route([[0, -170, 700], [19.0, -165, 1100], [20.6, -150, 1330], [21.55, -146, 1400, 'out'], [22.9, -146, 1400], [23.5, -70, 1460, 'io']]);
+const ADROUTE = route([[0, -170, 700], [19.0, -165, 1100], [20.6, -152, 1380], [21.3, -150, 1560, 'out'], [22.8, -150, 1560], [23.5, -122, 1520, 'io']]);
 const warp = x => x + .7 * Math.sin(2 * PI * x) / (2 * PI);                                  /* the time-warp: the arc crawls at the top */
+const exp0 = b => Math.exp(-b * 5);
 function bananaC(lt) {
-  const kb = KINDS.banana, s0 = V2.at(0, 1500).s;
   let X, Z = 1500, rot = 0, lift = 0, expr = 'happy', arms = { l: 'rest', r: 'rest' }, look = [-.4, .2], flat = false, sq = 0;
   const inAir = lt >= SLIP.boing && lt < SLIP.land, tau = c01((lt - SLIP.boing) / (SLIP.land - SLIP.boing)), wt = warp(tau);
   if (lt < SLIP.peel) { [X, Z] = BROUTE(lt); expr = lt < 20.2 ? 'happy' : 'sad'; look = lt < 20.28 ? [-.6, .4] : [-.5, .5]; }
   else if (lt < SLIP.boing) { X = 98; Z = 1520; const a = sstep(lt, SLIP.peel, SLIP.boing); rot = .32 * a; lift = 14 * a; expr = 'panic'; arms = { l: 'up', r: 'up' }; look = [0, .3]; }
-  else if (inAir) { X = lerp(98, -22, wt); Z = lerp(1520, 1490, wt); rot = lerp(.32, -1.55, easeIO(wt)); lift = 330 * 4 * wt * (1 - wt); expr = 'panic'; arms = { l: 'up', r: 'flail' }; look = [-.3, -.3]; }
-  else { X = -22; Z = 1490; flat = true; const b = lt - SLIP.land, bounce = b < .36 ? Math.abs(Math.sin(b / .36 * PI)) * 34 * Math.exp(-b * 4) : 0; rot = -1.55 + .03 * Math.sin(lt * 7) * exp0(b); lift = bounce; expr = lt < 22.7 ? 'panic' : 'sad'; arms = { l: 'rest', r: 'rest' }; look = [.3, .4]; sq = b < .1 ? .12 * (1 - b / .1) : 0; }
+  else if (inAir) { X = lerp(98, -20, wt); Z = lerp(1520, 1490, wt); rot = lerp(.32, 1.55, easeIO(wt)); lift = 330 * 4 * wt * (1 - wt); expr = 'panic'; arms = { l: 'up', r: 'flail' }; look = [-.3, -.3]; }
+  else { X = -20; Z = 1490; flat = true; const b = lt - SLIP.land, bounce = b < .36 ? Math.abs(Math.sin(b / .36 * PI)) * 34 * Math.exp(-b * 4) : 0; rot = 1.55 + .03 * Math.sin(lt * 7) * exp0(b); lift = bounce; expr = lt < 22.7 ? 'panic' : 'sad'; arms = { l: 'rest', r: 'rest' }; look = [-.3, .4]; sq = b < .1 ? .12 * (1 - b / .1) : 0; }
   const q = V2.at(X, Z), k = KINDS.banana;
   const drop = flat ? ((k.leg || 90) + k.ry * .9 - k.rx * .86) * q.s : 0;                          /* a body lying down: its centre sinks to half its thickness */
   const o = A7.banana(Object.assign(q, { t: lt, look, expr, who: 'banana', plant: true, rot, lift: flat ? -drop + lift * q.s : lift * q.s, squash: sq, arms, noReflect: flat || inAir, noShadow: flat || inAir, shake: 0 }));
   if (lt < SLIP.peel && lt > 20.28) gait(o, BROUTE, 20.28, lt);
   return o;
 }
-const exp0 = b => Math.exp(-b * 5);
 function adminC(lt) {
-  const [X, Z] = ADROUTE(lt), q = V2.at(X, Z), walking = lt < 21.55 || (lt > 22.9 && lt < 23.5);
-  const seen = lt >= SLIP.peel + .1, tm = wordT('a3', 'banana', 23.16), form = sstep(lt, 23.55, 23.8);
+  const [X, Z] = ADROUTE(lt), q = V2.at(X, Z), walking = lt < 21.3 || (lt > 22.8 && lt < 23.5);
+  const seen = lt >= SLIP.peel + .1;
   let look = [.5, .05], expr = 'happy';
   if (lt >= SLIP.peel + .1) { look = [.8, .3]; expr = 'shock'; }
   if (lt >= 22.7) { look = [.7, .4]; expr = 'sad'; }
   if (lt >= 23.4) { expr = 'happy'; look = [.6, .3]; }
-  const o = A9.melon(Object.assign(q, { s: q.s * 1.22, t: lt, look, expr, who: 'melon', plant: true, hold: { l: 'clipboard6' }, clipText: 'FORM', arms: { l: 'hold', r: lt >= 22.85 ? 'point' : 'rest' }, grip: { l: [-104, 74] },
-    rot: .02 * Math.sin(lt * 5) * (seen ? 1 : 0), sx: 1 }));
+  const o = A9.melon(Object.assign(q, { s: q.s * 1.22, t: lt, look, expr, who: 'melon', plant: true, hold: { l: 'clipboard6' }, clipText: 'FORM', arms: { l: 'hold', r: lt >= 22.85 ? [.95, .55] : 'rest' }, grip: { l: [-104, 74] },
+    rot: .02 * Math.sin(lt * 5) * (seen ? 1 : 0) }));
   if (walking) gait(o, ADROUTE, 0, lt);
   return o;
 }
 function mangoC(lt) {
   const q = V2.at(-215, 1260), click = pulse(lt, 24.95, 30, .09);
-  return A7.mango(Object.assign(q, { t: lt, look: [.75, .05], expr: lt >= 24.735 ? 'hopeful' : 'happy', who: 'mango', stride: 44, plant: true, arms: { l: 'rest', r: 'hold' }, hold: { r: 'fp13_clicker' }, clickK: Math.max(0, click), grip: { r: [78, 24] }, twitch: true, face: { curve: 1.2 } }));
+  return A7.mango(Object.assign(q, { t: lt, look: [.75, .05], expr: lt >= 24.735 ? 'hopeful' : 'happy', who: 'mango', stride: 44, plant: true, arms: { l: 'rest', r: 'hold' }, hold: { r: 'fp13_clicker' }, clickK: Math.max(0, click), grip: { r: [102, 30] }, twitch: true, face: { curve: 1.2 } }));
 }
 function peelProp(X, Z, flat = true) {
   const [x, y, k] = V2.proj(X, 0, Z);
@@ -317,7 +316,7 @@ function setCamera(lt) {
   else if (id === 'b1a' || id === 'b4') { S13.cam('foyer', { cz: 380 }); const p = V2.proj(0, 252, S13.FOY.zb), z = 1.1; zoomTo(p[0] + (540 - 440) / z, p[1] + (960 - 800) / z, z); }
   else if (id === 'b1b' || id === 'b2') { S13.cam('foyer', { cz: 640 + 40 * easeOut(u) }); faceZoom(strawB(lt), 1.0, 200); CAM.x -= (id === 'b2' ? 40 : 0) / CAM.z; }
   else if (id === 'b3') { zoomTo(540, 960, 1); }
-  else if (id === 'b5') { S13.cam('foyer', { cz: lerp(-60, 60, easeOut(u / 1)) }); const p = V2.proj(0, 252, S13.FOY.zb); zoomTo(p[0] - 150, p[1] + 140, 1); }
+  else if (id === 'b5') { S13.cam('foyer', { cz: lerp(330, 470, easeOut(u / 1.4)), cx: -125 }); zoomTo(540, 900, 1); }
   else if (id === 'c1') { S13.cam('hall', { f: 1200, cz: lerp(-120, 60, easeOut(u)) }); zoomTo(540, 880, 1); }
   else if (id === 'c2') { S13.cam('hall', { cz: 900 }); faceZoom(bananaC(lt), 1.0, 200); }
   else if (id === 'c3') { S13.cam('hall', { f: 1250, cz: lerp(260, 380, u) }); zoomTo(540, 860, 1 + .05 * sstep(lt, SLIP.boing, SLIP.land)); }
@@ -325,7 +324,7 @@ function setCamera(lt) {
   else if (id === 'c5') { S13.cam('hall', { f: 1250, cz: 520 }); frameGroup([[adminC(lt), 60], [bananaC(lt), 50]], { mx: 70, ty: 860, hMax: 1100 }); }
   else if (id === 'c6') { S13.cam('hall', { cz: 640 }); faceZoom(mangoC(lt), 1.0, 200); }
   CAM.x += sway.x; CAM.y += sway.y; CAM.r += sway.r;
-  if (wh.px > 0) CAM.r += .012 * wh.dir * (wh.px / 300);
+  if (wh.px > 0) CAM.r += .012 * wh.dir * (wh.px / 230);
 }
 
 // ------------------------------------------------------------------ the HUD (device space, in over()): the radio tag, the ADMIN LOOP chip, the INCIDENTS chip. The tag follows the hall scene exactly.
@@ -361,27 +360,27 @@ function overRadio(lt) {
 }
 const LOOP0 = 25.2, HOLD_T = 22.09;
 function overChip(lt) {
-  const a = sstep(lt, .22, .38) * (1 - sstep(lt, 26.45, 26.8)); if (a <= .01) return;
+  const a = sstep(lt, CUE.beep3 - .03, CUE.beep3 + .13) * (1 - sstep(lt, 26.45, 26.8)); if (a <= .01) return;
   const hold = lt >= HOLD_T, val = hold ? LOOP0 - HOLD_T : Math.max(0, LOOP0 - lt), sec = Math.floor(val + 1e-6), dec = Math.floor((val - sec) * 10 + 1e-6);
   const col = hold ? '#5cff9a' : val < 5 ? RED : val < 12 ? GOLD : CYAN, blink = !hold && val < 5 ? (Math.sin(lt * 14) > -.3 ? 1 : .55) : 1;
-  const lab = UI.sizeOf('ADMIN LOOP', { size: 26, weight: 900, spacing: 2 }), chars = ['0', ':', Math.floor(sec / 10), sec % 10, '.', dec], cw2 = c => (c === ':' || c === '.') ? 11 : 21, tw = chars.reduce((q, c) => q + cw2(c), 0);
+  const lab = UI.sizeOf('ADMIN LOOP', { size: 30, weight: 900, spacing: 2 }), chars = ['0', ':', Math.floor(sec / 10), sec % 10, '.', dec], cw2 = c => (c === ':' || c === '.') ? 11 : 21, tw = chars.reduce((q, c) => q + cw2(c), 0);
   const w = 26 + lab.w + 22 + tw + 24, h = 56, x0 = 1034 - w, y0 = 198;
   ctx.save(); ctx.globalAlpha *= a;
   const pan = UI.panel([x0, y0, w, h], { id: 'adminchip', kind: 'pill', fill: GLASS, stroke: col, lw: 3, r: h / 2, pad: 12 });
   reg('overlay', [x0, y0, x0 + w, y0 + h], { id: 'adminchip' });
-  UI.label('ADMIN LOOP', x0 + 26, y0 + h / 2, { size: 26, weight: 900, spacing: 2, fill: hold ? '#b8ffd2' : '#d9fbff', align: 'left', cid: 'adminchip', center: false });
+  UI.label('ADMIN LOOP', x0 + 26, y0 + h / 2, { size: 30, weight: 900, spacing: 2, fill: hold ? '#b8ffd2' : '#d9fbff', align: 'left', cid: 'adminchip', center: false });
   // the countdown in fixed cells so the digits never shuffle: m ss . t  (0:03.1)
   let xx = x0 + w - 24 - tw;
   for (const c of chars) { UI.label(String(c), xx + cw2(c) / 2, y0 + h / 2, { size: 34, weight: 900, fill: col, cid: 'adminchip', center: false, alpha: blink }); xx += cw2(c); }
   ctx.restore();
 }
 function overIncidents(lt) {
-  const a = sstep(lt, 20.95, 21.12) * (1 - sstep(lt, 25.1, 25.4)); if (a <= .01) return;
-  const roll = sstep(lt, 22.09, 22.4), pop = 1 + .06 * pulse(lt, 22.09, 24, .12), x0 = 48, y0 = 300, w = 372, h = 72;
+  const a = sstep(lt, 20.95, 21.12) * (1 - sstep(lt, 24.35, 24.65)); if (a <= .01) return;
+  const roll = sstep(lt, 22.09, 22.4), pop = 1 + .06 * Math.max(0, pulse(lt, 22.09, 24, .12)), x0 = 48, y0 = 300, w = 392, h = 72;
   ctx.save(); ctx.globalAlpha *= a; ctx.translate(x0 + w / 2, y0 + h / 2); ctx.scale(pop, pop); ctx.translate(-(x0 + w / 2), -(y0 + h / 2));
   UI.panel([x0, y0, w, h], { id: 'incchip', kind: 'pill', fill: GLASS, stroke: roll > 0 && roll < 1 ? RED : GOLD, lw: 3, r: h / 2, pad: 12 });
   reg('overlay', [x0, y0, x0 + w, y0 + h], { id: 'incidents' });
-  UI.label('INCIDENTS', x0 + 30, y0 + h / 2, { size: 30, weight: 900, spacing: 3, fill: '#fff3c8', align: 'left', cid: 'incchip', center: false });
+  UI.label('INCIDENTS', x0 + 30, y0 + h / 2, { size: 32, weight: 900, spacing: 3, fill: '#fff3c8', align: 'left', cid: 'incchip', center: false });
   const cx = x0 + w - 62, cy = y0 + h / 2, cw = 70, ch = 54;
   ctx.save(); rr(cx - cw / 2, cy - ch / 2, cw, ch, 10); ctx.fillStyle = '#1b1d26'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 2; ctx.stroke(); ctx.clip();
   const rolling = roll > 0 && roll < 1, e = easeIO(roll);
@@ -395,7 +394,7 @@ function smear(px) {
   if (px < 4 || TXA.mask) return;
   SMX.setTransform(1, 0, 0, 1, 0, 0); SMX.globalCompositeOperation = 'copy'; SMX.drawImage(canvas, 0, 0);
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-  const n = 11; for (let i = 0; i < n; i++) { ctx.globalAlpha = 1 / (i + 1); ctx.drawImage(SMEAR, (i / (n - 1) - .5) * 2 * px, 0); }
+  const n = 21; for (let i = 0; i < n; i++) { ctx.globalAlpha = 1 / (i + 1); ctx.drawImage(SMEAR, (i / (n - 1) - .5) * 2 * px, 0); }
   ctx.restore();
 }
 
@@ -409,7 +408,7 @@ const SC = {
     if (sh.id === 'b3') drawReaderMacro(lt); else if (sh.pl === 'A') drawA(lt, sh); else if (sh.pl === 'B') drawB(lt, sh); else drawC(lt, sh);
   },
   fx(lt) {
-    const sh = shotAt(lt), sting = lt >= 25.8 ? Math.exp(-(lt - 25.8) / .12) : 0, slow = sstep(lt, SLIP.boing - .05, SLIP.boing + .1) * (1 - sstep(lt, SLIP.land, SLIP.land + .2)) * (sh.id === 'c3' ? 1 : 0);
+    const sh = shotAt(lt), sting = lt >= CUE.sting ? Math.exp(-(lt - CUE.sting) / .12) : 0, slow = sstep(lt, SLIP.boing - .05, SLIP.boing + .1) * (1 - sstep(lt, SLIP.land, SLIP.land + .2)) * (sh.id === 'c3' ? 1 : 0);
     if (sh.pl === 'B') return { bloom: .45 + .5 * sting, vignette: .58, grain: .05, contrast: .22, sat: .02, tint: [['#6f8cff', .14, 'soft-light']], aberr: 8 * sting };
     if (sh.pl === 'C') return { bloom: .5 + .3 * slow, vignette: .5 + .1 * slow, grain: .05, contrast: .18 + .08 * slow, sat: .08 + .1 * slow, tint: [['#a8c8ff', .1, 'soft-light'], ['#ffb870', .08 * slow, 'soft-light']] };
     return { bloom: .45, vignette: .48, grain: .05, contrast: .18, sat: .1, tint: [['#9fb8ff', .1, 'soft-light'], ['#ffb070', .06, 'soft-light']] };
@@ -418,7 +417,7 @@ const SC = {
   over(lt) {
     smear(whip(lt).px);
     overIncidents(lt); overChip(lt); overRadio(lt);
-    if (lt >= 25.8) { const f = Math.exp(-(lt - 25.8) / .08); if (f > .02) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(200,225,255,${.5 * f})`; ctx.fillRect(0, 0, W, H); ctx.restore(); } }
+    if (lt >= CUE.sting) { const f = Math.exp(-(lt - CUE.sting) / .08); if (f > .02) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(200,225,255,${.5 * f})`; ctx.fillRect(0, 0, W, H); ctx.restore(); } }
   },
 };
 window.__EP13_SCENES = window.__EP13_SCENES || {};

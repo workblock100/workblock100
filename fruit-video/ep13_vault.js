@@ -1249,6 +1249,11 @@ function sfx(lt, t0, str, x, y, o = {}) {
 // ------------------------------------------------------------------ the scene
 window.__EP13_SCENES = window.__EP13_SCENES || {};
 window.__EP13_SCENES.vault = {
+  __geo(lt) {   // layout probe: the D-view door geometry at scene time lt
+    const sh = shotAt(lt); if (sh.view !== 'D') return null;
+    const c = sh.d(lt), kR = c.czR < -70 ? 1400 / -c.czR : 0, kd = kR * DWR / 370;
+    return { czR: +c.czR.toFixed(1), kR: +kR.toFixed(3), kd: +kd.toFixed(3), x0: +(540 + (DOORX - c.cxR) * kR).toFixed(1), y0: +(860 + c.cyR * kR).toFixed(1), ajar: +c.ajar.toFixed(3) };
+  },
   __dbg(lt) {   // layout probe for the builder: which faces a shot shows
     const sh = shotAt(lt); this.cam(lt);
     const out = { shot: sh.id, cam: [CAM.x, CAM.y, CAM.z].map(v => +v.toFixed(1)), faces: {} };

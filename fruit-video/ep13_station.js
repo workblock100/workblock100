@@ -525,10 +525,9 @@ function reader(x, y, k, o = {}) {
   } else {
     const L = [['BADGE: PER DIEM', '#b9ffd2', 12.5, 0, .3], ['STATUS: NOT STAFF', '#b9ffd2', 12.5, .3, .62], ['ACCESS GRANTED', G, 16, .62, 1]];
     const k2 = Math.min(1, 108 / UI.sizeOf('STATUS: NOT STAFF', { size: 12.5, weight: 900 }).w);
-    const sc = L.map(([s0, c, sz]) => sz * k2), tot = [0, 1, 2].map(i => i), base0 = -64 - (sc[0] + sc[1] + sc[2]) * .55;
     L.forEach(([s, c, sz, a, b], i) => {
-      const cy = -64 + (i - 1) * 30 + (i === 2 ? 6 : 0);
-      UI.label(s, 0, cy, { size: sz * k2, weight: 900, fill: c, spacing: .6, reveal: seg(okk, a, b), hero, cid: id, center: false, shadow: i === 2 ? 6 : 0 });
+      const cy = -78 + i * 28 + (i === 2 ? 4 : 0);   /* three lines inside the screen's inner box (y -94 to 18) */
+      UI.label(s, 0, cy, { size: sz * k2, weight: 900, fill: c, spacing: .6, maxW: 112, reveal: seg(okk, a, b), hero, cid: id, center: false, shadow: i === 2 ? 6 : 0 });
     });
     if (okk > .62) V2.glow(0, -34, 80, '60,255,120', .32 * seg(okk, .62, .8), 'screen', .8);
   }
@@ -652,7 +651,7 @@ function foyer(o = {}) {
   const on = o.lampsOn ?? 1;
   for (const z of [300, 800]) if (z > V2.P.cz + 220) for (const X of [-230, 230]) ceilingLamp(X, z, FOY.ch, on, '215,230,255', 100, 170);   /* a lamp the dolly has passed is skipped */
   // a light fixture over the door, a framed certificate and a fire extinguisher: the corner of a building nobody goes to
-  const cert = wallBox(zb, -470, 380, -330, 470);
+  const cert = wallBox(zb, -470, 520, -330, 610);   /* hung high: a person standing in front of it keeps their head clear of it */
   ctx.save(); rr(cert[0], cert[1], cert[2], cert[3], 4); ctx.fillStyle = '#6a4a2e'; ctx.fill(); ctx.restore();
   UI.panel([cert[0] + 6, cert[1] + 6, cert[2] - 12, cert[3] - 12], { fill: '#f5f0dc', stroke: false, r: 2, id: 'cert13', kind: 'sign', pad: 4 });
   UI.lines(['AUDIT 2019', 'PASSED'], cert[0] + cert[2] / 2, cert[1] + cert[3] / 2, { align: 'center', size: cert[3] * .17, weight: 900, fill: '#5a3a1a', v: 'mid', lh: 1.25, hero: false, maxW: cert[2] * .8 });

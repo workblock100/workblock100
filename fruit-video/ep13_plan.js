@@ -870,9 +870,9 @@ function actMango(lt, o2 = {}) {
   // m1 "Why is it locked?": a hand up like a student, brows up, head tilting on "locked"
   if (lt >= t.m1.s - .5 && lt < t.m1.e + .5) { const k = holdK(lt, t.m1.s - .3, t.m1.s - .05, t.m1.e + .1, t.m1.e + .4); arms = { l: 'rest', r: 'up' }; face = lerpE('neutral', 'hopeful', .9 * clamp01(sstep(lt, t.m1.s - .3, t.m1.s))); rot = .07 * sstep(lt, t.m1.s + .45, t.m1.s + .75); look = [-.15 * rot * 10, -.1]; if (k <= 0) arms = { l: 'rest', r: 'rest' }; squash += .04 * stress(lt, 'm1', 3); }
   // m2 "I'll talk to him.": thumb to her chest, chin up
-  if (lt >= t.m2.s - .2 && lt < t.m2.e + .4) { const k = sstep(lt, t.m2.s + .05, t.m2.s + .25) * (1 - sstep(lt, t.m2.e - .05, t.m2.e + .3)); face = lerpE('neutral', 'smug', .75); look = [-.05, -.1]; if (k > 0) { arms = { l: 'hold', r: 'rest' }; grip.l = [lerp(-100, -22, k), lerp(20, 30, k)]; hand.l = 'thumb'; } rot = -.04; squash += .05 * stress(lt, 'm2', 3); }
+  if (lt >= t.m2.s - .2 && lt < t.m2.e + .4) { const k = sstep(lt, t.m2.s + .05, t.m2.s + .25) * (1 - sstep(lt, t.m2.e - .05, t.m2.e + .3)); face = lerpE('neutral', 'smug', .75); look = [-.05, -.1]; if (k > 0) { arms = { l: 'hold', r: 'rest' }; grip.l = [lerp(-100, -30, k), lerp(20, 72, k)]; hand.l = 'thumb'; } rot = -.04; squash += .05 * stress(lt, 'm2', 3); }
   // m3 "I can hold him for forty.": both fists clenched in front of her, a squeeze on "hold"
-  if (lt >= t.m3.s - .2 && lt < t.m3.e + .3) { const k = sstep(lt, t.m3.s, t.m3.s + .22) * (1 - sstep(lt, t.m3.e, t.m3.e + .3)), sq = bump(lt, wordT('m3', 'hold'), wordT('m3', 'hold') + .25); face = lerpE('neutral', 'angry', .45); look = [0, 0]; if (k > 0) { arms = { l: 'hold', r: 'hold' }; grip.l = [lerp(-100, -34, k), lerp(20, 36, k)]; grip.r = [lerp(100, 34, k), lerp(20, 36, k)]; hand = { l: 'fist', r: 'fist' }; } squash += .08 * sq + .03 * stress(lt, 'm3', 3); }
+  if (lt >= t.m3.s - .2 && lt < t.m3.e + .3) { const k = sstep(lt, t.m3.s, t.m3.s + .22) * (1 - sstep(lt, t.m3.e, t.m3.e + .3)), sq = bump(lt, wordT('m3', 'hold'), wordT('m3', 'hold') + .25); face = lerpE('neutral', 'angry', .45); look = [0, 0]; if (k > 0) { arms = { l: 'hold', r: 'hold' }; grip.l = [lerp(-100, -46, k), lerp(20, 80, k)]; grip.r = [lerp(100, 46, k), lerp(20, 80, k)]; hand = { l: 'fist', r: 'fist' }; } squash += .08 * sq + .03 * stress(lt, 'm3', 3); }
   // q: eyes to the sign. The shush: she clamps a hand over Clementine's mouth (drawn as an overlay: see shushHand)
   if (lt >= B.q.s - .05 && lt < t.l12.s) look = gaze(base, ...SIGNPT());
   const shh = SHH();
@@ -1067,6 +1067,11 @@ const SCENE = {
       o.objs = objs;
       if (id === 'quiet' || id === 'lemon1') { const rk = redK(lt); o.flash = rk * (.5 + .5 * Math.sin(lt * 9)); o.flick = rk > .5 ? (hash(Math.floor(lt * 18)) > .3 ? 1 : .35) : 1; }
       if (id === 'quiet') { o.transit = lt > 29.58 && lt < 30.42; o.power = powerAt(lt); o.signSharp = true; }
+      if (id === 'lemon1') {   /* "The Q word.": the sign's red floods in from the left of the frame */
+        const f = faceC(castO('lemon')), rk = redK(lt);
+        ROOMLIGHTS = [{ x: f[0] - 300, y: f[1] - 20, r: 1100, color: REDR, a: .95 * rk }];
+        o.mid = () => { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); V2.glow(-90, 780, 620, REDR, .34 * rk, 'screen', .7); ctx.restore(); };
+      }
       if (id === 'clem1') { o.after = () => { const f = faceC(castO('clem')); V2.sparks(f[0] + 30, f[1] - 190, lt, t.c1.s, { n: 18, color: '255,214,120', speed: 300, life: .6, g: 500, size: 5, seed: 8 }); V2.sparks(f[0] - 40, f[1] - 170, lt, t.c1.s + .06, { n: 10, color: '255,255,230', speed: 220, life: .5, g: 300, size: 4, seed: 12 }); }; }
       if (id === 'clem2') {
         const f = faceC(castO('clem')), blink = Math.max(0, Math.sin(lt * 15.7)) * (.5 + .5 * sstep(lt, t.c2.s, t.c2.s + .3));
