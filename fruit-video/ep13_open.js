@@ -139,7 +139,7 @@ function pathD(fn, t0, t) { let d = 0, p = fn(t0); for (let u = t0 + .04; ; u +=
 
 // ------------------------------------------------------------------ cameras
 // dolly close-ups: cz, and where the face sits (up = how many px above the centre of the frame)
-const CU = { s1: { cz: 700, up: 200 }, s2: { cz: 700, up: 200 }, s3: { cz: 600, up: 200, dx: 40 }, s4: { cz: 700, up: 200 }, l1: { cz: 1000, up: 190 }, l2: { cz: 1000, up: 190, dx: -35 }, l3: { cz: 1000, up: 190 }, l4: { cz: 1000, up: 190 }, m2: { cz: 700, up: 200 } };
+const CU = { s1: { cz: 700, up: 200 }, s2: { cz: 700, up: 200 }, s3: { cz: 600, up: 200, dx: 40 }, s4: { cz: 700, up: 200 }, l1: { cz: 900, up: 190 }, l2: { cz: 900, up: 190, dx: -20 }, l3: { cz: 900, up: 190 }, l4: { cz: 900, up: 190 }, m2: { cz: 700, up: 200 } };
 // the screen box of a character in unzoomed picture space (padded sideways for what it holds): the camera frames a group from these
 function boxOf(o, pad = 0) {
   const k = KINDS[o.kind], s = o.s || 1, legLen = o.noLegs ? 0 : (k.leg || 90), top = o.y - (o.lift || 0) - (legLen + k.ry * .9 + (TOPS[o.kind] ?? k.ry * 1.05)) * s, half = (k.rx * 1.12 + pad) * s;

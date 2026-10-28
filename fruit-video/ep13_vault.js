@@ -599,7 +599,8 @@ const keyRoute = keys => lt => {
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = seg(lt, a[0], b[0]), e = b[3] === 'io' ? easeIO(k) : b[3] === 'out' ? easeOut(k) : k; return [lerp(a[1], b[1], e), lerp(a[2], b[2], e)]; }
   const l = keys[keys.length - 1]; return [l[1], l[2]];
 };
-const STRAW_PATH = keyRoute([[0, WIDE.straw[0], WIDE.straw[1]], [15.95, WIDE.straw[0], WIDE.straw[1]], [16.9, -105, 1262, 'io'], [20.3, -105, 1262], [20.9, -215, 1275, 'io'], [21.3, -215, 1275], [21.75, -255, 1415, 'io'], [22.27, SEATP[0], SEATP[1] - 20, 'io']]);
+const TWO_X = [-318, 1302];   // where Strawberry stands for the two-shot: at the left-hand end of the table, her hand out to Brenda
+const STRAW_PATH = keyRoute([[0, WIDE.straw[0], WIDE.straw[1]], [15.95, WIDE.straw[0], WIDE.straw[1]], [16.9, TWO_X[0], TWO_X[1], 'io'], [20.9, TWO_X[0], TWO_X[1]], [22.0, -96, 1506, 'io'], [22.27, SEATP[0] - 6, SEATP[1] - 16, 'io']]);
 const SIT_T = 22.28;
 function actStraw(lt, ex = {}, pos = null, seatPos = null) {
   const route = pos ? () => pos : STRAW_PATH, sp = seatPos || SEATP;
@@ -614,27 +615,28 @@ function actStraw(lt, ex = {}, pos = null, seatPos = null) {
   o.expr = lt < 2.85 ? 'neutral' : lt < 3.75 ? 'hopeful' : lt < 5.08 ? 'neutral' : lt < 6.43 ? 'shock' : lt < 11.87 ? 'dead' : lt < 13.28 ? 'sad' : lt < 15.38 ? 'hopeful' : lt < 15.95 ? 'shock' : lt < 22.0 ? 'neutral' : lt < 23.85 ? 'chill' : lt < 28.83 ? 'happy' : lt < 30.67 ? 'shock' : lt < 32.59 ? 'chill' : 'smug';
   if (inR(lt, 2.85, 3.75)) o.face = { wide: 1.14, raise: 14 };
   if (inR(lt, 15.95, 20.15)) o.face = { curve: .7, lid: .12, raise: 4, ang: -.2, wide: 1.04 };
-  o.look = track([[0, [.4, -.1]], [2.9, [.5, -.45]], [3.55, [.55, -.5]], [3.8, [.4, .0]], [4.6, [.25, .15]], [5.08, [.4, -.1]], [6.43, [.45, -.1]], [13.28, [.5, -.1]], [15.4, [.45, 0]], [16.2, [.55, -.1]], [19.9, [.5, -.12]], [20.3, [.2, .3]], [21.5, [-.4, .1]], [22.4, [.3, -.1]], [24.0, [0, .4]], [28.83, [-.5, -.3]], [30.7, [-.5, -.3]], [31.9, [-.4, -.2]]], lt);
-  const chew = inR(lt, 23.9, 27.18) || inR(lt, 32.55, 33.6) || inR(lt, 29.0, 28.8);
-  if (inR(lt, 23.9, 27.18)) { o.lid = 1; o.shut = 1; o.mouthOpen = Math.max(0, .26 * Math.sin((lt - 23.9) * 9)) * (lt > 24.4 ? 1 : .6); }
-  if (inR(lt, 32.55, 33.6)) { o.lid = 1; o.shut = 1; o.mouthOpen = Math.max(0, .2 * Math.sin((lt - 32.6) * 9)); }
-  if (inR(lt, 27.18, 28.83)) { o.lid = 1; o.shut = 1; o.mouthOpen = .0; }
-  void chew;
+  o.look = track([[0, [.4, -.1]], [2.9, [.5, -.45]], [3.55, [.55, -.5]], [3.8, [.4, .0]], [4.6, [.25, .15]], [5.08, [.4, -.1]], [6.43, [.45, -.1]], [13.28, [.5, -.1]], [15.4, [.45, 0]], [16.2, [.75, -.05]], [19.9, [.7, -.08]], [20.3, [.2, .3]], [21.5, [-.4, .1]], [22.4, [.3, -.1]], [24.0, [0, .4]], [28.83, [-.5, -.3]], [30.7, [-.5, -.3]], [31.9, [-.4, -.2]]], lt);
+  // closed eyes while she chews (the happy kind), and the mouth moves
+  const eat1 = inR(lt, 24.1, 27.18), eat2 = inR(lt, 32.55, 33.6);
+  if (inR(lt, 23.9, 24.1)) { o.lid = 1; o.shut = 1; o.shutStyle = 'happy'; }
+  if (eat1) { o.lid = 1; o.shut = 1; o.shutStyle = 'happy'; o.mouthOpen = Math.max(0, .2 * Math.sin((lt - 24.1) * 9)); }
+  if (eat2) { o.lid = 1; o.shut = 1; o.shutStyle = 'happy'; o.mouthOpen = Math.max(0, .18 * Math.sin((lt - 32.6) * 9)); }
+  if (inR(lt, 27.18, 28.83)) { o.lid = 1; o.shut = 1; o.shutStyle = 'happy'; o.mouthOpen = 0; }
   o.sparkle = inR(lt, 17.4, 20.3);
   // pen and hands
   const pen = penPlan('straw', lt);
   if (lt < 15.95) withPen(o, 1, [148, -42], pen.tgt ? p2(pen.tgt[0], pen.tgt[1], pen.tgt[2]) : null, pen.a > .05 ? 1 : 0);
-  if (inR(lt, 15.95, 20.9)) { const k = ph(lt, 16.0, 16.5); o.grip.r = [lerp(120, 205, k), lerp(30, 14, k)]; o.arms.r = 'hold'; o.hand.r = 'open'; }   // her hand out to Brenda, palm up
-  if (inR(lt, 20.9, 22.0)) { o.grip.r = [44, 38]; o.arms.r = 'hold'; o.hand.r = 'flat'; o.cap = false; o.hold = { l: 'fp13_cap' }; o.grip.l = [-40, 36]; o.arms.l = 'hold'; }   // hat over her heart
-  if (inR(lt, 20.0, 20.9)) { o.cap = false; o.hold = Object.assign({}, o.hold, { l: 'fp13_cap' }); o.grip.l = [-46, 34]; o.arms.l = 'hold'; }
+  if (inR(lt, 15.95, 20.9)) { const k = ph(lt, 16.0, 16.6); o.grip.r = [lerp(120, 214, k), lerp(30, 20, k)]; o.arms.r = 'hold'; o.hand.r = 'open'; }   // her hand out to Brenda, palm up
+  if (inR(lt, 20.0, 22.0)) { o.cap = false; o.hold = { l: 'fp13_cap' }; o.grip.l = [-34, 74]; o.arms.l = 'hold'; o.grip.r = [40, 76]; o.arms.r = 'hold'; o.hand.r = 'flat'; }   // hat off, held to her chest
   if (seated && lt < 23.1) { o.arms = { l: 'rest', r: 'rest' }; o.hold = {}; o.grip = {}; }
   if (lt >= 22.0 && lt < 23.1) { o.cap = true; }
-  // the granola bar: out of her pocket, unwrapped, to her mouth
+  // the granola bar: out of her pocket, unwrapped, to her mouth, one bite, then down at her chest while she chews
   if (lt >= 23.1) {
-    const un = ph(lt, 23.12, 23.55), toMouth = ph(lt, 23.62, 23.9), bite = ph(lt, 23.9, 24.1), bite2 = ph(lt, 33.0, 33.2);
+    const un = ph(lt, 23.12, 23.55), toMouth = ph(lt, 23.62, 23.9), away = ph(lt, 24.12, 24.45), bite = ph(lt, 23.9, 24.1), bite2 = ph(lt, 33.0, 33.2);
+    const up = toMouth * (1 - away);
     o.hold = { l: 'fp13_bar' }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' };
-    o.grip = { l: [lerp(-70, -26, toMouth), lerp(30, 30, toMouth) + 12 * (1 - toMouth)], r: [lerp(-40 + 22 * un, -20, toMouth), lerp(24, 44, toMouth)] };
-    o.barOpen = un; o.barBite = Math.max(bite * .4, lt > 32 ? .4 + .2 * bite2 : 0); o.barRot = lerp(0, .9, toMouth);
+    o.grip = { l: [lerp(-70, -22, up) - 6 * (1 - up) * 0, lerp(46, 28, up) + 34 * (1 - up)], r: [lerp(34, 42, up), lerp(60, 64, up)] };
+    o.barOpen = un; o.barBite = Math.max(bite * .4, lt > 32 ? .4 + .2 * bite2 : 0); o.barRot = lerp(0, .9, up);
   }
   o.rot = seated ? (lt < 23.1 ? -.03 : 0) + .02 * Math.sin(lt * 1.6) : .03 * Math.sin(lt * .9);
   if (inR(lt, 5.08, 6.4) || inR(lt, 15.4, 15.95)) o.shake = 1.8;
@@ -646,7 +648,7 @@ function actStraw(lt, ex = {}, pos = null, seatPos = null) {
 }
 
 // ------------------------------------------------------------------ Brenda
-const BR_ROUTE = keyRoute([[0, SEATP[0], SEATP[1]], [20.45, SEATP[0], SEATP[1]], [20.95, -215, 1470, 'io']]);
+const BR_ROUTE = () => SEATP;
 function actBrenda(lt, ex = {}, pos = null, route = null) {
   const rt = route || (pos ? () => pos : BR_ROUTE);
   const [X, Z] = rt(lt), up = lt >= 20.45, q = V2.at(X, Z);
@@ -660,32 +662,31 @@ function actBrenda(lt, ex = {}, pos = null, route = null) {
   // the eyes: shut (lid 1 + the lash arcs) until she wakes; the right one first, then the other
   const lidA = lt < first ? 1 : lerp(1, .42, wake);
   o.lid = lt < first ? 1 : (lt < first + .85 ? lidA : lerp(lidA, .26, eye2));
-  o.shut = lt < first + .02 ? 1 : 0;
+  o.shut = lt < first + .02 ? 1 : 0; o.shutStyle = 'sleep';
   o.expr = A13.expr(lt < first ? 'weak' : lt < 15.4 ? 'wake' : lt < 17.5 ? 'weak' : lt < 19.55 ? 'tear' : 'relief');
   if (lt >= 15.4 && lt < 17.5) o.face = { raise: 12, curve: -.2, lid: .2 };
   if (lt >= 15.4 && lt < 17.5) o.lid = .22;
   if (lt >= 17.5 && lt < 19.55) o.lid = .3;
   if (lt >= 19.55) o.lid = .2;
-  o.look = track([[0, [0, .2]], [13.3, [.0, .3]], [14.0, [-.3, .1]], [15.0, [-.5, -.1]], [15.8, [.5, -.1]], [16.3, [-.55, 0]], [17.0, [-.5, -.1]], [17.55, [-.55, .05]], [19.0, [-.5, .2]], [19.6, [-.4, 0]], [20.3, [.0, -.2]], [20.9, [-.5, 0]]], lt);
+  o.look = track([[0, [0, .2]], [13.3, [.0, .3]], [14.0, [-.3, .1]], [15.0, [-.5, -.1]], [15.8, [.5, -.1]], [16.3, [-.55, 0]], [17.0, [-.55, -.1]], [17.55, [-.6, .05]], [19.0, [-.55, .2]], [19.6, [-.4, 0]], [20.3, [.0, -.2]], [20.9, [-.5, 0]]], lt);
   o.specsDrop = lerp(.7, .9, ph(lt, 13.5, 19.5)) - .5 * ph(lt, 20.6, 20.9);
   // the cobweb across her mouth: stretches on the first word, snaps at 13.45
   const wsnap = first + .2;
   o.web = lt < 20.6 ? (lt > 14.8 ? 1 - ph(lt, 14.6, 15.0) : 1) : 0;
   o.webT = lt < wsnap ? -1 : lt - wsnap;
   o.tear = ph(lt, 17.62, 19.5) * (lt < 20.4 ? 1 : 1 - ph(lt, 20.4, 20.8));
-  // the body: upright and still; she draws a breath at the wake; head lifts; hands folded at her chest with cobwebs between the fingers
+  // the body: upright and still; she draws a breath at the wake; head lifts; hands folded low on the table edge with cobwebs between the fingers
   const lift = ph(lt, first, first + .5) * 7 - 4 * pulse(lt, 14.2, 1.0);
   o.y -= lift * o.s * .5;
   o.rot = .02 * Math.sin(lt * .8) - .03 * ph(lt, first, first + .6) + (lt > 17.6 && lt < 19.9 ? .012 * Math.sin(lt * 7) : 0);
-  if (lt < 20.15) { o.grip = { l: [-22, 20], r: [22, 24] }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' }; }
-  // she stands: a crouch, a stretch (arms up, a long breath), a wobble, then the first steps
+  if (lt < 20.15) { o.grip = { l: [-34, 76], r: [34, 80] }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' }; }
+  // she stands: a crouch, a stretch (arms up, a long breath), a wobble; the N view only sees her get up, the S view sees the first steps
   if (lt >= 20.15) {
     const k = lt - 20.15, crouch = pulse(lt, 20.15, .35) * .16, stretch = ph(lt, 20.5, 20.85) * (1 - ph(lt, 20.85, 21.2));
     o.squash = crouch - .08 * stretch; if (up) o.plant = true;
     o.arms = { l: stretch > .05 ? 'up' : 'rest', r: stretch > .05 ? 'up' : 'rest' }; o.hand = { l: 'open', r: 'open' }; o.grip = {};
     o.shake = lt < 20.45 ? 2.4 : 0;
     o.rot = .05 * Math.sin(k * 9) * Math.exp(-k * 1.2);
-    if (up) { const sp = Math.hypot(...[0, 0]); void sp; }
   }
   o.z = Z; o.seated = !up;
   return Object.assign(o, ex);
@@ -1159,6 +1160,16 @@ function sfx(lt, t0, str, x, y, o = {}) {
 // ------------------------------------------------------------------ the scene
 window.__EP13_SCENES = window.__EP13_SCENES || {};
 window.__EP13_SCENES.vault = {
+  __dbg(lt) {   // layout probe for the builder: which faces a shot shows
+    const sh = shotAt(lt); this.cam(lt);
+    const out = { shot: sh.id, cam: [CAM.x, CAM.y, CAM.z].map(v => +v.toFixed(1)), faces: {} };
+    if (sh.view === 'D') return out;
+    lensN(); const cast = castAll(sh.freezeLt ?? lt, sh.pos || {}, sh.ex || {}); this.cam(lt);
+    const fr = frameRect(0);
+    for (const id of Object.keys(cast)) { const o = cast[id], r = faceRect(o); out.faces[id] = { x: +o.x.toFixed(0), z: +o.z.toFixed(0), inside: faceInside(o), rect: r.map(v => +v.toFixed(0)) }; }
+    out.frame = fr.map(v => +v.toFixed(0));
+    return out;
+  },
   shot: lt => shotAt(lt).id,
   cam(lt) {
     const sh = shotAt(lt), u = seg(lt, sh.a, sh.b);

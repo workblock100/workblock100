@@ -187,7 +187,7 @@ const V2 = (() => {
   function grade(fx) {
     const g = mainCtx;
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
-    if (fx.aberr > 0) aberrate(fx.aberr);
+    if (fx.aberr > .2) aberrate(fx.aberr);   /* under a fifth of a pixel the three-channel split is invisible and costs ~50 ms a frame */
     if (fx.contrast > 0) { g.globalCompositeOperation = 'soft-light'; g.globalAlpha = fx.contrast; g.drawImage(canvas, 0, 0); g.globalAlpha = 1; }
     if (fx.sat > 0) { g.globalCompositeOperation = 'saturation'; g.fillStyle = '#ff2d2d'; g.globalAlpha = fx.sat; g.fillRect(0, 0, W, H); g.globalAlpha = 1; }
     for (const [c, a, mode] of fx.tint || []) {   // tint: [[color, alpha, blendMode], ...]

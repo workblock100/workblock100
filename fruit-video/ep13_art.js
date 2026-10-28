@@ -131,31 +131,28 @@ EXT.acc.fp13_dust = (o, k, t, layer) => {
       ctx.fillStyle = `rgba(205,200,194,${(.14 + .2 * sr(i, 4)) * d})`; ell(x, y, 1.6 + sr(i, 5) * 3.4, 1.2 + sr(i, 6) * 2.2, sr(i, 7) * 3); ctx.fill();
     }
     ctx.restore();
-  } else if (layer === 'front') {
-    // a low drift of dust lying on each shoulder (where the arm leaves the body), flat and lumpy, with a bright crest
-    for (const s of [-1, 1]) {
-      ctx.save(); ctx.translate(s * (k.rx * .93 + 8), 2); ctx.rotate(s * .5);
-      const h = 13 * d + 3;
-      ctx.fillStyle = `rgba(212,207,200,${.96 * d})`; ctx.strokeStyle = `rgba(116,110,106,${.55 * d})`; ctx.lineWidth = 2.2;
-      ctx.beginPath(); ctx.moveTo(-26, 4); ctx.bezierCurveTo(-22, -h * .9, -8, -h * 1.15, 2, -h); ctx.bezierCurveTo(12, -h * 1.2, 24, -h * .7, 30, 4); ctx.quadraticCurveTo(2, 9, -26, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = `rgba(255,255,250,${.4 * d})`; ell(-2, -h * .6, 14, 2.6); ctx.fill();
-      ctx.restore();
-    }
   }
 };
 
-// closed eyes: a relaxed downward arc with a few lashes, over the lids (shut 0..1)
+// closed eyes: the open eye is wiped with a patch of skin, then one clean arc is drawn over it: 'sleep' (a relaxed U with a few lashes) or 'happy' (an upside-down U, the squint of someone enjoying a bite). o.shut 0..1, o.shutStyle
 EXT.acc.fp13_shut = (o, k, t, layer) => {
   const sh = o.shut ?? 0;
   if (layer !== 'front' || sh < .05) return;
-  ctx.save(); ctx.lineCap = 'round'; ctx.globalAlpha *= clamp(sh * 1.5);
-  const breathe = Math.sin(t * 1.5 + 1) * .6;
+  const kc = o.colors || k.c, mixc = V2.mix(kc[0], kc[1], .34), skin = V2.rgba(mixc, 1), skin0 = V2.rgba(mixc, 0), happy = o.shutStyle === 'happy';
+  const E = EXPR[o.expr || 'neutral'] || {}, er = k.er * (E.wide || 1) * (o.eyeScale || 1), eh = er * 1.15, breathe = Math.sin(t * 1.5 + 1) * .6;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha *= clamp(sh * 1.4);
   for (const s of [-1, 1]) {
-    const x = s * k.eyeX, y = k.eyeY + 6 + breathe, w = k.er * .98;
-    ctx.strokeStyle = '#1d1a22'; ctx.lineWidth = 4.4;
-    ctx.beginPath(); ctx.moveTo(x - w, y - 5); ctx.quadraticCurveTo(x, y + 13, x + w, y - 5); ctx.stroke();
-    ctx.lineWidth = 2.6;
-    for (const u of [-.7, -.25, .25, .7]) { const px = x + u * w, py = y + 3.6 - 9 * (u * u - .5) * 0 + 2.6 * (1 - u * u); ctx.beginPath(); ctx.moveTo(px, py + 2); ctx.lineTo(px + s * 1.5 * u * 3, py + 9); ctx.stroke(); }
+    const x = s * k.eyeX, y = k.eyeY + breathe, w = er * 1.02, R = Math.max(er, eh) + 3.5;
+    ctx.fillStyle = V2.radial(x, y, 0, R, [[0, skin], [.74, skin], [1, skin0]]); ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#1d1a22'; ctx.lineWidth = 4.6;
+    ctx.beginPath();
+    if (happy) { ctx.moveTo(x - w, y + 6); ctx.quadraticCurveTo(x, y - 17, x + w, y + 6); } else { ctx.moveTo(x - w, y - 3); ctx.quadraticCurveTo(x, y + 15, x + w, y - 3); }
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    for (const u of happy ? [.62, .9] : [.3, .62, .92]) {   // lashes toward the outer corner
+      const px = x + s * u * w, py = happy ? y + 6 - 17 * 2 * u * (1 - u) * 1.0 - 4 * (1 - u) * 0 : y - 3 + 14 * 2 * u * (1 - u);
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + s * (happy ? 7 : 3), py + (happy ? -8 : 8)); ctx.stroke();
+    }
   }
   ctx.restore();
 };
