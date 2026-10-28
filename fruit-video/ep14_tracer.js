@@ -55,7 +55,9 @@ const CUE = {
   get peel() { return bs('slip') + .15; }, get boing() { return bs('slip') + .4; },
 };
 
-// ------------------------------------------------------------------ STAGE: where everything stands (world coordinates at zoom 1; the floor line is y = FL). Re-tune here when the real rooms land.
+// ------------------------------------------------------------------ STAGE: where everything stands (world coordinates at zoom 1; the floor line is y = FL). Numbers read off K's rooms (S14 v1):
+// ROOM 4: bed x 318..462, window 435..512; ROOM 7: lamp 575, armchair 589..668 (seat top FL-50), radio 700, dresser 722..772; SHOWER: curtain 906..962. Nobody can walk past the seated Cranberry
+// (two faces would overlap), so Strawberry hurdles her and the group relocates while the pen macro is on screen.
 const R = id => S14.rect(id);
 const FL = R('med').floor;
 const U = (id, u) => R(id).x0 + u * R(id).w;
@@ -63,52 +65,61 @@ const S = S14.S, KS = S14.S * .72;                                              
 const STAGE = {
   // n1: the med room. Strawberry at the cart (the cart on her right, its handle toward her), the two observers close behind her on her left
   sMed: 202, stMed: 132, kMed: 72, cartMed: 264,
-  // the three call lights: where the handset lands (x, y above the floor) and where her hand is when it does
-  light1: [522, 64], light2: [640, 52], light3: [794, 98],
-  contact1: 440, contact2: 560, contact3: 712, halt: 738,
+  // the three call lights: where the handset lands (x, px above the floor) and where her hand is when it does
+  light1: [474, 64], light2: [640, 62], light3: [794, 98],
+  contact1: 392, hurdle: [8.46, 9.02], contact3: 712, halt: 738,
   // residents
-  banR4: 480, cranR7: 596,
-  // the observers' stops in ROOM 4, and in ROOM 7 at the cart
-  stR4: 420, kR4: 456, stR7: 612, kR7: 706, cartR7: 668, sR7: 752,
+  banR4: 440, cranR7: 628, seatY: 50,
+  // the observers: ROOM 4 at the first handset, then ROOM 7 at the cart (a cut hides the walk), then into the shower room while the macro is on
+  stR4: 352, kR4: 398, stR7: 770, kR7: 815, sR7: 870, cartR7: 720,
+  stSH: 990, kSH: 940, sSH: 890, banSlip: 725,
 };
+const CUT = { st3: 13.184, macro0: 16.294, macro1: 17.793 };             /* hard cuts hide the observers' relocations (scene-local seconds) */
 
 // ------------------------------------------------------------------ paths in world x (the feet are always on the floor line)
-/* Strawberry: the shadow-step gag in n1, the churn, then dash-stop-dash-stop-dash through three call-light stops, the halt, and her place in ROOM 7 */
+/* Strawberry: the shadow-step gag in n1, the churn, then dash - stop at ROOM 4 - hurdle the armchair - stop at the wall - halt, then inch to the cart's other side */
 const SXf = lazy(() => {
   const f = wordT('n1', 'followed', 2.54), e = wordT('n1', 'everywhere', 3.0), w = CUE.whoosh, c1 = CUE.ding1, c2 = CUE.ding2, c3 = CUE.ding3, h = bs('run') + 3.52;
+  const [h0, h1] = STAGE.hurdle;
   return pchip([
     [0, STAGE.sMed], [f, STAGE.sMed], [f + .3, STAGE.sMed - 34], [e + .05, STAGE.sMed - 34], [e + .4, STAGE.sMed],
     [w + .3, STAGE.sMed - 4], [w + .31, STAGE.sMed - 4],                                  /* held by the squash while the legs spin */
     [w + .55, STAGE.sMed + 52], [w + .8, STAGE.sMed + 150], [c1 - .22, STAGE.contact1 - 40], [c1 - .05, STAGE.contact1 - 8], [c1 + .05, STAGE.contact1],
-    [c1 + .2, STAGE.contact1 + 22], [c1 + .45, STAGE.contact1 + 80], [c2 - .25, STAGE.contact2 - 40], [c2 - .05, STAGE.contact2 - 6], [c2 + .05, STAGE.contact2],
-    [c2 + .2, STAGE.contact2 + 22], [c2 + .45, STAGE.contact2 + 100], [c3 - .22, STAGE.contact3 - 36], [c3 - .05, STAGE.contact3 - 6], [c3 + .05, STAGE.contact3],
-    [h - .1, STAGE.halt - 4], [h + .15, STAGE.halt + 6], [h + .45, STAGE.halt], [bs('st3') - .4, STAGE.halt], [bs('st3') + .5, STAGE.sR7],
+    [c1 + .2, STAGE.contact1 + 22], [c1 + .45, STAGE.contact1 + 90], [h0 - .15, 556], [h0, 574], [c2, 626], [h1, 682], [h1 + .2, 708],
+    [c3 - .1, STAGE.contact3 - 8], [c3 + .05, STAGE.contact3],
+    [h - .1, STAGE.halt - 4], [h + .15, STAGE.halt + 6], [h + .45, STAGE.halt], [bs('st2') + .1, STAGE.halt], [CUT.st3, STAGE.sR7],
+    [bs('s2') + .6, STAGE.sR7], [CUT.macro1, STAGE.sSH], [bs('b1'), STAGE.sSH],
   ]);
 });
 const SX = lt => SXf()(lt);
+/* the arc of the hurdle: 0 outside it, 4u(1-u) inside, in px of lift */
+const hurdleLift = lt => { const [a, b] = STAGE.hurdle; return lt > a && lt < b ? 96 * 4 * ((lt - a) / (b - a)) * (1 - (lt - a) / (b - a)) : 0; };
 /* the cart: parked beside her, shoved at the launch, coasting to rest in ROOM 7 */
 const CARTf = lazy(() => {
-  const t0 = CUE.whoosh + .5, t1 = CUE.whoosh + 3.3, x0 = STAGE.cartMed + 26, v0 = 2 * (STAGE.cartR7 - x0) / (t1 - t0 + (t1 - t0) * .0);
+  const t0 = CUE.whoosh + .5, t1 = CUE.whoosh + 3.3, x0 = STAGE.cartMed + 26, v0 = 2 * (STAGE.cartR7 - x0) / (t1 - t0);
   return t => t < CUE.whoosh + .3 ? STAGE.cartMed : t < t0 ? lerp(STAGE.cartMed, x0, sstep(t, CUE.whoosh + .3, t0)) : t < t1 ? x0 + v0 * ((t - t0) - (t - t0) * (t - t0) / (2 * (t1 - t0))) : STAGE.cartR7;
 });
 const cartX = lt => CARTf()(lt);
-const cartMoving = lt => lt > CUE.whoosh + .3 && lt < CUE.whoosh + 3.3;
-/* Stateman: shadows her steps, turns his head late, ambles after her, reads the first handset, then walks on to the cart */
-const STXf = lazy(() => {
+/* Stateman: shadows her steps, turns his head late, ambles after her, stands at the first handset in ROOM 4 */
+const STXa = lazy(() => {
   const f = wordT('n1', 'followed', 2.54), e = wordT('n1', 'everywhere', 3.0), w = CUE.whoosh;
   return pchip([
     [0, STAGE.stMed], [f + .1, STAGE.stMed], [f + .42, STAGE.stMed - 34], [e + .15, STAGE.stMed - 34], [e + .5, STAGE.stMed], [w + .75, STAGE.stMed],
-    [w + 1.2, STAGE.stMed + 24], [bs('k1') - .3, STAGE.stR4], [bs('k1') + .9, STAGE.stR4], [bs('st3') - .25, STAGE.stR7], [bs('st3') + .5, STAGE.stR7],
+    [w + 1.2, STAGE.stMed + 24], [bs('k1') - .3, STAGE.stR4], [CUT.st3, STAGE.stR4],
   ]);
 });
-/* the Kumquat: shadows too, then sprints after her and arrives in ROOM 4 a full room late */
-const KXf = lazy(() => {
+/* after the cut: at the cart in ROOM 7, then (hidden by the macro) across to the shower room */
+const STXb = lazy(() => pchip([[CUT.st3, STAGE.stR7], [CUT.macro0 - .05, STAGE.stR7], [CUT.macro0 + .1, STAGE.stR7], [CUT.macro1 - .1, STAGE.stSH], [bs('b1'), STAGE.stSH]]));
+const KXa = lazy(() => {
   const f = wordT('n1', 'followed', 2.54), e = wordT('n1', 'everywhere', 3.0), w = CUE.whoosh;
   return pchip([
     [0, STAGE.kMed], [f + .2, STAGE.kMed], [f + .5, STAGE.kMed - 20], [e + .25, STAGE.kMed - 20], [e + .6, STAGE.kMed], [w + .35, STAGE.kMed],
-    [w + 1.1, STAGE.kMed + 90], [w + 1.9, STAGE.kR4 - 40], [w + 2.15, STAGE.kR4], [bs('st2') + .5, STAGE.kR4], [bs('st3') - .2, STAGE.kR7], [bs('st3') + .5, STAGE.kR7],
+    [w + 1.1, STAGE.kMed + 90], [w + 1.9, STAGE.kR4 - 40], [w + 2.15, STAGE.kR4], [CUT.st3, STAGE.kR4],
   ]);
 });
+const KXb = lazy(() => pchip([[CUT.st3, STAGE.kR7], [CUT.macro0 + .1, STAGE.kR7], [CUT.macro1 - .1, STAGE.kSH], [bs('b1'), STAGE.kSH]]));
+/* Banana: in ROOM 4 on his walker until the pen scene is over, then (hidden by the cuts) past the armchair to the arch */
+const BXf = lazy(() => pchip([[0, STAGE.banR4], [bs('s2'), STAGE.banR4], [bs('s2') + .6, STAGE.banR4 + 38], [18.0, 665], [bs('slip'), STAGE.banSlip], [CUE.peel, 748], [CUE.boing, 772]]));
 
 // ------------------------------------------------------------------ gait of the runner (phase in CYCLES, so the stride can change without a jump), the cap
 const strideAt = sp => lerp(30, 54, sstep(sp, 70, 270));                                  /* half-stride in local units: a stroll, then a sprint */

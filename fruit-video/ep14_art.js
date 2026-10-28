@@ -511,6 +511,48 @@ EXT.prop.fp14_binocs = (side, o, t) => {
 };
 PROP_BOX.fp14_binocs = Object.assign([-70, -50, 70, 40], { nearFace: true });
 
+// ------------------------------------------------------------------ small extras for the lobby scene (the Administrator's pizza, a picture frame to hide in)
+// pizza sauce round the mouth: o.sauce 0..1 a few dabs at the corners, o.sauceSmile 0..1 a wide red smear wiped across the lower face (the "pizza smile"); drawn over the face
+EXT.acc.fp14_sauce = (o, k, t, layer) => {
+  if (layer !== 'front') return;
+  const a = clamp(o.sauce ?? 0), b = clamp(o.sauceSmile ?? 0);
+  if (a <= .01 && b <= .01) return;
+  const my = k.mouthY, mw = (k.mw || 26) + 6;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (a > .01) {
+    ctx.fillStyle = `rgba(190,52,34,${.9 * a})`;
+    for (const [dx, dy, r] of [[-mw - 4, 4, 7], [mw + 6, 10, 8], [-mw + 8, 22, 5.5], [mw - 10, 26, 6], [4, 30, 4.5]]) { ell(dx, my + dy, r * a + 1, r * .8 * a + 1, dx * .1); ctx.fill(); }
+    ctx.fillStyle = `rgba(246,184,64,${.9 * a})`; for (const [dx, dy] of [[-mw + 2, 14], [mw + 2, 18]]) { ell(dx, my + dy, 4 * a + 1, 3 * a + 1); ctx.fill(); }
+  }
+  if (b > .01) {   /* the napkin dragged a wide red smile across the cheeks */
+    ctx.strokeStyle = `rgba(196,56,38,${.85 * b})`; ctx.lineWidth = 15;
+    ctx.beginPath(); ctx.moveTo(-mw * 2.1, my - 8); ctx.quadraticCurveTo(0, my + 38 * b, mw * 2.1, my - 8); ctx.stroke();
+    ctx.strokeStyle = `rgba(246,184,64,${.7 * b})`; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-mw * 1.6, my - 2); ctx.quadraticCurveTo(0, my + 30 * b, mw * 1.6, my - 2); ctx.stroke();
+  }
+  ctx.restore();
+};
+// a paper napkin in the fist, stained with sauce
+EXT.prop.fp14_napkin = (side, o, t) => {
+  ctx.save(); ctx.rotate(side * .4 + .2); ctx.lineJoin = 'round';
+  ctx.fillStyle = '#fbfaf4'; ctx.strokeStyle = 'rgba(70,60,50,.75)'; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.moveTo(-18, -22); ctx.lineTo(8, -28); ctx.lineTo(24, -12); ctx.lineTo(20, 10); ctx.lineTo(-4, 16); ctx.lineTo(-22, 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(200,60,40,.8)'; ell(4, -8, 7, 5, .4); ctx.fill(); ell(-8, 2, 4, 3); ctx.fill(); ctx.fillStyle = 'rgba(246,190,70,.75)'; ell(12, 2, 4, 3); ctx.fill();
+  ctx.restore();
+};
+PROP_BOX.fp14_napkin = [-26, -32, 28, 20];
+// a picture frame held round the face: for somebody pretending to be a portrait. The face shows through it; registered nearFace. o.frameA 0..1 raises it
+EXT.prop.fp14_frame = (side, o, t) => {
+  const k = KINDS[o.kind] || KINDS.lemon, g = (o.grip && o.grip.l) || [0, 0], a = clamp(o.frameA ?? 1);
+  if (a <= .01) return;
+  const fw = (k.eyeX + k.er * 1.9) * 1.12, fh = (k.mouthY - k.eyeY + k.er * 3.5) * 1.1, cy = (k.eyeY + k.mouthY) / 2 + 2;
+  ctx.save(); ctx.translate(-g[0], cy - g[1]); ctx.scale(lerp(.6, 1, a), lerp(.6, 1, a)); ctx.globalAlpha *= clamp(a * 1.5); ctx.lineJoin = 'round';
+  ctx.strokeStyle = V2.grad(-fw, -fh, fw, fh, [[0, '#f6dc84'], [.5, '#b98a2c'], [1, '#8a6218']]); ctx.lineWidth = 17; rr(-fw, -fh, fw * 2, fh * 2, 10); ctx.stroke();
+  ctx.strokeStyle = 'rgba(40,24,6,.85)'; ctx.lineWidth = 3; rr(-fw - 8.5, -fh - 8.5, fw * 2 + 17, fh * 2 + 17, 12); ctx.stroke(); rr(-fw + 8.5, -fh + 8.5, fw * 2 - 17, fh * 2 - 17, 6); ctx.stroke();
+  ctx.fillStyle = '#f6dc84'; for (const sx of [-1, 1]) for (const sy of [-1, 1]) { ell(sx * (fw + 2), sy * (fh + 2), 10, 10); ctx.fill(); ctx.strokeStyle = 'rgba(40,24,6,.8)'; ctx.lineWidth = 2.4; ctx.stroke(); }
+  ctx.restore();
+};
+PROP_BOX.fp14_frame = Object.assign([-110, -150, 110, 120], { nearFace: true });
+
 // ------------------------------------------------------------------ the rest of the cast (delegates)
 A.pear = o => (window.A7 && A7.pear ? A7.pear(Object.assign({ s: SC, y: G }, o)) : Object.assign({ kind: 'pear', id: 'pear', who: 'pear', s: SC, y: G, expr: 'neutral' }, o));
 A.goji = o => (window.A7 && A7.goji ? A7.goji(Object.assign({ s: SC, y: G }, o)) : Object.assign({ kind: 'goji', id: 'goji', who: 'goji', s: SC, y: G, expr: 'neutral' }, o));
