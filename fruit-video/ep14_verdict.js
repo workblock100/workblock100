@@ -587,7 +587,7 @@ const SHOTS = [
   { id: 's5b', t0: 24.45, t1: 25.15, cam: pcam([640, 1172, 2.25], [640, 1172, 2.35]) },
   { id: 's5c', t0: 25.15, t1: 25.985, cam: fcam('straw', 5.0, 5.8, 180), dof: 10 },
   { id: 'a3', t0: 25.985, t1: 27.385, cam: fcam('melon', 4.6, 5.0, 190), dof: 10 },
-  { id: 'st6', t0: 27.385, t1: 28.421, cam: fcam('star', 5.6, 5.8, 190), dof: 12, dim: .58, dimC: '6,12,30', glowOn: 'star', light: { back: { color: '255,236,190', a: 1, w: 26 }, frontDark: .3, keyA: .16, rimA: .2 } },
+  { id: 'st6', t0: 27.385, t1: 28.421, cam: fcam('star', 5.6, 5.8, 190), dof: 12, dim: .74, dimC: '4,8,24', glowOn: 'star', light: { back: { color: '255,236,190', a: 1, w: 26 }, frontDark: .3, keyA: .16, rimA: .2 } },
   { id: 'st7a', t0: 28.421, t1: 29.64, cam: pcam([533, 1150, 3.8], [533, 1150, 3.95]), dof: 6 },
   { id: 'st7b', t0: 29.64, t1: 30.34, cam: pcam([745, 1150, 3.8], [745, 1150, 3.95]), dof: 6 },
   { id: 'st7c', t0: 30.34, t1: 31.36, cam: pcam([640, 1200, 1.35], [640, 1200, 1.4]) },
@@ -624,7 +624,7 @@ function drawBack(lt) { drawRoomAll(lt); drawBoard(lt, boardSt(lt)); }
 function drawStageBody(lt, sh) {
   lightRig(lt, sh);
   if (sh.dof) V2.dof(sh.dof, () => drawBack(lt)); else drawBack(lt);
-  if (sh.dim) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(${sh.dimC || '10,8,20'},${sh.dim})`; ctx.fillRect(0, 0, W, H); ctx.restore(); if (sh.glowOn) { const f = faceC(CASTFN[sh.glowOn](lt)); V2.glow(f[0], f[1] - 10, 260, '255,214,150', .5, 'screen', .6); } }
+  if (sh.dim) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(${sh.dimC || '10,8,20'},${sh.dim})`; ctx.fillRect(0, 0, W, H); ctx.restore(); if (sh.glowOn) { const f = faceC(CASTFN[sh.glowOn](lt)); V2.glow(f[0], f[1] + 20, 330, '255,206,140', .78, 'screen', .7); V2.glow(f[0], f[1] + 20, 640, '255,190,120', .34, 'screen', .3); } }
   const kumO = CASTFN.kum(lt), list = [];
   for (const id of CASTORDER) {
     const o = id === 'kum' ? kumO : CASTFN[id](lt), v = visFrac(o);
