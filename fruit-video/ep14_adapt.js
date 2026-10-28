@@ -1,9 +1,10 @@
 'use strict';
-/* DEV build of ep14_adapt.js (junk sheet) */
+/* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: adapt (3:04 PM, THE ADAPTATION, 24.4 s). Builder E14-B. (header is written last; see the shot list at the end of the file's build)
+ * Registers window.__EP14_SCENES.adapt and exports the junk catalogue on window.FP14J for ep14_closet.js. Everything is a pure function of the scene time `lt`. */
 (() => {
 if (!window.TIMELINE_EP14 || !window.S14) return;
 const { zoomTo, faceZoom, drawBg } = window.H6;
-const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, S14 = window.S14;
+const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, A14 = window.A14, S14 = window.S14;
 // ------------------------------------------------------------------ THE JUNK LIBRARY (the stash of the shower room): vector art, one drawing per kind, shared by adapt (the conveyor, the spill) and closet (the avalanche)
 // Every drawing is centred on its own origin, in native pixels (a standing fruit is about 400 px tall at native scale), light from the upper left. NO TEXT in any sprite (a sprite is cached; text is drawn live).
 // A sprite is cached once at 2x with a hairline ink outline already in the art; the rim lights (a warm key edge up-left, a cool back edge down-right) are laid down at draw time as offset silhouettes so they stay on the
@@ -268,6 +269,235 @@ function jdraw(kind, x, y, rot, sc, st = {}) {
   if (rim > 0 && !TXA.mask) ctx.filter = `drop-shadow(${-rim}px ${-rim}px 0px rgba(255,228,176,.9)) drop-shadow(${rim * .8}px ${rim * .8}px 0px rgba(140,185,255,.55))`;
   ctx.drawImage(cv, -w / 2, -h / 2, w, h);
   ctx.restore();
+}
+
+// ------------------------------------------------------------------ small helpers (wordT, sstep, pulse, hnoise copied from ep13_station.js / ep13_cross.js; route from ep13_station.js)
+const cl01 = x => Math.max(0, Math.min(1, x));
+const sstep = (t, a, b) => { const k = cl01((t - a) / (b - a)); return k * k * (3 - 2 * k); };
+const pulse = (t, t0, hz = 36, tau = .07) => t < t0 ? 0 : Math.sin((t - t0) * hz) * Math.exp(-(t - t0) / tau);
+const hnoise = (t, f, s = 0) => vnoise(t * f + s * 17.3);
+const inB = (lt, id) => lt >= B(id).s && lt < B(id).e;
+/* the scene-local time of a spoken word: wordT('n5', 'position') */
+const wordT = (id, word, fb = 0) => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id), w = l && l.words.find(x => x[0].toLowerCase().replace(/[^a-z]/g, '').includes(word)); return w ? l.s - CUR.start + w[1] : fb; };
+const route = keys => lt => {
+  if (lt <= keys[0][0]) return [keys[0][1], keys[0][2]];
+  for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = cl01((lt - a[0]) / (b[0] - a[0])), e = b[3] === 'io' ? easeIO(k) : b[3] === 'out' ? easeOut(k) : b[3] === 'in' ? easeIn(k) : k; return [lerp(a[1], b[1], e), lerp(a[2], b[2], e)]; }
+  const l = keys[keys.length - 1]; return [l[1], l[2]];
+};
+/* the sound cues, relative to their BEATS (the audio spec in script_ep14.json): crash +0.1 and clatter +0.15 into pop, typing +0.4 into n3, shutter +0.1, scribble +0.3 and shutter +1.0 into cam, pizzabox -0.2 and sparkle +0.1 around a1 */
+const CUE = { get crash() { return B('pop').s + .1; }, get clatter() { return B('pop').s + .15; }, get typing() { return B('n3').s + .4; }, get shutter1() { return B('cam').s + .1; }, get scribble() { return B('cam').s + .3; },
+  get shutter2() { return B('cam').s + 1.0; }, get pizzabox() { return B('a1').s - .2; }, get sparkle() { return B('a1').s + .1; } };
+
+// ------------------------------------------------------------------ the palette of the film's field-guide graphics
+const CREAM = '#f2e8cf', GREEN = '#24402e', OCHRE = '#c98b2c', INKD = '#1d1a16', STAMP = '#c23a2b', NVG = '#7dff8a', NVGD = '#04120a', SLATE = '#33527a';
+
+// ------------------------------------------------------------------ a character's geometry: where its body centre is on the canvas, and the grip target that puts a hand on a world point (the same maths as drawChar / arms in v2_char.js)
+function bodyCentre(o) {
+  const k = KINDS[o.kind], s = o.s || 1, L = o.noLegs ? 0 : (k.leg || 90), t = o.t ?? T, seed = o.seed ?? (o.kind.charCodeAt(0) * 13 + o.kind.length * 7);
+  const walkBob = (o.gait != null || o.gaitW != null) ? -Math.abs(Math.sin((o.gaitW != null ? o.gaitW : o.gait / s) / (2 * (o.stride || 30)) * PI)) * 7 : 0;
+  const bob = o.noBob ? 0 : Math.sin(t * 2.6 + seed) * 2.2 + walkBob;
+  return [o.x, o.y - (o.lift || 0) - (L + k.ry * .9) * s + bob * s];
+}
+/* the grip (local units, relative to the body centre, in the character's own turned frame) that puts the hand of `side` ('l' or 'r') on the world point (X, Y); clamped to the arm's reach so the audit never sees an overstretched arm */
+function gripFor(o, side, X, Y) {
+  const k = KINDS[o.kind], s = o.s || 1, [cx, cy] = bodyCentre(o), rot = o.rot || 0;
+  let gx = (X - cx) / s, gy = (Y - cy) / s;
+  if (rot) { const c = Math.cos(-rot), n = Math.sin(-rot), x = gx * c - gy * n, y = gx * n + gy * c; gx = x; gy = y; }
+  const [sx, sy] = shoulder(k, side === 'l' ? -1 : 1), reach = ((k.arm1 || 56) + (k.arm2 || 52)) * (o.armScale || 1.12) - 3, dx = gx - sx, dy = gy - sy, d = Math.hypot(dx, dy);
+  if (d > reach) { gx = sx + dx / d * reach; gy = sy + dy / d * reach; }
+  return [gx, gy];
+}
+/* the world position of a local grip (the inverse of the above) */
+function gripWorld(o, g) {
+  const s = o.s || 1, [cx, cy] = bodyCentre(o), rot = o.rot || 0, c = Math.cos(rot), n = Math.sin(rot);
+  return [cx + (g[0] * c - g[1] * n) * s, cy + (g[0] * n + g[1] * c) * s];
+}
+/* lean about the FEET: the same sprite turned by `a` radians with the shoes kept where they were (drawChar turns the body about its centre, which would swing the shoes) */
+function leanO(o, a) {
+  const k = KINDS[o.kind], s = o.s || 1, L = o.noLegs ? 0 : (k.leg || 90), h = (L + k.ry * .9) * s;
+  o.rot = (o.rot || 0) + a; o.x += h * Math.sin(a); o.y += h * (1 - Math.cos(a));
+  return o;
+}
+/* is a character's face and body entirely inside the frame under the current camera? (a shot that needs everybody in frame hides the ones that are not) */
+function frameStat(o) {
+  const k = KINDS[o.kind], s = o.s || 1, L = o.noLegs ? 0 : (k.leg || 90), top = o.y - (o.lift || 0) - (L + k.ry * .9 + (TOPS[o.kind] ?? k.ry * 1.05)) * s, bot = o.y + 24 * s, half = k.rx * 1.12 * s;
+  const m = ctx.getTransform(), p = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+  const q = [p(o.x - half, top), p(o.x + half, top), p(o.x - half, bot), p(o.x + half, bot)], xs = q.map(a => a[0]), ys = q.map(a => a[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  return { inter: x1 > 0 && x0 < W && y1 > 0 && y0 < H, whole: x0 >= 6 && x1 <= W - 6 && y0 >= 6 && y1 <= H - 6, x0, x1, y0, y1 };
+}
+/* a character that may be half out of frame because the camera is whipping past it: transit exempts it from the edge audit */
+const withTransit = (o, moving) => { const f = frameStat(o); if (f.inter && !f.whole && moving) o.transit = true; return o; };
+
+// ------------------------------------------------------------------ the documentary graphics (screen space, drawn in over(): never blurred, never covered by the world)
+const regOverlay = (r, id) => reg('overlay', [r[0], r[1], r[2], r[3]], { id });
+/* the field-guide tag: a cream specimen plate with a forest-green border, an ochre kicker, the behaviour in Bangers and its Latin name in italic. It drops in from above (no sliding through the frame edge) and fades out. */
+const TAG_BOX = [512, 96, 520, 200];
+const BEHAVIORS = [
+  { n: 1, name: 'CONCEALMENT', latin: 'Occultatio communis' },
+  { n: 2, name: 'CHARTING', latin: 'Scriptura retrograda' },
+  { n: 3, name: 'INSULIN PENS', latin: 'Stylus hodiernus' },
+  { n: 4, name: 'CALL LIGHTS', latin: 'Statio custodiens' },
+  { n: 5, name: 'THE DISPLAY', latin: 'Pavo administratorius' },
+];
+function fieldTag(lt, b, t0, t1) {
+  const k = seg(lt, t0, t0 + .3), a = Math.min(sstep(lt, t0, t0 + .18), 1 - sstep(lt, t1 - .22, t1));
+  if (a <= .01) return;
+  const [x, y, w, h] = TAG_BOX, cx = x + w / 2, cy = y + h / 2, dy = (1 - easeOut(k)) * -34, pop = lerp(.94, 1, easeBack(k));
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy + dy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
+  /* the string and the pin it hangs from */
+  ctx.strokeStyle = 'rgba(60,40,20,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 34, y + 12); ctx.quadraticCurveTo(x + 6, y - 6, x - 14, y - 4); ctx.stroke();
+  UI.sign([x, y, w, h], [
+    { t: 'BEHAVIOR ' + b.n + ' OF 5', size: 30, weight: 900, spacing: 4, fill: OCHRE, gap: 2 },
+    { t: b.name, size: 66, font: 'Bangers', spacing: 3, fill: INKD },
+    { t: b.latin, size: 31, weight: 800, italic: true, fill: GREEN },
+  ], { fill: [CREAM, '#e6d9b8'], stroke: GREEN, lw: 6, r: 18, pad: 22, shadow: 18, id: 'tag14' });
+  ctx.strokeStyle = 'rgba(201,139,44,.9)'; ctx.lineWidth = 2.4; rr(x + 11, y + 11, w - 22, h - 22, 12); ctx.stroke();
+  for (const [px, py] of [[x + 20, y + 20], [x + w - 20, y + 20], [x + 20, y + h - 20], [x + w - 20, y + h - 20]]) { ctx.fillStyle = '#b08a3a'; ell(px, py, 4.4, 4.4); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(px - 1.2, py - 1.4, 1.5, 1.5); ctx.fill(); }
+  ctx.restore();
+  regOverlay([x, y + dy, x + w, y + h + dy], 'tag14');
+}
+
+// ------------------------------------------------------------------ the camera trap: scanlines, a rolling band, the IR flash, the HUD (CAM 03 MED ROOM, a timestamp, REC, a MOTION box)
+const SCAN = V2.mk(4, 4); { const g = SCAN.getContext('2d'); g.fillStyle = 'rgba(0,18,6,.34)'; g.fillRect(0, 0, 4, 1.4); g.fillStyle = 'rgba(0,18,6,.12)'; g.fillRect(0, 2, 4, 1); }
+function trapOverlay(lt, o) {
+  if (TXA.mask) return;
+  ctx.save();
+  ctx.fillStyle = ctx.createPattern(SCAN, 'repeat'); ctx.fillRect(0, 0, W, 1390);
+  /* the slow bright band that rolls down a tube picture */
+  const by = ((lt * 340) % 1700) - 200;
+  ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.grad(0, by - 110, 0, by + 110, [[0, 'rgba(125,255,138,0)'], [.5, 'rgba(125,255,138,.07)'], [1, 'rgba(125,255,138,0)']]); ctx.fillRect(0, 0, W, 1390);
+  /* the frame is wiped to static for the first three frames after the cut */
+  const st = 1 - seg(lt, o.cut, o.cut + .1);
+  if (st > 0) { for (let i = 0; i < 26; i++) { const y = hash(i * 7.3 + Math.floor(lt * 30) * 2.1) * 1390, h = 8 + hash(i + 5) * 60; ctx.fillStyle = `rgba(180,255,190,${.18 * st * hash(i * 3.3 + Math.floor(lt * 30))})`; ctx.fillRect(0, y, W, h); } }
+  ctx.restore();
+}
+function trapFlash(lt, t0) {   /* an infrared flash: two frames, white-green */
+  const k = lt - t0; if (k < 0 || k > .1) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(200,255,214,${k < .034 ? .95 : .5 * (1 - (k - .034) / .066)})`; ctx.fillRect(0, 0, W, H); ctx.restore();
+}
+/* the HUD. box: Clementine's screen box [x0, y0, x1, y1] for the MOTION frame; caught: the second shutter has gone */
+function trapHUD(lt, o) {
+  const a = sstep(lt, o.t0, o.t0 + .08); if (a <= .01) return;
+  ctx.save(); ctx.globalAlpha *= a;
+  const G = NVG;
+  /* top right: the camera name and REC */
+  const rec = Math.sin(lt * 7) > -.15;
+  const p = UI.pill('CAM 03  MED ROOM', 1032, 150, { anchor: 'right', size: 34, weight: 900, spacing: 3, ink: G, fill: 'rgba(2,16,6,.7)', stroke: G, lw: 3, padX: 24, h: 62, id: 'camname' });
+  regOverlay([p.x0, p.y0, p.x1, p.y1], 'camname');
+  const r2 = UI.pill('REC', 1032, 226, { anchor: 'right', size: 32, weight: 900, spacing: 4, ink: '#ffb4b4', fill: 'rgba(2,16,6,.7)', stroke: 'rgba(255,90,90,.9)', lw: 3, padX: 56, h: 54, id: 'rec' });
+  regOverlay([r2.x0, r2.y0, r2.x1, r2.y1], 'rec');
+  ctx.fillStyle = rec ? '#ff3b3b' : '#5a1414'; ell(r2.x0 + 30, 226, 11, 11); ctx.fill();
+  /* bottom left: the timestamp, above the caption zone */
+  const secs = 51 + Math.floor(lt - o.t0 + o.t0 * 0), ts = `15:04:${String(secs % 60).padStart(2, '0')}`;
+  const t = UI.pill(ts + '  FRI', 48, 1318, { anchor: 'left', size: 34, weight: 900, spacing: 3, ink: G, fill: 'rgba(2,16,6,.7)', stroke: G, lw: 3, padX: 24, h: 60, id: 'ts' });
+  regOverlay([t.x0, t.y0, t.x1, t.y1], 'ts');
+  /* the MOTION frame: four corner brackets round the subject and a small tab */
+  if (o.box) {
+    const [x0, y0, x1, y1] = o.box, L = 34, caught = !!o.caught, col = caught ? '#ff6a5a' : G;
+    ctx.strokeStyle = col; ctx.lineWidth = 5; ctx.lineCap = 'butt';
+    for (const [cx, cy, dx, dy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]]) { ctx.beginPath(); ctx.moveTo(cx, cy + dy * L); ctx.lineTo(cx, cy); ctx.lineTo(cx + dx * L, cy); ctx.stroke(); }
+    const tab = UI.pill(caught ? 'CAUGHT' : 'MOTION', x0, y0 - 6, { anchor: 'left', size: 30, weight: 900, spacing: 3, ink: caught ? '#2a0804' : NVGD, fill: col, padX: 14, h: 44, id: 'motion', lw: 0 });
+    regOverlay([tab.x0, tab.y0, tab.x1, tab.y1], 'motion');
+  }
+  ctx.restore();
+}
+
+// ------------------------------------------------------------------ the cast, at the dollhouse scale (S14.S = .44; the Administrator is s 1.22 x that). Every walker goes through S14.walk / S14.run so its gait fields reach the footstep tool.
+const SS = S14.S;
+const mkMango = o => A7.mango(Object.assign({}, o));
+const mkClem = o => A10.clem(Object.assign({}, o));
+const mkLemon = o => A7.lemon(Object.assign({}, o));
+const mkStraw = o => A11.straw(Object.assign({}, o));
+const mkMelon = o => A9.melon(Object.assign({}, o));
+const FL = { top: S14.rect('office').floor, mid: S14.rect('r7').floor, low: S14.rect('station').floor };   /* the three floor lines: 656, 986, 1316 */
+const RC = id => S14.rect(id);
+/* the junk is drawn a little larger than its native size next to a person, so a wheelchair is about as long as a person is tall: its scale against the cast */
+const JSC = { chair: 1.15, iv: 1.1, fan: .85, rail: 1, bucket: .92, tv: .8, treebox: 1, banner: 1, box0: 1, box1: 1, box2: 1, boxo1: 1, boxo2: 1, qsign: 1, sock: 1 };
+
+/* a ballistic piece: position of a thrown thing at time t after the throw, with bounces, then a slide (all deterministic) */
+function ball(p, t) {
+  let x = p.x, y = p.y, vx = p.vx, vy = p.vy, rot = p.rot || 0, w = p.w || 0, tt = Math.max(0, t);
+  const g = p.g ?? 1500, fl = p.floor, e = p.e ?? .38, fr = p.fr ?? .8;
+  for (let i = 0; i < 7; i++) {
+    const a = .5 * g, b = vy, c = y - fl, d = b * b - 4 * a * c, dt = d >= 0 ? Math.max(0, (-b + Math.sqrt(d)) / (2 * a)) : 1e9;
+    if (tt <= dt) return [x + vx * tt, y + vy * tt + a * tt * tt, rot + w * tt, false];
+    x += vx * dt; rot += w * dt; y = fl; vy = -(vy + g * dt) * e; vx *= fr; w *= .72; tt -= dt;
+    if (Math.abs(vy) < 90) { const k = p.slide ?? 2.6, f = 1 - Math.exp(-k * tt); return [x + vx / k * f, fl, rot + w / k * f, true]; }
+  }
+  return [x, fl, rot, true];
+}
+
+/* ---- the held junk: a prop that draws one of the catalogue's pieces in the hand (the glove goes over it). o.junk = { kind, rot, ox, oy, st } in the character's local units, drawn at the catalogue scale */
+EXT.prop.fp14b_junk = (side, o, t) => {
+  const j = o.junk; if (!j) return;
+  jdraw(j.kind, (j.ox || 0) * side, j.oy || 0, (j.rot || 0) * side, (j.sc ?? 1) * (JSC[j.kind] || 1), Object.assign({ rim: 2.2 }, j.st));
+};
+PROP_BOX.fp14b_junk = o => { const j = o.junk || {}, K = KIND[j.kind] || { w: 60, h: 60 }, r = Math.max(K.w, K.h) * (JSC[j.kind] || 1) * (j.sc ?? 1) * .5; return Object.assign([(j.ox || 0) - r, (j.oy || 0) - r, (j.ox || 0) + r, (j.oy || 0) + r], { mirror: true }); };
+/* how each kind is carried: the offset of its centre from the hand, its turn, and a scale */
+const CARRY = { iv: { ox: 0, oy: -6, rot: .1 }, fan: { ox: 6, oy: 96, rot: 0 }, rail: { ox: -92, oy: -4, rot: -.5 }, bucket: { ox: 0, oy: 70, rot: 0 }, treebox: { ox: -86, oy: 10, rot: .2, sc: .85 } };
+
+// ------------------------------------------------------------------ SHOT A, the conveyor. Two lanes: Mango runs the middle floor into the shower room through the arch; Clementine runs the top floor through the break room and room 14 to a trapdoor
+// in the floor over the shower room. They come in from the left, drop, and run back out, again and again, one delivery about every 0.4 s.
+const ARCH = S14.door('shower', 'l').x;             /* 802: the arch between room 7 and the shower room */
+const HATCH = 956;                                   /* the trapdoor in the floor of room 14, over the shower room */
+const RUN_V = 700;                                   /* px per second along the floor */
+const XL = 452;                                      /* just off the left edge of the frame: the runners come out of the arch at x 540 */
+const LANE = { m: { x: ARCH - 34, fl: FL.mid }, c: { x: HATCH - 4, fl: FL.top } };
+const TRIPS = [   /* who, kind, the time the item leaves the hand */
+  { who: 'm', kind: 'chair', t: .66 }, { who: 'c', kind: 'iv', t: .98 },
+  { who: 'm', kind: 'fan', t: 1.86 }, { who: 'c', kind: 'rail', t: 2.2 },
+  { who: 'm', kind: 'bucket', t: 3.06 }, { who: 'c', kind: 'treebox', t: 3.42 },
+];
+/* the route of one runner as keyframes [t, x]: out of frame, in, a short stop to throw, back out */
+function laneKeys(who) {
+  const L = LANE[who], keys = [];
+  for (const q of TRIPS.filter(q => q.who === who)) {
+    const din = (L.x - XL) / RUN_V, dout = (L.x - XL) / (RUN_V * 1.12);
+    keys.push([q.t - din, XL], [q.t, L.x], [q.t + .1, L.x], [q.t + .1 + dout, XL]);
+  }
+  return keys;
+}
+const laneFn = (who, keys, fl) => lt => {
+  if (lt <= keys[0][0]) return [XL, fl];
+  for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i]; return [lerp(a[1], b[1], cl01((lt - a[0]) / (b[0] - a[0]))), fl]; }
+  return [XL, fl];
+};
+const MKEYS = laneKeys('m'), CKEYS = laneKeys('c');
+/* which trip is a runner on at lt? -> { q, phase: 'in' | 'out', k } */
+function tripAt(who, lt) {
+  const L = LANE[who], tr = TRIPS.filter(q => q.who === who);
+  for (const q of tr) {
+    const din = (L.x - XL) / RUN_V, dout = (L.x - XL) / (RUN_V * 1.12);
+    if (lt >= q.t - din - .02 && lt < q.t) return { q, phase: 'in', k: (lt - (q.t - din)) / din };
+    if (lt >= q.t && lt < q.t + .1 + dout + .02) return { q, phase: 'out', k: (lt - q.t) / (.1 + dout) };
+  }
+  return null;
+}
+
+/* the distance from a piece's centre to the lowest thing it rests on, in catalogue units: its rest height on a floor */
+const JB = { chair: 94, iv: 184, fan: 78, rail: 40, bucket: 78, tv: 70, box0: 28, box1: 38, box2: 49, boxo1: 38, boxo2: 49, treebox: 34, banner: 28, qsign: 80, sock: 38, tree: 124 };
+const restY = (kind, floor, sc = 1) => floor - JB[kind] * (JSC[kind] || 1) * sc * SS;
+const jsc = (kind, sc = 1) => (JSC[kind] || 1) * sc * SS;     /* the scale a piece is drawn at in the dollhouse */
+
+/* the pile in the shower room: where each delivered piece comes to rest (x, a stacking height in pieces, a turn) */
+const PILE = {
+  chair: { x: 1004, up: 0, rot: 0, flip: 0 }, iv: { x: 928, up: 0, rot: -1.2 }, fan: { x: 880, up: 0, rot: .1 }, rail: { x: 944, up: 1, rot: .22 },
+  bucket: { x: 1022, up: 1.4, rot: -.08 }, treebox: { x: 968, up: 2, rot: .1 },
+};
+/* a delivered piece: from the hand at the drop time, then flying or rolling into the pile. returns { x, y, rot, landed, tl } where tl is the landing time */
+function deliveryState(q, lt) {
+  const t = lt - q.t; if (t < 0) return null;
+  const P = PILE[q.kind], fl = restY(q.kind, FL.mid, 1) - P.up * 36 * SS * 2.2;
+  if (q.who === 'm') {
+    const x0 = LANE.m.x + 40, y0 = FL.mid - 62;
+    const vx = q.kind === 'chair' ? 520 : 400, vy = q.kind === 'chair' ? 0 : -300;
+    const [x, y, rot, rest] = ball({ x: x0, y: q.kind === 'chair' ? fl : y0, vx, vy, floor: fl, w: q.kind === 'chair' ? 0 : 7, rot: 0, e: .32, fr: .72, slide: q.kind === 'chair' ? 3.4 : 5 }, t);
+    return { x, y, rot, rest, spin: q.kind === 'chair' ? vx * Math.exp(-3.4 * t) : 0 };
+  }
+  const x0 = HATCH + 6, y0 = FL.top - 70;
+  const [x, y, rot, rest] = ball({ x: x0, y: y0, vx: (P.x - x0) / .62, vy: -140, floor: fl, w: q.kind === 'iv' ? 3.4 : q.kind === 'rail' ? -2.6 : 2.2, rot: .3, e: .3, fr: .55, slide: 9 }, t);
+  return { x, y, rot: rest ? P.rot : rot, rest, spin: 0 };
 }
 
 const SC = {

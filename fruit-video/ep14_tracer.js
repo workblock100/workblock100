@@ -62,7 +62,7 @@ const U = (id, u) => R(id).x0 + u * R(id).w;
 const S = S14.S, KS = S14.S * .72;                                                   /* an adult, and the trainee */
 const STAGE = {
   // n1: the med room.  Strawberry at the cart, the two observers close behind her (on her left, away from the way she will run)
-  sMed: U('med', .72), stMed: U('med', .44), kMed: U('med', .20), cartMed: U('med', .97),
+  sMed: U('med', .72), stMed: U('med', .44), kMed: U('med', .20), cartMed: U('med', .97), cartR7: U('r7', .42),
   // the three call lights she places (x of the resident's hand reach), and where she halts afterwards
   light1: U('r4', .50), light2: U('r7', .56), light3: U('r7', .985), halt: U('r7', .66),
   // residents
