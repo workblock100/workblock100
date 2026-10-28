@@ -823,7 +823,7 @@ EXT.acc.fp14v_pizza = (o, k, t, layer) => {   /* a slice stuck to the Administra
   ctx.fillStyle = '#b02a22'; for (const [dx, dy, r] of [[-12, -6, 9], [14, 12, 8]]) { ell(dx, dy, r, r); ctx.fill(); ctx.strokeStyle = '#6a140f'; ctx.lineWidth = 2.5; ctx.stroke(); }
   ctx.restore();
   ctx.strokeStyle = '#f6d36a'; ctx.lineWidth = 5; ctx.lineCap = 'round';
-  for (const [x0, len] of [[-18, 70], [6, 96], [28, 58]]) { ctx.beginPath(); ctx.moveTo(x0, k.mouthY + 26); ctx.quadraticCurveTo(x0 + 8 * Math.sin(t * 2 + x0), k.mouthY + 26 + len * .6, x0 - 4, k.mouthY + 26 + len); ctx.stroke(); }
+  for (const [x0, len] of [[-18, 30], [6, 42], [28, 24]]) { ctx.beginPath(); ctx.moveTo(x0, k.mouthY + 22); ctx.quadraticCurveTo(x0 + 6 * Math.sin(t * 2 + x0), k.mouthY + 22 + len * .6, x0 - 3, k.mouthY + 22 + len); ctx.stroke(); }
   ctx.fillStyle = 'rgba(190,48,36,.7)'; for (const [dx, dy] of [[-48, 26], [52, 20], [-8, 58]]) { ell(k.rx * 0 + dx, dy, 13, 7, .4); ctx.fill(); }
   ctx.restore();
 };
