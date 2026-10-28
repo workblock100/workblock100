@@ -14,7 +14,8 @@
  *   S12room.pizza({ at: {X, Z}, boxes, lift, tap })  // the pizza cart with a stack of boxes (lift = px the top box is raised, tap 0..1 = it has landed)
  *   S12room.seatPt(X, Z)                 // {x, y, s} of a seat at X, Z with the body on the seat (Y 120): pass it into a character's options
  *   S12room.pt(X, Y, Z)                  // the screen point of a world point, with its scale: {x, y, s}
- *   S12room.silhouettes(fn, col)         // draws whatever fn draws (characters, props) and fills all of it with one flat dark colour (an audience seen from behind)
+ *   S12room.silhouettes(fn, col, a, o)   // draws whatever fn draws (characters, props) and fills all of it with one soft dark navy gradient plus a pale rim light on the upper edges (an audience seen from behind); o.y0 / o.y1 = the band the gradient spans
+ *   S12room.wallBox / wholeOnWall        // the screen box of a wall rectangle; a wall sign is drawn only when it is whole in the frame
  *   S12room.sfxWord, S12room.wordT, S12room.route, S12room.pulse, S12room.sk, S12room.lerpA   // the small helpers the scenes share (copied from ep9_floor.js and ep11_orient.js)
  *
  * LAYOUT (every number is a world coordinate; the sign-in scene and the slides scene use the same room):
@@ -33,10 +34,10 @@ const { box3, onZ, kz, lit } = S6;
 const LAY = {
   zb: 1320, hw: 1000, ch: 960, rail: 150,                         // back wall depth, half width, ceiling height, wainscot top
   screen: { x0: -400, x1: 400, z: 1296, yBot: 337, yTop: 900, caseH: 40 },   // the picture: yBot when down, yTop when rolled up
-  board: { x0: 610, x1: 860, y0: 500, y1: 880, z: 1316 },         // the whiteboard on the back wall, right
-  clock: { X: -590, Y: 900, r: 46 },                              // the wall clock, above the cork board on the left
-  cork: { x0: -700, x1: -480, y0: 580, y1: 820, z: 1316 },        // the cork board on the left, under the clock
-  door: { x0: -700, x1: -480, y1: 540, z: 1316 },                 // the pizza door, far left (its frame and glass panel)
+  board: { x0: 440, x1: 730, y0: 560, y1: 890, z: 1316 },         // the whiteboard on the back wall, right (whole in every wide shot: X 427..743 with its frame, the frames show X -721..865)
+  clock: { X: -569, Y: 900, r: 46 },                              // the wall clock, above the cork board on the left
+  cork: { x0: -668, x1: -470, y0: 570, y1: 830, z: 1316 },        // the cork board on the left, under the clock (three notes, none touching)
+  door: { x0: -660, x1: -480, y1: 540, z: 1316 },                 // the pizza door, far left (its frame and glass panel), under the cork board
   table: { x0: -500, x1: 480, z0: 760, z1: 1000, top: 190 },      // the long folding table
   seats: { far: 1110, near: 640, xs: [-440, -180, 80, 340] },    // chair rows: far side (behind the table) and near side (between camera and table)
   projector: { X: -680, Z: 960, Y: 520 },
@@ -93,37 +94,51 @@ function shell(o = {}) {
 }
 
 // ------------------------------------------------------------------ the back wall: whiteboard, cork board with flyers, wall clock, the door, the cooler and the plant
+/* the screen box of a rectangle on the back wall (world units, depth z), through the camera in force. pad grows it (a frame around the board) */
+const wallBox = (x0, y0, x1, y1, z, pad = 0) => { const a = pt(x0 - pad, y1 + pad, z), b = pt(x1 + pad, y0 - pad, z); return A12.box(a.x, a.y, b.x, b.y); };
+/* a sign on the wall is WHOLE in the frame (28 px from every edge, clear of the clock pill and the captions) or not drawn in that shot: a poster is never sliced by an edge or run over by the pill */
+const wholeOnWall = (x0, y0, x1, y1, z, pad) => { const b = wallBox(x0, y0, x1, y1, z, pad); return A12.whole(b, 28) && A12.clear(b); };
+
 function whiteboard(lt) {
   const b = LAY.board, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2, w = b.x1 - b.x0, h = b.y1 - b.y0;
+  if (!wholeOnWall(b.x0, b.y0, b.x1, b.y1, b.z, 16)) return;
   flat(cx, cy, b.z, w + 26, h + 26, 0, (x, y, ww, hh) => { ctx.fillStyle = '#c9ccd2'; rr(x, y, ww, hh, 8); ctx.fill(); });
-  flat(cx, cy, b.z, w, h, 0, (x, y, ww, hh) => { ctx.fillStyle = '#fbfbf7'; rr(x, y, ww, hh, 4); ctx.fill(); });
-  const L = (t, row, o = {}) => flat(cx, b.y1 - 40 - row * 72, b.z, w, 1, 0, (x, y) => text(t, x + 24, y, { size: o.size || 36, font: 'Nunito', weight: 900, fill: o.fill || '#2a3f8a', align: 'left', base: 'middle' }));
-  L('IN-SERVICE:', 0, { size: 30, fill: '#1d1a2a' });
-  L('DIGNITY FIRST', 1, { size: 32, fill: '#d6202e' });
-  L('1. People first', 2, { size: 26, fill: '#2a3f8a' });
-  L('2. Breaks', 3, { size: 26, fill: '#2a3f8a' });
-  L('3. Pizza, funded', 4, { size: 26, fill: '#2a3f8a' });
-  // the one item crossed out: a red line through "2. Breaks" (drawn in the same plane, so the line lands on the text)
-  flat(cx, b.y1 - 40 - 3 * 72, b.z, w, 1, 0, (x, y) => { ctx.strokeStyle = '#d6202e'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 18, y - 1); ctx.lineTo(x + 170, y - 3); ctx.stroke(); });
-  flat(cx, b.y1 - 40 - 5 * 72, b.z, w, 1, 0, (x, y) => text('(all staff)', x + 24, y, { size: 22, font: 'Nunito', weight: 800, fill: '#6b6578', align: 'left' }));
+  flat(cx, cy, b.z, w, h, 0, (x, y, ww, hh) => {
+    UI.panel([x, y, ww, hh], { fill: '#fbfbf7', r: 4, id: 'wb', kind: 'board', pad: 14 });
+    // the poster: left-aligned lines on one grid, each shrunk (never squeezed) to the board; set dressing, so none of it is hero text
+    const L = x + 26, o = { align: 'left', hero: false, cid: 'wb', maxW: ww - 52 };
+    UI.label('IN-SERVICE:', L, y + 42, { ...o, size: 30, fill: '#1d1a2a' });
+    UI.label('DIGNITY FIRST', L, y + 94, { ...o, size: 38, fill: '#d6202e' });
+    UI.label('1. People first', L, y + 156, { ...o, size: 28, fill: '#2a3f8a' });
+    UI.strike('2. Breaks', L, y + 206, { ...o, size: 28, fill: '#2a3f8a', line: '#d6202e' });   /* the one item crossed out: a multiply-blended line on the text */
+    UI.label('3. Pizza, funded', L, y + 256, { ...o, size: 28, fill: '#2a3f8a' });
+    UI.label('(all staff)', L, y + 302, { ...o, size: 22, weight: 800, fill: '#6b6578' });
+  });
   // marker tray
   flat(cx, b.y0 - 14, b.z, w * .6, 14, 0, (x, y, ww, hh) => { ctx.fillStyle = '#b8bcc4'; rr(x, y, ww, hh, 4); ctx.fill(); });
 }
 function corkBoard() {
   const c = LAY.cork, cx = (c.x0 + c.x1) / 2, cy = (c.y0 + c.y1) / 2, w = c.x1 - c.x0, h = c.y1 - c.y0;
+  if (!wholeOnWall(c.x0, c.y0, c.x1, c.y1, c.z, 12)) return;
   flat(cx, cy, c.z, w + 22, h + 22, 0, (x, y, ww, hh) => { ctx.fillStyle = '#7d5c3e'; rr(x, y, ww, hh, 6); ctx.fill(); });
-  flat(cx, cy, c.z, w, h, 0, (x, y, ww, hh) => { ctx.fillStyle = '#c59a64'; rr(x, y, ww, hh, 3); ctx.fill(); });
-  const flyers = [
-    { t: ['LOST CAT', 'answers to "Mr. Biscuit"'], x: -.62, y: .30, rot: -.05, col: '#fff6d8', hi: '#d6202e' },
-    { t: ['WHO TOOK', 'MY YOGURT?'], x: .05, y: .26, rot: .06, col: '#ffffff', hi: '#2a5ac8' },
-    { t: ["Luigi's Pizza", 'Tuesdays: half off'], x: -.2, y: -.22, rot: .03, col: '#fff0f0', hi: '#e8852a' },
-  ];
-  for (const f of flyers) flat(cx + f.x * w / 2 * 1.0, cy + f.y * h / 2, c.z, 128, 96, f.rot, (x, y, ww, hh) => {
-    ctx.fillStyle = f.col; ctx.strokeStyle = 'rgba(40,24,20,.5)'; ctx.lineWidth = 1.2; rr(x, y, ww, hh, 3); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = f.hi; ctx.fillRect(x, y, ww, 16);
-    text(f.t[0], x + ww / 2, y + 34, { size: 17, font: 'Bangers', weight: 400, fill: '#1d1a2a', align: 'center' });
-    text(f.t[1], x + ww / 2, y + 60, { size: 13, font: 'Nunito', weight: 800, fill: '#1d1a2a', align: 'center' });
-    ctx.fillStyle = '#e8e0cc'; ell(x + ww - 10, y + 10, 4, 4); ctx.fill();
+  flat(cx, cy, c.z, w, h, 0, (x, y, ww, hh) => {
+    UI.panel([x, y, ww, hh], { fill: '#c59a64', r: 3, id: 'cork', kind: 'board', pad: 4 });
+    // three notes on a 2 + 1 grid with clear gaps; each note is a sign (its text is centred in it and shrunk to fit), turned a few degrees
+    const nw = 86, nh = 80, gx = (ww - 2 * nw) / 3, top = 18;
+    const notes = [
+      { r: [x + gx, y + top, nw, nh], rot: -.05, col: '#fff6d8', hi: '#d6202e', t: ['LOST CAT', 'answers to', '"Mr. Biscuit"'] },
+      { r: [x + 2 * gx + nw, y + top + 8, nw, nh], rot: .05, col: '#ffffff', hi: '#2a5ac8', t: ['WHO TOOK', 'MY YOGURT?'] },
+      { r: [x + (ww - nw - 20) / 2, y + hh - nh - 24, nw + 20, nh], rot: .03, col: '#fff0f0', hi: '#e8852a', t: ["Luigi's Pizza", 'Tuesdays:', 'half off'] },
+    ];
+    notes.forEach((n, i) => {
+      const lines = n.t.map((s, j) => j ? { t: s, size: 13, weight: 800, fill: '#1d1a2a' } : { t: s, size: 20, font: 'Bangers', fill: '#1d1a2a', gap: 0 });
+      UI.sign(n.r, lines, { fill: n.col, stroke: 'rgba(40,24,20,.5)', lw: 1.2, r: 3, pad: 9, rot: n.rot, hero: false, id: 'note' + i, shadow: 4 });
+      const ncx = n.r[0] + n.r[2] / 2, ncy = n.r[1] + n.r[3] / 2;
+      ctx.save(); ctx.translate(ncx, ncy); ctx.rotate(n.rot); ctx.translate(-ncx, -ncy);
+      ctx.fillStyle = n.hi; ctx.fillRect(n.r[0] + 1, n.r[1] + 1, n.r[2] - 2, 9);
+      ctx.fillStyle = '#e8e0cc'; ell(n.r[0] + n.r[2] - 10, n.r[1] + 5.5, 3.2, 3.2); ctx.fill();
+      ctx.restore();
+    });
   });
 }
 function backWall(o = {}) {
@@ -241,18 +256,30 @@ function pizza(o = {}) {
   }
 }
 
-// ------------------------------------------------------------------ silhouettes: whatever fn draws (characters, props) is painted into a scratch picture and filled with one flat dark colour
-const SIL = V2.mk(W, H);
-function silhouettes(fn, col = '#1b1427', alpha = 1) {
-  const prev = ctx, g = SIL.getContext('2d');
+// ------------------------------------------------------------------ silhouettes: whatever fn draws (characters, props) is painted into a scratch picture and filled with one soft dark navy,
+// a little lighter at the top; a thin rim light runs along every upper edge (the screen's glow comes from the front). The text gate may ignore these two flat buffers (__txOK)
+const SIL = V2.mk(W, H), RIM = V2.mk(W, H);
+SIL.__txOK = true; RIM.__txOK = true;
+function silhouettes(fn, col = ['#46508a', '#262d54'], alpha = 1, o = {}) {
+  const prev = ctx, g = SIL.getContext('2d'), rg = RIM.getContext('2d');
   g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H);
   g.setTransform(prev.getTransform());
   ctx = g;
   try { fn(); } finally { ctx = prev; }
-  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-atop'; g.globalAlpha = alpha; g.fillStyle = col; g.fillRect(0, 0, W, H); g.restore();
-  prev.save(); prev.setTransform(1, 0, 0, 1, 0, 0); prev.drawImage(SIL, 0, 0); prev.restore();
+  // the soft navy: a vertical gradient over the band the figures occupy (o.y0 .. o.y1, screen px)
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-atop'; g.globalAlpha = alpha;
+  const y0 = o.y0 ?? 700, y1 = o.y1 ?? 1500, gr = g.createLinearGradient(0, y0, 0, y1);
+  if (Array.isArray(col)) { gr.addColorStop(0, col[0]); gr.addColorStop(1, col[1]); g.fillStyle = gr; } else g.fillStyle = col;
+  g.fillRect(0, 0, W, H); g.restore();
+  // the rim light: the silhouette minus itself shifted down is a crescent along the top edges; it is painted pale blue over the navy
+  const rim = o.rim ?? 4;
+  rg.setTransform(1, 0, 0, 1, 0, 0); rg.globalCompositeOperation = 'copy'; rg.drawImage(SIL, 0, 0);
+  rg.globalCompositeOperation = 'destination-out'; rg.drawImage(SIL, 0, rim);
+  rg.globalCompositeOperation = 'source-in'; rg.fillStyle = o.rimColor ?? 'rgba(190,208,255,.85)'; rg.fillRect(0, 0, W, H);
+  rg.globalCompositeOperation = 'source-over';
+  prev.save(); prev.setTransform(1, 0, 0, 1, 0, 0); prev.drawImage(SIL, 0, 0); prev.drawImage(RIM, 0, 0); prev.restore();
 }
 
 // ------------------------------------------------------------------ export
-window.S12room = { LAY, CAM: CAMB, cam, light, shell, back: backWall, screen, projector, table, chair, seatPt, pt, pizza, cooler, silhouettes, stand, flat, kzP, sfxWord, wordT, route, pulse, sk, lerpA, shade };
+window.S12room = { LAY, CAM: CAMB, cam, light, shell, back: backWall, screen, projector, table, chair, seatPt, pt, pizza, cooler, silhouettes, stand, flat, kzP, sfxWord, wordT, route, pulse, sk, lerpA, shade, wallBox, wholeOnWall };
 })();

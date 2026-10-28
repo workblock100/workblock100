@@ -277,7 +277,7 @@ EXT.acc.fp13_tear = (o, k, t, layer) => {
 };
 
 // ------------------------------------------------------------------ props
-Object.assign(PROP_BOX, { fp13_pen: [-14, -64, 14, 14], fp13_bar: [-34, -42, 34, 22], fp13_cap: [-46, -40, 46, 26] });
+Object.assign(PROP_BOX, { fp13_pen: Object.assign([-14, -64, 14, 14], { nearFace: true }), fp13_bar: Object.assign([-34, -42, 34, 22], { nearFace: true }), fp13_cap: Object.assign([-46, -40, 46, 26], { nearFace: true }) });
 // a penlight: slim, white with a clip, the lit lens at the tip. o.penAim is the angle it points, in the character's own frame (0 = straight up); o.penOn 0..1 the brightness
 EXT.prop.fp13_pen = (side, o, t) => {
   ctx.save(); ctx.rotate(o.penAim ?? 0);

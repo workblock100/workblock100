@@ -40,7 +40,7 @@
 (() => {
 if (!window.TIMELINE_EP12) return;
 const { person, zoomTo, faceZoom, faceC, drawBg } = window.H6;
-const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, S6 = window.S6, S7 = window.S7;
+const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, A12 = window.A12, S6 = window.S6, S7 = window.S7;
 const { p2, poly, grad } = V2;
 const { box3, onZ, kz, ceilingLamp, table3, wallClock, microwave, backWindow } = S6;
 const melon = A9.melon, straw = A11.straw, lemon = A7.lemon, mango = A7.mango, cran = A7.cran, clem = A10.clem;
@@ -57,12 +57,7 @@ const vtrack = keys => lt => {  // [t, [v, ...], ease]: a vector of numbers (ang
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = seg(lt, a[0], b[0]), e = b[2] === 'io' ? easeIO(k) : b[2] === 'out' ? easeOut(k) : k; return a[1].map((v, j) => v + (b[1][j] - v) * e); }
   return keys[keys.length - 1][1].slice();
 };
-function sfxWord(lt, t0, str, x, y, o = {}) {   // an onomatopoeia that pops in and fades
-  const k = seg(lt, t0, t0 + .14), f = 1 - seg(lt, t0 + (o.hold ?? .5), t0 + (o.hold ?? .5) + .2);
-  if (k <= 0 || f <= 0) return;
-  ctx.save(); ctx.globalAlpha *= f; ctx.translate(x, y); ctx.scale(lerp(1.25, 1, easeOut(k)), lerp(1.25, 1, easeOut(k))); ctx.rotate(o.rot ?? -.08);
-  text(str, 0, 0, { size: o.size ?? 130, font: 'Bangers', weight: 400, fill: o.fill ?? '#ffe135', lw: 14, stroke: '#150f22', spacing: 3, shadow: 14 }); ctx.restore();
-}
+const sfxWord = A12.sfx;   // an onomatopoeia that pops in and fades (the shared UI-kit word, ep12_art.js)
 const BCOL = ['#ff4f6d', '#ffd23a', '#4aa8ff', '#58c85a', '#c25bd6', '#ff9f1c'];
 
 // ---- the stage: the break room (warm, the afternoon sun through the window)
@@ -72,7 +67,7 @@ const WIN = { x0: 40, x1: 250, y0: 220, y1: 470 };                    // the win
 const DOOR = { x0: -250, x1: -110, y1: 430 };                         // the sliding door to the hall
 const CLOCK = { x: -60, y: 430, r: 58 };                              // the wall clock, 4:52, between the door and the window
 const BAN = { X0: -430, X1: 430, Y0: 506, Y1: 588 };                  // STAFF ENGAGEMENT AWARDS
-const CERT = { x0: -440, x1: -300, y0: 292, y1: 472 };               // Strawberry's certificate, on the back wall where she stood, below the banner (fades in at the end)
+const CERT = { x0: -500, x1: -270, y0: 175, y1: 475 };               // Strawberry's certificate, on the back wall left of the door, below the banner (fades in at the end): big enough to read at the tail
 const TABLE = { x: -400, z: 1420, w: 95, d: 300, h: 135 };            // the long table on the left (front edge at Z 1120)
 const PODIUM = { x: -60, z: 1420, w: 80, d: 80, h: 110 };             // the lectern; the trophy on top (a low lectern keeps the trophy below Mango's face)
 const GONG = { x: 460, y: 300, z: 1640, r: 90 };                      // the gong on its frame, right of the Administrator's reach
@@ -137,9 +132,10 @@ function banner12(lt) {
   ctx.fillStyle = grad(0, tl[1], 0, bl[1], [[0, '#e93a8a'], [1, '#b0185f']]); ctx.strokeStyle = '#e9c34c'; ctx.lineWidth = Math.max(4, 8 * k);
   ctx.beginPath(); ctx.moveTo(tl[0], tl[1] + wv(0)); for (let i = 1; i <= 24; i++) ctx.lineTo(lerp(tl[0], tr[0], i / 24), tl[1] + wv(i * 36));
   for (let i = 24; i >= 0; i--) ctx.lineTo(lerp(bl[0], br[0], i / 24), bl[1] + wv(i * 36 + 90)); ctx.closePath(); ctx.fill(); ctx.shadowColor = 'transparent'; ctx.stroke();
-  ctx.save(); ctx.translate((tl[0] + tr[0]) / 2, (tl[1] + bl[1]) / 2 + 1.5 * k);
-  text('STAFF ENGAGEMENT AWARDS', 0, 0, { size: 62 * k, font: 'Bangers', weight: 400, fill: '#fff8dc', lw: 6 * k, stroke: '#6a0c3a', spacing: 3, maxW: BW * .92 });
-  ctx.restore();
+  { /* the lettering: set by the kit, centred on the banner, shrunk (never squeezed) to its width; drawn only when the whole banner is in the frame, clear of the clock pill (never sliced) */
+    const cx = (tl[0] + tr[0]) / 2, cy = (tl[1] + bl[1]) / 2 + 1.5 * k, bb = A12.box(tl[0], tl[1], br[0], bl[1] + 36 * k);
+    if (A12.whole(bb, 28) && A12.clear(bb)) UI.label('STAFF ENGAGEMENT AWARDS', cx, cy, { size: 62 * k, font: 'Bangers', fill: '#fff8dc', lw: 6 * k, stroke: '#6a0c3a', spacing: 3, maxW: BW * .92, min: 20 * k });
+  }
   for (let i = 0; i < 13; i++) { const u = (i + .5) / 13, px = lerp(bl[0], br[0], u), py = bl[1] + wv(u * 24 * 36 + 90) + 3; ctx.fillStyle = ['#ffd23a', '#4aa8ff', '#58c85a', '#ff9f1c', '#c25bd6'][i % 5]; ctx.strokeStyle = 'rgba(30,16,36,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px - 15 * k, py); ctx.lineTo(px + 15 * k, py); ctx.lineTo(px, py + 34 * k); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   ctx.restore();
 }
@@ -176,7 +172,7 @@ EXT.prop.rosette12 = (side, o, t) => {   // Newest Hire: a pleated rosette with 
   ctx.beginPath(); ctx.moveTo(8, 14); ctx.lineTo(24, 58); ctx.lineTo(12, 52); ctx.lineTo(2, 66); ctx.lineTo(-4, 16); ctx.closePath(); ctx.fill(); ctx.stroke();
   for (let i = 0; i < 10; i++) { ctx.save(); ctx.rotate(i / 10 * TAU); ctx.fillStyle = i % 2 ? '#ffd60a' : '#ff7ac8'; ctx.beginPath(); ctx.ellipse(0, -24, 10, 24, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
   ctx.fillStyle = '#fff8dc'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, TAU); ctx.fill(); ctx.stroke();
-  text('NEW', 0, 1, { size: 14, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 1 });
+  UI.label('NEW', 0, 0, { size: 14, font: 'Bangers', fill: '#c1121f', spacing: 1, hero: false });
   ctx.restore();
 };
 Object.assign(PROP_BOX, { rosette12: [-40, -112, 40, 72] });
@@ -204,7 +200,8 @@ EXT.prop.pizzaTrophy12 = (side, o, t) => {   // Most Reports Filed: a gold pizza
   ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0, 3, 56, 11, 0, 0, TAU); ctx.fill();
   ctx.fillStyle = '#b6862a'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-52, -14, 104, 16, 6); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#fff8dc'; rr(-42, -12, 84, 11, 3); ctx.fill();
-  text('MOST REPORTS FILED', 0, -6, { size: 10, font: 'Bangers', weight: 400, fill: '#6a0c3a', spacing: .5 });
+  { const a = 1 - seg(t, GONG_T() - .25, GONG_T());   /* the plate reads until the gong; after it the room is looking at the rosette */
+    if (a > 0 && A12.whole(A12.box(-44, -14, 44, 2), 14)) { ctx.save(); ctx.globalAlpha *= a; UI.label('MOST REPORTS FILED', 0, -6, { size: 10, font: 'Bangers', fill: '#6a0c3a', spacing: .5, maxW: 80, min: 6, hero: false }); ctx.restore(); } }
   ctx.fillStyle = '#c99a3a'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-9, -64, 18, 52, 5); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(-70, -122); ctx.quadraticCurveTo(0, -158, 70, -122); ctx.lineTo(0, -44); ctx.closePath();
   ctx.fillStyle = grad(-70, -150, 70, -40, [[0, '#ffe98a'], [1, '#d99a1c']]); ctx.fill(); ctx.stroke();
@@ -219,7 +216,7 @@ EXT.acc.sash12 = (o, k, t, layer) => {   // the Administrator's sash over the ch
   ctx.save(); ctx.translate(x0, y0); ctx.rotate(Math.atan2(y1 - y0, x1 - x0));
   ctx.fillStyle = '#e8336f'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-6, -13, L + 12, 26, 4); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#ffd23a'; ctx.fillRect(-4, -9, L + 8, 2); ctx.fillRect(-4, 7, L + 8, 2);
-  text('STAFF ENGAGEMENT', L / 2, 1, { size: 15, font: 'Bangers', weight: 400, fill: '#fff8dc', spacing: 2 });
+  UI.label('STAFF ENGAGEMENT', L / 2, 0, { size: 15, font: 'Bangers', fill: '#fff8dc', spacing: 2, hero: false, tilt: .5 });
   ctx.restore();
 };
 
@@ -243,20 +240,22 @@ function roomShell(lt) {
   certSet(lt);
   ceilingLamp(-200, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(170, 900, CH, 1, '255,240,210', 110, 170); ceilingLamp(-10, 1560, CH, 1, '255,240,210', 110, 170);
 }
-function certSet(lt) {   // the framed certificate, hung at the back right; it fades in at the sting (the Administrator's ATTENDED, UNDER PROTEST)
+function certSet(lt) {   // the framed certificate, hung at the back left; it fades in at the sting (the Administrator's ATTENDED, UNDER PROTEST). Set by the kit; whole in the frame or not drawn
   const a = seg(lt, SEAT_T(), SEAT_T() + .34);
   if (a <= 0) return;
-  const Z = ZB - 4, [cx, cy] = p2((CERT.x0 + CERT.x1) / 2, (CERT.y0 + CERT.y1) / 2, Z), k = kz(Z), w = (CERT.x1 - CERT.x0) * k, h = (CERT.y1 - CERT.y0) * k;
-  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy); ctx.scale(lerp(.96, 1, a), lerp(.96, 1, a));
-  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 14 * k; ctx.shadowOffsetY = 6 * k;
-  ctx.fillStyle = '#5a3a1e'; rr(-w / 2 - 10 * k, -h / 2 - 10 * k, w + 20 * k, h + 20 * k, 6); ctx.fill(); ctx.shadowColor = 'transparent';
-  ctx.fillStyle = '#fff8e6'; rr(-w / 2, -h / 2, w, h, 4); ctx.fill();
-  ctx.strokeStyle = '#c99a2e'; ctx.lineWidth = 3; rr(-w / 2 + 8 * k, -h / 2 + 8 * k, w - 16 * k, h - 16 * k, 4); ctx.stroke();
-  text('CERTIFICATE', 0, -h * .33, { size: 12 * k, font: 'Nunito', weight: 900, fill: '#7a5a2a', spacing: 1, maxW: w * .8 });
-  text('STRAWBERRY', 0, -h * .1, { size: 24 * k, font: 'Bangers', weight: 400, fill: '#1d1a22', spacing: 1, maxW: w * .8 });
-  text('ATTENDED', 0, h * .12, { size: 30 * k, font: 'Bangers', weight: 400, fill: '#c1121f', spacing: 1, maxW: w * .8 });
-  ctx.save(); ctx.rotate(-.1); ctx.strokeStyle = 'rgba(193,18,31,.9)'; ctx.lineWidth = 4 * k; rr(-w * .38, h * .25 - 17 * k, w * .76, 34 * k, 6); ctx.stroke();
-  text('UNDER PROTEST', 0, h * .25, { size: 16 * k, font: 'Bangers', weight: 400, fill: 'rgba(193,18,31,.9)', spacing: 1, maxW: w * .7 }); ctx.restore();
+  const Z = ZB - 4, [cx, cy] = p2((CERT.x0 + CERT.x1) / 2, (CERT.y0 + CERT.y1) / 2, Z), k = kz(Z), w = CERT.x1 - CERT.x0, h = CERT.y1 - CERT.y0;
+  const bb = A12.box(cx - (w / 2 + 12) * k, cy - (h / 2 + 12) * k, cx + (w / 2 + 12) * k, cy + (h / 2 + 12) * k);
+  if (!A12.whole(bb, 24) || !A12.clear(bb)) return;
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy); ctx.scale(k * lerp(.96, 1, a), k * lerp(.96, 1, a));
+  ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 6;
+  ctx.fillStyle = '#5a3a1e'; rr(-w / 2 - 10, -h / 2 - 10, w + 20, h + 20, 6); ctx.fill(); ctx.shadowColor = 'transparent';
+  UI.panel([-w / 2, -h / 2, w, h], { fill: '#fff8e6', r: 4, id: 'cert', kind: 'board', pad: 18 });
+  ctx.strokeStyle = '#c99a2e'; ctx.lineWidth = 3; rr(-w / 2 + 10, -h / 2 + 10, w - 20, h - 20, 4); ctx.stroke();
+  const o = { cid: 'cert', maxW: w - 52 };
+  UI.label('CERTIFICATE', 0, -112, Object.assign({ size: 24, fill: '#7a5a2a', spacing: 3, hero: false }, o));
+  UI.label('STRAWBERRY', 0, -58, Object.assign({ size: 48, font: 'Bangers', fill: '#1d1a22', spacing: 1, hero: false }, o));
+  UI.label('ATTENDED', 0, 10, Object.assign({ size: 58, font: 'Bangers', fill: '#c1121f', spacing: 1 }, o));
+  UI.sign([-92, 52, 184, 96], ['UNDER', 'PROTEST'], { fill: false, stroke: 'rgba(193,18,31,.9)', lw: 5, r: 8, rot: -.1, size: 40, font: 'Bangers', spacing: 1, ink: 'rgba(193,18,31,.92)', pad: 8, id: 'cert-stamp' });
   ctx.restore();
 }
 
@@ -264,11 +263,13 @@ function certSet(lt) {   // the framed certificate, hung at the back right; it f
 function fridgeSet() {
   box3({ x0: FRIDGE.x0, x1: FRIDGE.x1, y1: FRIDGE.h, z0: FRIDGE.z0, z1: FRIDGE.z1, color: '#e9eef2', top: '#f4f7fa', front: '#f4f7fa', side: '#c9d2d9' });
   onZ(FRIDGE.z0, 452, 504, 300, 352, '#ffe066', 'rgba(25,16,30,.55)', 1.6);
-  const [nx, ny] = p2(478, 326, FRIDGE.z0), k = kz(FRIDGE.z0); text('TO SHARE', nx, ny, { size: 13 * k, font: 'Bangers', weight: 400, fill: '#2a1a0a', spacing: 1 });
+  const [nx, ny] = p2(478, 326, FRIDGE.z0), k = kz(FRIDGE.z0);
+  if (A12.whole(A12.box(nx - 30 * k, ny - 10 * k, nx + 30 * k, ny + 10 * k), 16)) UI.label('TO SHARE', nx, ny, { size: 13 * k, font: 'Bangers', fill: '#2a1a0a', spacing: 1, hero: false });
 }
 function counterSet() {   // the counter along the right, the microwave on it
   box3({ x0: COUNTER.x0, x1: COUNTER.x1, y1: COUNTER.h, z0: COUNTER.z0, z1: COUNTER.z1, color: '#c9d3d3', top: '#55606a', front: '#b9c4c6', side: '#98a6a8' });
-  microwave(380, 1700, { on: 0, display: '4:52' });
+  const mw = microwave(380, 1700, { on: 0, display: '' });   /* the display reads 4:52 like the clock: its digits are set by the kit and drawn only when the whole display is in the frame */
+  if (mw && mw.disp && A12.whole(A12.box(mw.disp[0] - 34 * mw.k, mw.disp[1] - 16 * mw.k, mw.disp[0] + 34 * mw.k, mw.disp[1] + 16 * mw.k), 16)) UI.label('4:52', mw.disp[0], mw.disp[1], { size: 28 * mw.k, fill: '#58ff7a', hero: false });
 }
 function tableSet(lt, takenDonut) {   // the long table on the left: the plate of donuts, the reports with their bookmarks, two cups
   table3(TABLE.x, TABLE.z, { w: TABLE.w, d: TABLE.d, h: TABLE.h, color: '#c9a26a' });

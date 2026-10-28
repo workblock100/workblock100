@@ -33,19 +33,14 @@
 (() => {
 if (!window.TIMELINE_EP12) return;
 const { zoomTo, drawBg, person, localOf, faceC } = window.H6;
-const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, S6 = window.S6, S7 = window.S7;
+const A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, A12 = window.A12, S6 = window.S6, S7 = window.S7;
 const { kz, lampPost, car3, wallClock, onZ, box3 } = S6;
 const { p2, poly, grad } = V2;
 const HW = S6.HW, CH = S6.CH;
 
-// ------------------------------------------------------------------ helpers (copies of the Episode 9 and 10 ones)
+// ------------------------------------------------------------------ helpers (copies of the Episode 9 and 10 ones; the sound word is the shared A12.sfx)
 const wordT = (id, word, fb) => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id), w = l && l.words.find(x => x[0].toLowerCase().replace(/[^a-z]/g, '').includes(word)); return w ? l.s - CUR.start + w[1] : fb; };
-function sfxWord(lt, t0, str, x, y, o = {}) {
-  const k = seg(lt, t0, t0 + .14), f = 1 - seg(lt, t0 + (o.hold ?? .5), t0 + (o.hold ?? .5) + .2);
-  if (k <= 0 || f <= 0) return;
-  ctx.save(); ctx.globalAlpha *= f; ctx.translate(x, y); ctx.scale(lerp(1.25, 1, easeOut(k)), lerp(1.25, 1, easeOut(k))); ctx.rotate(o.rot ?? -.08);
-  text(str, 0, 0, { size: o.size ?? 130, font: 'Bangers', weight: 400, fill: o.fill ?? '#ffe135', lw: 14, stroke: '#150f22', spacing: 3, shadow: 14 }); ctx.restore();
-}
+const sfxWord = A12.sfx;   /* the sound word, set by the UI kit (ep12_art.js) */
 const sk = (lt, a, b) => easeIO(seg(lt, a, b));
 // a hand aimed at a screen point (copy of ep10_days.js handTo): it blends from the resting grip toward the point, short of full reach
 function handTo(o, side, x, y, k, rest) {
@@ -60,10 +55,10 @@ function wallQ(side, y0, y1, z0, z1, fill, stroke, lw) { poly([p2(side * HW, y0,
 function actor(ctor, fn, lt, extra = {}, m = 1) { return person(ctor, fn, lt, Object.assign({ s: kz(fn(lt)[1]) * m }, extra)); }
 
 // ------------------------------------------------------------------ props (prefix drill12_)
-Object.assign(PROP_BOX, { drill12_mop: [-70, -330, 70, 330], drill12_fingers: [-30, -62, 30, 14] });
+Object.assign(PROP_BOX, { drill12_mop: [-18, -330, 18, 330], drill12_fingers: [-30, -62, 30, 14] });   /* the mop is audited as its shaft (the sponge head rests on the floor) */
 // a mop held by the handle: a wood shaft through the hand, the grey sponge head resting on the floor (the floor is about 190 local px below the grip)
 EXT.prop.drill12_mop = (side, o, t) => {
-  ctx.save(); ctx.rotate(side * .25);
+  ctx.save(); ctx.rotate(side * .07);
   ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(0, -300); ctx.lineTo(0, 196); ctx.stroke();
   ctx.strokeStyle = '#c99b6a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -298); ctx.lineTo(0, 194); ctx.stroke();
   ctx.fillStyle = '#eceae2'; ctx.strokeStyle = INK; ctx.lineWidth = 4; rr(-64, 188, 128, 34, 12); ctx.fill(); ctx.stroke();
@@ -99,6 +94,26 @@ for (let i = 0; i < 18; i++) {
   DOORS.push({ side: -1, z: 620 + i * 300, n: String(2 * i + 2), color: DCOL[i % 4] });
   DOORS.push({ side: 1, z: 770 + i * 300, n: String(2 * i + 1), color: DCOL[(i + 1) % 4] });
 }
+/* the plaque numbers of this frame: the corridor draws every plaque with its number; far doors crowd each other near the vanishing point and near doors run off the frame, so a number is kept only
+   when its box is whole in the frame and does not touch the number of a nearer door. (Doors keep their plaques; only the digits are left out.) */
+function doorsAt() {
+  const P = V2.P, cand = [];
+  DOORS.forEach((d, i) => {
+    const pz = d.z + 107, pk = P.f / (pz - P.cz);
+    if (!(pk > .36) || pz <= P.cz + 60) return;
+    if (d.side === 1 && Math.abs(d.z - Z_DOOR) < 330) return;   /* the closet's neighbours */
+    const [px, py] = p2(d.side * HW, 361, pz), size = 16 * pk, w = UI.sizeOf(d.n, { size, weight: 900 }).w;
+    cand.push({ i, pk, box: A12.box(px - w / 2 - 3, py - size * .42, px + w / 2 + 3, py + size * .42) });
+  });
+  cand.sort((a, b) => b.pk - a.pk);
+  const keep = new Set(), taken = [];
+  for (const c of cand) {
+    if (!A12.whole(c.box, 14)) continue;
+    if (taken.some(t => c.box[0] < t[2] + 4 && c.box[2] > t[0] - 4 && c.box[1] < t[3] + 4 && c.box[3] > t[1] - 4)) continue;
+    taken.push(c.box); keep.add(c.i);
+  }
+  return DOORS.map((d, i) => keep.has(i) ? d : Object.assign({}, d, { n: '' }));
+}
 const DECOR = [{ side: -1, z: 1100, c: '#e6a23c' }, { side: 1, z: 1400, c: '#6cc1d9' }, { side: -1, z: 1990, c: '#9bd96c' }, { side: 1, z: 2300, c: '#d96c8a' }];
 
 // the strobe: a flash about twice a second from the firebell (0.1) until the muster point (22.6)
@@ -107,11 +122,12 @@ const strobe = lt => { if (lt < STROBE_ON || lt > STROBE_OFF) return 0; const p 
 // the closet door: shut until Clementine hits it (7.05), then it swings into the closet over the next .4 s
 const doorOpen = lt => sk(lt, 7.05, 7.45) * (1 - sk(lt, 10.9, 11.25));
 
+const LEM_X = -215;   /* Lemon stands clear of Mrs. Cranberry's chair (X 15): their faces no longer touch in the far shots */
 // the camera track for the hall: [time, cx, zoom, cy, y0] keyframes; two equal times make a hard cut (blur is 1 on those frames)
 const TRK = [
   [0, 0, 1.00, 360, 960], [1.5, 0, 1.04, 360, 960],                                                                    // alarm: a slow push
   [2.6, -70, 1.14, 360, 900], [4.3, -70, 1.14, 360, 900],                                                              // a1: the Administrator
-  [4.9, -146, 2.20, 360, 830], [6.6, -146, 2.20, 360, 830], [6.7, -146, 2.20, 360, 830],                               // l1: Lemon, tight
+  [4.9, LEM_X, 2.20, 360, 830], [6.6, LEM_X, 2.20, 360, 830], [6.7, LEM_X, 2.20, 360, 830],                               // l1: Lemon, tight
   [6.759, 310, 1.10, 360, 860], [7.6, 40, 1.00, 360, 960],                                                             // c1: a hard cut to the closet; then the scramble, wide
   [8.33, 0, 1.00, 360, 960], [11.0, 0, 1.00, 360, 960], [11.04, 0, 1.00, 360, 960],                                    // m1: the wide two-shot by the closet
   [11.041, 200, 1.90, 360, 840], [14.5, 200, 1.90, 360, 840],                                                          // r1 -> m2: Mrs. Cranberry and Mango, tight
@@ -134,10 +150,11 @@ const trackAt = lt => {
 
 // ------------------------------------------------------------------ the cast: the hall positions (lateral X, depth D; the depth rides with the camera)
 const at = (X, D) => lt => [X, camZ(lt) + D];
-const P_STR = at(-310, 1480), P_LEM = at(-146, 2050);
+const P_STR = at(-310, 1480), P_LEM = at(LEM_X, 2050);
 // the Administrator: centre front at the start; steps right during l1 so Lemon is clear of him, walks off left in the run and m1 (the pizza run),
 // is out of frame for the Mrs. Cranberry shots, and walks back in for the peel
-const admX = lt => lt < 4.3 ? -70 : lt < 5.0 ? lerp(-70, 80, easeIO(seg(lt, 4.3, 5.0))) : lt < 7.0 ? 80 : lt < 9.0 ? lerp(80, -330, easeIO(seg(lt, 7.0, 9.0))) : lt < 15.9 ? -330 : lt < 16.8 ? lerp(-330, 80, easeIO(seg(lt, 15.9, 16.8))) : 80;
+const admX = lt => lt < 4.3 ? -70 : lt < 5.0 ? lerp(-70, 80, easeIO(seg(lt, 4.3, 5.0))) : lt < 7.0 ? 80 : lt < 9.4 ? lerp(80, -900, easeIO(seg(lt, 7.0, 9.4))) : lt < 15.6 ? -900 : lt < 16.8 ? lerp(-900, 80, easeIO(seg(lt, 15.6, 16.8))) : 80;   /* he walks off to the left (out of the frame by 9.0) and walks back in for the peel */
+const admWalking = lt => (lt >= 7.0 && lt < 9.4) || (lt >= 15.6 && lt < 16.8);
 const P_ADM = lt => [admX(lt), camZ(lt) + 1420];
 // Clementine: in the group until 6.6, runs to the closet (skids in at 7.05, goes inside at 7.25), comes back out with the mop at 7.7, stands in the doorway, goes back in at 10.9 (hidden from 11.0)
 const P_CLM = lt => [lt < 7.1 ? lerp(150, 310, sk(lt, 6.6, 7.1)) : lt < 7.25 ? lerp(310, 340, sk(lt, 7.1, 7.25)) : lt < 7.7 ? 340 : lt < 10.8 ? lerp(340, 310, sk(lt, 7.7, 7.95)) : lerp(310, 340, sk(lt, 10.8, 11.0)), camZ(lt) + 1560];
@@ -148,7 +165,11 @@ const P_MNG = lt => [215, camZ(lt) + chairD(lt)];
 const P_BAN = at(320, 2600);
 
 // the parking lot: the staff on their stalls at depth 1700 (no camera travel)
-const LOT_D = 1700, STALL = { clm: -400, mng: -240, lem: -80, empty: 60, str: 200, adm: 452 };   // the stall at 80 is PERSIMMON, empty
+/* the lot: the staff stand each on their own painted stall at depth 1700, one feet line, a hand's width between neighbours (nobody covers a neighbour's face or badge): Clementine -560,
+   Mango -350, Lemon -130, PERSIMMON (empty, 220 wide) 100, Strawberry 315, the Administrator 590. The wide shots frame the whole row (zoom LOT.z about LOT.x), every hand inside the frame. */
+const LOT_D = 1700, STALL = { clm: -560, mng: -350, lem: -130, empty: 100, str: 315, adm: 590 };
+const STALL_LINES = [-670, -455, -245, -10, 210, 435, 745];
+const LOT = { z: .82, x: 577 };
 const lotAt = (X, D) => lt => [X, D];
 
 // Mr. Banana, far down the hall: he steps on the peel (16.11), slips over backwards, and bounces off the floor on the boing (16.31)
@@ -172,7 +193,8 @@ function hallFixtures(lt) {
     ctx.save(); ctx.fillStyle = inten > .4 ? '#ff7a80' : `rgb(${150 + 60 * inten | 0},40,50)`; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, 3 * k);
     ctx.beginPath(); ctx.ellipse(lx, ly, r, r * .9, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
     if (inten > .02) { V2.glow(lx, ly, 300 * k, '255,40,50', .9 * inten, 'screen', .8); V2.glow(lx, ly, 1100 * k, '255,50,60', .45 * inten, 'screen', .5); }
-    text('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', weight: 900, spacing: 2 }); }
+    { const fb = A12.box(lx - 30 * k, ly + 44 * k - 14 * k, lx + 30 * k, ly + 44 * k + 14 * k);
+      if (A12.whole(fb, 16)) UI.label('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', spacing: 2, hero: false }); } }
   // the wall clock, reading 3:41 like the pill
   wallClock(-HW + 3, 470, Z_CLK, -1, 41, 3, 46);
   // the supply closet on the right wall: the door swings into the closet, the dark room behind it with shelves, and the QUIET sign with its Q crossed out
@@ -190,19 +212,25 @@ function hallFixtures(lt) {
       const zc = (zf + z1) / 2, [qx, qy] = p2(HW, 330, zc), kk = kz(zc);
       if (z1 - zf > 110) {
         wallQ(1, 304, 362, zf + 10, z1 - 10, '#fffdf6', 'rgba(25,16,30,.55)', 1.6);
-        ctx.save(); ctx.fillStyle = '#2b2530'; ctx.font = `400 ${34 * kk}px Bangers`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('QUIET', qx, qy); ctx.restore();
-        ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 3 * kk; ctx.beginPath(); ctx.moveTo(qx - 30 * kk, qy - 13 * kk); ctx.lineTo(qx - 14 * kk, qy + 14 * kk); ctx.stroke();
+        /* the plaque is set dressing on the wall: its word and the red slash through the Q are drawn only when the whole plaque is in the frame (never sliced by an edge) */
+        const [qa, qb] = [p2(HW, 362, zf + 10), p2(HW, 304, z1 - 10)], qbox = A12.box(Math.min(qa[0], qb[0]), qa[1], Math.max(qa[0], qb[0]), qb[1]);
+        if (A12.whole(qbox, 20)) {
+          UI.label('QUIET', qx, qy, { size: 34 * kk, font: 'Bangers', fill: '#2b2530', hero: false });
+          ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 3 * kk; ctx.beginPath(); ctx.moveTo(qx - 30 * kk, qy - 13 * kk); ctx.lineTo(qx - 14 * kk, qy + 14 * kk); ctx.stroke();
+        }
       }
     }
   }
-  // the MUSTER POINT sign: hung from the ceiling mid-hall, its arrow pointing across at the closet door on the right wall (the sign is wrong: it sends them to the closet)
-  { const [sx, sy] = p2(160, 540, Z_DOOR), k = kz(Z_DOOR);
-    ctx.save(); ctx.fillStyle = '#1a7a4a'; ctx.strokeStyle = 'rgba(10,30,20,.8)'; ctx.lineWidth = Math.max(2, 4 * k);
-    rr(sx - 130 * k, sy - 62 * k, 250 * k, 118 * k, 14 * k); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#eafff0'; ctx.font = `400 ${40 * k}px Bangers`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${1 * k}px`;
-    ctx.fillText('MUSTER POINT', sx - 5 * k, sy - 4 * k); ctx.letterSpacing = '0px';
-    ctx.fillStyle = '#fff6d6'; ctx.beginPath(); ctx.moveTo(sx + 118 * k, sy - 26 * k); ctx.lineTo(sx + 150 * k, sy - 26 * k); ctx.lineTo(sx + 150 * k, sy - 50 * k); ctx.lineTo(sx + 186 * k, sy); ctx.lineTo(sx + 150 * k, sy + 50 * k); ctx.lineTo(sx + 150 * k, sy + 26 * k); ctx.lineTo(sx + 118 * k, sy + 26 * k); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.restore(); }
+  // the MUSTER POINT sign: hung from the ceiling mid-hall, its arrow pointing across at the closet door on the right wall (the sign is wrong: it sends them to the closet).
+  // It is a flat sign facing the camera (uniform scale, nothing skewed); it is drawn only when the whole of it, arrow included, is inside the frame
+  { const [sx, sy] = p2(160, 540, Z_DOOR), k = kz(Z_DOOR), gb = A12.box(sx - 134 * k, sy - 66 * k, sx + 190 * k, sy + 60 * k);
+    if (A12.whole(gb, 24)) {
+      ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k);
+      UI.sign([-130, -62, 250, 118], 'MUSTER POINT', { fill: '#1a7a4a', stroke: 'rgba(10,30,20,.8)', lw: 4, r: 14, size: 44, font: 'Bangers', spacing: 1, ink: '#eafff0', pad: 16, hero: false, id: 'muster' });
+      ctx.fillStyle = '#fff6d6'; ctx.strokeStyle = 'rgba(10,30,20,.8)'; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(118, -26); ctx.lineTo(150, -26); ctx.lineTo(150, -50); ctx.lineTo(186, 0); ctx.lineTo(150, 50); ctx.lineTo(150, 26); ctx.lineTo(118, 26); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    } }
 }
 
 // Strawberry's list: each finger rises on its word (1 on "Residents", 2 on "second", 3 on "Third", 4 on "Pizza")
@@ -211,32 +239,26 @@ function fingerState(lt) {
   return [sk(lt, t1 - .05, t1 + .2), sk(lt, t2 - .05, t2 + .2), sk(lt, t3 - .05, t3 + .2), sk(lt, t4 - .05, t4 + .2)];
 }
 
-// the hall cast: which characters are focal (drawn sharp, held to the audit) in each shot; the rest are neighbours, drawn soft with drawBg
+// the hall cast: who is in each shot. A shot shows only the people it is about, sharp and whole; nobody else is drawn (no soft neighbour at the edge of the frame, no over-the-shoulder blur).
+// The wides carry the whole group; a character walking in or out of the frame (the Administrator in the run and the peel) is a transit and may be cut by the edge.
 const FOCAL = {
-  alarm: ['str', 'adm'], a1: ['adm'], l1: ['lem'], c1: ['clm'], run: ['adm', 'clm'], m1: ['mng'], r1: ['cran', 'mng'], m2: ['cran', 'mng'],
-  r2: ['cran'], peel: [], s1: ['str'], a2: ['adm'], s2: ['str'], a3: ['adm'], s3: ['str'],
+  alarm: ['str', 'adm'], a1: ['str', 'adm'], l1: ['lem'], c1: ['clm'], run: ['adm', 'clm'], m1: ['mng', 'clm', 'cran'], r1: ['cran', 'mng'], m2: ['cran', 'mng'],
+  r2: ['cran'], peel: ['lem', 'cran', 'mng'], s1: ['str'], a2: ['adm'], s2: ['str'], a3: ['adm'], s3: ['str'],
 };
 const shotHall = lt => lt < 1.5 ? 'alarm' : lt < 4.38 ? 'a1' : lt < 6.76 ? 'l1' : lt < 7.29 ? 'c1' : lt < 8.33 ? 'run' : lt < 11.04 ? 'm1' : lt < 12.70 ? 'r1' : lt < 14.56 ? 'm2' : lt < 15.91 ? 'r2' : lt < 16.86 ? 'peel' : lt < 18.95 ? 's1' : lt < 20.15 ? 'a2' : lt < 20.83 ? 's2' : lt < 21.71 ? 'a3' : lt < 22.79 ? 's3' : 'lot';
 function hallCast(lt, sh) {
   const F = FOCAL[sh] || [];
-  // a neighbour is drawn soft (the house depth of field), a focal character sharp and held to the audit
-  const near = (o, px = 5) => V2.dof(px, () => drawBg(o));
-  const draw = (k, o) => (F.includes(k) ? drawChar(o) : near(o));
+  const draw = (k, o) => { if (F.includes(k)) drawChar(o); };
   const fingers = fingerState(lt);
   // far back: Lemon (left), Mrs. Cranberry in her chair and Mango (right, pulling to the threshold)
   const lem = actor(A7.lemon, P_LEM, lt, { expr: 'dead', lid: .3, look: [.3, .1], hold: { l: 'clipboard6' }, grip: { l: [-96, 96] }, arms: { l: 'hold', r: 'rest' }, clipText: 'DRILL' }, 1);
   const qC = V2.at(...P_CHAIR(lt));
   const cran = A7.cran({ x: qC.x, y: qC.y - 118 * qC.s, s: qC.s, noLegs: true, noShadow: true, look: [-.7, 0], expr: lt > 14.56 ? 'sour' : 'happy', arms: lt > 14.6 ? { l: [1.25, -2.0], r: [1.25, -2.0] } : { l: 'rest', r: 'rest' } });
   const mng = actor(A7.mango, P_MNG, lt, { look: [-.8, 0], expr: lt > 7.6 && lt < 8.4 ? 'panic' : 'happy', acc: ['badge7', 'gaitbelt7', 'keys7'], arms: { l: 'rest', r: lt > 13.2 && lt < 14.6 ? [2.0, .1] : 'reach' } }, 1);
-  // the wheelchair: its back half, Mrs. Cranberry, then its front half (the Episode 7 chair)
-  const chairPass = o => {
-    const go = () => { S7.wheelchairBack(qC.x, qC.y, qC.s); (F.includes('cran') ? drawChar(o) : drawBg(o)); S7.wheelchairFront(qC.x, qC.y, qC.s); };
-    if (F.includes('cran')) go(); else V2.dof(3, go);
-  };
   // the back row first (far to near), then the front
-  if (F.includes('lem')) drawChar(lem); else V2.dof(3, () => drawBg(lem));
-  if (F.includes('mng')) drawChar(mng); else V2.dof(3, () => drawBg(mng));
-  chairPass(cran);
+  draw('lem', lem);
+  draw('mng', mng);
+  if (F.includes('cran')) { S7.wheelchairBack(qC.x, qC.y, qC.s); drawChar(cran); S7.wheelchairFront(qC.x, qC.y, qC.s); }   /* the wheelchair: its back half, Mrs. Cranberry, then its front half (the Episode 7 chair) */
   // Clementine: at the closet from 7.1, then out with a mop
   if (clmVisible(lt)) {
     const clm = actor(A10.clem, P_CLM, lt, { expr: lt > 7.2 && lt < 8.2 ? 'shock' : 'hopeful', look: [-.2, 0], hold: lt > 7.8 ? { r: 'drill12_mop' } : {}, grip: { r: [150, 60] }, arms: lt > 7.8 ? { l: 'rest', r: 'hold' } : { l: 'rest', r: 'rest' } }, 1);
@@ -247,18 +269,18 @@ function hallCast(lt, sh) {
   if (lt > 16.8 && lt < 22.6) { const k = sk(lt, 16.8, 17.3) * (1 - sk(lt, 22.4, 22.7)); handTo(str, -1, str.x - 96 * str.s, str.y - 300 * str.s, k, [-150, 90]); }
   draw('str', str);
   // the Administrator, front centre: his clipboard, his wave, his two reactions
-  const adm = actor(A9.melon, P_ADM, lt, { expr: lt > 18.95 && lt < 20.1 ? 'shock' : lt > 20.83 && lt < 21.7 ? 'sad' : 'happy', look: [.4, 0], hold: { r: 'clipboard6' }, grip: { r: [110, 120] }, arms: { l: lt < 3.0 ? 'wave' : 'rest', r: 'hold' }, hand: lt < 3.0 ? { l: 'wave' } : {}, clipText: 'DRILL' }, 1.22);
+  const adm = actor(A9.melon, P_ADM, lt, { expr: lt > 18.95 && lt < 20.1 ? 'shock' : lt > 20.83 && lt < 21.7 ? 'sad' : 'happy', look: [.4, 0], hold: { r: 'clipboard6' }, grip: { r: [110, 120] }, arms: { l: lt < 3.0 ? 'wave' : 'rest', r: 'hold' }, hand: lt < 3.0 ? { l: 'wave' } : {}, clipText: 'DRILL', transit: admWalking(lt) }, 1.22);
   draw('adm', adm);
 }
 function hallScene(lt, sh) {
   V2.setLight({ key: [-.4, -.8], keyColor: '#fff3dc', keyA: .26, rim: '#cfe0ff', rimA: .5, shadow: '#3a3048', shadowA: .3, bounce: '#ffe0b0', bounceA: .18, amb: '#fff6e6', ambA: .05 });
   V2.opts.reflect = true;
-  S6.corridor({ doors: DOORS, ch: CH, fog: '#c4cfe2', fogAmt: .32, wall: '#e9e0cb', wain: '#5c9298', lampOn: 1, bright: .9, signs: [], decor: DECOR, zFar: 7600 });
+  S6.corridor({ doors: doorsAt(), ch: CH, fog: '#c4cfe2', fogAmt: .32, wall: '#e9e0cb', wain: '#5c9298', lampOn: 1, bright: .9, signs: [], decor: DECOR, zFar: 7600 });
   hallFixtures(lt);
   // Mr. Banana and his peel, far down the hall, behind the action
   if (lt > 15.5 && lt < 17.2) {
     const q = V2.at(...P_BAN(lt));
-    V2.dof(3, () => { A7.peelFloor(q.x - 22 * q.s * .42, q.y, q.s * .42 * 1.1); drawBg(banana(lt)); });
+    A7.peelFloor(q.x - 22 * q.s * .42, q.y, q.s * .42 * 1.1); drawBg(banana(lt));   /* small, far, sharp: the slip has to read */
   }
   hallCast(lt, sh);
 }
@@ -283,27 +305,36 @@ function lotNight(lt) {
   { const [gx, gy] = p2(0, 120, Zb); V2.glow(gx, gy, 460 * k, '255,220,150', .5, 'screen', .8); }
   box3({ x0: -270, x1: 270, y0: 268, y1: 296, z0: Zb - 170, z1: Zb, color: '#2c2842', top: '#3c3858', lw: 1.6 });
   onZ(Zb, -440, 440, bh + 44, bh + 134, '#1e1a34', 'rgba(255,226,170,.55)', 2.6);
-  { const [sx, sy] = p2(0, bh + 89, Zb); ctx.save(); ctx.shadowColor = 'rgba(255,214,140,.9)'; ctx.shadowBlur = 16; ctx.fillStyle = '#ffe9b0'; ctx.font = `900 ${42 * k}px Nunito`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = `${4 * k}px`; ctx.fillText('FRUIT BOWL REHAB & NURSING', sx, sy); ctx.restore(); ctx.letterSpacing = '0px'; }
+  { const [sx, sy] = p2(0, bh + 89, Zb), sz = { size: 42 * k, spacing: 4 * k }, sw = UI.sizeOf('FRUIT BOWL REHAB & NURSING', sz).w;
+    /* the word on the sign (a warm glow behind it) is drawn only when the whole of it is in the frame; a close-up that would slice it sees the plain sign board */
+    if (A12.whole(A12.box(sx - sw / 2 - 8, sy - 24 * k, sx + sw / 2 + 8, sy + 24 * k), 20)) { ctx.save(); ctx.shadowColor = 'rgba(255,214,140,.9)'; ctx.shadowBlur = 16; UI.label('FRUIT BOWL REHAB & NURSING', sx, sy, Object.assign({ fill: '#ffe9b0', hero: false }, sz)); ctx.restore(); } }
   // the asphalt, then the painted stalls in true perspective
   { const yb = p2(0, 0, Zb)[1]; ctx.fillStyle = grad(0, yb - 2, 0, H, [[0, '#3a3e66'], [.5, '#22243e'], [1, '#12132a']]); ctx.fillRect(-300, yb - 2, W + 600, H - yb + 320); }
   ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineCap = 'butt';
-  for (const x of [-480, -320, -160, 0, 160, 320, 480]) { const a = p2(x, 0, 1450), b = p2(x, 0, 2000); ctx.lineWidth = Math.max(2, 9 * kz(1450)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
-  { const a = p2(-600, 0, 1450), b = p2(600, 0, 1450); ctx.lineWidth = Math.max(2, 9 * kz(1450)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
+  for (const x of STALL_LINES) { const a = p2(x, 0, 1450), b = p2(x, 0, 2000); ctx.lineWidth = Math.max(2, 9 * kz(1450)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
+  { const a = p2(STALL_LINES[0], 0, 1450), b = p2(STALL_LINES[STALL_LINES.length - 1], 0, 1450); ctx.lineWidth = Math.max(2, 9 * kz(1450)); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
   car3(-820, 1880, { color: '#2c8f9a', brake: .1 }); car3(860, 1900, { color: '#5a3b8a', brake: .1, w: 160 });
   lampPost(-760, 1300, { h: 640, on: .7 }); lampPost(760, 1300, { h: 640, on: .7 });
 }
-// the outlined PERSIMMON stall, lettered on the ground (the letters are squashed by the ground's foreshortening, cy / depth)
+// the outlined PERSIMMON stall, lettered on the ground. The dashed space is 220 wide (the stall's own width) and 420 deep; the lettering is centred in it, both ways, and shrunk to fit its width (it was
+// 2.5 times the stall's width and ran under the neighbours' feet). The letters are stretched along the stall (the ground foreshortening is only .62, not the full cy / depth) the way road markings
+// are painted, so they read upright; nobody stands in the space and no neighbour's feet reach it.
 function persimmonSpace() {
-  const Zc = 1700, Xc = STALL.empty, gz = V2.P.cy / Zc, kk = kz(Zc);
+  const Zc = LOT_D, Xc = STALL.empty, gz = .62, kk = kz(Zc);
   ctx.save();
-  const q = [p2(Xc - 84, 0, 1490), p2(Xc + 84, 0, 1490), p2(Xc + 84, 0, 1910), p2(Xc - 84, 0, 1910)];
+  const q = [p2(Xc - 110, 0, 1490), p2(Xc + 110, 0, 1490), p2(Xc + 110, 0, 1910), p2(Xc - 110, 0, 1910)];
   ctx.strokeStyle = 'rgba(255,240,200,.9)'; ctx.lineWidth = Math.max(3, 7 * kk); ctx.setLineDash([24 * kk, 14 * kk]);
   ctx.beginPath(); q.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
-  const [cx, cy] = p2(Xc, 0, 1640);
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(kk, kk * gz);
-  ctx.fillStyle = 'rgba(255,246,222,.92)'; ctx.font = '400 96px Bangers'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.letterSpacing = '6px';
-  ctx.fillText('PERSIMMON', 0, -60); ctx.font = '400 56px Bangers'; ctx.letterSpacing = '4px'; ctx.fillText('(AGENCY)', 0, 60);
-  ctx.restore(); ctx.restore();
+  const [cx, cy] = p2(Xc, 0, Zc), hero = CAM.z > 1.8;   /* the insert on the stall is the one shot that has to be read */
+  ctx.translate(cx, cy); ctx.scale(kk, kk * gz);
+  UI.container('persimmon', 'stall', [-110, -120, 110, 120], 8);
+  const ink = 'rgba(255,246,222,.94)';
+  /* the lettering is drawn only where it clears the captions (in Strawberry's close-ups the stall is down in the caption zone: there it is just the dashed space) */
+  if (A12.clear(A12.box(-90, -62, 90, 62))) {
+    UI.label('PERSIMMON', 0, -28, { size: 64, font: 'Bangers', fill: ink, spacing: 3, maxW: 146, min: 16, cid: 'persimmon', hero });
+    UI.label('(AGENCY)', 0, 32, { size: 42, font: 'Bangers', fill: ink, spacing: 2, maxW: 116, min: 12, cid: 'persimmon', hero });
+  }
+  ctx.restore();
 }
 function lotScene(lt, sh) {
   V2.opts.reflect = false;
@@ -315,16 +346,16 @@ function lotScene(lt, sh) {
   persimmonSpace();
   // the insert (28.5-28.95): only the painted stall, nobody standing in it or beside it
   if (lt >= 28.5 && lt < 28.95) return;
-  // the row, left to right. Props point outboard so nothing reaches a neighbour's face. A close-up on Strawberry (s4, s5) leaves the others soft.
+  // the row, left to right. Props point outboard so nothing reaches a neighbour's face. A close-up on Strawberry (s4, s5) shows only her.
   const closeOnStr = sh === 's4' || sh === 's5';
   const cast = [
-    ['clm', actor(A10.clem, lotAt(STALL.clm, LOT_D), lt, { expr: 'hopeful', hold: { l: 'drill12_mop' }, grip: { l: [-150, 60] }, arms: { l: 'hold', r: 'rest' } }, 1)],
+    ['clm', actor(A10.clem, lotAt(STALL.clm, LOT_D), lt, { expr: 'hopeful', hold: { r: 'drill12_mop' }, grip: { r: [74, 60] }, arms: { l: 'rest', r: 'hold' } }, 1)],
     ['mng', actor(A7.mango, lotAt(STALL.mng, LOT_D), lt, { expr: 'happy', acc: ['badge7', 'gaitbelt7', 'keys7'], arms: { l: 'hips', r: 'rest' } }, 1)],
     ['lem', actor(A7.lemon, lotAt(STALL.lem, LOT_D), lt, { expr: 'dead', lid: .3, hold: { r: 'clipboard6' }, grip: { r: [90, 60] }, arms: { l: 'rest', r: 'hold' }, clipText: 'DRILL' }, 1)],
     ['str', actor(A11.straw, lotAt(STALL.str, LOT_D), lt, { expr: 'dead', look: sh === 's4' ? [-.9, 0] : [.2, 0], arms: { l: 'rest', r: 'rest' } }, 1)],
     ['adm', actor(A9.melon, lotAt(STALL.adm, LOT_D), lt, { expr: 'happy', look: [.4, 0], arms: { l: 'rest', r: 'rest' } }, 1.22)],
   ];
-  for (const [k, c] of cast) (!closeOnStr || k === 'str' ? drawChar(c) : V2.dof(4, () => drawBg(c)));
+  for (const [k, c] of cast) if (!closeOnStr || k === 'str') drawChar(c);   /* in her close-ups only Strawberry is drawn: nobody soft, nobody cut by the edge */
 }
 
 // ------------------------------------------------------------------ the scene
@@ -332,15 +363,16 @@ const SC = {
   shot(lt) { return lt < 22.79 ? shotHall(lt) : lt < 23.84 ? 'muster' : lt < 25.96 ? 'mo1' : lt < 26.87 ? 's4' : lt < 28.09 ? 'mo2' : lt < 29.48 ? 's5' : 'end'; },
   cam(lt) {
     if (lt >= 22.79) {
-      // the lot: no camera travel, a push on the wide, a close-up on Strawberry for s4, the two-shot for mo2, a pull-out to finish
+      // the lot: no camera travel, a push on the wide, a close-up on Strawberry for s4, the two-shot for mo2, a pull-out to finish. The wides frame the whole row of six (zoom LOT.z about LOT.x)
       V2.setCam({ cz: 0, cx: 0, cy: 360, hy: 860, f: 1400 });
-      if (lt < 23.84) { zoomTo(540, 960, 1); return; }                                        // muster: the lot, still
-      if (lt < 25.96) { zoomTo(540, 960, 1 + .04 * sk(lt, 23.84, 25.8)); return; }             // mo1: a slow push on the row and the Moon
-      if (lt < 26.87) { zoomTo(705, 760, 1.5); return; }                                      // s4: Strawberry
-      if (lt < 28.09) { zoomTo(540, 960, 1.04); return; }                                     // mo2: the two-shot, the Moon and Strawberry
-      if (lt < 28.5 || lt >= 28.95 && lt < 29.48) { zoomTo(705, 760, 1.5); return; }          // s5: Strawberry, around the insert
-      if (lt < 28.95) { zoomTo(591, 1167, 2.2); return; }                                     // the insert: the empty PERSIMMON stall on the ground
-      zoomTo(540, 960, 1.0); return;   // the end: a cut to the wide lot, held for the sting   // the end: a pull-out to the wide lot
+      const sx = 540 + STALL.str * kz(LOT_D), ex = 540 + STALL.empty * kz(LOT_D);   /* Strawberry's and the empty stall's screen x */
+      if (lt < 23.84) { zoomTo(LOT.x, 960, LOT.z); return; }                                                        // muster: the lot, still
+      if (lt < 25.96) { zoomTo(LOT.x, 960, LOT.z * (1 + .04 * sk(lt, 23.84, 25.8))); return; }                      // mo1: a slow push on the row and the Moon
+      if (lt < 26.87) { zoomTo(sx, 760, 1.5); return; }                                                             // s4: Strawberry
+      if (lt < 28.09) { zoomTo(LOT.x, 960, LOT.z * 1.04); return; }                                                 // mo2: the two-shot, the Moon and the row
+      if (lt < 28.5 || lt >= 28.95 && lt < 29.48) { zoomTo(sx, 760, 1.5); return; }                                 // s5: Strawberry, around the insert
+      if (lt < 28.95) { zoomTo(ex, 1150, 3.1); return; }                                                            // the insert: the empty PERSIMMON stall on the ground
+      zoomTo(LOT.x, 960, LOT.z); return;   // the end: a cut to the wide lot, held for the sting
     }
     // the hall: the camera tracks with the group in the tracking shots (cz from camZ) and frames by the keyframe track
     const [cx, z, cy, y0] = trackAt(lt);
@@ -364,7 +396,7 @@ const SC = {
     return 1;
   },
   over(lt) {
-    sfxWord(lt, .1, 'BRRRRING!', 540, 400, { size: 124, hold: .9, rot: -.06 });
+    sfxWord(lt, .1, 'BRRRRING!', 540, 400, { size: 124, hold: .62, rot: -.06 });   /* one word at a time: this one has faded (.92) before the next lands (1.0) */
     sfxWord(lt, 1.0, 'BRRRING!', 540, 400, { size: 112, hold: .42, rot: .05 });
     sfxWord(lt, B('c1').s + .05, 'SKRRRT!', 540, 430, { size: 112, hold: .42, rot: -.07 });
     sfxWord(lt, B('peel').s + .4, 'BOING!', 540, 430, { size: 120, hold: .42, rot: .06 });

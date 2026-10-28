@@ -18,5 +18,5 @@ const placeholder = id => ({
 const ALL = {};
 for (const id of ids) ALL[id] = (window.__EP12_SCENES || {})[id] || placeholder(id);
 window.__EP12_ALL = ALL;
-EPISODES[12] = { num: 12, v2: true, balanceCaps: true, title: 'Episode 12: The In-Service', TL: window.TIMELINE_EP12, SCENES: ALL, layout: 'v2', audio: 'build/ep12/audio.m4a' };
+EPISODES[12] = { num: 12, v2: true, balanceCaps: true, textGate: true, title: 'Episode 12: The In-Service', TL: window.TIMELINE_EP12, SCENES: ALL, layout: 'v2', audio: 'build/ep12/audio.m4a' };
 })();

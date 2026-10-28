@@ -2,7 +2,7 @@
 
 Importing build_audio12 registers every earlier effect (Episodes 6 to 12) in the same registry (build_audio.SFX). This file adds the heist: a vault dial that coasts to a stop, a
 heavy steel bolt, a record scratch, the blueprint hologram (glass, not metal), the call-light lasers in slow motion, a radio key-up, the creak of a door that has been shut since
-2019 and a wall of call lights going off at once. A few existing names are redefined for this episode only (alarm, vmbeep, chair, doorclose, drone: see the end of the sfx section),
+2019 and a wall of call lights going off at once. A few existing names are redefined for this episode only (alarm, vmbeep, chair, doorclose, phonering, drone: see the end of the sfx section),
 because the cue list asks for something the old sound cannot be: the registry is rebuilt in every process, so Episodes 6 to 12 are untouched.
 It changes the defaults (script, output folder, timeline variable, music module) and runs the same loudness trim, peak limiter and AAC guard as Episodes 10 to 12.
 Nothing is sampled: every sound is a few lines of numpy. The score (build_music13.py) shares two things with this file: the click times of the vault dial and the beats of the
@@ -21,8 +21,8 @@ import build_audio6 as A6
 import build_audio7 as A7
 import build_audio9 as A9
 import build_audio10 as A10
-import build_audio12 as A12
-from build_audio import SR, tarr, osc, ar, lp, bp, hp, midi
+import build_audio12 as A12   # importing it registers every earlier effect (Episodes 6 to 12) in build_audio.SFX
+from build_audio import SR, tarr, osc, ar, lp, midi
 from build_audio6 import norm6, rng6, noise6, place2
 from build_audio7 import _smooth_rand
 from build_audio10 import _nth, _burst, _thump
@@ -111,15 +111,6 @@ def _glass(f, d, tau, a=.004, bright=1.0):
     return x * e
 
 
-def _ring(f0, modes, d, tau_scale=1.0, seed=0):
-    """A struck metal body as a handful of damped modes: modes are (ratio to f0, amplitude, decay seconds)."""
-    t = tarr(d)
-    x = np.zeros(len(t))
-    for i, (m, a, tau) in enumerate(modes):
-        x += a * np.sin(2 * np.pi * f0 * m * t + 1.7 * i + seed) * np.exp(-t / (tau * tau_scale))
-    return x
-
-
 # ================================================================ sound effects (refined in the sound pass; the registration is at the end of this section)
 def _dial_click(seed, heavy=False):
     """One tooth of the dial's ratchet, about 25 ms long: the pawl riding up the tooth (a tiny scrape), 5 to 7 ms later the drop into the notch (a hard tick and a small steel ping
@@ -152,7 +143,7 @@ def sfx_vaultdial():
     ts = dial_times()
     for i, at in enumerate(ts):
         heavy = (i + 1) % 5 == 0 or i == len(ts) - 1
-        amp = (.55 + .45 * (1 - i / len(ts)) ** .6) * r.uniform(.88, 1.1) * (1.4 if heavy else 1.0)
+        amp = (.82 + .18 * (1 - i / len(ts))) * r.uniform(.88, 1.1) * (1.4 if heavy else 1.0)       # a slower tooth is a softer tick, but the riser is building, so only a little softer
         _place(x, _dial_click(1310 + i, heavy), at, amp)
     tt = tarr(d)
     sp = dial_speed(tt)
@@ -165,11 +156,20 @@ def sfx_vaultdial():
     return norm6(_edge(x, .0005, .004), .7)
 
 
+def _bolt(f0, seed):
+    """A smaller bolt sliding back: a quick strike and a short steel ring (three modes, 35 ms and less)."""
+    d = .14
+    t = tarr(d)
+    ring = sum(a * np.sin(2 * np.pi * f0 * m * t + i) * np.exp(-t / tau) for i, (m, a, tau) in enumerate(((1.0, 1.0, .035), (2.3, .6, .025), (3.8, .4, .018))))
+    return _burst(seed, d, 1200, 7000, .0018) * .9 + ring * .5
+
+
 def sfx_clunk():
     """A steel bolt shot home. A hard strike (broadband, 2 ms) as the bolt end meets the keeper, the keeper housing ringing like a plate (five inharmonic modes between 640 Hz and
     5 kHz, the high ones dying first, so it is metal and not a drum), the door frame answering in the low mids (150 to 200 Hz, short, so a phone can play it without a boom) and,
     40 ms later, the second small knock of the bolt seating. The first call (the title: the vault dial locking) is the heavy one, with a longer ring and a low weight under it; the
-    other two (the badge reader's locks) are lighter and a little higher."""
+    other two (the badge reader's locks) are lighter and a little higher. After the main hit the other bolts of the ring draw back, one after another (three small ones for the
+    vault, two for each of the door's locks: six locks on two cues), each softer than the one before."""
     k = _nth("clunk")
     r = rng6(1320 + k)
     heavy = k == 0
@@ -177,7 +177,7 @@ def sfx_clunk():
     t = tarr(d)
     sh = r.uniform(.97, 1.04)
     if heavy:
-        modes = ((640, 1.0, .16), (1480, .85, .12), (2390, .75, .09), (3500, .5, .06), (5000, .3, .04))
+        modes = ((640, 1.0, .11), (1480, .85, .08), (2390, .75, .06), (3500, .5, .04), (5000, .3, .03))
     else:
         modes = ((820, 1.0, .09), (1870, .8, .065), (3000, .65, .045), (4400, .4, .03))
     ring = sum(a * np.sin(2 * np.pi * f * sh * t + 1.7 * i + k) * np.exp(-t / tau) for i, (f, a, tau) in enumerate(modes))
@@ -190,6 +190,8 @@ def sfx_clunk():
     x[seat:] += tail
     if heavy:
         x += np.sin(2 * np.pi * np.cumsum(_glide(74, 52, d)) / SR) * np.exp(-t / .16) * .22 * np.minimum(1, t / .004)
+    for j, (at, f, g) in enumerate(((.13, 560, .5), (.205, 640, .42), (.275, 730, .34)) if heavy else ((.075, 900, .4), (.15, 1020, .3))):      # the other bolts of the ring drawing back, one after another
+        _place(x, _bolt(f * r.uniform(.97, 1.03), 1345 + 10 * k + j), at, g)
     return norm6(_fade_end(x, int(.12 * SR)), .85)
 
 
@@ -217,13 +219,14 @@ def sfx_recscratch():
     n = int(d * SR)
     t = tarr(d)
     rate = np.zeros(n)
+    sk = (1.0, 1.12, .88)[k % 3]                                   # the three scratches are the same gag by different hands: a little faster, a little slower
     for a, b, pk in ((0.0, .075, 2.5), (.075, .15, -3.1), (.15, .225, 2.2), (.225, .30, -2.8)):
         m = (t >= a) & (t < b)
-        rate[m] = pk * np.sin(np.pi * (t[m] - a) / (b - a)) ** 1.15
+        rate[m] = pk * sk * np.sin(np.pi * (t[m] - a) / (b - a)) ** 1.15
     m = t >= .30
     u = np.clip((t[m] - .30) / .12, 0, 1)
     rate[m] = (1 - u) ** 1.6 * (1 + .09 * np.sin(2 * np.pi * 9 * (t[m] - .30)))
-    pos = .42 * SR + np.cumsum(rate)
+    pos = (.42, .55, .33)[k % 3] * SR + np.cumsum(rate)
     y = np.interp(pos, np.arange(len(src)), src) * np.abs(rate) ** .75
     surf = _bp4(noise6(d, 1349 + k), 1800, 9000) * np.abs(rate) ** .5 * .2
     r = rng6(1345 + k)
@@ -270,7 +273,7 @@ def sfx_holoblip():
     x = np.zeros(int(d * SR))
     _place(x, _glass(a, .2, .032), 0)
     _place(x, _glass(b, .2, .042), .055, .75)
-    return norm6(_edge(x, .0005, .01), .5)
+    return norm6(_edge(x, .0005, .01), .36)
 
 
 def sfx_pips():
@@ -289,7 +292,7 @@ def sfx_pips():
     last = .01 + 31 * .0305
     place2(out, _glass(3520, .5, .16, .002), last, .45, 0.0)
     place2(out, _glass(5274, .4, .09, .002), last + .012, .22, .2)
-    return norm6(_edge(out, .0004, .04), .5)
+    return norm6(_edge(out, .0004, .04), .36)
 
 
 def sfx_holooff():
@@ -343,8 +346,8 @@ def sfx_laserhum():
     wire = _bp4(signal.lfilter([1.0], a, _bp4(noise6(d, 1391), 250, 3500)), 300, 2200)
     whine = np.sin(2 * np.pi * 2431 * t + .5 * np.sin(2 * np.pi * .4 * t)) + np.sin(2 * np.pi * 2491 * t)
     swell = np.interp(t, [0, .32, 1.0, 1.5], [0, 1, .85, 0]) * (1 + .1 * np.sin(2 * np.pi * 6.5 * t))
-    x = (mains / np.abs(mains).max() * .55 + wire / np.abs(wire).max() * .26 + whine * .07) * swell
-    return norm6(x, .4)
+    x = _lp4((mains / np.abs(mains).max() * .55 + wire / np.abs(wire).max() * .26 + whine * .07) * swell, 3200, 2)
+    return norm6(x, .32)
 
 
 def sfx_laserpass():
@@ -418,8 +421,8 @@ def sfx_freezesnap():
     _place(x, _burst(1353 + k, .02, 2000, 10000, .0018) * .65, .044)
     _place(x, _glass(r.uniform(3900, 4400), .35, .09, .002) * .14, .006)
     wh = _tv_filter(noise6(d, 1354 + k), 5000 * (.12 ** np.minimum(t / .35, 1)), 1.4, "bp")
-    wh = wh / np.abs(wh).max() * np.minimum(1, t / .006) * np.exp(-t / .12)
-    x += wh * .42
+    wh = wh / np.abs(wh).max() * np.minimum(1, t / .006) * np.exp(-t / .09)
+    x += wh * .3
     return norm6(_edge(x, .0003, .12), .6)
 
 
@@ -649,7 +652,7 @@ def sfx_munch():
     for j in range(5):
         _place(x, _burst(1510 + j, .012, 1800, 4800, .002), .215 + j * .008, .22 * r.uniform(.4, 1))
     _place(x, np.sin(2 * np.pi * np.cumsum(_glide(170, 120, .08)) / SR) * np.exp(-tarr(.08) / .03), .22, .15)
-    return norm6(_edge(x, .0003, .08), .6)
+    return norm6(_edge(x, .0003, .08), .5)
 
 
 def _call_ding(f, tau, ratio_dong=0.0):
@@ -767,15 +770,35 @@ def sfx_doorclose():
     return norm6(_edge(x, .0004, .1), .8)
 
 
+def sfx_phonering():
+    """A phone ringing at the far end of the hall, and a call light answering it (replaces the old office-landline burr for this episode): the two-tone burr twice, closed off at 1.7 kHz
+    and given a little hall echo so it is clearly somewhere else, then, 0.5 s after the second ring, a distant 'ding-dong' of a call light (880 and 659 Hz, the series' chime, soft). Quiet:
+    it is the nurses' station at 7 PM and nobody is answering anything. 2.0 s."""
+    d = 2.0
+    n = int(d * SR)
+    x = np.zeros(n)
+    for at in (0.0, .62):
+        dd = .42
+        t = tarr(dd)
+        ring = (np.sin(2 * np.pi * 440 * t) + np.sin(2 * np.pi * 480 * t)) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 20 * t)))
+        _place(x, np.tanh(ring * 1.4) * ar(dd, .006, .02), at, .6)
+    x = _lp4(x, 1700, 2)
+    echo = int(.07 * SR)
+    x[echo:] += x[:-echo] * .3
+    _place(x, _lp4(_call_ding(880, .2), 2600, 2), 1.2, .5)
+    _place(x, _lp4(_call_ding(659, .22), 2600, 2), 1.62, .4)
+    return norm6(_edge(x, .003, .08), .5)
+
+
 def sfx_drone():
     """Obstacle three (replaces the old drone for this episode): the same low drone (A1 against itself, its fifth, and a flat second above the root that does not belong) but with
-    its level written for the scene: it swells in under the silent Q-word beat (full at 1.0 s), gives way to half when 'The Q word.' begins and falls away under the voices, gone by
-    2.6 s."""
+    its level written for the scene: it swells in under the silent Q-word beat (full at 1.0 s), gives way to under a third when 'The Q word.' begins and falls away under the voices, gone
+    by 2.6 s."""
     d = 2.6
     t = tarr(d)
     x = osc("saw", 55, d) + osc("saw", 55.7, d) + .5 * osc("saw", 82.4, d) + .3 * osc("saw", 58.3, d)
     x = lp(x, 380) * (.7 + .3 * np.sin(2 * np.pi * 3.5 * t))
-    return norm6(x * np.interp(t, [0, .5, 1.0, 1.15, 1.8, 2.6], [0, .85, 1.0, .5, .32, 0]), .6)
+    return norm6(x * np.interp(t, [0, .5, 1.0, 1.12, 1.7, 2.6], [0, .85, 1.0, .3, .16, 0]), .6)
 
 
 BA.SFX.update({k[4:]: v for k, v in list(globals().items()) if k.startswith("sfx_")})
@@ -790,12 +813,27 @@ def main():
     A6.main()
     out = argv[argv.index("--out") + 1]
     wav = os.path.join(A6.HERE, out, "audio.wav")
-    print(f"loudness trim: {A9.trim_loudness(wav):+.2f} dB")
-    print(f"peak limiter: deepest gain dip {A7.peak_limit(wav):.2f} dB")
+    import shutil
     import soundfile as sf
-    if sf.info(wav).subtype != "PCM_16":
-        x, sr = sf.read(wav, dtype="float64")
-        sf.write(wav, np.clip(x, -1, 1), sr, subtype="PCM_16")
+    base = wav + ".pre"
+    shutil.copyfile(wav, base)
+    # the same loudness trim and peak limiter as Episodes 10 to 12, run until the finished file measures -14.8 LUFS (the limiter takes a few tenths of a decibel off what the trim
+    # aimed at, and by a different amount in every episode, so the trim target is corrected from the measurement)
+    target = -14.7
+    for attempt in range(3):
+        shutil.copyfile(base, wav)
+        g = A9.trim_loudness(wav, target=target)
+        dip = A7.peak_limit(wav)
+        if sf.info(wav).subtype != "PCM_16":   # the limiter only rewrites the file when something was over the ceiling
+            x, sr = sf.read(wav, dtype="float64")
+            sf.write(wav, np.clip(x, -1, 1), sr, subtype="PCM_16")
+        final = A9._lufs(wav)
+        print(f"loudness trim: {g:+.2f} dB (aimed at {target:.2f} LUFS)")
+        print(f"peak limiter: deepest gain dip {dip:.2f} dB, finished file {final:.2f} LUFS")
+        if abs(final + 14.8) <= .04:
+            break
+        target += -14.8 - final
+    os.remove(base)
     dips, deep = A10.aac_guard(wav)
     print(f"aac guard: {dips} dip(s), deepest {deep:.2f} dB (keeps the AAC encode under -1 dBTP)")
 
