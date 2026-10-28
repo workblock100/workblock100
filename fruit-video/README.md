@@ -16,6 +16,7 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 9: The Agency Nurse | [`shift-happens-ep9.mp4`](shift-happens-ep9.mp4) | 2:13 |
 | 10: Two Weeks' Notice | [`shift-happens-ep10.mp4`](shift-happens-ep10.mp4) | 2:30 |
 | 11: Welcome Back | [`shift-happens-ep11.mp4`](shift-happens-ep11.mp4) | 2:13 |
+| 12: The In-Service | [`shift-happens-ep12.mp4`](shift-happens-ep12.mp4) | 2:36 |
 | 13: The Float Pool | [`shift-happens-ep13.mp4`](shift-happens-ep13.mp4) | 2:52 |
 
 To play an episode live in the browser, start a local server in this directory and open
@@ -168,6 +169,20 @@ resident cards that build a leaning house of cards in front of Clementine; a tru
 time-lapse across both panels and a glass-shatter merge; an invoice, a vault with a coin avalanche, god rays and a moth; an LED countdown to
 11:00:00; and a parking-lot chaos montage with eight hits keyed to eight sound cues.
 
+## Episode 12: The In-Service
+
+A mandatory in-service that is voluntary for per diem staff. The Administrator's sign-in sheet ("Persimmon is not attending. Agency."), four slides (Dignity First;
+answer every call light within two minutes; teamwork, "We are a family." "Are families paid overtime?" "Families are unpaid."; the budget, ninety-seven percent
+pizza and ninety-seven percent dignity), a quiz (a resident calls while you are on your break: "You are never on break."; a supervisor asks you to stay late: yes,
+yes, or let me check my contract) and the word that has no slide: "No." "There is no slide for no." A fire drill whose muster point is the parking lot
+("Residents first. Staff second." "And administration?" "Third." "Pizza last."), where the Moon counts everyone and Persimmon is "on another budget". The Staff
+Engagement Awards: Most Reports Filed ("Nobody reads them." "I read every one. The good cuff is behind the Q-word sign."), Newest Hire, and Strawberry
+("Per diem. Not required to attend. Attended." "Under protest." "We need you Friday." "No.") ending on "Then it's not in my contract."
+
+Episode 12 was repaired under the text gate (see Layout audit) before it was published: the sign-in sheet had been drawn upside down, several posters, plaques and the
+awards banner were sliced by the frame edge, notes overlapped each other and the drill hall used blurred foreground characters. The sign-in sheet is now an upright
+table with its own signature column. Its script, timing and audio are unchanged.
+
 ## Episode 13: The Float Pool
 
 Hour four of eight, and Strawberry's break has said "pending" since the merger. "That's not a break. That's a heist." The float pool, the people no schedule can find,
@@ -199,13 +214,13 @@ a laser hall with a time-warped walk, radio HUD tags, a break room lit only by p
 | Pineapple | Family member | The crown is a "Can I speak to your manager" |
 | Coconut | New admit, 10:55 PM | No med list. No paperwork. Just vibes |
 | Starfruit | State surveyor (Ep. 2) | "Don't mind me. I'm just going to observe." |
-| Melon | The Administrator (Ep. 2, 9, 10, 11) | Leaves the office once a year, with pizza. Has a different budget for agency nurses |
+| Melon | The Administrator (Ep. 2, 9, 10, 11, 12, 13) | Leaves the office once a year, with pizza. Has a different budget for agency nurses |
 | Kiwis x5 | Agency nurses (Ep. 2) | Appear when the State does. Vanish at 4:45 |
 | Nifedipine ER | Capsule (Ep. 2) | Almost crushed. Says thank you |
 | Fig | The Scheduler (Ep. 3) | Makes you an offer you can't refuse. Texts "hey :)" at 3 AM |
 | Doris | Cranberry sauce (Ep. 3) | Mrs. Cranberry's cousin. She was jellied |
 | Clementine | New grad (Ep. 4), the replacement (Ep. 10, 11) | Passed at 85 questions. Says "Sure!" to everyone. Becomes marmalade. Takes twenty-eight residents without a contract |
-| Moon | Night-shift narrator (Ep. 5, 7, 13) | Keeps score whenever someone blames him for a problem. Ep. 7: he would like it noted that he has not said anything |
+| Moon | Night-shift narrator (Ep. 5, 7, 12, 13) | Keeps score whenever someone blames him for a problem. Ep. 7: he would like it noted that he has not said anything |
 | Sun | Day-shift counterpart (Ep. 5) | Takes credit for a quiet day, then claims sundowning |
 | Mango | CNA (Ep. 5) | Knows the legend of the good blood pressure cuff |
 | Mr. Pear | Resident (Ep. 5) | Still honors the paid-break clause in his old contract |
@@ -215,7 +230,7 @@ a laser hall with a time-warped walk, radio HUD tags, a break room lit only by p
 | Papaya | Activities Director (Ep. 7) | Calls bingo like a game-show host, in a sun visor, with a microphone she does not need |
 | Goji | Resident, Room 14 (Ep. 7) | Is the wolf. Has not had water since lunch. It is a UTI |
 | Mr. Lime | Day nurse (Ep. 8; a resident who hears chirps in Ep. 6) | Arrives at 7:00 with a 7-3 mug and asks how the night was |
-| Persimmon | Agency nurse, per diem (Ep. 9, 11) | Orientation is four minutes. Helping is not in her contract. Leaves at 11:00:00 with the keys. Welcomes Strawberry to the club |
+| Persimmon | Agency nurse, per diem (Ep. 9, 11, 12) | Orientation is four minutes. Helping is not in her contract. Leaves at 11:00:00 with the keys. Welcomes Strawberry to the club |
 | Brenda | Prune nurse, the break room (Ep. 13) | Went on break in 2019. Nobody covered. "Nobody ever said that." First one out the door when the call lights ring |
 
 ## Layout audit
@@ -224,7 +239,7 @@ a laser hall with a time-warped walk, radio HUD tags, a break room lit only by p
 or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 13 are checked at 30 frames per second and the command
 exits non-zero on any issue, so it works as a release gate (`EP=13 node render.js audit 0.0333333333`).
 
-### The text gate (Episode 13 onward)
+### The text gate (Episode 13 onward; Episode 12 after its repair)
 
 The box audit never looked at text drawn into the world, so upside-down sheets, names printed over each other and posters sliced by the frame edge got through.
 `txaudit.js` hooks `fillText` on every canvas and records every string with its true on-screen quad (camera, rotation and mirroring included). Every audit of an episode with
@@ -367,6 +382,18 @@ EP=11 FMT=image/png CRF=21 node render.js video shift-happens-ep11.mp4
 
 `script_ep11.json` holds the scenes, lines, voices and sound cues; `build_audio11.py` and `build_music11.py` are thin additions on the Episode 10 files (they import them, so each pair must stay together);
 the scenes reuse Episode 10's office set (`ep10_set.js`) for the vault and Episode 9's lobby, lounge and hall by copy.
+
+## Episode 12 build and release gate
+
+```bash
+python3 build_audio12.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin   # voices, stereo mix, score, lip-sync -> build/ep12/audio.wav, timeline.js
+EP=12 node render.js events 15                                               # footsteps from the animation -> build/ep12/events.json (then run build_audio12.py again with --events build/ep12/events.json)
+EP=12 node render.js audit 0.0333333333                                      # hard gate, text gate included (textGate: true): exits non-zero on any layout or text issue
+ffmpeg -y -i build/ep12/audio.wav -c:a aac -b:a 192k build/ep12/audio.m4a     # browser playback and CI
+EP=12 FMT=image/png CRF=21 node render.js video shift-happens-ep12.mp4
+```
+
+`script_ep12.json` holds the scenes, lines, voices and sound cues; `build_audio12.py` and `build_music12.py` build on the earlier audio and music files (they import them, so the files must stay together).
 
 ## Episode 13 build and release gate
 
