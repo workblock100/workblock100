@@ -175,7 +175,7 @@ const V2 = (() => {
     ctx.translate(W / 2 + dx, H / 2 + dy); ctx.rotate(CAM.r); ctx.scale(CAM.z, CAM.z); ctx.translate(-CAM.x, -CAM.y);
     S.draw(lt);
     ctx.restore();
-    if (fxNow.bloom > 0) {   // blur the emissive layer at quarter size, then add it back
+    if (fxNow.bloom > 0 && !TXA.mask) {   // blur the emissive layer at quarter size, then add it back (skipped in the text gate's mask pass)
       bloomTmpCtx.clearRect(0, 0, W / 4, H / 4); bloomTmpCtx.filter = 'blur(5px)'; bloomTmpCtx.drawImage(bloomCv, 0, 0); bloomTmpCtx.filter = 'none';
       bloomTmpCtx.globalCompositeOperation = 'lighter'; bloomTmpCtx.globalAlpha = .55; bloomTmpCtx.filter = 'blur(14px)'; bloomTmpCtx.drawImage(bloomCv, 0, 0); bloomTmpCtx.filter = 'none'; bloomTmpCtx.globalAlpha = 1; bloomTmpCtx.globalCompositeOperation = 'source-over';
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = fxNow.bloom; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -227,8 +227,9 @@ const V2 = (() => {
     ctx.save();
     S.over && S.over(lt);
     ctx.restore();
-    drawCaption(T, S);
+    TXA.eng++; drawCaption(T, S);
     if (!S.noChyron) chyron(S, lt);
+    TXA.eng--;
   }
 
   function renderFrame(S, lt) { worldAt(T); compose(S, lt, worldCv); }
@@ -341,6 +342,6 @@ const V2 = (() => {
   }
 
   return { mk, rng, rgb, rgba, mix, P, setCam, proj, p2, at, poly, quad3, line3, grad, radial, LIGHT, lights, setLight, addLight, glow, emit, beam, dust, ring, smoke, sparks, dof, flare,
-    renderFrame, renderSampled, captureFrames, validate, validators, opts, skinTile, worldCv, CAP };
+    renderFrame, renderSampled, captureFrames, validate, validators, opts, skinTile, worldCv, dofCv, worldAt, CAP };
 })();
 window.V2 = V2;

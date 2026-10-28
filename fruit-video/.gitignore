@@ -53,3 +53,11 @@ build/ep12/*
 !build/ep12/timeline.js
 !build/ep12/audio.m4a
 !build/ep12/events.json
+!build/ep13/
+build/ep13/*
+!build/ep13/timeline.js
+!build/ep13/audio.m4a
+!build/ep13/events.json
+!build/ep99/
+build/ep99/*
+!build/ep99/timeline.js

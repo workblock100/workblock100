@@ -98,8 +98,19 @@ async function main() {
       console.log(`wrote ${events.length} footsteps to ${path.join(BUILD, 'events.json')} (${n} samples at ${fps} fps)`);
       return;
     }
+    if (mode === 'textinv') {
+      // every distinct text run in a range: where it is, how big, how it is turned, and the moment it is most visible (feeds the text atlas)
+      const { page, duration } = await openPage(browser, port);
+      const step = parseFloat(args[0] || '0.25'), from = parseFloat(args[1] || '0'), to = Math.min(duration, parseFloat(args[2] || String(duration)));
+      const inv = await page.evaluate(([a, b, st]) => TXA.inventory(a, b, st), [from, to, step]);
+      fs.mkdirSync(BUILD, { recursive: true });
+      fs.writeFileSync(path.join(BUILD, 'textinv.json'), JSON.stringify(inv));
+      console.log(`wrote ${inv.length} distinct text runs to ${path.join(BUILD, 'textinv.json')}`);
+      return;
+    }
     if (mode === 'audit') {
       const { page, duration } = await openPage(browser, port);
+      if (process.env.TEXTGATE) await page.evaluate(() => { TXA.force = true; });   // hold an older episode to the text gate too
       const step = parseFloat(args[0] || '0.1'), from = parseFloat(args[1] || '0'), to = Math.min(duration, parseFloat(args[2] || String(duration)));
       const rows = await page.evaluate(([a, b, st]) => window.audit(a, b, st), [from, to, step]);
       // collapse consecutive hits of the same problem into time ranges
@@ -110,10 +121,13 @@ async function main() {
         g.to = t; g.n++; groups.set(k, g);
       }
       const list = [...groups.values()].sort((a, b) => a.from - b.from);
-      for (const g of list) console.log(`${g.from.toFixed(2)}-${g.to.toFixed(2)}s  ${g.scene.padEnd(9)} ${g.msg}  (x${g.n})`);
-      console.log(`${rows.length} issue-frames, ${list.length} distinct issues, ${Math.round((to - from) / step)} frames checked`);
-      // Episode 6 onward is held to a hard gate: any layout issue fails the run. Older episodes keep the old behavior.
-      if (rows.length && (EPNUM >= 6 || process.env.STRICT)) process.exitCode = 1;
+      const notes = list.filter(g => g.msg.startsWith('NOTE ')), errs = list.filter(g => !g.msg.startsWith('NOTE '));
+      for (const g of errs) console.log(`${g.from.toFixed(2)}-${g.to.toFixed(2)}s  ${g.scene.padEnd(9)} ${g.msg}  (x${g.n})`);
+      if (!process.env.NONOTES) for (const g of notes) console.log(`${g.from.toFixed(2)}-${g.to.toFixed(2)}s  ${g.scene.padEnd(9)} ${g.msg}  (x${g.n})`);
+      const errFrames = rows.filter(r => !r[2].startsWith('NOTE ')).length;
+      console.log(`${errFrames} issue-frames, ${errs.length} distinct issues, ${Math.round((to - from) / step)} frames checked, ${notes.length} notes`);
+      // Episode 6 onward is held to a hard gate: any layout issue fails the run (notes do not). Older episodes keep the old behavior.
+      if (errFrames && (EPNUM >= 6 || process.env.STRICT)) process.exitCode = 1;
       return;
     }
     const out = path.resolve(args[0] || path.join(BUILD, 'shift-happens.mp4'));

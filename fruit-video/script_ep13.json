@@ -1,0 +1,1547 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 13: The Float Pool",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "strawr": {
+   "name": "NURSE STRAWBERRY, ON THE RADIO",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us",
+   "fx": "phone"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "mangor": {
+   "name": "CNA MANGO, ON THE RADIO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us",
+   "fx": "phone"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "lemonr": {
+   "name": "CHARGE NURSE LEMON, ON THE RADIO",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us",
+   "fx": "phone"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "clem": {
+   "name": "NEW NURSE CLEMENTINE",
+   "voice": "af_kore",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff8a1a",
+   "pan": -0.3
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a",
+   "pan": 0.35
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "narr": {
+   "name": "NARRATOR",
+   "voice": "bm_george",
+   "lang": "en-gb",
+   "speed": 1.07,
+   "semis": 0,
+   "color": "#e8e8e8"
+  },
+  "all": {
+   "name": "EVERYONE",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "am_fenrir",
+    "bf_emma",
+    "am_michael"
+   ],
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#7b61ff",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "brenda": {
+   "name": "BRENDA, RN (ON BREAK)",
+   "voice": "bf_alice",
+   "speed": 0.88,
+   "semis": -4,
+   "color": "#8e5a9b",
+   "pan": 0.1,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 4.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "vaultdial",
+       0,
+       0.55,
+       0
+      ],
+      [
+       "clunk",
+       2.4,
+       0.7,
+       0
+      ],
+      [
+       "textding",
+       2.5,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "open",
+   "clock": "7:02 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.25
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "phonering",
+       0.25,
+       0.2,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Fruit Bowl Rehab and Nursing. Seven oh two P M. Hour four.",
+     "text": "Fruit Bowl Rehab and Nursing. Seven oh two P M. Hour four.",
+     "gap": 0.25
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I haven't sat down since three.",
+     "text": "I haven't sat down since three.",
+     "gap": 0.2
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "You have a break.",
+     "text": "You have a break.",
+     "gap": 0.15
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Where?",
+     "text": "Where?",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "It's on the schedule.",
+     "text": "It's on the schedule.",
+     "gap": 0.2
+    },
+    {
+     "id": "sched",
+     "pause": 1.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "paperslide",
+       0.05,
+       0.5,
+       0.2
+      ],
+      [
+       "tap",
+       0.95,
+       0.35,
+       0
+      ],
+      [
+       "poofs",
+       1.05,
+       0.25,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "It says pending.",
+     "text": "It says pending.",
+     "gap": 0.2
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "It's said pending since the merger.",
+     "text": "It's said pending since the merger.",
+     "gap": 0.2
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "So we're not asking for it.",
+     "text": "So we're not asking for it.",
+     "gap": 0.2
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "We're taking it.",
+     "text": "We're taking it.",
+     "gap": 0.25
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "Thirty minutes. Uninterrupted. One chair.",
+     "text": "Thirty minutes. Uninterrupted. One chair.",
+     "gap": 0.2
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "That's not a break. That's a heist.",
+     "text": "That's not a break. That's a heist.",
+     "gap": 0.2
+    },
+    {
+     "id": "l5",
+     "who": "lemon",
+     "say": "Then we'll need a crew.",
+     "text": "Then we'll need a crew.",
+     "gap": 0.1
+    },
+    {
+     "id": "end",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "recscratch",
+       0.05,
+       0.65,
+       0
+      ],
+      [
+       "sting",
+       0.3,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "plan",
+   "clock": "7:09 PM",
+   "label": "THE BRIEFING",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.18
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.9,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "holoon",
+       0.05,
+       0.55,
+       0
+      ],
+      [
+       "holoblip",
+       0.55,
+       0.35,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "This is the facility.",
+     "text": "This is the facility.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "holoblip",
+       0.25,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Thirty-two rooms. Two nurses. One called out.",
+     "text": "Thirty-two rooms. Two nurses. One called out.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "pips",
+       0.15,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "And this is the vault. The break room.",
+     "text": "And this is the vault. The break room.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "holoblip",
+       0.35,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Why is it locked?",
+     "text": "Why is it locked?",
+     "gap": 0.15
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "Policy fourteen point three.",
+     "text": "Policy fourteen point three.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "cardslam",
+       0.2,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "gap": 0.15
+    },
+    {
+     "id": "l5",
+     "who": "lemon",
+     "say": "Obstacle one. The call lights.",
+     "text": "Obstacle one. The call lights.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "holoblip",
+       0.2,
+       0.35,
+       0
+      ],
+      [
+       "laserhum",
+       0.9,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "I can't ignore a call light.",
+     "text": "I can't ignore a call light.",
+     "gap": 0.15
+    },
+    {
+     "id": "l6",
+     "who": "lemon",
+     "say": "Nobody can. Except her.",
+     "text": "Nobody can. Except her.",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Per dee um.",
+     "text": "Per diem.",
+     "gap": 0.15
+    },
+    {
+     "id": "l7",
+     "who": "lemon",
+     "say": "Her badge isn't in the system.",
+     "text": "Her badge isn't in the system.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "holoblip",
+       0.6,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l8",
+     "who": "lemon",
+     "say": "Obstacle two. The Administrator.",
+     "text": "Obstacle two. The Administrator.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "holoblip",
+       0.2,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "I'll talk to him.",
+     "text": "I'll talk to him.",
+     "gap": 0.15
+    },
+    {
+     "id": "l9",
+     "who": "lemon",
+     "say": "He loops every fourteen minutes.",
+     "text": "He loops every fourteen minutes.",
+     "gap": 0.15
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "I can hold him for forty.",
+     "text": "I can hold him for forty.",
+     "gap": 0.2
+    },
+    {
+     "id": "l10",
+     "who": "lemon",
+     "say": "Obstacle three.",
+     "text": "Obstacle three.",
+     "gap": 0.1
+    },
+    {
+     "id": "q",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "drone",
+       0,
+       0.4,
+       0
+      ],
+      [
+       "holoblip",
+       0.6,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l11",
+     "who": "lemon",
+     "say": "The Q word.",
+     "text": "The Q word.",
+     "gap": 0.15
+    },
+    {
+     "id": "c3",
+     "who": "clem",
+     "say": "What's the-",
+     "text": "What's the...",
+     "gap": 0.1
+    },
+    {
+     "id": "a1",
+     "who": "all",
+     "say": "Shh!",
+     "text": "Shh!",
+     "gap": 0.2
+    },
+    {
+     "id": "l12",
+     "who": "lemon",
+     "say": "Moon. You're on the window.",
+     "text": "Moon. You're on the window.",
+     "gap": 0.15
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "I see everything.",
+     "text": "I see everything.",
+     "gap": 0.2
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "And if we're caught?",
+     "text": "And if we're caught?",
+     "gap": 0.15
+    },
+    {
+     "id": "l13",
+     "who": "lemon",
+     "say": "Then it was a mandatory in-service.",
+     "text": "Then it was a mandatory in-service.",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "holooff",
+       0.05,
+       0.5,
+       0
+      ],
+      [
+       "sting",
+       0.15,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "crew",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "recscratch",
+       0.05,
+       0.5,
+       0
+      ],
+      [
+       "freezesnap",
+       0.35,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "The Brains.",
+     "text": "The Brains.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "cardslam",
+       0.02,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Eleven years. One plan.",
+     "text": "Eleven years. One plan.",
+     "gap": 0.2
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "The Ghost.",
+     "text": "The Ghost.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "freezesnap",
+       0.0,
+       0.5,
+       0
+      ],
+      [
+       "cardslam",
+       0.02,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I'm per dee um.",
+     "text": "I'm per diem.",
+     "gap": 0.2
+    },
+    {
+     "id": "n3",
+     "who": "narr",
+     "say": "The Talker.",
+     "text": "The Talker.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "freezesnap",
+       0.0,
+       0.5,
+       0
+      ],
+      [
+       "cardslam",
+       0.02,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "I once made a family like the food.",
+     "text": "I once made a family like the food.",
+     "gap": 0.2
+    },
+    {
+     "id": "n4",
+     "who": "narr",
+     "say": "The Muscle.",
+     "text": "The Muscle.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "freezesnap",
+       0.0,
+       0.5,
+       0
+      ],
+      [
+       "cardslam",
+       0.02,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "gap": 0.2
+    },
+    {
+     "id": "n5",
+     "who": "narr",
+     "say": "The Distraction.",
+     "text": "The Distraction.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "freezesnap",
+       0.0,
+       0.5,
+       0
+      ],
+      [
+       "cardslam",
+       0.02,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "banana",
+     "say": "Forty-seven.",
+     "text": "Forty-seven.",
+     "gap": 0.2
+    },
+    {
+     "id": "n6",
+     "who": "narr",
+     "say": "The Eye in the Sky.",
+     "text": "The Eye in the Sky.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "freezesnap",
+       0.0,
+       0.5,
+       0
+      ],
+      [
+       "cardslam",
+       0.02,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "I'm literally the moon.",
+     "text": "I'm literally the moon.",
+     "gap": 0.2
+    },
+    {
+     "id": "end",
+     "pause": 0.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "whoosh",
+       0.05,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hall",
+   "clock": "7:14 PM",
+   "label": "THE HALL",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "alarms",
+    "gain": 0.16
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.1,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "beep3",
+       0.1,
+       0.35,
+       0
+      ],
+      [
+       "laserhum",
+       0.3,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "lr1",
+     "who": "lemonr",
+     "say": "Ghost. You're clear to enter the hall.",
+     "text": "Ghost. You're clear to enter the hall.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "sr1",
+     "who": "strawr",
+     "say": "Copy.",
+     "text": "Copy.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "lasers",
+     "pause": 3.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slowmo",
+       0,
+       0.55,
+       0
+      ],
+      [
+       "heartbeat",
+       0.2,
+       0.55,
+       0
+      ],
+      [
+       "laserpass",
+       0.8,
+       0.4,
+       -0.3
+      ],
+      [
+       "laserpass",
+       1.6,
+       0.4,
+       0.3
+      ],
+      [
+       "laserpass",
+       2.4,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "lr2",
+     "who": "lemonr",
+     "say": "The lights can't see you.",
+     "text": "The lights can't see you.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "sr2",
+     "who": "strawr",
+     "say": "Nobody can.",
+     "text": "Nobody can.",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cross",
+   "clock": "7:15 PM",
+   "label": "THE JOB",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.18
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "beep3",
+       0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "lr1",
+     "who": "lemonr",
+     "say": "Administrator is on his loop. Mango.",
+     "text": "Administrator is on his loop. Mango.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Hi! Do you have a minute?",
+     "text": "Hi! Do you have a minute?",
+     "gap": 0.15
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "I have fourteen.",
+     "text": "I have fourteen.",
+     "gap": 0.15
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "I'd like to discuss my schedule.",
+     "text": "I'd like to discuss my schedule.",
+     "gap": 0.2
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "Fascinating. Slide one.",
+     "text": "Fascinating. Slide one.",
+     "gap": 0.15
+    },
+    {
+     "id": "slide",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "clack",
+       0.05,
+       0.5,
+       0.2
+      ],
+      [
+       "fanwhir",
+       0,
+       0.15,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "sr1",
+     "who": "strawr",
+     "say": "Door's locked. Policy fourteen point three.",
+     "text": "Door's locked. Policy fourteen point three.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "lr2",
+     "who": "lemonr",
+     "say": "Staff may not enter.",
+     "text": "Staff may not enter.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "sr2",
+     "who": "strawr",
+     "say": "I'm not staff.",
+     "text": "I'm not staff.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "badge",
+     "pause": 1.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "vmbeep",
+       0.1,
+       0.4,
+       0
+      ],
+      [
+       "clunk",
+       0.6,
+       0.6,
+       0
+      ],
+      [
+       "clunk",
+       0.85,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "lr3",
+     "who": "lemonr",
+     "say": "He's heading your way. Banana. Now.",
+     "text": "He's heading your way. Banana. Now.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "banana",
+     "say": "Now?",
+     "text": "Now?",
+     "gap": 0.1
+    },
+    {
+     "id": "lr4",
+     "who": "lemonr",
+     "say": "Slip.",
+     "text": "Slip.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "radioclick",
+       -0.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "slip",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "peel",
+       0.15,
+       0.5,
+       0.3
+      ],
+      [
+       "boing",
+       0.4,
+       0.35,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "b2",
+     "who": "banana",
+     "say": "Forty-eight!",
+     "text": "Forty-eight!",
+     "gap": 0.15
+    },
+    {
+     "id": "a3",
+     "who": "melon",
+     "say": "Mr. Banana! I'll get the form.",
+     "text": "Mr. Banana! I'll get the form.",
+     "gap": 0.15
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "Slide two?",
+     "text": "Slide two?",
+     "gap": 0.1
+    },
+    {
+     "id": "end",
+     "pause": 0.7,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "vault",
+   "clock": "7:19 PM",
+   "label": "THE BREAK ROOM",
+   "head": 0.2,
+   "tail": 0.6,
+   "room": "break",
+   "amb": {
+    "name": "break",
+    "gain": 0.25
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 2.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "doorcreak",
+       0.1,
+       0.6,
+       0
+      ],
+      [
+       "wind",
+       0.2,
+       0.3,
+       0
+      ],
+      [
+       "drip",
+       1.9,
+       0.3,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "It's real.",
+     "text": "It's real.",
+     "gap": 0.2
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Is that a sandwich?",
+     "text": "Is that a sandwich?",
+     "gap": 0.2
+    },
+    {
+     "id": "find",
+     "pause": 1.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "stab",
+       0.1,
+       0.55,
+       0
+      ],
+      [
+       "gasp",
+       0.2,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Brenda.",
+     "text": "Brenda.",
+     "gap": 0.25
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Who's Brenda?",
+     "text": "Who's Brenda?",
+     "gap": 0.15
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "She went on break in twenty nineteen.",
+     "text": "She went on break in twenty nineteen.",
+     "gap": 0.2
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "She never came back?",
+     "text": "She never came back?",
+     "gap": 0.15
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "Nobody covered.",
+     "text": "Nobody covered.",
+     "gap": 0.3
+    },
+    {
+     "id": "br1",
+     "who": "brenda",
+     "say": "Is someone covering?",
+     "text": "Is someone covering?",
+     "gap": 0.2
+    },
+    {
+     "id": "gasp",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "gasp",
+       0.05,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I've got it. Go.",
+     "text": "I've got it. Go.",
+     "gap": 0.25
+    },
+    {
+     "id": "br2",
+     "who": "brenda",
+     "say": "Nobody ever said that.",
+     "text": "Nobody ever said that.",
+     "gap": 0.2
+    },
+    {
+     "id": "free",
+     "pause": 1.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "bonecreak",
+       0.1,
+       0.5,
+       0
+      ],
+      [
+       "dust",
+       0.3,
+       0.3,
+       0
+      ],
+      [
+       "steps",
+       0.9,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "sit",
+     "pause": 1.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "chair",
+       0.3,
+       0.5,
+       0
+      ],
+      [
+       "harp",
+       0.6,
+       0.35,
+       0
+      ],
+      [
+       "wrapper",
+       1.1,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Mm.",
+     "text": "Mm.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "munch",
+       0.05,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "All clear. It's quiet out here.",
+     "text": "All clear. It's quiet out here.",
+     "gap": 0.15
+    },
+    {
+     "id": "freeze",
+     "pause": 1.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "recscratch",
+       0.05,
+       0.5,
+       0
+      ],
+      [
+       "callcascade",
+       0.3,
+       0.6,
+       0
+      ],
+      [
+       "alarm",
+       0.4,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "Moon.",
+     "text": "Moon.",
+     "gap": 0.1
+    },
+    {
+     "id": "mo2",
+     "who": "moon",
+     "say": "Sorry.",
+     "text": "Sorry.",
+     "gap": 0.15
+    },
+    {
+     "id": "l5",
+     "who": "lemon",
+     "say": "We've got it. Sit.",
+     "text": "We've got it. Sit.",
+     "gap": 0.15
+    },
+    {
+     "id": "c2",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "gap": 0.15
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Pending.",
+     "text": "Pending.",
+     "gap": 0.2
+    },
+    {
+     "id": "end",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.15,
+       0.4,
+       0
+      ],
+      [
+       "doorclose",
+       0.5,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "open",
+  "to_": "vault",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

@@ -59,7 +59,10 @@ function text(str, x, y, o = {}) {
   ctx.font = `${italic ? 'italic ' : ''}${weight} ${size}px ${font}`;
   ctx.textAlign = align; ctx.textBaseline = base;
   if (spacing) ctx.letterSpacing = spacing + 'px';
+  /* letter spacing adds its gap after every glyph, the last one included, so centred or right-aligned text sits half a gap (a whole gap) too far left; episodes with the text gate correct it */
+  if (spacing && EP && EP.textGate) ctx.translate(align === 'center' ? spacing / 2 : align === 'right' ? spacing : 0, 0);
   if (shadow) { ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = shadow; ctx.shadowOffsetY = shadow / 3; }
+  TXA.opts = o;
   if (lw) {
     ctx.lineJoin = 'round'; ctx.lineWidth = lw; ctx.strokeStyle = stroke;
     if (maxW) ctx.strokeText(str, 0, 0, maxW); else ctx.strokeText(str, 0, 0);
@@ -67,6 +70,7 @@ function text(str, x, y, o = {}) {
   }
   ctx.fillStyle = fill;
   if (maxW) ctx.fillText(str, 0, 0, maxW); else ctx.fillText(str, 0, 0);
+  TXA.opts = null;
   if (REG.on && !REG.suppress) {
     const w = ctx.measureText(str).width;
     if (maxW && w > maxW * 1.15) REG.errors.push(`squished text "${str}" (${Math.round(maxW / w * 100)}% width)`);
@@ -2367,15 +2371,22 @@ function checkFrame() {
     }
   }
   if (EP.v2) V.push(...V2.validate());
+  if (TXA.rec) V.push(...TXA.check());   // the text gate (txaudit.js): episodes with textGate, or any episode run with TEXTGATE=1
   return V.concat(REG.errors);
 }
 function audit(start, end, step) {
-  const out = [];
-  REG.on = true;
+  const out = [], gate = !!(EP.textGate || TXA.force);
+  REG.on = true; TXA.rec = gate;
   for (let t = start; t < end; t += step) {
+    if (gate) TXA.begin(t, step);
     renderAt(t);
     for (const m of checkFrame()) out.push([+t.toFixed(2), CUR.id, m]);
+    if (gate) {   // the pixel pass: a second render of this frame with every string in a flat key colour, to prove none is covered
+      for (const m of TXA.visibility()) out.push([+t.toFixed(2), CUR.id, m]);
+      TXA.end();
+    }
   }
-  REG.on = false;
+  REG.on = false; TXA.rec = false;
+  if (gate) for (const m of TXA.offscreenReport()) out.push([start, 'offscreen', m]);
   return out;
 }
