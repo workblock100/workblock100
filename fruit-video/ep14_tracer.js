@@ -55,38 +55,65 @@ const CUE = {
   get peel() { return bs('slip') + .15; }, get boing() { return bs('slip') + .4; },
 };
 
-// ------------------------------------------------------------------ STAGE: where everything stands (world coordinates at zoom 1; the floor line is y = FL)
+// ------------------------------------------------------------------ STAGE: where everything stands (world coordinates at zoom 1; the floor line is y = FL). Re-tune here when the real rooms land.
 const R = id => S14.rect(id);
 const FL = R('med').floor;
 const U = (id, u) => R(id).x0 + u * R(id).w;
 const S = S14.S, KS = S14.S * .72;                                                   /* an adult, and the trainee */
 const STAGE = {
-  // n1: the med room.  Strawberry at the cart, the two observers close behind her (on her left, away from the way she will run)
-  sMed: U('med', .72), stMed: U('med', .44), kMed: U('med', .20), cartMed: U('med', .97), cartR7: U('r7', .42),
-  // the three call lights she places (x of the resident's hand reach), and where she halts afterwards
-  light1: U('r4', .50), light2: U('r7', .56), light3: U('r7', .985), halt: U('r7', .66),
+  // n1: the med room. Strawberry at the cart (the cart on her right, its handle toward her), the two observers close behind her on her left
+  sMed: 202, stMed: 132, kMed: 72, cartMed: 264,
+  // the three call lights: where the handset lands (x, y above the floor) and where her hand is when it does
+  light1: [522, 64], light2: [640, 52], light3: [794, 98],
+  contact1: 440, contact2: 560, contact3: 712, halt: 738,
   // residents
-  banR4: U('r4', .72), cranR7: U('r7', .20),
-  // the observers' stops
-  stR4: U('r4', .40), kR4: U('r4', .20), stR7: U('r7', .46), kR7: U('r7', .30),
+  banR4: 480, cranR7: 596,
+  // the observers' stops in ROOM 4, and in ROOM 7 at the cart
+  stR4: 420, kR4: 456, stR7: 612, kR7: 706, cartR7: 668, sR7: 752,
 };
 
-// ------------------------------------------------------------------ the cast: paths in world x (the feet are always on the floor line)
-/* Strawberry: the shadow-step gag in n1, the churn and the run, three call-light stops, the halt */
-const SXf = lazy(() => pchip([
-  [0, STAGE.sMed], [wordT('n1', 'followed', 2.54), STAGE.sMed], [wordT('n1', 'followed', 2.54) + .3, STAGE.sMed - 34], [wordT('n1', 'everywhere', 3.0) + .05, STAGE.sMed - 34], [wordT('n1', 'everywhere', 3.0) + .4, STAGE.sMed],
-  [CUE.whoosh + .28, STAGE.sMed - 6], [CUE.whoosh + .3, STAGE.sMed - 6],
-  [CUE.whoosh + .5, STAGE.sMed + 40], [CUE.whoosh + .8, STAGE.sMed + 150], [CUE.ding1 - .06, STAGE.light1 - 8], [CUE.ding1 + .06, STAGE.light1 + 20],
-  [CUE.ding1 + .4, STAGE.light1 + 118], [CUE.ding2 - .06, STAGE.light2 - 8], [CUE.ding2 + .06, STAGE.light2 + 20],
-  [CUE.ding2 + .3, STAGE.light2 + 80], [CUE.ding3 - .06, STAGE.light3 - 8], [CUE.ding3 + .02, STAGE.light3],
-  [CUE.ding3 + .35, STAGE.light3 - 50], [bs('run') + 3.52, STAGE.halt], [bs('run') + 3.7, STAGE.halt - 6], [bs('run') + 3.95, STAGE.halt],
-]));
+// ------------------------------------------------------------------ paths in world x (the feet are always on the floor line)
+/* Strawberry: the shadow-step gag in n1, the churn, then dash-stop-dash-stop-dash through three call-light stops, the halt, and her place in ROOM 7 */
+const SXf = lazy(() => {
+  const f = wordT('n1', 'followed', 2.54), e = wordT('n1', 'everywhere', 3.0), w = CUE.whoosh, c1 = CUE.ding1, c2 = CUE.ding2, c3 = CUE.ding3, h = bs('run') + 3.52;
+  return pchip([
+    [0, STAGE.sMed], [f, STAGE.sMed], [f + .3, STAGE.sMed - 34], [e + .05, STAGE.sMed - 34], [e + .4, STAGE.sMed],
+    [w + .3, STAGE.sMed - 4], [w + .31, STAGE.sMed - 4],                                  /* held by the squash while the legs spin */
+    [w + .55, STAGE.sMed + 52], [w + .8, STAGE.sMed + 150], [c1 - .22, STAGE.contact1 - 40], [c1 - .05, STAGE.contact1 - 8], [c1 + .05, STAGE.contact1],
+    [c1 + .2, STAGE.contact1 + 22], [c1 + .45, STAGE.contact1 + 80], [c2 - .25, STAGE.contact2 - 40], [c2 - .05, STAGE.contact2 - 6], [c2 + .05, STAGE.contact2],
+    [c2 + .2, STAGE.contact2 + 22], [c2 + .45, STAGE.contact2 + 100], [c3 - .22, STAGE.contact3 - 36], [c3 - .05, STAGE.contact3 - 6], [c3 + .05, STAGE.contact3],
+    [h - .1, STAGE.halt - 4], [h + .15, STAGE.halt + 6], [h + .45, STAGE.halt], [bs('st3') - .4, STAGE.halt], [bs('st3') + .5, STAGE.sR7],
+  ]);
+});
 const SX = lt => SXf()(lt);
+/* the cart: parked beside her, shoved at the launch, coasting to rest in ROOM 7 */
+const CARTf = lazy(() => {
+  const t0 = CUE.whoosh + .5, t1 = CUE.whoosh + 3.3, x0 = STAGE.cartMed + 26, v0 = 2 * (STAGE.cartR7 - x0) / (t1 - t0 + (t1 - t0) * .0);
+  return t => t < CUE.whoosh + .3 ? STAGE.cartMed : t < t0 ? lerp(STAGE.cartMed, x0, sstep(t, CUE.whoosh + .3, t0)) : t < t1 ? x0 + v0 * ((t - t0) - (t - t0) * (t - t0) / (2 * (t1 - t0))) : STAGE.cartR7;
+});
+const cartX = lt => CARTf()(lt);
+const cartMoving = lt => lt > CUE.whoosh + .3 && lt < CUE.whoosh + 3.3;
+/* Stateman: shadows her steps, turns his head late, ambles after her, reads the first handset, then walks on to the cart */
+const STXf = lazy(() => {
+  const f = wordT('n1', 'followed', 2.54), e = wordT('n1', 'everywhere', 3.0), w = CUE.whoosh;
+  return pchip([
+    [0, STAGE.stMed], [f + .1, STAGE.stMed], [f + .42, STAGE.stMed - 34], [e + .15, STAGE.stMed - 34], [e + .5, STAGE.stMed], [w + .75, STAGE.stMed],
+    [w + 1.2, STAGE.stMed + 24], [bs('k1') - .3, STAGE.stR4], [bs('k1') + .9, STAGE.stR4], [bs('st3') - .25, STAGE.stR7], [bs('st3') + .5, STAGE.stR7],
+  ]);
+});
+/* the Kumquat: shadows too, then sprints after her and arrives in ROOM 4 a full room late */
+const KXf = lazy(() => {
+  const f = wordT('n1', 'followed', 2.54), e = wordT('n1', 'everywhere', 3.0), w = CUE.whoosh;
+  return pchip([
+    [0, STAGE.kMed], [f + .2, STAGE.kMed], [f + .5, STAGE.kMed - 20], [e + .25, STAGE.kMed - 20], [e + .6, STAGE.kMed], [w + .35, STAGE.kMed],
+    [w + 1.1, STAGE.kMed + 90], [w + 1.9, STAGE.kR4 - 40], [w + 2.15, STAGE.kR4], [bs('st2') + .5, STAGE.kR4], [bs('st3') - .2, STAGE.kR7], [bs('st3') + .5, STAGE.kR7],
+  ]);
+});
 
-// ------------------------------------------------------------------ gait of the runner (phase in CYCLES, so the stride can change without a jump), the cart, the cap
+// ------------------------------------------------------------------ gait of the runner (phase in CYCLES, so the stride can change without a jump), the cap
 const strideAt = sp => lerp(30, 54, sstep(sp, 70, 270));                                  /* half-stride in local units: a stroll, then a sprint */
 const sxSpeed = lt => (SX(lt + .03) - SX(lt - .03)) / .06;                                /* px/s */
-const churnRate = lt => { const a = bs('run') + .02, b = CUE.whoosh + .34; return lt > a && lt < b ? 4.6 * sstep(lt, a, a + .08) * (1 - sstep(lt, b - .06, b)) : 0; };   /* cycles/s of legs spinning on the spot */
+const churnRate = lt => { const a = CUE.whoosh + .02, b = CUE.whoosh + .34; return lt > a && lt < b ? 4.6 * sstep(lt, a, a + .08) * (1 - sstep(lt, b - .06, b)) : 0; };   /* cycles/s of legs spinning on the spot */
 const PHI = lazy(() => {
   const dt = 1 / 120, N = Math.ceil(28 / dt), g = new Float32Array(N + 2); let acc = 0;
   for (let i = 0; i <= N; i++) { const t = i * dt, v = Math.abs(sxSpeed(t)); acc += Math.max(v / S / (4 * strideAt(v)), churnRate(t)) * dt; g[i] = acc; }
@@ -95,80 +122,99 @@ const PHI = lazy(() => {
 });
 const smoothSpeed = lt => { let a = 0; for (let i = 0; i < 6; i++) a += Math.abs(sxSpeed(lt - i * .03)); return a / 6; };
 
-// ------------------------------------------------------------------ Strawberry
+// ------------------------------------------------------------------ small acting helpers
 const gazeTo = (o, tx, ty = 0, rx = 90) => [Math.max(-1, Math.min(1, (tx - o.x) / rx)), Math.max(-.8, Math.min(.8, ty / 80))];
+/* where a hand ends up in world px, for a grip target in the character's local units */
+const handW = (o, g) => H6.localToScreen(o, g[0], g[1]);
+/* a grip target (local units) for a world point, kept within reach of the shoulder */
+function gripAt(o, side, wx, wy, frac = .94) {
+  const k = KINDS[o.kind], sh = (k.shape === 'straw' ? [side * k.rx * .88, -k.ry * .1] : [side * k.rx * .92, k.ry * .1]), [u, v] = localOf(o, wx, wy);
+  const reach = ((k.arm1 || 56) + (k.arm2 || 52)) * (o.armScale || 1.12) * frac, dx = u - sh[0], dy = v - sh[1], d = Math.hypot(dx, dy) || 1, f = Math.min(1, reach / d);
+  return [sh[0] + dx * f, sh[1] + dy * f];
+}
+
+// ------------------------------------------------------------------ Strawberry
 function strawO(lt) {
-  const w0 = CUE.whoosh, x = SX(lt), v = sxSpeed(lt), av = Math.abs(v), t = lt;
-  const running = lt >= w0 - .05 && lt < bs('run') + 3.9;
-  // body language by phase
+  const w0 = CUE.whoosh, x = SX(lt), v = sxSpeed(lt), av = Math.abs(v), t = lt, c1 = CUE.ding1, c2 = CUE.ding2, c3 = CUE.ding3, h = bs('run') + 3.52;
+  const running = lt >= w0 - .05 && lt < h + .05;
   const ant = sstep(lt, bs('s1') + .1, w0) * (1 - sstep(lt, w0, w0 + .06));                /* the crouch on "Run." */
   const snap = sstep(lt, w0, w0 + .1) * (1 - sstep(lt, w0 + .3, w0 + .55));               /* stretched while the legs spin, then the launch */
   const speedN = c01(av / 330);
-  const halt = bs('run') + 3.52, hk = lt >= halt ? Math.sin(c01((lt - halt) / .42) * PI) * Math.exp(-(lt - halt) * 3) : 0;
-  const near = d => Math.exp(-Math.pow((lt - d) / .07, 2));                                 /* a pulse around a ding */
-  const brace = Math.max(near(CUE.ding1 - .09), near(CUE.ding2 - .09), near(CUE.ding3 - .09));   /* anticipation before the hand goes out */
-  const kick = Math.max(near(CUE.ding1 + .08), near(CUE.ding2 + .08), near(CUE.ding3 + .08));    /* the overshoot after it */
-  let squash = .1 * ant - .1 * snap - .035 * speedN + .06 * brace - .05 * kick + .13 * hk;
+  const hk = lt >= h ? Math.sin(c01((lt - h) / .42) * PI) * Math.exp(-(lt - h) * 3) : 0;
+  const near = d => Math.exp(-Math.pow((lt - d) / .07, 2));
+  const brace = Math.max(near(c1 - .1), near(c2 - .1), near(c3 - .1)), kick = Math.max(near(c1 + .1), near(c2 + .1), near(c3 + .1));
+  const pant = lt > h ? Math.exp(-(lt - h) / 1.6) * .028 * Math.sin((lt - h) * 11) : 0;                /* out of breath */
+  let squash = .1 * ant - .1 * snap - .035 * speedN + .06 * brace - .05 * kick + .13 * hk + pant;
   let rot = .3 * snap + .16 * speedN * (1 - snap) - .1 * hk + .05 * ant;
-  let expr = 'dead', lid = .42, look = [.2, .15], arms = { l: 'rest', r: 'rest' }, grip, hand, face;
-  const ph = PHI()(lt);
-  // n1: working at the cart
+  let expr = 'dead', lid = .42, look = [.2, .15], arms = { l: 'rest', r: 'rest' }, grip, hand, face, acc;
+  const ph = PHI()(lt), p0 = { x, y: FL, s: S };
+  const placeW = (tc, tx, ty) => sstep(lt, tc - .17, tc - .02) * (1 - sstep(lt, tc + .05, tc + .22));   /* 0..1: the hand is out at the target */
   if (lt < bs('s1')) {
+    // n1: working at the cart, hands busy, one glance at the surveyor
     const tw = lt * 1.3;
     arms = { l: 'hold', r: 'hold' };
-    grip = { l: [30 + 6 * Math.sin(tw), 44 + 6 * Math.sin(tw * 1.7)], r: [78 + 8 * Math.sin(tw * 2.1), 36 + 8 * Math.sin(tw * 1.3 + 1)] };
-    look = lt < bs('st1') + 1.2 ? [.55 + .1 * Math.sin(tw), .45] : lt < bs('st1') + 1.8 ? [-.5, .1] : [-.2, .2];
-    if (lt >= bs('st1') && lt < bs('s1')) look = vtrack([[bs('st1'), [.55, .4]], [bs('st1') + .5, [-.7, .0]], [bs('st1') + 1.7, [-.7, .0]], [bs('s1'), [-.1, .0]]])(lt);
+    grip = { l: [-46 + 4 * Math.sin(tw * 1.4), 34 + 5 * Math.sin(tw * 1.9)], r: [128 + 7 * Math.sin(tw * 2.1), 12 + 7 * Math.sin(tw * 1.3 + 1)] };
+    look = vtrack([[0, [.55, .5]], [bs('st1') + .1, [.55, .45]], [bs('st1') + .6, [-.7, .05]], [bs('st1') + 1.75, [-.7, .05]], [bs('s1') - .05, [-.1, .0]]])(lt);
+    hand = { l: 'grip', r: 'open' };
   } else if (lt < w0 + .3) {
-    look = [0, 0]; arms = { l: 'rest', r: 'rest' };
+    look = [0, 0]; arms = { l: 'rest', r: lt > w0 ? 'hold' : 'rest' };
+    if (lt > w0) { grip = { r: [128, 18] }; hand = { r: 'grip' }; }                       /* a fist on the cart handle */
   } else if (running) {
-    // the run: hands pump (a cartoon fold at the sides); the hand shoots out at each call light
-    const sw = Math.sin(ph * TAU);
+    // the run: hands pump at her sides; at each ding the right hand shoots out to the handset's place
+    const sw = Math.sin(ph * TAU), pr = Math.sin(ph * TAU + 1.2), bw = [[c1, STAGE.light1], [c2, STAGE.light2], [c3, STAGE.light3]];
     arms = { l: 'hold', r: 'hold' };
-    grip = { l: [-84, 8 + 30 * sw], r: [84, 8 - 30 * sw] };
-    look = [.55, .0];
+    const swing = { l: [-86, 6 + 28 * sw], r: [86, 6 - 28 * sw] };
+    grip = { l: swing.l, r: swing.r };
+    for (const [tc, L] of bw) {
+      const k = placeW(tc, L[0], L[1]);
+      if (k > 0) { const tg = gripAt(Object.assign({}, p0, { kind: 'straw', lift: 0 }), 1, L[0], FL - L[1]); grip.r = [lerp(swing.r[0], tg[0], k), lerp(swing.r[1], tg[1], k)]; hand = { r: 'open' }; }
+    }
+    look = lt < c1 - .3 ? [.5, .1] : lt < c2 - .3 ? [.45, .2] : lt < c3 - .3 ? [.45, .1] : [.4, .0];
+    void pr;
   } else {
-    arms = { l: 'none', r: 'none' }; expr = 'hopeful'; lid = 0; look = [-.5, .05];     /* hands behind her back */
+    arms = { l: 'none', r: 'none' }; expr = 'hopeful'; lid = 0; acc = ['steth', 'bandage7', 'perdiem9', 'sweat'];       /* hands behind her back, out of breath, innocent */
+    look = vtrack([[h, [-.1, .0]], [h + .7, [-.8, .05]], [h + 1.3, [-.3, -.3]], [h + 2.0, [-.8, .05]], [h + 3, [-.6, 0]]])(Math.min(lt, h + 3));
+    const d = dart(lt, 5, .3); look = [look[0] + d[0] * .3, look[1] + d[1] * .3];
   }
-  // the legs
   const sp = Math.abs(v), A = strideAt(sp), moving = sp / S > 9 || churnRate(lt) > 0;
-  const o = A11.straw({ x, y: FL, s: S, t, expr, lid, look, arms, grip, hand, plant: true, squash, rot, cap: lt < w0 + .12 || lt > halt + .75, stride: A });
+  const o = A11.straw({ x, y: FL, s: S, t, expr, lid, look, arms, grip, hand, plant: true, squash, rot, cap: lt < w0 + .12 || lt > h + .75, stride: A });
+  if (acc) o.acc = acc;
   if (moving) { o.gaitW = ph * 4 * A; o.axis = 'x'; o.dir = Math.sign(v) || 1; o.vx = v; }
   if (face) o.face = face;
   return o;
 }
 
 // ------------------------------------------------------------------ the observers
-const STX = lazy(() => pchip([
-  [0, STAGE.stMed], [wordT('n1', 'followed', 2.54) + .1, STAGE.stMed], [wordT('n1', 'followed', 2.54) + .45, STAGE.stMed - 34], [wordT('n1', 'everywhere', 3.0) + .15, STAGE.stMed - 34], [wordT('n1', 'everywhere', 3.0) + .5, STAGE.stMed],
-  [bs('run') + .75, STAGE.stMed], [bs('run') + 3.5, STAGE.stR4], [bs('k1') + .2, STAGE.stR4],
-]));
 function stateO(lt) {
-  const fn = t => [STX()(t), FL];
-  const o0 = { x: STX()(lt), y: FL };
-  const look = lt < bs('run') ? gazeTo(o0, SX(lt - .15), 40) : gazeTo(o0, SX(lt - .5), 40);
-  const wr = pk(lt, [[0, .0], [bs('n1') + .3, .7], [bs('st1') - .2, 0]], 0);
-  return S14.walk(A14.stateman, fn, lt, { s: S, t: lt, look, writing: wr, pose: wr > .1 ? 'write' : 'carry', stride: 38 });
+  const fn = t => [STXf()(t), FL];
+  const o0 = { x: STXf()(lt), y: FL };
+  const w = CUE.whoosh;
+  let look = lt < w ? gazeTo(o0, SX(lt - .15), 40) : lt < bs('k1') ? gazeTo(o0, SX(lt - .55), 40) : gazeTo(o0, lt < bs('st2') ? STAGE.light1[0] : SX(lt), 20);
+  const wr = lt < bs('st1') - .2 ? sstep(lt, bs('n1') + .3, bs('n1') + .6) * .7 : 0;
+  const extra = { s: S, t: lt, look, writing: wr, pose: wr > .1 ? 'write' : 'carry', stride: 38 };
+  if (lt >= bs('st2') - .05 && lt < bs('st3') + 1.5) extra.expr = 'stateman_brow';
+  return S14.walk(A14.stateman, fn, lt, extra);
 }
-const KXf = lazy(() => pchip([
-  [0, STAGE.kMed], [wordT('n1', 'followed', 2.54) + .2, STAGE.kMed], [wordT('n1', 'followed', 2.54) + .5, STAGE.kMed - 20], [wordT('n1', 'everywhere', 3.0) + .25, STAGE.kMed - 20], [wordT('n1', 'everywhere', 3.0) + .6, STAGE.kMed],
-  [bs('run') + .3, STAGE.kMed], [bs('run') + 2.0, STAGE.kR4], [bs('k1') + .2, STAGE.kR4],
-]));
 function kumO(lt) {
   const fn = t => [KXf()(t), FL];
   const o0 = { x: KXf()(lt), y: FL };
-  const look = gazeTo(o0, SX(lt - .3), 40);
-  return S14.walk(A14.kumquat, fn, lt, { s: KS, t: lt, look, pose: 'write', writing: .6, tongue: .8, stride: 30 });
+  const w = CUE.whoosh;
+  const look = lt < bs('k1') ? gazeTo(o0, lt < w ? SX(lt - .3) : lt < w + 2.2 ? SX(lt - .5) : STAGE.light1[0], 30) : gazeTo(o0, STXf()(lt), 70);
+  const run = lt > w + .35 && lt < w + 2.2;
+  const extra = { s: KS, t: lt, look, pose: run ? 'hug' : 'write', writing: run ? 0 : .6, tongue: run ? 0 : .8, expr: run ? 'kum_puzzled' : 'kum_eager', stride: 32 };
+  return run ? S14.run(A14.kumquat, fn, lt, extra, 480) : S14.walk(A14.kumquat, fn, lt, extra);
 }
 
 // ------------------------------------------------------------------ residents
 function banO(lt) {
   const fn = t => [STAGE.banR4, FL];
-  return S14.walk(A7.banana, fn, lt, { s: S, t: lt, expr: 'happy', look: [-.3, .2] });
+  const react = lt > CUE.ding1 ? Math.exp(-(lt - CUE.ding1) / .6) : 0;
+  return S14.walk(A7.banana, fn, lt, { s: S, t: lt, expr: lt > CUE.ding1 && lt < CUE.ding1 + 1.2 ? 'shock' : 'happy', look: lt < CUE.ding1 ? [.3, .1] : [.5 - .3 * (1 - react), .2], arms: { l: 'hold', r: 'hold' }, grip: { l: [-70, 70], r: [95, 70] }, hold: { l: 'fp14t_walker' }, hand: { l: 'grip', r: 'grip' } });
 }
 function cranO(lt) {
   const fn = t => [STAGE.cranR7, FL];
-  return S14.walk(A7.cran, fn, lt, { s: S, t: lt, expr: 'happy', look: [.2, .1] });
+  const look = lt < CUE.ding2 ? [.2, .1] : lt < CUE.ding2 + 1 ? [.8, .1] : [.5, .1];
+  return S14.walk(A7.cran, fn, lt, { s: S, t: lt, expr: lt > CUE.ding2 && lt < CUE.ding2 + .8 ? 'shock' : 'happy', look });
 }
 
 // ------------------------------------------------------------------ the camera: a list of shots, each a function of scene-local time returning [cx, cy, z, roll]
@@ -176,14 +222,15 @@ const cyFor = (z, fy = 1270) => FL - (fy - 960) / z;                            
 const camFloor = (cx, z, fy) => [cx, cyFor(z, fy), z, 0];
 const camFace = (o, z, up = 230) => { const [fx, fy] = faceC(o); return [fx, fy + up / z, z, 0]; };
 const expK = (a, b, k) => a * Math.pow(b / a, k);                                         /* zoom in log space */
+const mixCam = (a, b, e) => [lerp(a[0], b[0], e), lerp(a[1], b[1], e), expK(a[2], b[2], e), lerp(a[3], b[3], e)];
 const SHOTS = [
   { id: 'wide', t0: 0, t1: .2, cam: lt => [540, 960, 1, 0] },
-  { id: 'dive', t0: .2, t1: .9, cam: lt => { const e = easeIO(seg(lt, .2, .9)), z = expK(1, 2.1, e); return [lerp(540, 262, e), lerp(960, cyFor(2.1), e), z, 0]; } },
-  { id: 'n1', t0: .9, t1: 3.9, cam: lt => camFloor(lerp(262, 250, seg(lt, .9, 3.9)), lerp(2.1, 2.22, easeIO(seg(lt, .9, 3.9)))) },
-  { id: 'st1', t0: 3.9, t1: 6.1, cam: lt => camFloor(lerp(250, 238, seg(lt, 3.9, 6.1)), lerp(2.22, 2.4, easeIO(seg(lt, 3.9, 6.1)))) },
-  { id: 'snap', t0: 6.1, t1: 6.66, cam: lt => { const e = easeOut(seg(lt, 6.1, 6.34)); const a = camFloor(238, 2.4), b = camFace(strawO(lt), 3.0, 250); return [lerp(a[0], b[0], e), lerp(a[1], b[1], e), lerp(a[2], b[2], e), 0]; } },
-  { id: 'run', t0: 6.66, t1: 10.3, cam: lt => { const x = SX(lt - .1) + 110; return camFloor(x, 1.75, 1240); } },
-  { id: 'two', t0: 10.3, t1: 99, cam: lt => camFloor(540, 2.1) },
+  { id: 'dive', t0: .2, t1: .9, cam: lt => mixCam([540, 960, 1, 0], camFloor(262, 2.1), easeIO(seg(lt, .2, .9))) },
+  { id: 'n1', t0: .9, t1: 3.9, cam: lt => mixCam(camFloor(262, 2.1), camFloor(250, 2.22), easeIO(seg(lt, .9, 3.9))) },
+  { id: 'st1', t0: 3.9, t1: 6.1, cam: lt => mixCam(camFloor(250, 2.22), camFloor(238, 2.4), easeIO(seg(lt, 3.9, 6.1))) },
+  { id: 'snap', t0: 6.1, t1: 6.66, cam: lt => mixCam(camFloor(238, 2.4), camFace(strawO(lt), 3.0, 250), easeOut(seg(lt, 6.1, 6.34))) },
+  { id: 'run', t0: 6.66, t1: 9.95, cam: lt => { const k = easeOut(seg(lt, 6.66, 7.2)), a = camFace(strawO(lt), 3.0, 250), b = camFloor(SX(lt - .1) + 110, 1.8, 1240); return mixCam(a, b, k); } },
+  { id: 'two', t0: 9.95, t1: 99, cam: lt => { const k = easeIO(seg(lt, 9.95, 10.5)); return mixCam(camFloor(SX(9.85) + 110, 1.8, 1240), camFloor(540, 2.1), k); } },
 ];
 const shotAt = lt => SHOTS.find(s => lt < s.t1) || SHOTS[SHOTS.length - 1];
 
@@ -212,7 +259,7 @@ function drawCart(x, lt, rattle = 0) {
   ctx.fillStyle = V2.grad(0, -78, 0, -16, [[0, '#4f8ae6'], [1, '#2a62c4']]); rr(-40, -78, 80, 60, 7); ctx.fill(); ctx.stroke();
   for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) { ctx.fillStyle = '#6aa0f0'; ctx.lineWidth = 2; rr(-35 + c * 36, -73 + r * 27, 33, 23, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#e4ecf5'; rr(-24 + c * 36, -64 + r * 27, 11, 4, 2); ctx.fill(); }
   ctx.lineWidth = 3; ctx.fillStyle = '#eef2f8'; rr(-46, -88 + rt, 92, 11, 4); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#9aa3b2'; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(44, -70); ctx.lineTo(60, -70); ctx.lineTo(60, -46); ctx.stroke();
+  ctx.strokeStyle = '#9aa3b2'; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(-44, -70); ctx.lineTo(-60, -70); ctx.lineTo(-60, -46); ctx.stroke();
   // the tray: med cups and a row of insulin pens
   ctx.save(); ctx.translate(0, -88 + rt);
   for (let i = 0; i < 3; i++) { ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.strokeStyle = INK_; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(-36 + i * 11, -13); ctx.lineTo(-27 + i * 11, -13); ctx.lineTo(-28.5 + i * 11, 0); ctx.lineTo(-34.5 + i * 11, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); }
@@ -289,9 +336,9 @@ function drawCap(o, cs) {
 
 // ------------------------------------------------------------------ the call lights she places
 const LIGHTS = [
-  { at: () => CUE.ding1, x: () => STAGE.light1, y: () => FL - 66, rot: .05 },
-  { at: () => CUE.ding2, x: () => STAGE.light2, y: () => FL - 52, rot: -.08 },
-  { at: () => CUE.ding3, x: () => STAGE.light3, y: () => FL - 96, rot: 0 },
+  { at: () => CUE.ding1, x: () => STAGE.light1[0], y: () => FL - STAGE.light1[1], rot: .05 },
+  { at: () => CUE.ding2, x: () => STAGE.light2[0], y: () => FL - STAGE.light2[1], rot: -.08 },
+  { at: () => CUE.ding3, x: () => STAGE.light3[0], y: () => FL - STAGE.light3[1], rot: 0 },
 ];
 const placed = lt => LIGHTS.filter(L => lt >= L.at()).length;
 function drawPlaced(lt) {
@@ -333,9 +380,7 @@ function drawWorld(lt, sh) {
   drawBundle(lt, so, n);
   S14.front(lt, { t: lt });
 }
-const CARTD = () => STAGE.cartR7 - STAGE.cartMed;
-const cartX = lt => { const t0 = CUE.whoosh + .4, T = 2.9, u = c01((lt - t0) / T); return STAGE.cartMed + CARTD() * (2 * u - u * u); };
-const cartRattle = lt => { const t0 = CUE.whoosh + .4, T = 2.9, u = c01((lt - t0) / T); return lt > t0 && u < 1 ? .4 + .6 * (1 - u) : 0; };
+const cartRattle = lt => { const t0 = CUE.whoosh + .4, t1 = CUE.whoosh + 3.3, u = c01((lt - t0) / (t1 - t0)); return lt > CUE.whoosh + .3 && u < 1 ? .4 + .6 * (1 - u) : 0; };
 
 // ------------------------------------------------------------------ the HUD (screen space, in over())
 const HUD = { right: 1040 };
@@ -373,8 +418,8 @@ function hudTag(lt) {
 // ------------------------------------------------------------------ the scene
 const SC = {
   shot: lt => shotAt(lt).id,
-  cam(lt) { const [cx, cy, z, r] = shotAt(lt).cam(lt); zoomTo(cx, cy, z); CAM.r = r; },
-  draw(lt) { drawWorld(lt, shotAt(lt)); },
+  cam(lt) { const D = window.TR_DEBUG; if (D) { zoomTo(D.cx, D.cy, D.z); CAM.r = 0; return; } const [cx, cy, z, r] = shotAt(lt).cam(lt); zoomTo(cx, cy, z); CAM.r = r; },
+  draw(lt) { if (window.TR_DEBUG && window.TR_DEBUG.nocast) { V2.setLight({}); S14.back(lt, { t: lt }); S14.front(lt, { t: lt }); return; } drawWorld(lt, shotAt(lt)); },
   fx: lt => ({ bloom: .45, vignette: .36, grain: .05, contrast: .14, sat: .1 }),
   blur: lt => (lt > .2 && lt < .95) || (lt > CUE.whoosh - .1 && lt < bs('run') + 3.7) ? 3 : 1,
   over(lt) { hudTag(lt); hudTally(lt); },

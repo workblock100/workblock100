@@ -167,7 +167,8 @@ function artBox(sz = 1, open = 0) {
 function artTreeBox() {
   slab(-118, -34, 236, 68, 6, '#2c8a4a', '#18532c', 3.4);
   ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fillRect(-114, -30, 228, 6);
-  ctx.fillStyle = '#e8f3e6'; ctx.beginPath(); ctx.moveTo(-60, 22); ctx.lineTo(-30, -18); ctx.lineTo(0, 22); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(-34, 22); ctx.lineTo(0, -24); ctx.lineTo(34, 22); ctx.closePath(); ctx.fill();   /* the picture on the carton: two white trees, no lettering */
+  ctx.fillStyle = '#e8f3e6'; for (const [y, w] of [[-20, 16], [-8, 24], [4, 32]]) { ctx.beginPath(); ctx.moveTo(-34, y - 14); ctx.lineTo(-34 - w, y + 12); ctx.lineTo(-34 + w, y + 12); ctx.closePath(); ctx.fill(); }   /* the picture on the carton: one white tree, three tiers and a trunk, no lettering */
+  ctx.fillStyle = '#c9a070'; ctx.fillRect(-37, 12, 6, 12); ctx.fillStyle = '#ffd84a'; ell(-34, -32, 5, 5); ctx.fill();
   ctx.fillStyle = '#d9a336'; ctx.fillRect(48, -22, 56, 8); ctx.fillRect(48, -6, 40, 8);
   ctx.strokeStyle = '#18532c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-118, -10); ctx.lineTo(118, -10); ctx.stroke();
 }
@@ -435,40 +436,40 @@ EXT.prop.fp14b_junk = (side, o, t) => {
 };
 PROP_BOX.fp14b_junk = o => { const j = o.junk || {}, K = KIND[j.kind] || { w: 60, h: 60 }, r = Math.max(K.w, K.h) * (JSC[j.kind] || 1) * (j.sc ?? 1) * .5; return Object.assign([(j.ox || 0) - r, (j.oy || 0) - r, (j.ox || 0) + r, (j.oy || 0) + r], { mirror: true }); };
 /* how each kind is carried: the offset of its centre from the hand, its turn, and a scale */
-const CARRY = { iv: { ox: 0, oy: -6, rot: .1 }, fan: { ox: 6, oy: 96, rot: 0 }, rail: { ox: -92, oy: -4, rot: -.5 }, bucket: { ox: 0, oy: 70, rot: 0 }, treebox: { ox: -86, oy: 10, rot: .2, sc: .85 } };
+const CARRY = { iv: { ox: 0, oy: -6, rot: .1 }, fan: { ox: 6, oy: 96, rot: 0 }, rail: { ox: 6, oy: -64, rot: 1.25 }, bucket: { ox: 0, oy: 70, rot: 0 }, treebox: { ox: 14, oy: -78, rot: 1.42, sc: .85 } };
 
 // ------------------------------------------------------------------ SHOT A, the conveyor. Two lanes: Mango runs the middle floor into the shower room through the arch; Clementine runs the top floor through the break room and room 14 to a trapdoor
 // in the floor over the shower room. They come in from the left, drop, and run back out, again and again, one delivery about every 0.4 s.
 const ARCH = S14.door('shower', 'l').x;             /* 802: the arch between room 7 and the shower room */
 const HATCH = 956;                                   /* the trapdoor in the floor of room 14, over the shower room */
 const RUN_V = 700;                                   /* px per second along the floor */
-const XL = 452;                                      /* just off the left edge of the frame: the runners come out of the arch at x 540 */
-const LANE = { m: { x: ARCH - 34, fl: FL.mid }, c: { x: HATCH - 4, fl: FL.top } };
+const LANE = { m: { x: ARCH - 34, fl: FL.mid, xl: 330 }, c: { x: HATCH - 4, fl: FL.top, xl: 470 } };   /* the drop point, the floor, and where the runner is out of frame */
 const TRIPS = [   /* who, kind, the time the item leaves the hand */
-  { who: 'm', kind: 'chair', t: .66 }, { who: 'c', kind: 'iv', t: .98 },
-  { who: 'm', kind: 'fan', t: 1.86 }, { who: 'c', kind: 'rail', t: 2.2 },
-  { who: 'm', kind: 'bucket', t: 3.06 }, { who: 'c', kind: 'treebox', t: 3.42 },
+  { who: 'm', kind: 'chair', t: .7 }, { who: 'c', kind: 'iv', t: 1.0 },
+  { who: 'm', kind: 'fan', t: 2.05 }, { who: 'c', kind: 'rail', t: 2.35 },
+  { who: 'm', kind: 'bucket', t: 3.4 }, { who: 'c', kind: 'treebox', t: 3.7 },
 ];
-/* the route of one runner as keyframes [t, x]: out of frame, in, a short stop to throw, back out */
-function laneKeys(who) {
-  const L = LANE[who], keys = [];
-  for (const q of TRIPS.filter(q => q.who === who)) {
-    const din = (L.x - XL) / RUN_V, dout = (L.x - XL) / (RUN_V * 1.12);
-    keys.push([q.t - din, XL], [q.t, L.x], [q.t + .1, L.x], [q.t + .1 + dout, XL]);
-  }
+/* the route of one runner as keyframes [t, x]: out of frame, in, a short stop to throw, back out (the last trip of Mango ends at the door and stays there) */
+function laneKeys(who, stay) {
+  const L = LANE[who], keys = [], tr = TRIPS.filter(q => q.who === who);
+  tr.forEach((q, i) => {
+    const din = (L.x - L.xl) / RUN_V, dout = (L.x - L.xl) / (RUN_V * 1.25);
+    keys.push([q.t - din, L.xl], [q.t, L.x], [q.t + .1, L.x]);
+    if (!(stay && i === tr.length - 1)) keys.push([q.t + .1 + dout, L.xl]);
+  });
   return keys;
 }
 const laneFn = (who, keys, fl) => lt => {
-  if (lt <= keys[0][0]) return [XL, fl];
+  if (lt <= keys[0][0]) return [keys[0][1], fl];
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i]; return [lerp(a[1], b[1], cl01((lt - a[0]) / (b[0] - a[0]))), fl]; }
-  return [XL, fl];
+  return [keys[keys.length - 1][1], fl];
 };
-const MKEYS = laneKeys('m'), CKEYS = laneKeys('c');
+const MKEYS = laneKeys('m', true), CKEYS = laneKeys('c', false);
 /* which trip is a runner on at lt? -> { q, phase: 'in' | 'out', k } */
 function tripAt(who, lt) {
   const L = LANE[who], tr = TRIPS.filter(q => q.who === who);
   for (const q of tr) {
-    const din = (L.x - XL) / RUN_V, dout = (L.x - XL) / (RUN_V * 1.12);
+    const din = (L.x - L.xl) / RUN_V, dout = (L.x - L.xl) / (RUN_V * 1.25);
     if (lt >= q.t - din - .02 && lt < q.t) return { q, phase: 'in', k: (lt - (q.t - din)) / din };
     if (lt >= q.t && lt < q.t + .1 + dout + .02) return { q, phase: 'out', k: (lt - q.t) / (.1 + dout) };
   }
@@ -482,45 +483,235 @@ const jsc = (kind, sc = 1) => (JSC[kind] || 1) * sc * SS;     /* the scale a pie
 
 /* the pile in the shower room: where each delivered piece comes to rest (x, a stacking height in pieces, a turn) */
 const PILE = {
-  chair: { x: 1004, up: 0, rot: 0, flip: 0 }, iv: { x: 928, up: 0, rot: -1.2 }, fan: { x: 880, up: 0, rot: .1 }, rail: { x: 944, up: 1, rot: .22 },
-  bucket: { x: 1022, up: 1.4, rot: -.08 }, treebox: { x: 968, up: 2, rot: .1 },
+  chair: { x: 1000, up: 0, rot: 0 }, iv: { x: 928, up: 0, rot: -1.2 }, fan: { x: 888, up: 0, rot: .1 }, rail: { x: 944, up: 1, rot: .22 },
+  bucket: { x: 1016, up: 1.2, rot: -.08 }, treebox: { x: 968, up: 2, rot: .1 },
 };
 /* a delivered piece: from the hand at the drop time, then flying or rolling into the pile. returns { x, y, rot, landed, tl } where tl is the landing time */
 function deliveryState(q, lt) {
   const t = lt - q.t; if (t < 0) return null;
   const P = PILE[q.kind], fl = restY(q.kind, FL.mid, 1) - P.up * 36 * SS * 2.2;
   if (q.who === 'm') {
-    const x0 = LANE.m.x + 40, y0 = FL.mid - 62;
-    const vx = q.kind === 'chair' ? 520 : 400, vy = q.kind === 'chair' ? 0 : -300;
-    const [x, y, rot, rest] = ball({ x: x0, y: q.kind === 'chair' ? fl : y0, vx, vy, floor: fl, w: q.kind === 'chair' ? 0 : 7, rot: 0, e: .32, fr: .72, slide: q.kind === 'chair' ? 3.4 : 5 }, t);
-    return { x, y, rot, rest, spin: q.kind === 'chair' ? vx * Math.exp(-3.4 * t) : 0 };
+    const x0 = q.kind === 'chair' ? chairCentre(q.t)[0] : LANE.m.x + 40, y0 = FL.mid - 62;
+    const dt1 = q.kind === 'chair' ? 1 : (Math.sqrt(300 * 300 + 4 * 750 * Math.max(1, fl - y0 + 62 + 0)) + 300) / 1500;
+    const vx = q.kind === 'chair' ? 380 : (P.x - x0) / dt1 * .85, vy = q.kind === 'chair' ? 0 : -300;
+    const [x, y, rot, rest] = ball({ x: x0, y: q.kind === 'chair' ? fl : y0, vx, vy, floor: fl, w: q.kind === 'chair' ? 0 : 7, rot: 0, e: .32, fr: .6, slide: q.kind === 'chair' ? 3.4 : 5 }, t);
+    return { x, y, rot, rest, spin: 0 };
   }
   const x0 = HATCH + 6, y0 = FL.top - 70;
   const [x, y, rot, rest] = ball({ x: x0, y: y0, vx: (P.x - x0) / .62, vy: -140, floor: fl, w: q.kind === 'iv' ? 3.4 : q.kind === 'rail' ? -2.6 : 2.2, rot: .3, e: .3, fr: .55, slide: 9 }, t);
   return { x, y, rot: rest ? P.rot : rot, rest, spin: 0 };
 }
 
+// ------------------------------------------------------------------ SHOT A actors. The beats: conveyor 0-3.5, Mango at the door 3.2-5.7, "Does it close?" 4.17, "Sure!" 5.08 (the shove), the burst 5.71, Lemon "It closes." 6.36, the junk obeys 6.6-7.0
+const DOORX = ARCH - 3;                                  /* the face of the door */
+const MX_DOOR = ARCH - 84, CX_PUSH = ARCH - 178, LM_X = ARCH - 20;         /* where Mango leans, and Clementine behind her */
+const t_wordCloses = () => wordT('l1', 'closes', 6.6);
+const burstK = lt => seg(lt, CUE.crash, CUE.crash + .42);
+/* the pushed wheelchair of Mango's first trip: the handle is 78 px ahead of her body, the chair 50 px beyond it */
+const CHAIR_SC = jsc('chair'), CHAIR_H = [-98 * CHAIR_SC, -103 * CHAIR_SC];
+const chairHandle = lt => [laneFn('m', MKEYS, FL.mid)(lt)[0] + 78, FL.mid - JB.chair * CHAIR_SC - 52];
+const chairCentre = lt => { const h = chairHandle(lt); return [h[0] - CHAIR_H[0], h[1] - CHAIR_H[1]]; };
+const OFF = (x, who) => x < LANE[who].xl + 4;                /* a runner that is still out of frame (not drawn) */
+
+/* the free hand swings while the other carries */
+const runArms = (o, lt, carry, kind) => {
+  o.arms = { l: 'run', r: carry ? 'hold' : 'run' };
+  if (carry) { o.hold = { r: 'fp14b_junk' }; o.junk = Object.assign({ kind }, CARRY[kind]); o.grip = { r: [76 + 4 * Math.sin(lt * 26), 34 + 6 * Math.cos(lt * 26)] }; }
+  return o;
+};
+function mangoA(lt) {
+  const tr = tripAt('m', lt), lastDrop = TRIPS.filter(q => q.who === 'm').pop().t + .1, bt = CUE.crash;
+  const base = { s: SS, stride: 44, plant: true, who: 'mango', t: lt };
+  let o;
+  if (lt < lastDrop + .04) {
+    o = S14.run(mkMango, laneFn('m', MKEYS, FL.mid), lt, Object.assign({ expr: 'happy', look: [.9, 0] }, base));
+    if (OFF(o.x, 'm')) return null;
+    const dir = o.dir || 1; if (o.gaitW != null) leanO(o, dir * .13);
+    const carry = tr && tr.phase === 'in' && tr.q.kind !== 'chair' ? tr.q.kind : null;
+    runArms(o, lt, !!carry, carry);
+    if (tr && tr.phase === 'in' && tr.q.kind === 'chair') { const h = chairHandle(lt); o.arms = { l: 'run', r: 'reach' }; o.grip = { r: gripFor(o, 'r', h[0], h[1]) }; }
+    if (!tr || tr.phase === 'out') { o.expr = 'happy'; o.look = [-.9, 0]; }
+    return o;
+  }
+  /* door duty: she walks from the drop point to the door, leans her shoulder into it with one hand flat on it, and is flung back at the burst */
+  const x0 = MX_DOOR, kk = burstK(lt), rec = sstep(lt, bt + .5, bt + 1.0);
+  const walking = lt < lastDrop + .55;
+  const px = u => [lerp(LANE.m.x, x0, easeIO(seg(u, lastDrop + .02, lastDrop + .5))), FL.mid];
+  o = walking ? S14.walk(mkMango, px, lt, Object.assign({ expr: 'hopeful', look: [.85, .05], stride: 36 }, base)) : mkMango(Object.assign({ x: lt < bt ? x0 : x0 - 96 * easeOut(burstK(lt)), y: FL.mid, expr: 'hopeful', look: [.85, .05] }, base));
+  const lean = lt < bt ? sstep(lt, 3.3, 3.8) * .16 + sstep(lt, 4.1, 5.05) * .06 + sstep(lt, 5.1, 5.6) * .08 : lerp(-.42, 0, rec);
+  leanO(o, lean);
+  o.shake = lt >= 5.0 && lt < bt ? 1.8 * sstep(lt, 5.0, 5.5) : 0;
+  if (lt < bt) {
+    const pushing = lt >= 3.3;
+    o.arms = { l: 'hips', r: pushing ? 'reach' : 'down' };
+    if (pushing) { o.grip = { r: gripFor(o, 'r', DOORX, FL.mid - 82) }; o.hand = { r: 'flat' }; }
+    o.expr = lt >= 5.0 ? 'weak' : lt >= B('m1').s ? 'hopeful' : 'happy'; o.look = lt >= B('c1').s - .3 ? [-.6, .1] : [.85, .05];
+    if (lt >= B('m1').s && lt < B('m1').e) o.lid = .22;
+  } else {
+    o.arms = { l: lt < bt + .6 ? 'up' : 'rest', r: lt < bt + .6 ? 'flail' : 'rest' };
+    o.expr = lt < bt + .9 ? 'panic' : 'dead'; o.look = [.7, .2]; o.lid = lt >= bt + .9 ? .45 : undefined;
+  }
+  return o;
+}
+/* Clementine: the top lane (through the break room and room 14 to the trapdoor), then down to the middle floor to shove */
+const CMID = lt => [lerp(LANE.c.xl, CX_PUSH, easeOut(seg(lt, 4.5, 5.0))), FL.mid];
+function clemA(lt) {
+  const tr = tripAt('c', lt), bt = CUE.crash, lastDrop = TRIPS.filter(q => q.who === 'c').pop().t + .1;
+  const base = { s: SS, stride: 40, plant: true, who: 'clem', t: lt };
+  let o;
+  if (lt < lastDrop + (LANE.c.x - LANE.c.xl) / (RUN_V * 1.25) + .04) {
+    o = S14.run(mkClem, laneFn('c', CKEYS, FL.top), lt, Object.assign({ expr: 'hopeful', look: [.9, 0] }, base));
+    if (OFF(o.x, 'c')) return null;
+    if (o.gaitW != null) leanO(o, (o.dir || 1) * .13);
+    const carry = tr && tr.phase === 'in' ? tr.q.kind : null;
+    runArms(o, lt, !!carry, carry);
+    return o;
+  }
+  if (lt < 4.5) return null;
+  const pushX = CX_PUSH, kk = burstK(lt), rec = sstep(lt, bt + .7, bt + 1.3);
+  const cfn = u => [CMID(u)[0], FL.mid];
+  o = lt < 5.0 ? S14.run(mkClem, cfn, lt, Object.assign({ expr: 'hopeful', look: [.9, .1] }, base)) : mkClem(Object.assign({ x: lt < bt ? pushX : pushX - 70 * easeOut(kk), y: FL.mid, expr: 'hopeful', look: [.9, .1] }, base));
+  if (lt < 5.0) { if (o.gaitW != null) leanO(o, .12); }
+  const lean = lt < bt ? sstep(lt, 5.0, 5.2) * .22 + sstep(lt, 5.2, 5.6) * .06 : lerp(-.55, 0, rec);
+  if (lt >= 5.0) leanO(o, lean);
+  o.shake = lt >= 5.1 && lt < bt ? 2.2 * sstep(lt, 5.1, 5.5) : 0;
+  if (lt >= 4.95 && lt < bt) {
+    const m = mangoA(lt); const mx = m ? m.x - 44 : MX_DOOR - 44;
+    o.arms = { l: 'down', r: 'reach' }; o.grip = { r: gripFor(o, 'r', mx, FL.mid - 84) }; o.hand = { r: 'flat' };
+    o.expr = lt >= B('c1').s ? 'happy' : 'hopeful'; o.look = [.9, .05]; o.squash = .05 * sstep(lt, 5.2, 5.6);
+  } else if (lt >= bt) { o.arms = { l: lt < bt + .7 ? 'up' : 'rest', r: lt < bt + .7 ? 'flail' : 'rest' }; o.expr = lt < bt + 1.0 ? 'shock' : 'happy'; o.look = [.6, .2]; if (lt >= bt + 1.0) o.face = { curve: 1.1 }; }
+  return o;
+}
+function lemonA(lt) {
+  const bt = CUE.crash, t0 = 5.5, t1 = B('l1').s - .1;
+  if (lt < t0) return null;
+  const base = { s: SS, stride: 40, plant: true, who: 'lemon', t: lt };
+  const fn = u => [lerp(LANE.m.xl + 120, 738, easeOut(seg(u, t0, t1 + .05))), FL.mid];
+  const o = S14.walk(mkLemon, fn, lt, Object.assign({ expr: 'dead', lid: .5, look: [.8, 0] }, base));
+  const tc = t_wordCloses(), reach = sstep(lt, tc - .25, tc + .05), pull = sstep(lt, tc + .5, tc + .9);
+  if (lt >= t1) { o.arms = { l: 'rest', r: 'reach' }; o.grip = { r: lerpA(gripFor(o, 'r', 738 + 20, FL.mid - 66), gripFor(o, 'r', DOORX + 1, FL.mid - 96), reach * (1 - pull)) }; o.hand = { r: 'point' }; }
+  o.look = lt < tc + .6 ? [.9, 0] : [.1, 0];
+  return o;
+}
+const lerpA = (a, b, t) => a.map((v, i) => lerp(v, b[i], t));
+
+// ------------------------------------------------------------------ SHOT A: the room options the kit reads (the stash level, the bulge, the door), the trapdoor, the pieces, the dust
+function roomsA(lt) {
+  const bt = CUE.crash, tc = t_wordCloses();
+  const landed = TRIPS.reduce((n, q) => n + sstep(lt, q.t + (q.who === 'm' ? .3 : .62), q.t + (q.who === 'm' ? .55 : .9)), 0);
+  let stash = 2 + landed / 3, door = 1, bulge = sstep(lt, 2.4, 3.9) * .8;
+  if (lt >= 3.3) door = lerp(1, .14, sstep(lt, 3.3, 3.9));
+  if (lt >= 5.2) { door = lerp(.14, 0, sstep(lt, 5.2, 5.55)); bulge = 1; }
+  if (lt >= bt) { door = easeOut(seg(lt, bt, bt + .16)); bulge = 0; stash = 3.2; }
+  if (lt >= tc) { const c = easeIO(seg(lt, tc + .04, tc + .42)); door = lerp(1, 0, c); stash = lerp(3.2, 4, c); bulge = .5 * c; }
+  return { shower: { stash, bulge, door }, med: { pens: 0 } };
+}
+/* the trapdoor in the floor of room 14 over the shower room: an opening in the slab, its cover lying on the floor beside it */
+function drawHatch(lt) {
+  const y0 = RC('r14').y1, x0 = HATCH - 38, w = 76;
+  ctx.save();
+  ctx.fillStyle = '#120d0c'; ctx.fillRect(x0, y0 - 2, w, 16);
+  ctx.fillStyle = 'rgba(255,214,150,.18)'; ctx.fillRect(x0, y0 - 2, w, 3);
+  ctx.strokeStyle = 'rgba(40,24,16,.9)'; ctx.lineWidth = 2.4; ctx.strokeRect(x0, y0 - 2, w, 16);
+  ctx.translate(x0 + w + 6, y0 - 8); ctx.rotate(-.05);
+  ctx.fillStyle = g2(0, -3, 0, 6, [[0, '#c9955a'], [1, '#7a4f26']]); rr(0, -3, w - 6, 8, 2); ctx.fill(); outline(2.4); ctx.stroke();
+  ctx.fillStyle = '#d9d4cc'; ell(w - 20, 1, 3.4, 3.4); ctx.fill();
+  ctx.restore();
+}
+function puff(x, y, k, o = {}) {
+  if (k <= 0 || k >= 1) return;
+  const n = o.n ?? 6, R = o.r ?? 40, col = o.c ?? '226,212,190';
+  ctx.save();
+  for (let i = 0; i < n; i++) {
+    const a = hash(i * 3.1 + (o.seed || 0)) * TAU, d = (.3 + .7 * hash(i * 5.7 + 1 + (o.seed || 0))) * R * easeOut(k), px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * .55 - k * R * .5, r = R * (.35 + .6 * k) * (.7 + .5 * hash(i + (o.seed || 0)));
+    ctx.fillStyle = V2.radial(px, py, 0, r, [[0, `rgba(${col},${(o.a ?? .55) * (1 - k)})`], [1, `rgba(${col},0)`]]); ctx.fillRect(px - r, py - r, 2 * r, 2 * r);
+  }
+  ctx.restore();
+}
+const wheelA = (kind, x) => kind === 'chair' ? x / (56 * jsc('chair')) : 0;
+/* a soft contact shadow under a piece on the floor */
+function floorShadow(x, y, w, a = .3) { ctx.save(); ctx.fillStyle = V2.radial(x, y, 0, w, [[0, `rgba(10,6,16,${a})`], [1, 'rgba(10,6,16,0)']]); ctx.translate(x, y); ctx.scale(1, .16); ctx.translate(-x, -y); ctx.beginPath(); ctx.arc(x, y, w, 0, TAU); ctx.fill(); ctx.restore(); }
+
+/* the spill at the burst: the pile's six pieces fly out of the arch to the left, and a television, boxes and the banner come with them. d = delay after the burst */
+const SPILL = [
+  { kind: 'chair', from: 'pile', d: 0, vx: -940, vy: -40, w: 0, slide: 2.7, e: .3, fr: .8, up: 0 },
+  { kind: 'iv', from: 'pile', d: .02, vx: -600, vy: -520, w: -4.4, slide: 4.5, e: .36, fr: .7, up: 0 },
+  { kind: 'fan', from: 'pile', d: .04, vx: -520, vy: -560, w: 6.4, slide: 4, e: .42, fr: .7, up: 0 },
+  { kind: 'rail', from: 'pile', d: .06, vx: -470, vy: -360, w: 3.4, slide: 4, e: .3, fr: .7, up: 0 },
+  { kind: 'bucket', from: 'pile', d: .05, vx: -380, vy: -600, w: -5, slide: 5, e: .34, fr: .6, up: 0 },
+  { kind: 'treebox', from: 'pile', d: .1, vx: -430, vy: -300, w: -2.4, slide: 4, e: .3, fr: .7, up: 0 },
+  { kind: 'tv', from: 'door', d: .03, vx: -420, vy: -440, w: 3.2, slide: 5, e: .36, fr: .6, y: -92 },
+  { kind: 'boxo2', from: 'door', d: .08, vx: -330, vy: -360, w: -3, slide: 5, e: .3, fr: .6, y: -60 },
+  { kind: 'box1', from: 'door', d: .12, vx: -250, vy: -520, w: 4.5, slide: 6, e: .35, fr: .6, y: -120 },
+  { kind: 'banner', from: 'door', d: .14, vx: -540, vy: -260, w: 2.6, slide: 3.4, e: .3, fr: .8, y: -40 },
+];
+function spillState(sp, lt) {
+  const bt = CUE.crash, tc = t_wordCloses(), u = 1 - easeIO(seg(lt, tc + .06, tc + .5));
+  const tt = (Math.min(lt, tc + .06) - bt - sp.d) * (lt > tc + .06 ? u : 1);
+  if (tt <= 0 && sp.from === 'door') return null;
+  const P = PILE[sp.kind], fl = restY(sp.kind, FL.mid, 1);
+  let x0, y0;
+  if (sp.from === 'pile') { const pf = restY(sp.kind, FL.mid, 1) - P.up * 36 * SS * 2.2; x0 = P.x; y0 = pf; } else { x0 = ARCH + 18; y0 = FL.mid + sp.y * 1; }
+  const r = ball({ x: x0, y: y0, vx: sp.vx, vy: sp.vy, floor: fl, w: sp.w, rot: sp.from === 'pile' ? P.rot : 0, e: sp.e, fr: sp.fr, slide: sp.slide }, Math.max(0, tt));
+  return { x: r[0], y: r[1], rot: r[2], rest: r[3], alpha: sp.from === 'door' ? cl01(tt / .06) * cl01(u * 6) : 1 };
+}
+function piecesA(lt) {
+  const bt = CUE.crash, out = [];
+  if (lt < bt + .001) {
+    for (const q of TRIPS) { const s = deliveryState(q, lt); if (!s) continue; out.push({ z: 1, kind: q.kind, x: s.x, y: s.y, rot: s.rot, st: { a: wheelA(q.kind, s.x), spin: 1, t: lt } }); }
+    const tr = tripAt('m', lt);
+    if (tr && tr.phase === 'in' && tr.q.kind === 'chair') { const c = chairCentre(lt); out.push({ z: 2.6, kind: 'chair', x: c[0], y: c[1], rot: 0, st: { a: wheelA('chair', c[0]) } }); }
+  } else {
+    for (const sp of SPILL) { const s = spillState(sp, lt); if (!s) continue; out.push({ z: 2, kind: sp.kind, x: s.x, y: s.y, rot: s.rot, st: { a: wheelA(sp.kind, s.x), spin: s.rest ? 0 : 1, t: lt, alpha: s.alpha, slosh: s.rest ? 0 : 1 } }); }
+  }
+  return out;
+}
+
+// ------------------------------------------------------------------ SHOT A: the camera, the world, the dust
+const A_CAM = lt => ({ z: lerp(1.58, 1.74, easeOut(seg(lt, 0, 5.6))), x: 800, y: 768 });
+const LAND = {};   /* when each delivered piece first comes to rest */
+function landTime(q) {
+  if (LAND[q.kind] != null) return LAND[q.kind];
+  let t = q.t + .05; for (; t < q.t + 2; t += .02) { const s = deliveryState(q, t); if (s && s.rest) break; }
+  return (LAND[q.kind] = t);
+}
+function effectsA(lt) {
+  const bt = CUE.crash;
+  for (const q of TRIPS) { const tl = landTime(q), P = PILE[q.kind]; if (lt > tl && lt < tl + .7) { const s = deliveryState(q, lt); puff(s.x, FL.mid - 8, (lt - tl) / .7, { r: 30, seed: q.t * 3, n: 4, a: .5 }); } }
+  /* the burst: a shock ring, a billow of dust from the arch */
+  if (lt >= bt && lt < bt + 1.2) {
+    puff(ARCH - 20, FL.mid - 40, (lt - bt) / 1.2, { r: 74, seed: 3, n: 9, a: .6 });
+    puff(ARCH - 120, FL.mid - 12, (lt - bt - .1) / 1.2, { r: 60, seed: 8, n: 7, a: .5 });
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(ARCH, FL.mid - 70, (lt - bt) / .5, { r0: 20, r1: 260, lw: 7, alpha: .7, color: '255,236,200' }); ctx.restore();
+  }
+  if (lt >= bt && lt < bt + .35) V2.glow(ARCH, FL.mid - 70, 200, '255,226,170', .5 * (1 - (lt - bt) / .35), 'screen', .4);
+}
+function drawShotA(lt) {
+  const rooms = roomsA(lt);
+  S14.back(lt, { rooms, t: lt });
+  drawHatch(lt);
+  const items = [];
+  for (const p of piecesA(lt)) items.push({ z: p.z, fn: () => { floorShadow(p.x, FL.mid - 2, 34, .22); jdraw(p.kind, p.x, p.y, p.rot, jsc(p.kind), p.st); } });
+  const m = mangoA(lt), c = clemA(lt), l = lemonA(lt);
+  if (m) items.push({ z: 3, fn: () => drawChar(m) });
+  if (c) items.push({ z: c.y < FL.mid - 100 ? 2.9 : 3.1, fn: () => drawChar(c) });
+  if (l) items.push({ z: 3.2, fn: () => drawChar(l) });
+  items.sort((a, b) => a.z - b.z);
+  for (const it of items) it.fn();
+  S14.front(lt, { rooms });
+  effectsA(lt);
+}
+
+// ------------------------------------------------------------------ the scene (development tail: shot A only)
 const SC = {
-  shot: lt => 'sheet',
-  cam(lt) { zoomTo(540, 960, 1); },
-  draw(lt) {
-    ctx.fillStyle = '#5a6478'; ctx.fillRect(0, 0, W, H);
-    const kinds = Object.keys(KIND);
-    kinds.forEach((k, i) => {
-      const cx = 200 + (i % 4) * 230, cy = 330 + Math.floor(i / 4) * 330;
-      ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(cx - 105, cy - 150, 210, 300);
-      const st = { a: lt * 3, t: lt, k: (lt * .4) % 1, slosh: .5 + .5 * Math.sin(lt * 5), spin: 1 };
-      jdraw(k, cx, cy, 0, Math.min(1, 200 / KIND[k].w, 290 / KIND[k].h), st);
-    });
-    jdraw('tree', 540, 1280, 0, .7, { k: 1 });
-    jdraw('tree', 200, 1280, 0, .7, { k: .2 });
-    jdraw('qsign', 850, 1280, 0, .55, {});
-    jdraw('chair', 860, 1000 + 0, 0, 1.1, { a: lt * 4 });
-  },
-  fx: () => ({ bloom: .2 }),
-  blur: () => 1,
-  over() {},
+  shot: lt => 'a',
+  cam(lt) { const c = A_CAM(lt); zoomTo(c.x, c.y, c.z); CAM.shake = lt >= CUE.crash ? 9 * Math.exp(-(lt - CUE.crash) / .22) : 0; },
+  draw(lt) { drawShotA(lt); },
+  fx: lt => ({ bloom: .4, vignette: .42, grain: .045, contrast: .14, sat: .12, tint: [['#ffb870', .06, 'soft-light']] }),
+  blur: lt => 1,
+  over(lt) { },
 };
 window.__EP14_SCENES = window.__EP14_SCENES || {};
 window.__EP14_SCENES.adapt = SC;
+window.FP14J = { KIND, jdraw, jsc, JSC, JB, restY, ball, puff, floorShadow };
 })();
