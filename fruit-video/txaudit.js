@@ -106,7 +106,7 @@ const TXA = (() => {
   // the geometry checks for the frame just rendered
   function check() {
     const V = [], S = EP.SCENES[CUR.id] || {};
-    const runs = st.runs.filter(r => !r.soft && !r.eng && !r.clear && r.alpha >= cfg.minAlpha * .5 && onScreen(r));
+    const runs = st.runs.filter(r => !r.soft && !r.eng && !r.clear && r.alpha >= cfg.minAlpha * .5 && r.px >= 8 && onScreen(r));   // under 8 px a string is a speck, not text
     const dt = st.dt, prev = st.prev || [];
     for (const r of runs) {
       r.vis = r.alpha >= cfg.minAlpha && r.comp === 'source-over';

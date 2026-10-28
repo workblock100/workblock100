@@ -104,8 +104,9 @@ async function main() {
       const step = parseFloat(args[0] || '0.25'), from = parseFloat(args[1] || '0'), to = Math.min(duration, parseFloat(args[2] || String(duration)));
       const inv = await page.evaluate(([a, b, st]) => TXA.inventory(a, b, st), [from, to, step]);
       fs.mkdirSync(BUILD, { recursive: true });
-      fs.writeFileSync(path.join(BUILD, 'textinv.json'), JSON.stringify(inv));
-      console.log(`wrote ${inv.length} distinct text runs to ${path.join(BUILD, 'textinv.json')}`);
+      const invPath = process.env.TEXTINV_OUT || path.join(BUILD, 'textinv.json');   // atlas.py gives each run its own file so builders do not collide
+      fs.writeFileSync(invPath, JSON.stringify(inv));
+      console.log(`wrote ${inv.length} distinct text runs to ${invPath}`);
       return;
     }
     if (mode === 'audit') {
