@@ -208,7 +208,7 @@ function heroNow(x0, y0, x1, y1, sizePx) {
  * or the clock pill: the room art stays, the lettering goes. Returns 0..1 for the screen box of a local rectangle: 1 while the box keeps the hero margins (44 px from the edge, clear of
  * the caption zone and the pill), falling to 0 over 40 px of intrusion. */
 /* S14.keepOut: [[x0, y0, x1, y1, k], ...] screen rectangles (px) of a scene's own hero overlays (field-guide tags, lower thirds) that the dressing lettering must give way to; k 0..1 is how present the
- * overlay is (a pop-in or a fade). The kit adds its own chat bubbles. Lettering within 14 px of a rectangle, or under it, fades out. */
+ * overlay is (a pop-in or a fade). The kit adds its own chat bubbles. Lettering under a rectangle (or within 6 px of it) fades out; lettering clear of it by 6 px or more is untouched. */
 S14.keepOut = [];
 let KO_INT = [];
 function dressGuard(x0, y0, x1, y1) {
@@ -218,7 +218,7 @@ function dressGuard(x0, y0, x1, y1) {
   if (!S.noChyron) d = Math.min(d, Math.max(44 - b.x1, b.x0 - 506, 110 - b.y1, b.y0 - 250));
   let a = d >= 0 ? 1 : clamp01(1 + d / 40);
   for (const R of (S14.keepOut || []).concat(KO_INT)) {
-    const gap = Math.max(R[0] - b.x1, b.x0 - R[2], R[1] - b.y1, b.y0 - R[3]), ar = gap >= 14 ? 1 : clamp01((gap + 26) / 40);
+    const gap = Math.max(R[0] - b.x1, b.x0 - R[2], R[1] - b.y1, b.y0 - R[3]), ar = gap >= 6 ? 1 : clamp01((gap + 6) / 12);
     a = Math.min(a, 1 - (R[4] ?? 1) * (1 - ar));
   }
   return a;

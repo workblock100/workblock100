@@ -27,16 +27,19 @@
  *   clipPage    0..1 how much of the form on the clipboard is filled (ticks and lines); clipScale scales the board; clipRot, clipAt override the pose
  *   writing     0..1 how hard the pen scribbles (the hand wiggles and the page fills)
  *  Kumquat
- *   pose        'carry' (default: the huge board hugged at his left side, standing on the floor beside him) | 'write' (the board up in front, the pencil on it) | 'hug' (the board hugged
- *               across his chest) | 'rest' | 'free'
+ *   pose        'carry' (default: the huge board hugged across his tummy in both hands, its top under his chin) | 'write' (the same board, the pencil on it; writing 0..1 scribbles) | 'side' (the
+ *               board held out at his left side in one hand, bigger) | 'rest' (arms down) | 'free' (use the arms / grip / hold you pass)
  *   expr        'kum_eager' (default) | 'kum_puzzled' | 'kum_crushed' | any engine expression
  *   tongue      0..1 sticks the tongue out the corner of the mouth (concentrating); writing 0..1 the pencil scribbles; clipPage, clipScale, clipRot, clipAt as above
  *   pencil      false takes the pencil from behind his ear
  *  Props (use through o.hold, drawn around the hand; registered in PROP_BOX)
  *   fp14_clip   a clipboard with a form (shapes only; ticks, lines, a pen on a string). A14.clip(x, y, o) draws the same board as a set piece.
  *   fp14_pen    a pen (or a pencil with o.pencil) in the fist, the tip at the hand; o.penAng aims it
- *   fp14_binder a huge three-ring binder (tabs on the edge, a label); o.binderLabel, o.binderColor; A14.drawBinder(cx, cy, w, h, o) draws one anywhere (spines, wall, desk)
+ *   fp14_binder a huge three-ring binder (tabs on the edge, a label); o.binderLabel, o.binderColor, o.binderRot; A14.drawBinder(cx, cy, w, h, o) draws one anywhere (o.color, o.label, o.sub, o.rot, o.cid, o.noLabel)
  *   fp14_binocs binoculars held to the eyes (o.focus 0..1 pulls the barrels out and sharpens the glint; o.binocK 0..1 slides them from the hand (0) to the eyes (1); o.binocA 0..1 brings them out). Registered nearFace. Needs o.grip.l (the left hand on the left barrel).
+ *   fp14_napkin a stained paper napkin in the fist (nearFace); fp14_frame a gilt picture frame held round the face, o.frameA 0..1 raises it (nearFace, hold it in the LEFT hand with grip l at about [-92, 14])
+ *  Accessories (o.acc, any face): fp14_sauce (o.sauce 0..1 dabs of pizza sauce at the mouth, o.sauceSmile 0..1 a wide red smear across the lower face: the Administrator's pizza smile)
+ *  The art draws its own tiny dressing text (STATE ID, TRAINEE) only when it would be at least 8 px on the screen, always as set dressing (hero: false). The constructors set no .transit: scenes pass it while a body slides through the frame edge.
  */
 (() => {
 if (!window.TIMELINE_EP14) return;

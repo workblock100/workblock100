@@ -5,12 +5,16 @@
  * A guard of honour: the staff stand rigid in two pairs either side of an aisle that leads back to the sliding glass doors; Mr. Stateman walks down the aisle out of a blaze of afternoon light.
  * The reception desk and the wall of forty SURVEY READY binders are on the right; the banner WELCOME BACK STRAWBERY (one R short) hangs over the door.
  *
- * THIS FILE IS BUILT IN INCREMENTS (each chunk is syntax-checked and the module is loadable after each one). Status: chunk 1 (helpers, layout, camera).
+ * STRUCTURE (top to bottom): helpers and layout; the scene object SCN (cam, draw, fx, blur, over); the shell (ceiling, floor, back wall); the doors and the lot; what hangs on the wall (banner, clock, notice
+ * board, the wall of forty binders, with the text gate's gateOf); the furniture (desk, cart, stool, plant, rack); the cast (routes, Stateman, Kumquat, Melon, the guard of honour); lighting and the frame
+ * cache; the world drawn back to front; the shot table (SH) with who is in which shot (VIS); the overlays (field-guide tags, THUD, the notes page, the circle page, the binocular view); light in the air
+ * (floor pool, sun rays, the thud's dust, the room's breath).
  *
- * LAYOUT (world X right, Z forward; camera f 1000, height cy 380, horizon hy 665; a sprite at distance D is drawn at scale 1000 / D)
- *   back wall Z 1750 (X -1400..1400, 0..700), doors centred at X 0 (width 520, height 480), banner above them, desk (480..900, Z 1600) with Melon behind it (720, 1660), shelves of binders on the
- *   wall X 420..1100, the stool at (1010, 1690), the cart at (990, 1540), the plant (-560, 1380).  The guard of honour at Z 1450: Lemon -430, Mango -270, Clementine 270, Strawberry 430.
- *   Stateman walks the aisle (X 0) from the doors to Z 1180; the Kumquat trots behind and then beside him (X -205).
+ * LAYOUT (world X right, Z forward; camera f 1000, height 380, horizon at screen y 830; a sprite at distance D from the camera is drawn at scale 1000 / D)
+ *   back wall Z 1750 (X -1400..1400, 0..860), the doors centred at X 0 (520 wide, 480 high) with the banner above them, the wall of binders X 300..900 (ten columns, four rows, a SURVEY READY header board),
+ *   the reception desk X 330..840 at Z 1600 with Melon behind it at (740, 1715), the Kumquat's stool at (905, 1690), the binder cart at (1150, 1540), the plant at (-560, 1380).
+ *   The guard of honour at Z 1450: Lemon -445, Mango -275, Clementine 275, Strawberry 445. Stateman walks the aisle (X 0) from the doors (Z 1795) to Z 1190; the Kumquat trots behind and then beside him.
+ *   Characters are front-facing sprites, so the shots are built around that: wide tableaux, close-ups from a different angle on the room (VIS lists who is in each shot), and a binocular view.
  */
 (() => {
 if (!window.TIMELINE_EP14) return;
@@ -57,7 +61,7 @@ const STOOL = [905, 1690], CART = [1150, 1540], PLANT = [-560, 1380];
 function setCamera(cx, cz, cy = CY, hy = HY) { V2.setCam({ f: F, cx, cy, cz, hy }); }
 const K = (Z, cz = V2.P.cz) => F / (Z - cz);                           /* the scale of something at world depth Z under the current camera */
 
-// ------------------------------------------------------------------ placeholder scene (replaced chunk by chunk; the module is loadable at every step)
+// ------------------------------------------------------------------ the scene object: the camera, the world, the grade, the shutter, the overlays
 const SCN = {
   shot: lt => shotAt(lt).id,
   cam(lt) {
@@ -562,7 +566,7 @@ function frame(lt) {
   const st = stateO(lt), kq = kumO(lt), me = melonO(lt);
   FR = { lt, cz: V2.P.cz, cx: V2.P.cx, st, kq, me, le: lemonO(lt, st), ma: mangoO(lt, st), cl: clemO(lt, st), sw: strawO(lt, st) };
   for (const id of ALL) FR[id].reflectA = .38;
-  if (lt < 6.4 || lt >= 6.9 && lt < 9.3) kq.transit = true;                                      /* he walks in behind the visitor (the guard hides him in turn), then crosses the lobby and leaves the shot */                                                   /* he crosses the lobby and leaves the shot */
+  if (lt < 6.4 || lt >= 6.9 && lt < 9.3) kq.transit = true;                                      /* he walks in behind the visitor (the guard hides him in turn), then crosses the lobby and leaves the shot */
   if (shotAt(lt).id === 'binoc') for (const id of ['le', 'ma', 'cl', 'sw']) FR[id].transit = true;   /* the view slides along the guard: faces pass through the frame edge */
   return FR;
 }
@@ -850,7 +854,6 @@ function breathPuffs(lt, F) {
   }
   ctx.restore();
 }
-/*@@CHUNKS@@*/
 window.__EP14_SCENES = window.__EP14_SCENES || {};
 window.__EP14_SCENES.arrive = SCN;
 })();
