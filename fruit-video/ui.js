@@ -8,13 +8,13 @@
  *
  * Text options understood everywhere: size, font ('Nunito' weight 900 | 'Bangers' | 'Lucky', 400), weight, italic, fill, stroke, lw, spacing (letter spacing px), alpha, shadow,
  *   hero (default TRUE: the viewer must read it, so the gate holds it to 30 px and to the safe margin; pass hero:false for set dressing), id, tilt (allowed rotation, radians), crop, grp, transit.
- *   rot (labels, panels, signs, pills, pages, stamps) turns the object about its own centre.
- * Gate options: cid (the container the string belongs to), center (verify it is centred in it).
+ *   rot (labels, panels, signs, pills, pages, stamps, tags) turns the object about its own centre; write/lines/para/stack take none (rotate the ctx). alpha on a container (sign, pill, stamp, tag, ring) fades panel and text together.
+ * Gate options: cid (the container the string belongs to: the gate checks it stays inside), center (also verify it is centred in it; signs, pills, rings, stamps and tags assert this themselves).
  *
- * Text:      UI.metrics(font, weight, italic) -> {cap, x, asc, desc}   fractions of the font size (cap from "H", x from "x", measured once at 1000 px per face)
+ * Text:      UI.metrics(font, weight, italic) -> {cap, x, asc, desc}   fractions of the font size (cap from "H", x from "x", asc = tallest of d l b f h k i j, desc = deepest of p g y; read from pixels once per face)
  *            UI.sizeOf(str, o) -> {w, h, cap, asc, desc, adv, inkH}     w = ink width (+ outline), h = cap height (+ outline)
  *            UI.fit(str, maxW, o) -> {size, spacing, lw, k, w, overflow}   largest size <= o.size (down to o.min, default 0.6 x size) whose ink width <= maxW. Never squishes.
- *            UI.write(str, x, baseline, o) -> box     ink anchored at x (o.align 'left' | 'center' | 'right'), baseline exactly at `baseline`
+ *            UI.write(str, x, baseline, o) -> box     ink anchored at x (o.align 'left' | 'center' | 'right'), baseline exactly at `baseline`; o.reveal 0..1 types the string in without moving it
  *            UI.label(str, cx, cy, o) -> box           ink-centred on cx, CAP BAND centred on cy (o.align 'left' | 'right' anchors the ink edge at cx; o.maxW fits by shrinking)
  *            UI.lines(arr, x, y, o) -> boxes           lines on a baseline grid (o.lh x size, o.pitch px, o.align, o.v 'base' | 'top' | 'mid', o.maxW fits the block)
  *            UI.wrap(str, maxW, o) -> lines            greedy by words; a word wider than maxW shrinks the size (lines.size)
@@ -51,17 +51,41 @@ const fontReady = spec => { try { return document.fonts.check(spec); } catch (e)
 const mc = document.createElement('canvas'); mc.width = mc.height = 16;
 const mx = mc.getContext('2d');
 
+/* a flat measuring buffer: the text gate must not report text drawn on it (canvas.__txOK) */
+const pc = document.createElement('canvas'); pc.width = 700; pc.height = 900; pc.__txOK = true;
+const px = pc.getContext('2d', { willReadFrequently: true });
+/* how far the ink of one glyph rises above and falls below the baseline at 400 px, read from the pixels (coverage-weighted edges): measureText rounds these up by about a pixel per 100 px of size */
+function glyphEdges(spec, ch) {
+  const y0 = 560;
+  px.setTransform(1, 0, 0, 1, 0, 0); px.clearRect(0, 0, pc.width, pc.height);
+  px.font = spec; px.textAlign = 'left'; px.textBaseline = 'alphabetic'; px.letterSpacing = '0px'; px.fillStyle = '#000'; px.fillText(ch, 100, y0);
+  const d = px.getImageData(0, 0, pc.width, pc.height).data, w = pc.width;
+  const rowMax = y => { let m = 0; for (let x = 0; x < w; x++) { const a = d[(y * w + x) * 4 + 3]; if (a > m) m = a; } return m; };
+  let top = -1, bot = -1;
+  for (let y = 0; y < pc.height; y++) if (rowMax(y)) { top = y; break; }
+  for (let y = pc.height - 1; y >= 0; y--) if (rowMax(y)) { bot = y; break; }
+  if (top < 0) return { up: 0, down: 0 };
+  return { up: Math.max(0, y0 - (top + 1 - rowMax(top) / 255)), down: Math.max(0, bot + rowMax(bot) / 255 - y0) };
+}
+
 const METS = new Map();
 UI.metrics = (font = 'Nunito', weight, italic = false) => {
   weight = wOf(font, weight);
   const key = `${font}|${weight}|${italic ? 1 : 0}`, hit = METS.get(key);
   if (hit) return hit;
-  const S = 1000, spec = specOf(S, font, weight, italic);
+  const S = 400, spec = specOf(S, font, weight, italic), ok = fontReady(spec);
   mx.font = spec; mx.textAlign = 'left'; mx.textBaseline = 'alphabetic'; mx.letterSpacing = '0px';
-  const up = s => mx.measureText(s).actualBoundingBoxAscent / S, down = s => mx.measureText(s).actualBoundingBoxDescent / S;
   const fm = mx.measureText('H');
-  const m = { cap: up('H'), x: up('x'), asc: Math.max(up('d'), up('l'), up('k'), up('h')), desc: Math.max(down('p'), down('g'), down('y'), down('j')), fasc: fm.fontBoundingBoxAscent / S, fdesc: fm.fontBoundingBoxDescent / S };
-  if (fontReady(spec)) METS.set(key, m);
+  let m;
+  if (ok) {
+    const e = ch => glyphEdges(spec, ch);
+    m = { cap: e('H').up / S, x: e('x').up / S, asc: Math.max(...['d', 'l', 'b', 'f', 'h', 'k', 'i', 'j'].map(ch => e(ch).up)) / S, desc: Math.max(e('p').down, e('g').down, e('y').down) / S };
+  } else {   /* the face is not loaded yet: measureText of the fallback, not cached */
+    const up = s => mx.measureText(s).actualBoundingBoxAscent / S, down = s => mx.measureText(s).actualBoundingBoxDescent / S;
+    m = { cap: up('H'), x: up('x'), asc: Math.max(up('d'), up('l')), desc: Math.max(down('p'), down('g')) };
+  }
+  m.fasc = fm.fontBoundingBoxAscent / S; m.fdesc = fm.fontBoundingBoxDescent / S;
+  if (ok) METS.set(key, m);
   return m;
 };
 
@@ -115,8 +139,9 @@ const autoId = (kind, box) => kind + '@' + box.map(v => Math.round(v)).join(',')
 /* register a container with the gate: rect in the current local frame, pad = inner margin text must respect, m = the transform in force (rotation and camera included) */
 UI.container = (id, kind, rect, pad = 0) => {
   if (!id || !gateOn()) return;
-  const m = ctx.getTransform();
-  TXA.UIREG.set(id, { kind, rect: rect.slice(), pad, m: [m.a, m.b, m.c, m.d, m.e, m.f] });
+  const m = ctx.getTransform(), prev = TXA.UIREG.get(id);
+  /* an id drawn twice in one frame keeps counting the per-label aliases (id#n) where the first one stopped, so the second does not overwrite the first one's */
+  TXA.UIREG.set(id, { kind, rect: rect.slice(), pad, m: [m.a, m.b, m.c, m.d, m.e, m.f], n: prev ? prev.n || 0 : 0 });
 };
 /* the same container, expressed in the frame of a label whose text origin is (x, base) under the current transform */
 function aliasFor(cid, x, base) {
@@ -138,6 +163,15 @@ function aliasFor(cid, x, base) {
 function rotated(cx, cy, rot, fn) {
   if (!rot) return fn();
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.translate(-cx, -cy);
+  const r = fn();
+  ctx.restore();
+  return r;
+}
+
+/* alpha on a container fades the whole group (panel and text together) */
+function faded(alpha, fn) {
+  if (alpha == null || alpha === 1) return fn();
+  ctx.save(); ctx.globalAlpha *= alpha;
   const r = fn();
   ctx.restore();
   return r;
@@ -165,7 +199,9 @@ UI.write = (str, x, base, o = {}) => {
   str = String(str);
   const { st, k } = resolve(str, o), i = inkOf(str, st), al = o.align || 'left';
   const ox = al === 'center' ? x - (i.l + i.r) / 2 : al === 'right' ? x - i.r : x - i.l;
-  if (str.trim()) put(str, ox, base, st, o, aliasFor(o.cid, ox, base));
+  /* a string typed in (o.reveal 0..1) keeps the position of the whole string, so nothing shifts as it grows; while partial it is not asked to be centred */
+  const n = o.reveal == null || o.reveal >= 1 ? str.length : Math.max(0, Math.ceil(str.length * o.reveal)), shown = n >= str.length ? str : str.slice(0, n);
+  if (shown.trim()) put(shown, ox, base, st, n < str.length ? Object.assign({}, o, { center: false }) : o, aliasFor(o.cid, ox, base));
   return boxOf(ox, base, i, st, k, str);
 };
 
@@ -173,7 +209,7 @@ UI.label = (str, cx, cy, o = {}) => {
   str = String(str);
   const { st, k } = resolve(str, o), m = UI.metrics(st.font, st.weight, st.italic), al = o.align || 'center';
   const base = cy + m.cap * st.size / 2;
-  const o2 = Object.assign({}, o, { maxW: 0, size: st.size, spacing: st.spacing, lw: st.lw, shadow: st.shadow, align: al, center: o.center ?? al === 'center' });
+  const o2 = Object.assign({}, o, { maxW: 0, size: st.size, spacing: st.spacing, lw: st.lw, shadow: st.shadow, align: al, rot: 0 });   /* center is the caller's claim: pass center: true with cid to have the gate verify the label is centred in its container */
   const res = rotated(cx, cy, o.rot, () => UI.write(str, cx, base, o2));
   res.cy = cy; res.k = k;
   return res;
@@ -227,7 +263,7 @@ UI.lines = (arr, x, y, o = {}) => {
     if (b.over) fail(`text does not fit: ${quote(ls.reduce((a, l) => l.t.length > a.length ? l.t : a, ''))} [${Math.ceil(o.maxW)} px wide block]`);
   }
   const L = blockLayout(ls, k, o), m0 = UI.metrics(ls[0].font, ls[0].weight, ls[0].italic);
-  const base0 = o.v === 'top' ? y + m0.cap * L.sizes[0] : o.v === 'mid' ? y - (L.last + L.capTop) / 2 : y;
+  const base0 = o.v === 'top' ? y + Math.max(m0.cap, m0.asc) * L.sizes[0] : o.v === 'mid' ? y - (L.last + L.capTop) / 2 : y;
   const boxes = ls.map((l, j) => UI.write(l.t, x, base0 + L.rel[j], Object.assign({}, l, {
     size: L.sizes[j], spacing: (l.spacing || 0) * k, lw: (l.lw || 0) * k, shadow: (l.shadow || 0) * k, maxW: 0,
     align: o.align || 'left', cid: l.cid ?? o.cid, center: l.center ?? o.center, centerY: l.centerY ?? o.centerY,
@@ -261,25 +297,27 @@ UI.wrap = (str, maxW, o = {}) => {
 };
 
 UI.para = (str, box, o = {}) => {
-  const [bx, by, bw, bh] = box, size0 = o.size ?? 40, min = o.min ?? size0 * .5, base = sty(o);
-  const m = UI.metrics(base.font, base.weight, base.italic);
+  const [bx, by, bw, bh] = box, size0 = o.size ?? 40, min = o.min ?? size0 * .5, base = sty(o), va = o.valign || 'top', al = o.align || 'left';
+  const m = UI.metrics(base.font, base.weight, base.italic), tall = Math.max(m.cap, m.asc);
+  // the block at one size: the first baseline sits topAsc below the ink top of the tallest letters, the last baseline body below the first, descenders botDesc below that
   const build = size => {
     const lines = UI.wrap(str, bw, Object.assign({}, o, { size, min: Math.min(min, size) }));
-    const sz = lines.size, k = sz / size, pitch = o.pitch != null ? o.pitch * sz / size0 : o.lh >= 5 ? o.lh * sz / size0 : lhMult(o) * sz;
-    return { lines, sz, k, pitch, h: m.cap * sz + (lines.length - 1) * pitch + m.desc * sz + base.lw * k };
+    const sz = lines.size, k = sz / size0, pitch = o.pitch != null ? o.pitch * sz / size0 : o.lh >= 5 ? o.lh * sz / size0 : lhMult(o) * sz;
+    const lw2 = base.lw * (sz / base.size) / 2, topAsc = tall * sz + lw2, body = (lines.length - 1) * pitch, botDesc = m.desc * sz + lw2;
+    // first baseline for the vertical alignment: top = ink top at the box top; bottom = last descender at the box bottom; middle = cap top of the first line to the baseline of the last centred
+    const base0 = va === 'bottom' ? by + bh - botDesc - body : va === 'middle' ? by + bh / 2 - (body - m.cap * sz) / 2 : by + topAsc;
+    return { lines, sz, k, pitch, lw2, base0, top: base0 - topAsc, bottom: base0 + body + botDesc };
   };
+  const fits = b => b.top >= by - .5 && b.bottom <= by + bh + .5;
   let size = size0, b = build(size);
-  while (b.h > bh && size > min + 1e-6) { size = Math.max(min, size * .96); b = build(size); }
-  const overflow = b.h > bh + .5 || b.lines.overflow;
-  if (overflow) fail(`paragraph does not fit its box: ${quote(str)} [${Math.ceil(b.h)} > ${Math.floor(bh)} px]`);
-  const lw2 = base.lw * b.k / 2, va = o.valign || 'top', al = o.align || 'left';
-  const capTop = va === 'bottom' ? by + bh - b.h + lw2 : va === 'middle' ? by + (bh - b.h) / 2 + lw2 : by + lw2;   /* the block spans [capTop - lw/2, capTop - lw/2 + height] */
-  const base0 = capTop + m.cap * b.sz;
-  const ax = al === 'center' ? bx + bw / 2 : al === 'right' ? bx + bw - lw2 : bx + lw2;
-  const boxes = b.lines.map((ln, j) => UI.write(ln, ax, base0 + j * b.pitch, Object.assign({}, o, {
-    size: b.sz, spacing: (o.spacing || 0) * b.k, lw: (o.lw || 0) * b.k, shadow: (o.shadow || 0) * b.k, maxW: 0, align: al,
+  while (!fits(b) && size > min + 1e-6) { size = Math.max(min, size * .96); b = build(size); }
+  const overflow = !fits(b) || b.lines.overflow;
+  if (overflow) fail(`paragraph does not fit its box: ${quote(str)} [${Math.ceil(b.bottom - b.top)} > ${Math.floor(bh)} px]`);
+  const ax = al === 'center' ? bx + bw / 2 : al === 'right' ? bx + bw - b.lw2 : bx + b.lw2;
+  const boxes = b.lines.map((ln, j) => UI.write(ln, ax, b.base0 + j * b.pitch, Object.assign({}, o, {
+    size: b.sz, spacing: (o.spacing || 0) * b.sz / size0, lw: (o.lw || 0) * b.sz / size0, shadow: (o.shadow || 0) * b.sz / size0, maxW: 0, align: al,
   })));
-  return { size: b.sz, lines: b.lines, boxes, overflow, pitch: b.pitch, height: b.h };
+  return { size: b.sz, lines: b.lines, boxes, overflow, pitch: b.pitch, top: b.top, bottom: b.bottom };
 };
 
 // ---------------------------------------------------------------- panels and the things built on them
@@ -314,8 +352,8 @@ UI.sign = (box, content, o = {}) => {
   const ls = (Array.isArray(content) ? content : [content]).map(c => Object.assign({}, def, typeof c === 'object' && c ? c : { t: c })).map(l => (l.t = String(l.t), l));
   const pad = o.pad ?? .08 * Math.min(w, h), iw = w - 2 * pad - 1, ih = h - 2 * pad - 1;
   let out;
-  rotated(cx, cy, o.rot, () => {
-    const pan = UI.panel(box, Object.assign({}, o, { rot: 0, id, kind: o.kind || 'sign', pad }));
+  rotated(cx, cy, o.rot, () => faded(o.alpha, () => {
+    const pan = UI.panel(box, Object.assign({}, o, { rot: 0, alpha: undefined, id, kind: o.kind || 'sign', pad }));
     if (!ls.length || ls.every(l => !l.t.trim())) { out = { id, panel: pan, boxes: [], size: 0, k: 1 }; return; }
     // fit: one scale for the whole block, so the hierarchy between the lines survives
     let k = blockK(ls, iw, 0).k, L = blockLayout(ls, 1, o);
@@ -332,7 +370,7 @@ UI.sign = (box, content, o = {}) => {
       align: 'center', cid: id, center: l.center ?? true, centerY: l.centerY ?? one,
     })));
     out = { id, panel: pan, boxes, size: L.sizes[0], k, inner: pan.inner };
-  });
+  }));
   return out;
 };
 
@@ -347,11 +385,11 @@ UI.pill = (str, cx, cy, o = {}) => {
   const left = o.anchor === 'left' ? cx : o.anchor === 'right' ? cx - w : cx - w / 2, pcx = left + w / 2;
   const id = o.id || autoId('pill', [pcx, cy, w, h]);
   const pad = o.pad ?? Math.max(1, Math.min(padX * .6, st.size * .2));
-  const res = rotated(pcx, cy, o.rot, () => {
-    const pan = UI.panel([left, cy - h / 2, w, h], Object.assign({ fill: '#ffe135', r: h / 2 }, o, { rot: 0, id, kind: o.kind || 'pill', pad }));
+  const res = rotated(pcx, cy, o.rot, () => faded(o.alpha, () => {
+    const pan = UI.panel([left, cy - h / 2, w, h], Object.assign({ fill: '#ffe135', r: h / 2 }, o, { rot: 0, alpha: undefined, id, kind: o.kind || 'pill', pad }));
     const lab = UI.label(str, pcx, cy, Object.assign({}, def, { size: st.size, spacing: st.spacing, lw: st.lw, shadow: st.shadow, cid: id, center: true }));
     return { id, panel: pan, label: lab };
-  });
+  }));
   return { id, x0: left, y0: cy - h / 2, x1: left + w, y1: cy + h / 2, w, h, cx: pcx, cy, size: st.size, k, panel: res.panel, label: res.label };
 };
 UI.button = UI.pill;
@@ -363,26 +401,26 @@ UI.stamp = (str, cx, cy, o = {}) => {
   const padX = o.padX ?? st.size * .5, padY = o.padY ?? st.size * .34, lwB = o.lw ?? Math.max(4, st.size * .1);
   const i = inkOf(str, st), w = i.w + st.lw + 2 * padX, h = met.cap * st.size + 2 * padY, x = cx - w / 2, y = cy - h / 2, id = o.id || autoId('stamp', [cx, cy, w, h]);
   const col = o.color || def.fill, pad = Math.max(lwB + 4, st.size * .22);
-  rotated(cx, cy, rot, () => {
+  rotated(cx, cy, rot, () => faded(o.alpha ?? .92, () => {   /* ink is never quite solid */
     ctx.save();
-    ctx.globalAlpha *= o.alpha ?? .92; ctx.strokeStyle = col; ctx.lineJoin = 'round';
+    ctx.strokeStyle = col; ctx.lineJoin = 'round';
     ctx.lineWidth = lwB; rr(x, y, w, h, st.size * .18); ctx.stroke();
     ctx.lineWidth = Math.max(2, lwB * .35); rr(x + lwB * 1.6, y + lwB * 1.6, w - lwB * 3.2, h - lwB * 3.2, st.size * .1); ctx.stroke();
     ctx.restore();
     UI.container(id, 'stamp', [x, y, x + w, y + h], pad);
     UI.label(str, cx, cy, Object.assign({}, def, { tilt: o.tilt, cid: id, center: true }));
-  });
+  }));
   return { id, x0: x, y0: y, x1: x + w, y1: y + h, w, h, cx, cy, rot };
 };
 
 /* a name tag: a tag-shaped card with a punched hole on the left (a chamfered corner above and below it) and its text centred in the body to the right of the hole */
 UI.tag = (content, cx, cy, o = {}) => {
   const def = Object.assign({ size: 38, fill: '#15111a' }, tdef(o));
-  const ls = (Array.isArray(content) ? content : [content]).map(c => Object.assign({}, def, typeof c === 'object' && c ? c : { t: c })).map(l => (l.t = String(l.t), l));
+  const ls = (Array.isArray(content) && content.length ? content : [Array.isArray(content) ? '' : content]).map(c => Object.assign({}, def, typeof c === 'object' && c ? c : { t: c })).map(l => (l.t = String(l.t), l));
   const widest = Math.max(...ls.map(l => UI.sizeOf(l.t, l).w)), hole = o.hole ?? def.size * .42, bodyPad = def.size * .5;
   const w = o.w ?? Math.max(widest + 2 * bodyPad + hole * 4.4, def.size * 6), h = o.h ?? ls.length * def.size * 1.3 + def.size * 1.5;
   const x = cx - w / 2, y = cy - h / 2, hx = x + hole * 2.2, bx = hx + hole * 1.8, id = o.id || autoId('tag', [cx, cy, w, h]), c = Math.min(h * .28, w * .1);
-  rotated(cx, cy, o.rot, () => {
+  rotated(cx, cy, o.rot, () => faded(o.alpha, () => {
     ctx.save();
     if (o.shadow !== 0) { ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = o.shadow ?? 10; ctx.shadowOffsetY = (o.shadow ?? 10) / 3; }
     ctx.fillStyle = o.fill ?? '#fff4c2';
@@ -398,11 +436,11 @@ UI.tag = (content, cx, cy, o = {}) => {
     ls.forEach((l, j) => UI.write(l.t, bx + bw / 2, base0 + L.rel[j], Object.assign({}, l, {
       size: L.sizes[j], spacing: (l.spacing || 0) * kk, lw: (l.lw || 0) * kk, maxW: 0, align: 'center', cid: id, center: true, centerY: ls.length === 1,
     })));
-  });
+  }));
   return { id, x0: x, y0: y, x1: x + w, y1: y + h, w, h, cx, cy };
 };
 
-UI.ring = (cx, cy, r, k, o = {}) => {
+UI.ring = (cx, cy, r, k, o = {}) => faded(o.alpha, () => {
   const lwR = o.lw ?? r * .2, id = o.id || autoId('ring', [cx, cy, r, r]), ri = (r - lwR / 2) * Math.SQRT1_2;
   ctx.save();
   ctx.lineCap = 'round'; ctx.lineWidth = lwR;
@@ -412,7 +450,7 @@ UI.ring = (cx, cy, r, k, o = {}) => {
   UI.container(id, 'ring', [cx - ri, cy - ri, cx + ri, cy + ri], 0);
   if (o.text != null) UI.label(o.text, cx, cy, Object.assign({ size: r * .9, fill: '#fff' }, tdef(o), { maxW: 2 * ri - 1, cid: id, center: true }));
   return { id, cx, cy, r };
-};
+});
 
 // ---------------------------------------------------------------- a page of paper
 UI.page = (box, o = {}) => {
@@ -471,7 +509,7 @@ UI.onRule = (str, x, i, page, o = {}) => {
 // ---------------------------------------------------------------- tables
 UI.table = (box, cols, rows, o = {}) => {
   const [bx, by, bw, bh] = box, head = o.header || null, nR = rows.length, nAll = nR + (head ? 1 : 0);
-  const rowH = o.rowH ?? (bh ? bh / nAll : (o.size ?? 28) * 2.1), size = o.size ?? Math.round(rowH * .42), padX = o.padX ?? Math.round(size * .45);
+  const rowH = o.rowH ?? (bh && nAll ? bh / nAll : (o.size ?? 28) * 2.1), size = o.size ?? Math.round(rowH * .42), padX = o.padX ?? Math.round(size * .45);
   const id = o.id || autoId('table', box), tH = rowH * nAll;
   // column widths: a number above 1 is px, 1 or less a fraction of the width, none = an equal share of what is left
   const fixed = cols.map(c => c.w == null ? null : c.w > 1 ? c.w : c.w * bw), used = fixed.reduce((a, v) => a + (v || 0), 0), free = fixed.filter(v => v == null).length;
@@ -479,7 +517,7 @@ UI.table = (box, cols, rows, o = {}) => {
   cw.reduce((a, v, i) => (cx0[i] = a, a + v), bx);
   const hero = o.hero !== false;
   // frame, header band, zebra rows, grid
-  const pan = UI.panel([bx, by, bw, tH], { fill: o.fill ?? '#fffdf5', stroke: o.stroke ?? '#c9bfa4', lw: o.lw ?? 3, r: o.r ?? 10, shadow: o.shadow, id, kind: 'table', pad: 0 });
+  const pan = UI.panel([bx, by, bw, tH], { fill: o.fill ?? '#fffdf5', r: o.r ?? 10, shadow: o.shadow, id, kind: 'table', pad: 0 });
   ctx.save();
   rr(bx, by, bw, tH, o.r ?? 10); ctx.clip();
   if (head) { ctx.fillStyle = o.headFill ?? '#3a3358'; ctx.fillRect(bx, by, bw, rowH); }
@@ -490,22 +528,27 @@ UI.table = (box, cols, rows, o = {}) => {
   }
   if (o.vgrid) { ctx.strokeStyle = o.grid ?? 'rgba(60,45,30,.18)'; ctx.lineWidth = 1.5; for (let c = 1; c < cols.length; c++) { ctx.beginPath(); ctx.moveTo(cx0[c], by); ctx.lineTo(cx0[c], by + tH); ctx.stroke(); } }
   ctx.restore();
-  if (o.stroke !== null && (o.lw ?? 3)) { ctx.save(); ctx.strokeStyle = o.stroke ?? '#c9bfa4'; ctx.lineWidth = o.lw ?? 3; rr(bx, by, bw, tH, o.r ?? 10); ctx.stroke(); ctx.restore(); }
+  if (o.stroke !== null && o.stroke !== false && (o.lw ?? 3)) { ctx.save(); ctx.strokeStyle = o.stroke ?? '#c9bfa4'; ctx.lineWidth = o.lw ?? 3; rr(bx, by, bw, tH, o.r ?? 10); ctx.stroke(); ctx.restore(); }   /* the frame goes over the fills */
   // cells
   const grid = [];
   const drawRow = (cells, rowTop, kind) => {
-    const styles = cells.map((cell, c) => {
+    const styles = cols.map((_, c) => cells[c] ?? '').map((cell, c) => {
       const col = cols[c] || {}, cellObj = typeof cell === 'object' && cell ? cell : { t: cell };
-      const s = Object.assign({ size, fill: kind === 'head' ? '#fff' : '#1d1a22' }, o.text, kind === 'head' ? Object.assign({ weight: 900 }, o.headText) : null, pickText(col), col.align ? { align: col.align } : null, cellObj);
+      const s = kind === 'head'
+        ? Object.assign({ size, fill: '#fff', weight: 900 }, o.text, col.align ? { align: col.align } : null, o.headText, cellObj)
+        : Object.assign({ size, fill: '#1d1a22' }, o.text, pickText(col), col.align ? { align: col.align } : null, cellObj);
       s.t = cellObj.t == null ? '' : String(cellObj.t);
       return s;
     });
     // one baseline for the whole row: centred for the tallest nominal cap height in it
     const capRow = Math.max(...styles.map(s => { const m = UI.metrics(s.font, s.weight, s.italic); return m.cap * (s.size ?? size); }));
+    const descRow = Math.max(...styles.map(s => { const m = UI.metrics(s.font, s.weight, s.italic); return m.desc * (s.size ?? size) + (s.lw || 0) / 2; }));
     const base = rowTop + (rowH + capRow) / 2, out = [];
+    /* the registered padding is one number for all four sides: the sideways padding, but never more than leaves room for the descenders above and below the cap band */
+    const cellPad = Math.max(2, Math.min(padX - .75, rowH / 2 - (capRow / 2 + descRow) - 1));
     styles.forEach((s, c) => {
       const x0 = cx0[c], x1 = x0 + cw[c], cellId = `${id}.${kind === 'head' ? 'h' : grid.length - (head ? 1 : 0)}.${c}`, al = s.align || 'left';
-      UI.container(cellId, 'cell', [x0, rowTop, x1, rowTop + rowH], padX - .75);
+      UI.container(cellId, 'cell', [x0, rowTop, x1, rowTop + rowH], cellPad);
       const rec = { x0, y0: rowTop, x1, y1: rowTop + rowH, cx: (x0 + x1) / 2, cy: rowTop + rowH / 2, base, id: cellId, text: s.t, size: s.size, shrunk: false, ellipsis: false, ink: null };
       if (s.draw) { s.draw(x0, rowTop, x1, rowTop + rowH, rec); out.push(rec); return; }
       if (s.t.trim()) {
@@ -541,6 +584,7 @@ UI.table = (box, cols, rows, o = {}) => {
 // ---------------------------------------------------------------- title and end cards
 UI.stack = (items, o = {}) => {
   const cx = o.cx ?? W / 2;
+  if (!items.length) return Object.assign([], { boxes: [], x0: cx, x1: cx, y0: o.cy ?? o.top ?? 0, y1: o.cy ?? o.top ?? 0 });
   // 1. every block, relative to its own top (a text block's top is the cap top of its first line, its bottom the last baseline)
   const blocks = items.map(it => {
     const d = Object.assign({ size: o.size ?? 60 }, o.text, it);
@@ -557,7 +601,7 @@ UI.stack = (items, o = {}) => {
   // 2. stack them
   let y = 0;
   blocks.forEach((b, i) => { b.y = y; y += b.bottom + (i < blocks.length - 1 ? b.gap : 0); });
-  const first = blocks[0], last = blocks[blocks.length - 1];
+  const first = blocks[0], last = blocks[blocks.length - 1];   /* (a text block with no lines has no strings: it is skipped below) */
   const inkTop = first.y + first.inkTop, inkBot = last.y + last.inkBot;
   const shift = o.cy != null ? o.cy - (inkTop + inkBot) / 2 : (o.top ?? 0) - first.y;
   // 3. draw
