@@ -2,7 +2,7 @@
 /* SHIFT HAPPENS, Episode 13: ep13_vault (work in progress: room and light test) */
 (() => {
 if (!window.TIMELINE_EP13) return;
-const { person, zoomTo, faceC, faceZoom, drawBg, inB, runner } = window.H6;
+const { person, zoomTo, faceC, faceZoom, drawBg, runner } = window.H6;
 const A7 = window.A7, A10 = window.A10, A11 = window.A11, A13 = window.A13, S6 = window.S6, S7 = window.S7;
 const { p2, poly, quad3, grad, radial, rgba } = V2;
 const { box3, onZ, kz, lit, table3, chair3, wallClock, ceilingLamp, backWindow } = S6;
@@ -16,8 +16,6 @@ const ZB = 2200, HW = 460, CH = 600;
 const CAMP = { f: 1400, cy: 330, hy: 860 };
 const TBL = { x: 0, z: 1380, w: 190, d: 66, h: 125 };
 const PLATE = { x: -135, z: 1338 }, CARD = { x: 122, z: 1322 };   // the sandwich at the left-hand end of the table, the tent card at the right-hand end, the middle in front of Brenda kept clear
-const hex = a => '#' + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
-const shade = (c, f) => hex(V2.rgb(c).map(v => v * f));
 
 // ------------------------------------------------------------------ the light map: everything is drawn as if the room were lit, then multiplied by what the lights actually reach
 const LM = { cv: V2.mk(540, 960), s: .5 };
@@ -38,27 +36,10 @@ function lmSpot(x, y, rx, ry, color, a, o = {}) {
   gr.addColorStop(0, `rgba(${color},${a})`); gr.addColorStop(Math.max(.05, hard), `rgba(${color},${a * (o.mid ?? .9)})`); gr.addColorStop(1, `rgba(${color},0)`);
   g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, TAU); g.fill(); g.restore();
 }
-// a lit cone's footprint plus the air between the lamp and it (a light shaft of lighter fog)
-function lmPoly(pts, color, a) {
-  const g = LM.g; g.save(); g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); g.fillStyle = `rgba(${color},${a})`; g.fill(); g.restore();
-}
 function lmApply() {
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(LM.cv, 0, 0, W, H); ctx.restore();
 }
-
-// ------------------------------------------------------------------ cones of light in the air: soft, layered, widening from the lamp to the thing it hits
-function beamVol(S, T, r0, r1, color, a, o = {}) {
-  const dx = T[0] - S[0], dy = T[1] - S[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
-  ctx.save(); ctx.globalCompositeOperation = 'screen';
-  const layers = [[1, .22], [.72, .3], [.46, .38], [.24, .5]];
-  for (const [k, w] of layers) {
-    ctx.fillStyle = V2.grad(S[0], S[1], T[0], T[1], [[0, rgba(color, a * w * (o.near ?? 1))], [.55, rgba(color, a * w * .72)], [1, rgba(color, a * w * (o.far ?? .5))]]);
-    ctx.beginPath(); ctx.moveTo(S[0] + nx * r0 * k, S[1] + ny * r0 * k); ctx.lineTo(T[0] + nx * r1 * k, T[1] + ny * r1 * k); ctx.lineTo(T[0] - nx * r1 * k, T[1] - ny * r1 * k); ctx.lineTo(S[0] - nx * r0 * k, S[1] - ny * r0 * k); ctx.closePath(); ctx.fill();
-  }
-  ctx.restore();
-}
-
 
 // ------------------------------------------------------------------ small perspective helpers
 const wq = (Z, x0, y0, x1, y1) => { const a = p2(x0, y1, Z), b = p2(x1, y0, Z); return [a[0], a[1], b[0] - a[0], b[1] - a[1]]; };   // screen rect [x, y, w, h] of a world rect on the plane Z
@@ -71,7 +52,6 @@ const discTop = (X, Y, Z, rx, rz, fill, stroke, lw = 2) => {   // a flat ellipse
 };
 const dustTop = (x0, x1, y, z0, z1, a = .4) => poly([p2(x0, y, z0), p2(x1, y, z0), p2(x1, y, z1), p2(x0, y, z1)], `rgba(204,204,196,${a})`);
 const px = u => u * curScale();                       // units -> screen px at the current transform
-const heroPx = u => px(u) >= 34;                      // a string this big on screen is read by the viewer, so the gate holds it to the hero rules
 
 // ------------------------------------------------------------------ set-dressing lettering: drawn only while it lies wholly inside the frame (and inside the door opening in view D); it fades out before it reaches an edge,
 // so no string is ever sliced by the frame and nothing printed behind the door leaf shows through it
@@ -102,8 +82,8 @@ const BANNER = { x0: -410, x1: 410, y0: 506, y1: 586 };
 const CLOCK = { x: -150, y: 466, r: 58 };
 const CAL = { x0: -70, x1: 70, y0: 290, y1: 470 };
 const WIN = { x0: 116, x1: 326, y0: 172, y1: 484 };
-const VEND = { x0: -456, x1: -334, z0: 2030, z1: 2162, h: 432 };
-const FRIDGE = { x0: 352, x1: 456, z0: 2040, z1: 2172, h: 470 };
+const VEND = { x0: 334, x1: 456, z0: 2030, z1: 2162, h: 432 };
+const FRIDGE = { x0: -456, x1: -352, z0: 2040, z1: 2172, h: 470 };   /* the vending machine sits in the right-hand corner by the counter, the fridge in the left: the wall behind the crew's row and behind Strawberry in the two-shot is a plain pale box */
 const COUNTER = { x0: 316, x1: 460, z0: 1500, z1: 1992, h: 200 };
 const BAR_AT = { x: 388, y: 262 };   // the last granola bar in the machine (world X, Y on the glass)
 
@@ -129,6 +109,10 @@ function stains() {   // water stains, peeling paint and a creep of mould on the
 function banner(lt, ST) {
   const { x0, x1, y0, y1 } = BANNER, Z = ZB - 6, r = wq(Z, x0, y0, x1, y1), k = kz(Z), flap = Math.sin(lt * 1.7) * .004 * ST.draft;
   const w = r[2], h = r[3];
+  /* the banner is only drawn while the whole of the cloth is inside the frame (it fades out as a camera move brings it to an edge): no banner is ever seen running off the side */
+  const kb = CLIPQ ? 1 : visK(r[0] - 6, r[1] - 6, r[0] + w + 6, r[1] + h + 6, 8);
+  if (kb < .02) return r;
+  ctx.save(); ctx.globalAlpha *= kb;
   // streamers first (crepe paper twisted and gone grey), then the cloth
   ctx.save(); ctx.lineCap = 'round';
   for (const [fx, len, c] of [[.06, 150, '#cf8aa0'], [.2, 110, '#8fb2c8'], [.5, 70, '#d8c27a'], [.8, 120, '#cf8aa0'], [.95, 160, '#8fb2c8']]) {
@@ -160,6 +144,7 @@ function banner(lt, ST) {
     ctx.strokeStyle = 'rgba(30,16,30,.35)'; ctx.lineWidth = 1.6 * k; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-14 * k + i * 9 * k, 0); ctx.quadraticCurveTo(-8 * k + i * 9 * k, 14 * k, -12 * k + i * 9 * k, 28 * k); ctx.stroke(); }
     ctx.restore();
   }
+  ctx.restore();
   return r;
 }
 
@@ -221,7 +206,7 @@ function vendingBox() {
   const { x0, x1, z0, z1, h } = VEND;
   box3({ x0, x1, y1: h, z0, z1, color: '#3a527c', front: '#46639a', side: '#2c4066', top: '#53688a' });
   const g = wpoly(z0, x0 + 12, 150, x1 - 40, h - 36);
-  poly(g, V2.grad(0, g[2][1], 0, g[0][1], [[0, '#9fc4c8'], [1, '#6f9a9c']]), 'rgba(10,20,30,.8)', 2.4);
+  poly(g, V2.grad(0, g[2][1], 0, g[0][1], [[0, '#dffffa'], [1, '#a4ece4']]), 'rgba(10,20,30,.8)', 2.4);
   const cell = (c, r) => [lerp(x0 + 16, x1 - 44, (c + .5) / 3), lerp(h - 56, 170, (r + .5) / 5)];
   for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) {   // coils: empty except the one bar
     const [cx, cy] = cell(c, r), a = p2(cx - 15, cy, z0), b = p2(cx + 15, cy, z0);
@@ -243,12 +228,9 @@ function vendingBox() {
   lab13('SNACKS', lbl[0] + lbl[2] / 2, lbl[1] + lbl[3] / 2, { size: lbl[3] * .56, weight: 900, fill: '#c4343f', spacing: lbl[3] * .06, maxW: lbl[2] * .9, hero: false, cid: 'vend13', center: true });
   dustTop(x0, x1, h, z0, z1, .55);
 }
-function vendGlow(ST) {   // the machine's own light: the one lit thing in a dark room (drawn after the light map)
-  const { x0, x1, z0, h } = VEND, g = wpoly(z0, x0 + 12, 150, x1 - 40, h - 36), a = ST.vend, [cx, cy] = p2((x0 + x1) / 2, 280, z0), k = kz(z0);
+function vendGlow(ST) {   // the machine's own light: a soft glow in the air in front of it (the glass itself is lit through the light map, so nobody standing in front of it is cut by a hard edge)
+  const { x0, x1, z0 } = VEND, a = ST.vend, [cx, cy] = p2((x0 + x1) / 2, 280, z0), k = kz(z0);
   if (a <= .01) return;
-  ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.beginPath(); g.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.clip();
-  ctx.fillStyle = V2.grad(0, g[2][1], 0, g[0][1], [[0, `rgba(150,235,225,${.5 * a})`], [1, `rgba(110,200,205,${.38 * a})`]]); ctx.fillRect(g[0][0] - 4, g[2][1] - 4, g[1][0] - g[0][0] + 8, g[0][1] - g[2][1] + 8);
-  ctx.restore();
   V2.glow(cx, cy, 260 * k, '120,225,215', .3 * a, 'screen', .45);
 }
 
@@ -352,7 +334,7 @@ function cobwebs(lt, ST) {
   // the two top corners and the ceiling lamp, the window, the vending machine and the table legs
   for (const [X, side] of [[-HW, 1], [HW, -1]]) { const [x, y] = p2(X, CH, Z), k = kz(Z); ctx.save(); ctx.translate(x, y); A13.cobweb('corner', [0, 0, side, 0, 0, 1, 150 * k], { alpha: .62, seed: side + 3, lw: 1.5 }); ctx.restore(); }
   { const [x, y] = p2(WIN.x1, WIN.y1, Z), k = kz(Z); ctx.save(); ctx.translate(x, y); A13.cobweb('corner', [0, 0, -1, 0, 0, 1, 90 * k], { alpha: .5, seed: 9, lw: 1.3 }); ctx.restore(); }
-  { const [x, y] = p2(VEND.x0, VEND.h, VEND.z0), k = kz(VEND.z0); ctx.save(); ctx.translate(x, y); A13.cobweb('corner', [0, 0, 1, 0, 0, -1, 70 * k], { alpha: .5, seed: 13, lw: 1.3 }); ctx.restore(); }
+  { const [x, y] = p2(VEND.x1, VEND.h, VEND.z0), k = kz(VEND.z0); ctx.save(); ctx.translate(x, y); A13.cobweb('corner', [0, 0, -1, 0, 0, 1, 70 * k], { alpha: .5, seed: 13, lw: 1.3 }); ctx.restore(); }
   void draft; void lt;
 }
 
@@ -417,7 +399,6 @@ function nearChair() { chairSide(CHAIR2.x, CHAIR2.z, { cardigan: true }); }
 
 
 // ------------------------------------------------------------------ time and words
-const wordT = (id, word, fb = 0) => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id), w = l && l.words.find(x => x[0].toLowerCase().replace(/[^a-z]/g, '').includes(word)); return w ? l.s - CUR.start + w[1] : fb; };
 const lineSpan = id => { const l = TL.lines.find(q => q.scene === CUR.id && q.id === id); return l ? [l.s - CUR.start, l.e - CUR.start] : [0, 0]; };
 const ph = (lt, a, b) => sk(lt, a, b);                                   // 0..1, smooth
 const pulse = (lt, t0, d) => lt < t0 || lt > t0 + d ? 0 : Math.sin((lt - t0) / d * PI);   // one hump
@@ -431,7 +412,7 @@ function tubeAt(lt) {
   if (lt < 22.34) return 0;
   if (lt < 22.67) { for (const [t0, d, v] of [[22.34, .05, .5], [22.48, .06, .75], [22.6, .06, .95]]) if (lt >= t0 && lt < t0 + d) return v; return 0; }
   if (lt < 27.18) return lt < 23.5 ? (hash(Math.floor(lt * 20) + 5) > .9 ? .6 : 1) : (hash(Math.floor(lt * 9) + 2) > .965 ? .78 : 1);
-  if (lt < 28.8) return hash(Math.floor(lt * 30) + 11) > .64 ? .85 : .06;   // the tube stutters in the red light
+  if (lt < 28.8) return hash(Math.floor(lt * 30) + 11) > .64 ? .5 : .05;   // the tube stutters in the red light
   if (lt < 33.3) return hash(Math.floor(lt * 14) + 3) > .82 ? .04 : .3;
   return .3 * (1 - ph(lt, 33.3, 34.2));
 }
@@ -440,7 +421,7 @@ function alarmAt(lt) {   // the red strobe: a hard flash at the freeze, then a p
   if (lt < 27.3) return 1;
   if (lt < 27.58) return .4;
   const env = 1 - ph(lt, 33.5, 34.4);
-  return env * (Math.sin((lt - 27.58) * TAU * 2.4 + 1.2) > -.1 ? 1 : .45);
+  return env * (Math.sin((lt - 27.58) * TAU * 2.4 + 1.2) > -.1 ? 1 : .6);
 }
 function state(lt) {
   const ST = {}, tube = tubeAt(lt), al = alarmAt(lt);
@@ -459,13 +440,11 @@ function state(lt) {
 
 // ------------------------------------------------------------------ cast: where they stand, what they do. One function per person, all pure functions of scene time
 const KD = k => KINDS[k] || KINDS.lemon;
-const WIDE = { lemon: [-385, 1250], straw: [-210, 1205], mango: [150, 1212], clem: [380, 1262], brenda: [-30, 1520] };
+const WIDE = { lemon: [-385, 1240], straw: [-210, 1240], mango: [150, 1240], clem: [380, 1240], brenda: [-30, 1520] };   /* the standing crew share one floor line (Z 1240) */
 const BR_Y = 98;   // Brenda's body centre sits this high above the floor-point of her chair when she is seated (so standing up is a stretch, not a jump)
 /* a point of a character's own frame (local px, origin at the body centre) in scene coordinates */
 const handAt = (o, lx, ly) => { const k = KD(o.kind), leg = o.noLegs ? 0 : (k.leg || 90); return [o.x + lx * o.s, o.y - (o.lift || 0) - (leg + k.ry * .9) * o.s + ly * o.s]; };
-const SH = { straw: [104, -13], lemon: [103, 7], mango: [92, 12], clem: [96, 10], brenda: [99, 12] };   // shoulder points, local
 const mk = (ctor, X, Z, ex) => ctor(Object.assign(V2.at(X, Z), ex));
-const lookAt = (o, tx, ty, k = 1) => { const [cx, cy] = faceC(o); const dx = tx - cx, dy = ty - cy, L = Math.hypot(dx, dy) || 1; return [clamp(dx / L, -1, 1) * k, clamp(dy / L, -1, 1) * k]; };
 
 // the pen: each of the crew holds a penlight; where it points is decided by penPlan(), the character just has to hold it there
 function withPen(o, side, grip, aimAt, on = 1) {
@@ -481,7 +460,7 @@ function withPen(o, side, grip, aimAt, on = 1) {
 
 
 // ------------------------------------------------------------------ the penlights: where each beam points over time (world points), how strong, how much it shakes
-const TG = { banner: [-120, 548, ZB - 6], cal: [10, 384, ZB - 5], clock: [-150, 468, ZB - 4], vend: [-395, 252, VEND.z0], win: [214, 330, ZB], plate: [PLATE.x, 172, PLATE.z], tent: [CARD.x, 204, CARD.z], brenda: [-30, 196, 1508],
+const TG = { banner: [-120, 548, ZB - 6], cal: [10, 384, ZB - 5], clock: [-150, 468, ZB - 4], vend: [381, 252, VEND.z0], win: [214, 330, ZB], plate: [PLATE.x, 172, PLATE.z], tent: [CARD.x, 204, CARD.z], brenda: [-30, 196, 1508],
   chair: [CHAIR2.x, 150, CHAIR2.z], floorB: [-60, 0, 1296], floorL: [-250, 0, 1330], floorR: [150, 0, 1330], ceil: [-40, CH, 1500] };
 const PEN_PLAN = {
   lemon: [[0, 'clock', .8, 0], [4.3, 'plate', .85, 0], [5.08, 'brenda', 1, 1], [6.43, 'floorB', .55, 0], [8.7, 'clock', .8, 0], [9.35, 'cal', .85, 0], [10.6, 'brenda', .6, 0], [12.2, 'chair', .8, 0], [13.2, 'brenda', .8, 0], [15.4, 'brenda', 1, 1], [16.0, 'floorB', .6, 0]],
@@ -539,7 +518,8 @@ function actLemon(lt, ex = {}, pos = null) {
 
 function actMango(lt, ex = {}, pos = null) {
   const [X0, Z0] = WIDE.mango, bow = ph(lt, 20.2, 20.7) * (1 - ph(lt, 21.9, 22.4));
-  let [X, Z] = pos || [X0 - 30 * bow, Z0];
+  const side = ph(lt, 20.05, 20.5) * (1 - ph(lt, 21.9, 22.4));   /* she steps out to the right so Brenda has the middle of the room */
+  let [X, Z] = pos || [X0 + 110 * side, Z0];
   const exit = ph(lt, 32.3, 32.85);
   X = lerp(X, -170, easeIn(exit)); Z = lerp(Z, 380, easeIn(exit));
   const o = mk(A7.mango, X, Z, { expr: 'neutral', arms: { l: 'rest', r: 'rest' }, hold: {}, grip: {}, hand: {} });
@@ -556,7 +536,7 @@ function actMango(lt, ex = {}, pos = null) {
   else if (inR(lt, 20.2, 22.0)) { o.grip.r = [40, 36]; o.arms.r = 'hold'; o.hand.r = 'flat'; }
   else if (inR(lt, 26.0, 28.83)) { o.arms.l = 'up'; o.arms.r = 'up'; o.hand.l = 'open'; o.hand.r = 'open'; }
   if (!mouthHand && !inR(lt, 15.38, 20.15) && !inR(lt, 20.1, 22.34) && lt < 22.34 && !ex.noPen) withPen(o, 1, [140, -30], pen.tgt ? p2(pen.tgt[0], pen.tgt[1], pen.tgt[2]) : null, pen.a > .05 ? 1 : 0);
-  if (inR(lt, 3.75, 4.9)) { o.arms.l = 'point'; }
+  if (inR(lt, 3.75, 4.9)) { o.grip.l = [-128, -32]; o.arms.l = 'hold'; o.hand.l = 'point'; }
   o.rot = -.04 * Math.sin(lt * .9) - .05 * pulse(lt, 13.28, 1.9) + .04 * bow;
   if (inR(lt, 26.0, 28.83)) { o.mouthOpen = .8; o.shake = lt < 27.18 ? 2.4 : 0; }
   if (inR(lt, 5.08, 6.4)) o.shake = 2.2;
@@ -594,14 +574,13 @@ function actClem(lt, ex = {}, pos = null) {
 
 // ------------------------------------------------------------------ Strawberry: awe, resolve, the chair, the first bite in seven hours
 const SEATP = [-30, 1520];   // Brenda's chair, then Strawberry's
-const strawRoute = route => lt => route(lt);
 const keyRoute = keys => lt => {
   if (lt <= keys[0][0]) return [keys[0][1], keys[0][2]];
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = seg(lt, a[0], b[0]), e = b[3] === 'io' ? easeIO(k) : b[3] === 'out' ? easeOut(k) : k; return [lerp(a[1], b[1], e), lerp(a[2], b[2], e)]; }
   const l = keys[keys.length - 1]; return [l[1], l[2]];
 };
-const TWO_X = [-255, 1302];   // where Strawberry stands for the two-shot: at the left-hand end of the table, her hand out to Brenda
-const STRAW_PATH = keyRoute([[0, WIDE.straw[0], WIDE.straw[1]], [15.95, WIDE.straw[0], WIDE.straw[1]], [16.9, TWO_X[0], TWO_X[1], 'io'], [19.4, TWO_X[0], TWO_X[1]], [19.95, WIDE.straw[0], WIDE.straw[1], 'io'], [21.1, WIDE.straw[0], WIDE.straw[1]], [21.75, -150, 1498, 'io'], [22.0, -100, 1510], [22.27, SEATP[0] - 6, SEATP[1] - 16, 'io']]);
+const TWO_X = [-198, 1302];   // where Strawberry stands for the two-shot: at the left-hand end of the table, her hand out to Brenda
+const STRAW_PATH = keyRoute([[0, WIDE.straw[0], WIDE.straw[1]], [15.95, WIDE.straw[0], WIDE.straw[1]], [16.9, TWO_X[0], TWO_X[1], 'io'], [21.1, TWO_X[0], TWO_X[1]], [21.75, -150, 1498, 'io'], [22.0, -100, 1510], [22.27, SEATP[0] - 6, SEATP[1] - 16, 'io']]);
 const SIT_T = 22.28;
 function actStraw(lt, ex = {}, pos = null, seatPos = null) {
   const route = pos ? () => pos : STRAW_PATH, sp = seatPos || SEATP;
@@ -631,13 +610,14 @@ function actStraw(lt, ex = {}, pos = null, seatPos = null) {
   if (inR(lt, 20.0, 22.0)) { o.cap = false; o.hold = { l: 'fp13_cap' }; o.grip.l = [-34, 74]; o.arms.l = 'hold'; o.grip.r = [40, 76]; o.arms.r = 'hold'; o.hand.r = 'flat'; }   // hat off, held to her chest
   if (seated && lt < 23.1) { o.arms = { l: 'rest', r: 'rest' }; o.hold = {}; o.grip = {}; }
   if (lt >= 22.0 && lt < 23.1) { o.cap = true; }
-  // the granola bar: out of her pocket, unwrapped, to her mouth, one bite, then down at her chest while she chews
+  // the granola bar: out of her pocket, held at her chest and unwrapped (the other hand peels the foil), up to her mouth for one bite, down again while she chews; a second bite after "Pending."
   if (lt >= 23.1) {
-    const un = ph(lt, 23.12, 23.55), toMouth = ph(lt, 23.62, 23.9), away = ph(lt, 24.12, 24.45), bite = ph(lt, 23.9, 24.1), bite2 = ph(lt, 33.0, 33.2);
-    const up = toMouth * (1 - away);
-    o.hold = { l: 'fp13_bar' }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' };
-    o.grip = { l: [lerp(-70, -22, up) - 6 * (1 - up) * 0, lerp(46, 28, up) + 34 * (1 - up)], r: [lerp(34, 42, up), lerp(60, 64, up)] };
-    o.barOpen = un; o.barBite = Math.max(bite * .4, lt > 32 ? .4 + .2 * bite2 : 0); o.barRot = lerp(0, .9, up);
+    const un = ph(lt, 23.12, 23.55), toMouth = ph(lt, 23.62, 23.9), away = ph(lt, 24.12, 24.45), bite = ph(lt, 23.9, 24.1);
+    const toMouth2 = ph(lt, 32.95, 33.12) * (1 - ph(lt, 33.36, 33.52)), bite2 = ph(lt, 33.12, 33.26);
+    const up = Math.max(toMouth * (1 - away), toMouth2);
+    o.hold = { l: 'fp13_bar' }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: lt < 23.62 ? 'grip' : 'flat' };
+    o.grip = { l: [lerp(-34, -22, up), lerp(46, 52, up)], r: [lerp(24 + 14 * Math.sin(un * PI * 2), 50, toMouth), lerp(50, 72, toMouth)] };
+    o.barOpen = un; o.barBite = Math.max(bite * .4, lt > 32 ? .4 + .2 * bite2 : 0); o.barRot = lerp(0, 1.0, up);
   }
   o.rot = seated ? (lt < 23.1 ? -.03 : 0) + .02 * Math.sin(lt * 1.6) : .03 * Math.sin(lt * .9);
   if (inR(lt, 32.85, 33.34)) o.rot += .045 * Math.sin((lt - 32.85) / .46 * PI) * (lt > 33.1 ? 1 : 1);   // the small satisfied nod
@@ -684,8 +664,8 @@ function actBrenda(lt, ex = {}, pos = null, route = null) {
   if (lt < 20.15) { o.grip = { l: [-34, 76], r: [34, 80] }; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' }; }
   // she stands: a crouch, a stretch (arms up, a long breath), a wobble; the N view only sees her get up, the S view sees the first steps
   if (lt >= 20.15) {
-    const k = lt - 20.15, crouch = pulse(lt, 20.15, .35) * .16, stretch = ph(lt, 20.5, 20.85) * (1 - ph(lt, 20.85, 21.2));
-    o.squash = crouch - .08 * stretch; if (up) o.plant = true;
+    const k = lt - 20.15, crouch = pulse(lt, 20.15, .35) * .28, stretch = ph(lt, 20.5, 20.85) * (1 - ph(lt, 20.85, 21.2));
+    o.squash = crouch - .2 * stretch; if (up) o.plant = true;
     o.arms = { l: stretch > .05 ? 'up' : 'rest', r: stretch > .05 ? 'up' : 'rest' }; o.hand = { l: 'open', r: 'open' }; o.grip = {};
     o.shake = lt < 20.45 ? 2.4 : 0;
     o.rot = .05 * Math.sin(k * 9) * Math.exp(-k * 1.2);
@@ -771,7 +751,7 @@ function hallBackdrop(lt, ST, Z) {
 }
 // the hall light: only glow and shafts (additive, never covering a person)
 function emissiveS(lt, ST) {
-  const { x0, x1, y1 } = SDOOR, Z = ZBS - 2, a = clamp(ST.hall);
+  const { x0, x1, y1 } = SDOOR, Z = ZBS - 2, a = clamp(ST.hall) * (1 - ST.alarm * .55);
   if (a <= .01) return;
   const c = p2(0, 190, Z), k = kz(Z);
   V2.glow(c[0], c[1], 560 * k, '214,234,255', .5 * a, 'screen', .9);
@@ -848,7 +828,7 @@ function trimPen(o) {
 }
 
 // ------------------------------------------------------------------ lamps: the beams of the penlights, the faces a penlight is catching, the light under the door
-const PR = { banner: 120, cal: 95, clock: 85, vend: 105, win: 125, plate: 62, tent: 58, brenda: 112, chair: 95, floorB: 135, floorL: 130, floorR: 130, ceil: 150 };
+const PR = { banner: 120, cal: 95, clock: 85, vend: 105, win: 125, plate: 62, tent: 58, brenda: 112, chair: 95, floorB: 92, floorL: 88, floorR: 88, ceil: 150 };
 const PEN_COL = '255,240,212';
 function penLamps(lt, ST, cast, show) {
   const L = [];
@@ -876,7 +856,7 @@ function beamG(g, S, T, r0, r1, color, a) {
   const dx = T[0] - S[0], dy = T[1] - S[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, N = 10;
   g.globalCompositeOperation = 'lighter';
   for (let i = 0; i < N; i++) {
-    const f = 1 - i / N * .92, w = a * (.05 + .045 * i / N), gr = g.createLinearGradient(S[0], S[1], T[0], T[1]);
+    const f = 1 - i / N * .92, w = a * (.07 + .06 * i / N), gr = g.createLinearGradient(S[0], S[1], T[0], T[1]);
     gr.addColorStop(0, `rgba(${color},${w})`); gr.addColorStop(.55, `rgba(${color},${w * .72})`); gr.addColorStop(1, `rgba(${color},${w * .5})`);
     g.fillStyle = gr; g.beginPath(); g.moveTo(S[0] + nx * r0 * f, S[1] + ny * r0 * f); g.lineTo(T[0] + nx * r1 * f, T[1] + ny * r1 * f); g.lineTo(T[0] - nx * r1 * f, T[1] - ny * r1 * f); g.lineTo(S[0] - nx * r0 * f, S[1] - ny * r0 * f); g.closePath(); g.fill();
   }
@@ -905,7 +885,7 @@ function lampsAir(L, lt, ST, cast, show) {   // the visible cones, the dust turn
   if (cast) for (const id of Object.keys(cast)) { const o = cast[id]; if (!show || !show[id] || id === 'brenda') continue; const K = KD(o.kind), c = handAt(o, 0, 0); occ.push({ id, z: o.z, cx: c[0], cy: c[1], rx: K.rx * o.s * 1.02, ry: K.ry * o.s * 1.02 }); }
   for (const l of L) {
     airBegin(gA);
-    const r0 = Math.max(3, 5 * l.s), r1 = l.r * .78;
+    const r0 = l.shown === false ? 1.5 : Math.max(3, 5 * l.s), r1 = l.r * .78;
     beamG(gA, l.from, l.to, r0, r1, PEN_COL, .5 * l.a);
     motesG(gA, l.from, l.to, r0 * 1.5, r1, lt, { n: 40, seed: l.who.length * 5 + 2, alpha: .9 * l.a, size: 2.8 * Math.max(.7, l.s * .8) });
     if (l.shown !== false) glowG(gA, l.from[0], l.from[1], 46 * l.s, '255,246,224', .85 * l.a);
@@ -917,6 +897,14 @@ function lampsAir(L, lt, ST, cast, show) {   // the visible cones, the dust turn
 }
 // a penlight (or someone else's) catching a face: a soft warm patch on the face and the shoulders under it; the speaker gets the most
 function faceKeys(lt, ST, cast, speaker, subj) {
+  if (lt >= 27.18 && lt < 33.4) {   /* under the strobe: a soft pink key on whoever is talking or framed, so the face is never lost in the dark half of the pulse */
+    for (const id of ['lemon', 'straw', 'mango', 'clem']) {
+      const o = cast[id]; if (!o) continue;
+      const a = id === speaker || id === subj ? .72 : .3, [fx, fy] = faceC(o);
+      lmSpot(fx - 10 * o.s, fy + 14 * o.s, 150 * o.s, 170 * o.s, '255,168,176', a, { hard: .4 });
+    }
+    return;
+  }
   if (ST.tube > .55 || lt > 22.34) return;
   for (const id of ['lemon', 'straw', 'mango', 'clem', 'brenda']) {
     const o = cast[id]; if (!o) continue;
@@ -927,12 +915,6 @@ function faceKeys(lt, ST, cast, speaker, subj) {
     if (a < .05) continue;
     lmSpot(fx - 20 * o.s, fy + 18 * o.s, 170 * o.s, 200 * o.s, '255,236,204', a, { hard: .35 });
   }
-}
-function lmShade(x, y, rx, ry, a, hard = .7) {   // take light away: a dark patch on the light map (hard 0..1: how much of the radius is solid)
-  if (a <= 0) return;
-  const g = LM.g; g.save(); g.globalCompositeOperation = 'source-over'; g.translate(x, y); g.scale(1, ry / rx);
-  const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, `rgba(0,0,0,${a})`); gr.addColorStop(hard, `rgba(0,0,0,${a * .95})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, TAU); g.fill(); g.restore();
 }
 
 // ------------------------------------------------------------------ particles: dust that is thrown off, falls, and is lit where it falls (pure functions of time)
@@ -957,10 +939,8 @@ function flakes(x, y, t0, lt, o = {}) {   // small grains that drop from a point
 
 // ------------------------------------------------------------------ the camera lenses
 const lensN = (o = {}) => V2.setCam(Object.assign({}, CAMP, o));
-const DOORX = -180, DWR = 266, DHR = 363;
+const DOORX = -180, DWR = 266;
 const FOYER_K = .85;   /* the door is drawn at this fraction of the foyer's world scale, so the foyer around it keeps its size */
-const kd2r = kd => kd * 370 / DWR;                      // the interior's px per world unit at the door plane, given the door leaf's scale
-const czOfKd = kd => -1400 / kd2r(kd);
 
 // ------------------------------------------------------------------ the light state of the characters (lit as if the room were bright; the light map takes the rest away)
 function charLight(lt, ST, mode = 'N') {
@@ -988,16 +968,14 @@ function sceneN(lt, ST, sh) {
   if (far.length) V2.dof(bg, () => far.forEach(it => it.fn()));
   near.forEach(it => it.fn());
   // dust that is thrown off
-  { const b = cast.brenda; if (b && show.brenda) { const [fx, fy] = faceC(b); puff(fx, fy + 92 * b.s, 20.45, lt, { n: 46, speed: 300, size: .85 * b.s, alpha: .4, up: 16, color: '168,164,158', life: 2.2 }); flakes(fx + 22 * b.s, fy - 10 * b.s, 13.3, lt, { n: 14, w: 26 * b.s, life: 1.6, fall: b.s }); }
+  { const b = cast.brenda; if (b && show.brenda) { const [fx, fy] = faceC(b); puff(fx, fy + 92 * b.s, 20.45, lt, { n: 54, speed: 320, size: 1.15 * b.s, alpha: .62, up: 18, color: '196,192,184', life: 2.2 }); flakes(fx + 22 * b.s, fy - 10 * b.s, 13.3, lt, { n: 14, w: 26 * b.s, life: 1.6, fall: b.s }); }
     const s2 = cast.straw; if (s2 && show.straw && lt >= SIT_T - .02) puff(s2.x, s2.y + 70 * s2.s, SIT_T, lt, { n: 26, speed: 220, size: .9 * s2.s, alpha: .34, up: 8, arc: PI * .9, color: '168,164,158' }); }
   // the light map
   lmBegin(ST.amb);
   if (ST.hall > 0) lmSpot(-60, 1850, 800, 620, '96,114,132', .42 * ST.hall * (1 - ST.tube));
-  { const k = kz(VEND.z0), vp = p2((VEND.x0 + VEND.x1) / 2, 160, VEND.z0 - 90); lmSpot(vp[0], vp[1], 270 * k, 210 * k, '86,176,172', .6 * ST.vend, { hard: .3 }); }
+  { const k = kz(VEND.z0), vp = p2((VEND.x0 + VEND.x1) / 2, 160, VEND.z0 - 90), gp = p2((VEND.x0 + VEND.x1) / 2 - 14, 292, VEND.z0 - 4); lmSpot(vp[0], vp[1], 270 * k, 210 * k, '86,176,172', .6 * ST.vend, { hard: .3 }); lmSpot(gp[0], gp[1], 118 * k, 190 * k, '255,255,255', Math.min(1, 2.2 * ST.vend), { hard: .5 }); }
   { const m = moonState(lt), wp = p2((WIN.x0 + WIN.x1) / 2, 100, ZB - 400), k = kz(ZB - 400); lmSpot(wp[0], wp[1], 300 * k, 170 * k, '90,116,170', .4 * m.k * (1 - ST.tube)); }
   lampsToMap(L); faceKeys(lt, ST, cast, spk, subj);
-  // before the find, Brenda is only a shape in the dark behind the table
-  if (lt < 5.32 && cast.brenda && show.brenda) { const b = cast.brenda, c = handAt(b, 0, 0), a = .96 * (1 - ph(lt, 5.1, 5.32)); lmShade(c[0], c[1], 112 * b.s, 126 * b.s, a, .9); lmShade(c[0] + 4 * b.s, c[1] - 112 * b.s, 104 * b.s, 70 * b.s, a, .9); }
   lmApply();
   return { cast, L, show };
 }
@@ -1084,6 +1062,74 @@ function hallShaft(lt, ajar) {   // the hall light falling through the open door
   ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.grad(0, A[1], 0, D[1], [[0, `rgba(190,215,245,${.5 * a})`], [1, 'rgba(190,215,245,0)']]);
   ctx.beginPath(); ctx.moveTo(...A); ctx.lineTo(...B); ctx.lineTo(...C); ctx.lineTo(...D); ctx.closePath(); ctx.fill(); ctx.restore();
 }
+// the plaque over the door and the notice on its leaf are drawn here (not by S13.breakDoor) so they can be held back while the frame would cut them or the HUD sits on them
+const SIGN13 = { box: [-155, -474, 310, 232], lines: [{ t: 'POLICY 14.3', size: 64, font: 'Bangers', weight: 400, fill: '#c2182b', spacing: 3 }, { t: 'STAFF MAY NOT ENTER', size: 32 }, { t: 'DURING A SHIFT', size: 32 }, { t: 'THIS MEANS YOU', size: 40, fill: '#c2182b' }] };
+function plaque13(x0, y0, kd, a = 1) {
+  const pw = 250, ph0 = 56, py = -(504 + 28 + 20 + ph0 / 2);
+  ctx.save(); ctx.translate(x0, y0); ctx.scale(kd, kd);
+  const b = scrBox(-pw / 2, py - ph0 / 2, pw / 2, py + ph0 / 2), f = clamp(Math.min((b[1] - 190) / 30, (b[0] - 24) / 30, (W - 24 - b[2]) / 30, (1360 - b[3]) / 30)) * a;
+  if (f > .02) {
+    ctx.globalAlpha *= f;
+    UI.panel([-pw / 2, py - ph0 / 2, pw, ph0], { fill: ['#2f6f78', '#24565e'], stroke: '#d8e4e6', lw: 3, r: 8, id: 'plaque13b', kind: 'sign', pad: 8, shadow: 8 });
+    UI.label('BREAK ROOM', 0, py, { size: 34, weight: 900, fill: '#f4fbfb', spacing: 2, maxW: pw - 28, hero: false, cid: 'plaque13b', center: true });
+  }
+  ctx.restore();
+}
+function sign13(x0, y0, kd, a = 1) {   // the POLICY 14.3 notice on the closed leaf
+  if (a <= .02) return;
+  ctx.save(); ctx.translate(x0, y0); ctx.scale(kd, kd); ctx.globalAlpha *= a;
+  UI.sign(SIGN13.box, SIGN13.lines, { fill: '#f4efe2', stroke: '#7a1420', lw: 5, r: 12, pad: 14, ink: '#1d1a22', size: 32, weight: 900, hero: false, id: 'doorsign13', shadow: 8 });
+  ctx.restore();
+}
+// the moment in the end shot at which the plaque, the notice and the two cards all fit inside the frame (found by walking the camera path), so they can arrive together
+let ENDT0 = null;
+function endFitTime() {
+  if (ENDT0 != null) return ENDT0;
+  const sh = SHOTS.find(q => q.id === 'end');
+  for (let lt = 33.9; lt < 35.3; lt += 1 / 120) {
+    const c = sh.d(lt); if (c.czR > -90) continue;
+    const kR = 1400 / -c.czR, kd = kR * DWR / 370, x0 = 540 + (DOORX - c.cxR) * kR, y0 = 860 + c.cyR * kR, xs = (u0, u1) => x0 + u0 * kd >= 34 && x0 + u1 * kd <= W - 34;
+    if (xs(-173, 173) && xs(-155, 155) && xs(-125, 125) && y0 - 608 * kd >= 196 && y0 - 79 * kd <= 1372) return (ENDT0 = Math.max(lt, 34.12));
+  }
+  return (ENDT0 = 34.3);
+}
+// the cobweb across the doorway: long strands from the frame to the swinging edge of the leaf, stretching as the door opens and snapping one by one (pure function of time)
+const doorAjar = t => .95 * easeIO(seg(t, .34, 2.3));
+const openFrac = a => (1 - Math.cos(a * 1.4)) / (1 - Math.cos(.95 * 1.4));
+function snapTime(fr) {   // when the opening reaches the fraction fr of its full width
+  let a = .34, b = 2.3; for (let i = 0; i < 22; i++) { const m = (a + b) / 2; if (openFrac(doorAjar(m)) < fr) a = m; else b = m; } return (a + b) / 2;
+}
+function webStrands(lt, x0, y0, kd) {
+  const ajar = doorAjar(lt); if (ajar < .01) return;
+  const cs = Math.cos(ajar * 1.4), xl = x0 + (-185 + 370 * cs) * kd, xr = x0 + 185 * kd, o = openFrac(ajar);
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (let i = 0; i < 12; i++) {
+    const fy = .06 + .88 * (i + .9 * sr(i, 91)) / 12, yy = y0 - 504 * kd * fy, so = .1 + .74 * sr(i, 92), tS = snapTime(so), lw = (1.5 + 1.1 * sr(i, 93)) * Math.max(1, kd * .8), dy = (sr(i, 94) - .5) * 90 * kd, sg = (.5 + sr(i, 95)) * 24 * kd;
+    if (lt < tS) {   // whole: sags while slack, goes taut and thin just before it goes
+      const tight = clamp(o / so), sag = (1 - tight) * sg + 4 * kd * Math.sin(lt * 2 + i);
+      ctx.strokeStyle = `rgba(238,242,240,${.72 - .32 * tight * tight})`; ctx.lineWidth = lw * (1 - .35 * tight);
+      ctx.beginPath(); ctx.moveTo(xl, yy + dy * tight * .0 + dy); ctx.quadraticCurveTo((xl + xr) / 2, (yy + yy + dy) / 2 + sag, xr, yy); ctx.stroke();
+    } else {   // snapped: two ends recoil toward their anchors, droop, fade
+      const dt = lt - tS, r = easeOut(clamp(dt / .32)), f = 1 - clamp((dt - .1) / .6); if (f <= .02) continue;
+      const w0 = (xr - xl) * 0 + (xr - (x0 + (-185 + 370 * Math.cos(doorAjar(tS) * 1.4)) * kd)), half = w0 * .5 * (1 - r * .78) + 4;
+      ctx.strokeStyle = `rgba(238,242,240,${.62 * f})`; ctx.lineWidth = lw * .8;
+      ctx.beginPath(); ctx.moveTo(xr, yy); ctx.quadraticCurveTo(xr - half * .5, yy + 6 * kd * r, xr - half, yy + (10 + 38 * r) * kd + 6 * Math.sin(dt * 9)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(xl, yy + dy); ctx.quadraticCurveTo(xl + half * .5, yy + dy + 6 * kd * r, xl + half * .8, yy + dy + (10 + 30 * r) * kd + 6 * Math.sin(dt * 8 + 1)); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+function hallDust(lt, ajar, P, kd) {   // specks of dust shaken out of the doorway, falling through the hall light
+  if (ajar < .08) return;
+  const xs = P.map(q => q[0]), ys = P.map(q => q[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 70; i++) {
+    const u = sr(i, 81), v = (sr(i, 82) + lt * (.05 + .07 * sr(i, 83))) % 1, x = lerp(x0, x1, u) + 12 * Math.sin(lt * .9 + i * 2.1), y = lerp(y0, y1, v);
+    const a = clamp(ajar * 1.2) * (.3 + .6 * sr(i, 84)) * Math.sin(v * PI) * (.65 + .35 * Math.sin(lt * 2.2 + i));
+    ctx.fillStyle = `rgba(238,246,255,${a})`; ctx.beginPath(); ctx.arc(x, y, (1.2 + 2.4 * sr(i, 85)) * Math.max(.8, kd * .5), 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+}
 function drawD(lt, ST, sh, cfg) {
   const { czR, cxR, cyR, ajar } = cfg, outside = czR < -70, kR = outside ? 1400 / -czR : 0, kd = kR * DWR / 370;
   const x0 = outside ? 540 + (DOORX - cxR) * kR : 0, y0 = outside ? 860 + cyR * kR : 0;
@@ -1094,7 +1140,8 @@ function drawD(lt, ST, sh, cfg) {
     V2.setCam({ f: kk * S13.FOY.zb, cx: -(x0 - 540) / kk, cy: 330, hy: y0 - 330 * kk, cz: 0 });   /* the foyer is seen from where it was built (cz 0), with a longer lens, so its lamps stay in front of the camera */
     S13.light('foyer');
     guardLines(() => S13.foyer({ t: lt, lampsOn: 1 }));
-    S13.breakDoor(x0, y0, kd, { t: lt, ajar, locks: ALL_OPEN, dust: .6 * (1 - ajar * .5), noReader: true, hero: ajar < .04 ? undefined : false, plaque: kd < 3.2, sign: kd < 3.0, heroPlaque: false });
+    S13.breakDoor(x0, y0, kd, { t: lt, ajar, locks: ALL_OPEN, dust: .6 * (1 - ajar * .5), noReader: true, hero: ajar < .04 ? undefined : false, plaque: false, sign: !sh.cards });
+    if (sh.cards) { const T0 = endFitTime(), fa = ph(lt, T0 - .02, T0 + .2); plaque13(x0, y0, kd, fa); sign13(x0, y0, kd, fa); } else plaque13(x0, y0, kd, 1);
     ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = `rgb(${96 + 40 * ST.tubeShow | 0},${112 + 40 * ST.tubeShow | 0},${130 + 36 * ST.tubeShow | 0})`; ctx.fillRect(0, 0, W, H); ctx.restore();
     const cs = Math.cos(ajar * 1.4), xr = -185 + 370 * cs, tp = (1 - cs) * 22;
     poly_ = [[x0 + xr * kd, y0 - tp * .5 * kd], [x0 + 185 * kd, y0], [x0 + 185 * kd, y0 - 504 * kd], [x0 + xr * kd, y0 - (504 - tp) * kd]];
@@ -1107,11 +1154,8 @@ function drawD(lt, ST, sh, cfg) {
   try {
     if (outside) { ctx.beginPath(); poly_.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.clip(); }
     r = sceneN(lt, Object.assign({}, ST, { hall: 0 }), shI);
-    if (sh.curtain) {   // the cobweb curtain across the doorway, torn by the door
-      const a = p2(DOORX - DWR / 2, DHR, 0), b = p2(DOORX + DWR / 2, 0, 0);
-      ctx.save(); A13.cobweb('curtain', [a[0], a[1], b[0], b[1]], { tear: ph(lt, .38, 1.8), from: 1, t: lt, alpha: .55, seed: 3, lw: Math.max(1.2, 1.7 * kR / 2), nx: 11, ny: 14 }); ctx.restore();
-    }
-    if (outside) hallShaft(lt, ajar);
+    if (sh.curtain && outside) webStrands(lt, x0, y0, kd);
+    if (outside) { hallShaft(lt, ajar); hallDust(lt, ajar, poly_, kd); }
     moonGlow(lt, ST); vendGlow(ST); tubeGlow(ST);
   } finally { CLIPQ = null; ctx.restore(); }
   lampsAir(r.L, lt, ST, r.cast, r.show);   // the crew's beams arrive from the hall behind the camera: they cross the whole picture
@@ -1120,36 +1164,37 @@ function drawD(lt, ST, sh, cfg) {
 }
 // the end of the scene: two cards on the door, the old one from 2019 and the new one (pop on as the door shuts)
 function doorCards(lt, x0, y0, kd, cfg) {
-  const t0 = 33.88, k = easeBack(seg(lt, t0, t0 + .16)); if (k <= 0 || kd > 2.4) return;
-  const place = (cx, cy, w, h, rot, fn) => { ctx.save(); ctx.translate(x0 + cx * kd, y0 + cy * kd); ctx.scale(kd * k, kd * k); ctx.rotate(rot); fn(w, h); ctx.restore(); };
+  const t0 = endFitTime() + .04, k = easeBack(seg(lt, t0, t0 + .22)); if (k <= 0 || cfg.czR > -90) return;
+  const hero = k >= .98;   /* the strings are only held to the hero rules once the card has landed */
+  const place = (cx, cy, w, h, rot, fn) => { ctx.save(); ctx.translate(x0 + cx * kd, y0 + cy * kd); ctx.scale(kd * k, kd * k); ctx.globalAlpha *= clamp(k * 1.6); ctx.rotate(rot); fn(w, h); ctx.restore(); };
   // the old card: yellowed, taped crooked, a coffee ring
-  place(-100, -152, 134, 118, -.045, (w, h) => {
+  place(-106, -152, 124, 112, -.045, (w, h) => {
     ctx.fillStyle = 'rgba(0,0,0,.28)'; rr(-w / 2 + 4, -h / 2 + 6, w, h, 5); ctx.fill();
     UI.panel([-w / 2, -h / 2, w, h], { fill: ['#e6d8a2', '#cbb87a'], stroke: '#8a7a4e', lw: 2.4, r: 5, id: 'oldcard13', kind: 'sign', pad: 7 });
-    ctx.strokeStyle = 'rgba(110,70,30,.35)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(30, 30, 16, 0, TAU * .86); ctx.stroke();
+    ctx.strokeStyle = 'rgba(110,70,30,.35)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(28, 28, 15, 0, TAU * .86); ctx.stroke();
     ctx.fillStyle = 'rgba(214,210,200,.4)'; ctx.fillRect(-w / 2 + 2, -h / 2 + 2, w - 4, 8);
     ctx.fillStyle = 'rgba(255,236,150,.8)'; ctx.fillRect(-w / 2 - 6, -h / 2 - 4, 30, 14); ctx.fillRect(w / 2 - 24, -h / 2 - 4, 30, 14);   // tape
     UI.label('BACK IN', 0, -h / 2 + 24, { size: 14, weight: 800, fill: '#6a2424', spacing: 2, hero: false, cid: 'oldcard13' });
-    UI.label('15 MIN', 0, -h / 2 + 56, { size: 36, font: 'Bangers', weight: 400, fill: '#8a2626', spacing: 2, hero: false, cid: 'oldcard13' });
-    UI.label('3/12/2019', 0, -h / 2 + 90, { size: 13, weight: 800, fill: '#4a3c26', spacing: 1, hero: false, cid: 'oldcard13' });
+    UI.label('15 MIN', 0, -h / 2 + 54, { size: 36, font: 'Bangers', weight: 400, fill: '#8a2626', spacing: 2, hero: false, cid: 'oldcard13' });
+    UI.label('3/12/2019', 0, -h / 2 + 88, { size: 13, weight: 800, fill: '#4a3c26', spacing: 1, hero: false, cid: 'oldcard13' });
   });
   // the new card: white, a cyan band, the same three lines the break timer says
-  place(74, -150, 190, 134, .02, (w, h) => {
+  place(74, -150, 196, 132, .02, (w, h) => {
     ctx.fillStyle = 'rgba(0,0,0,.28)'; rr(-w / 2 + 4, -h / 2 + 6, w, h, 6); ctx.fill();
     UI.panel([-w / 2, -h / 2, w, h], { fill: ['#fbfcfe', '#e6ebf2'], stroke: '#2a3a52', lw: 2.6, r: 6, id: 'newcard13', kind: 'sign', pad: 8 });
     ctx.fillStyle = '#4de3ff'; ctx.fillRect(-w / 2 + 3, -h / 2 + 3, w - 6, 40);
     ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillRect(-w / 2 + 3, h / 2 - 6, w - 6, 3);
-    UI.label('ON BREAK', 0, -h / 2 + 23, { size: 32, font: 'Bangers', weight: 400, fill: '#0b2233', spacing: 3, maxW: w - 22, hero: true, cid: 'newcard13' });
-    UI.label('BACK IN 30 MIN', 0, -h / 2 + 68, { size: 18, weight: 900, fill: '#1c2b3f', spacing: .6, maxW: w - 20, hero: true, cid: 'newcard13' });
-    UI.label('RELIEF: PENDING', 0, -h / 2 + 100, { size: 18, weight: 900, fill: '#c4202f', spacing: .6, maxW: w - 20, hero: true, cid: 'newcard13' });
+    UI.label('ON BREAK', 0, -h / 2 + 23, { size: 32, font: 'Bangers', weight: 400, fill: '#0b2233', spacing: 3, maxW: w - 24, hero, cid: 'newcard13' });
+    UI.label('BACK IN 30 MIN', 0, -h / 2 + 69, { size: 19, weight: 900, fill: '#1c2b3f', spacing: .6, maxW: w - 20, hero, cid: 'newcard13' });
+    UI.label('RELIEF: PENDING', 0, -h / 2 + 102, { size: 19, weight: 900, fill: '#c4202f', spacing: .6, maxW: w - 20, hero, cid: 'newcard13' });
   });
 }
 
 // ------------------------------------------------------------------ the shots: each one is a camera, a subject, how soft the background is, and where the cast stands if it is not in the usual place
 const sc = (X, Y, Z) => p2(X, Y, Z);
 const S_OUT = { lemon: [-410, 1420], straw: [-240, 1420], mango: [240, 1420], clem: [410, 1420] };
-const S_FRZ = { lemon: [-345, 1240], mango: [175, 1240], clem: [350, 1250], brenda: [0, 1522], seat: [-120, 1330] };
-const S_TABLE = { x: -120, z: 1215 };
+const S_FRZ = { lemon: [-330, 1240], mango: [110, 1240], clem: [330, 1240], brenda: [0, 1522], seat: [-118, 1330] };   /* the four in a row with equal 249 px gaps on screen: Lemon, Strawberry (seated, a little nearer, so her world X is chosen to land on the midpoint), Mango, Clementine; close enough to the middle for all four faces to stay in frame through the slow push */
+const S_TABLE = { x: -118, z: 1215 };
 const BR_S = keyRoute([[20.95, 0, 1250], [21.95, 0, 1535, 'io']]);
 const NOPEN = { lemon: { noPen: true }, mango: { noPen: true }, clem: { noPen: true }, straw: { noPen: true } };
 const hideGone = ['brenda'], hideAll = ['brenda', 'lemon', 'mango', 'clem'], hideCrew = ['lemon', 'mango', 'clem'];
@@ -1158,7 +1203,7 @@ const SHOTS = [
   { id: 'door', a: 0, b: 2.85, view: 'D', curtain: true, lampsFn: dPens, hide: ['lemon', 'straw', 'mango', 'clem', 'brenda'], d: lt => { const u = seg(lt, 0, 2.85); return { czR: lerp(-790, -520, easeOut(u)), cxR: DOORX, cyR: 215, ajar: .95 * easeIO(seg(lt, .34, 2.3)) }; } },
   { id: 'cuS1', a: 2.85, b: 3.72, subj: 'straw', dof: 9, cam: (lt, u, c) => faceZoom(c.straw, lerp(2.25, 2.42, u), 95) },
   { id: 'cuM1', a: 3.72, b: 4.45, subj: 'mango', dof: 9, cam: (lt, u, c) => faceZoom(c.mango, lerp(2.35, 2.5, u), 95) },
-  { id: 'tbl', a: 4.45, b: 6.38, noChair: true, cam: (lt, u) => zoomTo(lerp(540, 520, u), lerp(1010, 990, u), lerp(1.8, 2.3, easeIO(u)) + .1 * damp(lt, 5.18, 16, .15)) },
+  { id: 'tbl', a: 4.45, b: 6.38, noChair: true, hide: ['lemon', 'straw', 'mango', 'clem'], cam: (lt, u) => zoomTo(lerp(540, 520, u), lerp(1010, 990, u), lerp(1.8, 2.3, easeIO(u)) + .1 * damp(lt, 5.18, 16, .15)) },
   { id: 'cuL1', a: 6.38, b: 7.32, subj: 'lemon', dof: 9, cam: (lt, u, c) => faceZoom(c.lemon, lerp(2.3, 2.42, u), 90) },
   { id: 'cuC1', a: 7.32, b: 8.18, subj: 'clem', dof: 9, cam: (lt, u, c) => faceZoom(c.clem, lerp(2.45, 2.55, u), 90) },
   { id: 'l2a', a: 8.18, b: 9.15, subj: 'lemon', dof: 8, cam: (lt, u, c) => faceZoom(c.lemon, lerp(1.85, 1.95, u), 70) },
@@ -1169,11 +1214,11 @@ const SHOTS = [
   { id: 'chair', a: 12.3, b: 13.22, hide: ['lemon', 'straw', 'mango', 'clem'], cam: (lt, u) => zoomTo(lerp(625, 610, u), 1040, lerp(1.95, 2.1, u)) },
   { id: 'cuB1', a: 13.22, b: 15.36, subj: 'brenda', dof: 9, cam: (lt, u, c) => faceZoom(c.brenda, lerp(2.15, 2.7, easeIO(u)), 75) },
   { id: 'gasp', a: 15.36, b: 16.2, cam: (lt, u) => zoomTo(520, 968, lerp(1.35, 1.4, u)) },
-  { id: 'two', a: 16.2, b: 19.98, hide: hideCrew, cam: (lt, u) => zoomTo(lerp(436, 446, u), lerp(990, 975, u), lerp(1.5, 1.62, easeIO(u))) },
-  { id: 'rise', a: 19.98, b: 20.95, cam: (lt, u) => zoomTo(520, lerp(975, 945, u), 1.4) },
-  { id: 'out', a: 20.95, b: 22.0, view: 'S', ex: Object.assign({}, NOPEN, { brenda: { noFace: true, acc: ['fp13_scrubs', 'fp13_dust', 'fp13_cap'] } }), pos: Object.assign({}, S_OUT, { brendaRoute: BR_S }), cam: () => zoomTo(540, 960, 1) },
+  { id: 'two', a: 16.2, b: 19.98, hide: hideCrew, cam: (lt, u) => zoomTo(lerp(396, 402, easeIO(u)), lerp(990, 976, easeIO(u)), lerp(1.7, 1.92, easeIO(u))) },
+  { id: 'rise', a: 19.98, b: 20.95, cam: (lt, u) => zoomTo(540, lerp(990, 962, u), lerp(1.26, 1.32, u)) },
+  { id: 'out', a: 20.95, b: 22.0, view: 'S', ex: Object.assign({}, NOPEN, { brenda: { noFace: true, acc: ['fp13_scrubs', 'fp13_wrinkles', 'fp13_dust', 'fp13_cap'] } }), pos: Object.assign({}, S_OUT, { brendaRoute: BR_S }), cam: () => zoomTo(540, 960, 1) },
   { id: 'sit', a: 22.0, b: 22.95, hide: hideCrew.concat(hideGone), cam: (lt, u) => zoomTo(540, 975, lerp(1.25, 1.4, u)) },
-  { id: 'unwrap', a: 22.95, b: 23.85, subj: 'straw', dof: 8, hide: hideGone, cam: (lt, u, c) => faceZoom(c.straw, lerp(1.7, 1.95, u), 70) },
+  { id: 'unwrap', a: 22.95, b: 23.85, subj: 'straw', dof: 8, hide: hideCrew.concat(hideGone), cam: (lt, u, c) => faceZoom(c.straw, lerp(1.7, 1.95, u), 70) },
   { id: 'cuS3', a: 23.85, b: 24.62, subj: 'straw', dof: 9, hide: hideGone, cam: (lt, u, c) => faceZoom(c.straw, lerp(2.4, 2.55, u), 85) },
   { id: 'moon1', a: 24.62, b: 26.0, hide: hideAll, noChair: true, noFront: true, noSeat: true, cam: (lt, u) => winCam(lt, u, 3.4, 3.7) },
   { id: 'dreadL', a: 26.0, b: 26.35, subj: 'lemon', dof: 9, hide: hideGone, cam: (lt, u, c) => faceZoom(c.lemon, lerp(2.5, 2.8, u), 90) },
@@ -1183,7 +1228,7 @@ const SHOTS = [
   { id: 'freeze', a: 27.18, b: 28.8, view: 'S', ex: NOPEN, freezeLt: 27.17, pos: S_FRZ, table: S_TABLE, hide: ['brenda'], cam: (lt, u) => zoomTo(540, lerp(965, 945, u), lerp(1, 1.05, u)) },
   { id: 'cuL4', a: 28.8, b: 29.55, subj: 'lemon', dof: 9, hide: hideGone, cam: (lt, u, c) => faceZoom(c.lemon, lerp(2.4, 2.5, u), 90) },
   { id: 'moon2', a: 29.55, b: 30.62, hide: hideAll, noChair: true, noFront: true, noSeat: true, cam: (lt, u) => winCam(lt, u, 3.6, 3.8) },
-  { id: 'l5', a: 30.62, b: 31.98, hide: hideGone, noChair: true, cam: (lt, u) => zoomTo(lerp(250, 300, u), 975, 1.3) },
+  { id: 'l5', a: 30.62, b: 31.98, hide: hideGone, noChair: true, cam: (lt, u) => zoomTo(lerp(205, 250, u), 975, 1.3) },
   { id: 'cuC2', a: 31.98, b: 32.3, subj: 'clem', dof: 9, hide: hideGone, cam: (lt, u, c) => faceZoom(c.clem, lerp(2.5, 2.7, u), 90) },
   { id: 'run', a: 32.3, b: 32.59, view: 'S', ex: NOPEN, special: 'run', pos: S_FRZ, table: S_TABLE, cam: () => zoomTo(540, 950, 1.05) },
   { id: 'cuS4', a: 32.59, b: 33.34, subj: 'straw', dof: 9, hide: hideAll, cam: (lt, u, c) => faceZoom(c.straw, lerp(2.3, 2.45, u), 85) },
@@ -1200,16 +1245,16 @@ function drawRun(lt, ST, sh) {
   const rt = (x0, z0, x1, z1, t0, t1) => t => [lerp(x0, x1, easeIn(seg(t, t0, t1))), lerp(z0, z1, easeIn(seg(t, t0, t1)))];
   const back = { noFace: true, acc: [], hold: {}, grip: {}, transit: true };
   const list = [];
-  list.push([A7.lemon, rt(-330, 1170, -40, 1540, 32.14, 32.75), 'lemon', { arms: { l: 'run', r: 'run' } }]);
-  list.push([A7.mango, rt(110, 1170, 20, 1545, 32.08, 32.68), 'mango', { arms: { l: 'run', r: 'run' } }]);
-  list.push([A10.clem, rt(330, 1170, 60, 1550, 32.0, 32.6), 'clem', { arms: { l: 'run', r: 'run' } }]);
+  list.push([A7.lemon, rt(S_FRZ.lemon[0], S_FRZ.lemon[1], -40, 1540, 32.14, 32.75), 'lemon', { arms: { l: 'run', r: 'run' } }]);
+  list.push([A7.mango, rt(S_FRZ.mango[0], S_FRZ.mango[1], 20, 1545, 32.08, 32.68), 'mango', { arms: { l: 'run', r: 'run' } }]);
+  list.push([A10.clem, rt(S_FRZ.clem[0], S_FRZ.clem[1], 60, 1550, 32.0, 32.6), 'clem', { arms: { l: 'run', r: 'run' } }]);
   const items = [];
   const t = sh.table; items.push({ z: t.z + 120, fn: () => chair13(t.x, t.z + 90, { dir: 1 }) }); items.push({ z: t.z, fn: () => { table3(t.x, t.z, { w: TBL.w, d: TBL.d, h: TBL.h, color: '#b89a68' }); dustTop(t.x - TBL.w, t.x + TBL.w, TBL.h + 16, t.z - TBL.d, t.z + TBL.d, .5); } });
   const q = V2.at(S_FRZ.seat[0], S_FRZ.seat[1]);
   const so = actStraw(lt, { t: 32.4 }, [S_FRZ.seat[0], S_FRZ.seat[1]], S_FRZ.seat); items.push({ z: S_FRZ.seat[1], fn: () => drawChar(so) }); void q;
   for (const [ctor, fn, id, ex] of list) { const o = runner(ctor, fn, lt, Object.assign({ id, who: id }, back, ex), 360); items.push({ z: fn(lt)[1], fn: () => drawChar(o) }); }
   // Brenda: first out of the door, a spring in her step (she has not answered a light since 2019)
-  { const route = t2 => [lerp(0, 0, 0), lerp(1522, 1720, easeIn(seg(t2, 32.06, 32.6)))], o = runner(A13.brenda, route, lt, { id: 'brenda', who: 'brenda', noFace: true, transit: true, acc: ['fp13_scrubs'], dust: 0, specsDrop: 0, arms: { l: 'run', r: 'run' }, expr: 'brenda_relief', capOff: false }, 360);
+  { const route = t2 => [lerp(0, 0, 0), lerp(1522, 1720, easeIn(seg(t2, 32.06, 32.6)))], o = runner(A13.brenda, route, lt, { id: 'brenda', who: 'brenda', noFace: true, transit: true, acc: ['fp13_scrubs', 'fp13_wrinkles', 'fp13_cap'], dust: 0, specsDrop: 0, arms: { l: 'run', r: 'run' }, expr: 'brenda_relief', capOff: false }, 360);
     o.lift = (o.lift || 0) + Math.abs(Math.sin((lt - 32.06) * 11)) * 26 * o.s; items.push({ z: route(lt)[1], fn: () => drawChar(o) }); }
   items.sort((a, b) => b.z - a.z).forEach(it => it.fn());
   lmBegin(ST.amb);
@@ -1223,10 +1268,10 @@ function drawRun(lt, ST, sh) {
 // ------------------------------------------------------------------ HUD and sound words (screen space, after the grade)
 function timerChip(lt) {
   const a = seg(lt, 23.05, 23.35); if (a <= 0) return;
-  const rem = Math.max(0, 1800 - (lt - 23.05)), str = Math.floor(rem / 60) + ':' + String(Math.floor(rem % 60)).padStart(2, '0');
+  const secs = Math.max(0, Math.ceil(1800 - Math.max(0, lt - 23.35))), str = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
   const x = 646, y = 118, w = 340, h = 64, cx = x + w / 2, cy = y + h / 2;
   reg('overlay', [x, y, x + w, y + h], { id: 'hud-break' });
-  ctx.save(); ctx.translate(0, (1 - a) * -18); ctx.globalAlpha *= a;
+  ctx.save(); ctx.translate(0, (1 - a) * -18); ctx.globalAlpha *= a * (1 - seg(lt, 34.5, 35.3));
   UI.panel([x, y, w, h], { fill: 'rgba(8,10,20,.78)', stroke: '#4de3ff', lw: 3, r: 32, id: 'hudbreak', kind: 'pill', pad: 10, shadow: 14 });
   // a cup of coffee, in cyan, with steam
   ctx.save(); ctx.translate(x + 36, cy + 4); ctx.strokeStyle = '#4de3ff'; ctx.lineWidth = 3.4; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -1249,6 +1294,20 @@ function sfx(lt, t0, str, x, y, o = {}) {
 // ------------------------------------------------------------------ the scene
 window.__EP13_SCENES = window.__EP13_SCENES || {};
 window.__EP13_SCENES.vault = {
+  __vis(lt) {   // which characters a shot draws at scene time lt
+    const sh = shotAt(lt); this.cam(lt);
+    const vis = {};
+    if (sh.view === 'D') return { shot: sh.id, vis };
+    const cast = castAll(sh.freezeLt ?? lt, sh.pos || {}, sh.ex || {});
+    for (const id of Object.keys(cast)) { const o = cast[id]; vis[id] = !(sh.hide || []).includes(id) && (sh.view === 'S' ? faceInside(o) : (id === sh.subj || faceInside(o))); }
+    return { shot: sh.id, vis };
+  },
+  __lamps(lt) {
+    const sh = shotAt(lt), ST = state(lt); this.cam(lt);
+    const clt = sh.freezeLt ?? lt, cast = castAll(clt, sh.pos || {}, sh.ex || {}), show = {};
+    for (const id of Object.keys(cast)) { const o = cast[id]; show[id] = (id === sh.subj || faceInside(o)) && !(sh.hide || []).includes(id); if (show[id]) trimPen(o); }
+    return penLamps(lt, ST, cast, show).map(l => ({ who: l.who, from: l.from.map(Math.round), to: l.to.map(Math.round), r: Math.round(l.r), a: +l.a.toFixed(2), shown: l.shown }));
+  },
   __geo(lt) {   // layout probe: the D-view door geometry at scene time lt
     const sh = shotAt(lt); if (sh.view !== 'D') return null;
     const c = sh.d(lt), kR = c.czR < -70 ? 1400 / -c.czR : 0, kd = kR * DWR / 370;
@@ -1308,7 +1367,7 @@ window.__EP13_SCENES.vault = {
     sfx(lt, 23.9, 'MUNCH', 820, 440, { size: 100, fill: '#ffe135', hold: .6 });
     sfx(lt, 27.23, 'SKREEEE', 540, 340, { size: 150, fill: '#ffffff', hold: .5, rot: -.04 });
     sfx(lt, 27.46, 'CLUNK', 540, 520, { size: 110, fill: '#ffe135', hold: .4 });
-    sfx(lt, 33.84, 'THUNK', 160, 340, { size: 100, fill: '#ffe135', hold: .5 });
+    sfx(lt, 33.84, 'THUNK', 540, 700, { size: 120, fill: '#ffe135', hold: .15 });
     if (lt >= 27.18 && lt < 27.3) { ctx.save(); ctx.globalAlpha = .85 * (1 - (lt - 27.18) / .12); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
     if (lt >= 5.18 && lt < 5.3) { ctx.save(); ctx.globalAlpha = .4 * (1 - (lt - 5.18) / .12); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
   },

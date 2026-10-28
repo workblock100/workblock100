@@ -115,7 +115,7 @@ const TXA = (() => {
       let speed = 0;
       for (const p of prev) if (p.s === r.s && Math.abs(p.px - r.px) < r.px * .5 + 1) {
         const d = Math.hypot((p.x0 + p.x1 - r.x0 - r.x1) / 2, (p.y0 + p.y1 - r.y0 - r.y1) / 2);
-        if (d < Math.max(70, cfg.transitPx * dt * 2)) speed = Math.max(speed, d / dt);
+        if (d < Math.max(170, cfg.transitPx * dt * 2)) speed = Math.max(speed, d / dt);   // up to about 5000 px/s at 30 fps; a static twin of the same string matches itself at 0
       }
       const transit = speed >= cfg.transitPx || r.o.transit;
       const tag = nm(r), hero = !!r.o.hero, soft = msg => hero ? msg : 'NOTE ' + msg;
@@ -197,12 +197,12 @@ const TXA = (() => {
       let tot = 0, ok = 0;
       const world = gx1 > gx0 && gy1 > gy0 ? wctx.getImageData(gx0, gy0, gx1 - gx0, gy1 - gy0) : null;
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-        if (ref[(y * w + x) * 4 + 3] < 160) continue;
+        if (ref[(y * w + x) * 4 + 3] < 220) continue;   // solid ink only: the anti-aliased rim of a thin glyph blends with a dark background and would read as covered
         const X = ox + x - gx0, Y = oy + y - gy0;
         if (!world || X < 0 || Y < 0 || X >= world.width || Y >= world.height) continue;   // outside the frame: the geometry check reports a cut, not a cover
         tot++;
         const k = (Y * world.width + X) * 4, d = world.data;
-        if (d[k] > 200 && d[k + 2] > 200 && d[k + 1] < 90) ok++;
+        if (d[k] > 165 && d[k + 2] > 165 && d[k + 1] < 125) ok++;
       }
       if (tot < 30) continue;
       const share = ok / tot, hero = !!r.o.hero, box = `[${Math.round(r.x0)},${Math.round(r.y0)},${Math.round(r.x1)},${Math.round(r.y1)}]`;

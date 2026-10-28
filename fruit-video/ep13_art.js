@@ -44,16 +44,17 @@ EXT.acc.fp13_wrinkles = (o, k, t, layer) => {
     ctx.strokeStyle = hi; ctx.lineWidth = w; ctx.save(); ctx.translate(1.4, 2.4); ctx.stroke(); ctx.restore();
     ctx.strokeStyle = ink; ctx.lineWidth = w; ctx.stroke();
   };
+  const faceOn = !o.noFace;
   // forehead (what shows under the cap): two lines, broken in the middle like a worry
-  for (let i = 0; i < 2; i++) {
+  if (faceOn) for (let i = 0; i < 2; i++) {
     const y = -78 + i * 11, w = 78 - i * 12;
     line([[-w, y + 6], [-w * .55, y - 3], [-w * .12, y + 1]], 3.8);
     line([[w * .12, y + 1], [w * .55, y - 3 + (i % 2) * 3], [w, y + 6]], 3.8);
   }
   // between the brows
-  line([[-9, -66], [-11, -52], [-8, -42]], 3.2); line([[9, -66], [11, -52], [8, -42]], 3.2);
+  if (faceOn) { line([[-9, -66], [-11, -52], [-8, -42]], 3.2); line([[9, -66], [11, -52], [8, -42]], 3.2); }
   // crow's feet
-  for (const s of [-1, 1]) {
+  if (faceOn) for (const s of [-1, 1]) {
     const ex = s * (k.eyeX + k.er * 1.2);
     line([[ex + s * 4, k.eyeY - 10], [ex + s * 26, k.eyeY - 24]], 3); line([[ex + s * 6, k.eyeY + 2], [ex + s * 32, k.eyeY - 2]], 3); line([[ex + s * 4, k.eyeY + 14], [ex + s * 28, k.eyeY + 22]], 3);
     // bags, and the crease under them
@@ -64,8 +65,8 @@ EXT.acc.fp13_wrinkles = (o, k, t, layer) => {
     line([[s * 22, k.eyeY + 60], [s * 52, k.mouthY + 8], [s * 60, k.mouthY + 36]], 3);
   }
   // chin: a dimple and two puckers, and the fine lines that fan out from the mouth
-  line([[-14, k.mouthY + 40], [0, k.mouthY + 46], [14, k.mouthY + 40]], 3.4);
-  for (const s of [-1, 1]) for (let i = 0; i < 3; i++) line([[s * (k.mw ? k.mw + 10 : 36), k.mouthY - 8 + i * 8], [s * (74 + i * 4), k.mouthY - 12 + i * 12]], 2.4);
+  if (faceOn) line([[-14, k.mouthY + 40], [0, k.mouthY + 46], [14, k.mouthY + 40]], 3.4);
+  if (faceOn) for (const s of [-1, 1]) for (let i = 0; i < 3; i++) line([[s * (k.mw ? k.mw + 10 : 36), k.mouthY - 8 + i * 8], [s * (74 + i * 4), k.mouthY - 12 + i * 12]], 2.4);
   // creases that follow the body, like a prune
   const R = [[-.84, -.2, .5], [.88, -.1, .5], [-.7, .42, .4], [.68, .5, .4], [-.4, .78, .3], [.38, .8, .3], [-.9, -.52, .4], [.9, -.5, .4], [-.55, -.8, .3], [.58, -.8, .3]];
   R.forEach(([cx, cy, ln], i) => {
@@ -78,6 +79,17 @@ EXT.acc.fp13_wrinkles = (o, k, t, layer) => {
 // faded scrubs: a V-neck top in a washed-out teal, a pocket with a pen, a seam; dusty at the shoulders
 EXT.acc.fp13_scrubs = (o, k, t, layer) => {
   if (layer !== 'mid') return;
+  if (o.noFace) {   /* seen from behind: the top with its collar band and a centre seam */
+    ctx.save(); bodyClip(o, k);
+    const top = k.eyeY + 34, dust = o.dust ?? .55;
+    ctx.fillStyle = V2.grad(0, top, 0, k.ry, [[0, '#6aa59f'], [.55, '#4f8a86'], [1, '#2f5654']]);
+    ctx.beginPath(); ctx.moveTo(-k.rx * 1.2, top + 8); ctx.quadraticCurveTo(0, top - 22, k.rx * 1.2, top + 8); ctx.lineTo(k.rx * 1.2, k.ry * 1.2); ctx.lineTo(-k.rx * 1.2, k.ry * 1.2); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(10,30,32,.55)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-k.rx * 1.1, top + 8); ctx.quadraticCurveTo(0, top - 20, k.rx * 1.1, top + 8); ctx.stroke();
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, top - 8); ctx.lineTo(0, k.ry * 1.1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(210,235,225,.3)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-k.rx * 1.05, top + 12); ctx.quadraticCurveTo(0, top - 14, k.rx * 1.05, top + 12); ctx.stroke();
+    ctx.fillStyle = `rgba(200,196,190,${.3 * dust})`; ctx.beginPath(); ctx.moveTo(-k.rx * 1.2, top + 8); ctx.quadraticCurveTo(0, top - 22, k.rx * 1.2, top + 8); ctx.lineTo(k.rx * 1.2, top + 26); ctx.quadraticCurveTo(0, top, -k.rx * 1.2, top + 26); ctx.closePath(); ctx.fill();
+    ctx.restore(); return;
+  }
   ctx.save(); bodyClip(o, k);
   const top = k.mouthY + 28, vn = 38, dust = o.dust ?? .55;
   const g = V2.grad(0, top, 0, k.ry, [[0, '#6aa59f'], [.55, '#4f8a86'], [1, '#2f5654']]);
@@ -110,7 +122,7 @@ EXT.acc.fp13_dust = (o, k, t, layer) => {
   if (layer === 'mid') {
     ctx.save(); bodyClip(o, k);
     // matte: the skin's glossy window highlight is painted over with dry, dusty skin (a dried prune does not shine)
-    { const kx = V2.LIGHT.key[0], ky = V2.LIGHT.key[1], ang = Math.atan2(ky, kx) + PI / 2;
+    if (!o.noFace) { const kx = V2.LIGHT.key[0], ky = V2.LIGHT.key[1], ang = Math.atan2(ky, kx) + PI / 2;
       ctx.save(); ctx.translate(kx * k.rx * .52, ky * k.ry * .58); ctx.rotate(ang);
       ctx.fillStyle = 'rgba(112,84,118,.82)'; ell(0, 0, k.rx * .26, k.ry * .13); ctx.fill(); ell(k.rx * .3, k.ry * .12, k.rx * .09, k.ry * .09); ctx.fill();
       ctx.restore();
@@ -232,7 +244,7 @@ EXT.acc.fp13_webs = (o, k, t, layer) => {
     const m = clamp(o.talk || 0), w = k.mw || 26, my = k.mouthY, gape = 4 + 34 * m;
     const strand = (ax, ay, bx, by, sag) => { ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo((ax + bx) / 2, (ay + by) / 2 + sag, bx, by); ctx.stroke(); };
     if (wt < 0) {   // intact
-      ctx.strokeStyle = `rgba(248,248,244,${.85 * web})`; ctx.lineWidth = 1.7;
+      ctx.strokeStyle = `rgba(244,244,240,${.58 * web})`; ctx.lineWidth = 1.4;
       for (const s of [-1, 1]) {
         strand(s * (w + 4), my - 2, s * (w + 40), my - 16, 3); strand(s * (w + 4), my, s * (w + 44), my + 4, 4); strand(s * (w + 4), my + 3, s * (w + 34), my + 30, 3);
         strand(s * (w + 4), my + 2, s * 6, my + gape + 8, 4 + 6 * m);
@@ -274,7 +286,7 @@ EXT.acc.fp13_tear = (o, k, t, layer) => {
 };
 
 // ------------------------------------------------------------------ props
-Object.assign(PROP_BOX, { fp13_pen: Object.assign([-14, -64, 14, 14], { nearFace: true }), fp13_bar: Object.assign([-34, -42, 34, 22], { nearFace: true }), fp13_cap: Object.assign([-46, -40, 46, 26], { nearFace: true }) });
+Object.assign(PROP_BOX, { fp13_pen: Object.assign([-14, -64, 14, 14], { nearFace: true }), fp13_bar: Object.assign([-54, -52, 54, 30], { nearFace: true }), fp13_cap: Object.assign([-46, -40, 46, 26], { nearFace: true }) });
 // a penlight: slim, white with a clip, the lit lens at the tip. o.penAim is the angle it points, in the character's own frame (0 = straight up); o.penOn 0..1 the brightness
 EXT.prop.fp13_pen = (side, o, t) => {
   ctx.save(); ctx.rotate(o.penAim ?? 0);
@@ -286,19 +298,25 @@ EXT.prop.fp13_pen = (side, o, t) => {
   ctx.fillStyle = `rgba(255,248,226,${.35 + .65 * on})`; ell(0, -63, 7.4, 5); ctx.fill();
   ctx.restore();
 };
-// the granola bar from the first scene: wrapped (barOpen 0) or with the wrapper peeled down and the bar bitten (barOpen 1; barBite 0..1)
+// the granola bar from the first scene (same look as S13's fp13_granola: a foil sleeve with a red and a blue stripe, the oat bar inside), wrapped (barOpen 0) or with the wrapper peeled back toward the hand and the bar bitten (barOpen 1; barBite 0..1).
+// o.barRot raises the exposed end toward her mouth (radians, counter-clockwise for the left hand)
 EXT.prop.fp13_bar = (side, o, t) => {
-  const op = clamp(o.barOpen ?? 0), bite = clamp(o.barBite ?? 0);
-  ctx.save(); ctx.rotate(side * -.5 + (o.barRot ?? 0));
-  // the bar
-  ctx.fillStyle = '#c99a58'; ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-30, -14); ctx.lineTo(26 - 22 * bite, -14); ctx.quadraticCurveTo(34 - 22 * bite, -4, 26 - 22 * bite, 10); ctx.lineTo(-30, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#e2c27a'; for (let i = 0; i < 7; i++) { ell(-24 + i * 7, -6 + (i % 3) * 5, 3, 2.6); ctx.fill(); }
-  ctx.fillStyle = '#6a3a1e'; for (let i = 0; i < 4; i++) { ell(-20 + i * 13, 2 + (i % 2) * 4, 3.4, 2.6); ctx.fill(); }
-  // the wrapper: covers the bar when closed, rolled back toward the hand when open
-  const cover = 1 - op;
-  ctx.fillStyle = V2.grad(-30, -16, 30, 12, [[0, '#2f6fc0'], [.5, '#dfe6f2'], [1, '#e8a23a']]); ctx.strokeStyle = INK; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-36, -16); ctx.lineTo(-36 + 66 * cover - 6, -16); ctx.lineTo(-36 + 66 * cover + 6, -10); ctx.lineTo(-36 + 66 * cover - 6, -4); ctx.lineTo(-36 + 66 * cover + 6, 2); ctx.lineTo(-36 + 66 * cover - 6, 8); ctx.lineTo(-36 + 66 * cover, 12); ctx.lineTo(-36, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const peel = clamp(o.barOpen ?? 0), bite = clamp(o.barBite ?? 0), L = 98 * (1 - .45 * bite);
+  ctx.save(); ctx.rotate(-.14 * side - (o.barRot ?? 0) * -side);
+  ctx.strokeStyle = 'rgba(15,12,24,.9)'; ctx.lineWidth = 3.4; ctx.lineJoin = 'round';
+  ctx.fillStyle = V2.grad(0, -18, 0, 18, [[0, '#f0d9a0'], [.5, '#cfa55a'], [1, '#9a6f2a']]); rr(-49, -17, L, 34, 6); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(90,50,10,.55)'; for (let i = 0; i < 10; i++) { const x = -43 + i * 9.4; if (x < -49 + L - 6) { ell(x, -7 + (i % 3) * 7, 3, 2.4, i); ctx.fill(); } }
+  if (bite > .02) { ctx.fillStyle = 'rgba(70,38,8,.7)'; const ex = -49 + L; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(ex + 1, -9 + i * 9, 5, -PI / 2, PI / 2, true); ctx.fill(); } }   /* the toothed edge of the bite */
+  const wr = 1 - peel;
+  if (wr > .02) {
+    const wl = 98 * wr + 8;
+    ctx.fillStyle = V2.grad(0, -19, 0, 19, [[0, '#e9edf3'], [.5, '#b8c2d2'], [1, '#8e9aaf']]); rr(-53, -19, wl, 38, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e8283c'; ctx.fillRect(-49, -4, Math.max(0, wl - 12), 9);
+    ctx.fillStyle = '#2a6fdb'; ctx.fillRect(-49, 5, Math.max(0, wl - 12), 4);
+    ctx.strokeStyle = 'rgba(15,12,24,.5)'; ctx.lineWidth = 2; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-53 + wl - 4 - i * 3, -17); ctx.lineTo(-53 + wl - 4 - i * 3, 17); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(255,255,255,.5)'; rr(-47, -16, wl * .6, 5, 2.5); ctx.fill();
+  }
+  if (peel > .02 && peel < .98) { ctx.strokeStyle = '#b8c2d2'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-40, -8); ctx.quadraticCurveTo(-60, -38 * peel, -34, -50 * peel); ctx.stroke(); }
   ctx.restore();
 };
 // a scrub cap held over the heart (hats off)
@@ -326,12 +344,13 @@ A.cobweb = (kind, a, o = {}) => {
     }
     for (let ring = 1; ring <= 5; ring++) {
       const rr0 = R * ring / 5.4;
+      let qx = 0, qy = 0;   /* the previous point of this ring: each arc between two spokes sags a little */
       ctx.beginPath();
       for (let i = 0; i <= spokes; i++) {
         const f = i / spokes, dx = lerp(ux, vx, f), dy = lerp(uy, vy, f), L = Math.hypot(dx, dy) || 1, sag = (1 - Math.abs(f - .5) * 2) * rr0 * .1;
-        const px = x + dx / L * rr0 - dx / L * sag * 0 + (i % 2 ? 0 : 0), py = y + dy / L * rr0 + sag;
-        i ? ctx.quadraticCurveTo((ctx.__px + px) / 2, (ctx.__py + py) / 2 + sag * .7, px, py) : ctx.moveTo(px, py);
-        ctx.__px = px; ctx.__py = py;
+        const px = x + dx / L * rr0, py = y + dy / L * rr0 + sag;
+        if (i) ctx.quadraticCurveTo((qx + px) / 2, (qy + py) / 2 + sag * .7, px, py); else ctx.moveTo(px, py);
+        qx = px; qy = py;
       }
       ctx.stroke();
     }

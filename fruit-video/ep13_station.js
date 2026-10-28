@@ -14,14 +14,16 @@
  *                       Returns { box: {name: [x, y, w, h] screen rects of the boards}, k } for the current camera.
  *   S13.counter(o)      the counter with monitors, phone, papers and a cup: draw it AFTER anyone seated behind it, BEFORE anyone standing in front. o: { t, phoneRing 0..1 }
  *   S13.medCart(X, Z, o), S13.chair(X, Z, o)    standing props at a world point
+ *   S13.shafts(o)       the sun's shafts in the air (one band per gap of the blinds, window to floor); draw it AFTER the cast. o: { a (alpha), sunX, rgb }. station(o) also takes sunX (slides the sun patch on the floor) and bare (a plain wall: no
+ *                       whiteboard writing, scoreboard, Q sign or call board, for a shot with a slide or a sign over it).
  *   S13.callBoard(x, y, w, h, lit, o)   the 32-dome board, flat in the current space: lit(i, t) -> null | level | [rgb 'r,g,b', level]; o { t, title, labels, hero, dim }
  *   S13.scoreboard(cx, cy, w, h, value, o)  the flip-digit BREAKS TAKEN TODAY board, flat: value, o { roll 0..1 (value-1 rolls into value), hero }
  *   S13.hall(o)         the long hall (S6.corridor) with domes on every door and, at the far end, the break room door. o: { doors, fog, lampOn, bright, door: {...breakDoor options} }
- *   S13.foyer(o)        the dead end in front of the break room door (a wider vestibule): returns the door's screen frame
- *   S13.breakDoor(x, y, k, o)   the steel door in elevation: x centre, y floor line, k px per world unit. o { locks: {reader, tape, wet, bolts, padlock, chain} each 0 locked .. 1 released,
- *                       ajar 0..1 (swing), t, reader: {state 'idle'|'read'|'ok', k}, sign (true by default), dust 0..1, hero (true when the sign is big enough) }
+ *   S13.foyer(o)        the dead end in front of the break room door (a wider vestibule): returns the door's screen frame. o { t, lampsOn, ext (false: no fire extinguisher) }
+ *   S13.breakDoor(x, y, k, o)   the steel door in elevation: x centre, y floor line, k px per world unit. o { locks: {reader, tape, wet, bolt1, bolt2, padlock, chain} each 0 locked .. 1 released,
+ *                       ajar 0..1 (swing), t, reader: {state 'idle'|'read'|'ok', k}, sign (true by default), dust 0..1, hero (true when the sign is big enough), noReader, noWet, shake {x, y}, boltT [t1, t2] (the bolts' shake) }
  *   S13.reader(x, y, k, o)   the card reader on its plate (used by breakDoor, also callable alone for a macro): o { state 'idle' | 'read' | 'ok', k (0..1 the screen's fade-in), t }
- *   S13.LAY, S13.PAL, S13.sfxWord, S13.wordT, S13.route, S13.pulse, S13.sk, S13.pts (screen points of the layout in the current camera)
+ *   S13.LAY, S13.PAL, S13.sfxWord, S13.wordT, S13.route, S13.pulse and S13.sk
  *
  * LAYOUT (world units; the 'station' camera sits at X 0, eye height 360 (cy), looks along +Z with f 1400 and the horizon at screen y 720 (hy); a scene may change f, cz (dolly), cx (truck), cy)
  *   back wall at Z 1900, half width 820, ceiling 1100, wainscot rail 120.
@@ -193,10 +195,10 @@ function whiteboard(mode = 'schedule') {
   onZ(zb, x0 - 14, x1 + 14, y0 - 32, y0 - 12, '#aab2bd', INKC, 1.6);
   for (const [a, c] of [[x0 + 60, '#2a5ac8'], [x0 + 110, '#d62a3a'], [x0 + 160, '#1f9a52']]) onZ(zb, a, a + 34, y0 - 28, y0 - 14, c, INKC, 1);   /* markers in the tray */
   if (mode === 'blank') return;
-  const [bx, by, bw, bh] = wallBox(zb, x0, y0, x1, y1), left = bx + bw * .075, col2 = bx + bw * .5, sz = bw * .066, pitch = bh * .152, top = by + bh * .13;
+  const [bx, by, bw, bh] = wallBox(zb, x0, y0, x1, y1), left = bx + bw * .075, col2 = bx + bw * .53, sz = bw * .066, pitch = bh * .152, top = by + bh * .13;
   const base = { weight: 800, italic: true, hero: false, maxW: bw * .4 };
   UI.write('3 TO 11', left, top, Object.assign({ size: sz * 1.25, fill: '#2a5ac8' }, base, { maxW: bw * .5 }));
-  SCHED.forEach(([n, r], i) => { const b = top + pitch * (i + 1); UI.write(n, left, b, Object.assign({ size: sz, fill: '#2a3f8a' }, base)); UI.write(r, col2, b, Object.assign({ size: sz, fill: i === 3 ? '#1f9a52' : '#2a3f8a' }, base)); });
+  SCHED.forEach(([n, r], i) => { const b = top + pitch * (i + 1); UI.write(n, left, b, Object.assign({ size: sz, fill: '#2a3f8a' }, base, { maxW: bw * .4 })); UI.write(r, col2, b, Object.assign({ size: sz, fill: i === 3 ? '#1f9a52' : '#2a3f8a' }, base, { maxW: bw * .4 })); });
   const b6 = top + pitch * 5.25;
   UI.write('BREAK 6:00', left, b6, Object.assign({ size: sz, fill: '#d62a3a' }, base));
   const pw = UI.write('PENDING', col2, b6, Object.assign({ size: sz, fill: '#d62a3a' }, base));
@@ -656,7 +658,7 @@ function foyer(o = {}) {
   UI.panel([cert[0] + 6, cert[1] + 6, cert[2] - 12, cert[3] - 12], { fill: '#f5f0dc', stroke: false, r: 2, id: 'cert13', kind: 'sign', pad: 4 });
   UI.lines(['AUDIT 2019', 'PASSED'], cert[0] + cert[2] / 2, cert[1] + cert[3] / 2, { align: 'center', size: cert[3] * .17, weight: 900, fill: '#5a3a1a', v: 'mid', lh: 1.25, hero: false, maxW: cert[2] * .8 });
   const ex = p2(-520, 0, zb - 30), ek = kzP(zb - 30);
-  ctx.save(); ctx.translate(ex[0], ex[1]); ctx.scale(ek, ek); ctx.fillStyle = '#d6203a'; rr(-17, -150, 34, 120, 14); ctx.fill(); ctx.strokeStyle = 'rgba(15,12,24,.9)'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#2a2d34'; rr(-8, -176, 16, 28, 4); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#2a2d34'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(8, -166); ctx.quadraticCurveTo(34, -150, 22, -100); ctx.stroke(); ctx.restore();
+  if (o.ext !== false) { ctx.save(); ctx.translate(ex[0], ex[1]); ctx.scale(ek, ek); ctx.fillStyle = '#d6203a'; rr(-17, -150, 34, 120, 14); ctx.fill(); ctx.strokeStyle = 'rgba(15,12,24,.9)'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#2a2d34'; rr(-8, -176, 16, 28, 4); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#2a2d34'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(8, -166); ctx.quadraticCurveTo(34, -150, 22, -100); ctx.stroke(); ctx.restore(); }   /* o.ext false: no fire extinguisher */
   const [x, y, k] = V2.proj(0, 0, zb);
   const lampY = p2(0, FOY.ch, zb - 100);
   V2.glow(x, y - 400 * k, 520 * k, '200,225,255', .12, 'screen', .3);
@@ -745,9 +747,10 @@ EXT.acc.fp13_headset = (o, k, t, layer) => {
   if (layer === 'back') { ctx.strokeStyle = '#23262e'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-ex, ey - 6); ctx.bezierCurveTo(-rx * .95, -ry * 1.05, rx * .95, -ry * 1.05, ex, ey - 6); ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-ex + 4, ey - 10); ctx.bezierCurveTo(-rx * .9, -ry * 1.0, rx * .5, -ry * 1.02, rx * .8, -ry * .7); ctx.stroke(); return; }
   if (layer !== 'front') return;
   for (const s of [-1, 1]) { if (s < 0 && !o.headset2) continue; ctx.fillStyle = grad(s * ex - 14, 0, s * ex + 14, 0, [[0, '#3a3f4c'], [1, '#1d2028']]); ctx.strokeStyle = 'rgba(15,12,24,.95)'; ctx.lineWidth = 3; rr(s * ex - 14, ey - 22, 28, 44, 11); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#e8283c'; ell(s * ex, ey, 4, 4); ctx.fill(); }
-  ctx.strokeStyle = '#1d2028'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(ex - 4, ey + 20); ctx.bezierCurveTo(ex + 6, ey + 70, rx * .92, k.mouthY + 54, rx * .5, k.mouthY + 56); ctx.stroke();
-  ctx.fillStyle = '#23262e'; ctx.strokeStyle = 'rgba(15,12,24,.95)'; ctx.lineWidth = 2.6; ell(rx * .46, k.mouthY + 57, 12, 8); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.2)'; ell(rx * .44, k.mouthY + 54, 5, 2.6); ctx.fill();
+  /* the boom comes down from the ear cup round the cheek and ends in a foam bud level with the corner of the mouth, clear of an open mouth (and above a counter that hides what is lower) */
+  ctx.strokeStyle = '#1d2028'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(ex - 4, ey + 20); ctx.bezierCurveTo(ex + 6, ey + 56, rx * .98, k.mouthY + 24, rx * .64, k.mouthY + 6); ctx.stroke();
+  ctx.fillStyle = '#23262e'; ctx.strokeStyle = 'rgba(15,12,24,.95)'; ctx.lineWidth = 2.6; ell(rx * .6, k.mouthY + 6, 12, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.2)'; ell(rx * .58, k.mouthY + 3, 5, 2.6); ctx.fill();
 };
 
 // ==== NEXT SECTION GOES HERE ====

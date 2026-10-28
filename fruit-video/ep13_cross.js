@@ -44,7 +44,7 @@ const c01 = x => Math.max(0, Math.min(1, x));
 const sstep = (t, a, b) => { const k = c01((t - a) / (b - a)); return k * k * (3 - 2 * k); };
 const CYAN = '#4de3ff', RED = '#ff3b4e', GOLD = '#ffc83d', GLASS = 'rgba(8,10,20,.78)';
 // sound cues are relative to their BEAT (the audio spec): beep3 +0.05 into open, clack +0.05 into slide, vmbeep +0.1 and the two clunks +0.6 / +0.85 into badge, peel +0.15 and boing +0.4 into slip, sting +0.1 into end
-const CUE = { beep3: B('open').s + .05, clack: B('slide').s + .05, vmbeep: B('badge').s + .1, clunk1: B('badge').s + .6, clunk2: B('badge').s + .85, peel: B('slip').s + .15, boing: B('slip').s + .4, sting: B('end').s + .1 };
+const CUE = { get beep3() { return B('open').s + .05; }, get clack() { return B('slide').s + .05; }, get vmbeep() { return B('badge').s + .1; }, get clunk1() { return B('badge').s + .6; }, get clunk2() { return B('badge').s + .85; }, get peel() { return B('slip').s + .15; }, get boing() { return B('slip').s + .4; }, get sting() { return B('end').s + .1; } };   /* getters: B() reads the scene being drawn */
 
 // ------------------------------------------------------------------ the shots
 const SHOTS = [
@@ -98,7 +98,7 @@ const handAt = (o, g) => { const k = KINDS[o.kind], s = o.s || 1, legLen = o.noL
 // ------------------------------------------------------------------ PLACE A: the nurses' station. Who is where, and what they do.
 const SEAT = 96, LEM_P = [470, 1600];
 const MROUTE = route([[0, -330, 1250], [3.0, -330, 1250], [3.72, -170, 1250, 'io']]);       /* Mango waits, then steps into his way */
-const AROUTE = route([[0, 720, 1130], [3.75, 235, 1250, 'io']]);                             /* the Administrator strolls in from the right on his loop */
+const AROUTE = route([[0, 720, 1130], [3.75, 205, 1250, 'io']]);                             /* the Administrator strolls in from the right on his loop */
 const radioL = lt => inB(lt, 'lr1') || inB(lt, 'lr2') || inB(lt, 'lr3') || inB(lt, 'lr4');
 const radioS = lt => inB(lt, 'sr1') || inB(lt, 'sr2');
 
@@ -133,28 +133,34 @@ function adminA(lt) {
   if (inB(lt, 'a1')) look = glance ? [-.2, .55] : [-.7, .0];
   if (lt >= 10.4) look = [-.2, 0];
   const o = A9.melon(Object.assign(q, { s: q.s * 1.22, t: lt, look, expr, who: 'melon', plant: true, hold: { l: 'clipboard6', r: pj > .02 ? 'fp13_projector' : undefined }, projOn: on, clipText: 'LOOP',
-    arms: { l: 'hold', r: pj > .02 ? 'hold' : 'rest' }, grip: { l: [-104, 74], r: [lerp(88, 108, pj), lerp(110, 66, pj)] } }));
+    arms: { l: 'hold', r: pj > .02 ? 'hold' : 'rest' }, grip: { l: [-104, 74], r: [lerp(88, 120, pj), lerp(110, 100, pj)] } }));
   if (walking) gait(o, AROUTE, 0, lt);
   return o;
 }
 // ------------------------------------------------------------------ the slide projected on the back wall (A7), and the beam to it
-const SLIDE = { x0: -330, x1: 390, y0: 600, y1: 1000 };
+const SLIDE = { x0: -400, x1: 450, y0: 600, y1: 1000 };
+const slideT = lt => { const t0 = B('slide').s; return { k: sstep(lt, t0 - .01, t0 + .05), fl: 1 - .14 * Math.abs(Math.sin(lt * 61)) * (1 - sstep(lt, t0 + .06, t0 + .4)) }; };   /* the slide lands on the wall at the start of the slide beat */
 function drawSlide(lt, adm) {
-  const k = sstep(lt, 9.5, 9.7), fl = .9 + .1 * Math.sin(lt * 61) * (1 - sstep(lt, 9.7, 10.0)), pop = pulse(lt, CUE.clack, 28, .1);
+  const { k, fl } = slideT(lt), pop = pulse(lt, CUE.clack, 28, .1);
   if (k <= .01) return;
   const zb = S13.LAY.zb, r = S13.wallBox(zb, SLIDE.x0, SLIDE.y0, SLIDE.x1, SLIDE.y1);
-  // the beam from the projector in his hand to the wall, with dust in it, then the picture itself: light on the wall
-  const hp = handAt(adm, [108, 66]);
   ctx.save(); ctx.globalAlpha *= k;
-  V2.beam(hp[0] - 20, hp[1] - 10, r[0] + r[2] * .5, r[1] + r[3] * .55, 40, r[2] * 1.15, '170,225,255', .22 * fl, 'screen');
-  V2.dust(Math.min(hp[0], r[0]) - 40, r[1] + r[3] * .4, Math.max(hp[0], r[0] + r[2]) + 40, hp[1], lt, { n: 46, alpha: .7, size: 3, speed: 12, color: '200,235,255', seed: 21 });
+  V2.glow(r[0] + r[2] / 2, r[1] + r[3] / 2, r[2] * .85, '150,215,255', .4 * fl, 'screen', .5);   /* the wall lit round the picture: UNDER the picture, so it never washes the text */
   ctx.translate(r[0] + r[2] / 2, r[1] + r[3] / 2); ctx.scale(1 + .025 * pop, 1 + .025 * pop); ctx.translate(-(r[0] + r[2] / 2), -(r[1] + r[3] / 2));
-  const s = UI.sign([r[0], r[1], r[2], r[3]], [{ t: 'SCHEDULES: A JOURNEY', size: 38, weight: 900, fill: '#0f2a4a', gap: 18 }, { t: '3 TO 11', size: 37, weight: 800, fill: '#1c4a7c' }, { t: 'BREAK: PENDING', size: 37, weight: 800, fill: '#b02a37' }, { t: 'DOUBLE SHIFT', size: 37, weight: 800, fill: '#1c4a7c' }],
-    { fill: ['#f6fbff', '#d6e9fa'], stroke: '#9fd2ff', lw: 5, r: 10, pad: 22, shadow: 40, shadowColor: 'rgba(150,220,255,.7)', id: 'slide13', alpha: fl });
-  for (const b of s.boxes.slice(1)) { ctx.fillStyle = '#1c4a7c'; ell(b.x0 - 24, b.base - b.size * .36, 6, 6); ctx.fill(); }
-  ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = grad(r[0], r[1], r[0], r[1] + r[3], [[0, 'rgba(160,220,255,.22)'], [1, 'rgba(160,220,255,.05)']]); ctx.fillRect(r[0], r[1], r[2], r[3]);
+  const s = UI.sign([r[0], r[1], r[2], r[3]], [{ t: 'SCHEDULES: A JOURNEY', size: 38, weight: 900, fill: '#0b2240', gap: 18 }, { t: '3 TO 11', size: 37, weight: 800, fill: '#123f73' }, { t: 'BREAK: PENDING', size: 37, weight: 800, fill: '#b02a37' }, { t: 'DOUBLE SHIFT', size: 37, weight: 800, fill: '#123f73' }],
+    { fill: ['#fbfdff', '#dcecfb'], stroke: '#9fd2ff', lw: 5, r: 10, pad: 22, shadow: 40, shadowColor: 'rgba(150,220,255,.7)', id: 'slide13', alpha: fl });
+  for (const b of s.boxes.slice(1)) { ctx.fillStyle = '#123f73'; ell(b.x0 - 24, b.base - b.size * .36, 6, 6); ctx.fill(); }
   ctx.restore();
-  V2.glow(r[0] + r[2] / 2, r[1] + r[3] / 2, r[2] * .9, '150,215,255', .3 * k * fl, 'screen', .5);
+}
+// the cone of light from the lens to the picture, with dust in it: light in the air, so it is drawn after the cast (over the Administrator's chest, where the projector is)
+function drawCone(lt, adm) {
+  const { k, fl } = slideT(lt);
+  if (k <= .01) return;
+  const r = S13.wallBox(S13.LAY.zb, SLIDE.x0, SLIDE.y0, SLIDE.x1, SLIDE.y1), hp = handAt(adm, [120, 100]), lx = hp[0] - 22, ly = hp[1] - 12, by = r[1] + r[3];
+  ctx.save(); ctx.globalAlpha *= k; ctx.globalCompositeOperation = 'screen';
+  ctx.fillStyle = grad(lx, ly, lx, by, [[0, `rgba(170,225,255,${.5 * fl})`], [.5, `rgba(170,225,255,${.2 * fl})`], [1, `rgba(170,225,255,${.1 * fl})`]]);
+  ctx.beginPath(); ctx.moveTo(lx - 14, ly); ctx.lineTo(lx + 14, ly); ctx.lineTo(r[0] + r[2] * .96, by); ctx.lineTo(r[0] + r[2] * .04, by); ctx.closePath(); ctx.fill(); ctx.restore();
+  V2.dust(Math.min(lx, r[0]) - 40, by - 20, Math.max(lx, r[0] + r[2]) + 40, ly, lt, { n: 46, alpha: .7 * k, size: 3, speed: 12, color: '200,235,255', seed: 21 });
 }
 
 // ------------------------------------------------------------------ PLACE A drawing
@@ -179,6 +185,7 @@ function drawA(lt, sh) {
   const front = [[M, id === 'a2' || id === 'a5' || id === 'a3'], [D, id === 'a4' || id === 'a6' || id === 'a3']];
   front.sort((a, b) => a[0].y - b[0].y);
   for (const [o, subject] of front) { if (!subject && hide(o)) continue; drawChar(o); }
+  if (onSlide) drawCone(lt, D);
   if (!dofPx || id === 'a3') S13.shafts({ a: .06 });
   V2.dust(60, 600, 1020, 1400, t, { n: 22, alpha: .28, seed: 8 });
 }
@@ -189,32 +196,47 @@ function doorOpts(lt) {
   const rel = (a, d) => seg(lt, a, a + d), vb = CUE.vmbeep, c1 = CUE.clunk1, c2 = CUE.clunk2;
   return { t: lt, locks: { reader: rel(vb, .45), wet: rel(c1 - .12, .3), tape: rel(c1 - .16, .34), bolt1: rel(c1, .12), bolt2: rel(c1 + .04, .12), padlock: rel(c2, .1), chain: rel(c2 + .03, .36) }, boltT: [c1, c1 + .04],
     shake: { x: 3.2 * pulse(lt, c1, 46, .06) + 3.2 * pulse(lt, c2, 46, .06), y: 2 * pulse(lt, c1, 38, .06) + 2 * pulse(lt, c2, 38, .06) },
-    ajar: lt >= c2 + .12 ? .06 + .05 * sstep(lt, c2 + .12, c2 + .5) + .2 * sstep(lt, CUE.sting, CUE.sting + .9) : 0, dust: sstep(lt, c2 + .08, c2 + .42), noReader: shotAt(lt).id === 'b5',
+    ajar: lt >= c2 + .12 ? .06 + .05 * sstep(lt, c2 + .12, c2 + .5) + .3 * sstep(lt, CUE.sting, CUE.sting + .9) : 0, dust: sstep(lt, c2 + .08, c2 + .42), noReader: shotAt(lt).id === 'b5', noWet: shotAt(lt).id === 'b5', hero: shotAt(lt).id === 'b5' ? false : undefined,
     rd: { state: lt < vb - .06 ? 'idle' : lt < vb ? 'read' : 'ok', k: rel(vb + .02, .42) } };
 }
 function strawB(lt, who) {
   const q = V2.at(FOYS[0], FOYS[1]);
-  const sr = radioS(lt), badge = sstep(lt, 15.2, 15.45) * (1 - sstep(lt, 16.0, 16.02)), gust = sstep(lt, CUE.sting + .05, CUE.sting + .4);
+  /* the badge: the hand goes out to the side first (empty), takes the clip-on badge off the chest (the prop replaces it), then lifts it beside her face, clear of it all the way */
+  const sr = radioS(lt), bx = sstep(lt, 15.18, 15.36), by = sstep(lt, 15.3, 15.52), gust = sstep(lt, CUE.sting + .05, CUE.sting + .4), inHand = bx > .7 && lt < 16.0;
   let look = [.2, 0], expr = 'dead', lid = .42;
   if (inB(lt, 'sr1')) look = lt < wordT('sr1', 'policy', 11.8) ? [.35, .1] : [.55, -.35];     /* the sign: up and to the right */
   if (inB(lt, 'sr2')) { look = [.1, 0]; lid = .5; }
   if (lt >= B('badge').s) look = [.6, .0];
   if (lt >= B('end').s) { look = [.8, 0]; lid = .4; }
-  return A11.straw(Object.assign(q, { t: lt, look, expr, lid, who: sr ? 'strawr' : 'straw', plant: true, arms: { l: 'rest', r: badge > .02 ? 'hold' : 'rest' }, hold: { r: badge > .02 ? 'fp13_badge' : undefined }, grip: { r: [lerp(80, 156, badge), lerp(60, -24, badge)] },
+  return A11.straw(Object.assign(q, { t: lt, look, expr, lid, who: sr ? 'strawr' : 'straw', plant: true, acc: inHand ? ['steth', 'bandage7'] : ['steth', 'bandage7', 'perdiem9'], arms: { l: 'rest', r: bx > .02 ? 'hold' : 'rest' }, hold: { r: inHand ? 'fp13_badge' : undefined }, grip: { r: [lerp(80, 158, bx), lerp(60, -24, by)] },
     sway: -.05 - .2 * gust + .02 * Math.sin(lt * 3), rot: .01 * Math.sin(lt * 1.4) }));
+}
+// the draught that comes out of the seam when the door cracks: thin streaks of dust drifting left, toward Strawberry and her leaf
+function draught(lt, f) {
+  const a = sstep(lt, CUE.sting - .1, CUE.sting + .3); if (a <= .01) return;
+  ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.lineCap = 'round';
+  for (let i = 0; i < 28; i++) {
+    const h1 = hash(i * 3.1), h2 = hash(i * 5.7 + 2), h3 = hash(i + 9), ph = (lt * (.35 + .5 * h3) + h1) % 1;
+    const x = f.x + 210 * f.k - ph * (560 + 360 * h2) * f.k, y = f.y - (50 + 380 * h2) * f.k + Math.sin(ph * 6 + i) * 22 * f.k - ph * 40 * f.k, len = (26 + 50 * h3) * f.k * (1 - .4 * ph);
+    ctx.strokeStyle = `rgba(222,230,246,${a * .6 * Math.sin(ph * PI) * (.4 + .6 * h1)})`; ctx.lineWidth = 2 + 2 * h3;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x - len * .5, y - 6, x - len, y + 3); ctx.stroke();
+  }
+  ctx.restore();
 }
 function drawB(lt, sh) {
   const id = sh.id;
   S13.light('foyer', { keyA: .28, shadowA: .42, rimA: .5 });
   V2.opts.reflect = true;
   const dofPx = id === 'b1b' || id === 'b2' ? 12 : 0;
+  let F = null;
   const bg = () => {
-    const f = S13.foyer({ t: lt });
+    const f = F = S13.foyer({ t: lt, ext: id !== 'b5' });
     S13.breakDoor(f.x, f.y, f.k, doorOpts(lt));
     ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.dust(f.x - 300, f.y - 560 * f.k, f.x + 520, f.y, lt, { n: 40, alpha: .5, size: 2.6, speed: 8, color: '210,225,255', seed: 33 }); ctx.restore();
   };
   if (dofPx) V2.dof(dofPx, bg); else bg();
   if (id === 'b1b' || id === 'b2' || id === 'b5') drawChar(strawB(lt));
+  if (id === 'b5') draught(lt, F);
 }
 function drawReaderMacro(lt) {
   const vb = CUE.vmbeep, okk = seg(lt, vb + .02, vb + .44);
@@ -232,22 +254,22 @@ function drawReaderMacro(lt) {
   EXT.prop.fp13_badge(1, {}, lt);
   ctx.save(); ctx.translate(2, 40); ctx.rotate(-PI / 2 - .3); ctx.fillStyle = '#4a4258'; ctx.beginPath(); ctx.roundRect(-18, -8.5, 10, 17, 3); ctx.fill(); V2C.hand('grip', 1, {}); ctx.restore();
   ctx.restore();
-  V2.ring(560, 800 - 118 * 3.3, seg(lt, vb, vb + .4), { r0: 20, r1: 260, lw: 5, alpha: .8, color: '90,255,140' });   /* the beep, as a ring from the lamp */
+  ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(560, 800 - 118 * 3.3, seg(lt, vb, vb + .4), { r0: 20, r1: 260, lw: 5, alpha: .8, color: '90,255,140' }); ctx.restore();   /* the beep, as a ring from the lamp (light: it never counts as covering the text) */
 }
 
 // ------------------------------------------------------------------ PLACE C: the hall. Banana, the peel, the Administrator.
-const PEEL = [95, 1500], SLIP = { peel: CUE.peel, boing: CUE.boing, land: CUE.boing + .525 };
-const BROUTE = route([[0, 205, 1650], [20.28, 205, 1650], [21.185, 98, 1520, 'io']]);
-const ADROUTE = route([[0, -170, 700], [19.0, -165, 1100], [20.6, -152, 1380], [21.3, -150, 1560, 'out'], [22.8, -150, 1560], [23.5, -122, 1520, 'io']]);
+const PEEL = [45, 1500], SLIP = { get peel() { return CUE.peel; }, get boing() { return CUE.boing; }, get land() { return CUE.boing + .525; } };
+const BROUTE = route([[0, 205, 1650], [20.28, 205, 1650], [21.185, 45, 1520, 'io']]);
+const ADROUTE = route([[0, -170, 700], [19.0, -165, 1100], [20.6, -165, 1330], [21.3, -165, 1400, 'out'], [22.8, -165, 1400], [23.5, -150, 1380, 'io']]);
 const warp = x => x + .7 * Math.sin(2 * PI * x) / (2 * PI);                                  /* the time-warp: the arc crawls at the top */
 const exp0 = b => Math.exp(-b * 5);
 function bananaC(lt) {
   let X, Z = 1500, rot = 0, lift = 0, expr = 'happy', arms = { l: 'rest', r: 'rest' }, look = [-.4, .2], flat = false, sq = 0;
   const inAir = lt >= SLIP.boing && lt < SLIP.land, tau = c01((lt - SLIP.boing) / (SLIP.land - SLIP.boing)), wt = warp(tau);
   if (lt < SLIP.peel) { [X, Z] = BROUTE(lt); expr = lt < 20.2 ? 'happy' : 'sad'; look = lt < 20.28 ? [-.6, .4] : [-.5, .5]; }
-  else if (lt < SLIP.boing) { X = 98; Z = 1520; const a = sstep(lt, SLIP.peel, SLIP.boing); rot = .32 * a; lift = 14 * a; expr = 'panic'; arms = { l: 'up', r: 'up' }; look = [0, .3]; }
-  else if (inAir) { X = lerp(98, -20, wt); Z = lerp(1520, 1490, wt); rot = lerp(.32, 1.55, easeIO(wt)); lift = 330 * 4 * wt * (1 - wt); expr = 'panic'; arms = { l: 'up', r: 'flail' }; look = [-.3, -.3]; }
-  else { X = -20; Z = 1490; flat = true; const b = lt - SLIP.land, bounce = b < .36 ? Math.abs(Math.sin(b / .36 * PI)) * 34 * Math.exp(-b * 4) : 0; rot = 1.55 + .03 * Math.sin(lt * 7) * exp0(b); lift = bounce; expr = lt < 22.7 ? 'panic' : 'sad'; arms = { l: 'rest', r: 'rest' }; look = [-.3, .4]; sq = b < .1 ? .12 * (1 - b / .1) : 0; }
+  else if (lt < SLIP.boing) { X = 45; Z = 1520; const a = sstep(lt, SLIP.peel, SLIP.boing); rot = .32 * a; lift = 14 * a; expr = 'panic'; arms = { l: 'up', r: 'up' }; look = [0, .3]; }
+  else if (inAir) { X = lerp(45, 118, wt); Z = lerp(1520, 1490, wt); rot = lerp(.32, 1.55, easeIO(wt)); lift = 330 * 4 * wt * (1 - wt); expr = 'panic'; arms = { l: 'up', r: 'flail' }; look = [-.3, -.3]; }
+  else { X = 118; Z = 1490; flat = true; const b = lt - SLIP.land, bounce = b < .36 ? Math.abs(Math.sin(b / .36 * PI)) * 34 * Math.exp(-b * 4) : 0; rot = 1.55 + .03 * Math.sin(lt * 7) * exp0(b); lift = bounce; expr = lt < 22.7 ? 'panic' : 'sad'; arms = { l: 'rest', r: 'rest' }; look = [-.3, .4]; sq = b < .1 ? .12 * (1 - b / .1) : 0; }
   const q = V2.at(X, Z), k = KINDS.banana;
   const drop = flat ? ((k.leg || 90) + k.ry * .9 - k.rx * .86) * q.s : 0;                          /* a body lying down: its centre sinks to half its thickness */
   const o = A7.banana(Object.assign(q, { t: lt, look, expr, who: 'banana', plant: true, rot, lift: flat ? -drop + lift * q.s : lift * q.s, squash: sq, arms, noReflect: flat || inAir, noShadow: flat || inAir, shake: 0 }));
@@ -261,7 +283,7 @@ function adminC(lt) {
   if (lt >= SLIP.peel + .1) { look = [.8, .3]; expr = 'shock'; }
   if (lt >= 22.7) { look = [.7, .4]; expr = 'sad'; }
   if (lt >= 23.4) { expr = 'happy'; look = [.6, .3]; }
-  const o = A9.melon(Object.assign(q, { s: q.s * 1.22, t: lt, look, expr, who: 'melon', plant: true, hold: { l: 'clipboard6' }, clipText: 'FORM', arms: { l: 'hold', r: lt >= 22.85 ? [.95, .55] : 'rest' }, grip: { l: [-104, 74] },
+  const o = A9.melon(Object.assign(q, { s: q.s * 1.22, t: lt, look, expr, who: 'melon', plant: true, hold: { l: 'clipboard6' }, clipText: lt < 23.3 ? 'LOOP' : 'FORM', arms: { l: 'hold', r: lt >= 22.85 ? [.95, .55] : 'rest' }, grip: { l: [-104, 74] },
     rot: .02 * Math.sin(lt * 5) * (seen ? 1 : 0) }));
   if (walking) gait(o, ADROUTE, 0, lt);
   return o;
@@ -298,7 +320,7 @@ function drawC(lt, sh) {
   if (id === 'c3' && lt > SLIP.boing && lt < SLIP.land + .3) {   /* the slow-motion: the dust of the landing and a few specks hanging in the air */
     V2.dust(0, 500, W, 1300, lt * .35, { n: 40, alpha: .6, size: 3.2, speed: 6, color: '255,244,214', seed: 77 });
   }
-  if (lt >= SLIP.land && lt < SLIP.land + .6) { const k = seg(lt, SLIP.land, SLIP.land + .6), p = V2.p2(-22, 20, 1490); V2.ring(p[0], p[1], k, { r0: 20, r1: 300, lw: 8, alpha: .5, color: '255,240,210' }); V2.dust(p[0] - 260, p[1] - 160, p[0] + 260, p[1] + 30, lt, { n: 30, alpha: .8 * (1 - k), size: 4, speed: 20, color: '255,236,200', seed: 5 }); }
+  if (lt >= SLIP.land && lt < SLIP.land + .6) { const k = seg(lt, SLIP.land, SLIP.land + .6), p = V2.p2(118, 20, 1490); V2.ring(p[0], p[1], k, { r0: 20, r1: 300, lw: 8, alpha: .5, color: '255,240,210' }); V2.dust(p[0] - 260, p[1] - 160, p[0] + 260, p[1] + 30, lt, { n: 30, alpha: .8 * (1 - k), size: 4, speed: 20, color: '255,236,200', seed: 5 }); }
 }
 
 // ------------------------------------------------------------------ cameras
@@ -309,7 +331,7 @@ function setCamera(lt) {
   if (id === 'a0') { S13.cam('station', { f: 1000, cz: lerp(40, 260, easeOut(u / 1)), cy: 330 }); zoomTo(540, 830, 1); }
   else if (id === 'a1' || id === 'a8' || id === 'a9' || id === 'a10') { S13.cam('station', { cz: 900 + 60 * easeOut(u) }); faceZoom({ kind: 'lemon', x: V2.at(LEM_P[0], LEM_P[1]).x, y: V2.p2(LEM_P[0], SEAT, LEM_P[1])[1], s: V2.at(LEM_P[0], LEM_P[1]).s, noLegs: true }, 1.0, 190); CAM.x -= 20 / CAM.z; }
   else if (id === 'a2' || id === 'a5') { S13.cam('station', { cz: 640 + 60 * easeOut(u) }); faceZoom(mangoA(lt), 1.0, 200); }
-  else if (id === 'a3') { S13.cam('station', { f: 1150, cz: lerp(150, 260, easeOut(u)) }); frameGroup([[V2.at(-170, 1250, { kind: 'mango' }), 40], [V2.at(235, 1250, { kind: 'melon', s: V2.at(235, 1250).s * 1.22 }), 70]], { mx: 70, ty: 900 }); }
+  else if (id === 'a3') { S13.cam('station', { f: 1150, cz: lerp(150, 260, easeOut(u)) }); frameGroup([[V2.at(-170, 1250, { kind: 'mango' }), 40], [V2.at(205, 1250, { kind: 'melon', s: V2.at(205, 1250).s * 1.22 }), 70]], { mx: 70, ty: 900 }); }
   else if (id === 'a4') { S13.cam('station', { cz: 520 + 50 * easeOut(u) }); faceZoom(adminA(lt), 1.0, 210); }
   else if (id === 'a6') { S13.cam('station', { f: 1150, cz: 330 }); frameGroup([[adminA(lt), 90]], { mx: 140, ty: 840, hMax: 1100 }); }
   else if (id === 'a7') { S13.cam('station', { f: 1100, cz: lerp(330, 380, u) }); zoomTo(540, 960, 1); }
@@ -320,7 +342,7 @@ function setCamera(lt) {
   else if (id === 'c1') { S13.cam('hall', { f: 1200, cz: lerp(-120, 60, easeOut(u)) }); zoomTo(540, 880, 1); }
   else if (id === 'c2') { S13.cam('hall', { cz: 900 }); faceZoom(bananaC(lt), 1.0, 200); }
   else if (id === 'c3') { S13.cam('hall', { f: 1250, cz: lerp(260, 380, u) }); zoomTo(540, 860, 1 + .05 * sstep(lt, SLIP.boing, SLIP.land)); }
-  else if (id === 'c4') { S13.cam('hall', { f: 1250, cz: 540, cy: 150, hy: 880 }); zoomTo(540, 960, 1); }
+  else if (id === 'c4') { S13.cam('hall', { f: 1250, cz: 540, cy: 150, hy: 880, cx: -70 }); zoomTo(540, 960, 1); }
   else if (id === 'c5') { S13.cam('hall', { f: 1250, cz: 520 }); frameGroup([[adminC(lt), 60], [bananaC(lt), 50]], { mx: 70, ty: 860, hMax: 1100 }); }
   else if (id === 'c6') { S13.cam('hall', { cz: 640 }); faceZoom(mangoC(lt), 1.0, 200); }
   CAM.x += sway.x; CAM.y += sway.y; CAM.r += sway.r;

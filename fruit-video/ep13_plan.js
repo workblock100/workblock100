@@ -119,6 +119,8 @@ const OUTER_LEN = pathLen(PG.outer), ROUTE_LEN = pathLen(PG.route), LOOP_LEN = p
 const FLAT = { f: (u, v) => [PL.cx + u, PL.cy + v + BOB], s: 1, k: 1 };
 let M = FLAT;   /* the map in force while a frame is drawn */
 var BOB = 0;
+let SHK = [0, 0];   /* the camera shake of the current frame in px (the plan is drawn in screen space, so the engine's shake transform is replayed by hand: see SCENE.draw) */
+const PAD = 48;      /* the blueprint paper is drawn this much larger than the frame on every side, so a shake never shows its edge */
 const mp = (u, v) => M.f(u, v);
 function trace(pts, close) { ctx.beginPath(); pts.forEach(([u, v], i) => { const [x, y] = mp(u, v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); if (close) ctx.closePath(); }
 function lineSet(segs) { ctx.beginPath(); for (const [a, b, c, d] of segs) { const p = mp(a, b), q = mp(c, d); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); } }
@@ -157,18 +159,19 @@ const wordT = (id, word) => { const l = TX().L[id]; if (!word) return l.s; const
 let PAPER = null;
 function paper() {
   if (PAPER) return PAPER;
-  const c = V2.mk(W, H), g = c.getContext('2d');
+  const c = V2.mk(W + 2 * PAD, H + 2 * PAD), g = c.getContext('2d');
+  g.translate(PAD, PAD);
   const bg = g.createRadialGradient(PL.cx, PL.cy - 40, 60, PL.cx, PL.cy - 40, 1180); bg.addColorStop(0, '#0d3250'); bg.addColorStop(.55, '#07203a'); bg.addColorStop(1, '#030b16');
-  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.fillStyle = bg; g.fillRect(-PAD, -PAD, W + 2 * PAD, H + 2 * PAD);
   g.lineWidth = 1;
-  for (let i = -24; i <= 24; i++) {   /* minor grid every 24 px, major every 96 px, aligned on the drawing's centre */
+  for (let i = -27; i <= 27; i++) {   /* minor grid every 24 px, major every 96 px, aligned on the drawing's centre */
     const major = i % 4 === 0;
     g.strokeStyle = major ? 'rgba(77,227,255,.105)' : 'rgba(77,227,255,.045)';
-    const x = PL.cx + i * 24 + .5; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke();
+    const x = PL.cx + i * 24 + .5; g.beginPath(); g.moveTo(x, -PAD); g.lineTo(x, H + PAD); g.stroke();
   }
-  for (let j = -40; j <= 44; j++) {
+  for (let j = -40; j <= 48; j++) {
     const major = j % 4 === 0; g.strokeStyle = major ? 'rgba(77,227,255,.105)' : 'rgba(77,227,255,.045)';
-    const y = PL.cy + j * 24 + .5; g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke();
+    const y = PL.cy + j * 24 + .5; g.beginPath(); g.moveTo(-PAD, y); g.lineTo(W + PAD, y); g.stroke();
   }
   return PAPER = c;
 }
@@ -453,7 +456,7 @@ function drawPlan(lt, map, o = {}) {
       const g = age(r.n); if (g < 0) continue;
       const flash = Math.exp(-g / .22);
       rectP(r.x0 + 2, r.y0 + 2, r.x1 - 2, r.y1 - 2); ctx.fillStyle = `rgba(${CYR},${.075 + .22 * flash})`; ctx.fill();
-      if (g < .3) { const [x, y] = mp(r.cx, r.cy); ctx.strokeStyle = `rgba(200,250,255,${.8 * (1 - g / .3)})`; ctx.lineWidth = 3 * M.s; ctx.beginPath(); ctx.arc(x, y, (24 + 10 * easeOut(g / .3)) * M.s, 0, TAU); ctx.stroke(); }   /* the ping ripples out from just beyond the number and stays inside its own room (68 wide), so it never crosses a digit */
+      if (g < .3) { const [x, y] = mp(r.cx, r.cy); ctx.strokeStyle = `rgba(200,250,255,${.8 * (1 - g / .3)})`; ctx.lineWidth = 3 * M.s; ctx.beginPath(); ctx.arc(x, y, (32 + 5 * easeOut(g / .3)) * M.s, 0, TAU); ctx.stroke(); }   /* the ping is a ring just outside the number (a two-digit label reaches 29 px from the ring's centre): it never crosses a digit */
     }
   });
   // lasers across the call-light hall (the east corridor)
@@ -534,7 +537,7 @@ function drawPlanText(lt, T, age, ta) {
   const sk = seg(lt, T.stamp, T.stamp + .1) * na;
   if (sk > 0) { const [x, y] = mp(112, -62), sc = 1 + .9 * (1 - easeOut(seg(lt, T.stamp, T.stamp + .12))); saved(() => { ctx.globalAlpha *= clamp01(sk * 3); ctx.translate(x, y); ctx.scale(sc, sc); ctx.translate(-x, -y); ctx.save(); ctx.translate(x, y); ctx.rotate(-.09); ctx.fillStyle = 'rgba(30,6,12,.82)'; ctx.beginPath(); ctx.roundRect(-112, -34, 224, 68, 10); ctx.fill(); ctx.restore(); UI.stamp('CALLED OUT', x, y, { size: 44, color: '#ff5063', lw: 5, alpha: 1 }); }); }
   // THE VAULT: label plate with a leader to the vault's door
-  drawPlate(lt, { t0: T.vaultLabel, t1: T.policy - .1, u: 172, v: -300, w: 232, h: 64, pad: 10, accent: GOLD, accentR: GOLDR, lines: [{ t: 'THE VAULT', size: 38, font: 'Bangers', weight: 400, spacing: 3, fill: '#ffe9a6' }], leader: { from: [288, -318], to: [PG.vault.cx, PG.vault.cy + 38] }, id: 'plate-vault' });
+  drawPlate(lt, { t0: T.vaultLabel, t1: T.policy - .1, u: 172, v: -300, w: 232, h: 64, pad: 10, accent: GOLD, accentR: GOLDR, lines: [{ t: 'THE VAULT', size: 38, font: 'Bangers', weight: 400, spacing: 3, fill: '#ffe9a6' }], leader: { from: [288, -300], to: [PG.vault.cx, PG.vault.cy + 38] }, id: 'plate-vault' });   /* from the middle of the plate's edge: clear of the corner brackets */
   // POLICY 14.3: slams onto the middle of the plan
   { const k = seg(lt, T.policy, T.policy + .12), a = k * (1 - seg(lt, T.policyOut, T.policyOut + .2));
     if (a > 0) saved(() => {
@@ -556,18 +559,18 @@ function drawPlanText(lt, T, age, ta) {
       ctx.fillStyle = 'rgba(77,227,255,.24)'; ctx.beginPath(); ctx.roundRect(x - w / 2 + 1.5, top + 1.5, w - 3, 66, [12.5, 12.5, 0, 0]); ctx.fill();
       UI.label('BADGE SCAN', x, top + 35, { size: 30, spacing: 6, fill: HI, weight: 900 });
       const noMatch = r2 > 0 ? `rgb(255,${Math.round(90 + 70 * (1 - bad))},${Math.round(100 + 70 * (1 - bad))})` : '#7fc9dc';
-      UI.table([x - w / 2, top + 68, w, 204], [{ w: .4, align: 'left' }, { align: 'left' }], [['BADGE', 'PER DIEM'], ['SYSTEM', { t: r2 > 0 ? 'NO MATCH' : '...', fill: noMatch }]],
+      UI.table([x - w / 2, top + 68, w, 204], [{ w: .46, align: 'left' }, { align: 'left' }], [['BADGE', 'PER DIEM'], ['SYSTEM', { t: r2 > 0 ? 'NO MATCH' : '...', fill: noMatch }]],
         { fill: 'rgba(0,0,0,0)', lw: 0, r: 0, size: 38, padX: 30, grid: 'rgba(77,227,255,.35)', id: 'card-rows', text: { fill: '#fff', weight: 900 } });
     }); }
   // OBSTACLE 2 / THE ADMINISTRATOR (leader to the patrol loop)
   drawPlate(lt, { t0: T.ob2, t1: T.ob2Out, u: SLOT.top[0], v: SLOT.top[1], lines: [{ t: 'OBSTACLE 2', size: 30, spacing: 6, fill: '#ff7684' }, { t: 'THE ADMINISTRATOR', size: 52, font: 'Bangers', weight: 400, spacing: 3, fill: '#fff', gap: 4 }], leader: { from: [0, SLOT.top[1] - PLATE.h / 2], to: [0, MID_N] }, id: 'plate-ob2' });
   // the ring timer: the Administrator's loop as a 40 minute dial (14:00 is one lap; Mango stretches it to 40:00)
-  { const a = seg(lt, T.timer, T.timer + .2) * (1 - sstep(lt, T.final - .03, T.final + .05));
+  { const a = seg(lt, T.timer, T.timer + .2) * (1 - sstep(lt, T.final - .14, T.final - .02));
     if (a > 0) saved(() => {
       const mins = lt < T.forty ? 14 * sstep(lt, T.lap2a, T.lap2b) : lerp(14, 40, easeOut(seg(lt, T.forty, T.forty + .55))), [cx, cy] = mp(0, -96), R = 92, lwR = 17, rr0 = R - lwR / 2, gold = lt >= T.forty;
       ctx.globalAlpha *= a;
       ctx.fillStyle = 'rgba(8,10,20,.74)'; ctx.beginPath(); ctx.arc(cx, cy, R + 10, 0, TAU); ctx.fill();
-      UI.ring(cx, cy, R, 0, { text: String(Math.floor(mins + 1e-6)).padStart(2, '0') + ':00', size: 80, font: 'Bangers', weight: 400, spacing: 2, ink: gold ? '#ffe9a6' : '#ffffff', lw: lwR, track: 'rgba(77,227,255,.22)', id: 'timer' });
+      UI.ring(cx, cy, R, 0, { text: String(Math.floor(mins + 1e-6)).padStart(2, '0') + ':00', size: 52, font: 'Bangers', weight: 400, spacing: 2, ink: gold ? '#ffe9a6' : '#ffffff', lw: lwR, track: 'rgba(77,227,255,.22)', id: 'timer' });
       const k = mins / 40, a0 = -PI / 2, kA = Math.min(k, .35);
       ctx.lineCap = 'round'; ctx.lineWidth = lwR; ctx.strokeStyle = CY; ctx.beginPath(); ctx.arc(cx, cy, rr0, a0, a0 + TAU * kA); ctx.stroke();
       if (k > .35) { ctx.strokeStyle = GOLD; ctx.beginPath(); ctx.arc(cx, cy, rr0, a0 + TAU * .35, a0 + TAU * k); ctx.stroke(); V2.glow(cx, cy, 170, GOLDR, .22 * Math.min(1, (k - .35) * 6), 'screen', .5); }
@@ -578,7 +581,7 @@ function drawPlanText(lt, T, age, ta) {
       label('ADMIN LOOP', 0, 33, { size: 30, weight: 900, spacing: 6, fill: gold ? '#ffe9a6' : '#7fe6ff' });
     }); }
   // ON HOLD: Mango has stopped him
-  { const a = seg(lt, T.forty + .3, T.forty + .45) * (1 - sstep(lt, T.final - .03, T.final + .05)), [hx, hy] = mp(190, 152);
+  { const a = seg(lt, T.forty + .3, T.forty + .45) * (1 - sstep(lt, T.final - .14, T.final - .02)), [hx, hy] = mp(190, 152);
     if (a > 0) saved(() => {
       const [px, py] = mp(214, 86), sc = 1 + .15 * (1 - easeOut(seg(lt, T.forty + .3, T.forty + .55)));
       ctx.globalAlpha *= a; ctx.strokeStyle = GOLD; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(px - 20, py + 22); ctx.lineTo(hx + 6, hy - 24); ctx.stroke(); ctx.strokeStyle = GOLD; ctx.beginPath(); ctx.arc(hx, hy, 26, 0, TAU); ctx.stroke();
@@ -614,7 +617,7 @@ const RM = {
   sign: { x0: -640, x1: -250, y0: 520, y1: 700 },
   cast: { lemon: [-400, 920], straw: [-430, 1620], mango: [430, 1620], clem: [400, 920] },
 };
-function roomCam() { V2.setCam(RM.cam); }
+function roomCam(cx = 0) { V2.setCam(cx ? Object.assign({}, RM.cam, { cx }) : RM.cam); }   /* cx trucks the camera sideways: the depth layers slide against each other (an arc around the table) */
 const scenePt = (X, Y, Z) => V2.proj(X, Y, Z);   /* scene (pre-camera) coordinates and scale */
 /* a point in scene coordinates -> screen, through the shot's camera (zoomTo and roll) */
 function toScreen(p) {
@@ -803,7 +806,7 @@ function penTarget(lt) {
 }
 function actLemon(lt) {
   const t = TX().L, B = TX().B, base = castO('lemon');
-  let expr = 'neutral', look = gaze(base, ...HOLOPT()), arms = { l: 'rest', r: 'hold' }, hand = {}, grip = {}, penOn = 1, rot = 0, squash = 0, face = null, penAngOverride = null;
+  let expr = 'neutral', look = gaze(base, ...HOLOPT()), arms = { l: 'rest', r: 'hold' }, hand = {}, grip = {}, penOn = 1, rot = 0, squash = 0, face = null, penAngOverride = null, shushK = 0;
   const sp = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10', 'l11', 'l12', 'l13'].find(id => inL(lt, id));
   squash += .05 * stress(lt, sp || 'l1');
   // 0 - 1.2: she watches the table come alive, then turns her eyes on the crew
@@ -827,7 +830,7 @@ function actLemon(lt) {
   const shh = SHH();
   if (lt >= shh && lt < shh + 1.1 + .2) {
     const k = sstep(lt, shh + .6, shh + .74), fk = 1 - sstep(lt, shh + 1.08, shh + 1.28), kk = k * fk, ml = [0, KINDS.lemon.mouthY + 30];
-    arms = { l: 'rest', r: 'rest' }; grip = {}; if (kk > 0) { arms.l = 'hold'; grip.l = [lerp(-105, 6, kk), lerp(20, ml[1] + 4, kk)]; hand.l = 'point'; }
+    arms = { l: 'rest', r: 'rest' }; grip = {}; if (kk > 0) { arms.l = 'none'; shushK = kk; }   /* the arm is drawn over her: see shushFinger */
     look = gaze(base, ...faceOfName('clem'));
     penOn = 0; penAngOverride = 1.3;
   }
@@ -838,14 +841,14 @@ function actLemon(lt) {
   if (lt >= t.s2.s - .1) { penOn = 0; arms = { l: 'rest', r: 'rest' }; grip = {}; penAngOverride = 1.3; }
   if (lt >= B.end.s - .6) { look = [.0, 0]; penOn = 0; }
   if (penAngOverride != null) penAng = penAngOverride;
-  return castO('lemon', Object.assign({ expr, face: face || undefined, look, arms, hand, grip, hold: { r: 'fp13_penlight' }, penAng, penLen, penOn, rot: rot + .012 * Math.sin(lt * 1.3), squash, plant: true, t: lt }));
+  return castO('lemon', Object.assign({ expr, face: face || undefined, look, arms, hand, grip, hold: { r: 'fp13_penlight' }, penAng, penLen, penOn, rot: rot + .012 * Math.sin(lt * 1.3), squash, plant: true, t: lt, shushK }));
 }
 function lerp2(a, b, k) { return [lerp(a[0], b[0], k), lerp(a[1], b[1], k)]; }
 
 // ---- Strawberry: the ghost. Back left, deadpan, per diem badge
 function actStraw(lt) {
   const t = TX().L, B = TX().B, base = castO('straw');
-  let expr = 'dead', look = gaze(base, ...HOLOPT()), arms = { l: 'rest', r: 'rest' }, hand = {}, grip = {}, squash = 0, face = null, badgeSwing = 0, lid = .5;
+  let expr = 'dead', look = gaze(base, ...HOLOPT()), arms = { l: 'rest', r: 'rest' }, hand = {}, grip = {}, squash = 0, face = null, badgeSwing = 0, lid = .5, shushK = 0;
   const shrug = holdK(lt, t.s1.s + .35, t.s1.s + .55, t.s1.e - .1, t.s1.e + .2);
   // l6 / s1: the spotlight finds her: she looks away, then slowly at the camera, then the little shrug of "per diem"
   if (lt >= t.l6.s - .3 && lt < t.s1.e + .8) {
@@ -858,9 +861,9 @@ function actStraw(lt) {
   // q: eyes to the sign, the shush: a finger to her lips
   if (lt >= B.q.s - .05 && lt < t.l12.s) look = gaze(base, ...SIGNPT());
   const shh = SHH();
-  if (lt >= shh + .1 && lt < shh + 1.3) { const kk = sstep(lt, shh + .7, shh + .85) * (1 - sstep(lt, shh + 1.1, shh + 1.3)); arms = { l: 'rest', r: 'rest' }; if (kk > 0) { arms.r = 'hold'; grip.r = [lerp(105, 8, kk), lerp(30, KINDS.straw.mouthY + 28, kk)]; hand.r = 'point'; } look = gaze(base, ...faceOfName('clem')); }
+  if (lt >= shh + .1 && lt < shh + 1.3) { const kk = sstep(lt, shh + .7, shh + .85) * (1 - sstep(lt, shh + 1.1, shh + 1.3)); arms = { l: 'rest', r: 'rest' }; if (kk > 0) { arms.r = 'none'; shushK = kk; } look = gaze(base, ...faceOfName('clem')); }
   if (lt >= B.end.s - .5) { look = [.3, .0]; }
-  return castO('straw', Object.assign({ expr, face: face || undefined, lid, look, arms, hand, grip, squash, badgeSwing, plant: true, rot: .01 * Math.sin(lt * 1.1 + 1), t: lt }));
+  return castO('straw', Object.assign({ expr, face: face || undefined, lid, look, arms, hand, grip, squash, badgeSwing, plant: true, rot: .01 * Math.sin(lt * 1.1 + 1), t: lt, shushK }));
 }
 
 // ---- Mango: the talker. Back right, next to Clementine
@@ -872,7 +875,7 @@ function actMango(lt, o2 = {}) {
   // m2 "I'll talk to him.": thumb to her chest, chin up
   if (lt >= t.m2.s - .2 && lt < t.m2.e + .4) { const k = sstep(lt, t.m2.s + .05, t.m2.s + .25) * (1 - sstep(lt, t.m2.e - .05, t.m2.e + .3)); face = lerpE('neutral', 'smug', .75); look = [-.05, -.1]; if (k > 0) { arms = { l: 'hold', r: 'rest' }; grip.l = [lerp(-100, -30, k), lerp(20, 72, k)]; hand.l = 'thumb'; } rot = -.04; squash += .05 * stress(lt, 'm2', 3); }
   // m3 "I can hold him for forty.": both fists clenched in front of her, a squeeze on "hold"
-  if (lt >= t.m3.s - .2 && lt < t.m3.e + .3) { const k = sstep(lt, t.m3.s, t.m3.s + .22) * (1 - sstep(lt, t.m3.e, t.m3.e + .3)), sq = bump(lt, wordT('m3', 'hold'), wordT('m3', 'hold') + .25); face = lerpE('neutral', 'angry', .45); look = [0, 0]; if (k > 0) { arms = { l: 'hold', r: 'hold' }; grip.l = [lerp(-100, -46, k), lerp(20, 80, k)]; grip.r = [lerp(100, 46, k), lerp(20, 80, k)]; hand = { l: 'fist', r: 'fist' }; } squash += .08 * sq + .03 * stress(lt, 'm3', 3); }
+  if (lt >= t.m3.s - .2 && lt < t.m3.e + .3) { const k = sstep(lt, t.m3.s, t.m3.s + .22) * (1 - sstep(lt, t.m3.e, t.m3.e + .3)), sq = bump(lt, wordT('m3', 'hold'), wordT('m3', 'hold') + .25); face = lerpE('neutral', 'angry', .45); look = [0, 0]; if (k > 0) { arms = { l: 'hold', r: 'rest' }; grip.l = [lerp(-100, -36, k), lerp(20, 82, k)]; hand = { l: 'fist', r: 'fist' }; }   /* one fist clenched in front of her chest: the other arm hangs clear of the CNA badge */ squash += .08 * sq + .03 * stress(lt, 'm3', 3); }
   // q: eyes to the sign. The shush: she clamps a hand over Clementine's mouth (drawn as an overlay: see shushHand)
   if (lt >= B.q.s - .05 && lt < t.l12.s) look = gaze(base, ...SIGNPT());
   const shh = SHH();
@@ -904,7 +907,7 @@ const powerAt = lt => { const B = TX().B, q = B.q, e = B.end; return sstep(lt, .
 function drawHolo(lt, k, power, collapse) {
   if (power <= 0 || collapse <= 0) return;
   const map = morphMap(k, collapse);
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, SHK[0], SHK[1]);
   const e = map.k;
   // the projection field: a grid on the hologram plane (the paper's grid takes over as the plan fills the frame)
   if (e < .98) { ctx.save(); M = map; ctx.globalAlpha = (1 - e) * power;
@@ -958,6 +961,23 @@ function shushHand(lt, m, c, k) {
   ctx.restore();
 }
 
+/* a finger to the lips ("Shh"): the arm is drawn over the character, shoulder to elbow to wrist (from its resting pose, so nothing pops), the index finger pointing up across the lips */
+function shushFinger(c, side, k) {
+  if (!c || !(k > 0)) return;
+  const K = KINDS[c.kind], s = c.s || 1, bc = bodyCenter(c), sh = shoulder(K, side), sx = bc[0] + sh[0] * s, sy = bc[1] + sh[1] * s;
+  const L1 = (K.arm1 || 56) * 1.12 * s, L2 = (K.arm2 || 52) * 1.12 * s, [a1, a2] = poseAngles('rest', (c.t || 0) + (side > 0 ? .5 : 0));
+  const ex0 = sx + side * Math.sin(a1) * L1, ey0 = sy + Math.cos(a1) * L1, hx0 = ex0 + side * Math.sin(a1 + a2) * L2, hy0 = ey0 + Math.cos(a1 + a2) * L2;
+  const tx = bc[0] + side * 4 * s, ty = bc[1] + (K.mouthY + 4) * s, sol = V2C.ik2(sx, sy, tx, ty + 42 * s, L1, L2, -side, 'shush'), e = easeOut(clamp01(k));
+  const ex = lerp(ex0, sol.ex, e), ey = lerp(ey0, sol.ey, e), hx = lerp(hx0, sol.hx, e), hy = lerp(hy0, sol.hy, e);
+  const ang0 = Math.atan2(hy0 - ey0, hx0 - ex0), ang = lerp(ang0, side < 0 ? -PI / 2 : PI * 1.5, e);
+  ctx.save();
+  V2C.limb([[sx, sy], [ex, ey], [hx, hy]], [17 * s, 14.5 * s, 12.5 * s], LIMB);
+  ctx.fillStyle = '#3a3342'; ctx.beginPath(); ctx.arc(sx, sy, 9.5 * s, 0, TAU); ctx.fill();
+  ctx.translate(hx, hy); ctx.rotate(ang); ctx.scale(s, side > 0 ? -s : s);
+  V2C.hand('point', side, {});
+  ctx.restore();
+}
+
 // ------------------------------------------------------------------ the scene object (v0: the plan alone, for looking at the drawing)
 function planShot(lt) {
   ctx.drawImage(paper(), 0, 0);
@@ -985,14 +1005,14 @@ const dutch = lt => { const q = TX().B.q; return .08 * sstep(lt, q.s - .05, q.s 
 
 function camFor(lt, sh) {
   const k = seg(lt, sh.t0, sh.t1);
-  if (sh.id === 'plan') { zoomTo(540, 960, 1); const f = PT().final, a = lt - f, c = PT().policy, b = lt - c; CAM.shake = a >= 0 && a < .4 ? 16 * Math.exp(-a / .09) : b >= 0 && b < .3 ? 9 * Math.exp(-b / .08) : 0; return; }
+  if (sh.id === 'plan') { zoomTo(540, 960, 1); const f = PT().final, a = lt - f, c = PT().policy, b = lt - c; CAM.shake = a >= 0 && a < .45 ? 22 * Math.exp(-a / .1) : b >= 0 && b < .3 ? 12 * Math.exp(-b / .08) : 0; return; }
   roomCam();
-  if (sh.id === 'wide0') { zoomTo(WIDE.x, WIDE.y, lerp(1.08, 1.14, k)); return; }
+  if (sh.id === 'wide0') { roomCam(lerp(-90, 0, easeOut(k))); zoomTo(holoCenter()[0], WIDE.y, lerp(1.08, 1.14, k)); return; }   /* a slow arc in from the left, ending square on the table where the dive begins */
   if (sh.id === 'dive' || sh.id === 'undive') {
     const e = easeIO(sh.id === 'dive' ? k : 1 - k), hc = holoCenter();
     zoomTo(lerp(WIDE.x, hc[0], e), lerp(WIDE.y, hc[1], e), lerp(1.14, 2.3, e)); return;
   }
-  if (sh.id === 'end') { zoomTo(WIDE.x, WIDE.y, lerp(1.14, 1.18, k)); return; }
+  if (sh.id === 'end') { roomCam(80 * sstep(k, 0, 1)); zoomTo(holoCenter()[0], WIDE.y, lerp(1.14, 1.18, k)); return; }   /* and a slow arc out to the right while the hologram collapses */
   if (sh.id === 'quiet') { const e = sstep(lt, 29.6, 30.38), a = faceOfName('clem'), sg = SIGNPT(); zoomTo(lerp(a[0] - 60, 330, e), lerp(a[1] - 90, 700, e), lerp(1.75, 1.95, e) + .05 * k); CAM.r = dutch(lt); return; }
   if (sh.id === 'shh') { const e = easeIO(seg(lt, SHH() + .5, SHH() + .82)), c = faceOfName('clem'), m = faceOfName('mango'), l = faceOfName('lemon'), st = faceOfName('straw'); zoomTo(lerp((c[0] + m[0]) / 2 - 10, (l[0] + st[0]) / 2 + 10, e), lerp((c[1] + m[1]) / 2 + 10, (l[1] + st[1]) / 2 + 10, e), lerp(1.9, 1.95, e) + .06 * k); return; }
   if (sh.id === 'whip' || sh.id === 'moon') {
@@ -1001,6 +1021,7 @@ function camFor(lt, sh) {
   }
   const [who, sc0, up] = SING[sh.id], o = castO(who), z0 = sc0 / o.s, z = lerp(z0, z0 * 1.07, k);
   faceZoom(o, z, up);
+  CAM.x += 2.6 * Math.sin(lt * 1.9 + sh.t0) / z; CAM.y += 2 * Math.sin(lt * 1.3 + 2 * sh.t0) / z; CAM.r = (CAM.r || 0) + .0016 * Math.sin(lt * 1.1 + sh.t0);   /* a hair of handheld drift on every close-up */
 }
 function fxFor(lt, sh) {
   const plan = sh.id === 'plan', e = TX().B.end, rk = redK(lt);
@@ -1018,13 +1039,13 @@ function fxFor(lt, sh) {
 }
 
 function drawPlanShot(lt, a = 1) {
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = a; ctx.drawImage(paper(), 0, 0); ctx.restore();
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, SHK[0], SHK[1]); ctx.globalAlpha = a; ctx.drawImage(paper(), -PAD, -PAD); ctx.restore();
   M = FLAT; BOB = Math.sin(lt * 1.3) * 3;
 }
 function planFrame(lt, a) {
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, SHK[0], SHK[1]);
   M = FLAT; drawFrame(a * sstep(lt, 1.8, 2.4)); drawDressing(a * sstep(lt, 2.2, 2.9));
-  ctx.globalAlpha *= .2 * a; ctx.fillStyle = scanPattern(); ctx.globalCompositeOperation = 'screen'; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha *= .2 * a; ctx.fillStyle = scanPattern(); ctx.globalCompositeOperation = 'screen'; ctx.fillRect(-PAD, -PAD, W + 2 * PAD, H + 2 * PAD);
   ctx.restore();
 }
 
@@ -1041,14 +1062,16 @@ function callLight(x, y, k) {
 }
 const SCENE = {
   shot(lt) { return shotAt(lt).id; },
-  cam(lt) { camFor(lt, shotAt(lt)); },
+  cam(lt) { BOB = Math.sin(lt * 1.3) * 3; camFor(lt, shotAt(lt)); },   /* the hologram's bob is part of the dive's camera target: set it here, not from the previous frame */
   draw(lt) {
     const sh = shotAt(lt), id = sh.id;
+    M = FLAT; BOB = Math.sin(lt * 1.3) * 3; ROOMLIGHTS = [];   /* every module-level variable is set afresh each frame, so a frame never depends on the one rendered before it */
+    SHK = id === 'plan' && CAM.shake ? [Math.round(CAM.shake * vnoise((CUR.start + lt) * 37)), Math.round(CAM.shake * vnoise((CUR.start + lt) * 41 + 50))] : [0, 0];   /* the offsets the engine applies to the world, in whole pixels (a pixel-snapped shake keeps thin digits crisp and measurable) */
     if (id === 'plan') {
       drawPlanShot(lt); drawHolo(lt, 1, 1, 1); planFrame(lt, 1);
       V2.dust(60, 280, 1020, 1360, lt, { n: 48, color: '150,235,255', alpha: .5, size: 2.4, speed: 16, seed: 9 }); V2.dust(60, 280, 1020, 1360, lt, { n: 14, color: '255,255,255', alpha: .35, size: 3.6, speed: 9, seed: 31 });
       { const a = lt - PT().final; if (a >= 0 && a < .5) { const c = FLAT.f(0, -124); ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(c[0], c[1], a / .5, { r0: 80, r1: 620, color: '255,90,104', lw: 12, alpha: .9 }); ctx.restore(); V2.sparks(c[0] - 290, c[1] + 120, lt, PT().final, { n: 14, color: '255,110,120', speed: 420, life: .5, g: 900, size: 5, seed: 21 }); V2.sparks(c[0] + 290, c[1] + 120, lt, PT().final, { n: 14, color: '255,200,200', speed: 420, life: .5, g: 900, size: 5, seed: 22 });
-        ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,200,210,${.28 * Math.max(0, 1 - a / .09)})`; ctx.fillRect(0, 0, W, H); ctx.restore(); } }
+        ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,200,210,${.28 * Math.max(0, 1 - a / .09)})`; ctx.fillRect(-80, -80, W + 160, H + 160); ctx.restore(); } }
     } else if (id === 'dive' || id === 'undive') {
       const k = seg(lt, sh.t0, sh.t1), e = id === 'dive' ? k : 1 - k, ee = easeIO(e);
       if (ee < .93) { const fade = 1 - sstep(ee, .25, .6), objs = {}; for (const n of ['lemon', 'straw', 'mango', 'clem']) objs[n] = fade > 0 ? Object.assign(n === 'lemon' ? actLemon(lt) : n === 'straw' ? actStraw(lt) : n === 'mango' ? actMango(lt) : actClem(lt), { alpha: fade }) : false;
@@ -1092,8 +1115,8 @@ const SCENE = {
       }
       if (id === 'whip' || id === 'moon' || id === 'lemon2') { o.moonK = seg(lt, 33.75, 34.95); const roll = seg(lt, 36.15, 36.62), a = roll * TAU - PI / 2; o.moonOpt = { char: { who: 'moon', expr: lt < t.mo1.s ? 'neutral' : 'smug', look: lt < t.mo1.s ? [-.5, .5] : roll > 0 && roll < 1 ? [Math.cos(a) * .85, Math.sin(a) * .85] : [-.1, -.1] } }; }
       if (id === 'moon') { o.noHolo = true; o.noTable = true; o.objs = { lemon: false, straw: false, mango: false, clem: false }; }
-      if (id === 'whip') { o.transit = true; o.dof = 0; o.dof2 = 0; o.moonOpt.char.transit = true; o.fast = lt > 34.48 && lt < 34.74; }
-      if (id === 'shh') { o.who = 'all'; o.mangoFront = true; o.transit = lt > SHH() + .45 && lt < SHH() + .9; o.fast = lt > SHH() + .54 && lt < SHH() + .78; const m = actMango(lt, SHH_POS(lt)), c = actClem(lt); c.keepWho = true; c.who = 'clem'; o.objs = { mango: m, clem: c }; o.after = () => shushHand(lt, m, c, sstep(lt, SHH() + .05, SHH() + .2) * (1 - sstep(lt, SHH() + 1.15, SHH() + 1.28))); }
+      if (id === 'whip') { o.transit = true; o.dof = 0; o.dof2 = 0; o.moonOpt.char.transit = true; o.fast = lt > 34.48 && lt < 34.74; if (lt >= 34.66) { o.noHolo = true; o.noTable = true; o.objs = { lemon: false, straw: false, mango: false, clem: false }; } }   /* the table and the crew drop out under the blur, so the shot that lands on the Moon matches the clean window of the next cut */
+      if (id === 'shh') { o.who = 'all'; o.mangoFront = true; o.transit = lt > SHH() + .45 && lt < SHH() + .9; o.fast = lt > SHH() + .54 && lt < SHH() + .78; const m = actMango(lt, SHH_POS(lt)), c = actClem(lt), lm = actLemon(lt), sw = actStraw(lt); c.keepWho = true; c.who = 'clem'; o.objs = { mango: m, clem: c, lemon: lm, straw: sw }; o.after = () => { shushHand(lt, m, c, sstep(lt, SHH() + .05, SHH() + .2) * (1 - sstep(lt, SHH() + 1.15, SHH() + 1.28))); shushFinger(lm, -1, lm.shushK); shushFinger(sw, 1, sw.shushK); }; }
       roomDraw(lt, o);
     }
   },

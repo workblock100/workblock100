@@ -2,31 +2,35 @@
 /* SHIFT HAPPENS, Episode 13: "The Float Pool". Scene module: open (7:02 PM, THE NURSES' STATION, 26.29 s). Scene builder E13-B.
  *
  * A heist film opens on a quiet station at dusk. The set is the shared kit ep13_station.js (window.S13): a wide back wall with the BREAKS TAKEN TODAY board (0), the Q-word sign, the clock, the
- * schedule whiteboard, a window with the low sun, a call-light board and, at the far left, a doorway down a long hall (one dome in it dings at 0.25). The cast: Strawberry (per diem) at the med cart
- * with an untouched granola bar, Lemon seated behind the counter with a chart, Mango who arrives out of the hall.
+ * schedule whiteboard, a window with the low sun (bands of it on the floor, shafts in the air), a call-light board and, at the far left, a doorway down a long hall (one dome in it dings with the phone).
+ * The cast: Strawberry (per diem) at the med cart with an untouched granola bar, Lemon seated behind the counter with a chart and a pen, Mango who arrives out of the hall; the one rolling chair
+ * beside the counter is the object of the plan ("One chair.").
  *
- * SHOT LIST (scene-local seconds; every cut is a hard cut with blur 1 on its frame)
- *   0.00-5.84   open, n1   WIDE establishing: a real dolly-in (the camera moves, so the foreground gains on the wall), fade up from black, the far dome dings (0.45, the phonering cue), the desk phone lamp blinks, the
- *                          clock ticks to 7:02 on "Seven oh two", Strawberry sags on "Hour four".
- *   5.84-7.50   s1         CU Strawberry (a dolly CU: the neighbours are out of frame), a slow push: "I haven't sat down since three." Her eyes go to the chair on "sat down".
- *   7.50-8.70   l1         CU Lemon, flat: "You have a break." She looks up over her readers and does not blink.
- *   8.70-9.25   s2         CU Strawberry: "Where?" eyes dart round the room.
- *   9.25-10.70  l2         CU Lemon: "It's on the schedule." She flicks the printout at the lens; it grows and becomes the insert.
- *   10.70-12.58 sched      INSERT, flat: the schedule printout, a table; the BREAK row carries a faded PENDING stamp and "(since 2019)"; a finger taps it (0.95) and the dust puffs (1.05).
- *   12.58-13.60 s3         CU Strawberry with the printout: "It says pending." Mango is a small blurred figure far down the hall behind her.
- *   13.60-15.70 m1         TWO-SHOT (dolly back, zoom 1.4): Mango walks out of the hall doorway and arrives beside Strawberry: "It's said pending since the merger."
+ * SHOT LIST (scene-local seconds; every cut is a hard cut with blur 1 on its frame; close-ups are DOLLY close-ups with the background in depth of field)
+ *   0.00-5.84   wide, n1   WIDE establishing, a wide lens (f 1000) dollying in (cz -80 to 480) while the camera eases down (cy 420 to 330): fade up from black, the phone rings (the phonering cue is the
+ *                          open beat +0.25 = 0.45: the far dome dings, the desk lamp blinks until 1.7, Strawberry glances at the hall, Lemon flicks her eyes at the phone), the clock ticks to 7:02
+ *                          on "two", Strawberry sags on "Hour four", the window goes from golden to orange.
+ *   5.84-7.50   s1         CU Strawberry: "I haven't sat down since three." Her eyes go to the chair on "sat down" (on her right).
+ *   7.50-8.70   l1         CU Lemon, flat: "You have a break." One click of the pen on "break".
+ *   8.70-9.25   s2         CU Strawberry: "Where?" her eyes dart round the room.
+ *   9.25-10.70  l2         CU Lemon: "It's on the schedule." Her pen hand goes out to the right, the printout appears in it, rises; at 10.30 she flicks it at the lens: it flies out of her hand (over()).
+ *   10.70-12.58 sched      INSERT, flat: the schedule printout on the desk (UI.page / UI.table / UI.stamp): paperslide +0.05 (10.81), the BREAK row carries a faded, dusty, coffee-ringed PENDING stamp
+ *                          and "(since 2019)", a gloved finger taps it at +0.95 (11.71) and the dust puffs at +1.05 (11.81).
+ *   12.58-13.60 s3         CU Strawberry with the printout in her left hand: "It says pending."
+ *   13.60-15.70 two        TWO-SHOT on a wide lens (f 1150, dolly 120 to 300): Mango walks out of the hall doorway and arrives beside Strawberry: "It's said pending since the merger." (an open palm on
+ *                          "pending", a shrug on "merger")
  *   15.70-17.42 l3         CU Lemon, she stands: "So we're not asking for it."
- *   17.42-18.50 s4         CU Strawberry, the smirk grows: "We're taking it."
+ *   17.42-18.50 s4         CU Strawberry: "We're taking it." a nod and the granola bar raised like a toast.
  *   18.50-20.32 l4         CU Lemon (a slow push): "Thirty minutes. Uninterrupted."
- *   20.32-21.22 l4         INSERT: "One chair." A lone chair in the last shaft of the window light, dust in it.
- *   21.22-23.40 m2         CU Mango: "That's not a break. That's a heist." Her eyes light up. (Lemon walks round the counter off screen.)
- *   23.40-24.89 l5         THREE-SHOT, a dolly in: "Then we'll need a crew."
- *   24.89-26.29 end        FREEZE FRAME on the three faces: a record scratch (flash, aberration), the picture stops, a red-tinted spotlight closes on them. Held to the end of the scene.
+ *   20.32-21.22 chair      INSERT: "One chair." the rolling chair square to us against the dusk window, rim light, a long shadow, dust, one glint.
+ *   21.22-23.40 m2         CU Mango: "That's not a break." a wagging finger. "That's a heist." both fists up at her chin, a hop, sparkles. (Lemon walks round the counter; Strawberry steps in.)
+ *   23.40-24.89 three      THREE-SHOT on a wide lens (f 1100), a dolly in (cz -100 to 380): Mango, Lemon, Strawberry in a row: "Then we'll need a crew."
+ *   24.89-26.29 freeze     FREEZE FRAME on the three faces: the record scratch (the end beat + 0.05): a white hit and a colour split, the picture stops, a red-tinted spotlight closes on them,
+ *                          a second smaller hit on the sting (the end beat + 0.3).
  *
- * Layout (world X, Z): the camera is at Z 0 looking along +Z (S13.cam('station')); back wall Z 1900; Strawberry (60, 1250), the cart (-60, 1420), Lemon seated at (420, 1600) behind the counter, Mango's
- * arrival route from (-520, 2900) through the doorway (-490, 1900) to (-290, 1220); in the last two shots Lemon has come round the counter to (-90, 1200): the huddle is Mango, Lemon, Strawberry.
- * Close-ups are DOLLY close-ups (cz 700 to 1000): the neighbours leave the frame by parallax. A character is never drawn partly in a frame: it is either entirely inside or left out.
- * Text: only the schedule insert (UI.page / UI.table / UI.stamp) and the kit's boards. Fonts: Nunito, Bangers. */
+ * Layout (world X, Z; the camera looks along +Z): back wall Z 1900; Strawberry (60, 1250), the cart (-60, 1330), the chair (250, 1290), Lemon seated at (470, 1600) behind the counter; Mango's route
+ * from the hall doorway (-490, 1900) to (-250, 1220); in the last shots Lemon has walked round the counter to (-50, 1185) and Strawberry has stepped to (150, 1240): the huddle.
+ * A character is never drawn partly in a frame: it is either entirely inside or left out. Text: the schedule insert (UI.page / UI.table / UI.stamp) and the kit's boards. Fonts: Nunito, Bangers. */
 (() => {
 if (!window.TIMELINE_EP13) return;
 const { zoomTo, faceZoom, drawBg, localOf } = window.H6;
@@ -55,14 +59,14 @@ const SHOTS = [
 ];
 const shotAt = lt => SHOTS.find(s => lt < s.t1) || SHOTS[SHOTS.length - 1];
 const FREEZE_T = SHOTS[SHOTS.length - 1].t0;                        /* every animation clock stops here (the record scratch is the end beat + 0.05 = 24.892, the sting + 0.3) */
-const PR = B('open').s + .25;                                       /* the phone rings: the sound cue phonering is +0.25 into the open beat (0.2), so 0.45; the far dome, the desk lamp and the glances follow it */
+const phoneT = () => B('open').s + .25;                              /* (a function: B() reads the scene being drawn) the phone rings: the sound cue phonering is +0.25 into the open beat (0.2), so 0.45; the far dome, the desk lamp and the glances follow it */
 const ftime = lt => Math.min(lt, FREEZE_T);
 
 // ------------------------------------------------------------------ the characters' acting (options for drawChar, in the camera that is set when this runs)
 function strawO(lt) {
   const t = ftime(lt), b = id => B(id), [X, Z] = SROUTE(lt), q = V2.at(X, Z);
   const reading = lt >= b('l2').e - .25 && lt < b('l3').s;                                   /* she holds the printout while she reads it */
-  const glance = lt >= PR && lt < PR + .75, sat = inB(lt, 's1') && lt > wordT('s1', 'sat', 6.3) - .1;
+  const PR = phoneT(), glance = lt >= PR && lt < PR + .75, sat = inB(lt, 's1') && lt > wordT('s1', 'sat', 6.3) - .1;
   const darts = inB(lt, 's2') ? [Math.sin(seg(lt, b('s2').s, b('s2').e) * 9.4) * .95, -.05 + .15 * Math.sin(lt * 20)] : null;
   let look = [-.15, .35], expr = 'dead', lid = .5;
   if (glance) look = [-.9, -.1];
@@ -92,6 +96,7 @@ function lemonO(lt) {
   const [X, Z] = walking ? LROUTE(lt) : POS.lemon, q = V2.at(X, Z);
   const stand = sk(lt, b('l3').s - .2, b('l3').s + .25), pop = Math.sin(seg(lt, b('l3').s - .2, b('l3').s + .45) * PI);
   let look = [-.5, .75], expr = 'neutral', lid = .15;
+  const PR = phoneT();
   if (lt < PR) look = [-.35, .8];
   if (lt >= PR && lt < PR + .3) look = [-.2, .9];                                                   /* a flick at the phone, then she ignores it */
   if (lt >= b('l1').s - .05) { look = [-.7, .05]; lid = .3; }                                    /* up over the readers, flat */
@@ -200,7 +205,7 @@ function drawScene(lt) {
   const dofPx = id === 'wide' || id === 'three' || id === 'freeze' ? 0 : id === 'two' ? 5 : 13;
   S13.light('evening', { keyA: .34, shadowA: .42, rimA: .5, back: { color: '255,176,110', a: .28, w: 12 }, frontDark: .05 });
   V2.opts.reflect = true;
-  const sky = .35 * seg(t, 0, 5.84) + .27 * seg(t, 5.84, 25), ping = t > PR ? t - PR : -1;
+  const PR = phoneT(), sky = .35 * seg(t, 0, 5.84) + .27 * seg(t, 5.84, 25), ping = t > PR ? t - PR : -1;
   const tw = wordT('n1', 'two', 3.9), min = 1 + easeBack(seg(t, tw, tw + .2));
   const S = strawO(lt), L = lemonO(lt), M = mangoO(lt);
   const hide = o => { const f = inFrame(o); return !f.inter || !f.whole; };
