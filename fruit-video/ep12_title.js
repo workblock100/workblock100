@@ -32,6 +32,9 @@ const ring = (lt, t0, tau) => lt < t0 ? 0 : Math.exp(-(lt - t0) / tau);
 function widthOf(str, font, weight, size) { ctx.save(); ctx.font = `${weight} ${size}px ${font}`; const w = ctx.measureText(str).width; ctx.restore(); return w; }
 // the largest size (at most `size`) that fits str into maxW, so text() never squeezes it
 function fitSize(str, font, weight, size, maxW) { const w = widthOf(str, font, weight, size); return w > maxW ? Math.floor(size * maxW / w) : size; }
+// the lettering of the italic display lines (Bangers) is set by the kit, centred on its INK (the slant of the letters no longer pushes the whole line 5 to 15 px to the right of the frame's centre).
+// text() put the middle of the em box on y; the kit puts the middle of the cap band on cy: BANG_CAP is the distance between the two, a fraction of the size, so every line keeps the height it had
+const BANG_CAP = -.0373;
 // an audited box for text that must stay on the frame; it is only recorded while the audit runs (coordinates are scene coordinates, the camera is applied)
 const regBox = (id, x0, y0, x1, y1) => regLocal('otext', x0, y0, x1, y1, { name: id });
 
@@ -103,8 +106,8 @@ function stamp(lt) {
 function logo(lt) {
   const k = seg(lt, CUTS[2], CUTS[2] + .3), s = lerp(1.35, 1, easeBack(k)), sz = fitSize('HAPPENS', 'Bangers', 400, 240, 700);
   ctx.save(); ctx.globalAlpha *= clamp(k * 3); ctx.translate(SCX, 875); ctx.scale(s, s);
-  text('SHIFT', 0, -105, { size: sz, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 22, stroke: '#150f22', spacing: 6, shadow: 24 });
-  text('HAPPENS', 0, 105, { size: sz, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 22, stroke: '#150f22', spacing: 6, shadow: 24 });
+  UI.label('SHIFT', 0, -105 + BANG_CAP * sz, { size: sz, font: 'Bangers', fill: '#ffd60a', lw: 22, stroke: '#150f22', spacing: 6, shadow: 24 });
+  UI.label('HAPPENS', 0, 105 + BANG_CAP * sz, { size: sz, font: 'Bangers', fill: '#ffd60a', lw: 22, stroke: '#150f22', spacing: 6, shadow: 24 });
   ctx.restore();
   regBox('logo', 140, 680, 940, 1090);
 }
@@ -114,12 +117,13 @@ function episode(lt) {
     ctx.save(); ctx.translate(SCX, 1160); ctx.scale(c, c);
     ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6; ctx.fillStyle = '#7b61ff'; rr(-230, -50, 460, 100, 50); ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.strokeStyle = INK; ctx.lineWidth = 7; rr(-230, -50, 460, 100, 50); ctx.stroke();
-    text('EPISODE 12', 0, 4, { size: 76, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 0, spacing: 5 });
+    UI.container('chip12', 'pill', [-230, -50, 230, 50], 10);   /* the chip is drawn by hand: register it, then centre the word in it, both ways, by its ink */
+    UI.label('EPISODE 12', 0, 0, { size: 76, font: 'Bangers', fill: '#ffffff', lw: 0, spacing: 5, cid: 'chip12', center: true });
     ctx.restore();
   }
   const k = easeOut(seg(lt, CUTS[3] + .16, CUTS[3] + .5)), sz = fitSize('THE IN-SERVICE', 'Bangers', 400, 150, 700);
   ctx.save(); ctx.globalAlpha *= clamp(k * 2.5);
-  text('THE IN-SERVICE', SCX, 1318 + 24 * (1 - k), { size: sz, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 20, stroke: '#150f22', spacing: 4, shadow: 22 });
+  UI.label('THE IN-SERVICE', SCX, 1318 + 24 * (1 - k) + BANG_CAP * sz, { size: sz, font: 'Bangers', fill: '#ffffff', lw: 20, stroke: '#150f22', spacing: 4, shadow: 22 });
   ctx.restore();
   regBox('chip', 310, 1110, 770, 1210); regBox('subtitle', 120, 1240, 960, 1420);
 }
@@ -249,8 +253,8 @@ const END = {
     const k = easeBack(seg(lt, .1, .55));
     if (k > .06) {
       ctx.save(); ctx.translate(540, 0); ctx.scale(k, k);
-      text('SHIFT HAPPENS', 0, 262, { size: 92, font: 'Bangers', weight: 400, fill: '#ffd60a', lw: 18, stroke: '#150f22', spacing: 4, shadow: 20 });
-      text('THE IN-SERVICE', 0, 384, { size: 116, font: 'Bangers', weight: 400, fill: '#ffffff', lw: 18, stroke: '#150f22', spacing: 4, shadow: 24 });
+      UI.label('SHIFT HAPPENS', 0, 262 + BANG_CAP * 92, { size: 92, font: 'Bangers', fill: '#ffd60a', lw: 18, stroke: '#150f22', spacing: 4, shadow: 20 });
+      UI.label('THE IN-SERVICE', 0, 384 + BANG_CAP * 116, { size: 116, font: 'Bangers', fill: '#ffffff', lw: 18, stroke: '#150f22', spacing: 4, shadow: 24 });
       ctx.restore();
     }
     const pop = (at, y) => { const q = easeOut(seg(lt, at, at + .3)); return { alpha: q, y: y + 14 * (1 - q) }; };
