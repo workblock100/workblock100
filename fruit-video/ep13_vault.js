@@ -77,8 +77,8 @@ const BANNER = { x0: -410, x1: 410, y0: 506, y1: 586 };
 const CLOCK = { x: -150, y: 466, r: 58 };
 const CAL = { x0: -62, x1: 82, y0: 286, y1: 470 };
 const WIN = { x0: 126, x1: 304, y0: 186, y1: 470 };
-const VEND = { x0: 330, x1: 452, z0: 2030, z1: 2162, h: 432 };
-const FRIDGE = { x0: -456, x1: -352, z0: 2040, z1: 2172, h: 470 };
+const VEND = { x0: -456, x1: -334, z0: 2030, z1: 2162, h: 432 };
+const FRIDGE = { x0: 352, x1: 456, z0: 2040, z1: 2172, h: 470 };
 const COUNTER = { x0: 262, x1: 460, z0: 1100, z1: 1992, h: 200 };
 const BAR_AT = { x: 388, y: 262 };   // the last granola bar in the machine (world X, Y on the glass)
 
@@ -163,7 +163,7 @@ function calendar(lt) {
   const tb = UI.table([r[0] + 6 * k, r[1] + hh + 8 * k, r[2] - 12 * k, r[3] - hh - 14 * k], Array.from({ length: 7 }, (_, i) => ({ w: 1 / 7, align: 'center', weight: 800, fill: i % 6 === 0 ? '#a8353c' : '#2a2630' })), CAL_DAYS,
     { header: ['S', 'M', 'T', 'W', 'T', 'F', 'S'], hero: false, fill: 'rgba(0,0,0,0)', stroke: null, lw: 0, headFill: 'rgba(0,0,0,0)', headText: { fill: '#6a5c38' }, grid: 'rgba(0,0,0,0)', size: r[3] * .062, padX: 0, r: 0 });
   // the 12th, circled twice
-  const c12 = tb.cell(1, 2);
+  const c12 = tb.cell(2, 2);   /* the 12th: a Tuesday */
   if (c12) { ctx.save(); ctx.strokeStyle = '#c4222e'; ctx.lineWidth = Math.max(2, 3 * k); ctx.lineCap = 'round';
     for (let j = 0; j < 2; j++) { ctx.beginPath(); ctx.ellipse(c12.cx, c12.cy, (c12.x1 - c12.x0) * (.46 + j * .06), (c12.y1 - c12.y0) * (.5 + j * .05), -.2 + j * .1, 0, TAU * .95); ctx.stroke(); }
     ctx.restore(); }
@@ -247,7 +247,11 @@ function counterSet(lt) {
   const { x0, x1, z0, z1, h } = COUNTER;
   box3({ x0, x1, y1: h, z0, z1, color: '#b9b4a2', top: '#6a6a60', front: '#a8a38f', side: '#8d8977' });
   dustTop(x0, x1, h, z0, z1, .45);
-  S6.microwave(352, 1500, { on: 0, display: '' });
+  { const X = 364, Z = 1500, w = 64, y0 = h, hh = 62;   // a microwave nobody has used since the cake
+    const f = box3({ x0: X - w, x1: X + w, y0, y1: y0 + hh, z0: Z, z1: Z + 90, color: '#c9ccd0', front: '#d8dadd', side: '#a3a8ae', top: '#e6e8ea' });
+    poly([p2(X - w * .82, y0 + 10, Z), p2(X + w * .1, y0 + 10, Z), p2(X + w * .1, y0 + hh - 10, Z), p2(X - w * .82, y0 + hh - 10, Z)], '#1c1f24', 'rgba(10,10,14,.9)', 2.4);
+    poly([p2(X + w * .3, y0 + 10, Z), p2(X + w * .92, y0 + 10, Z), p2(X + w * .92, y0 + hh - 10, Z), p2(X + w * .3, y0 + hh - 10, Z)], '#2b2f38', 'rgba(10,10,14,.9)', 2);
+    dustTop(X - w, X + w, y0 + hh, Z, Z + 90, .5); void f; }
   // coffee maker
   stand(392, h, 1260, () => {
     ctx.fillStyle = '#26262c'; ctx.strokeStyle = 'rgba(25,16,30,.8)'; ctx.lineWidth = 3; rr(-34, -92, 68, 92, 8); ctx.fill(); ctx.stroke();
@@ -306,9 +310,9 @@ function tentCard(X, Y, Z, ST, o = {}) {
 }
 
 function footprints() {   // the crew's tracks through the dust, from the door (behind the camera, right) to where they stand; clean floor shows through
-  const pts = []; for (let i = 0; i < 17; i++) { const u = i / 16; pts.push([lerp(190, -40, easeOut(u)) + (i % 2 ? 24 : -24) * (1 - u * .2), lerp(40, 1070, u)]); }
-  pts.forEach(([X, Z], i) => { const a = i % 2 ? .12 : -.12; ctx.save(); const [x, y] = p2(X, 0, Z), k = kz(Z); ctx.translate(x, y); ctx.scale(k, k * .3); ctx.rotate(a);
-    ctx.fillStyle = 'rgba(72,76,70,.36)'; ctx.beginPath(); ctx.ellipse(0, 0, 15, 36, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, 44, 12, 14, 0, 0, TAU); ctx.fill(); ctx.restore(); });
+  const pts = []; for (let i = 0; i < 13; i++) { const u = i / 12; pts.push([lerp(-150, -40, easeIO(u)) + (i % 2 ? 22 : -22), lerp(560, 1070, u)]); }
+  pts.forEach(([X, Z], i) => { const a = i % 2 ? .1 : -.1; ctx.save(); const [x, y] = p2(X, 0, Z), k = kz(Z); ctx.translate(x, y); ctx.scale(k, k * .3); ctx.rotate(a);
+    ctx.fillStyle = 'rgba(84,88,80,.2)'; ctx.beginPath(); ctx.ellipse(0, 0, 11, 26, 0, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, 36, 8, 10, 0, 0, TAU); ctx.fill(); ctx.restore(); });
 }
 
 function cobwebs(lt, ST) {
@@ -321,6 +325,15 @@ function cobwebs(lt, ST) {
 }
 
 
+// a chair that can face either way: dir +1 has its back on the far side (the sitter faces the camera), -1 on the near side (the sitter faces the table)
+function chair13(X, Z, o = {}) {
+  const w = o.w ?? 50, d = o.d ?? 44, seat = o.seat ?? 120, back = o.back ?? 280, c = o.color ?? '#8a6a4a', dir = o.dir ?? 1, leg = '#3a3a44';
+  for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) box3({ x0: X + dx * (w - 6) - 4, x1: X + dx * (w - 6) + 4, y1: seat, z0: Z + dz * (d - 6) - 4, z1: Z + dz * (d - 6) + 4, color: leg, lw: 1 });
+  box3({ x0: X - w, x1: X + w, y0: seat, y1: seat + 16, z0: Z - d, z1: Z + d, color: c });
+  const bz0 = dir > 0 ? Z + d - 10 : Z - d, bz1 = dir > 0 ? Z + d : Z - d + 10;
+  box3({ x0: X - w, x1: X + w, y0: seat + 16, y1: back, z0: bz0, z1: bz1, color: c, top: lit(c, 1.1) });
+  dustTop(X - w, X + w, seat + 16, Z - d, Z + d, .4);
+}
 // ------------------------------------------------------------------ the whole room, far to near (the table and the chairs are separate, so the cast can be sorted between them)
 const PAL = { wall: '#a9b5aa', wain: '#587a7c', floorA: '#b8bcb0', floorB: '#8d9389', ceil: '#adb5ab', fog: '#56686a' };
 function roomBack(lt, ST) {
@@ -335,19 +348,19 @@ function roomBack(lt, ST) {
   // fridge, plant, vending machine
   box3({ x0: FRIDGE.x0, x1: FRIDGE.x1, y1: FRIDGE.h, z0: FRIDGE.z0, z1: FRIDGE.z1, color: '#b9c2c6', front: '#cdd5d8', side: '#98a2a8', top: '#d8dde0' });
   onZ(FRIDGE.z0, FRIDGE.x1 - 14, FRIDGE.x1 - 8, 280, 400, '#7a828a'); onZ(FRIDGE.z0, FRIDGE.x0, FRIDGE.x1, 322, 326, 'rgba(0,0,0,.3)'); dustTop(FRIDGE.x0, FRIDGE.x1, FRIDGE.h, FRIDGE.z0, FRIDGE.z1, .55);
-  deadPlant(-286, 2060, lt);
+  deadPlant(-262, 2072, lt);
   vendingBox();
   counterSet(lt);
   ceilingLamp(0, 1230, CH, ST.tubeShow, '210,236,222', 120, 300);
   cobwebs(lt, ST);
   footprints();
 }
-function roomFront(lt, ST) {   // the table and the two chairs
-  chair3(-60, 1555, { color: '#8a6a4a', w: 50, d: 44, seat: 120, back: 280 });
+function roomSeat() { chair13(-60, 1555, { dir: 1 }); }   // Brenda's chair, behind the table
+function roomFront(lt, ST) {   // the table, its things, and the empty chair across from Brenda
   table3(TBL.x, TBL.z, { w: TBL.w, d: TBL.d, h: TBL.h, color: '#b89a68' });
   tableItems(lt, ST);
 }
-function nearChair() { chair3(-60, 1170, { color: '#8a6a4a', w: 50, d: 44, seat: 120, back: 280 }); }
+function nearChair() { chair13(-60, 1190, { dir: -1 }); }
 
 const DEBUG = { lit: 1 };
 window.__EP13_SCENES = window.__EP13_SCENES || {};
@@ -357,7 +370,7 @@ window.__EP13_SCENES.vault = {
   draw(lt) {
     const ST = { tubeShow: 1, draft: 1, vend: 1 };
     V2.setLight({ key: [-.3, -.85], keyColor: '#fff0d8', keyA: .3, rim: '#9fc4ff', rimA: .35, shadow: '#101a24', shadowA: .4, amb: '#cfe0d8', ambA: .06 });
-    roomBack(lt, ST); nearChair(); roomFront(lt, ST);
+    roomBack(lt, ST); roomSeat(); roomFront(lt, ST); nearChair();
     if (DEBUG.lit) return;
     lmBegin([14, 20, 24]);
     lmApply();

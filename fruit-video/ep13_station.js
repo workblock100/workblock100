@@ -371,6 +371,25 @@ function chair(X, Z, o = {}) {
   return { x, y, k };
 }
 
+// ------------------------------------------------------------------ the light map: the set is drawn evenly lit, then multiplied by a map of where the light is (a dark ambient plus coloured pools), so a room
+// gets a mood: warm near the window, cool under the lamps and the hall. The map is kept small (1/8 scale) and drawn smooth. Lights are in scene coordinates: { x, y, r, color 'r,g,b', a, sy (squash) }.
+const LM = { sc: 8, x0: -300, y0: -300, w: 1680, h: 2520 };
+const LMC = V2.mk(LM.w / LM.sc, LM.h / LM.sc), LMX = LMC.getContext('2d');
+function lightMap(o = {}) {
+  const g = LMX;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  g.fillStyle = o.ambient || 'rgb(112,100,138)'; g.fillRect(0, 0, LMC.width, LMC.height);
+  g.globalCompositeOperation = 'lighter';
+  for (const l of o.lights || []) {
+    if (!(l.a > 0)) continue;
+    const x = (l.x - LM.x0) / LM.sc, y = (l.y - LM.y0) / LM.sc, r = l.r / LM.sc;
+    g.save(); g.translate(x, y); g.scale(1, l.sy ?? 1);
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, r); gr.addColorStop(0, rgba(l.color, l.a)); gr.addColorStop(.5, rgba(l.color, l.a * .5)); gr.addColorStop(1, rgba(l.color, 0));
+    g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill(); g.restore();
+  }
+  ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(LMC, LM.x0, LM.y0, LM.w, LM.h); ctx.restore();
+}
+
 // the window thrown on the floor: a soft lit parallelogram q = [near-left, near-right, far-right, far-left] (screen points) with the slats of the blinds as stripes across it
 function sunPatch(q, a, rgb, stripes = 6) {
   const m = (p, r, u) => [lerp(p[0], r[0], u), lerp(p[1], r[1], u)], cx = q.reduce((s0, p) => s0 + p[0], 0) / 4, cy = q.reduce((s0, p) => s0 + p[1], 0) / 4;
@@ -421,7 +440,13 @@ function station(lt, o = {}) {
     V2.beam(wc[0], wc[1], wc[0] - 330, wc[1] + 820, 300, 760, '255,196,130', .1 * sun, 'screen');
     V2.dust(wc[0] - 560, wc[1] - 80, wc[0] + 100, wc[1] + 800, t, { n: 52, alpha: .55 * sun, size: 3.4, speed: 9, color: '255,226,176', seed: 4 });
   }
-  return { k: kzP(zb), box: { board: wallBox(zb, L.board.x0, L.board.y0, L.board.x1, L.board.y1), score: sb, call: cb, qsign: [qf[3][0], qf[3][1], qf[1][0] - qf[3][0], qf[0][1] - qf[3][1]], win: wallBox(zb, L.win.x0, L.win.y0, L.win.x1, L.win.y1), door: wallBox(zb, L.doorway.x0, 0, L.doorway.x1, L.doorway.y1) } };
+  const lamps = [[-330, 1500], [330, 1500], [-330, 900], [330, 900]].map(([X, Z]) => { const q = p2(X, L.ch * .7, Z + 90), kk = kzP(Z); return { x: q[0], y: q[1] + 220 * kk, r: 620 * kk, color: '230,236,255', a: .5 * on, sy: .8 }; });
+  const dw = p2((L.doorway.x0 + L.doorway.x1) / 2, L.doorway.y1 * .5, zb), lights = [
+    { x: wc[0] - 60, y: wc[1] + 40, r: 1250 * kzP(zb) / .737, color: sunk > .5 ? '255,140,100' : '255,196,140', a: 1.0 - .35 * sunk },
+    { x: dw[0] + 40, y: dw[1] + 160, r: 700 * kzP(zb) / .737, color: '170,205,255', a: .75 },
+    { x: wc[0] - 520, y: p2(0, 0, 1500)[1], r: 900 * kzP(zb) / .737, color: '255,214,170', a: .38 * (1 - .5 * sunk), sy: .5 },
+    ...lamps];
+  return { k: kzP(zb), lights, box: { board: wallBox(zb, L.board.x0, L.board.y0, L.board.x1, L.board.y1), score: sb, call: cb, qsign: [qf[3][0], qf[3][1], qf[1][0] - qf[3][0], qf[0][1] - qf[3][1]], win: wallBox(zb, L.win.x0, L.win.y0, L.win.x1, L.win.y1), door: wallBox(zb, L.doorway.x0, 0, L.doorway.x1, L.doorway.y1) } };
 }
 // the screen rectangle of the projection wall (the schedule whiteboard) under the current camera: [x, y, w, h]
 const slideRect = () => wallBox(LAY.zb, LAY.board.x0, LAY.board.y0, LAY.board.x1, LAY.board.y1);
@@ -429,5 +454,5 @@ const slideRect = () => wallBox(LAY.zb, LAY.board.x0, LAY.board.y0, LAY.board.x1
 // ==== NEXT SECTION GOES HERE ====
 
 // ------------------------------------------------------------------ export
-window.S13 = { LAY, PAL, CALLCOL, cam, light, station, slideRect, counter, medCart, chair, scoreboard, callBoard, qSign, whiteboard, windowDusk, hallBeyond, sfxWord, wordT, route, pulse, sk, wallBox, wallPoly, clipPoly, kzP, shade, mixh };
+window.S13 = { LAY, PAL, CALLCOL, cam, light, station, slideRect, lightMap, counter, medCart, chair, scoreboard, callBoard, qSign, whiteboard, windowDusk, hallBeyond, sfxWord, wordT, route, pulse, sk, wallBox, wallPoly, clipPoly, kzP, shade, mixh };
 })();

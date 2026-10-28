@@ -289,7 +289,7 @@ def sfx_pips():
     last = .01 + 31 * .0305
     place2(out, _glass(3520, .5, .16, .002), last, .45, 0.0)
     place2(out, _glass(5274, .4, .09, .002), last + .012, .22, .2)
-    return norm6(out, .5)
+    return norm6(_edge(out, .0004, .04), .5)
 
 
 def sfx_holooff():

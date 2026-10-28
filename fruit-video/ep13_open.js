@@ -10,12 +10,13 @@ const SC = {
   draw(lt) {
     S13.light('evening');
     V2.opts.reflect = true;
-    S13.station(lt, { t: lt, sky: .1 + .3 * seg(lt, 0, 20), ping: lt > .25 ? lt - .25 : -1 });
+    const st = S13.station(lt, { t: lt, sky: .1 + .3 * seg(lt, 0, 20), ping: lt > .25 ? lt - .25 : -1 });
     S13.medCart(-150, 1260, { t: lt });
     S13.chair(60, 1230);
-    drawChar(person(A11.straw, () => [-250, 1130], lt, { look: [.6, 0], expr: 'dead', lid: .4, arms: { l: 'rest', r: 'rest' } }));
     drawChar(A7.lemon(Object.assign(V2.at(340, 1600), { y: V2.p2(340, 150, 1600)[1], noLegs: true, noShadow: true, look: [-.3, .1], expr: 'neutral', arms: { l: 'rest', r: 'rest' } })));
     S13.counter({ t: lt, phoneRing: lt > .25 && lt < 1.5 ? 1 : 0 });
+    S13.lightMap({ lights: st.lights });
+    drawChar(person(A11.straw, () => [-250, 1130], lt, { look: [.6, 0], expr: 'dead', lid: .4, arms: { l: 'rest', r: 'rest' } }));
     V2.dust(60, 600, 1020, 1400, lt, { n: 30, alpha: .35 });
   },
   fx: lt => ({ bloom: .5, vignette: .42, grain: .045, contrast: .15, sat: .12, tint: [['#ffd9a0', .1, 'soft-light']] }),

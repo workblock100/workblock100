@@ -313,13 +313,38 @@ EXT.acc.fp13_ear = (o, k, t, layer) => {
   ctx.restore();
 };
 
+// ================================================================== the three beams that read her badge (the laserpass cues): placed so each touches her body at its cue
+const HIT_R = 78;
+const HITS = [{ bi: 0, cue: .8, Xc: -52, Yc: 300 }, { bi: 1, cue: 1.6, Xc: 46, Yc: 238 }, { bi: 3, cue: 2.4, Xc: -14, Yc: 336 }];
+let HITS_FOR = -1;
+function solveHits() {
+  const L = B('lasers');
+  if (HITS_FOR === L.s) return;
+  HITS_FOR = L.s;
+  for (const h of HITS) {
+    const b = BEAMS[h.bi], XA = b.A[0], zA = b.A[2], YA = b.A[1];
+    h.tc = L.s + h.cue;
+    const zHer = herZ(h.tc);
+    // slope m of the beam in the floor plan (dz per dx): touch when z(0) - HIT_R * sqrt(1 + m^2) = zHer, z(0) = zA - m * XA
+    let lo = -4, hi = 4;
+    const g = m => zA - m * XA - HIT_R * Math.sqrt(1 + m * m) - zHer;
+    for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (Math.sign(g(mid)) === Math.sign(g(lo))) lo = mid; else hi = mid; }
+    const m = (lo + hi) / 2, lam = (-XA - XA) / (h.Xc - XA);
+    b.B = [-XA, YA + (h.Yc - YA) * lam, zA - 2 * m * XA];
+    // the point on the beam nearest her axis at the cue: where it first touches her
+    let bt = 0, bd = 1e9;
+    for (let t = 0; t <= 1; t += .002) { const X = b.A[0] + (b.B[0] - b.A[0]) * t, Z = b.A[2] + (b.B[2] - b.A[2]) * t, d = Math.hypot(X, Z - zHer); if (d < bd) { bd = d; bt = t; } }
+    h.t = bt; h.P = [b.A[0] + (b.B[0] - b.A[0]) * bt, b.A[1] + (b.B[1] - b.A[1]) * bt, b.A[2] + (b.B[2] - b.A[2]) * bt];
+    b.hit = h;
+  }
+}
+
 // ================================================================== Strawberry's path and the slow-motion walk
 const STRAW_ACC = ['steth', 'bandage7', 'perdiem9', 'fp13_ear'];
 const V0 = 290, STRIDE = 48, Z_START = 1300;
 const herZ = lt => { const c0 = B('lasers').s; return lt <= c0 ? Z_START : Z_START + V0 * (ct(lt) - c0); };
 const herGait = lt => { const c0 = B('lasers').s; return lt <= c0 ? 0 : V0 * (ct(lt) - c0); };
 const herX = lt => 0;
-/* where a character standing at world (X, Z) is drawn: feet position and scale */
 function placeAt(X, Z) { const p = P3(X, 0, Z); return p ? { x: p[0], y: p[1], s: p[2], depth: p[3] } : null; }
 
 /* the camera: a point to look at, the angle around it (0 = straight ahead of her, looking back along the hall), distance, height, focal length, and where on the frame the point lands */
@@ -337,11 +362,10 @@ function shotId(lt) {
   const c = CUTS();
   return lt < c.lr1 ? 'open' : lt < c.sr1 ? 'lr1' : lt < c.l1 ? 'sr1' : lt < c.l2 ? 'L1' : lt < c.l3 ? 'L2' : lt < c.lr2 ? 'L3' : lt < c.sr2 ? 'lr2' : lt < c.end ? 'sr2' : 'end';
 }
-/* the whole camera for a moment: { view, roll, zoom, shot, ... } */
 function viewFor(lt) {
   const dbg = window.__HALLDBG; if (dbg && dbg.view) return Object.assign({ shot: 'dbg', roll: 0, zoom: 1, dof: 0, sil: 0, reflect: false }, dbg);
-  const sh = shotId(lt), c = CUTS(), L = B('lasers'), zH = herZ(lt), u = lt - L.s;
-  const v = { shot: sh, roll: 0, zoom: 1, dof: 0, sil: 0, reflect: true };
+  const sh = shotId(lt), c = CUTS(), L = B('lasers'), zH = herZ(lt);
+  const v = { shot: sh, roll: 0, zoom: 1, dof: 0, sil: 0, reflect: true, close: false };
   switch (sh) {
     case 'open': {
       const k = easeIO(clamp01(lt / c.lr1));
@@ -349,15 +373,15 @@ function viewFor(lt) {
     }
     case 'lr1': {
       const k = clamp01((lt - c.lr1) / (c.sr1 - c.lr1));
-      v.view = orbit(0, 226, zH, -14 * D2R, lerp(620, 540, easeIO(k)), 205, 1400, 560, 760); v.dof = 9; v.roll = -.012; break;
+      v.view = orbit(0, 226, zH, -14 * D2R, lerp(620, 540, easeIO(k)), 205, 1400, 560, 760); v.dof = 9; v.roll = -.012; v.close = true; break;
     }
     case 'sr1': {
       const k = clamp01((lt - c.sr1) / (c.l1 - c.sr1));
-      v.view = orbit(0, 226, zH, 11 * D2R, lerp(500, 430, easeOut(k)), 215, 1400, 520, 760); v.dof = 10; v.roll = .03; break;
+      v.view = orbit(0, 226, zH, 11 * D2R, lerp(500, 430, easeOut(k)), 215, 1400, 520, 760); v.dof = 10; v.roll = .03; v.close = true; break;
     }
     case 'L1': {
       const k = clamp01((lt - c.l1) / (c.l2 - c.l1));
-      v.view = orbit(0, 200, zH, lerp(-30, -12, easeIO(k)) * D2R, lerp(640, 600, k), 70, 1000, 540, 800); v.dof = 3; v.roll = lerp(-.035, -.01, k); break;
+      v.view = orbit(0, 200, zH, lerp(-30, -12, easeIO(k)) * D2R, lerp(640, 600, k), 70, 1000, 540, 800); v.dof = 0; v.roll = lerp(-.035, -.01, k); break;
     }
     case 'L2': {
       const k = clamp01((lt - c.l2) / (c.l3 - c.l2));
@@ -369,11 +393,11 @@ function viewFor(lt) {
     }
     case 'lr2': {
       const k = clamp01((lt - c.lr2) / (c.sr2 - c.lr2));
-      v.view = orbit(0, 205, zH, lerp(-9, 6, k) * D2R, 760, 165, 1300, 540, 790); v.dof = 2; break;
+      v.view = orbit(0, 205, zH, lerp(-9, 6, k) * D2R, 760, 165, 1300, 540, 790); v.dof = 0; break;
     }
     case 'sr2': {
       const k = clamp01((lt - c.sr2) / (c.end - c.sr2));
-      v.view = orbit(0, 226, zH, -6 * D2R, lerp(600, 520, easeIO(k)), 210, 1400, 540, 760); v.dof = 9; break;
+      v.view = orbit(0, 226, zH, -6 * D2R, lerp(600, 520, easeIO(k)), 210, 1400, 540, 760); v.dof = 9; v.close = true; break;
     }
     default: {
       const k = clamp01((lt - c.end) / (CUR.dur - c.end));
@@ -383,10 +407,67 @@ function viewFor(lt) {
   return v;
 }
 
+// ================================================================== layering: a beam is cut where it passes her depth, so it can pass behind, through and in front of her
+function beamSplit(b, zc, delta) {
+  const za = toCam(b.A[0], b.A[1], b.A[2])[2], zb = toCam(b.B[0], b.B[1], b.B[2])[2], f = t => za + (zb - za) * t, ts = [0, 1];
+  if (Math.abs(zb - za) > 1e-6) for (const zz of [zc - delta, zc + delta]) { const t = (zz - za) / (zb - za); if (t > 0 && t < 1) ts.push(t); }
+  ts.sort((a, b2) => a - b2);
+  const out = [];
+  for (let i = 0; i < ts.length - 1; i++) { const z = f((ts[i] + ts[i + 1]) / 2); out.push({ ta: ts[i], tb: ts[i + 1], cls: z < zc - delta ? 'near' : z > zc + delta ? 'far' : 'mid' }); }
+  return out;
+}
+function beamsPass(states, zc, which, ctt, close) {
+  for (const b of BEAMS) {
+    const st = states[b.i]; if (!st.on) continue;
+    for (const p of beamSplit(b, zc, HIT_R + 4)) {
+      const tb = Math.min(p.tb, st.ext); if (tb <= p.ta) continue;
+      if (which === 'under' && p.cls !== 'near') drawBeamPart(b, p.ta, tb, st.I, { n: 8 });
+      else if (which === 'over' && p.cls === 'near' && !close) drawBeamPart(b, p.ta, tb, st.I, { n: 8 });
+    }
+    if (which === 'under') drawBeamPackets(b, st.I, ctt, st.ext);
+  }
+}
+
+// ================================================================== Strawberry
+function strawOpts(lt, ctt, v, pl) {
+  const L = B('lasers'), walking = lt >= L.s, gait = herGait(lt);
+  const o = A11.straw({ x: pl.x, y: pl.y, s: pl.s, id: 'straw', who: 'straw', acc: STRAW_ACC, expr: 'dead', t: ctt, stride: STRIDE, look: [0, .04], earSide: -1 });
+  if (walking) { o.gaitW = gait; o.axis = v.side ? 'x' : 'z'; o.dir = 1; }
+  if (v.sil) o.noFace = true;
+  return o;
+}
+/* draw her into the shared scratch canvas at the current camera transform, dress that layer (silhouette, the beams seen through her, the glitch), then lay it on the picture */
+function drawStraw(lt, ctt, v, pl, states) {
+  const o = strawOpts(lt, ctt, v, pl), m = ctx.getTransform(), s = pl.s;
+  const Lcv = V2.dofCv, Lg = Lcv.getContext('2d');
+  // device-space box of her (generous: arms, leaves, the reflection)
+  const cs = [[pl.x - 230 * s, pl.y - 520 * s], [pl.x + 230 * s, pl.y + 150 * s]].flatMap(([x, y]) => [m.transformPoint({ x, y })]);
+  const bx = Math.max(0, Math.floor(Math.min(cs[0].x, cs[1].x))), by = Math.max(0, Math.floor(Math.min(cs[0].y, cs[1].y)));
+  const bw = Math.min(W, Math.ceil(Math.max(cs[0].x, cs[1].x))) - bx, bh = Math.min(H, Math.ceil(Math.max(cs[0].y, cs[1].y))) - by;
+  if (bw < 4 || bh < 4) return;
+  Lg.setTransform(1, 0, 0, 1, 0, 0); Lg.globalCompositeOperation = 'source-over'; Lg.globalAlpha = 1; Lg.filter = 'none'; Lg.clearRect(bx, by, bw, bh);
+  Lg.setTransform(m);
+  const prev = ctx; ctx = Lg;
+  drawChar(o);
+  // the beams that pass through her body show through it (only where she is opaque)
+  if (!v.sil) {
+    ctx.save(); ctx.globalCompositeOperation = 'source-atop';
+    for (const b of BEAMS) { const st = states[b.i]; if (!st.on) continue; for (const p of beamSplit(b, pl.depth, HIT_R + 4)) if (p.cls === 'mid') drawBeamPart(b, p.ta, Math.min(p.tb, st.ext), st.I, { n: 6, ghost: true }); }
+    ctx.restore();
+  }
+  if (v.sil) { ctx.save(); ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(9,5,16,.93)'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  ctx = prev;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (v.sil) { ctx.shadowColor = 'rgba(255,50,76,.85)'; ctx.shadowBlur = 20; }
+  ctx.drawImage(Lcv, bx, by, bw, bh, bx, by, bw, bh);
+  ctx.restore();
+}
+
 // ================================================================== the scene
 const SC = {
   shot: lt => shotId(lt),
   cam(lt) {
+    solveHits();
     const v = viewFor(lt);
     setView(v.view);
     CAM.r = v.roll; CAM.z = v.zoom;
@@ -398,25 +479,18 @@ const SC = {
       drawHall(lt, ctt, states);
       for (const b of BEAMS) { const st = states[b.i]; if (st.on) drawBeamPart(b, 0, st.ext, st.I, { mirror: true, k: .22, n: 6 }); }
     });
-    // her
-    const zH = herZ(lt), pl = placeAt(herX(lt), zH);
+    const zH = herZ(lt), pl = placeAt(herX(lt), zH), zc = pl ? pl.depth : 1e9;
     V2.setLight({ key: [.4, -.7], keyColor: '#ff7a88', keyA: .3, rim: '#4de3ff', rimA: .55, shadow: '#0a0618', shadowA: .5, amb: '#2a2f6a', ambA: .12, bounce: '#ff3b4e', bounceA: .22 });
     V2.opts.reflect = v.reflect;
-    for (const b of BEAMS) { const st = states[b.i]; if (st.on) drawBeamPart(b, 0, st.ext, st.I); }
-    if (pl) drawStraw(lt, ctt, v, pl);
+    beamsPass(states, zc, 'under', ctt, v.close);
+    if (pl) drawStraw(lt, ctt, v, pl, states);
+    beamsPass(states, zc, 'over', ctt, v.close);
     drawDust(ctt, states);
   },
   fx: lt => ({ bloom: .85, vignette: .56, grain: .05, contrast: .22, tint: [['#28306a', .22, 'soft-light']] }),
   blur: lt => 1,
   over(lt) {},
 };
-function drawStraw(lt, ctt, v, pl) {
-  const L = B('lasers'), walking = lt >= L.s, gait = herGait(lt);
-  const o = A11.straw({ x: pl.x, y: pl.y, s: pl.s, id: 'straw', who: 'straw', acc: STRAW_ACC, expr: 'dead', t: ctt, stride: STRIDE, look: [0, .04], earSide: -1 });
-  if (walking) { o.gaitW = gait; o.axis = v.side ? 'x' : 'z'; o.dir = 1; }
-  if (v.sil) o.noFace = true;
-  drawChar(o);
-}
 window.__EP13_SCENES = window.__EP13_SCENES || {};
 window.__EP13_SCENES.hall = SC;
 })();
