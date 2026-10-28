@@ -733,8 +733,12 @@ function actStrawDoor(lt) {
   const wr = Math.sin(lt * 21) * 7 * (lt > 20.45 && lt < 20.7 ? 1 : 0);   /* the right hand "writes" on the board that is not there */
   let rx = o.x + 38, ry = o.y + 78 + wr * .3;                             /* right hand: on the invisible board */
   if (cap) { rx = o.x + 40; ry = o.y - 150 + 8 * Math.sin((lt - SD_[1]) * 14); }
-  else if (lt >= SD_[2]) { rx = lerp(tx + 10, o.x + 70, eWatch); ry = lerp(ty + 26, o.y - 6, eWatch); }
-  o.hold = { r: eWatch > .3 ? 'fp14v_watch' : undefined };
+  else if (lt >= SD_[2]) {   /* to the watch the hand dips below her face and comes up at the side; afterwards it drops down the side again (it never crosses the face) */
+    const eW = sk(lt, SD_[3] + .02, SD_[3] + .18);
+    if (lt < SD_[4]) { rx = lerp(tx + 10, o.x + 114, eW); ry = lerp(ty + 26, o.y + 26, eW) + 80 * Math.sin(PI * eW); }
+    else { const k = sk(lt, SD_[4], SD_[4] + .15); rx = lerp(o.x + 114, o.x + 70, k); ry = lerp(o.y + 26, o.y + 120, k); }
+  }
+  o.hold = { r: eWatch > .3 && lt < SD_[4] + .1 ? 'fp14v_watch' : undefined };
   o.grip = { l: gripTo(o, -1, lx + 6 * up, ly), r: gripTo(o, 1, rx + wr, ry) };
   o.tx = tx; o.ty = ty; o.tumbler = up;
   return o;
@@ -752,7 +756,7 @@ function drawDoor(lt, sh) {
   ctx.fillStyle = C.ceil; ctx.fillRect(-700, -1500, W + 1400, 1500 + DFLOOR - 944 + 2);   /* the ceiling carries on above the cached wall (the camera pushes in) */
   ctx.save(); ctx.translate(0, DFLOOR - 944); ctx.drawImage(doorWall(), WX0, 0, WW, WH); ctx.restore();
   ctx.fillStyle = vgrad(-260, 640, 'rgba(26,12,6,.86)', 'rgba(26,12,6,0)'); ctx.fillRect(-700, -1500, W + 1400, 2140 + 260);   /* the light falls off up there */
-  const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(255,200,120,0)'); g.addColorStop(1, 'rgba(255,196,110,.34)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, DFLOOR);   /* the afternoon sun from the right */
+  const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, 'rgba(255,200,120,0)'); g.addColorStop(1, 'rgba(255,196,110,.34)'); ctx.fillStyle = g; ctx.fillRect(-700, -1500, W + 1400, DFLOOR + 1500);   /* the afternoon sun from the right */
   // the door: a cream frame, a wood leaf, hinges, a kick plate, a lever handle, a brass plaque; the pane is cut out of the leaf
   rbox(DR.x - 30, DR.y - 30, DR.w + 60, DR.h + 30, '#fff7ec', { r: 8, lw: 3 }); rbox(DR.x, DR.y, DR.w, DR.h, vgrad(DR.y, DR.y + DR.h, '#c39662', '#a9784a'), { r: 4, lw: 3 });
   ctx.strokeStyle = 'rgba(255,230,190,.28)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(DR.x + 6, DR.y + DR.h - 6); ctx.lineTo(DR.x + 6, DR.y + 6); ctx.lineTo(DR.x + DR.w - 6, DR.y + 6); ctx.stroke();
@@ -948,7 +952,7 @@ const SHOTS = [
   { id: 'st3', a: 16.282, b: 17.75, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 300], cam: (lt, u) => camOn('star', lt, lerp(3.0, 3.25, u), 500, 700) },
   { id: 'goji', a: 17.75, b: 18.593, show: ['goji'], dof: 9, bgDy: 110, chairsBg: true, halo: ['goji', .26, 320], cam: (lt, u) => camOn('goji', lt, lerp(3.0, 3.15, u), 560, 740) },
   { id: 'ra4', a: 18.593, b: 20.35, show: ['cran', 'pear', 'goji', 'banana'], dof: 5, bgDy: 70, chairsBg: true, glow: 1.3, cam: (lt, u) => zoomTo(690, lerp(1052, 1044, u), lerp(1.45, 1.62, easeIO(u))) },
-  { id: 'door', a: 20.35, b: 22.903, view: 'door', show: [], cam: (lt, u) => zoomTo(lerp(585, 612, u), lerp(800, 770, u), lerp(1.05, 1.3, easeIO(u))) },
+  { id: 'door', a: 20.35, b: 22.903, view: 'door', show: [], cam: (lt, u) => zoomTo(lerp(598, 628, u), lerp(800, 770, u), lerp(1.05, 1.3, easeIO(u))) },
   { id: 'st4', a: 22.903, b: 23.5, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 320], cam: (lt, u) => camOn('star', lt, lerp(3.1, 3.25, u), 480, 740) },
   { id: 'clip', a: 23.5, b: 24.7, view: 'clip', show: [], cam: (lt, u) => zoomTo(lerp(540, 575, u), lerp(1010, 1130, u), lerp(1.0, 1.22, u)) },
 ];

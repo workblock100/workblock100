@@ -56,7 +56,8 @@
  *              S14.cart(x, floorY, o) draws a med cart anywhere (o: s scale, drawer 0..1, color, accent).
  *   shower     stash 0..4 (default 2; 0 empty, 1 a few items, 2 half full, 3 full, 4 packed to the ceiling; fractional values bring items in one by one with a little pop),
  *              bulge 0..1 (the door bows, its panels crack, the tape strains and frays, the glass cracks, dust leaks at the edges; the door shakes a pixel or so when bulge > .45),
- *              door 0..1 (0 shut, 1 swung wide toward the camera; the tape snaps the moment it starts to move), junk(t, rect, items) (a hook called in WORLD coordinates after the stash is drawn and
+ *              jolt 0..1 (a momentary shove from behind, for a creak or a thump: the leaf bows a few px more and shakes, the tape stretches and frays at its ends, the sock is shoved out along the threshold and flips its toe up,
+ *              dust puffs shake loose from the frame; drive it with a short spike, e.g. 1 for 50 ms then a 300 ms decay), door 0..1 (0 shut, 1 swung wide toward the camera; the tape snaps the moment it starts to move), junk(t, rect, items) (a hook called in WORLD coordinates after the stash is drawn and
  *              before the glass and the door, with S14.stashItems(stash): the closet's avalanche draws its falling pieces from here).
  *              THE DOOR (all of it, with the OUT OF ORDER tape, the DO NOT OPEN sign and the sock, is drawn in S14.back, behind the characters; nothing of the shower room is in S14.front):
  *                S14.showerDoor(st) -> { x0, y0, x1, y1 (the closed leaf: 88 wide, 198 tall, x 890..978, y 790..988), knob: [x, y] (the brass knob on the LEFT edge, about [901, 896] when shut; it follows the leaf as it swings),
@@ -206,12 +207,21 @@ function heroNow(x0, y0, x1, y1, sizePx) {
  * or a menu board running through the caption words, as broken text. So dressing lettering (and a dressing sign as a whole) fades out before it reaches the frame edge, the caption zone
  * or the clock pill: the room art stays, the lettering goes. Returns 0..1 for the screen box of a local rectangle: 1 while the box keeps the hero margins (44 px from the edge, clear of
  * the caption zone and the pill), falling to 0 over 40 px of intrusion. */
+/* S14.keepOut: [[x0, y0, x1, y1, k], ...] screen rectangles (px) of a scene's own hero overlays (field-guide tags, lower thirds) that the dressing lettering must give way to; k 0..1 is how present the
+ * overlay is (a pop-in or a fade). The kit adds its own chat bubbles. Lettering within 14 px of a rectangle, or under it, fades out. */
+S14.keepOut = [];
+let KO_INT = [];
 function dressGuard(x0, y0, x1, y1) {
   const b = screenOf(x0, y0, x1, y1), S = scrFrame();
   let d = Math.min(b.x0 - 44, b.y0 - 44, W - 44 - b.x1, H - 44 - b.y1);
   if (!S.noScrim) d = Math.min(d, Math.max(1374 - b.y1, b.y0 - 1706));
   if (!S.noChyron) d = Math.min(d, Math.max(44 - b.x1, b.x0 - 506, 110 - b.y1, b.y0 - 250));
-  return d >= 0 ? 1 : clamp01(1 + d / 40);
+  let a = d >= 0 ? 1 : clamp01(1 + d / 40);
+  for (const R of (S14.keepOut || []).concat(KO_INT)) {
+    const gap = Math.max(R[0] - b.x1, b.x0 - R[2], R[1] - b.y1, b.y0 - R[3]), ar = gap >= 14 ? 1 : clamp01((gap + 26) / 40);
+    a = Math.min(a, 1 - (R[4] ?? 1) * (1 - ar));
+  }
+  return a;
 }
 /* dressing text: a centred label that never complains; the room's wall charts, calendars, name plates */
 function dress(str, cx, cy, size, o = {}) {
@@ -1354,7 +1364,7 @@ function glassFront(r, t, st, b) {
 }
 function showerDoorDraw(r, t, st) {
   const d = clamp01(st.door ?? 0), b = clamp01(st.bulge ?? 0), th = d * 1.25, s = Math.sin(th), c = Math.cos(th), wLeaf = (SD.x1 - SD.x0) * c, xf = SD.x1 - wLeaf;
-  const jit = b > .45 && d < .02 ? b * .8 * Math.sin(t * 37) : 0, jy = b > .45 && d < .02 ? b * .5 * Math.sin(t * 29 + 1) : 0;
+  const j = clamp01(st.jolt ?? 0), jit = (b > .45 && d < .02 ? b * .8 * Math.sin(t * 37) : 0) + (d < .02 ? j * 1.8 * Math.sin(t * 61) : 0), jy = (b > .45 && d < .02 ? b * .5 * Math.sin(t * 29 + 1) : 0) + (d < .02 ? j * 1.1 * Math.sin(t * 53 + 2) : 0);
   /* the frame: brown casing and a threshold */
   ctx.fillStyle = vg(SD.top, SD.bot, 'rgba(20,12,8,.0)', 'rgba(20,12,8,.0)');
   for (const [x, y, w, h] of [[SD.x0 - 9, SD.top - 9, 9, SD.bot - SD.top + 9], [SD.x1, SD.top - 9, 9, SD.bot - SD.top + 9], [SD.x0 - 9, SD.top - 9, SD.x1 - SD.x0 + 18, 9]]) rb(x, y, w, h, '#8a6038', { r: 2, lw: 1.7 });
@@ -1363,7 +1373,7 @@ function showerDoorDraw(r, t, st) {
   const pj = (u, v, ex = 0) => { const topf = lerp(SD.top - 14 * s, SD.top, u), botf = lerp(SD.bot + 10 * s, SD.bot, u); return [xf + (SD.x1 - xf) * u + ex, lerp(topf, botf, v)]; };
   /* the leaf, bowed by the pressure behind it */
   ctx.save(); ctx.translate(jit, jy);
-  const bow = b * 11;
+  const bow = b * 11 + j * 6;
   ctx.beginPath(); const p0 = pj(0, 0), p1 = pj(1, 0), p2 = pj(1, 1), p3 = pj(0, 1);
   ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo((p0[0] + p1[0]) / 2, p0[1] - bow * .9, p1[0], p1[1]); ctx.quadraticCurveTo(p1[0] + bow * .55, (p1[1] + p2[1]) / 2, p2[0], p2[1]); ctx.quadraticCurveTo((p2[0] + p3[0]) / 2, p2[1] + bow * .9, p3[0], p3[1]); ctx.quadraticCurveTo(p3[0] - bow * .75, (p3[1] + p0[1]) / 2, p0[0], p0[1]); ctx.closePath();
   const dim = 1 - .32 * s;
@@ -1383,16 +1393,16 @@ function showerDoorDraw(r, t, st) {
 function rg2() { return rg(-1.4, -1.6, .6, 7, [[0, '#fff0a8'], [.5, '#e0b83a'], [1, '#9a7418']]); }
 /* the OUT OF ORDER tape (two strips), the DO NOT OPEN sign and the sock; they sit on the closed leaf and stay with it as it swings */
 function showerDoorBits(r, t, st) {
-  const d = clamp01(st.door ?? 0), b = clamp01(st.bulge ?? 0), th = d * 1.25, c = Math.cos(th), xf = SD.x1 - (SD.x1 - SD.x0) * c, jit = b > .45 && d < .02 ? b * .8 * Math.sin(t * 37) : 0;
+  const d = clamp01(st.door ?? 0), b = clamp01(st.bulge ?? 0), th = d * 1.25, c = Math.cos(th), xf = SD.x1 - (SD.x1 - SD.x0) * c, j = clamp01(st.jolt ?? 0), jit = (b > .45 && d < .02 ? b * .8 * Math.sin(t * 37) : 0) + (d < .02 ? j * 1.8 * Math.sin(t * 61) : 0);
   if (d > .9) return;
   ctx.save(); ctx.translate(jit, 0);
   const xa = Math.min(SD.x0 - 8, xf - 6), xb = SD.x1 + 8;
   for (const [y0, y1] of (d > .06 ? [] : [[142, 158], [226, 242]])) {
-    const sag = b * 3;
+    const sag = b * 3 + j * 5;
     ctx.save(); ctx.beginPath(); ctx.moveTo(xa, y0); ctx.quadraticCurveTo((xa + xb) / 2, y0 - sag, xb, y0); ctx.lineTo(xb, y1 - sag * .3); ctx.quadraticCurveTo((xa + xb) / 2, y1 - sag, xa, y1); ctx.closePath(); ctx.fillStyle = '#f7d21e'; ctx.fill(); ctx.strokeStyle = 'rgba(60,40,0,.8)'; ctx.lineWidth = 1.2; ctx.stroke(); ctx.clip();
     ctx.fillStyle = '#1d1a16'; for (let x = xa - 20; x < xb + 20; x += 13) { ctx.beginPath(); ctx.moveTo(x, y1 + 2); ctx.lineTo(x + 6, y1 + 2); ctx.lineTo(x + 6 + 11, y0 - 2); ctx.lineTo(x + 11, y0 - 2); ctx.closePath(); ctx.fill(); }
     ctx.fillStyle = '#f7d21e'; ctx.fillRect(xf + 6 + (SD.x0 - xf) * 0, y0 + 1.5, (SD.x1 - xf) - 12, y1 - y0 - 3); ctx.restore();
-    if (b > .75) { ctx.fillStyle = '#f7d21e'; for (const x of [xa, xb]) { ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x + (x < 100 ? -6 : 6), y0 + 5); ctx.lineTo(x, y0 + 8); ctx.lineTo(x + (x < 100 ? -4 : 4), y0 + 12); ctx.lineTo(x, y1); ctx.fill(); } }
+    if (b + j * .45 > .75) { ctx.fillStyle = '#f7d21e'; for (const x of [xa, xb]) { ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x + (x < 100 ? -6 : 6), y0 + 5); ctx.lineTo(x, y0 + 8); ctx.lineTo(x + (x < 100 ? -4 : 4), y0 + 12); ctx.lineTo(x, y1); ctx.fill(); } }
     dress('OUT OF ORDER', (xf + SD.x1) / 2, (y0 + y1) / 2 + .2, 9.2, { fill: '#1d1a16', maxW: Math.max(20, (SD.x1 - xf) - 14), weight: 900 });
   }
   /* DO NOT OPEN, red and white, taped at the corners */
@@ -1407,7 +1417,8 @@ function showerDoorBits(r, t, st) {
 function showerSock(r, t, st) {
   if ((st.stash ?? 2) < 2.2) return;
   const d = clamp01(st.door ?? 0); if (d > .3) return;
-  ctx.save(); ctx.translate(SD.x0 + 8, SD.bot + 1); ctx.rotate(.04);
+  const j = clamp01(st.jolt ?? 0);   /* the jolt shoves the sock out along the threshold and flips its toe up */
+  ctx.save(); ctx.translate(SD.x0 + 8 - j * 10, SD.bot + 1 - j * 3); ctx.rotate(.04 - j * .34);
   ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 8); ctx.lineTo(22, 8); ctx.quadraticCurveTo(32, 8, 31, 2); ctx.quadraticCurveTo(30, -2, 22, -1); ctx.closePath(); ctx.fillStyle = '#f6f2ea'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.4; ctx.stroke();
   ctx.save(); ctx.clip(); ctx.fillStyle = '#c23a2b'; for (const x of [6, 14]) ctx.fillRect(x, -2, 3.4, 12); ctx.fillStyle = '#2b5fc2'; ctx.fillRect(26, -2, 8, 12); ctx.restore();
   ctx.restore();
@@ -1425,6 +1436,11 @@ LIVE.shower = (r, t, st, o, lamp) => {
     /* dust leaking from the edges of the door while it strains */
     const b = clamp01(st.bulge ?? 0), d = clamp01(st.door ?? 0);
     if (b > .5 && d < .05) for (let i = 0; i < 8; i++) { const ph = ((t * .7 + i / 8) % 1), x = i % 2 ? SD.x1 + 8 : SD.x0 - 8, y = 120 + (i * 53 % 170), a = .4 * b * Math.sin(ph * PI); ctx.fillStyle = rg(x + (i % 2 ? 1 : -1) * ph * 10, y + ph * 30, 0, 7, [[0, `rgba(220,212,196,${a})`], [1, 'rgba(220,212,196,0)']]); ctx.fillRect(x - 12, y - 8, 30, 50); }
+    /* the creak: a puff of dust shakes loose from the door frame (expanding and fading as the jolt dies away) */
+    const jl = clamp01(st.jolt ?? 0);
+    if (jl > .03 && d < .05) for (const [px, py, sg] of [[SD.x0 - 8, SD.bot - 4, -1], [SD.x1 + 8, SD.bot - 4, 1], [(SD.x0 + SD.x1) / 2, SD.top - 8, 0], [SD.x0 - 8, SD.top + 40, -1], [SD.x1 + 8, SD.top + 70, 1]]) {
+      const k = 1 - jl, rr0 = 7 + k * 20; ctx.fillStyle = rg(px + sg * k * 10, py - k * 14, 0, rr0, [[0, `rgba(226,218,200,${.55 * jl})`], [1, 'rgba(226,218,200,0)']]); ctx.beginPath(); ctx.arc(px + sg * k * 10, py - k * 14, rr0, 0, TAU); ctx.fill();
+    }
   });
 };
 
@@ -1519,18 +1535,24 @@ function phoneFront(r, t, st) {
   V2.glow(0, -2, 26, '140,200,255', .6, 'screen', .4);
   ctx.restore();
 }
-function bubbleFront(r, t, st) {
-  if (!st.bubble) return;
+/* the geometry of a room's chat bubble in world units (a pure function of the camera): the bubble keeps a constant size on screen once the camera is in close (its text is 32 px at zoom 1 and about 34 px at any
+ * zoom above that), and is kept whole inside the safe frame */
+function bubbleGeom(r, st) {
+  if (!st.bubble) return null;
   const B = typeof st.bubble === 'string' ? { t: st.bubble } : st.bubble, k = clamp01(B.k ?? 1);
-  if (k <= 0) return;
-  /* the bubble keeps a constant size on screen once the camera is in close (its text is 32 px at zoom 1 and about 34 px at any zoom above that), and is kept whole inside the safe frame */
+  if (k <= 0) return null;
   const z = CAM && CAM.z || 1, sc = Math.min(1, 1.05 / z), size = 32 * sc;
   const lines = UI.wrap(String(B.t), 270 * sc, { size, weight: 900 }), L = lines.length, lw = Math.max(...lines.map(s => UI.sizeOf(s, { size, weight: 900 }).w));
   const bw = Math.max(120 * sc, lw + 44 * sc), bh = L * size * 1.18 + 30 * sc, inset = (bw - lw) / 2, cam = CAM || { x: W / 2, y: H / 2 };
   const sx0 = cam.x - (W / 2 - 46) / z, sx1 = cam.x + (W / 2 - 46) / z, sy0 = cam.y - (H / 2 - 252) / z, sy1 = cam.y + (1370 - H / 2) / z;
   let bx = r.cx - bw / 2 + (B.dx || 0), by = (B.at === 'bottom' ? r.y1 - bh - 30 * sc : B.at === 'above' ? r.y0 - bh - 22 * sc : r.y0 + 16 * sc) + (B.dy || 0);
   bx = Math.max(sx0 - inset, Math.min(sx1 - inset - lw, bx)); by = Math.max(sy0, Math.min(sy1 - bh - 16 * sc, by));
-  const tx = Math.max(bx + 20 * sc, Math.min(bx + bw - 20 * sc, r.x0 + (B.tail ?? r.w / 2))), pop = k >= 1 ? 1 : easeBack(k), ox = tx, oy = by + bh + 14 * sc;
+  const tx = Math.max(bx + 20 * sc, Math.min(bx + bw - 20 * sc, r.x0 + (B.tail ?? r.w / 2)));
+  return { B, k, sc, size, lines, bw, bh, bx, by, tx };
+}
+function bubbleFront(r, t, st) {
+  const g = bubbleGeom(r, st); if (!g) return;
+  const { k, sc, size, lines, bw, bh, bx, by, tx } = g, pop = k >= 1 ? 1 : easeBack(k), ox = tx, oy = by + bh + 14 * sc;
   ctx.save(); ctx.translate(ox, oy); ctx.scale(pop, pop); ctx.translate(-ox, -oy);
   const hero = k >= 1 && heroNow(bx, by, bx + bw, by + bh, size);
   ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 12 * sc; ctx.shadowOffsetY = 4 * sc;
@@ -1555,6 +1577,8 @@ function platesDraw(o, V) {
 {
   const back0 = S14.back, front0 = S14.front;
   S14.back = (lt, o = {}) => {
+    KO_INT = [];
+    for (const id of S14.ids) { const st = (o.rooms || {})[id]; if (!st || !st.bubble || (o.only && !o.only.includes(id))) continue; const r = S14.rect(id), g = bubbleGeom(r, st); if (!g) continue; const sb = screenOf(g.bx - 4, g.by - 4, g.bx + g.bw + 4, g.by + g.bh + 20 * g.sc); KO_INT.push([sb.x0, sb.y0, sb.x1, sb.y1, g.k >= 1 ? 1 : easeOut(g.k)]); }
     back0(lt, o);
     const t = o.t ?? lt, V = view(120), rs = o.rooms || {};
     ctx.save();

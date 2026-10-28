@@ -336,7 +336,7 @@ function drawDeskBody(st = {}) {
   // the ledge: a lower shelf along the front edge of the top, where visitors lean
   box3(x0, x1, h, h + 22, z, z + 26, '#e6dcc3', '#f4eedd', '#cbbf9f');
   // the sign on the front
-  const sb = R(x0 + 270, 28, x0 + 480, 98, z), g = gateOf(scrBox(sb[0], sb[1], sb[0] + sb[2], sb[1] + sb[3]), 14 * kk);
+  const sb = R(x0 + 306, 28, x0 + 500, 98, z), g = gateOf(scrBox(sb[0], sb[1], sb[0] + sb[2], sb[1] + sb[3]), 14 * kk);
   if (!g.skip) UI.sign([sb[0], sb[1], sb[2], sb[3]], [{ t: 'ALL VISITORS', size: 22 * kk, weight: 900 }, { t: 'PLEASE SIGN IN', size: 22 * kk, weight: 900 }], Object.assign({ fill: '#f7f4e8', stroke: '#33527a', lw: Math.max(1.5, 3 * kk), ink: '#1d2a4a', r: 6 * kk, id: 'deskSign' }, g));
   ctx.restore();
 }
@@ -630,7 +630,7 @@ shot('kum', 9.22, 11.54, lt => [0, 150], (lt, F) => face(F.kq, lerp(3.1, 3.3, sk
 shot('melon2', 11.54, 11.98, lt => [0, 150], (lt, F) => face(F.me, 2.3, 90));
 shot('lemon', 11.98, 12.43, lt => [0, 150], (lt, F) => face(F.le, lerp(2.3, 2.4, sk(lt, 11.98, 12.43)), 150));
 shot('noted', 12.43, 13.09, lt => [0, 150], (lt, F) => face(F.st, lerp(2.2, 2.35, sk(lt, 12.43, 13.09)), 170));
-shot('kumw', 13.09, 13.95, lt => [0, 150], (lt, F) => face(F.kq, 2.5, 120));
+shot('kumw', 13.09, 13.95, lt => [0, 150], (lt, F) => face(F.kq, 3.3, 30));
 shot('rise', 13.95, 14.9, lt => [0, 150], (lt, F) => face(F.st, lerp(1.9, 2.1, sk(lt, 13.95, 14.9)), 150));
 // the binocular view: a sweep along the guard, one face at a time, then the slow whoosh to Strawberry and the lock on her badge
 const BINZ = 1.9;
@@ -812,6 +812,7 @@ function sunRays(lt, open, back) {
     ctx.beginPath(); ctx.moveTo(cx + nx * 6, cy + ny * 6); ctx.lineTo(x1 + nx * w, y1 + ny * w); ctx.lineTo(x1 - nx * w, y1 - ny * w); ctx.lineTo(cx - nx * 6, cy - ny * 6); ctx.closePath(); ctx.fill();
   }
   ctx.restore();
+  { const k0 = K(WALL - 20); ctx.save(); ctx.beginPath(); ctx.rect(-2400, -2400, W + 4800, H + 4800); ctx.rect(dr[0], dr[1], dr[2], dr[3]); ctx.clip('evenodd'); V2.glow(cx, cy + 40 * k0, 660 * k0 + 200, '255,244,214', .34 * a, 'screen', .3); ctx.restore(); }   /* the blaze bleeds out of the doorway into the haze */
   V2.dust(cx - 520, cy - 150, cx + 520, cy + 760, lt, { n: 46, seed: 14, alpha: .6 * a, size: 3.4, speed: 9 });
   const fl = bump(lt, .3, 1.7); if (fl > 0) { const [fx, fy] = toScreen(...p2(-210, 430, WALL - 20)); V2.flare(fx, fy, .4 * fl); }   /* the sun itself glints in the top corner of the glass */
 }

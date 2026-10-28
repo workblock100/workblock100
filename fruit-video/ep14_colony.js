@@ -41,10 +41,11 @@ const hz = (t, f, ph = 0) => Math.sin(t * TAU * f + ph);
 const CUE = {
   car: bs('n3') + .9, carclose: bs('n3') + 2.6,
   buzz: [bs('n4') + .55, bs('n4') + .95, bs('n4') + 1.3, bs('n4') + 1.65, bs('n4') + 2.0],
+  creak: bs('n2') + 2.93,
   squeak: bs('meer') + .1, stab: bs('meer') + .15, sting: bs('end') + .1,
 };
-const FREEZE = CUE.stab, RELEASE = bs('n5');
-/* the clock of everything that freezes on the stab: it stops at FREEZE and picks up where it left off at RELEASE (no jump) */
+const FREEZE = CUE.squeak, RELEASE = bs('n5');
+/* the clock of everything that freezes on the first squeak (the score is silent from 21.80 to 23.20): it stops dead at FREEZE and picks up where it left off at RELEASE (no jump) */
 const ft = lt => lt - Math.max(0, Math.min(lt, RELEASE) - FREEZE);
 
 // ------------------------------------------------------------------ the alarm chain: which room gets which phone
@@ -64,10 +65,11 @@ function roomsAt(lt) {
   }
   const fl = lt >= RELEASE && lt < bs('n5') + 2.4 ? .5 : 0;
   for (const id of S14.ids) R[id] = Object.assign(R[id] || {}, { flicker: fl });
-  /* the shower room: the stash is half full and the door already strains; it strains more on "Do not open it." and again when the colony adapts */
-  const dn = wordT('n2', 'do', 7.9);
-  const bulge = .28 + .1 * sk(lt, 5, 7) + .22 * sk(lt, dn, dn + 1.1) + .1 * sk(lt, 19, 21.9) + .35 * sk(lt, RELEASE, bs('n5') + 2.2);
-  R.shower = Object.assign(R.shower || {}, { stash: 2.6 + .8 * sk(lt, RELEASE + .2, bs('n5') + 2.0), bulge: Math.min(1, bulge) });
+  /* the shower room: the stash is half full and the door already strains; on the creak (the word "Do") the pile shoves back: the leaf bows and shakes, the tape stretches, the sock is jolted out, the stash level steps up
+   * (a rolled banner and the Q sign slide into view beside the door), dust shakes loose; it strains more again when the colony adapts */
+  const cr = lt - CUE.creak, jolt = cr < 0 || cr > 1.4 ? 0 : (1 - Math.exp(-cr / .018)) * Math.exp(-cr / .3) * (1 + .3 * Math.sin(cr * 46));
+  const bulge = .28 + .1 * sk(lt, 5, 7) + .24 * so(lt, CUE.creak, CUE.creak + .14) + .1 * sk(lt, 19, 21.9) + .35 * sk(lt, RELEASE, bs('n5') + 2.2);
+  R.shower = Object.assign(R.shower || {}, { stash: 2.6 + .5 * so(lt, CUE.creak, CUE.creak + .12) + .6 * sk(lt, RELEASE + .2, bs('n5') + 2.0), bulge: Math.min(1, bulge), jolt: Math.max(0, Math.min(1, jolt)) });
   /* the station: a few call lights glow, one pulses; the Q sign says 41 */
   const calls = []; calls[5] = 1; calls[19] = .55; calls[26] = 1; calls[33] = .4;
   if (lt >= RELEASE) for (let i = 0; i < 40; i++) calls[i] = Math.max(calls[i] || 0, seg(lt, RELEASE + i * .03, RELEASE + i * .03 + .2) * (1 - seg(lt, RELEASE + 1.3 + i * .02, RELEASE + 1.6 + i * .02)));
@@ -111,11 +113,11 @@ function dyOf(lt, who) {
   if (lt < d0) return 0;
   if (lt < pop - .07) return DIVE * easeIn(seg(lt, d0, d0 + .22));
   if (lt < pop) return DIVE + 10 * seg(lt, pop - .07, pop);                       /* the last crouch before the spring */
-  if (lt < pop + .075) return lerp(DIVE + 10, -9, easeOut(seg(lt, pop, pop + .075)));
-  if (lt < pop + .2) return lerp(-9, 0, easeIO(seg(lt, pop + .075, pop + .2)));
+  if (lt < pop + .05) return lerp(DIVE + 10, -9, easeOut(seg(lt, pop, pop + .05)));   /* two frames up, on the first squeak */
+  if (lt < pop + .17) return lerp(-9, 0, easeIO(seg(lt, pop + .05, pop + .17)));
   return 0;
 }
-const popK = lt => seg(lt, CUE.squeak, CUE.squeak + .075);          /* 0 before the pop, 1 once they are up */
+const popK = lt => seg(lt, CUE.squeak, CUE.squeak + .05);          /* 0 before the pop, 1 once they are up */
 const MEER = { arms: { l: [.42, 2.05], r: [.42, 2.05] }, hand: { l: 'fist', r: 'fist' } };  /* paws at the chest */
 
 /* the Administrator at his desk, a slice in hand, one bite every 2.4 s; he chokes on the first buzz */
@@ -365,22 +367,22 @@ const SC = {
   shot(lt) { let id = 'open'; for (const [n, t] of CUTS_SHOT) if (lt >= t) id = n; return id; },
   cam(lt) {
     const c = camAt(lt); zoomTo(c.x, c.y, c.z);
-    const slam = lt >= CUE.carclose && lt < CUE.carclose + .22 ? 5 * (1 - (lt - CUE.carclose) / .22) : 0, thump = lt >= CUE.stab && lt < CUE.stab + .3 ? 9 * (1 - (lt - CUE.stab) / .3) : 0;
-    CAM.shake = Math.max(slam, thump);
+    const slam = lt >= CUE.carclose && lt < CUE.carclose + .22 ? 5 * (1 - (lt - CUE.carclose) / .22) : 0, thump = lt >= CUE.stab && lt < CUE.stab + .3 ? 9 * (1 - (lt - CUE.stab) / .3) : 0, creak = lt >= CUE.creak && lt < CUE.creak + .22 ? 2.6 * (1 - (lt - CUE.creak) / .22) : 0;
+    CAM.shake = Math.max(slam, thump, creak);
   },
   draw(lt) {
     const rs = roomsAt(lt), car = carAt(lt);
     V2.setLight({ key: [-.55, -.72], keyColor: '#ffe3ac', keyA: .26, rim: '#9fc4ff', rimA: .38, shadow: '#1a1030', shadowA: .3, bounce: '#ffd9a0', bounceA: .16 });
     for (const id of S14.ids) if (rs[id] && rs[id].alert > .02) { const r = RC(id); V2.addLight({ x: r.cx, y: r.cy, r: 330, color: '255,226,70', a: .5 * rs[id].alert }); }
-    S14.back(lt, { t: lt, rooms: rs, car, carDoor: car.door, carLeaf: 'front' });
+    S14.back(lt, { t: ft(lt), rooms: rs, car, carDoor: car.door, carLeaf: 'front' });
     if (lt < 3.4 && A7 && A7.birds) A7.birds(lt, -820, -160, { n: 7, seed: 21, speed: 64, size: 1.7 });
     starShadow(lt);
     /* the colony, room by room */
     putCast(lt);
-    S14.front(lt, { t: lt, rooms: rs, car, carDoor: car.door, carLeaf: 'front' });
+    S14.front(lt, { t: ft(lt), rooms: rs, car, carDoor: car.door, carLeaf: 'front' });
   },
   fx(lt) {
-    const stab = lt >= FREEZE && lt < FREEZE + .5 ? 1 - seg(lt, FREEZE, FREEZE + .5) : 0, frozen = lt >= FREEZE && lt < RELEASE, sting = lt >= CUE.sting ? seg(lt, CUE.sting, 26.8) : 0;
+    const stab = lt >= CUE.stab && lt < CUE.stab + .5 ? 1 - seg(lt, CUE.stab, CUE.stab + .5) : 0, frozen = lt >= FREEZE && lt < RELEASE, sting = lt >= CUE.sting ? seg(lt, CUE.sting, 26.8) : 0;
     const tint = [['#ffb464', .1, 'soft-light']]; if (lt < 2.2) tint.push(['#ffd890', .22 * (1 - seg(lt, 0, 2.2)), 'screen']);
     return { bloom: .5 + .2 * stab, vignette: .4, grain: .045, contrast: .13, sat: .12 - (frozen ? .05 : 0), tint, aberr: 1.8 * stab + 3.2 * sting, fade: Math.max(1 - seg(lt, 0, .4), .35 * stab * stab), fadeColor: lt < 1 ? '255,240,206' : '255,255,255' };
   },

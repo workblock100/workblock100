@@ -175,7 +175,7 @@ function drawDoor(lt, o = {}) {
 const warned = new Set();
 const guard = (name, fn, fb) => (...a) => { try { return fn(...a); } catch (e) { if (!warned.has(name + e.message)) { warned.add(name + e.message); console.error('verdict ' + name + ': ' + (e.stack || e)); } return fb ? fb(...a) : undefined; } };
 
-const doorSt = lt => { const d = snapT(CUE.ding); return { dome: lt >= d ? .55 + .45 * Math.sin((lt - d) * 9 + 1.2) : 0, open: sstep(lt, 37.4, 37.75) }; };
+const doorSt = lt => { const d = snapT(CUE.ding); return { dome: lt >= d - 1e-6 ? .55 + .45 * Math.sin((lt - d) * 9 + 1.2) : 0, open: sstep(lt, 37.4, 37.75) }; };
 function drawRoomAll(lt) {
   drawCeiling(lt); drawWall(lt); drawFloor();
   ceilingPanel(160, 40, 240, 62, 1, lt); ceilingPanel(640, 40, 240, 62, 1, lt);
@@ -337,7 +337,7 @@ function drawBoard(lt, st) {
   if (lt >= T_LAND && lt < T_LAND + 1.6) {   /* the landing: a column of light up the slot, a ring, sparks */
     const e = Math.exp(-(lt - T_LAND) / .5), cx = SLOT_X;
     ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = lg(0, BD.slotBot, 0, BD.slotBot - 460, [[0, `rgba(255,150,150,${.55 * e})`], [1, 'rgba(255,150,150,0)']]); ctx.fillRect(cx - 17, BD.slotBot - 460, 34, 460); ctx.restore();
-    V2.ring(cx, BD.slotBot - 12, c01((lt - T_LAND + .03) / .7), { r0: 14, r1: 200, lw: 8, color: '255,130,130', alpha: .9 });
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(cx, BD.slotBot - 12, c01((lt - T_LAND + .03) / .7), { r0: 14, r1: 200, lw: 8, color: '255,130,130', alpha: .9 }); ctx.restore();
     V2.sparks(cx, BD.slotBot - 12, lt, T_LAND, { n: 34, speed: 520, life: .9, color: '255,214,150', g: 1300, size: 4, seed: 9 });
   }
   drawBell(lt, st.bell || 0); drawBeacon(lt, st.spin || 0, st.beacon || 0);
@@ -416,7 +416,7 @@ function ballLook(o, lt) {
   const dz = lt > 27.4 && lt < 35.5 ? .5 * sstep(lt, 27.4, 28.4) * (1 - sstep(lt, 34.9, 35.45)) : 0;   /* still dazed: the eyes drift in slow circles until he is down */
   return dz > .01 ? [g[0] + dz * Math.sin((lt - 27) * 3.1), g[1] + dz * .7 * Math.cos((lt - 27) * 2.6)] : g;
 }
-const KUM_RUN = [[0, XS.kum], [10.4, XS.kum], [11.0, CUSH.x], [15.2, CUSH.x], [16.0, XS.kum], [36.85, XS.kum], [38.2, 146], [38.5, 92]];   /* the Kumquat steps to the ball, comes back, and trots after Stateman */
+const KUM_RUN = [[0, XS.kum], [10.4, XS.kum], [11.0, CUSH.x], [15.2, CUSH.x], [16.0, XS.kum], [36.85, XS.kum], [38.2, 164], [38.5, 112]];   /* the Kumquat steps to the ball, comes back, and trots after Stateman */
 const KK = () => KINDS.kumquat || KINDS.clem;
 const bodyCY = o => { const k = KINDS[o.kind]; return o.y - (o.lift || 0) - ((o.noLegs ? 0 : (k.leg || 90)) + k.ry * .9) * o.s; };
 /* the hands' height (local px under the body centre) while the Kumquat carries the ball: lifted from the cushion, held at the chest, lowered for the wind-up, swung up for the throw */
@@ -448,7 +448,7 @@ function heldBall(lt, o) {
 /* Stateman: reads (1.1 to 6.6), holds up the evidence bag (8.6 to 10.2), writes the new tag (20.9 to 25.9), notes (27.95), then walks to the door, tips his hat on "me." and goes out */
 const STAR_X = [[0, XS.star], [36.48, XS.star], [37.3, 140], [37.78, 104], [38.2, 78]];
 function castStar(lt) {
-  const bag = sstep(lt, 8.6, 8.95) * (1 - sstep(lt, 9.9, 10.25)), salute = sstep(lt, 37.12, 37.32) * (1 - sstep(lt, 37.62, 37.82));
+  const bag = sstep(lt, 8.6, 8.95) * (1 - sstep(lt, 9.85, 10.12)), salute = sstep(lt, 37.12, 37.32) * (1 - sstep(lt, 37.62, 37.82));
   const x = key(STAR_X, lt, easeIO), walking = lt > 36.48 && lt < 38.2, s = SA;
   let pose = lt > 20.9 && lt < 25.9 ? 'write' : lt > 1.0 && lt < 6.6 ? 'read' : lt > 10.2 && lt < 14.3 ? 'read' : 'carry';
   const o = A14.stateman({ x, y: F, s, t: lt, pose: bag > .01 || salute > .01 ? 'free' : pose, writing: lt > 21 && lt < 25.9 ? .7 : 0, noted: sstep(lt, 27.95, 28.42) });
@@ -569,9 +569,9 @@ const SHOTS = [
   { id: 'a1', t0: 6.757, t1: 8.598, cam: fcam('melon', 4.7, 5.1, 190), dof: 10 },
   { id: 'st2', t0: 8.598, t1: 10.165, cam: fcam('star', 3.2, 3.5, 190, 190), dof: 9 },
   { id: 'st3a', t0: 10.165, t1: 10.95, cam: fcam('star', 5.0, 5.2, 190), dof: 10 },
-  { id: 'kum1', t0: 10.95, t1: 13.2, cam: fcam('kum', 4.6, 4.9, 130, 10), dof: 10 },
-  { id: 'kum2', t0: 13.2, t1: TOSS.tr, cam: fcam('kum', 4.9, 4.4, 130, 10), dof: 10 },
-  { id: 'toss', t0: TOSS.tr, t1: T_APEX, pan: true, blur: 10, cam: (lt, u) => mixA([384, 1215, 4.4], BCAM(T_APEX), easeIO(c01((lt - TOSS.tr) / .55))) },
+  { id: 'kum1', t0: 10.95, t1: 13.2, cam: fcam('kum', 6.0, 6.9, 110, 6), dof: 10 },
+  { id: 'kum2', t0: 13.2, t1: TOSS.tr, cam: fcam('kum', 6.9, 6.3, 110, 6), dof: 10 },
+  { id: 'toss', t0: TOSS.tr, t1: T_APEX, pan: true, blur: 10, cam: (lt, u) => mixA(fcam('kum', 6.3, 6.3, 110, 6)(TOSS.tr, 1), BCAM(T_APEX), easeIO(c01((lt - TOSS.tr) / .55))) },
   { id: 'b1', t0: T_APEX, t1: T_BEND, cam: (lt, u) => BCAM(lt) },
   { id: 'm1', t0: T_BEND, t1: 16.40, cam: fcam('melon', 4.4, 4.6, 190), dof: 10 },
   { id: 'b3', t0: 16.40, t1: 16.713, cam: (lt, u) => mixA(BCAM(lt), LCAM, easeOut(c01((lt - 16.40) / .3))) },
@@ -595,10 +595,11 @@ const SHOTS = [
   { id: 'st8', t0: 32.18, t1: 33.68, cam: fcam('star', 5.0, 5.2, 190), dof: 10 },
   { id: 'sit', t0: 33.68, t1: 34.95, cam: pcam([640, 1172, 2.2], [640, 1172, 2.3]) },
   { id: 'sit2', t0: 34.95, t1: 35.53, cam: pcam([880, 1160, 3.0], [880, 1160, 3.1]) },
-  { id: 'ring', t0: 35.53, t1: 36.48, cam: pcam([560, 900, .98], [560, 900, 1.0]) },
-  { id: 'st9a', t0: 36.48, t1: 37.95, cam: pcam([430, 1060, 1.5], [300, 1060, 1.6]) },
+  { id: 'ring1', t0: 35.53, t1: 35.9, cam: pcam([100, 985, 3.0], [100, 981, 3.2]), dof: 5 },
+  { id: 'ring2', t0: 35.9, t1: 36.48, cam: pcam([721, 1120, 1.8], [721, 1120, 1.84]) },
+  { id: 'st9a', t0: 36.48, t1: 37.95, cam: pcam([330, 1090, 2.0], [250, 1085, 2.3]) },
   { id: 'st9b', t0: 37.95, t1: 38.85, cam: fcam('straw', 4.8, 5.4, 180), dof: 11 },
-  { id: 'out', t0: 38.85, t1: 99, type: 'out', blur: 4, cam: (lt, u) => lt < T_OUTX ? [560, 900, 1] : outCam(lt) },
+  { id: 'out', t0: 38.85, t1: 99, type: 'out', blur: 6, cam: (lt, u) => lt < T_OUTX ? [560, 900, 1] : outCam(lt) },
 ];
 const shotAt = lt => { for (const s of SHOTS) if (lt < s.t1) return s; return SHOTS[SHOTS.length - 1]; };
 
@@ -630,6 +631,7 @@ function drawStageBody(lt, sh) {
     let show = true;
     if (v.x1 < 0 || v.x0 > W) show = false;
     else if (!v.ok) { if (!sh.pan) show = false; else o.transit = true; }
+    if (show && sh.pan) o.transit = true;                         /* a whip: nobody is a subject while the camera is crossing the room */
     if (show && !sh.pan && faceInZone(o)) show = false;           /* a face never sits under the captions or on the frame's bottom edge: that character is out of the shot */
     list.push([id, o, show]);
   }
@@ -673,6 +675,7 @@ const FT = {   /* the typing schedule (scene-local): the tag, the two lines of t
 const ROWS = [['F-761', 'INSULIN PEN', 'WITHOUT AN OPEN DATE'], ['F-725', 'SUFFICIENT', 'NURSING STAFF'], ['F-999', 'THE FACILITY FAILED', 'TO COVER ITS STAFF']];
 const INK_F = '#1d2540', RED_F = '#c23a2b';
 const rev = (lt, a, b) => c01((lt - a) / (b - a));
+const sring = (x, y, k, o) => { ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(x, y, k, o); ctx.restore(); };   /* a ring of light (never an opaque stroke across a letter) */
 /* the stamp's slam: huge and faint a tenth of a second before the hit, full size ON the hit frame, a small rebound; returns { k (scale), a (alpha), age } */
 function slam(lt, tHit, big = 2.3) {
   const age = lt - tHit;
@@ -750,7 +753,7 @@ function drawForm(lt, which) {
   /* the stamps, in the SEVERITY column only (or, for NEW TAG, in the empty part of the paper under the table) */
   const sevCx = T.x + W3[0] + W3[1] + W3[2] / 2, rowCy = r => T.y + T.rowH * (r + .5);
   const sD = which === 0 ? slam(lt, F_.stamp, 2.3) : { k: 1, a: .94, age: 9 };
-  if (sD) { ctx.save(); ctx.translate(sevCx, rowCy(0)); ctx.scale(sD.k, sD.k); ctx.translate(-sevCx, -rowCy(0)); UI.stamp('D', sevCx, rowCy(0), { size: 84, color: '#1d2a5a', rot: -.11, alpha: sD.a, id: 'stampD' }); ctx.restore(); if (sD.age >= -1e-6 && sD.age < .5) V2.ring(sevCx, rowCy(0), (sD.age + .03) / .5, { r0: 40, r1: 170, lw: 7, color: '40,60,120', alpha: .8, bloom: 0 }); }
+  if (sD) { ctx.save(); ctx.translate(sevCx, rowCy(0)); ctx.scale(sD.k, sD.k); ctx.translate(-sevCx, -rowCy(0)); UI.stamp('D', sevCx, rowCy(0), { size: 84, color: '#1d2a5a', rot: -.11, alpha: sD.a, id: 'stampD' }); ctx.restore(); if (sD.age >= -1e-6 && sD.age < .5) sring(sevCx, rowCy(0), (sD.age + .03) / .5, { r0: 40, r1: 170, lw: 7, color: '40,60,120', alpha: .8, bloom: 0 }); }
   if (which === 1) { UI.stamp('L', sevCx, rowCy(1), { size: 84, color: RED_F, rot: .08, alpha: .94, id: 'stampL' }); }
   if (which === 1) {
     const sN = slam(lt, F_.stamp, 2.6);
@@ -765,7 +768,7 @@ function drawForm(lt, which) {
       if (sN.age > .05) { const g = c01((sN.age - .05) / .55), gx = lerp(-pw_ * .7, pw_ * .7, g); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = lg(gx - 70, -ph_, gx + 70, ph_, [[0, 'rgba(255,255,255,0)'], [.5, `rgba(255,248,200,${.55 * (1 - g)})`], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(-pw_ / 2, -ph_ / 2, pw_, ph_); }
       ctx.restore(); ctx.restore();
       UI.stamp('NEW TAG', cxn, cyn, { size: 176, color: '#f6d24a', ink: '#ffe57a', tstroke: '#0b4424', tlw: 8, lw: 14, rot: -.07, tilt: .2, alpha: sN.a, id: 'stampNEW' }); ctx.restore();
-      if (sN.age >= -1e-6) { V2.ring(cxn, cyn, c01((sN.age + .03) / .7), { r0: 80, r1: 700, lw: 16, color: '255,226,120', alpha: .9 }); V2.ring(cxn, cyn, c01((sN.age - .05) / .8), { r0: 60, r1: 900, lw: 8, color: '120,255,170', alpha: .6 });
+      if (sN.age >= -1e-6) { sring(cxn, cyn, c01((sN.age + .03) / .7), { r0: 80, r1: 700, lw: 16, color: '255,226,120', alpha: .9 }); sring(cxn, cyn, c01((sN.age - .05) / .8), { r0: 60, r1: 900, lw: 8, color: '120,255,170', alpha: .6 });
         V2.sparks(cxn, cyn, lt, F_.stamp, { n: 46, speed: 760, life: 1.0, color: '255,230,140', g: 900, size: 5, seed: 4 }); } }
   }
   ctx.restore();
@@ -870,13 +873,14 @@ function drawDollhouse(lt) {
   const fl = S14.rect('med').floor, rc = S14.rect('conf');
   /* the staff, seated at the conference table in its cell (small: the cell is 250 px wide), the Administrator at the head */
   const seated = [['lemon', A7.lemon, .12], ['mango', A7.mango, .29], ['clem', A10.clem, .46], ['straw', A11.straw, .63]], ss = S14.S * .55;
-  for (const [id, ctor, u] of seated) { const [x, y] = S14.at('conf', u, -22); drawChar(ctor({ x, y, s: ss, noLegs: true, plant: true, t: lt, expr: id === 'straw' ? 'happy' : 'chill', lid: .25, look: [.1, .05], arms: { l: 'rest', r: 'rest' }, sparkle: id === 'straw' })); }
-  const mx = S14.at('conf', .85, -22); drawChar(A9.melon({ x: mx[0], y: mx[1], s: ss * 1.2, noLegs: true, plant: true, t: lt, expr: 'weak', look: [-.4, .1], arms: { l: 'rest', r: 'rest' } }));
+  const tr = lt < T_OUTZ + .02;
+  for (const [id, ctor, u] of seated) { const [x, y] = S14.at('conf', u, -22); drawChar(ctor({ x, y, s: ss, noLegs: true, plant: true, t: lt, transit: tr, expr: id === 'straw' ? 'happy' : 'chill', lid: .25, look: [.1, .05], arms: { l: 'rest', r: 'rest' }, sparkle: id === 'straw' })); }
+  const mx = S14.at('conf', .85, -22); drawChar(A9.melon({ x: mx[0], y: mx[1], s: ss * 1.2, noLegs: true, plant: true, t: lt, transit: tr, expr: 'weak', look: [-.4, .1], arms: { l: 'rest', r: 'rest' } }));
   /* the surveyor crosses the middle floor toward the call, the trainee trotting behind */
   const path = S14.move(39.3, 41.4, [S14.at('r4', .4)[0], fl], [S14.at('r7', .58)[0], fl], easeIO), path2 = S14.move(39.5, 41.5, [S14.at('r4', .06)[0], fl], [S14.at('r7', .2)[0], fl], easeIO);
   if (lt >= 39.3) {
-    drawChar(S14.walk(A14.kumquat, path2, lt, { s: S14.S * .72, plant: true, t: lt, pose: 'carry' }));
-    drawChar(S14.walk(A14.stateman, path, lt, { s: S14.S, t: lt, pose: 'carry', expr: 'stateman_warm' }));
+    drawChar(S14.walk(A14.kumquat, path2, lt, { s: S14.S * .72, plant: true, t: lt, pose: 'carry', transit: tr }));
+    drawChar(S14.walk(A14.stateman, path, lt, { s: S14.S, t: lt, pose: 'carry', expr: 'stateman_warm', transit: tr }));
   }
   S14.front(lt, o);
   { const k = sstep(lt, T_OUTX + .2, T_OUTX + .9); if (k > .01) { ctx.save(); for (let i = 0; i < 26; i++) { const x = 30 + hash(i * 2.7) * 1020, y = -240 + hash(i * 5.1 + 1) * 540, tw = .5 + .5 * Math.sin(lt * (1.5 + hash(i) * 2) + i); ctx.fillStyle = `rgba(255,246,220,${.75 * k * tw})`; ell(x, y, 2.2, 2.2); ctx.fill(); } ctx.restore(); } }

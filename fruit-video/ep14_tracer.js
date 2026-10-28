@@ -600,10 +600,28 @@ function drawMedCart(x, lt) {
   S14.cart(x + rt * hn(lt, 33, 5) * 1.2, FL + rt * hn(lt, 40, 3) * .9, { s: 1.08, drawer: dr });
 }
 const cartRattle = lt => { const t0 = CUE.whoosh + .4, t1 = CUE.whoosh + 3.3, u = c01((lt - t0) / (t1 - t0)); return lt > CUE.whoosh + .3 && u < 1 ? .4 + .6 * (1 - u) : 0; };
+/* depth of field: a lens focused on the middle floor. The floors above and below it are soft (more the closer the camera), a close-up softens the whole background (the characters and
+   the foreground pieces stay sharp), and the tight door shot is sharp everywhere (it is the match cut for the closet scene). The wide opener is sharp so the sign reads. */
+const MID = ['med', 'r4', 'r7', 'shower'], OUT = S14.ids.filter(id => !MID.includes(id));
+function drawBuilding(lt, o, sh) {
+  const z = CAM.z, tight = sh && sh.only, cu = sh && sh.cu;
+  if (tight) return S14.back(lt, o);
+  if (cu) return V2.dof(Math.min(6, 1.9 * z), () => S14.back(lt, o));
+  const px = Math.max(0, Math.min(4.2, 3.6 * (z - 1.3)));
+  if (px < .6) return S14.back(lt, o);
+  V2.dof(px, () => S14.back(lt, Object.assign({}, o, { only: OUT })));
+  ctx.save(); ctx.beginPath(); ctx.rect(-200, 682, W + 400, 330); ctx.clip();
+  S14.back(lt, Object.assign({}, o, { only: MID, noSky: true, noLot: true, noRoof: true, noCar: true }));
+  ctx.restore();
+}
+function drawFront(lt, o, sh) {
+  if (sh && sh.cu) return V2.dof(Math.min(5, 1.5 * CAM.z), () => S14.front(lt, o));
+  S14.front(lt, o);
+}
 function drawWorld(lt, sh) {
   V2.setLight({ key: [-.4, -.8], keyColor: '#ffe9c4', keyA: .24, rim: '#a9ccff', rimA: .5, shadow: '#2a2040', shadowA: .34, bounce: '#ffd9a0', bounceA: .18, amb: '#fff0d8', ambA: .05 });
   const o = { t: lt, rooms: ROOMS(lt) };
-  S14.back(lt, o);
+  drawBuilding(lt, o, sh);
   const w0 = CUE.whoosh, halt = bs('run') + 3.52, so = strawO(lt), run = lt >= w0 && lt < bs('run') + 3.7;
   // dust and speed lines first (behind everyone)
   dustTrail(lt, w0, halt + .1, SX, 100);
@@ -618,7 +636,7 @@ function drawWorld(lt, sh) {
   drawPlaced(lt, true);
   const cs = capState(lt, so); if (cs) drawCap(so, cs);
   if (held(lt) > 0 && lt > bs('s1') + .05) drawBundle(lt, so, held(lt));
-  S14.front(lt, o);
+  drawFront(lt, o, sh);
 }
 function drawPeel(lt, ko) {
   const pp = peelPose(lt); if (!pp) return;
@@ -705,7 +723,7 @@ function drawMacro(lt) {
 // ------------------------------------------------------------------ the HUD (screen space, in over())
 const HUD = { right: 1040 };
 function hudTally(lt) {
-  const t0 = CUE.whoosh - .12, t1 = bs('k1') + 1.7, a = sstep(lt, t0, t0 + .2) * (1 - sstep(lt, t1, t1 + .3));
+  const t0 = CUE.whoosh - .12, t1 = bs('st2') - .1, a = sstep(lt, t0, t0 + .2) * (1 - sstep(lt, t1, t1 + .25));
   if (a <= .01) return;
   const n = placed(lt), size = 30, h = 64, lab = 'CALL LIGHTS IN REACH', li = UI.sizeOf(lab, { size, weight: 900, spacing: 1.5 });
   const dw = 30, w = 28 + li.w + 22 + dw * 3 + 26, x0 = HUD.right - w, y0 = 284;
