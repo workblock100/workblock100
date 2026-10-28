@@ -1,5 +1,6 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 14: the dollhouse kit, window.S14. The building at Fruit Bowl Rehab & Nursing as a cutaway: a dollhouse seen straight on, one room per cell, every room lit
+/* KIT STATUS: stub (S14.walk, S14.run and S14.move are live now; the rooms, building, roof, lot and car are still the lead's placeholder and are being replaced; this line becomes "KIT STATUS: v1" when every room is drawn)
+ * SHIFT HAPPENS, Episode 14: the dollhouse kit, window.S14. The building at Fruit Bowl Rehab & Nursing as a cutaway: a dollhouse seen straight on, one room per cell, every room lit
  * and furnished on its own. Shared by the colony, adapt, tracer and closet scenes (and the title and end card if they want the building).
  *
  * STUB written by the lead so every builder can start at once. THE GEOMETRY BELOW IS FINAL AND NEVER CHANGES (scene modules are being written against these numbers); what is drawn is a
@@ -25,6 +26,11 @@
  *   S14.back(lt, o)          draws the sky, roof, lot, car and every room as it is behind the characters. o: { rooms: { id: { lamp 0..1, alert 0..1, ... } }, only: [ids], car: x, t }
  *   S14.front(lt, o)         draws what sits in front of the characters (counter fronts, plants, the cutaway frame). Call it after the characters of the same room(s).
  *   S14.GEOM                 the numbers: { T, RW, RH, X0, Y0, COL, ROW }
+ *   S14.walk(ctor, pathFn, lt, extra)       a walker: the drawChar options of ctor at pathFn(lt) = [x, y] in WORLD (scene) coordinates (y = the floor line, S14.rect(id).floor; s defaults to S14.S).
+ *                                           Same contract as H6.person (ep6.js): speed from a centred difference, then gaitW (distance walked, in the character's LOCAL units = scene px / s, so
+ *                                           the planted foot does not slide at the dollhouse scale), axis 'x', dir = sign(vx), vx = on-screen px/s; the footstep tool (render.js events) sees them.
+ *   S14.run(ctor, pathFn, lt, extra, rate = 300)   a runner, like H6.runner: legs cycle at gaitW = lt * rate whatever the speed; vx clamped to +-1400.
+ *   S14.move(t0, t1, a, b, ease = easeIO)   a pathFn gliding from [x, y] a to b (H6.move)
  * The builder adds more per-room options (the stash level of the shower room, call lights, phones) and documents them here; the names above stay.
  */
 (() => {
@@ -58,6 +64,32 @@ S14.door = (id, side) => {
 };
 S14.who = (id, ctor, u, extra = {}) => { const [x, y] = S14.at(id, u); return ctor(Object.assign({ x, y, s: S14.S }, extra)); };
 S14.zoomRoom = (id, z, dy = 0) => { const r = S14.rect(id); window.H6.zoomTo(r.cx, r.cy + dy, z); };
+
+/* ---- walkers and runners in WORLD (scene) coordinates (added at the lead's request; the same contract as H6.person / H6.runner in ep6.js, so the footstep tool (render.js events) sees them) */
+/* the distance walked along fn(t) -> [x, y], integrated from t = 0 (copied from ep6.js pathDist) */
+const pathDist = (fn, lt) => { let d = 0, p = fn(0); for (let t = .04; ; t += .04) { const tt = Math.min(t, lt), q = fn(tt); d += Math.hypot(q[0] - p[0], q[1] - p[1]); p = q; if (tt >= lt) break; } return d; };
+/* S14.walk(ctor, pathFn, lt, extra) -> the drawChar options of ctor placed at pathFn(lt) = [x, y] (world coordinates; y is the floor line of the room, S14.rect(id).floor; s defaults to S14.S).
+ * Like H6.person: the speed comes from a centred difference (dt .03), and above 9 local units per second the gait fields are set: gaitW = the distance walked since t = 0, axis 'x', dir = sign(vx),
+ * vx = the on-screen speed in px per second at zoom 1. One unit of ep6's "world" is one LOCAL unit of the character (the perspective scale turns it into pixels), so here the distance and the speeds are
+ * measured in local units (scene px / s): the planted foot then stays planted at the dollhouse scale and nothing slides. */
+S14.walk = (ctor, fn, lt, extra = {}) => {
+  const [X, Y] = fn(lt), s = (extra && extra.s) || S14.S, dt = .03, a = fn(lt - dt), b = fn(lt + dt);
+  const vX = (b[0] - a[0]) / (2 * dt), vY = (b[1] - a[1]) / (2 * dt), speed = Math.hypot(vX, vY) / s;
+  const o = Object.assign({ x: X, y: Y, s }, extra);
+  if (speed > 9) { o.gaitW = pathDist(fn, lt) / s; o.axis = 'x'; o.dir = Math.sign(vX) || 1; o.vx = vX; }
+  return ctor(o);
+};
+/* S14.run(ctor, pathFn, lt, extra, rate = 300): like H6.runner, a dash whose legs cycle at a readable rate whatever the speed (gaitW = lt * rate, local units per second), above 30 local units per second;
+ * vx = the on-screen speed clamped to +-1400 */
+S14.run = (ctor, fn, lt, extra = {}, rate = 300) => {
+  const [X, Y] = fn(lt), s = (extra && extra.s) || S14.S, dt = .03, a = fn(lt - dt), b = fn(lt + dt);
+  const vX = (b[0] - a[0]) / (2 * dt), vY = (b[1] - a[1]) / (2 * dt), sp = Math.hypot(vX, vY) / s;
+  const o = Object.assign({ x: X, y: Y, s }, extra);
+  if (sp > 30) { o.gaitW = lt * rate; o.axis = 'x'; o.dir = Math.sign(vX) || 1; o.vx = Math.max(-1400, Math.min(1400, vX)); }
+  return ctor(o);
+};
+/* S14.move(t0, t1, a, b, ease = easeIO) -> pathFn: a straight glide from [x, y] a to b between t0 and t1 (H6.move, which fits world [x, y] pairs) */
+S14.move = (t0, t1, a, b, ease = easeIO) => (window.H6 && window.H6.move ? window.H6.move(t0, t1, a, b, ease) : lt => [lerp(a[0], b[0], ease(seg(lt, t0, t1))), lerp(a[1], b[1], ease(seg(lt, t0, t1)))]);
 
 // ---- placeholder drawing (flat boxes and room names); the kit builder replaces everything below this line
 S14.back = (lt, o = {}) => {
