@@ -449,7 +449,7 @@ window.__EP12_SCENES.award = {
     else if (sh === 'cuC2') { const f = F(c.clm); zoomTo(f[0] + 70, f[1] + 130 / 2.6, 2.6); }   // her raised rosette stays in frame
     else if (sh === 'back') zoomTo(520, 880, 1.02);
     else if (sh === 'cuS1') fz(c.str, 2.2, 130);
-    else if (sh === 'ask') { const m = F(c.mel); zoomTo(m[0] - 113, m[1] + 150, lerp(1.2, 1.3, easeIO(seg(lt, 19.7, 23.05)))); }   // the Administrator speaks from the right; Strawberry walks in from the left beside him and stands whole
+    else if (sh === 'ask') { const m = F(c.mel); zoomTo(m[0] - 143, m[1] + 150, lerp(1.18, 1.22, easeIO(seg(lt, 19.7, 23.05)))); }   // the Administrator speaks from the right, the mallet in frame; Strawberry stands whole at the far left, then walks in beside him
     else if (sh === 'no') fz(c.str, 2.2, 130);
     else if (sh === 'still') { const k = easeIO(seg(lt, bs('silence'), be('silence'))), f = F(c.str), fy = f[1] + 130 / 2.2; zoomTo(lerp(f[0], 560, k), lerp(fy, 900, k), lerp(2.2, 1.05, k)); }
     else if (sh === 'two2') { const q = mid(F(c.mel), F(c.str)); zoomTo(q[0] + 20, q[1] + 40, 1.05); }
@@ -491,8 +491,9 @@ window.__EP12_SCENES.award = {
     const sets = setPieces(lt, takenDonut).map(p => ({ z: p.z, run: p.run })).sort((p, q) => q.z - p.z);
     const castList = c.items.filter(e => e.draw).map(e => ({ z: e.z, run: runCast(e), key: e.key }));
     if (closeUp) {
-      // a close-up: the set is behind, the subject is drawn last so nothing stands over her face
-      for (const it of sets) it.run();
+      // a close-up: the set behind the subject is drawn, then the subject last, so nothing stands over her face; what stands nearer the camera than she does (the lectern, the table) is out of this shot
+      const sz = (c.items.find(e => e.key === subj) || { z: 1e9 }).z;
+      for (const it of sets) if (it.z >= sz - 1) it.run();
       castList.forEach(q => q.run());
     } else {
       const list = sets.concat(castList);

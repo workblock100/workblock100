@@ -613,6 +613,7 @@ CROSS_ORGAN = (((57, 60, 64, 65), 2), ((54, 60, 64, 69), 2), ((55, 58, 62, 65), 
 CROSS_LEAD_A = ((1, 72, 1), (2, 69, 1), (3, 72, 1), (4, 74, 2), (6, 72, 1), (7, 69, 1))           # C5 A4 C5 D5 . C5 A4 over Fmaj7 / D7: the question
 CROSS_LEAD_B = ((1, 70, 1), (2, 67, 1), (3, 70, 1), (4, 72, 2), (6, 70, 1), (7, 67, 1))           # Bb4 G4 Bb4 C5 . Bb4 G4 over Gm7 / C7: the answer
 CROSS_STAB = ((60, 65, 69, 72), (60, 66, 69, 72), (58, 62, 65, 67), (58, 64, 67, 70))
+CROSS_CUTS = (.95, 3.00, 3.86, 5.43, 6.57, 8.50, 10.02, 10.97, 11.80, 13.54, 15.05, 16.02, 16.56, 17.37, 18.60, 19.74, 20.28, 21.04, 22.05, 22.85, 24.74, 25.70)    # the finished picture's cuts, scene-local (ep13_cross.js)
 
 
 def cue_cross13(T, t0, d, beats, D):
@@ -668,22 +669,20 @@ def cue_cross13(T, t0, d, beats, D):
                 continue
             T.put(mtrumpet(m, ln * b * .5 * .85, .95), t, .055, .25)
             T.put(vib(m + 12, ln * b * .5 * 2.2, .7), t, .03, -.2)
-    # the stabs: one on every cut
-    cuts = [beats[k][0] for k in beats if k not in ("open",)]
-    big = {sl[0], bd[0], sp_[0], end0}
-    done = set()
-    for c in sorted(cuts):
-        tq = q(c - .01)
-        if round(tq, 3) in done:
+    # the stabs: one on every cut of the finished picture, at the cut itself (not on the nearest swung eighth: a hit that is a tenth of a second off its cut is worse than one off the grid)
+    big = [t0 + c for c in (10.02, 16.02, 21.04, 25.70)]                                   # the slide, the badge, the slip and the end
+    skip = (16.56, 22.05)                                                                  # the clunk's own woodblock is 60 ms after the first, and the rim shot lands 90 ms before the second
+    for c in CROSS_CUTS:
+        if c in skip:
             continue
-        done.add(round(tq, 3))
-        k = int(((tq - g0) // (4 * b)) % 2) * 2 + int(((tq - g0) % (4 * b)) // (2 * b))
+        tc = t0 + c
+        k = int(((tc - g0) // (4 * b)) % 2) * 2 + int(((tc - g0) % (4 * b)) // (2 * b))
         stab = CROSS_STAB[k % 4]
-        is_big = c in big
-        T.put(brass(list(stab), .13 if not is_big else .22, .004, .05, 2300), tq, .1 if not is_big else .12, 0)
-        T.put(woodblock(), tq, .05, .3)
-    # the opening: a pickup into the grid, the first bar bass and snaps only
-    T.put(tick(), beats["open"][0] + .1, .08, .3)
+        is_big = any(abs(tc - x) < .01 for x in big)
+        T.put(brass(list(stab), .13 if not is_big else .22, .004, .05, 2300), tc, .1 if not is_big else .12, 0)
+        T.put(woodblock(), tc, .05, .3)
+    # the opening: a pickup into the grid, the first bar bass and snaps only; a tick with the HUD chip's first beep (0.25 s)
+    T.put(tick(), beats["open"][0] + .05, .08, .3)
     # the slide: stop-time, two dry notes (a slide that goes 'dun, dun')
     for off in (.12, .5):
         T.put(marimba(midi(53), .3), sl[0] + off, .09, .2)
@@ -693,15 +692,16 @@ def cue_cross13(T, t0, d, beats, D):
     T.put(riser(bd[1] - bd[0] - .15, 400, 4500, .4), bd[0] + .05, .14)
     for at in (bd[0] + .6, bd[0] + .85):
         T.put(woodblock(), at, .16, 0)
-    T.put(timp(53, .7), q(bd[1] + .02), .16)
-    T.put(crash(.9), q(bd[1] + .02), .06, .1)
+    T.put(timp(53, .7), t0 + 17.37, .16)                                                     # the cut back to Lemon (17.37): everything goes at once
+    T.put(crash(.9), t0 + 17.37, .06, .1)
     # the slip: a slide whistle falls with the banana, a muted trumpet wah-wah-wahs after him, and a rim shot catches him at the bottom
-    T.put(slide_whistle(98, 55, .85), sp_[0] + .04, .24, .1)
+    land = sp_[0] + .92                                                                      # the picture: he lands flat about 21.96 s, 0.92 s into the slip
+    T.put(slide_whistle(98, 55, land - sp_[0] - .08), sp_[0] + .04, .24, .1)
     for k, m in enumerate((65, 63, 61, 58)):
-        T.put(mtrumpet(m, .17, .9, wah=6.0), sp_[0] + .35 + k * .17, .11, .2)
-    T.put(woodblock(), sp_[1] - .02, .2, 0)
-    T.put(snare13(1.0), sp_[1] - .02, .16, .1)
-    T.put(crash(.5), sp_[1] - .02, .06, .15)
+        T.put(mtrumpet(m, .13, .9, wah=6.0), sp_[0] + .45 + k * .14, .11, .2)              # after the boing (0.4 s)
+    T.put(woodblock(), land, .2, 0)
+    T.put(snare13(1.0), land, .16, .1)
+    T.put(crash(.5), land, .06, .15)
     # a chase: from 'Banana. Now.' the hats run in sixteenths and the bass doubles
     lr3 = beats["lr3"][0]
     for at in grid(lr3, sp_[0] - .02, CROSS_BPM, .5):

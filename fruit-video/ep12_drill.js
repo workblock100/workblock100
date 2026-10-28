@@ -96,6 +96,21 @@ for (let i = 0; i < 18; i++) {
 }
 /* the plaque numbers of this frame: the corridor draws every plaque with its number; far doors crowd each other near the vanishing point and near doors run off the frame, so a number is kept only
    when its box is whole in the frame and does not touch the number of a nearer door. (Doors keep their plaques; only the digits are left out.) */
+/* where the focal characters of the shot stand on the screen (generous boxes): a plaque number or a wall label that one of them stands in front of is left out, so no digit is ever half hidden behind a body */
+let OCC = [];
+function occupied(lt, sh) {
+  const F = FOCAL[sh] || [], out = [];
+  const add = (key, kind, X, D, m, noLegs) => {
+    if (!F.includes(key)) return;
+    const q = V2.at(X, D), k = KINDS[kind], s = kz(D) * m, leg = noLegs ? 0 : (k.leg || 90), rx = (k.rx * 1.2 + 120) * s;   /* the body and the clipboard, mop or hand beside it */
+    out.push(A12.box(q.x - rx, q.y - (noLegs ? 118 * kz(D) : 0) - (leg + k.ry * 1.9 + 70) * s, q.x + rx, q.y + 16 * s));
+  };
+  add('str', 'straw', ...P_STR(lt), 1); add('adm', 'melon', ...P_ADM(lt), 1.22); add('lem', 'lemon', ...P_LEM(lt), 1);
+  add('mng', 'mango', ...P_MNG(lt), 1); add('cran', 'cran', ...P_CHAIR(lt), 1, true);
+  if (clmVisible(lt)) add('clm', 'clem', ...P_CLM(lt), 1);
+  return out;
+}
+const behindSomeone = b => OCC.some(o => b[0] < o[2] + 6 && b[2] > o[0] - 6 && b[1] < o[3] + 6 && b[3] > o[1] - 6);
 function doorsAt() {
   const P = V2.P, cand = [];
   DOORS.forEach((d, i) => {
@@ -108,7 +123,7 @@ function doorsAt() {
   cand.sort((a, b) => b.pk - a.pk);
   const keep = new Set(), taken = [];
   for (const c of cand) {
-    if (!A12.whole(c.box, 14)) continue;
+    if (!A12.whole(c.box, 14) || behindSomeone(c.box)) continue;
     if (taken.some(t => c.box[0] < t[2] + 4 && c.box[2] > t[0] - 4 && c.box[1] < t[3] + 4 && c.box[3] > t[1] - 4)) continue;
     taken.push(c.box); keep.add(c.i);
   }
@@ -194,7 +209,7 @@ function hallFixtures(lt) {
     ctx.beginPath(); ctx.ellipse(lx, ly, r, r * .9, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
     if (inten > .02) { V2.glow(lx, ly, 300 * k, '255,40,50', .9 * inten, 'screen', .8); V2.glow(lx, ly, 1100 * k, '255,50,60', .45 * inten, 'screen', .5); }
     { const fb = A12.box(lx - 30 * k, ly + 44 * k - 14 * k, lx + 30 * k, ly + 44 * k + 14 * k);
-      if (A12.whole(fb, 16)) UI.label('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', spacing: 2, hero: false }); } }
+      if (A12.whole(fb, 16) && !behindSomeone(fb)) UI.label('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', spacing: 2, hero: false }); } }
   // the wall clock, reading 3:41 like the pill
   wallClock(-HW + 3, 470, Z_CLK, -1, 41, 3, 46);
   // the supply closet on the right wall: the door swings into the closet, the dark room behind it with shelves, and the QUIET sign with its Q crossed out
@@ -275,6 +290,7 @@ function hallCast(lt, sh) {
 function hallScene(lt, sh) {
   V2.setLight({ key: [-.4, -.8], keyColor: '#fff3dc', keyA: .26, rim: '#cfe0ff', rimA: .5, shadow: '#3a3048', shadowA: .3, bounce: '#ffe0b0', bounceA: .18, amb: '#fff6e6', ambA: .05 });
   V2.opts.reflect = true;
+  OCC = occupied(lt, sh);
   S6.corridor({ doors: doorsAt(), ch: CH, fog: '#c4cfe2', fogAmt: .32, wall: '#e9e0cb', wain: '#5c9298', lampOn: 1, bright: .9, signs: [], decor: DECOR, zFar: 7600 });
   hallFixtures(lt);
   // Mr. Banana and his peel, far down the hall, behind the action

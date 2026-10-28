@@ -619,29 +619,30 @@ def sfx_dust():
     return norm6(_edge(out, .002, .12), .32)
 
 
-def _shuffle_step(seed, g=1.0, bright=1.0):
-    """One shuffling step in a worn slipper on vinyl: the slipper drags (a soft 400 Hz to 2.4 kHz scuff, 110 ms, swelling and fading) and the sole lands (a pat at 150 to 90 Hz and a puff of 900 Hz noise). 0.22 s."""
-    d = .22
-    t = tarr(d)
-    drag = _bp4(noise6(d, seed), 400, 400 + 2000 * bright) * np.interp(t, [0, .04, .1, .13, d], [0, .45, .8, .2, 0]) * .5
-    pat_at = .1
-    pat = (_thump(150, 90, .1, .022) * .8 + _lp4(noise6(.1, seed + 7), 900, 2) * np.exp(-tarr(.1) / .015) * .6)
-    _place(drag, pat, pat_at)
-    return drag * g
+STEP_TIMES = (.176, .293, .381, .464, .563, .710)   # Brenda's six footfalls in the finished picture, seconds after the steps cue (build/ep13/events.json: 21.226 ... 21.760 s into the vault scene, cue at 21.05 s)
 
 
 def sfx_steps():
-    """Brenda shuffling out in slippers after five years: four slow steps (0.5 s apart, a hair irregular) that drag more than they stamp, each softer and duller than the last and
-    a little further to the right, as she walks away. Stereo, 2.0 s."""
-    d = 2.0
+    """Brenda shuffling out in her slippers after five years. The animation lays its own soft footfall on each of her six small steps (events.json: 0.18, 0.29, 0.38, 0.46, 0.56 and
+    0.71 s after this cue; the build turns those down to about half), so this sound does not step on its own: it is what a worn slipper adds to each of those footfalls, so the two
+    are one sound and never two walkers. Each step is the sole dragging forward over the vinyl for the 100 ms before it lands (a soft scuff, 450 Hz to 2.3 kHz, swelling), a small
+    low pat at the landing (140 Hz sagging to 95 Hz and a puff of 800 Hz noise), each a little duller than the one before, and under them all the swish of a long cardigan swinging
+    with the walk. Stereo, nearly central like the footsteps (the picture is a view from the back of the room), 1.1 s."""
+    d = 1.1
     n = int(d * SR)
+    t = tarr(d)
     out = np.zeros((2, n))
-    r = rng6(1440)
-    for i, at in enumerate((.05, .56, 1.07, 1.65)):
-        clip = _shuffle_step(1441 + i, 1.0 - .22 * i, 1.0 - .22 * i)
-        clip = _lp4(clip, 5000 - 1000 * i, 2)
-        place2(out, clip, at + r.uniform(-.02, .02), 1.0 - .18 * i, .15 + .15 * i)
-    return norm6(out, .45)
+    for i, f in enumerate(STEP_TIMES):
+        dd = .1
+        drag = _bp4(noise6(dd, 1441 + i), 450, 2300 - 150 * i) * np.interp(tarr(dd), [0, .035, .085, .1], [0, .7, 1.0, 0])
+        pat = _thump(140, 95, .08, .02) * .5 + _lp4(noise6(.08, 1450 + i), 800, 2) * np.exp(-tarr(.08) / .012) * .5
+        clip = np.zeros(int(.2 * SR))
+        _place(clip, drag, 0.0)
+        _place(clip, pat, dd - .005)
+        place2(out, _lp4(clip, 4200 - 200 * i, 2), f - dd + .005, 1.0 - .07 * i, .04 * (i - 2))
+    sw = _bp4(noise6(d, 1460), 700, 2600) * np.interp(t, [0, .12, .4, .8, 1.1], [0, .5, .9, .6, 0]) * (.6 + .4 * np.sin(2 * np.pi * 8.5 * t)) * .22
+    out += np.stack([sw, np.roll(sw, 90)])
+    return norm6(_edge(out, .002, .1), .4)
 
 
 def sfx_wrapper():
@@ -847,11 +848,60 @@ def sfx_drone():
 BA.SFX.update({k[4:]: v for k, v in list(globals().items()) if k.startswith("sfx_")})
 
 
+# ---------------------------------------------------------------- the animation's footsteps, balanced for this mix
+# build/ep13/events.json (written by the animation, never edited here) says where every footfall lands and how hard. The build reads it through --events; this turns it into a tuned copy
+# in the output folder (events.tuned.json) and the mixer reads that instead: the footsteps under dialogue are turned down (their peaks sat about as high as the speech's own RMS),
+# the vault's crew running out (four characters on one instant, the identical clip four times over, +12 dB) is spread into a rush, and Brenda's exit is halved because sfx_steps lays
+# her slippers on the same six footfalls.
+SCENE_SPANS = {"open": (5.2, 31.492), "hall": (90.143, 102.012), "cross": (102.012, 128.858), "vault": (128.858, 164.252)}   # seconds, the frozen timeline
+STEP_SCALE = {"open": .75, "hall": .7, "cross": .85, "vault": .85}
+RUSH = ("prune", "clem", "mango", "lemon")                                                  # Brenda goes first, with a hop
+RUSH_AT = (0.0, .035, .06, .09)
+
+
+def _tune_events(events):
+    out = []
+    for ev in events:
+        ev = dict(ev)
+        if ev.get("name") == "step":
+            t = ev["t"]
+            sc = next((k for k, (a, b) in SCENE_SPANS.items() if a <= t < b), None)
+            k = STEP_SCALE.get(sc, 1.0)
+            if sc == "hall" and t - SCENE_SPANS["hall"][0] > 10.7:                       # the walk away down the hall after the sting is already soft
+                k = 1.0
+            if ev.get("key", "").startswith("prune") and sc == "vault" and t - SCENE_SPANS["vault"][0] < 22.1:     # Brenda's exit: the slippers of sfx_steps ride on these
+                k *= .55
+            ev["vol"] = round(ev.get("vol", .5) * k, 4)
+        out.append(ev)
+    # steps that land on the same instant would add as one identical clip: spread them
+    steps = [e for e in out if e.get("name") == "step"]
+    for e in steps:
+        same = [x for x in steps if abs(x["t"] - e["t"]) < .005]
+        if len(same) > 1 and e is same[0]:
+            same.sort(key=lambda x: RUSH.index(x["key"].split(":")[0]) if x["key"].split(":")[0] in RUSH else 9)
+            for j, x in enumerate(same):
+                x["t"] = round(x["t"] + RUSH_AT[min(j, len(RUSH_AT) - 1)], 3)
+                x["vol"] = round(x["vol"] * .8, 4)
+    return sorted(out, key=lambda e: e["t"])
+
+
+def _tuned_events_path(src, out_dir):
+    import json
+    ev = json.load(open(src))
+    dst = os.path.join(out_dir, "events.tuned.json")
+    os.makedirs(out_dir, exist_ok=True)
+    json.dump(_tune_events(ev), open(dst, "w"), indent=0)
+    return dst
+
+
 def main():
     argv = sys.argv[1:]
     for k, v in (("--script", "script_ep13.json"), ("--out", "build/ep13"), ("--var", "TIMELINE_EP13"), ("--music", "build_music13")):
         if k not in argv:
             argv += [k, v]
+    if "--events" in argv and argv[argv.index("--events") + 1]:
+        i = argv.index("--events") + 1
+        argv[i] = _tuned_events_path(argv[i], os.path.join(A6.HERE, argv[argv.index("--out") + 1]))
     sys.argv = [sys.argv[0]] + argv
     A6.main()
     out = argv[argv.index("--out") + 1]
