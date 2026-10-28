@@ -254,7 +254,7 @@ const END = {
     // the lockup drops in, then the lines type in one by one
     text('THANKS FOR WATCHING', 540, 150, { size: 34, fill: '#ffd1e6', weight: 900, spacing: 10, lw: 8, alpha: seg(lt, .5, .85), maxW: 940 });
     const k = easeBack(seg(lt, .1, .55));
-    if (k > .06) {
+    if (k > .34) {   /* hero text stays at 30 px or more: the lockup appears once it is a third of its size, not before */
       ctx.save(); ctx.translate(540, 0); ctx.scale(k, k);
       UI.label('SHIFT HAPPENS', 0, 262 + BANG_CAP * 92, { size: 92, font: 'Bangers', fill: '#ffd60a', lw: 18, stroke: '#150f22', spacing: 4, shadow: 20 });
       UI.label('THE IN-SERVICE', 0, 384 + BANG_CAP * 116, { size: 116, font: 'Bangers', fill: '#ffffff', lw: 18, stroke: '#150f22', spacing: 4, shadow: 24 });

@@ -145,7 +145,7 @@ const LEM_X = -215;   /* Lemon stands clear of Mrs. Cranberry's chair (X 15): th
 const TRK = [
   [0, 0, 1.00, 360, 960], [1.5, 0, 1.04, 360, 960],                                                                    // alarm: a slow push
   [2.6, -70, 1.14, 360, 900], [4.3, -70, 1.14, 360, 900],                                                              // a1: the Administrator
-  [4.9, LEM_X, 2.20, 360, 830], [6.6, LEM_X, 2.20, 360, 830], [6.7, LEM_X, 2.20, 360, 830],                               // l1: Lemon, tight
+  [4.9, LEM_X, 2.20, 360, 830], [6.6, LEM_X, 2.20, 360, 830], [6.758, LEM_X, 2.20, 360, 830],                               // l1: Lemon, tight
   [6.759, 310, 1.10, 360, 860], [7.6, 40, 1.00, 360, 960],                                                             // c1: a hard cut to the closet; then the scramble, wide
   [8.33, 0, 1.00, 360, 960], [11.0, 0, 1.00, 360, 960], [11.04, 0, 1.00, 360, 960],                                    // m1: the wide two-shot by the closet
   [11.041, 200, 1.90, 360, 840], [14.5, 200, 1.90, 360, 840],                                                          // r1 -> m2: Mrs. Cranberry and Mango, tight
