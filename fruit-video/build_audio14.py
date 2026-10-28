@@ -562,10 +562,12 @@ def sfx_thud():
         x = _lp4(noise6(d, 2010), 700, 2) * np.exp(-t / .05) * .8
         x += (_sin_of(_glide(105, 55, d)) * np.exp(-t / .11) * 1.0 + np.sin(2 * np.pi * 190 * t) * np.exp(-t / .05) * .5)
         x += _burst(2011, d, 900, 4500, .005) * .5 + _burst(2012, d, 1500, 6000, .03) * .15
+        x += np.sin(2 * np.pi * 340 * t) * np.exp(-t / .03) * .75 + _band(2014, d, 250, 900) * np.exp(-t / .02) * .6      # the desk's knock: what a phone speaker can play
+        x += np.sin(2 * np.pi * 210 * t) * np.exp(-t / .07) * .9 + _band(2015, d, 120, 450) * np.exp(-t / .05) * 1.1        # and the whump of the slab, in the band a small speaker keeps
         r = rng6(2013)
         for j in range(5):
             _place(x, _ping(r.uniform(1400, 3200), .1, r.uniform(.015, .03), (1.0, 2.6), (1.0, .4), (1.0, .5)), .02 + .035 * j + r.uniform(0, .03), .14)
-        for at, g, tau in ((.04, .55, .3), (.34, .26, .22)):
+        for at, g, tau in ((.04, .3, .26), (.34, .14, .2)):
             tt = tarr(.9)
             bell = (np.sin(2 * np.pi * 2350 * tt) + .55 * np.sin(2 * np.pi * 2350 * 2.76 * tt) * np.exp(-tt / (tau * .4)) + .25 * np.sin(2 * np.pi * 2350 * 5.4 * tt) * np.exp(-tt / (tau * .2)))
             _place(x, bell * np.exp(-tt / tau) * np.minimum(1, tt / .0015), at, g)
@@ -574,9 +576,9 @@ def sfx_thud():
     t = tarr(d)
     x = _lp4(noise6(d, 2020), 600, 2) * np.interp(t, [0, .012, .05, .16], [0, 1, .5, 0]) * .9
     x += _sin_of(_glide(120, 66, d)) * np.exp(-t / .07) * .8
-    _place(x, _burst(2021, .15, 700, 3000, .05) * .35, .02)
+    _place(x, _burst(2021, .15, 600, 2200, .05) * .25, .02)
     _place(x, _sum(_sin_of(_glide(330, 130, .07)) * np.exp(-tarr(.07) / .03) * .35, _lp4(noise6(.06, 2022), 1200, 2) * np.exp(-tarr(.06) / .02) * .3), .07)
-    _place(x, _burst(2023, .12, 1200, 4500, .035) * .25, .2)
+    _place(x, _burst(2023, .12, 900, 3200, .035) * .16, .2)
     return norm6(_edge(x, .0004, .1), .75)
 
 
@@ -621,6 +623,7 @@ def sfx_whoosh():
     out = np.stack([w * np.cos(th), w * np.sin(th)])
     low = _thump(130, 70, d, .08) * np.minimum(1, t / .01) * .35
     out += np.stack([low * .7, low * .7])
+    out = np.stack([_lp4(out[0], 6000, 2), _lp4(out[1], 6000, 2)])
     return norm6(_edge(out, .002, .12), .6)
 
 
