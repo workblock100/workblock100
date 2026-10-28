@@ -36,7 +36,7 @@
  *   fp14_clip   a clipboard with a form (shapes only; ticks, lines, a pen on a string). A14.clip(x, y, o) draws the same board as a set piece.
  *   fp14_pen    a pen (or a pencil with o.pencil) in the fist, the tip at the hand; o.penAng aims it
  *   fp14_binder a huge three-ring binder (tabs on the edge, a label); o.binderLabel, o.binderColor; A14.drawBinder(cx, cy, w, h, o) draws one anywhere (spines, wall, desk)
- *   fp14_binocs binoculars held to the eyes (o.focus 0..1 pulls the barrels out and sharpens the glint). Registered nearFace.
+ *   fp14_binocs binoculars held to the eyes (o.focus 0..1 pulls the barrels out and sharpens the glint; o.binocK 0..1 slides them from the hand (0) to the eyes (1); o.binocA 0..1 brings them out). Registered nearFace. Needs o.grip.l (the left hand on the left barrel).
  */
 (() => {
 if (!window.TIMELINE_EP14) return;
@@ -489,8 +489,9 @@ PROP_BOX.fp14_binder = [-40, -70, 76, 70];
 
 // binoculars held to the eyes: two barrels with objective lenses facing us, a bridge with a focus wheel; o.focus 0..1 pulls the barrels out and sharpens the glint
 EXT.prop.fp14_binocs = (side, o, t) => {
-  const k = KINDS[o.kind] || KINDS.star14, g = (o.grip && o.grip.l) || [0, 0], f = clamp(o.focus ?? 0);
-  ctx.save(); ctx.translate(-g[0], k.eyeY - g[1]);
+  const k = KINDS[o.kind] || KINDS.star14, g = (o.grip && o.grip.l) || [0, 0], f = clamp(o.focus ?? 0), q = clamp(o.binocK ?? 1), a = clamp(o.binocA ?? 1);
+  if (a <= 0.01) return;
+  ctx.save(); ctx.translate(-g[0] * q, (k.eyeY - g[1]) * q); ctx.scale(lerp(.45, 1, a), lerp(.45, 1, a)); ctx.globalAlpha *= clamp(a * 1.6);   /* binocK 0 = at the hand, 1 = at the eyes; binocA 0..1 brings them out of the jacket */
   const ex = k.eyeX, R = k.er * 1.55 + 6 + 3 * f, L = 26 + 14 * f;
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // the bridge and the focus wheel

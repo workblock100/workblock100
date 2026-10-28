@@ -702,16 +702,147 @@ function drawShotA(lt) {
   effectsA(lt);
 }
 
-// ------------------------------------------------------------------ the scene (development tail: shot A only)
+// ------------------------------------------------------------------ SHOT D: THE CAMERA TRAP (12.64 to 14.10). A corner camera in the med room, drawn as its own flat set (grey values: the grade turns it night-vision green).
+const TRAP = { cut: 12.64, counter: 1150 };
+const PENX = [610, 730, 850, 970], PENY = 1128, NPEN = 4;          /* the five pens lie on the counter, a paper flag standing up from each */
+const OLDLAB = ['6/12', 'MAR', '?', 'EXP'];
+let trapBG = null;
+function buildTrapBG() {
+  const cv = V2.mk(W, 1400), g = cv.getContext('2d'), prev = ctx; ctx = g;
+  try {
+    ctx.fillStyle = g2(0, 0, 0, 1150, [[0, '#364148'], [.5, '#566269'], [1, '#6c797f']]); ctx.fillRect(0, 0, W, 1400);
+    /* the ceiling band and its tube light */
+    ctx.fillStyle = '#3a454b'; ctx.fillRect(0, 0, W, 150); ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(0, 150, W, 4);
+    ctx.fillStyle = '#f2ffe9'; rr(220, 62, 640, 36, 14); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(240, 68, 600, 6);
+    /* subway tile, lower wall */
+    ctx.fillStyle = '#a3afb6'; ctx.fillRect(0, 540, W, 612);
+    ctx.strokeStyle = 'rgba(70,82,90,.55)'; ctx.lineWidth = 2;
+    for (let y = 540; y <= 1150; y += 38) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    for (let r = 0; r < 16; r++) for (let x = (r % 2) * 38; x < W; x += 76) { ctx.beginPath(); ctx.moveTo(x, 540 + r * 38); ctx.lineTo(x, 578 + r * 38); ctx.stroke(); }
+    ctx.fillStyle = '#c6d0d5'; ctx.fillRect(0, 534, W, 10);
+    /* wall cabinets, left: three glass-front doors with the boxes inside */
+    for (let i = 0; i < 3; i++) {
+      const x = 40 + i * 176, y = 190;
+      ctx.fillStyle = g2(x, y, x + 160, y + 300, [[0, '#d9e0e4'], [1, '#aab5bb']]); rr(x, y, 160, 300, 8); ctx.fill(); outline(3.4); ctx.stroke();
+      ctx.fillStyle = '#e9f4f8'; rr(x + 16, y + 20, 128, 200, 5); ctx.fill(); outline(2.4); ctx.stroke();
+      for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) { ctx.fillStyle = ['#7f8d96', '#b9c4ca', '#5d6b74'][(r + c + i) % 3]; ctx.fillRect(x + 26 + c * 38, y + 40 + r * 84, 30, 56); }
+      ctx.fillStyle = '#8f9ba2'; ctx.fillRect(x + 16, y + 118, 128, 4);
+      ctx.fillStyle = '#5a666d'; rr(x + 62, y + 246, 36, 12, 5); ctx.fill();
+    }
+    /* the fridge, right: a tall white body, a glass door lit from inside, three shelves, a vented base */
+    ctx.fillStyle = g2(0, 170, 0, 1150, [[0, '#eef3f5'], [1, '#c3ced4']]); rr(640, 160, 372, 992, 16); ctx.fill(); outline(4); ctx.stroke();
+    ctx.fillStyle = '#233037'; rr(664, 232, 324, 660, 10); ctx.fill();
+    ctx.fillStyle = g2(0, 240, 0, 880, [[0, '#f6fdff'], [1, '#c9e3ea']]); rr(672, 240, 308, 644, 6); ctx.fill();
+    for (const sy of [380, 560, 736]) { ctx.fillStyle = '#aebcc3'; ctx.fillRect(672, sy, 308, 8); ctx.fillStyle = 'rgba(0,0,0,.14)'; ctx.fillRect(672, sy + 8, 308, 10); }
+    for (const [sy, n] of [[300, 9], [480, 8], [656, 9], [820, 7]]) for (let i = 0; i < n; i++) { ctx.fillStyle = ['#6e7e87', '#e9eff2', '#9aa8b0', '#4f5e66'][(i + sy) % 4]; ctx.fillRect(684 + i * 33, sy + 22 - ((i * 7) % 14), 24, 52 + ((i * 5) % 12) - 12); outline(2); ctx.strokeRect(684 + i * 33, sy + 22 - ((i * 7) % 14), 24, 52 + ((i * 5) % 12) - 12); }
+    ctx.fillStyle = '#9fb0b8'; rr(1000, 460, 8, 180, 4); ctx.fill(); ctx.fillStyle = '#2f3b42'; rr(676, 176, 120, 40, 8); ctx.fill(); ctx.fillStyle = '#9dffb0'; rr(686, 184, 60, 24, 4); ctx.fill();
+    ctx.fillStyle = '#4a565d'; ctx.fillRect(664, 920, 324, 220); ctx.strokeStyle = '#2c363c'; ctx.lineWidth = 6; for (let y = 940; y < 1130; y += 24) { ctx.beginPath(); ctx.moveTo(680, y); ctx.lineTo(972, y); ctx.stroke(); }
+    /* the sink, left: a basin in the counter, a swan-neck tap, a pump bottle and a red sharps bin on the wall */
+    ctx.fillStyle = '#dfe7ea'; rr(70, 1040, 320, 112, 8); ctx.fill(); outline(3); ctx.stroke();
+    ctx.fillStyle = '#9aa7ae'; rr(110, 1060, 240, 60, 22); ctx.fill();
+    tube(230, 1052, 230, 1000, 14); tube(230, 1000, 262, 982, 12); tube(262, 982, 262, 1006, 12);
+    ctx.fillStyle = '#e9f2f5'; rr(420, 1018, 36, 94, 8); ctx.fill(); outline(3); ctx.stroke(); ctx.fillStyle = '#7a8890'; rr(430, 996, 16, 26, 4); ctx.fill();
+    ctx.fillStyle = '#cfd8dc'; rr(480, 560, 120, 130, 12); ctx.fill(); outline(3.4); ctx.stroke(); ctx.fillStyle = '#4b585f'; rr(500, 590, 80, 44, 8); ctx.fill();
+  } finally { ctx = prev; }
+  return cv;
+}
+const PEN_SC = 1.0;
+function artPen() {
+  ctx.fillStyle = g2(0, -13, 0, 13, [[0, '#ffffff'], [1, '#aab6bd']]); rr(-52, -12, 104, 24, 10); ctx.fill(); outline(3); ctx.stroke();
+  ctx.fillStyle = '#39454c'; rr(-60, -14, 36, 28, 8); ctx.fill(); outline(3); ctx.stroke();
+  ctx.fillStyle = '#8fd0e6'; rr(-2, -6, 34, 12, 4); ctx.fill(); outline(2); ctx.stroke(); ctx.fillStyle = '#233037'; for (let i = 0; i < 4; i++) ctx.fillRect(4 + i * 8, -5, 2, 10);
+  ctx.fillStyle = '#2a343a'; rr(50, -8, 14, 16, 5); ctx.fill(); outline(2.4); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.fillRect(-20, -9, 70, 3);
+}
+/* a pen's flag: paper on a stalk, drawn as shapes (its string is drawn live, last) */
+function drawFlag(x, y, w = 108, h = 58, ink = 0) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; rr(x - w / 2 + 3, y - h + 5, w, h, 5); ctx.fill();
+  ctx.fillStyle = g2(0, y - h, 0, y, [[0, '#ffffff'], [1, '#e1e7ea']]); rr(x - w / 2, y - h, w, h, 5); ctx.fill(); outline(2.8); ctx.stroke();
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(x - w / 2 + 6, y - h + h * .7, w - 12, 2);
+  ctx.fillStyle = '#d9dee2'; ctx.fillRect(x - 6, y - 2, 12, 12); outline(2); ctx.strokeRect(x - 6, y - 2, 12, 12);
+  ctx.restore();
+}
+
+/* the marker: a fat black marker in the fist, its tip at (+24, +20) from the hand (local units), the cap on the other end */
+EXT.prop.fp14b_marker = (side, o, t) => {
+  ctx.save(); ctx.rotate(.72 * side * 1);
+  ctx.fillStyle = INK; rr(-8, -48, 16, 52, 6); ctx.fill();
+  ctx.fillStyle = g2(-8, 0, 8, 0, [[0, '#f4f4f6'], [1, '#aeb2bd']]); rr(-6, -44, 12, 40, 5); ctx.fill();
+  ctx.fillStyle = '#e8403f'; ctx.fillRect(-6, -34, 12, 9);
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(6, 0); ctx.lineTo(2.4, 17); ctx.lineTo(-2.4, 17); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#2a2630'; rr(-9, -52, 18, 14, 4); ctx.fill(); outline(2.2); ctx.stroke();
+  ctx.restore();
+};
+PROP_BOX.fp14b_marker = [-30, -60, 30, 30];
+
+// ------------------------------------------------------------------ SHOT D: Clementine dates the pens; the second shutter catches her looking into the lens
+const T_SCR0 = () => CUE.scribble, T_PEN = .17;             /* the marker reaches pen i at scribble + i x .17 */
+const PEN_T = i => T_SCR0() + i * T_PEN;
+function clemTrap(lt) {
+  const sc0 = T_SCR0(), sh2 = CUE.shutter2, k = seg(lt, sc0, sc0 + 4 * T_PEN + .1), s = 1.2;
+  const bx = lerp(420, 704, easeIO(k));                       /* she shuffles along the counter as she writes */
+  const caught = lt >= sh2 - .26;
+  const o = mkClem({ x: bx, y: 1166, s, t: lt, expr: caught ? 'shock' : 'hopeful', look: caught ? [0, .05] : lt < sc0 ? [-.95, .15] : [.3, .55], arms: { l: 'hips', r: 'reach' }, hold: { r: 'fp14b_marker' }, hand: {}, acc: ['steth', 'badge7'] });
+  /* the marker tip rides along the flags (tip is 29 px right of and 24 px below the hand at this scale) */
+  let tx, ty;
+  if (lt < sc0) { tx = PENX[0] - 36; ty = PENY - 96; }
+  else { const u = clamp((lt - sc0) / T_PEN, 0, NPEN - .6), i = Math.min(NPEN - 1, Math.floor(u)), f = u - i; tx = PENX[i] - 36 + 72 * easeIO(Math.min(1, f * 1.2)) + (i === 4 ? 0 : 0); ty = PENY - 66 + 4 * Math.sin(lt * 70); if (lt > sc0 + NPEN * T_PEN + .02) { tx = PENX[NPEN - 1] + 20; ty = PENY - 130 - 30 * easeOut(seg(lt, sc0 + NPEN * T_PEN + .02, sh2)); } }
+  o.grip = { r: gripFor(o, 'r', tx - 29, ty - 24) };
+  if (caught) { o.arms = { l: 'up', r: 'reach' }; o.squash = .04; o.browUp = 4; }
+  o.noLegs = false;
+  return o;
+}
+/* a flag: the old label, the scribble over it, then TODAY typed in */
+function flagStates(lt) {
+  return PENX.map((x, i) => { const t = PEN_T(i), scrib = sstep(lt, t - .03, t) * (1 - sstep(lt, t + .06, t + .1)), reveal = seg(lt, t + .02, t + .12); return { x, i, old: lt < t - .02, blob: scrib, reveal }; });
+}
+function drawTrapWorld(lt) {
+  if (!trapBG) trapBG = buildTrapBG();
+  ctx.drawImage(trapBG, 0, 0);
+  /* the fridge's light spills onto the wall; the IR lamp lights the middle of the frame */
+  V2.glow(826, 520, 560, '200,255,215', .34, 'screen', .3);
+  V2.glow(500, 760, 760, '170,255,190', .22, 'screen', .2);
+  V2.setLight({ key: [0, -.8], keyColor: '#dfffe6', keyA: .34, shadowA: .5, rim: '#9affb0', rimA: .5, amb: '#c8ffd0', ambA: .04 });
+  for (let i = 0; i < NPEN; i++) { floorShadow(PENX[i], PENY + 14, 56, .4); }
+    for (let i = 0; i < NPEN; i++) { ctx.save(); ctx.translate(PENX[i], PENY); ctx.rotate(-.04 + .08 * hash(i * 3)); ctx.scale(.9, .9); artPen(); ctx.restore(); drawFlag(PENX[i], PENY - 12); }
+  const c = clemTrap(lt); drawChar(c);
+  /* the counter front, over her legs: a cabinet front with drawers, and the worktop edge */
+  const cy = TRAP.counter;
+  ctx.fillStyle = g2(0, cy, 0, cy + 260, [[0, '#8a969d'], [1, '#5b676e']]); ctx.fillRect(-60, cy, W + 120, 900);
+  ctx.fillStyle = '#e8eef1'; ctx.fillRect(-60, cy - 14, W + 120, 22); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fillRect(-60, cy - 14, W + 120, 4);
+  ctx.strokeStyle = 'rgba(30,40,46,.7)'; ctx.lineWidth = 4; for (const x of [0, 270, 540, 810, 1080]) { ctx.beginPath(); ctx.moveTo(x, cy + 8); ctx.lineTo(x, cy + 760); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(-60, cy + 150); ctx.lineTo(W + 60, cy + 150); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-60, cy + 300); ctx.lineTo(W + 60, cy + 300); ctx.stroke();
+  ctx.fillStyle = '#4a565d'; for (const x of [135, 405, 675, 945]) { rr(x - 28, cy + 70, 56, 12, 6); ctx.fill(); rr(x - 28, cy + 210, 56, 12, 6); ctx.fill(); }
+  /* the writing, LAST: every string is drawn over everything (nothing can cover it). Old labels are dressing, TODAY is the joke. */
+  const st = flagStates(lt);
+  for (const f of st) {
+    const y = PENY - 12 - 29;
+    if (f.old) UI.label(OLDLAB[f.i], f.x, y, { size: 24, weight: 900, fill: '#3b4a53', hero: false, italic: true, maxW: 96 });
+    else if (f.blob > .01) { ctx.save(); ctx.globalAlpha = f.blob; ctx.strokeStyle = INK; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(f.x - 46, y + 8); for (let q = 0; q < 6; q++) ctx.lineTo(f.x - 46 + q * 18.4, y + (q % 2 ? -12 : 12)); ctx.stroke(); ctx.restore(); }
+    if (f.reveal > 0) UI.label('TODAY', f.x, y, { size: 24, weight: 900, spacing: .5, fill: '#0a1a10', reveal: f.reveal, maxW: 98 });
+  }
+}
+
+const trapFx = lt => ({ bloom: .55, vignette: .78, grain: .17, contrast: .46, sat: 0, tint: [['#2dff6e', 1, 'color'], ['#031c0c', .16, 'multiply']] });
+function trapOver(lt) {
+  trapOverlay(lt, { cut: TRAP.cut });
+  const c = clemTrap(lt), sh2 = CUE.shutter2;
+  trapFlash(lt, CUE.shutter1); trapFlash(lt, sh2);
+  const m = ctx.getTransform(), k = 1.25;   /* the MOTION frame follows her in screen space: the world is drawn at the trap camera's zoom */
+  const sx = x => 540 + (x - 640) * k, sy = y => 960 + (y - 900) * k;
+  trapHUD(lt, { t0: TRAP.cut, box: [sx(c.x - 150), sy(744), sx(c.x + 150), sy(1140)], caught: lt >= sh2 });
+}
+
+// DEV tail: the trap shot alone (lt 12.6 to 14.1)
 const SC = {
-  shot: lt => 'a',
-  cam(lt) { const c = A_CAM(lt); zoomTo(c.x, c.y, c.z); CAM.shake = lt >= CUE.crash ? 9 * Math.exp(-(lt - CUE.crash) / .22) : 0; },
-  draw(lt) { drawShotA(lt); },
-  fx: lt => ({ bloom: .4, vignette: .42, grain: .045, contrast: .14, sat: .12, tint: [['#ffb870', .06, 'soft-light']] }),
+  shot: lt => 'd',
+  cam(lt) { zoomTo(640, 900, 1.25 + .03 * seg(lt, TRAP.cut, 14.1)); },
+  draw(lt) { drawTrapWorld(lt); },
+  fx: trapFx,
   blur: lt => 1,
-  over(lt) { },
+  over(lt) { trapOver(lt); },
 };
 window.__EP14_SCENES = window.__EP14_SCENES || {};
 window.__EP14_SCENES.adapt = SC;
-window.FP14J = { KIND, jdraw, jsc, JSC, JB, restY, ball, puff, floorShadow };
 })();

@@ -158,6 +158,15 @@ def trem_strings(notes, d, rate=11.0, a=.4, r=.5, bright=3200, depth=.55):
     return s * np.stack([1 - depth * (.5 + .5 * np.sin(2 * np.pi * rate * t)), 1 - depth * (.5 + .5 * np.sin(2 * np.pi * rate * t + 1.6))])
 
 
+def gliss_cello(m0, m1, d, a=.3, r=.5, vel=1.0):
+    """A cello sliding from note m0 to note m1 (MIDI, an exponential glide) over d seconds, with the vibrato and the body resonances of cello(): a note that will not stay up."""
+    t = tarr(d)
+    f = midi(m0) * (midi(m1) / midi(m0)) ** (t / d) * (1 + .0045 * np.sin(2 * np.pi * 5.1 * t) * np.clip((t - .25) / .35, 0, 1))
+    x = osc("saw", f, d)
+    y = lp(x, 2200, 2) + .7 * bp(x, 180, 320, 1) + .5 * bp(x, 520, 800, 1) + hp(_noise(d), 3000) * .012
+    return _fit_rms(y) * ar(d, a, min(r, d * .45)) * vel
+
+
 def hornline(T, notes, at, gain=.1, pan=.2, vel=.7, **kw):
     """Play a horn line: notes are (midi, start offset, duration) tuples placed from `at`."""
     for m, off, dd in notes:
@@ -233,6 +242,261 @@ TAIL14["colony"] = .5
 DIP14["colony"] = .55
 REVERB14["colony"] = (.5, 1.8)
 DIPS14.update({"carclose": (3, .3, .25), "buzz": (2, .15, .15), "stab": (5, .5, .4), "sting": (6, .7, .5)})
+
+
+# ================================================================ adapt: six behaviours observed
+def cue_adapt14(T, t0, d, beats, D):
+    """3:04 PM, the adaptation: brisk comic scoring. Concealment (0.55 to 4.1 s) is a sneaking pizzicato walk in A minor at 112 bpm (an upright bass, a marimba on the offbeats, a
+    woodblock). 'Does it close?' is stop-time: the music drops out for two woodblock taps and a tuba that sags on the question mark; 'Sure!' is a marimba run and a timpani roll that
+    climbs into the crash (5.71), which gets a cymbal, a brass stab and a trombone sliding down; 'It closes.' gets one deadpan tuba. The charting is a typewriter: sixteenth-note
+    woodblocks at 150 bpm with a pizzicato bass and a bell at the end of the line. 'Born today' gets a celesta birth. The camera trap (12.5 to 14.1 s) is a hushed bed of low strings
+    with a heartbeat on the two shutters. 'Call lights are answered in nine seconds' is a metronome at 120 bpm (a woodblock and a bass); it stops dead on 'Position' and one
+    lonely step answers on 'has.'. The Administrator's display is a polka at 150 bpm whose downbeat lands on the pizza boxes (22.03): tuba oom, brass pah, a ridiculous fanfare of
+    trumpets climbing C major, a harp glissando on the sparkle, a flourish on 'surveys!' and a trombone that sighs as the staff member in the doorway watches in silence."""
+    op, n2, m1, c1, pop, l1, n3, n4, cam, n5, n6, a1, en = (beats[k] for k in ("open", "n2", "m1", "c1", "pop", "l1", "n3", "n4", "cam", "n5", "n6", "a1", "end"))
+    bl = 60 / 112
+    walk = (45, 48, 50, 52, 50, 48, 45, 43)
+    for k, at in enumerate(grid(t0 + .55, m1[0] - .04, 112, 1.0)):                                  # concealment
+        T.put(ubass(walk[k % 8], .45, .8 if k % 2 == 0 else .65), hum(at, -.006, .004), .19, -.1)
+        T.put(marimba(midi((69, 72, 74, 72)[k % 4]), .14), at + bl / 2, .06, .3 if k % 2 else -.3)
+        if k % 2 == 0:
+            D.put(woodblock(), at + bl / 2, .035, .3)
+    for at in (m1[0] + .27, m1[0] + .66):                                                            # 'Does it close?': stop-time
+        D.put(woodblock(), at, .09, 0)
+    T.put(tuba(38, .45), m1[1] - .12, .2, 0)
+    for k, m in enumerate((57, 60, 64, 67, 69, 72, 76, 79)):                                         # 'Sure!': the push
+        T.put(marimba(midi(m), .18), c1[0] + .02 + k * .06, .09, -.4 + .1 * k)
+    T.put(roll(70, .55, 16), c1[0] + .02, .12, -.1)
+    T.gate(c1[0] - .02, c1[1] + .02, .5, .04)                                                         # 'Sure!' is a short word: the push sits under it
+    crash_at = t0 + 5.71                                                                              # the door bursts
+    T.put(crash(1.0), crash_at, .1, .1)
+    T.put(brass([46, 53, 58, 62], .35, .01, .15, 1900), crash_at, .1, 0)
+    T.put(slide_brass(62, 50, .7, 900), crash_at + .05, .1, .1)
+    T.put(tuba(38, .5), W("l1", "closes") - .02, .17, 0)                                             # 'It closes.'
+    for k, at in enumerate(grid(n3[0] + .02, n3[1] - .05, 150, .25)):                                # charting: a typewriter
+        D.put(woodblock(), at, .05 if k % 4 == 0 else .028, .3 if k % 2 else -.3)
+        if k % 8 == 0:
+            D.put(pizz(midi(45 if (k // 8) % 2 == 0 else 52), .2), at, .16, 0)
+        if k % 4 == 2:
+            D.put(tick(), at, .04, .3)
+    D.put(bell(midi(96), 1.2) * .6, n3[1], .06, .3)                                                  # the carriage bell
+    for k, at in enumerate(grid(n4[0] - .05, cam[0] - .25, 120, 1.0)):                               # born today
+        T.put(ubass(walk[k % 8], .4, .8), hum(at, -.006, .004), .17, -.1)
+        T.put(marimba(midi((69, 72, 74, 72)[k % 4]), .14), at + .25, .055, .3 if k % 2 else -.3)
+    born = W("n4", "born")
+    for j, m in enumerate((84, 88, 91, 96)):
+        T.put(celesta(m, 1.2, .8), born + .02 + j * .06, .06, -.3 + .2 * j)
+    T.put(strings([33, 40, 45], cam[1] - cam[0] + .45, .35, .6, 4.5, 500), cam[0] - .15, .08)        # the camera trap
+    T.put(glass(103, 1.6, .3, .8), cam[0] + .1, .015, .4)
+    for at in (t0 + 12.788, t0 + 13.688):
+        D.put(heart(.3), at, .16, 0)
+        D.put(heart(.25), at + .2, .11, 0)
+        D.put(tick(), at + .01, .04, 0)
+    ps = W("n5", "Position")
+    for k, at in enumerate(grid(n5[0] + .02, ps - .05, 120, 1.0)):                                   # the metronome
+        D.put(woodblock(), at, .06, .3 if k % 2 else -.3)
+        D.put(pizz(midi(45 if k % 2 == 0 else 52), .2), at, .13, -.1)
+    stepl = W("n5", "has", 1)
+    D.put(woodblock(), stepl, .12, -.3)
+    D.put(pizz(midi(40), .25), stepl, .2, -.3)
+    pb = t0 + 22.032                                                                                  # the display: a polka
+    pbl = .4
+    pk0 = pb - 6 * pbl
+    for k in range(7):
+        at = pk0 + k * pbl
+        if k % 2 == 0:
+            D.put(tuba(36 if (k // 2) % 2 == 0 else 43, .3), at, .2, 0)
+        else:
+            D.put(brass([60, 64, 67], .12, .006, .05, 2000), at, .09, .2)
+    for bt, m, dd in ((0, 72, .5), (.5, 76, .5), (1, 79, .5), (1.5, 84, 1.0), (3, 79, .5), (3.5, 81, .5), (4, 83, 1.0), (5.5, 84, .5), (6, 84, 1.4)):
+        T.put(trumpet(m, dd * pbl * .9, .9), pk0 + bt * pbl, .07, .2)
+    T.put(brass([48, 55, 60, 64, 67, 72], .7, .01, .3, 2600), pb, .1, 0)
+    T.put(crash(1.2), pb, .06, .1)
+    T.put(timp(65, 1.0), pb, .16)
+    for k, m in enumerate((72, 76, 79, 84, 88, 91)):                                                  # the sparkle
+        T.put(harp(m, 1.2, .6), t0 + 22.33 + .045 * k, .07, -.4 + .15 * k)
+    sv = W("a1", "surveys")
+    T.put(brass([60, 64, 67, 72], .35, .01, .15, 2400), sv, .08, 0)
+    T.put(tuba(36, .35), sv, .17, 0)
+    T.put(slide_brass(57, 50, .9, 800), a1[1] + .12, .1, 0)                                           # the staff member in the doorway
+    T.fade(t0 + d - .5, t0 + d, 1, 0)
+
+
+CUES["adapt"] = cue_adapt14
+LEVEL14["adapt"] = 1.0
+TAIL14["adapt"] = .3
+DIP14["adapt"] = .6
+REVERB14["adapt"] = (.3, .9)
+DIPS14.update({"crash": (5, .3, .25), "clatter": (4, .4, .3), "shutter": (3, .2, .2), "scribble": (2, .4, .2), "pizzabox": (5, .3, .3), "sparkle": (2, .3, .2)})
+
+
+# ================================================================ arrive: the entrance conference
+def cue_arrive14(T, t0, d, beats, D):
+    """3:09 PM, the lobby. Ominous and comic, in D minor. The doors slide open (0.3 s) on a string swell (D, A, D, F; 0.25 to 1.15 s) that peaks on the second chime with a bass drum at 1.1:
+    the star-shaped silhouette. Under 'Good afternoon. Don't mind me. I'm just going to observe.' only a low pedal (a cello on D and a viola on A), a bass drum like a slow heartbeat, and,
+    on 'Don't mind me.', three celesta notes in the minor (G, C, E flat: the horn theme as the State sounded before anybody trusted it). The binder (thud at 8.84) gets a tuba and a trombone
+    that sag together. The pedal stops dead on 'The staff.' and stays out for 'Noted.', and a bassoon answers a beat after. 'He selects a subject' builds: a pad rises, a clock begins to
+    tick; the binoculars (16.48 to 17.28) are a high string tremolo, three slow ticks and, on the lock-on (17.28), a single bell (E6, which makes a C major chord with the blip's G6
+    and C7); then a held low chord under 'You.' to 'I never am.'; 'Perfect.' is a clarinet's sigh and a swell that is cut dead at 23.17, so the sting is alone."""
+    op, st1, st2, a1, k1, a2, st3, n1, sc, st4, st5, s2, st6, en = (beats[k] for k in ("open", "st1", "st2", "a1", "k1", "a2", "st3", "n1", "scan", "st4", "st5", "s2", "st6", "end"))
+    T.put(strings([38, 45, 50, 53], 1.3, .8, .3, 5.0, 900), t0 + .25, .1)
+    D.put(bdrum(1.0, 1.4), t0 + 1.1, .17, 0)
+    T.put(cello(38, a2[0] - st1[0] + .2, .9, a=.9, r=.3), st1[0] - .05, .09, 0)
+    T.put(strings([45, 50], a2[0] - st1[0] + .1, .9, .3, 4.8, 520), st1[0], .05)
+    for at in (t0 + 1.95, t0 + 3.55, t0 + 5.15, t0 + 6.75, t0 + 8.35, t0 + 10.0):
+        D.put(bdrum(.5, .7), at, .09, 0)
+    for j, m in enumerate((79, 84, 87)):                                                              # 'Don't mind me.' in the minor
+        T.put(celesta(m, 1.6 if j == 2 else .8, .6), (W("st1", "Don't"), W("st1", "mind"), W("st1", "me"))[j] + .02, .035, .3 - .15 * j)
+    bd = t0 + 8.841                                                                                   # the binder
+    T.put(tuba(38, .5), bd, .2, 0)
+    T.put(slide_brass(50, 38, .8, 700), bd + .03, .1, .1)
+    T.gate(a2[0] - .06, st3[1] + .05, 0.0, .05)                                                       # 'The staff.' 'Noted.': nothing
+    T.put(bassoon(33, .45, .9, a=.03, r=.1), st3[1] + .08, .15, 0)
+    T.put(strings([38, 45, 50, 53], n1[1] - n1[0] + .4, 1.6, .3, 5.0, 900), n1[0] + .3, .07)       # 'He selects a subject'
+    T.put(rising(38, 50, n1[1] - n1[0] - .6), n1[0] + .5, .06, .2)
+    for k, at in enumerate(grid(n1[0] + 1.6, sc[0] - .1, 60, 1.0)):
+        D.put(tick(), at, .06, .3)
+        D.put(woodblock(), at, .03, -.3)
+    T.put(trem_strings([88, 95], sc[1] - sc[0] + .1, 12, .2, .1, 6000), sc[0], .05)
+    for at in (t0 + 16.55, t0 + 16.85, t0 + 17.15):
+        D.put(tick(), at, .09, .2)
+        D.put(woodblock(), at, .05, -.2)
+    T.put(bell(midi(88), 2.6) * .6, sc[1] - .1, .12, .1)                                              # the lock-on: one bell
+    T.put(strings([38, 45, 50, 53], st6[0] - st4[0] + .3, .6, .6, 5.0, 800), st4[0] - .05, .07)       # a held low chord
+    T.put(cello(38, st6[0] - st4[0] + .3, .9, a=.6, r=.5), st4[0] - .05, .08, 0)
+    for at in (t0 + 19.0, t0 + 20.6):
+        D.put(bdrum(.45, .7), at, .08, 0)
+    T.put(clarinet(69, .3), st6[0] + .02, .08, .2)                                                    # 'Perfect.'
+    T.put(clarinet(65, .8, a=.06), st6[0] + .3, .08, .2)
+    T.put(strings([38, 45, 50, 53, 57], 1.1, .9, .1, 5.0, 1400), st6[0] + .1, .08)
+    T.put(riser(.9, 300, 3000, .4), st6[0] + .1, .05)
+    MUTES.append((t0 + 23.17, t0 + d, .02))                                                           # the sting is all there is
+
+
+CUES["arrive"] = cue_arrive14
+LEVEL14["arrive"] = 1.0
+TAIL14["arrive"] = .3
+DIP14["arrive"] = .55
+REVERB14["arrive"] = (.45, 1.5)
+DIPS14.update({"thud": (4, .5, .3), "click": (3, .3, .2), "slidedoor": (3, .6, .3), "slowwhoosh": (2, .6, .3)})
+
+
+# ================================================================ tracer: one nurse, followed everywhere
+def cue_tracer14(T, t0, d, beats, D):
+    """3:15 PM, the tracer. A dive onto the med room (a harp swoop and a riser, 0.2 s), a sneaking pizzicato under the surveyor's first sentences (D minor, 100 bpm), a snare roll
+    under 'Run.' and then THE CHASE: a brass-band ragtime at 150 bpm whose downbeat is the end of 'Run.' (6.558: the sound effects begin 0.1 s later, a sixteenth into the first beat):
+    kick and tuba on one and three, a brass 'pah' on two and four, a pizzicato bass on every eighth, a marching snare with ghost notes, and a trumpet that plays a syncopated
+    tune over D minor and A seventh (D4 to F5); each of the three call lights (7.758, 8.758, 9.558: beats 3, 5.5 and 7.5) gets a brass stab on D seven, at the instant of the ding;
+    the last chord is on beat 9 (10.158) and the music is then cut dead for the surveyors' arrival (10.23 to 11.78: 'Everything is perfect.' is in silence). 'It is suspicious.' gets
+    a deadpan clarinet, E, D, C (AN, falling: one note to a word). The pen investigation is a sparse pizzicato at 100 bpm with a bassoon 'bup' after each retort; 'June.' gets a
+    celesta ping and 'It's a long day.' a clarinet's sigh. The slip (19.03) is a slide whistle that falls from G7 to A4 over 0.85 s, and Banana lands (19.83) on a bass drum, a snare, a
+    little crash and a tuba. The door is a held low D (D1, A1, D2) with a pitch that climbs from 23.1 s to the end under a bass drum heartbeat; it fades at the last frame so the
+    closet can take the same chord over."""
+    op, n1, st1, s1, run, k1, st2, st3, s2, st4, s3, slip, b1, st6, en = (beats[k] for k in ("open", "n1", "st1", "s1", "run", "k1", "st2", "st3", "s2", "st4", "s3", "slip", "b1", "st6", "end"))
+    T.put(riser(.6, 400, 4000, .3), t0 + .2, .06, 0)
+    for k, m in enumerate((86, 81, 77, 74, 69, 65)):                                                  # the dive: a harp swoops down a D minor scale
+        T.put(harp(m, 1.2, .55), t0 + .2 + .07 * k, .07, .3 - .1 * k)
+    walk = (50, 53, 57, 53, 50, 48, 45, 48)
+    for k, at in enumerate(grid(n1[0] + .1, s1[0] - .15, 100, 1.0)):                                  # sneaking after the surveyor
+        T.put(ubass(walk[k % 8], .4, .75), hum(at, -.006, .004), .15 * (.7 + .3 * min(1.0, k / 6)), -.1)
+        T.put(marimba(midi((74, 77, 81, 77)[k % 4]), .12), at + .3, .045, .3 if k % 2 else -.3)
+    C, CD = Track(T.N), Track(T.N)                                                                    # the chase is the loudest thing in the scene: it has no dialogue over it, so it gets its own gain
+    b0 = t0 + 6.558                                                                                   # the chase
+    bl = .4
+    for j in range(10):                                                                               # a snare roll under 'Run.'
+        CD.put(snare13(.3 + .07 * j, ghost=(j < 5)), t0 + 6.12 + j * .045, .03 + .01 * j, .1)
+    for n in range(9):                                                                                # beats
+        t = b0 + n * bl
+        dm = n < 4 or n >= 8
+        if n % 2 == 0:
+            CD.put(kick13(.9 if n % 4 == 0 else .7), t, .1, 0)
+            C.put(tuba(38 if dm and n % 4 == 0 else 45 if dm else 45 if n % 4 == 0 else 40, .32), t, .16, 0)
+        else:
+            C.put(brass([62, 65, 69] if dm else [61, 64, 67], .13, .006, .05, 2000), t, .08, .2)
+            CD.put(snare13(.85), t, .08, .1)
+    for e in range(18):                                                                               # eighths
+        t = b0 + e * bl / 2
+        C.put(ubass((38, 45)[e % 2] if (e // 8) % 2 == 0 else (33, 40)[e % 2] + 12 if False else (45, 40)[e % 2], .16, .7), t, .1, -.1)
+        if e % 2 == 1:
+            CD.put(snare13(.45, ghost=True), t, .035, .1)
+    for e, m, ln in ((0, 69, 1), (1, 72, 1), (2, 74, 2), (4, 72, 1), (5, 69, 1), (6, 65, 2), (8, 69, 1), (9, 72, 1), (10, 74, 2), (12, 76, 1), (13, 77, 1), (14, 76, 1), (15, 74, 1), (16, 72, 2)):
+        C.put(trumpet(m, ln * bl / 2 * .85, .9), b0 + e * bl / 2, .06, .25)
+    for at in (t0 + 7.758, t0 + 8.758, t0 + 9.558):                                                   # a stab on every call light
+        C.put(brass([50, 54, 57, 60], .13, .006, .05, 2200), at, .1, 0)
+        CD.put(woodblock(), at, .06, .3)
+    C.put(brass([50, 57, 62, 65, 69], .4, .01, .12, 2200), b0 + 8 * bl, .1, 0)
+    CD.put(bdrum(.9, .8), b0 + 8 * bl, .12, 0)
+    T.buf += C.buf * 1.7
+    D.buf += CD.buf * 1.7
+    MUTES.append((t0 + 10.23, st2[0] - .03, .015))                                                    # the surveyors arrive: a sudden hush
+    for m, w in ((64, "It"), (62, "is"), (60, "suspicious")):                                         # 'It is suspicious.'
+        T.put(clarinet(m, .3 if w != "suspicious" else .9, a=.03), W("st2", w) + .02, .09, .2)
+    for k, at in enumerate(grid(st3[0] + .1, s3[1] - .1, 100, 1.0)):                                  # the pen investigation
+        T.put(ubass((45, 48, 50, 48)[k % 4], .4, .7), hum(at, -.006, .004), .12, -.1)
+        D.put(woodblock(), at + .3, .03, .3 if k % 2 else -.3)
+    for ln in ("s2",):
+        D.put(bassoon(38, .12, .85, a=.01, r=.04), beats[ln][1] + .08, .12, 0)
+    T.put(celesta(88, 1.2, .8), W("st4", "June") + .02, .07, .3)
+    T.put(clarinet(69, .3), s3[1] + .02, .08, .2)
+    T.put(clarinet(65, .6, a=.05), s3[1] + .3, .08, .2)
+    sl = t0 + 19.03                                                                                   # the slip
+    T.put(slide_whistle(103, 69, .85), sl, .2, .1)
+    land = t0 + 19.83
+    D.put(bdrum(.8, .8), land, .14, 0)
+    D.put(snare13(1.0), land, .1, .1)
+    T.put(crash(.6), land, .04, .1)
+    T.put(tuba(38, .4), land, .16, 0)
+    T.put(strings([26, 33, 38], en[1] - st6[0] + 1.6, 1.5, .5, 4.6, 450), st6[0] - .2, .1)           # the door
+    T.put(sub_bass(midi(26), en[1] - st6[0] + .5), st6[0] - .1, .1)
+    T.put(rising(38, 62, t0 + d - st6[0] - .8), st6[0] + .2, .07, .2)
+    for at in grid(st6[0] + .5, t0 + d - .3, 60, 1.0):
+        D.put(bdrum(.4, .7), at, .07, 0)
+    T.fade(t0 + d - .4, t0 + d, 1, 0)
+
+
+CUES["tracer"] = cue_tracer14
+LEVEL14["tracer"] = 1.0
+TAIL14["tracer"] = .3
+DIP14["tracer"] = .6
+REVERB14["tracer"] = (.3, .9)
+DIPS14.update({"whoosh": (3, .3, .2), "ding1": (3, .3, .25), "peel": (4, .3, .2), "boing": (4, .3, .2)})
+
+
+# ================================================================ closet: the stash lands, in slow motion
+def cue_closet14(T, t0, d, beats, D):
+    """3:21 PM, the shower room, in D minor, taking over the tracer's low chord (D1, A1, D2) so the held tension carries across the cut. The door's strain (0.3 s creak) is the pedal alone.
+    The landslide (1.77 to 4.37 s) is slow-motion drama: a reversed cymbal swells for 0.57 s into the first crash (2.27) and is cut on it; a timpani and a low-passed crash and a
+    dissonant brass cluster (D, F, A, G sharp) hit on the crash, with a long string cluster that sustains through the slide; a cello slides from B3 down to B1 over two seconds (1.85
+    to 3.8: the fall in slow motion); a second, lower timpani hits on the second crash (3.27); a harp falls through the tinsel (3.7). 'Concealment is not a strategy.' gets a single
+    bassoon note, D2, held for the line and fading, and nothing else. The Kumquat is crushed by a plucked sad trombone (B flat, A, A flat, G, the last one slow) after 'It is a tag.'"""
+    op, s1, sl, n1, k1, st1, en = (beats[k] for k in ("open", "s1", "slide", "n1", "k1", "st1", "end"))
+    T.put(strings([26, 33, 38], sl[0] - op[0] + .3, .4, .35, 4.6, 450), t0, .1)
+    T.put(sub_bass(midi(26), sl[0] - op[0]), t0 + .05, .08)
+    T.put(revcym(.57, 1500, 8000), t0 + 1.70, .08)
+    T.put(roll(48, .5, 14), t0 + 1.77, .08, 0)
+    c1, c2 = t0 + 2.274, t0 + 3.274
+    T.put(timp(48, 2.0), c1, .26)
+    T.put(lp(crash(2.0), 3500), c1, .08, .1)
+    T.put(brass([38, 45, 50, 53, 56], 1.2, .02, .6, 1300), c1, .1, 0)
+    T.put(strings([26, 33, 38, 44, 50, 56], 2.2, .15, 1.4, 4.8, 900), c1, .1)
+    T.put(gliss_cello(59, 35, 1.95, .2, .5), t0 + 1.85, .1, -.1)
+    T.put(timp(41, 1.6), c2, .22)
+    T.put(brass([38, 44, 50, 53], .9, .02, .5, 1200), c2, .08, 0)
+    for k, m in enumerate((96, 93, 88, 84, 79, 72)):
+        T.put(harp(m, 1.2, .5), t0 + 3.7 + .06 * k, .05, .4 - .15 * k)
+    T.put(bassoon(38, 2.1, .9, a=.06, r=.5), n1[0] + .03, .15, 0)
+    for at, m, dd in ((9.78, 58, .2), (10.0, 57, .2), (10.22, 56, .2), (10.44, 55, .3)):              # a plucked sad trombone
+        T.put(pizz(midi(m), dd + .15), t0 + at, .2, .2)
+        T.put(ubass(m - 12, dd + .15, .85), t0 + at, .11, .1)
+    T.fade(t0 + d - .3, t0 + d, 1, 0)
+
+
+CUES["closet"] = cue_closet14
+LEVEL14["closet"] = 1.0
+TAIL14["closet"] = .4
+DIP14["closet"] = .6
+REVERB14["closet"] = (.55, 1.8)
+DIPS14.update({"creak": (3, .4, .3), "slowmo": (4, .8, .4), "rumble": (3, 1.2, .5)})
 
 
 # ================================================================ title and end: the overture and its reprise
