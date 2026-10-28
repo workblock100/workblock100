@@ -145,7 +145,8 @@ function backWall(o = {}) {
   whiteboard(o.t || 0);
   corkBoard();
   // the wall clock: the time on the clock matches the scene's clock pill (min and hr from the caller)
-  S6.wallClock(LAY.clock.X, LAY.clock.Y, LAY.zb - 6, 1, o.min ?? 58, o.hr ?? 2, LAY.clock.r);
+  /* (the clock is hung like a sign: whole in the frame and clear of the clock pill, or left off the wall in that shot; a half clock peeking from behind the pill looks like a mistake) */
+  { const ck = LAY.clock; if (wholeOnWall(ck.X - ck.r, ck.Y - ck.r, ck.X + ck.r, ck.Y + ck.r, LAY.zb - 6, 10)) S6.wallClock(ck.X, ck.Y, LAY.zb - 6, 1, o.min ?? 58, o.hr ?? 2, ck.r); }
   // the pizza door: a frame with a glass panel, on the back wall, left
   const d = LAY.door, dw = d.x1 - d.x0, dx = (d.x0 + d.x1) / 2;
   flat(dx, (d.y1 + 0) / 2 + 0, d.z, dw + 24, d.y1 + 24, 0, (x, y, ww, hh) => { ctx.fillStyle = '#e8e2d2'; ctx.fillRect(x, y, ww, hh); });

@@ -21,7 +21,7 @@
  *  end     29.48-30.28 hard cut to the wide lot, held for the sting.
  *
  * Layout: the hall is S6.corridor (HW 330, ceiling 700). The camera is V2.P (f 1400, cy 360, hy 860): a point at depth D is drawn at scale 1400 / D, its floor line at y = 860 + 360 * 1400 / D.
- * Hall depths from the camera: Strawberry X -310 D 1480 (front left). The Administrator X -70 D 1420, X 80 from l1 on, X -330 for the Mrs. Cranberry shots, back at X 80 for the peel.
+ * Hall depths from the camera: Strawberry X -310 D 1480 (front left). The Administrator X 0 D 1420 (clear of her badge), X 80 from l1 on, X -330 for the Mrs. Cranberry shots, back at X 80 for the peel.
  * Lemon X -146 D 2050 (back left). The chair X 15 and Mango X 215 at D 2050, pulling to 1800 (back right). Clementine X 150-340 at D 1560, at the closet on the right wall.
  * Neighbours (not the focal character of a shot) are drawn with drawBg, soft inside V2.dof, and are not held to the audit. The camera track TRK holds [time, cx, zoom, cy, y0] keys; a repeated time is a hard cut
  * (blur 1 on those frames). cx pans the perspective (V2.setCam) and zoom / y0 frame the shot (zoomTo(540, y0, z)).
@@ -96,21 +96,24 @@ for (let i = 0; i < 18; i++) {
 }
 /* the plaque numbers of this frame: the corridor draws every plaque with its number; far doors crowd each other near the vanishing point and near doors run off the frame, so a number is kept only
    when its box is whole in the frame and does not touch the number of a nearer door. (Doors keep their plaques; only the digits are left out.) */
-/* where the focal characters of the shot stand on the screen (generous boxes): a plaque number or a wall label that one of them stands in front of is left out, so no digit is ever half hidden behind a body */
-let OCC = [];
+/* where the focal characters of the shot stand on the screen: OCC are generous boxes (the body and a hand's reach to each side): a plaque number or a wall label that one of them stands in front of is left out,
+   so no digit is ever half hidden behind a body; BODY are the bodies alone (the QUIET flag is only left out when a body would really cover it) */
+let OCC = [], BODY = [];
 function occupied(lt, sh) {
-  const F = FOCAL[sh] || [], out = [];
+  const F = FOCAL[sh] || [], gen = [], body = [];
   const add = (key, kind, X, D, m, noLegs) => {
     if (!F.includes(key)) return;
-    const q = V2.at(X, D), k = KINDS[kind], s = kz(D) * m, leg = noLegs ? 0 : (k.leg || 90), rx = (k.rx * 1.2 + 120) * s;   /* the body and the clipboard, mop or hand beside it */
-    out.push(A12.box(q.x - rx, q.y - (noLegs ? 118 * kz(D) : 0) - (leg + k.ry * 1.9 + 70) * s, q.x + rx, q.y + 16 * s));
+    const q = V2.at(X, D), k = KINDS[kind], s = kz(D) * m, leg = noLegs ? 0 : (k.leg || 90), yy = noLegs ? q.y - 118 * kz(D) : q.y, top = TOPS[kind] ?? k.ry * 1.05;
+    gen.push(A12.box(q.x - (k.rx * 1.2 + 120) * s, yy - (leg + k.ry * 1.9 + 70) * s, q.x + (k.rx * 1.2 + 120) * s, yy + 16 * s));
+    body.push(A12.box(q.x - k.rx * 1.1 * s, yy - (leg + k.ry * .9 + top) * s, q.x + k.rx * 1.1 * s, yy - (noLegs ? k.ry * .9 - k.ry : 0) * s + 12 * s));
   };
-  add('str', 'straw', ...P_STR(lt), 1); add('adm', 'melon', ...P_ADM(lt), 1.22); add('lem', 'lemon', ...P_LEM(lt), 1);
+  add('str', 'straw', ...P_STR(lt), 1); if (!admWalking(lt)) add('adm', 'melon', ...P_ADM(lt), 1.22); add('lem', 'lemon', ...P_LEM(lt), 1);
   add('mng', 'mango', ...P_MNG(lt), 1); add('cran', 'cran', ...P_CHAIR(lt), 1, true);
   if (clmVisible(lt)) add('clm', 'clem', ...P_CLM(lt), 1);
-  return out;
+  return { gen, body };
 }
-const behindSomeone = b => OCC.some(o => b[0] < o[2] + 6 && b[2] > o[0] - 6 && b[1] < o[3] + 6 && b[3] > o[1] - 6);
+const hits = (b, list, m = 6) => list.some(o => b[0] < o[2] + m && b[2] > o[0] - m && b[1] < o[3] + m && b[3] > o[1] - m);
+const behindSomeone = b => hits(b, OCC);
 function doorsAt() {
   const P = V2.P, cand = [];
   DOORS.forEach((d, i) => {
@@ -168,7 +171,7 @@ const at = (X, D) => lt => [X, camZ(lt) + D];
 const P_STR = at(-310, 1480), P_LEM = at(LEM_X, 2050);
 // the Administrator: centre front at the start; steps right during l1 so Lemon is clear of him, walks off left in the run and m1 (the pizza run),
 // is out of frame for the Mrs. Cranberry shots, and walks back in for the peel
-const admX = lt => lt < 4.3 ? -70 : lt < 5.0 ? lerp(-70, 80, easeIO(seg(lt, 4.3, 5.0))) : lt < 7.0 ? 80 : lt < 9.4 ? lerp(80, -900, easeIO(seg(lt, 7.0, 9.4))) : lt < 15.6 ? -900 : lt < 16.8 ? lerp(-900, 80, easeIO(seg(lt, 15.6, 16.8))) : 80;   /* he walks off to the left (out of the frame by 9.0) and walks back in for the peel */
+const admX = lt => lt < 4.3 ? 0 : lt < 5.0 ? lerp(0, 80, easeIO(seg(lt, 4.3, 5.0))) : lt < 7.0 ? 80 : lt < 9.4 ? lerp(80, -900, easeIO(seg(lt, 7.0, 9.4))) : lt < 15.6 ? -900 : lt < 16.8 ? lerp(-900, 80, easeIO(seg(lt, 15.6, 16.8))) : 80;   /* he walks off to the left (out of the frame by 9.0) and walks back in for the peel */
 const admWalking = lt => (lt >= 7.0 && lt < 9.4) || (lt >= 15.6 && lt < 16.8);
 const P_ADM = lt => [admX(lt), camZ(lt) + 1420];
 // Clementine: in the group until 6.6, runs to the closet (skids in at 7.05, goes inside at 7.25), comes back out with the mop at 7.7, stands in the doorway, goes back in at 10.9 (hidden from 11.0)
@@ -184,7 +187,7 @@ const P_BAN = at(320, 2600);
    Mango -350, Lemon -130, PERSIMMON (empty, 220 wide) 100, Strawberry 315, the Administrator 590. The wide shots frame the whole row (zoom LOT.z about LOT.x), every hand inside the frame. */
 const LOT_D = 1700, STALL = { clm: -560, mng: -350, lem: -130, empty: 100, str: 315, adm: 590 };
 const STALL_LINES = [-670, -455, -245, -10, 210, 435, 745];
-const LOT = { z: .82, x: 577 };
+const LOT = { z: .80, x: 577 };   /* the row of six with a hand's width to spare on both sides, even at the end of the slow push */
 const lotAt = (X, D) => lt => [X, D];
 
 // Mr. Banana, far down the hall: he steps on the peel (16.11), slips over backwards, and bounces off the floor on the boing (16.31)
@@ -195,7 +198,7 @@ function banana(lt) {
 }
 
 // the hall's fixtures, drawn after the corridor and before the cast
-function hallFixtures(lt) {
+function hallFixtures(lt, sh) {
   const inten = strobe(lt);
   // the fire-door threshold: a metal sill across the hall that the wheelchair meets
   { const th = [p2(-HW, 0, Z_TH - 16), p2(HW, 0, Z_TH - 16), p2(HW, 0, Z_TH + 16), p2(-HW, 0, Z_TH + 16)];
@@ -213,7 +216,7 @@ function hallFixtures(lt) {
       /* the wall is seen edge-on near the camera: the word (never sheared) is drawn only when the plate under it is wide enough to carry it */
       if (A12.whole(fb, 16) && !behindSomeone(fb) && plate[2] - plate[0] >= tw + 10) UI.label('FIRE', lx, ly + 44 * k, { size: 24 * k, fill: '#ffffff', spacing: 2, hero: false }); } }
   // the wall clock, reading 3:41 like the pill
-  wallClock(-HW + 3, 470, Z_CLK, -1, 41, 3, 46);
+  if (sh !== 's1' && sh !== 's2' && sh !== 's3') wallClock(-HW + 3, 566, Z_CLK, -1, 41, 3, 46);   // hung high: it clears every head in the tracking shots (at 470 it sat right on Strawberry's cap); Strawberry's close-ups are clean, the wall behind her has no clock (it would stand on her head)
   // the supply closet on the right wall: the door swings into the closet, the dark room behind it with shelves, and the QUIET sign with its Q crossed out
   { const z0 = Z_DOOR - 78, z1 = Z_DOOR + 78, open = doorOpen(lt), k = kz(Z_DOOR);
     wallQ(1, 0, 444, z0 - 12, z1 + 12, '#e9e0cb', 'rgba(25,16,30,.55)', 2.2);
@@ -226,22 +229,23 @@ function hallFixtures(lt) {
     wallQ(1, 0, 430, zf, z1, '#8a6a4a', 'rgba(25,18,30,.6)', 2.2);
     if (z1 - zf > 50) {
       wallQ(1, 56, 404, zf + 14, z1 - 14, '#9a7a58', 'rgba(25,18,30,.35)', 1.6);
-      const zc = (zf + z1) / 2, [qx, qy] = p2(HW, 330, zc), kk = kz(zc);
-      if (z1 - zf > 110) {
-        wallQ(1, 304, 362, zf + 10, z1 - 10, '#fffdf6', 'rgba(25,16,30,.55)', 1.6);
-        /* the plaque is set dressing on the wall: its word and the red slash through the Q are drawn only when the whole plaque is in the frame (never sliced by an edge) */
-        const [qa, qb] = [p2(HW, 362, zf + 10), p2(HW, 304, z1 - 10)], qbox = A12.box(Math.min(qa[0], qb[0]), qa[1], Math.max(qa[0], qb[0]), qb[1]);
-        if (A12.whole(qbox, 20) && qbox[2] - qbox[0] >= UI.sizeOf('QUIET', { size: 34 * kk, font: 'Bangers' }).w + 12) {   /* the plaque is wide enough on the screen to carry the word */
-          UI.label('QUIET', qx, qy, { size: 34 * kk, font: 'Bangers', fill: '#2b2530', hero: false });
-          ctx.strokeStyle = '#d6203a'; ctx.lineWidth = 3 * kk; ctx.beginPath(); ctx.moveTo(qx - 30 * kk, qy - 13 * kk); ctx.lineTo(qx - 14 * kk, qy + 14 * kk); ctx.stroke();
-        }
-      }
     }
+    /* the QUIET sign (the Q crossed out: the "Q-word sign" the good cuff is behind): a flat flag sign on a bracket over the closet door, facing down the hall (uniform scale, nothing skewed).
+       The door is seen edge-on from every camera in this hall, so a plaque on its leaf can never be read: the flag can. It is drawn only when the whole of it is in the frame, clear of the captions and of every character. */
+    { const kf = kz(Z_DOOR), [fx, fy] = p2(HW - 118, 410, Z_DOOR), [ax, ay] = p2(HW, 410, Z_DOOR), fb = A12.box(fx - 88 * kf, fy - 38 * kf, fx + 88 * kf, fy + 38 * kf);   /* the plate; its bracket arm may run off the frame */
+      if (sh !== 'alarm' && sh !== 'a1' && sh !== 'l1' && A12.whole(fb, 24) && A12.clear(fb) && !hits(fb, BODY, 0)) {   /* (first seen in the closet shot, where the story is) */
+        ctx.save(); ctx.strokeStyle = '#3a3340'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(3, 7 * kf); ctx.beginPath(); ctx.moveTo(fx + 84 * kf, fy); ctx.lineTo(ax, ay); ctx.stroke(); ctx.restore();   // the bracket arm
+        ctx.save(); ctx.translate(fx, fy); ctx.scale(kf, kf);
+        const sg = UI.sign([-84, -34, 168, 68], 'QUIET', { fill: '#fffdf6', stroke: 'rgba(25,16,30,.7)', lw: 3.5, r: 8, shadow: 8, size: 56, font: 'Bangers', spacing: 2, ink: '#2b2530', pad: 8, hero: false, id: 'quiet' });
+        const q = sg.boxes[0], qw = UI.sizeOf('Q', { size: q.size, font: 'Bangers', spacing: 0 }).w;   // the red slash across the Q, the first letter
+        ctx.strokeStyle = '#d6203a'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(3.5, q.size * .09); ctx.beginPath(); ctx.moveTo(q.x0 - 3, q.base - q.size * .74 - 2); ctx.lineTo(q.x0 + qw + 3, q.base + q.size * .06); ctx.stroke();
+        ctx.restore();
+      } }
   }
   // the MUSTER POINT sign: hung from the ceiling mid-hall, its arrow pointing across at the closet door on the right wall (the sign is wrong: it sends them to the closet).
   // It is a flat sign facing the camera (uniform scale, nothing skewed); it is drawn only when the whole of it, arrow included, is inside the frame
-  { const [sx, sy] = p2(160, 540, Z_DOOR), k = kz(Z_DOOR), gb = A12.box(sx - 134 * k, sy - 66 * k, sx + 190 * k, sy + 60 * k);
-    if (A12.whole(gb, 24)) {
+  { const [sx, sy] = p2(60, 540, Z_DOOR), k = kz(Z_DOOR), gb = A12.box(sx - 134 * k, sy - 66 * k, sx + 190 * k, sy + 60 * k);
+    if (sh !== 'l1' && A12.whole(gb, 24)) {   /* (not in Lemon's close-up, whose camera is already moving off the wide) */
       ctx.save(); ctx.translate(sx, sy); ctx.scale(k, k);
       UI.sign([-130, -62, 250, 118], 'MUSTER POINT', { fill: '#1a7a4a', stroke: 'rgba(10,30,20,.8)', lw: 4, r: 14, size: 44, font: 'Bangers', spacing: 1, ink: '#eafff0', pad: 16, hero: false, id: 'muster' });
       ctx.fillStyle = '#fff6d6'; ctx.strokeStyle = 'rgba(10,30,20,.8)'; ctx.lineWidth = 4; ctx.lineJoin = 'round';
@@ -292,9 +296,9 @@ function hallCast(lt, sh) {
 function hallScene(lt, sh) {
   V2.setLight({ key: [-.4, -.8], keyColor: '#fff3dc', keyA: .26, rim: '#cfe0ff', rimA: .5, shadow: '#3a3048', shadowA: .3, bounce: '#ffe0b0', bounceA: .18, amb: '#fff6e6', ambA: .05 });
   V2.opts.reflect = true;
-  OCC = occupied(lt, sh);
+  { const oc = occupied(lt, sh); OCC = oc.gen; BODY = oc.body; }
   S6.corridor({ doors: doorsAt(), ch: CH, fog: '#c4cfe2', fogAmt: .32, wall: '#e9e0cb', wain: '#5c9298', lampOn: 1, bright: .9, signs: [], decor: DECOR, zFar: 7600 });
-  hallFixtures(lt);
+  hallFixtures(lt, sh);
   // Mr. Banana and his peel, far down the hall, behind the action
   if (lt > 15.5 && lt < 17.2) {
     const q = V2.at(...P_BAN(lt));
@@ -322,7 +326,9 @@ function lotNight(lt) {
   onZ(Zb, -190, 190, 0, 260, grad(0, p2(0, 260, Zb)[1], 0, p2(0, 0, Zb)[1], [[0, '#ffd890'], [1, '#fff2cc']]), 'rgba(10,8,20,.7)', 3);
   { const [gx, gy] = p2(0, 120, Zb); V2.glow(gx, gy, 460 * k, '255,220,150', .5, 'screen', .8); }
   box3({ x0: -270, x1: 270, y0: 268, y1: 296, z0: Zb - 170, z1: Zb, color: '#2c2842', top: '#3c3858', lw: 1.6 });
-  onZ(Zb, -440, 440, bh + 44, bh + 134, '#1e1a34', 'rgba(255,226,170,.55)', 2.6);
+  /* the building's sign board: whole in the frame (with its word) or left off the facade in the shots that would slice it (a close-up of Strawberry sees the plain wall) */
+  const boardBox = A12.box(...p2(-440, bh + 134, Zb), ...p2(440, bh + 44, Zb));
+  if (A12.whole(boardBox, 20)) onZ(Zb, -440, 440, bh + 44, bh + 134, '#1e1a34', 'rgba(255,226,170,.55)', 2.6);
   { const [sx, sy] = p2(0, bh + 89, Zb), sz = { size: 42 * k, spacing: 4 * k }, sw = UI.sizeOf('FRUIT BOWL REHAB & NURSING', sz).w;
     /* the word on the sign (a warm glow behind it) is drawn only when the whole of it is in the frame; a close-up that would slice it sees the plain sign board */
     if (A12.whole(A12.box(sx - sw / 2 - 8, sy - 24 * k, sx + sw / 2 + 8, sy + 24 * k), 20)) { ctx.save(); ctx.shadowColor = 'rgba(255,214,140,.9)'; ctx.shadowBlur = 16; UI.label('FRUIT BOWL REHAB & NURSING', sx, sy, Object.assign({ fill: '#ffe9b0', hero: false }, sz)); ctx.restore(); } }
@@ -386,9 +392,9 @@ const SC = {
       const sx = 540 + STALL.str * kz(LOT_D), ex = 540 + STALL.empty * kz(LOT_D);   /* Strawberry's and the empty stall's screen x */
       if (lt < 23.84) { zoomTo(LOT.x, 960, LOT.z); return; }                                                        // muster: the lot, still
       if (lt < 25.96) { zoomTo(LOT.x, 960, LOT.z * (1 + .04 * sk(lt, 23.84, 25.8))); return; }                      // mo1: a slow push on the row and the Moon
-      if (lt < 26.87) { zoomTo(sx, 760, 1.5); return; }                                                             // s4: Strawberry
+      if (lt < 26.87) { zoomTo(sx, 790, 1.5); return; }                                                             // s4: Strawberry (framed so her badge clears the captions)
       if (lt < 28.09) { zoomTo(LOT.x, 960, LOT.z * 1.04); return; }                                                 // mo2: the two-shot, the Moon and the row
-      if (lt < 28.5 || lt >= 28.95 && lt < 29.48) { zoomTo(sx, 760, 1.5); return; }                                 // s5: Strawberry, around the insert
+      if (lt < 28.5 || lt >= 28.95 && lt < 29.48) { zoomTo(sx, 790, 1.5); return; }                                 // s5: Strawberry, around the insert
       if (lt < 28.95) { zoomTo(ex, 1150, 3.1); return; }                                                            // the insert: the empty PERSIMMON stall on the ground
       zoomTo(LOT.x, 960, LOT.z); return;   // the end: a cut to the wide lot, held for the sting
     }

@@ -83,8 +83,10 @@ function navy() {
 function dignity(lt) {
   const k = easeOut(seg(lt, CUTS[0], CUTS[0] + .16)), s = lerp(1.12, 1, k), sz = fitSize('DIGNITY', 'Nunito', 900, 176, 760);
   ctx.save(); ctx.globalAlpha *= clamp(k * 3); ctx.translate(SCX, 880); ctx.scale(s, s);
-  text('DIGNITY', 0, -96, { size: sz, fill: '#22285a', weight: 900, lw: 0 });
-  text('FIRST', 0, 96, { size: sz, fill: '#22285a', weight: 900, lw: 0 });
+  const NUN_CAP = -.1104;   /* text() put the middle of the em box on y; the kit puts the middle of the cap band on cy: the same height, and the letters centred by their ink */
+  const popping = lt < CUTS[0] + .2;   /* the heading fades in under the bulb's hiccup: for that fifth of a second it is covered on purpose */
+  UI.label('DIGNITY', 0, -96 + NUN_CAP * sz, { size: sz, fill: '#22285a', weight: 900, lw: 0, crop: popping });
+  UI.label('FIRST', 0, 96 + NUN_CAP * sz, { size: sz, fill: '#22285a', weight: 900, lw: 0, crop: popping });
   ctx.fillStyle = '#d62a3a'; rr(-190, 170, 380, 14, 7); ctx.fill();
   ctx.restore();
 }
@@ -94,8 +96,9 @@ function stamp(lt) {
   ctx.save(); ctx.translate(SCX, 940); ctx.rotate(rot); ctx.scale(s, s); ctx.globalAlpha *= clamp((lt - CUTS[1]) * 30);
   ctx.strokeStyle = '#d62a3a'; ctx.lineWidth = 16; rr(-340, -120, 680, 240, 26); ctx.stroke();
   ctx.lineWidth = 5; rr(-318, -98, 636, 196, 16); ctx.stroke();
-  text('MANDATORY', 2, 6, { size: sz, font: 'Bangers', weight: 400, fill: 'rgba(214,42,58,.45)', lw: 0 });   // the ink bleeds a little
-  text('MANDATORY', 0, 0, { size: sz, font: 'Bangers', weight: 400, fill: '#d62a3a', lw: 0 });
+  /* the word is set by the kit (centred on its ink in the stamp), the ink-bleed copy under it is the same string 2 px right and 6 px down (the gate reads a copy that close as its own shadow); the slam starts crooked */
+  UI.label('MANDATORY', 2, 6 + BANG_CAP * sz, { size: sz, font: 'Bangers', fill: 'rgba(214,42,58,.45)', lw: 0, tilt: .34 });
+  UI.label('MANDATORY', 0, BANG_CAP * sz, { size: sz, font: 'Bangers', fill: '#d62a3a', lw: 0, tilt: .34 });
   for (let i = 0; i < 70; i++) {
     if (hash(i * 5.3 + 2) < .6) continue;
     ctx.fillStyle = 'rgba(251,244,226,.9)'; const r = 1.5 + hash(i * 2.9) * 3; ell(-330 + hash(i * 3.7) * 660, -110 + hash(i * 7.1) * 220, r, r); ctx.fill();
@@ -118,7 +121,7 @@ function episode(lt) {
     ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6; ctx.fillStyle = '#7b61ff'; rr(-230, -50, 460, 100, 50); ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.strokeStyle = INK; ctx.lineWidth = 7; rr(-230, -50, 460, 100, 50); ctx.stroke();
     UI.container('chip12', 'pill', [-230, -50, 230, 50], 10);   /* the chip is drawn by hand: register it, then centre the word in it, both ways, by its ink */
-    UI.label('EPISODE 12', 0, 0, { size: 76, font: 'Bangers', fill: '#ffffff', lw: 0, spacing: 5, cid: 'chip12', center: true });
+    UI.label('EPISODE 12', 0, 0, { size: 76, font: 'Bangers', fill: '#ffffff', lw: 0, spacing: 5, cid: 'chip12', center: true, hero: c >= .45 });   /* while the chip pops in from nothing it is not yet something to read */
     ctx.restore();
   }
   const k = easeOut(seg(lt, CUTS[3] + .16, CUTS[3] + .5)), sz = fitSize('THE IN-SERVICE', 'Bangers', 400, 150, 700);

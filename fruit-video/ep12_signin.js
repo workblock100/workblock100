@@ -186,7 +186,7 @@ function world(lt, t) {
   const IDS = ['clem', 'mango', 'lemon', 'straw'], shown = {};
   for (const id of IDS) {
     const o = bodyOf(id, lt);
-    shown[id] = !focus || focus.includes(id) || (sh !== 'pizza' && A12.charWhole(o, 20));
+    shown[id] = !focus || focus.includes(id) || (sh !== 'pizza' && A12.charWhole(o, 20));   /* (a neighbour of the subject is drawn only when the whole of him is in the frame, and then sharp) */
   }
   IDS.forEach((id, i) => { if (shown[id] || sh === 'pizza' || (focus && focus.includes('cart'))) R.chair(R.LAY.seats.xs[i], R.LAY.seats.far, {}); });
   // the pizza cart by the door: wheeled in on its beat; the top box lands on its tap; a slice rises from the top box
@@ -210,7 +210,7 @@ function world(lt, t) {
     if (!shown[id]) continue;
     const o = bodyOf(id, lt);
     if (!focus || focus.includes(id)) drawChar(o);
-    else V2.dof(7, () => { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, yEdge); ctx.clip(); HP.drawBg(o); ctx.restore(); });
+    else { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, yEdge); ctx.clip(); HP.drawBg(o); ctx.restore(); }   /* whole and sharp (drawBg only leaves him out of the audit, as a background resident) */
   }
   ctx.restore();
   sheetOnTable(lt);
@@ -219,7 +219,7 @@ function world(lt, t) {
   // the Administrator at the head, standing (a soft neighbour only when the whole of him is in the frame)
   { const ao = bodyAdmin(lt);
     if (!focus || focus.includes('admin')) drawChar(ao);
-    else if (A12.charWhole(ao, 20)) V2.dof(7, () => HP.drawBg(ao)); }
+    else if (sh !== 'pizza' && A12.charWhole(ao, 20)) HP.drawBg(ao); }   /* never soft: whole and sharp, or not drawn (the push-in on the cart is an empty room) */
   // the empty near-side chairs (the camera's side of the table): only in the wides, they would cover the faces in a close-up
   if (WIDE.includes(sh)) for (const X of R.LAY.seats.xs.slice(0, 3)) R.chair(X, R.LAY.seats.near, {});   /* (the fourth stands where the Administrator does: a chair there would cover his name tag) */
 }
