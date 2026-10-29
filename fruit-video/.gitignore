@@ -66,3 +66,10 @@ build/ep14/*
 !build/ep14/timeline.js
 !build/ep14/audio.m4a
 !build/ep14/events.json
+!build/ep15/
+build/ep15/*
+!build/ep15/timeline.js
+!build/ep15/audio.m4a
+!build/ep15/events.json
+!build/ep15/phys_events.json
+!build/ep15/phys_sims.json
