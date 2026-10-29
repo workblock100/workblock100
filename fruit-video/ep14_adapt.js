@@ -148,9 +148,9 @@ function fieldTag(lt, b, t0, t1) {
   /* the string and the pin it hangs from */
   ctx.strokeStyle = 'rgba(60,40,20,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 34, y + 12); ctx.quadraticCurveTo(x + 6, y - 6, x - 14, y - 4); ctx.stroke();
   UI.sign([x, y, w, h], [
-    { t: 'BEHAVIOR ' + b.n + ' OF 5', size: 30, weight: 900, spacing: 4, fill: OCHRE, gap: 2 },
+    { t: 'BEHAVIOR ' + b.n + ' OF 5', size: 33, weight: 900, spacing: 4, fill: OCHRE, gap: 2 },
     { t: b.name, size: 66, font: 'Bangers', spacing: 3, fill: INKD },
-    { t: b.latin, size: 31, weight: 800, italic: true, fill: GREEN },
+    { t: b.latin, size: 33, weight: 800, italic: true, fill: GREEN },
   ], { fill: [CREAM, '#e6d9b8'], stroke: GREEN, lw: 6, r: 18, pad: 22, shadow: 18, id: 'tag14' });
   ctx.strokeStyle = 'rgba(201,139,44,.9)'; ctx.lineWidth = 2.4; rr(x + 11, y + 11, w - 22, h - 22, 12); ctx.stroke();
   for (const [px, py] of [[x + 20, y + 20], [x + w - 20, y + 20], [x + 20, y + h - 20], [x + w - 20, y + h - 20]]) { ctx.fillStyle = '#b08a3a'; ell(px, py, 4.4, 4.4); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(px - 1.2, py - 1.4, 1.5, 1.5); ctx.fill(); }
