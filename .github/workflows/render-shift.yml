@@ -1,5 +1,5 @@
 name: Render Shift Happens episode
-# Manual only. Renders a committed episode (Episode 6, 7, 8, 9, 10, 11, 12 or 13) from its committed audio and timeline (build/epN/audio.m4a,
+# Manual only. Renders a committed episode (Episode 6, 7, 8, 9, 10, 11, 12, 13 or 14) from its committed audio and timeline (build/epN/audio.m4a,
 # timeline.js), runs the strict 30 fps layout audit, and uploads the MP4 and the QA record as a workflow artifact.
 # It never commits or pushes.
 on:
@@ -8,8 +8,8 @@ on:
       episode:
         description: Episode to render
         type: choice
-        options: ['13', '12', '11', '10', '9', '8', '7', '6']
-        default: '13'
+        options: ['14', '13', '12', '11', '10', '9', '8', '7', '6']
+        default: '14'
 permissions:
   contents: read
 jobs:
