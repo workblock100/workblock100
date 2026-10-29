@@ -114,10 +114,11 @@ const TAGS = {
   bind: ['Binder', 'Fibula auxiliaris', 'ASSISTANT'],
 };
 const TAG_ALIAS = { tom: 'tomato', broccoli: 'broc', artichoke: 'arti', binder: 'bind' };
-/* A15.tagFor('arti') -> { common: 'Artichoke', latin: 'Cynara cardunculus', role: 'CEO (LAYERS: 11)' } (kind names and voice ids both work; pass the live layer count n to get LAYERS: n) */
+/* A15.tagFor('arti') -> { common: 'Artichoke', latin: 'Cynara cardunculus', role: 'CEO (LAYERS: 11)', lines: [the three] } (kind names and voice ids both work; pass the live layer count n to get LAYERS: n) */
 A.tagFor = (kind, layers) => {
   const k = TAG_ALIAS[kind] || kind, T3 = TAGS[k]; if (!T3) return null;
-  return { common: T3[0], latin: T3[1], role: k === 'arti' && layers != null ? `CEO (LAYERS: ${Math.max(0, Math.round(layers))})` : T3[2] };
+  const role = k === 'arti' && layers != null ? `CEO (LAYERS: ${Math.max(0, Math.round(layers))})` : T3[2];
+  return { common: T3[0], latin: T3[1], role, lines: [T3[0], T3[1], role] };   /* lines = the three UI.tag lines (common name, Latin name in italics, role) */
 };
 /* shared pieces for the sections below */
 A._ = { sr, rgbaOf, mixc, sm, yawOf, headYawOf, tOf, sec, lamb, lit, onSurf, SC, G, clampL };
@@ -741,15 +742,15 @@ EXT.acc.fp15_tears = (o, k, t, layer) => {
 /* turn on the weeping for any character: A15.cryOn(A7.mango({...}), .8) */
 A.cryOn = (o, cry = .8, extra = {}) => Object.assign({}, o, { cry, acc: (o.acc || []).filter(a => a !== 'fp15_tears').concat('fp15_tears') }, extra);
 /* a faint mist round a weeping character: a cloud of tiny droplets drifting outward (a pure function of time). A15.tearsAura(x, y, u, o): centre x, y on the current canvas, u = strength 0..1,
- * o = { r: radius (300), n: droplets (44), t: time (T), size: droplet scale (1), seed, color: 'r,g,b' } */
+ * o = { r: radius (300), n: droplets (56), t: time (T), size: droplet scale (1), seed, color: 'r,g,b' }; it is drawn in canvas pixels, so scale r and size with the sprite (s .44: r 130, size .6) */
 A.tearsAura = (x, y, u = 1, o = {}) => {
   u = clamp(u); if (u <= .01) return;
-  const t = o.t ?? T, R = o.r ?? 300, n = Math.round((o.n ?? 44) * (.3 + .7 * u)), rnd = V2.rng(o.seed ?? 5), sz = o.size ?? 1, col = o.color ?? '186,226,255';
+  const t = o.t ?? T, R = o.r ?? 300, n = Math.round((o.n ?? 56) * (.3 + .7 * u)), rnd = V2.rng(o.seed ?? 5), sz = o.size ?? 1, col = o.color ?? '186,226,255';
   ctx.save();
   ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = V2.radial(x, y, 0, R * 1.05, [[0, V2.rgba(col, .15 * u)], [.55, V2.rgba(col, .07 * u)], [1, V2.rgba(col, 0)]]); ctx.fillRect(x - R * 1.1, y - R * 1.1, R * 2.2, R * 2.2);
   ctx.globalCompositeOperation = 'source-over';
   for (let i = 0; i < n; i++) {
-    const a0 = rnd() * TAU, sp = .35 + rnd() * .65, ph = rnd(), life = 2.2 + rnd() * 1.4, age = (t * sp / life + ph) % 1, rad = R * (.16 + .8 * Math.pow(age, .8)), ang = a0 + .3 * Math.sin(t * .6 + i), sw = .25 + rnd() * .55, dr = (1.6 + rnd() * 2.6) * sz;
+    const a0 = rnd() * TAU, sp = .35 + rnd() * .65, ph = rnd(), life = 2.2 + rnd() * 1.4, age = (t * sp / life + ph) % 1, rad = R * (.16 + .8 * Math.pow(age, .8)), ang = a0 + .3 * Math.sin(t * .6 + i), sw = .3 + rnd() * .6, dr = (2.2 + rnd() * 3.2) * sz;
     const px = x + Math.cos(ang) * rad, py = y + Math.sin(ang) * rad * .78 - age * 28 + age * age * 40, al = u * Math.pow(Math.sin(PI * age), .8) * sw;
     ctx.fillStyle = V2.rgba(col, al * .75); ell(px, py, dr, dr * 1.15); ctx.fill();
     if (rnd() > .7) { ctx.fillStyle = `rgba(255,255,255,${al * .9})`; ell(px - dr * .3, py - dr * .35, dr * .35, dr * .3); ctx.fill(); }
@@ -1040,19 +1041,20 @@ const BROC_FL = (() => {
   return L;
 })();
 function drawCrown(o, k, t, pass) {
-  const yaw = headYawOf(o), br = 1 + .012 * Math.sin(t * 1.2 + (o.seed || 0)), Rx = BR.Rx * br, Ry = BR.Ry * br, key = V2.LIGHT.key, L = V2.LIGHT;
+  const yaw = headYawOf(o), br = 1 + .012 * Math.sin(t * 1.2 + (o.seed || 0)), Rx = BR.Rx * br, Ry = BR.Ry * br;
+  const M = ctx.getTransform(), sc = Math.hypot(M.a, M.b), px0 = BR.r0 * sc, dots = px0 >= 7.5, hi = px0 >= 3.6, outline = px0 >= 2;   /* level of detail: small on screen = fewer strokes */
   const list = [];
   for (const f of BROC_FL) { const a = f.lon + yaw, z = f.cp * Math.cos(a); if (pass === 'back' ? z < 0 : z >= 0) list.push([z, f, a]); }
   list.sort((p, q) => p[0] - q[0]);
-  ctx.save(); ctx.lineJoin = 'round';
+  ctx.save(); ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(12,48,16,.78)'; ctx.lineWidth = 1.7;
   for (const [z, f, a] of list) {
-    const sa = Math.sin(a), x = Rx * f.cp * sa, y = BR.Cy * 1 - Ry * f.sp, nx = f.cp * sa, ny = -f.sp, nz = z;
-    const lam = lamb(nx, ny, Math.max(nz, .05)), sh = .06 * Math.sin(t * 1.7 + f.ph), r = f.r * (1 + .03 * Math.sin(t * 1.3 + f.ph * 2)) * (.9 + .12 * Math.max(0, z));
-    const base = V2.mix(V2.mix('#2f8a34', '#6cc24a', f.tone), '#12361a', clamp(.45 - .6 * f.sp * .5 - (pass === 'back' ? .1 : 0)) * .55);
-    ctx.fillStyle = lit(base, clamp(lam + sh), 1.05); ctx.strokeStyle = 'rgba(12,48,16,.78)'; ctx.lineWidth = 1.7;
-    ctx.beginPath(); ctx.ellipse(x, y, r, r * (.94 + .06 * Math.abs(z)), 0, 0, TAU); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = `rgba(196,240,140,${.16 + .34 * lam})`; ell(x - r * .3, y - r * .3, r * .46, r * .34, -.4); ctx.fill();
-    ctx.fillStyle = 'rgba(14,56,18,.45)'; ell(x + r * .28, y + r * .12, r * .16, r * .16); ctx.fill(); ell(x - r * .1, y + r * .38, r * .13, r * .13); ctx.fill();
+    const sa = Math.sin(a), x = Rx * f.cp * sa, y = BR.Cy - Ry * f.sp, nx = f.cp * sa, ny = -f.sp;
+    const lam = lamb(nx, ny, Math.max(z, .05)), sh = .06 * Math.sin(t * 1.7 + f.ph), r = f.r * (1 + .03 * Math.sin(t * 1.3 + f.ph * 2)) * (.9 + .12 * Math.max(0, z));
+    const base = V2.mix(V2.mix('#2f8a34', '#6cc24a', f.tone), '#12361a', clamp(.45 - .3 * f.sp - (pass === 'back' ? .1 : 0)) * .55);
+    ctx.fillStyle = lit(base, clamp(lam + sh), 1.05);
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * (.94 + .06 * Math.abs(z)), 0, 0, TAU); ctx.fill(); if (outline) ctx.stroke();
+    if (hi) { ctx.fillStyle = `rgba(196,240,140,${.16 + .34 * lam})`; ctx.beginPath(); ctx.ellipse(x - r * .3, y - r * .3, r * .46, r * .34, -.4, 0, TAU); ctx.fill(); }
+    if (dots) { ctx.fillStyle = 'rgba(14,56,18,.45)'; ctx.beginPath(); ctx.moveTo(x + r * .28 + r * .16, y + r * .12); ctx.arc(x + r * .28, y + r * .12, r * .16, 0, TAU); ctx.moveTo(x - r * .1 + r * .13, y + r * .38); ctx.arc(x - r * .1, y + r * .38, r * .13, 0, TAU); ctx.fill(); }
   }
   ctx.restore();
 }

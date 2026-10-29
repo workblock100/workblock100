@@ -233,7 +233,7 @@ test('slider with a spring: static deflection and period within 3% (tower squat)
   const j = w.joint({ type: 'slider', a: ground, b: blk, anchor: [0, -10], axis: [0, -1], stiffness: k, damping: 2 * 0.02 * Math.sqrt(k * m), lower: -40, upper: 5 });
   w.run(4, { sampleHz: 240 });
   const ys = []; for (let t = 0; t <= 4; t += 1 / 480) ys.push([t, w.pose(blk, t).y]);
-  const peaks = []; for (let i = 1; i < ys.length - 1; i++) if (ys[i][1] < ys[i - 1][1] && ys[i][1] <= ys[i + 1][1] && ys[i][1] < -10 - 1) peaks.push(ys[i][0]); // top of each swing (smallest y)
+  const peaks = []; for (let i = 1; i < ys.length - 1; i++) if (ys[i][1] < ys[i - 1][1] && ys[i][1] <= ys[i + 1][1] && ys[i][1] < -0.5) peaks.push(ys[i][0]); // top of each swing (smallest y), above the equilibrium at y = 0
   const T = (peaks[peaks.length - 1] - peaks[0]) / (peaks.length - 1), T0 = 2 * Math.PI * Math.sqrt(m / k);
   const final = w.pose(blk, 4).y, static_ = -10 + 10; // rest at translation -10 => y = 0 (box centre starts at -10)
   return { ok: Math.abs(T - T0) / T0 < 0.03 && Math.abs(final - (-10 + 10)) < 0.6 && peaks.length >= 4, msg: 'period ' + T.toFixed(4) + ' vs ' + T0.toFixed(4) + ' s, settled y ' + final.toFixed(2) + ' (expected 0.00 = 10 units of squat)' };

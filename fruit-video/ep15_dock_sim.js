@@ -15,7 +15,8 @@ const SLING_DX = [-400, -140, 140, 400], EYE_DY = 109, LUG_DY = -523, SLING_L = 
 const HOOK_TO_UNDER = EYE_DY + SLING_L + 22 + GL_H;                                    /* hook centre to the block's underside when the slings hang taut: 1384 */
 const HOOK_C = SIGN_TOP - HOOK_TO_UNDER;                                               /* hook centre y at first contact: -1194 */
 const V1 = 83.75, A_SLIP = 1100, TAU_SLIP = .4, EASE = .8;                              /* the winch slips for the last 0.4 s: the block drops 127 px and meets the sign at 524 px/s */
-const SLACK_END = 14;                                                                    /* the slings end this slack (px) after the whip */
+const FB_HZ = 2.76;
+const SLACK_END = 30;                                                                    /* the slings end this slack (px) after the whip */
 const HOOK0 = HOOK_C - (V1 * (EASE / 2 + (TC - TAU_SLIP - T_LOWER - EASE)) + V1 * TAU_SLIP + .5 * A_SLIP * TAU_SLIP * TAU_SLIP);   /* where the hook starts so that it is at HOOK_C at TC */
 
 /* the hook's centre y at scene time t (a scripted, backwards-built path). The block lags the hook by about 26 ms when the winch slips (the slings have to go slack first), so the path runs CAL seconds early:
@@ -30,11 +31,11 @@ function hookY(tt) {
   if (t < TC) { const d = t - ts; return yS + V1 * d + .5 * A_SLIP * d * d; }
   const vC = V1 + A_SLIP * TAU_SLIP, d = t - TC, yC = HOOK_C;
   const dRoof = RIDGE - SIGN_TOP + 10, tRoof = dRoof / vC;                                    /* the hook keeps going at full speed until the block meets the ridge cap (84 px later), then the brake bites */
-  const tBrake = .17, yStop = yC + dRoof + .5 * vC * tBrake;
+  const tBrake = .28, yStop = yC + dRoof + .5 * vC * tBrake;
   if (d < tRoof) return yC + vC * d;
   if (d < tRoof + tBrake) { const e = d - tRoof; return yC + dRoof + vC * e - .5 * (vC / tBrake) * e * e; }
   if (t < 6.45 + CAL) return yStop;
-  const k = Math.min(1, (t - 6.45 - CAL) / .15), e = k * k * (3 - 2 * k);                       /* the winch hauls the slack: the slings whip */
+  const k = Math.min(1, (t - 6.45 - CAL) / .12), e = k * k * (3 - 2 * k);                       /* the winch hauls the slack: the slings whip */
   return yStop - (yStop - (yC + dRoof + SLACK_END)) * e;
 }
 
@@ -60,8 +61,9 @@ function build(opts) {
     /* furniture the props stand on: the conference table top, the break room table, the bed, the bedside table, the Administrator's desk */
     sh(409, 598, 95, 6, 'wood'), sh(670, 592, 44, 5, 'wood'), sh(808 + 162, 600, 46, 8, 'wood'), sh(808 + 95, 585, 15, 3, 'wood'), sh(22 + 160, 578, 92, 4, 'wood'),
   ];
-  const fb = reg(W.body({ type: 'dynamic', x: FO[0], y: FO[1], shapes: fbShapes, mass: 500000, fixedRotation: true, tag: 'fruitbowl', mat: 'concrete', allowSleep: false }), { name: 'fb', origin: FO });
-  W.joint({ type: 'slider', a: W.ground, b: fb, anchor: FO, axis: [0, 1], hz: 1.6, ratio: .3, lower: -80, upper: 110 });
+  const SAG0 = G / Math.pow(2 * Math.PI * FB_HZ, 2);                                    /* the building's own weight compresses its spring this much: start higher so that it rests at the nominal position */
+  const fb = reg(W.body({ type: 'dynamic', x: FO[0], y: FO[1] - SAG0, shapes: fbShapes, mass: 500000, fixedRotation: true, tag: 'fruitbowl', mat: 'concrete', allowSleep: false }), { name: 'fb', origin: FO });
+  W.joint({ type: 'slider', a: W.ground, b: fb, anchor: FO, axis: [0, 1], hz: FB_HZ, ratio: .3, lower: -80, upper: 110 });
 
   /* ---- the hook (kinematic: the path above) and the Greenleaf block */
   const hook = reg(W.body({ type: 'kinematic', x: 540, y: HOOK0, pose: t => ({ x: 540, y: hookY(t), angle: 0 }), tag: 'hook', silent: true }), { name: 'hook' });
@@ -72,7 +74,7 @@ function build(opts) {
   ];
   const gl = reg(W.body({ type: 'dynamic', x: 540, y: gl0, vx: 5, shapes: glShapes, mass: 900000, angularDamping: .25, tag: 'greenleaf', mat: 'concrete', allowSleep: false, category: 4, mask: 1 }), { name: 'gl', origin: [540, gl0] });
   for (let i = 0; i < 4; i++) {
-    const r = W.joint({ type: 'rope', a: hook, b: gl, anchorA: [SLING_DX[i], EYE_DY], anchorB: [SLING_DX[i], LUG_DY], segments: 12, length: SLING_L, mass: 9000, damping: .02, mat: 'metal', tag: 'cable', bend: 4 });
+    const r = W.joint({ type: 'rope', a: hook, b: gl, anchorA: [SLING_DX[i], EYE_DY], anchorB: [SLING_DX[i], LUG_DY], segments: 12, length: SLING_L, mass: 9000, damping: .02, mat: 'metal', tag: 'cable', bend: 4, sleep: false });
     meta.ropes.push(r.id);
   }
   W.schedule(3.421, w => { gl.vx += 9; });                                                  /* the load shifts as the cables creak */

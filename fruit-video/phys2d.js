@@ -182,7 +182,7 @@ function Body(W, def, id) {
   this.pose = typeof def.pose === 'function' ? def.pose : null;
   this.px = this.x; this.py = this.y; this.pa = this.angle;                 // kinematic target for the end of the step
   this.silent = !!def.silent; this.internal = !!def.internal;               // silent: no events. internal: rope particle (not listed by at())
-  this.radius = 0; this.inr = 0; this.slot = -1; this.jlist = []; this.moving = false; this.def = def;
+  this.radius = 0; this.inr = 0; this.slot = -1; this.jlist = []; this.moving = false; this.wild = false; this.def = def;
 }
 Body.prototype.isDynamic = function () { return this.type === DYNAMIC; };
 /* mass data from the shapes (density x area), centre of mass, inertia; def.mass / def.inertia override */
@@ -641,6 +641,7 @@ DistanceJoint.prototype.solveP = function () {
   return C < 0 ? -C : C;
 };
 DistanceJoint.prototype.reaction = function () { return Math.abs(this.impulse); };
+DistanceJoint.prototype.forget = function () { this.impulse = 0; };
 
 /* revolute / pin: anchors coincide; optional angle limits (relative angle b - a - ref) and motor */
 function RevoluteJoint(W, def) {
@@ -718,6 +719,7 @@ RevoluteJoint.prototype.solveP = function () {
   return Math.sqrt(cx * cx + cy * cy) + angErr;
 };
 RevoluteJoint.prototype.reaction = function () { return Math.sqrt(this.ix * this.ix + this.iy * this.iy); };
+RevoluteJoint.prototype.forget = function () { this.ix = 0; this.iy = 0; this.im2 = 0; this.il = 0; this.iu = 0; };
 RevoluteJoint.prototype.angle = function () { return this.b.a - this.a.a - this.ref; };
 
 let _x = 0, _y = 0, _z = 0;
@@ -792,6 +794,7 @@ WeldJoint.prototype.solveP = function () {
   return Math.sqrt(cx * cx + cy * cy) + angErr;
 };
 WeldJoint.prototype.reaction = function () { return Math.sqrt(this.ix * this.ix + this.iy * this.iy); };
+WeldJoint.prototype.forget = function () { this.ix = 0; this.iy = 0; this.iz = 0; };
 
 /* mouse / target: a soft pin that drags body b's anchor toward a target point (array, or function of time) */
 function MouseJoint(W, def) {
@@ -831,6 +834,7 @@ MouseJoint.prototype.solveV = function () {
 };
 MouseJoint.prototype.solveP = function () { return 0; };
 MouseJoint.prototype.reaction = function () { return 0; };
+MouseJoint.prototype.forget = function () { this.ix = 0; this.iy = 0; };
 
 /* slider (prismatic): b slides along an axis fixed in a. axis [x,y] in a's frame (default [0,-1] = up on screen).
  * translation 0 is the initial offset. Optional spring toward 0 (stiffness/damping or hz/ratio), limits lower/upper, motor. */
@@ -932,6 +936,7 @@ SliderJoint.prototype.solveP = function () {
   return err + Math.abs(c1) + Math.abs(c2);
 };
 SliderJoint.prototype.reaction = function () { return Math.abs(this.ip); };
+SliderJoint.prototype.forget = function () { this.ip = 0; this.ia = 0; this.is = 0; this.im2 = 0; this.il = 0; this.iu = 0; };
 SliderJoint.prototype.translation = function () { return this.trans; };
 
 // ---------------------------------------------------------------- the world
@@ -1184,7 +1189,9 @@ World.prototype._depthOrder = function (ac, nac, aj, naj) {
 };
 /* one solver step of length h starting at simulation time t */
 World.prototype._stepH = function (h, t) {
-  const invH = 1 / h, ratio = this._prevH > 0 ? h / this._prevH : 1;
+  // warm-start impulses are rescaled only when the step gets shorter (otherwise the carried impulse is too big and kicks the pile);
+  // when it gets longer they are kept as they are (too small is safe: the iterations rebuild them; an impact impulse times 8 explodes)
+  const invH = 1 / h, ratio = this._prevH > 0 && h < this._prevH ? h / this._prevH : 1;
   this._prevH = h;
   if (!this._warm) {
     const sc = this._sched;
@@ -1255,13 +1262,18 @@ World.prototype._stepH = function (h, t) {
   }
   // integrate positions
   const vmax2 = this.maxSpeed * this.maxSpeed, wmax = this.maxSpin;
+  let runaway = false;
   for (let i = 0; i < nDyn; i++) {
     const b = dyn[i];
     const v2 = b.vx * b.vx + b.vy * b.vy;
-    if (v2 > vmax2) { const s = this.maxSpeed / Math.sqrt(v2); b.vx *= s; b.vy *= s; }
-    if (b.w > wmax) b.w = wmax; else if (b.w < -wmax) b.w = -wmax;
+    if (v2 > vmax2) {
+      if (!(v2 < vmax2 * 1e4) || !(b.w * b.w < wmax * wmax * 1e4)) { b.vx = 0; b.vy = 0; b.w = 0; runaway = true; b.wild = true; } // NaN or absurd: stop it and forget its impulses
+      else { const s = this.maxSpeed / Math.sqrt(v2); b.vx *= s; b.vy *= s; }
+    }
+    if (b.w > wmax) b.w = wmax; else if (b.w < -wmax) b.w = -wmax; else if (!(b.w === b.w)) { b.w = 0; b.wild = true; runaway = true; }
     b.cx += h * b.vx; b.cy += h * b.vy; b.a += h * b.w;
   }
+  if (runaway) this._forget(ac, nac, aj, naj);
   for (let i = 0; i < this._kin.length; i++) { const k = this._kin[i]; k.cx = k.px; k.cy = k.py; k.a = k.pa; rotUpdate(k); }
   for (let i = 0; i < nDyn; i++) if (dyn[i].w !== 0) rotUpdate(dyn[i]);
   // relax: solve again without bias so the push-out velocity does not stay in the bodies
@@ -1300,6 +1312,18 @@ World.prototype._stepH = function (h, t) {
   for (let i = 0; i < naj; i++) {
     const j = aj[i];
     if (j.breakImpulse > 0 && j.reaction() > j.breakImpulse && !j.broken) this._breakJoint(j, t);
+  }
+};
+/* zero the accumulated impulses of every constraint that touches a runaway body */
+World.prototype._forget = function (ac, nac, aj, naj) {
+  for (let i = 0; i < nac; i++) {
+    const c = ac[i];
+    if (c.A.wild || c.B.wild) { c.p0.jn = 0; c.p0.jt = 0; c.p1.jn = 0; c.p1.jt = 0; }
+  }
+  for (let i = 0; i < naj; i++) { const j = aj[i]; if (j.a.wild || j.b.wild) j.forget(); }
+  for (let i = 0; i < this._nDyn; i++) {
+    const b = this._dyn[i];
+    if (b.wild) { b.wild = false; if (!(b.cx === b.cx && b.cy === b.cy && b.a === b.a)) { b.cx = b.px; b.cy = b.py; b.a = b.pa; } this.warnings.push('runaway body ' + b.id + ' (' + b.tag + ') was stopped at t=' + (this.stepIndex * this.dt).toFixed(3)); }
   }
 };
 World.prototype._breakJoint = function (j, t) {

@@ -18,7 +18,7 @@
 <div id="log"></div>
 <script>
 /* STANDALONE TEST PAGE for ep15_art.js (window.A15). It loads exactly the scripts of index.html, in the same order (it reads index.html and appends every <script src> except main.js,
- * which would start an episode), then draws one demo view.  URL: art15_demo.html?view=<name>&t=<seconds>&...   Views: see VIEWS below (lineup, lineup44, peel, cry, tomato, binder, yaw, ...).
+ * which would start an episode), then draws one demo view.  URL: art15_demo.html?view=<name>&t=<seconds>&...   Views: lineup, lineupbig, expr, peel, arti, arti2, layer, onion, cry, aura, tomato, broc, carrot, binder, props, plates, close, turn, turnrow, perf (add &s=<scale> where a view takes it).
  * The page is a test bench: its small captions are drawn with plain canvas text and are NOT part of any sprite. Render it with build/ep15_art/shots.js (Playwright). */
 const Q = new URLSearchParams(location.search);
 const LOGEL = document.getElementById('log');
@@ -291,6 +291,23 @@ VIEWS.close = P => {   /* close-ups: 2 x 2 cells of 540 x 960, one per character
     if (c === 'broc') { mk('broc', A15.broccoli({ t }), { mouthState: mouths.a }, 60); mk('broc stern', A15.broccoli({ t, expr: 'broc_stern', bowl: false }), {}, 60); }
   }
   sheetCells(2, 2, cells, { cw: 540, ch: 960, floor: 140 });
+};
+
+VIEWS.aura = P => {
+  const cells = [], sc = .9;
+  for (const [u, t, bg] of [[.35, 1.3, null], [.8, 1.3, null], [1, 2.1, null], [1, 1.3, ['#2a3340', '#1a2028']]]) cells.push({ label: `aura u ${u} t ${t}`, t, wall0: bg ? bg[0] : undefined, wall1: bg ? bg[1] : undefined, draw: (cx, fy) => { A15.tearsAura(cx, fy - 150, u, { t, r: 250 }); put(A15.onion({ t, cry: .4 + u * .5 }), cx, fy, sc); } });
+  sheetCells(2, 2, cells, { cw: 540, ch: 640, floor: 60 });
+};
+
+/* ---- profile walks (needs E15-TURN's rig): each kind walks left to right, a frame every 0.2 s ---- */
+VIEWS.walk = P => {
+  const cells = [], s = +(P.s || .6), sp = 190;   /* screen px per second */
+  const kinds = [['carrot', o => A15.carrot(o)], ['tom', o => A15.tomato(o)], ['broc', o => A15.broccoli(Object.assign(o, { bowl: false, arms: { l: 'rest', r: 'rest' } }))], ['onion', o => A15.onion(Object.assign(o, { pose: 'rest' }))], ['arti', o => A15.artichoke(o)]];
+  for (const [n, f] of kinds) for (let i = 0; i < 6; i++) {
+    const tt = 1 + i * .2, dist = i * .2 * sp;
+    cells.push({ label: `${n} ${tt.toFixed(1)}`, t: tt, draw: (cx, fy) => put(f({ t: tt, yaw: PI / 2, dir: 1, gaitW: dist / s, axis: 'x', vx: sp }), cx - 150 + dist, fy, s) });
+  }
+  sheetCells(6, 5, cells, { cw: 180, ch: 300, floor: 30 });
 };
 </script>
 </body>
