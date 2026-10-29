@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GridSheet kit demo (SH15)</title>
+<style>
+  @font-face { font-family: Bangers; src: url(fonts/Bangers-Regular.ttf); }
+  @font-face { font-family: Lucky; src: url(fonts/LuckiestGuy-Regular.ttf); }
+  @font-face { font-family: Nunito; src: url(fonts/Nunito.ttf); font-weight: 200 1000; }
+  html, body { margin: 0; height: 100%; background: #111; color: #fff; font-family: Nunito, system-ui, sans-serif; }
+  #stage { position: relative; height: 100vh; aspect-ratio: 9 / 16; max-width: 100vw; margin: 0 auto; }
+  canvas { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<!-- Standalone test page for ep15_sheet.js (SH15). ?t=<seconds> draws the demo at that time (1080x1920); window.audit(from, to, step) runs the text gate over it exactly like render.js does.
+     The demo is a little episode (number 98) whose scenes are laid out back to back (see the add(...) calls); it exercises every call of the kit. It loads only the engine, the text gate, the v2 renderer and the UI kit.
+     Scenes (absolute seconds): sheet 0 | merge 2 (the title: select, Merge & Center, the warning dialog, OK, the merge) | flip 8 (BREAK ROOM becomes PENDING ROOM on a door sign) | replace 12 (Find and Replace, the cells flip)
+     | saveas 19 | dialogs 24 (Remove Duplicates, its result, Can't undo, an error) | insert 32 | dupes 35 | fill 39.5 (Fill Down to row 41) | lookup 44 (#N/A) | call 47.5 (the laggy call on a TV-sized frame: lag, freeze, share, chat, muted)
+     | call2 56 (an insert on the frozen tile) | binder 59 | tv 64 (two cells merge on the rolling TV, scale .5) | zoom 70 (camera push-in to one cell, scale 1 to 3) | tabs 74 | undo 76 (Ctrl+Z key caps, Can't undo). -->
+<div id="stage"><canvas id="c" width="1080" height="1920"></canvas></div>
+<script src="engine.js"></script>
+<script src="txaudit.js"></script>
+<script src="v2_core.js"></script>
+<script src="v2_char.js"></script>
+<script src="ui.js"></script>
+<script src="ep15_sheet.js"></script>
+<script>
+(() => {
+const FLAT = { bloom: 0, vignette: 0, grain: 0, contrast: 0, sat: 0 };
+const SC = {}, TLD = { fps: 30, duration: 0, scenes: [], lines: [] };
+let tNow = 0;
+const scene = (draw, extra) => Object.assign({ shot: () => 'card', cam() {}, draw, fx: () => FLAT, blur: () => 1, over() {}, noChyron: true, noScrim: true }, extra);
+const add = (id, dur, draw, extra) => { TLD.scenes.push({ id, start: tNow, dur, clock: '', label: '', beats: {} }); tNow += dur; TLD.duration = tNow; SC[id] = scene(draw, extra); };
+const bg = c => { ctx.fillStyle = c; ctx.fillRect(-3000, -3000, 7000, 8000); };
+const seg_ = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+
+// ---------------------------------------------------------------- demo data: a staff table
+const FIRST = ['Strawberry', 'Lemon', 'Mango', 'Clementine', 'Melon', 'Banana', 'Cranberry', 'Pear', 'Goji', 'Kiwi', 'Papaya', 'Fig', 'Plum', 'Quince', 'Lime', 'Guava'];
+const ROLES = ['RN', 'LPN', 'CNA', 'Charge', 'Admin', 'Dietary', 'PT', 'Per diem'];
+const UNITS = ['3 West', '3 East', '2 North', 'Rehab'];
+function staff(n, dupEvery) {
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const k = dupEvery && i % dupEvery === dupEvery - 1 ? i - 1 : i;
+    rows.push([FIRST[k % FIRST.length] + (k >= FIRST.length ? ' ' + String.fromCharCode(65 + (k / FIRST.length | 0)) : ''), ROLES[k * 3 % ROLES.length], UNITS[k % UNITS.length], 3 + (k * 7) % 9]);
+  }
+  return rows;
+}
+function tableCells(rows, extra) {
+  const cells = { A1: { v: 'Name', bold: true, fill: '#e8f3ee' }, B1: { v: 'Role', bold: true, fill: '#e8f3ee' }, C1: { v: 'Unit', bold: true, fill: '#e8f3ee' }, D1: { v: 'Hours', bold: true, fill: '#e8f3ee', align: 'right' } };
+  rows.forEach((r, i) => { cells['A' + (i + 2)] = r[0]; cells['B' + (i + 2)] = r[1]; cells['C' + (i + 2)] = r[2]; cells['D' + (i + 2)] = r[3]; });
+  return Object.assign(cells, extra);
+}
+const SHEET = { w: 1080, h: 1920, doc: 'SYNERGY_MODEL_v47_FINAL_REAL', tabs: ['Sheet1', 'Staff', 'Policies', 'Sheet16'], tab: 'Staff', cols: { A: 280, B: 200, C: 200, D: 160 }, freeze: 1 };
+
+// ---------------------------------------------------------------- scenes
+add('sheet', 2, lt => {
+  bg('#ffffff');
+  SH15.sheet(Object.assign({}, SHEET, { cells: tableCells(staff(30, 0)), sel: 'B3:C5', active: 'B3', ribbon: { tab: 'Home', hot: 'merge', press: seg_(lt, .5, 1) }, stats: ['Sum: 31', 'Count: 4'] }), lt);
+});
+
+// the title merge: three cells selected, Merge & Center clicked, the warning dialog, OK, the cells merge into one centred title
+const TITLE = { w: 1080, h: 1920, doc: 'SYNERGY_MODEL_v47_FINAL_REAL', tabs: ['Sheet1', 'Staff', 'Policies'], tab: 'Sheet1', cols: { A: 336, B: 336, C: 336 }, rows: { 1: 230 }, cells: {
+  A1: { v: 'SHIFT HAPPENS', size: 40, bold: true, align: 'center', fill: '#eaf6f0' }, B1: { v: 'EPISODE 15', size: 40, bold: true, align: 'center', fill: '#fff4cf' }, C1: { v: 'THE MERGER', size: 40, bold: true, align: 'center', fill: '#e4edff' } } };
+add('merge', 6, lt => {
+  bg('#ffffff');
+  const sO = TITLE, A1 = SH15.cellRect('A1', sO), C1 = SH15.cellRect('C1', sO), btn = SH15.buttonRect('merge', sO);
+  const dlgO = { kind: 'warn', w: 1080, h: 1920 }, okR = SH15.dialogRect(dlgO, 'ok');
+  const cp = SH15.cursorPath([{ t: 0, x: 860, y: 1000, kind: 'arrow' }, { t: .55, x: A1.cx - 60, y: A1.cy + 20, kind: 'cross' }, { t: 1.05, x: C1.cx + 60, y: C1.cy + 20, kind: 'cross', hold: .1 },
+    { t: 1.6, x: btn.aim[0], y: btn.aim[1], kind: 'arrow', click: [1.7, 1.9] }, { t: 2.6, x: okR.aim[0], y: okR.aim[1], click: [2.9, 3.1] }, { t: 3.7, x: 760, y: 1100 }], lt);
+  const u = seg_(lt, 3.2, 4.4), du = lt < 3.1 ? seg_(lt, 2.0, 2.3) : 1 - seg_(lt, 3.1, 3.3);
+  const drag = lt > .55 && lt < 1.15 ? seg_(lt, .55, 1.05) : 1;
+  const so = Object.assign({}, sO, { ribbon: { tab: 'Home', hot: lt > 1.4 && lt < 3.3 ? 'merge' : null, press: lt > 1.6 && lt < 2.0 ? cp.press : 0 }, active: 'A1', status: lt < 3.2 ? 'Ready' : 'Ready' });
+  if (lt < 3.2) { so.sel = lt < .55 ? null : drag < 1 ? 'A1:' + (lt > .8 ? 'B1' : 'A1') : 'A1:C1'; SH15.sheet(so, lt); } else SH15.merge({ sheet: so, range: 'A1:C1', after: lt - 4.4 }, u, lt);
+  if (du > 0) SH15.dialog(Object.assign({ press: lt > 2.9 ? { id: 'ok', k: cp.press } : 0, t: lt }, dlgO), du);
+  SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.2 });
+});
+
+// letter by letter flips on a world sign: BREAK ROOM becomes PENDING ROOM (a door sign), and a smaller two-line plaque
+add('flip', 4, lt => {
+  bg('#2a2540');
+  const u = seg_(lt, .8, 2.2), u2 = seg_(lt, 1.6, 3.0);
+  UI.panel([120, 300, 840, 260], { id: 'door', kind: 'sign', fill: '#1f3b73', stroke: '#fff', lw: 6, r: 28, shadow: 20, pad: 24 });
+  SH15.flipText('BREAK ROOM', 'PENDING ROOM', u, { cx: 540, cy: 430, size: 130, font: 'Bangers', fill: '#ffffff', stroke: '#06122e', lw: 12, spacing: 6, maxW: 780, cid: 'door', center: true });
+  UI.panel([120, 700, 840, 300], { id: 'plaque', kind: 'sign', fill: '#f6f0dc', stroke: '#3a3358', lw: 5, r: 24, shadow: 16, pad: 24 });
+  UI.label('STRAWBERRY', 540, 790, { size: 54, fill: '#241a2c', cid: 'plaque' });
+  SH15.flipText('BREAK', 'PENDING', u2, { cx: 540, cy: 900, size: 120, font: 'Nunito', weight: 900, fill: '#d93025', cid: 'plaque', center: true, centerY: false, maxW: 760 });
+  SH15.flipText('Open 24 hours', 'Closed', seg_(lt, 2.4, 3.4), { cx: 540, cy: 1200, size: 64, fill: '#ffe135', font: 'Nunito' });
+});
+
+// Find and Replace: BREAK typed, PENDING typed, Replace All, the sheet behind flips letter by letter
+const BREAKS = [3, 5, 6, 9, 11, 12, 15, 18, 19, 22];
+add('replace', 7, lt => {
+  bg('#ffffff');
+  const cells = { A1: { v: 'Name', bold: true, fill: '#e8f3ee' }, B1: { v: 'Area', bold: true, fill: '#e8f3ee' }, C1: { v: 'Sign', bold: true, fill: '#e8f3ee' }, D1: { v: 'Hours', bold: true, fill: '#e8f3ee', align: 'right' } };
+  staff(24, 0).forEach((r, i) => { cells['A' + (i + 2)] = r[0]; cells['B' + (i + 2)] = r[2]; cells['D' + (i + 2)] = r[3]; cells['C' + (i + 2)] = BREAKS.includes(i + 2) ? { v: 'BREAK ROOM', bold: true, color: '#1f3b73', flip: { from: 'BREAK ROOM', u: 1 } } : 'Ward ' + (i + 1); });
+  const tReplace = 3.4;
+  BREAKS.forEach((r, i) => { const c = cells['C' + r]; c.v = 'PENDING ROOM'; c.flip.u = seg_(lt, tReplace + i * .11, tReplace + i * .11 + .5); c.pulse = c.flip.u > 0 ? seg_(lt, tReplace + i * .11, tReplace + i * .11 + 1.2) : 1; });
+  const so = Object.assign({}, SHEET, { cells, cols: { A: 280, B: 200, C: 280, D: 160 }, ribbon: { tab: 'Home', hot: 'find', press: 0 }, tab: 'Staff', dressing: true });
+  SH15.sheet(so, lt);
+  const dO = { kind: 'findReplace', w: 1080, h: 1920, find: ['BREAK ROOM', seg_(lt, .6, 1.5)], replace: ['PENDING ROOM', seg_(lt, 1.9, 3.0)], focus: lt < 1.7 ? 'find' : 'replace', t: lt, status: lt > 3.5 ? Math.round(214 * seg_(lt, 3.5, 5.2)) + ' replacements made' : null, dimA: lt > 3.3 ? .22 : .46 };
+  const raR = SH15.dialogRect(dO, 'replaceAll');
+  const press = lt > 3.1 && lt < 3.5 ? { id: 'replaceAll', k: Math.sin(Math.PI * seg_(lt, 3.1, 3.5)) } : 0;
+  SH15.dialog(Object.assign(dO, { press }), seg_(lt, 0, .35));
+  const cp = SH15.cursorPath([{ t: 0, x: 900, y: 1300, kind: 'arrow' }, { t: 2.9, x: raR.aim[0], y: raR.aim[1], click: [3.1, 3.4] }, { t: 4.2, x: 800, y: 1250 }], lt);
+  SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.2 });
+});
+
+// Save As: the file name typed, Save pressed; then the dialogs: Remove Duplicates (choose, result), Can't undo, an error
+add('saveas', 5, lt => {
+  bg('#ffffff');
+  SH15.sheet(Object.assign({}, SHEET, { cells: tableCells(staff(30, 0)), saved: lt > 3.4 ? 'Saved' : false, dressing: lt < 4.2 }), lt);
+  const dO = { kind: 'saveAs', w: 1080, h: 1920, name: ['FRUIT_SALAD_FINAL_v7_REAL', seg_(lt, .5, 3.0)], t: lt };
+  const sv = SH15.dialogRect(dO, 'save'), press = lt > 3.5 ? { id: 'save', k: Math.sin(Math.PI * seg_(lt, 3.5, 3.9)) } : 0;
+  SH15.dialog(Object.assign(dO, { press }), lt < 3.9 ? seg_(lt, 0, .35) : 1 - seg_(lt, 3.9, 4.15));
+  const cp = SH15.cursorPath([{ t: 0, x: 700, y: 1200 }, { t: 3.3, x: sv.aim[0], y: sv.aim[1], click: [3.5, 3.8] }, { t: 4.4, x: 760, y: 1300 }], lt);
+  SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.2 });
+});
+add('dialogs', 8, lt => {
+  bg('#ffffff');
+  const so = Object.assign({}, SHEET, { cells: tableCells(staff(30, 4)), sel: 'A2:D31', ribbon: { tab: 'Data', hot: lt < 4 ? 'dupes' : null }, dressing: true });
+  SH15.sheet(so, lt);
+  const kinds = [{ kind: 'removeDuplicates' }, { kind: 'removeDuplicates', stage: 'result', removed: 6, remain: 24 }, { kind: 'cantUndo' }, { kind: 'error', text: 'The formula refers to a cell that is no longer there. Please check the reference.', title: 'GridSheet error' }];
+  const i = Math.min(3, Math.floor(lt / 2)), lk = lt - i * 2;
+  SH15.dialog(Object.assign({ w: 1080, h: 1920, t: lt }, kinds[i]), seg_(lk, 0, .3) * (1 - seg_(lk, 1.75, 2)));
+});
+
+// Insert Row (the Executive Suite), Remove Duplicates, Fill Down to row 41, a lookup that returns #N/A
+add('insert', 3, lt => {
+  bg('#ffffff');
+  const so = Object.assign({}, SHEET, { cells: tableCells(staff(14, 0)), ribbon: { tab: 'Insert', hot: lt < 1.3 ? 'insert' : null, press: lt > .5 && lt < .8 ? Math.sin(Math.PI * seg_(lt, .5, .8)) : 0 }, active: 'A2' });
+  SH15.insertRow({ sheet: so, at: 2, row: { A: { v: 'Executive Suite', hero: true, size: 30 }, B: 'Corporate', C: '9 West', D: 0 } }, seg_(lt, .9, 1.9), lt);
+  const b = SH15.buttonRect('insert', so), cp = SH15.cursorPath([{ t: 0, x: 700, y: 900 }, { t: .5, x: b.aim[0], y: b.aim[1], click: [.55, .8] }, { t: 1.6, x: 600, y: 700 }], lt);
+  SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.2 });
+});
+add('dupes', 4.5, lt => {
+  bg('#ffffff');
+  const rows = staff(30, 5), dups = []; rows.forEach((r, i) => { if (i % 5 === 4) dups.push(i + 2); });
+  const so = Object.assign({}, SHEET, { cells: tableCells(rows), ribbon: { tab: 'Data', hot: lt < 1.4 ? 'dupes' : null }, sel: 'A2:D31', dressing: lt > 2.85 && lt < 4.45 });
+  SH15.removeDuplicates({ sheet: so, rows: dups, cols: 'A:D' }, seg_(lt, .5, 2.7), lt);
+  if (lt > 2.9) SH15.dialog({ kind: 'removeDuplicates', stage: 'result', removed: dups.length, remain: 30 - dups.length, w: 1080, h: 1920 }, seg_(lt, 2.9, 3.2) * (1 - seg_(lt, 4.1, 4.4)));
+});
+add('fill', 4.5, lt => {
+  bg('#ffffff');
+  const so = Object.assign({}, SHEET, { cells: { A1: { v: 'Name', bold: true, fill: '#e8f3ee' }, B1: { v: 'Role', bold: true, fill: '#e8f3ee' }, C1: { v: 'Unit', bold: true, fill: '#e8f3ee' }, D1: { v: 'Hours', bold: true, fill: '#e8f3ee', align: 'right' }, A2: 'Strawberry', B2: 'Per diem', C2: 'All units', D2: 8 }, ribbon: { tab: 'Home', hot: lt > 3.6 ? 'fill' : null }, tab: 'Staff' });
+  const r = SH15.fillDrag({ sheet: so, from: 'A2:D2', to: 41 }, seg_(lt, .8, 3.4), lt);
+  const cp = SH15.cursorPath([{ t: 0, x: 700, y: 1000 }, { t: .7, x: SH15.cellRect('D2', so).x1 + 2, y: SH15.cellRect('D2', so).y1 + 2, kind: 'cross', click: [.7, 3.4] }, { t: 4.2, x: 800, y: 1200, kind: 'arrow' }], lt);
+  SH15.pointer(lt > .7 && lt < 3.4 ? r.handle.x : cp.x, lt > .7 && lt < 3.4 ? r.handle.y : cp.y, { kind: lt > .7 && lt < 3.4 ? 'cross' : 'arrow', press: lt > .7 && lt < 3.4 ? 1 : 0, s: 1.1 });
+});
+add('lookup', 3.5, lt => {
+  bg('#ffffff');
+  const so = Object.assign({}, SHEET, { cells: Object.assign(tableCells(staff(10, 0)), { F1: { v: 'Lookup', bold: true, fill: '#e8f3ee' }, F2: { v: '' } }), cols: { A: 240, B: 170, C: 170, D: 130, E: 60, F: 190 }, active: 'F2', sel: 'F2', formula: { text: '=VLOOKUP("Strawberry", Staff!A:D, 2, FALSE)', typed: seg_(lt, .2, 1.4), caret: lt < 1.5 }, tab: 'Staff' });
+  SH15.sheet(so, lt);
+  SH15.errorCell('F2', '#N/A', seg_(lt, 1.6, 2.6), { sheet: so });
+});
+
+// the laggy video call on a TV-sized frame (scale .84 here so the whole window shows): live, lag, freeze, a screen share with chat, then an insert on the frozen tile; and Binder's bubble
+const artichoke = (r, tt) => {   /* a stand-in picture for the speaker (the scenes draw A15.artichoke here) */
+  const cx = r.x + r.w / 2, cy = r.y + r.h * .55, k = r.h / 400, bob = Math.sin(tt * 3) * 6 * k;
+  ctx.fillStyle = '#d7e8c8'; ctx.fillRect(r.x, r.y, r.w, r.h);
+  for (let i = 0; i < 9; i++) { const a = (i / 8 - .5) * 2.2; ctx.save(); ctx.translate(cx, cy + 40 * k + bob); ctx.rotate(a); ctx.fillStyle = i % 2 ? '#5d8b4a' : '#4a7a3b'; ctx.beginPath(); ctx.ellipse(0, -90 * k, 38 * k, 105 * k, 0, 0, TAU); ctx.fill(); ctx.restore(); }
+  ctx.fillStyle = '#7fae62'; ctx.beginPath(); ctx.ellipse(cx, cy + bob, 105 * k, 120 * k, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff'; for (const dx of [-34, 34]) { ctx.beginPath(); ctx.ellipse(cx + dx * k, cy - 20 * k + bob, 17 * k, 22 * k, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#1d1a22'; ctx.beginPath(); ctx.arc(cx + dx * k + 3 * k, cy - 16 * k + bob, 7 * k, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; }
+  ctx.strokeStyle = '#1d1a22'; ctx.lineWidth = 5 * k; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(cx, cy + 25 * k + bob, 30 * k, .2, Math.PI - .2); ctx.stroke();
+};
+const SHARE = { w: 1280, h: 720, ui: .8, show: { ribbon: false, formula: false, title: false, headers: false, sheetTabs: false, status: false }, cols: { A: 620, B: 620 }, rows: { 1: 420 }, colW: 620, rowH: 300,
+  cells: { A1: { v: 'FRUIT BOWL', size: 70, bold: true, align: 'center', fill: '#fff4cf' }, B1: { v: 'GREENLEAF', size: 70, bold: true, align: 'center', fill: '#e3f4ea' } }, sel: 'A1:B1' };
+const CHAT = [{ who: 'Tomato (HR)', text: 'Great news, everyone!', t0: 5.2 }, { who: 'Onion', text: 'I am not crying. You are.', t0: 5.9 }, { who: 'Strawberry', text: 'Is this mandatory?', t0: 6.6 }];
+add('call', 8.5, lt => {
+  bg('#0b0d10');
+  const frozen = lt >= 3.5 && lt < 5, share = lt >= 5.2;
+  ctx.save(); ctx.translate(20, 500); ctx.scale(.84, .84);
+  SH15.call({ dressing: true, shadow: 30, title: 'Greenleaf All-Hands', time: 42 + lt, main: { name: 'Mr. Artichoke', draw: artichoke, speaking: !frozen, muted: false }, others: [{ name: 'Onion', initials: 'ON', color: '#6b4a7a', speaking: false }, { name: 'Tomato', initials: 'TO', color: '#a8432f', hand: lt > 2.2 }, { name: 'Strawberry', initials: 'ST', color: '#b3304f', muted: true }],
+    lag: lt < 2 ? 0 : lt < 3.5 ? Math.min(.8, (lt - 2) / 1.5 * .8) : frozen ? .5 : 0, freeze: frozen ? Math.min(1, (lt - 3.5) / .3) : 0, frozenAt: 3.5, share: share ? { sheet: SHARE, label: 'Mr. Artichoke is presenting' } : null,
+    chat: CHAT, chatOpen: lt > 5.8 && lt < 8.3, muted: lt > 7.2, hand: lt > 6.2 }, lt);
+  ctx.restore();
+});
+add('call2', 3, lt => {
+  bg('#0b0d10');
+  ctx.save(); ctx.translate(-300, -150); ctx.scale(1.6, 1.6);   /* an insert on the frozen tile: zoomed in, only the freeze pill is hero */
+  SH15.call({ dressing: true, hero: ['freeze'], title: 'Greenleaf All-Hands', time: 51, main: { name: 'Mr. Artichoke', draw: artichoke }, others: [{ name: 'Onion', initials: 'ON', color: '#6b4a7a' }, { name: 'Tomato', initials: 'TO', color: '#a8432f' }, { name: 'Strawberry', initials: 'ST', color: '#b3304f', muted: true }], freeze: Math.min(1, lt / .4), frozenAt: 3.5, lag: .5 }, lt + 20);
+  ctx.restore();
+});
+add('binder', 5, lt => {
+  bg('#cfd8d3');
+  SH15.sheet({ w: 1080, h: 1500, dressing: true, cells: { A1: { v: 'FRUIT BOWL', bold: true }, B1: { v: 'GREENLEAF', bold: true } }, cols: { A: 300, B: 300 }, sel: 'A1:B1', ribbon: { tab: 'Home', hot: 'merge' } }, lt);
+  const o = { at: [90, 520], w: 700, tail: [880, 900], text: "It looks like you're merging two facilities. Would you like help?", pop: seg_(lt, .1, .5), typed: seg_(lt, .7, 2.2), runaway: seg_(lt, 3.0, 4.3), press: lt > 2.6 && lt < 2.9 ? { id: 'yes', k: Math.sin(Math.PI * seg_(lt, 2.6, 2.9)) } : null, thinking: lt < .7 };
+  SH15.binder(o, lt);
+  ctx.fillStyle = '#22262b'; ctx.beginPath(); ctx.ellipse(920, 960, 50, 60, 0, 0, TAU); ctx.fill();   /* a stand-in for the mascot (A15.binder) */
+});
+
+// the sheet on the rolling TV (scale .4: pure set dressing, two big cells merge), then a camera push-in to one cell (scale 1 to 3), with a scrolled, zoomed, frozen-row sheet
+add('tv', 6, lt => {
+  bg('#1a1612');
+  UI.panel([150, 560, 780, 480], { id: 'tvbezel', kind: 'panel', fill: '#0a0a0c', r: 26, shadow: 30, stroke: '#3a3338', lw: 6 });
+  const sc = .5, x0 = 540 - 1280 * sc / 2, y0 = 800 - 720 * sc / 2;
+  ctx.save(); ctx.translate(x0, y0); ctx.scale(sc, sc);
+  const so = { w: 1280, h: 720, ui: .8, dressing: true, doc: 'MERGER_MODEL', show: { formula: false }, cols: { A: 600, B: 600 }, rows: { 1: 330 }, ribbon: { tab: 'Home', hot: lt > 1.2 ? 'merge' : null, press: lt > 1.4 && lt < 1.7 ? Math.sin(Math.PI * seg_(lt, 1.4, 1.7)) : 0 }, tabs: ['Sheet1'],
+    cells: { A1: { v: 'FRUIT BOWL', size: 84, bold: true, align: 'center', fill: '#fff4cf' }, B1: { v: 'GREENLEAF', size: 84, bold: true, align: 'center', fill: '#e3f4ea' } }, sel: lt < 1.8 ? 'A1:B1' : null };
+  SH15.merge({ sheet: so, range: 'A1:B1', after: lt - 3.8, final: { hero: true } }, seg_(lt, 2.2, 3.8), lt);
+  const b = SH15.buttonRect('merge', so), cp = SH15.cursorPath([{ t: 0, x: 900, y: 600 }, { t: 1.3, x: b.aim[0], y: b.aim[1], click: [1.4, 1.7] }, { t: 2.6, x: 700, y: 500 }], lt);
+  SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 2.4 });
+  ctx.restore();
+});
+add('zoom', 4, lt => {
+  bg('#ffffff');
+  const k = 1 + 2 * Math.min(1, lt / 2) * Math.min(1, lt / 2) * (3 - 2 * Math.min(1, lt / 2)) / 1, so = Object.assign({}, SHEET, { cells: tableCells(staff(30, 0), { B3: { v: 'Per diem', hero: k >= 1.2, bold: true, size: 26, fill: '#fff1c4' } }), dressing: true, zoom: 1.25, scroll: [0, 100], sel: 'B3', active: 'B3' });
+  const R = SH15.cellRect('B3', so);
+  ctx.save(); ctx.translate(540, 760); ctx.scale(k, k); ctx.translate(-R.cx, -R.cy); SH15.sheet(so, lt); ctx.restore();
+});
+
+add('tabs', 2, lt => {
+  bg('#ffffff');
+  SH15.sheet({ w: 1080, h: 700, cells: tableCells(staff(8, 0), { C3: { v: 'Per diem staff cover breaks as needed, as approved by Compliance.', wrap: true, size: 22, fill: '#fff4cf' }, D4: { v: 1234.5, fmt: 'usd' }, D5: { v: .256, fmt: 'pct1', bold: true, border: { b: '#1e8e5a' } } }), rows: { 3: 96 }, cols: { A: 280, B: 200, C: 300, D: 160 }, ribbon: { tab: lt < 1 ? 'Review' : 'View' }, tab: 'Policies' }, lt);
+});
+
+// Ctrl+Z: key caps pressed, then "Can't undo."
+add('undo', 3.5, lt => {
+  bg('#ffffff');
+  SH15.sheet(Object.assign({}, SHEET, { cells: tableCells(staff(20, 0)), ribbon: { tab: 'Home', hot: lt > 1.0 ? 'undo' : null, press: lt > 1.0 && lt < 1.4 ? 1 : 0 }, dressing: true }), lt);
+  if (lt < 1.5) { ctx.fillStyle = `rgba(16,22,29,${.5 * Math.min(1, lt / .3)})`; ctx.fillRect(0, 0, 1080, 1920); SH15.keys(['Ctrl', 'Z'], 540, 900, { press: lt > 1.0 && lt < 1.4 ? Math.sin(Math.PI * seg_(lt, 1.0, 1.4)) : 0, size: 38 }); }
+  if (lt > 1.5) SH15.dialog({ kind: 'cantUndo', w: 1080, h: 1920, press: lt > 2.9 ? { id: 'ok', k: Math.sin(Math.PI * seg_(lt, 2.9, 3.3)) } : 0 }, seg_(lt, 1.5, 1.8));
+});
+
+/* @@END@@ */
+EPISODES[98] = { num: 98, v2: true, textGate: true, balanceCaps: true, title: 'GridSheet kit demo', TL: TLD, SCENES: SC, layout: 'v2', audio: '' };
+EP = EPISODES[98]; TL = EP.TL;
+window.renderAt = renderAt; window.renderMB = V2.renderSampled; window.audit = audit; window.DEMO = { TLD, SC, EPISODES };
+const fonts = () => Promise.all(['400 40px Bangers', '400 40px Lucky', '900 40px Nunito', '600 40px Nunito', '700 40px Nunito', '800 40px Nunito', 'italic 800 40px Nunito'].map(f => document.fonts.load(f)));
+window.READY = fonts().then(() => { renderAt(0); return TL.duration; });
+const q = new URLSearchParams(location.search);
+if (q.has('t')) window.READY.then(() => renderAt(parseFloat(q.get('t'))));
+})();
+</script>
+</body>
+</html>
