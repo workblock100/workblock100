@@ -239,7 +239,7 @@ const V2 = (() => {
     TL = EP.TL;
     const T0 = clamp(t, 0, TL.duration - 1e-3), sc = sceneAt(T0), S = EP.SCENES[sc.id];
     T = T0; CUR = sc;   // a scene's blur() looks its beats up with B(), which reads the scene being drawn
-    const n = Math.max(1, Math.min(10, Math.round(S.blur ? S.blur(T0 - sc.start) : 1)));
+    const n = Math.max(1, Math.min(EP.blurMax || 10, Math.round(S.blur ? S.blur(T0 - sc.start) : 1)));   // an episode may raise the cap (blurMax) for its whips; 10 for the rest
     if (n === 1) return renderAt(t);
     for (let i = 0; i < n; i++) {
       const tt = clamp(T0 + ((i + .5) / n - .5) * (SHUTTER / FPS), sc.start, sc.start + sc.dur - 1e-3);

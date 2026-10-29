@@ -636,7 +636,7 @@ const isCut = lt => [SHOT_T.d, SHOT_T.e, SHOT_T.f].some(c => lt >= c - .04 && lt
 function blurAt(lt) {
   if (isCut(lt)) return 1;
   const sp = camSpeed(lt);
-  let n = sp > 1800 ? 9 : sp > 900 ? 7 : sp > 400 ? 4 : sp > 150 ? 2 : 1;
+  let n = sp > 1800 ? Math.min(20, Math.round(9 + (sp - 1800) / 600)) : sp > 900 ? 7 : sp > 400 ? 4 : sp > 150 ? 2 : 1;   /* the whips get more samples so the streak is smooth, not stepped */
   if (lt >= CUE.typing - .3 && lt < SHOT_T.c) n = Math.max(n, 5);                       /* Lemon types at a blur */
   if (lt >= CUE.scribble && lt < SHOT_T.e) n = Math.max(n, 4);
   return n;
@@ -907,7 +907,7 @@ function melonF(lt) {
 }
 function watcherF(lt) {
   const o = mkStraw({ x: OFFR.x1 + 2, y: OFFR.floor, s: SS, t: lt, who: 'straw', plant: true, expr: 'dead', lid: .55, look: [-.95, .05] });
-  o.arms = { l: 'rest', r: 'rest' };
+  o.arms = { l: 'hips', r: 'hips' }; o.hand = { l: 'fist', r: 'fist' };   /* unimpressed, and clear of the Administrator's glove (at rest the two gloves met and read as holding hands) */
   const sigh = sstep(lt, 22.9, 23.4) * (1 - sstep(lt, 23.5, 23.9)); o.lid = .55 + .15 * sigh; o.squash = .03 * sigh;
   return o;
 }

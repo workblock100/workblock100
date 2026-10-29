@@ -544,7 +544,7 @@ function fxAt(lt) {
 const blurAt = lt => {
   const sp = camSpeed(lt);
   let n = lt >= CUE.slowmo + .1 && lt < 4.7 ? 3 : 1;
-  if (sp > 900) n = 7; else if (sp > 400) n = Math.max(n, 4); else if (sp > 150) n = Math.max(n, 2);
+  if (sp > 900) n = Math.min(16, Math.round(7 + (sp - 900) / 450)); else if (sp > 400) n = Math.max(n, 4); else if (sp > 150) n = Math.max(n, 2);
   return n;
 };
 

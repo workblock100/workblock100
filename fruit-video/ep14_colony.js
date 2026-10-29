@@ -411,7 +411,7 @@ const SC = {
   blur(lt) {
     for (const c of CUT_T) if (Math.abs(lt - c) < .04) return 1;
     const a = camAt(lt - .017), b = camAt(lt + .017), sp = (Math.hypot(b.x - a.x, b.y - a.y) * (a.z + b.z) / 2 + Math.abs(b.z - a.z) * 700) / .034;
-    return clamp(Math.round(1 + sp / 450), 1, 9);
+    return sp > 3600 ? clamp(Math.round(9 + (sp - 3600) / 600), 9, 20) : clamp(Math.round(1 + sp / 450), 1, 9);   /* the whips (the crane, the sting) get more samples so the streak is smooth, not stepped */
   },
   over(lt) { drawTags(lt); },
 };

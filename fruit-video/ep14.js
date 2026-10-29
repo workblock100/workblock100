@@ -20,5 +20,5 @@ const placeholder = id => ({
 const ALL = {};
 for (const id of ids) ALL[id] = (window.__EP14_SCENES || {})[id] || placeholder(id);
 window.__EP14_ALL = ALL;
-EPISODES[14] = { num: 14, v2: true, textGate: true, balanceCaps: true, title: 'Episode 14: The Survey', TL: window.TIMELINE_EP14, SCENES: ALL, layout: 'v2', audio: 'build/ep14/audio.m4a' };
+EPISODES[14] = { num: 14, v2: true, textGate: true, balanceCaps: true, blurMax: 24, title: 'Episode 14: The Survey', TL: window.TIMELINE_EP14, SCENES: ALL, layout: 'v2', audio: 'build/ep14/audio.m4a' };
 })();

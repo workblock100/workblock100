@@ -421,7 +421,7 @@ const SHOTS = [
   { id: 'st1', t0: 3.9, t1: 6.1, cam: lt => mixCam(camFloor(266, 2.24), camFloor(250, 2.4), easeIO(seg(lt, 3.9, 6.1))) },
   { id: 'snap', t0: 6.1, t1: 6.66, cam: lt => { const f = camFace(strawO(lt), 3.0, 250); f[0] -= 8; return mixCam(camFloor(250, 2.4), f, easeOut(seg(lt, 6.1, 6.34))); } },
   { id: 'run', t0: 6.66, t1: 9.95, cam: lt => { const q = seg(lt, 6.66, 7.3), k = 1 - Math.pow(1 - q, 2.2), a = camFace(strawO(lt), 3.0, 250), b = camFloor(Math.min(SX(lt - .1) + 110, 850), 1.8, 1240); return mixCam(a, b, k); } },
-  { id: 'two', t0: 9.95, t1: 11.816, cam: lt => { const k = easeIO(seg(lt, 9.95, 10.7)); return mixCam(camFloor(Math.min(SX(9.85) + 110, 850), 1.8, 1240), camFloor(582, 1.65, 1250), k); } },
+  { id: 'two', t0: 9.95, t1: 11.816, cam: lt => { const k = easeIO(seg(lt, 9.95, 10.7)); return mixCam(camFloor(Math.min(SX(9.85) + 110, 850), 1.8, 1240), camFloor(591, 1.63, 1250), k); } },
   { id: 'brow', t0: 11.816, t1: 13.184, cu: true, cam: lt => { const a = camFace(stateO(lt), lerp(3.3, 3.55, seg(lt, 11.816, 13.184)), 250); a[0] += 20; return a; } },
   { id: 'pen', t0: 13.184, t1: 15.424, cam: lt => camFloor(lerp(786, 796, seg(lt, 13.184, 15.424)), 2.1) },
   { id: 'cuS2', t0: 15.424, t1: 16.294, cu: true, cam: lt => camFace(strawO(lt), 3.0, 255) },
@@ -796,7 +796,7 @@ function blurSamples(lt) {
   const vS = Math.abs(sxSpeed(lt)) * z;
   const bp = t => { const q = banState(t); return [q.x, -q.lift]; }, p0 = bp(lt - dt / 2), p1 = bp(lt + dt / 2), vB = lt > CUE.peel - .05 && lt < BAN.haul1 + .2 ? Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / dt * z : 0;
   const n = Math.ceil(Math.max(vCam, vS, vB) * SHUT / 3);
-  return n <= 1 ? 1 : Math.min(10, n);
+  return n <= 1 ? 1 : Math.min(24, n);
 }
 
 // ------------------------------------------------------------------ the scene
