@@ -27,7 +27,7 @@ const TR_END = 27.059;                       /* the tracer's length: the charact
 // ------------------------------------------------------------------ the place: the shower room's numbers (kit: S14.rect('shower'), S14.showerDoor)
 const RS = S14.rect('shower'), FL = RS.floor, SS = S14.S, KSC = S14.S * .72;
 const DOOR0 = S14.showerDoor({ door: 0, bulge: 0 });       /* the closed leaf x 890..978, y 790..988, knob [901, 896] */
-const FLB = FL - 3, FLF = FL + 5;                          /* the floor line of the BACK lane (behind the people) and of the FRONT lane (in front of them) */
+const FLB = FL - 3, FLF = FL + 5, FLG = FL + 11;                          /* the floor line of the BACK lane (behind the people) and of the FRONT lane (in front of them) */
 const WALL_R = RS.x1 - 12;                                 /* the building's right wall, inside */
 const CHAR = { straw: 828, star: 690, kum: 758 };          /* where the three of them stand (the tracer's last frame: sDoor, stDoor, kDoor) */
 
@@ -115,9 +115,9 @@ const PLAN = [
   { id: 'box11', tL: 2.7, tI: 3.55, xP: 935, lo: 895, hi: 975, lane: 'I', rr: 0, turns: 0, tE: 99 },
   /* the left pane bursts at crash 1: the left half of the stash is thrown at the people */
   { id: 'bucket', tL: 2.274, tI: 3.15, xP: 740, lo: 700, hi: 820, lane: 'B', rr: 1.5708, turns: 2, tE: 2.274 }, { id: 'rail', tL: 2.3, tI: 3.0, xP: 790, lo: 700, hi: 860, lane: 'B', rr: 1.5708, turns: 2, tE: 2.3 },
-  { id: 'box3', tL: 2.3, tI: 3.05, xR: 736, lane: 'F', rr: 0, turns: 3, tE: 2.3 }, { id: 'wheelchair', tL: 2.274, tI: 3.274, xR: 758, lane: 'F', rr: 0, turns: 0, hop: .55, tE: 2.274 },
+  { id: 'box3', tL: 2.3, tI: 3.05, xR: 757, lane: 'G', rr: 0, turns: 3, tE: 2.3 }, { id: 'wheelchair', tL: 2.274, tI: 3.274, xR: 758, lane: 'F', rr: 0, turns: 0, hop: .55, tE: 2.274 },
   { id: 'tv', tL: 2.274, tI: 3.274, xP: 800, lo: 700, hi: 870, lane: 'B', rr: 1.5708, turns: 2, hop: .5, tE: 2.274 },
-  { id: 'box7', tL: 2.6, tI: 3.5, xR: 762, lane: 'F', rr: 0, turns: 1, tE: 2.6 }, { id: 'box8', tL: 2.8, tI: 3.65, xR: 750, lane: 'F', rr: 0, turns: -1, tE: 2.8 },
+  { id: 'box7', tL: 2.6, tI: 3.5, xR: 770, lane: 'G', rr: 0, turns: 1, tE: 2.6 }, { id: 'box8', tL: 2.8, tI: 3.65, xR: 763, lane: 'G', rr: 0, turns: -1, tE: 2.8 },
   { id: 'box12', tL: 2.9, tI: 3.7, xP: 780, lo: 700, hi: 860, lane: 'B', rr: 0, turns: 2, tE: 2.9 }, { id: 'qsign', tL: 3.2, tI: 4.2, xP: 905, lo: 850, hi: 960, lane: 'B', rr: 0, turns: 4, tE: 3.2, tilt: -.1, top: true },
   /* the right half pours through the door toward the camera and lands in front of it as clatter 2; the two bottom boxes on the right stay in the closet */
   { id: 'box1', stay: true, lane: 'B' }, { id: 'box2', stay: true, lane: 'B' },
@@ -127,17 +127,17 @@ const PLAN = [
   { id: 'bag2', tL: 3.3, tI: 4.3, xP: 900, lo: 885, hi: 1000, lane: 'F', rr: 0, turns: 1, tE: 3.4 },
 ];
 let SIM = null;
-const FLOORS = { B: FLB, F: FLF, I: 981 }, HX0 = 560, HDX = 2;
+const FLOORS = { B: FLB, F: FLF, G: FLG, I: 981 }, HX0 = 560, HDX = 2;
 function buildSim() {
   const KIT = S14.stashItems(4), by = {}; KIT.forEach(k => { by[k.id] = k; });
-  const rand = rnd(1414), Hf = { B: new Float32Array(260), F: new Float32Array(260), I: new Float32Array(260) }, items = [], events = [];
+  const rand = rnd(1414), Hf = { B: new Float32Array(260), F: new Float32Array(260), G: new Float32Array(260), I: new Float32Array(260) }, items = [], events = [];
   for (const p of PLAN) {
     const k = by[p.id]; if (!k) continue;
     const spr = spriteOf(k.kind, k.o), c = Math.cos(k.rot), s = Math.sin(k.rot);
     const C0 = [k.x + c * spr.cx - s * spr.cy, k.y + s * spr.cx + c * spr.cy];
     items.push(Object.assign({ k, spr, C0, th0: k.rot, z: k.z, tilt: p.tilt ?? (rand() - .5) * .5, creep: 5 + 9 * rand(), hop: p.hop ?? .42 + .14 * rand() }, p));
   }
-  const PROF = { B: x => lerp(0, 175, cl01((x - 700) / 260)) * (x > 980 ? lerp(1, .85, cl01((x - 980) / 70)) : 1), F: x => x < 880 ? 70 : 125, I: x => 150 };   /* the tallest the heap may be at x, per lane: low toward the people, tall in front of the door */
+  const PROF = { B: x => lerp(0, 175, cl01((x - 700) / 260)) * (x > 980 ? lerp(1, .85, cl01((x - 980) / 70)) : 1), F: x => x < 880 ? 70 : 125, G: x => 120, I: x => 150 };   /* the tallest the heap may be at x, per lane: low toward the people, tall in front of the door */
   const order = items.filter(i => !i.stay).sort((a, b) => a.tI - b.tI);
   const supAt = (lane, x, ew) => { const i0 = Math.max(0, Math.floor((x - ew / 2 - HX0) / HDX)), i1 = Math.min(259, Math.ceil((x + ew / 2 - HX0) / HDX)); let m = 0; for (let i = i0; i <= i1; i++) m = Math.max(m, Hf[lane][i]); return m; };
   for (const it of order) {
@@ -267,20 +267,13 @@ function stateC(lt) {
 
 // ------------------------------------------------------------------ the Kumquat: at his board, puzzled, crushed, buried; then one hand with the clipboard comes up out of the pile and bobs with his words
 function kumC(lt) {
-  const extra = { x: CHAR.kum, y: FL, s: KSC, t: lt + 2.3, who: 'kum', stride: 32, pose: 'write', writing: .6, tongue: .8, look: [.95, .1], expr: 'kum_eager' };
+  /* he is off screen to the left in the tracer's last frame (x 700) and scoots in to his place as the camera backs away */
+  const extra = { s: KSC, t: lt + 2.3, who: 'kum', stride: 32, pose: 'write', writing: .6, tongue: .8, look: [.95, .1], expr: 'kum_eager' }, kx = u => [lerp(700, CHAR.kum, easeOut(seg(u, 1.0, 1.6))), FL];
   if (lt >= B('s1').s) { extra.look = [.9, .25]; extra.expr = 'kum_eager'; extra.tongue = .8 * (1 - sstep(lt, B('s1').s, B('s1').s + .3)); }
   if (lt >= CUE.crash1) { extra.expr = 'kum_puzzled'; extra.look = [.2, -.5]; extra.writing = 0; extra.tongue = 0; }
   if (lt >= CUE.crash1 + .6) { extra.expr = 'kum_crushed'; extra.look = [.1, -.7]; }
-  /* the hand: up out of the pile before "Is the Christmas tree a tag?", bobbing on every word; down again, slowly, with the sad trombone */
-  const k1 = B('k1'), up = sstep(lt, k1.s - .5, k1.s - .05), dn = sstep(lt, CUE.trombone, B('end').e + .2);
-  if (up > 0) {
-    const L = TL.lines.find(q => q.scene === CUR.id && q.id === 'k1'), ph = L ? L.words.map(w => [w[1] + L.s - CUR.start, w[2] + L.s - CUR.start]) : [];
-    let bob = 0; for (const [a, b] of ph) if (lt >= a && lt < b) bob = Math.sin((lt - a) / (b - a) * PI);
-    const gy = lerp(120, -250, up * (1 - dn)) - 16 * bob;
-    Object.assign(extra, { pose: 'free', arms: { l: 'hold', r: 'none' }, grip: { l: [-70 + 6 * Math.sin(lt * 5), gy] }, hold: { l: 'fp14_clip' }, hand: { l: 'grip' }, clipAt: [.5, .35], clipRot: .1 * Math.sin(lt * 3.3) + .12 * bob - .25 * dn, writing: 0, tongue: 0 });
-    if (lt >= k1.s) extra.expr = 'kum_crushed';
-  }
-  return A14.kumquat(extra);
+  if (lt >= B('k1').s) extra.expr = 'kum_crushed';
+  return S14.walk(A14.kumquat, kx, lt, extra);
 }
 
 // ------------------------------------------------------------------ the effects: dust, tinsel, glass, the lone sock, the flashes. All of them are stateless (a pure function of lt and a seed).
@@ -426,7 +419,7 @@ function qsignText(it, p, lt) {
   ctx.restore();
 }
 function drawPiece(it, p, lt, rim) {
-  let sc = 1; if (it.lane === 'F' && !p.held) sc = 1 + .09 * Math.sin(PI * cl01((lt - it.tL) / Math.max(.3, it.tI - it.tL + .35)));
+  let sc = 1; if ((it.lane === 'F' || it.lane === 'G') && !p.held) sc = 1 + .09 * Math.sin(PI * cl01((lt - it.tL) / Math.max(.3, it.tI - it.tL + .35)));
   putSprite(it.spr, p.x, p.y, p.r, sc, rim);
   if (it.id === 'tree') treeBoughs(it, p, lt);
   if (it.id === 'qsign') qsignText(it, p, lt);
@@ -466,10 +459,27 @@ function drawWorld(lt) {
   wallLight(lt);
   sim(); lanePass('B', lt);
   drawSock(lt);
-  for (const o of [stateC(lt), kumC(lt), strawC(lt)]) drawChar(withTransit(o, moving));
-  lanePass('F', lt);
+  for (const o of [lt < .95 ? null : stateC(lt), kumC(lt), strawC(lt)]) if (o) drawChar(withTransit(o, moving || lt < 2.1));       /* the camera is still backing away: whoever is cut by the left edge is coming into frame */
+  kumHand(lt);
+  lanePass('F', lt); lanePass('G', lt);
   S14.front(lt, { rooms });
   floorHaze(lt); impactDust(lt); tinsel(lt); shards(lt); lampShaft(lt); flashes(lt);
+}
+
+/* the Kumquat's hand: his body is under the pile; one arm in a dark sleeve comes up out of the stack holding the clipboard, bobs on each word of "Is the Christmas tree a tag?" and sinks back with the sad trombone.
+   (An arm cannot reach out of a pile higher than itself, so this is drawn as a set piece behind the front lanes: the pile covers its root.) */
+function kumHand(lt) {
+  const k1 = B('k1'), up = sstep(lt, k1.s - .5, k1.s - .05), dn = sstep(lt, CUE.trombone, B('end').e + .15), a = up * (1 - dn); if (a <= .01) return;
+  const S = sim(), xi = Math.round((CHAR.kum + 4 - HX0) / HDX), top = FL - Math.max(S.Hf.G[xi] || 0, S.Hf.F[xi] || 0) - 4;
+  const L = TL.lines.find(q => q.scene === CUR.id && q.id === 'k1'), ph = L ? L.words.map(w => [w[1] + L.s - CUR.start, w[2] + L.s - CUR.start]) : [];
+  let bob = 0; for (const [p, q] of ph) if (lt >= p && lt < q) bob = Math.sin((lt - p) / (q - p) * PI);
+  const hx = CHAR.kum + 3 + 3 * Math.sin(lt * 5.1), hy = top + 26 - 78 * a - 6 * bob, rot = .1 * Math.sin(lt * 3.3) + .14 * bob - .3 * dn;
+  ctx.save(); ctx.lineCap = 'round';
+  ctx.strokeStyle = INKC; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(hx - 4, top + 46); ctx.lineTo(hx, hy + 6); ctx.stroke();
+  ctx.strokeStyle = '#3a3342'; ctx.lineWidth = 4.6; ctx.beginPath(); ctx.moveTo(hx - 4, top + 46); ctx.lineTo(hx, hy + 6); ctx.stroke();
+  ctx.translate(hx + 3, hy - 22); A14.clip(0, 0, { clipScale: .66, rot, clipPage: .1 });
+  ctx.restore();
+  ctx.save(); ctx.fillStyle = '#f6f6fa'; ctx.strokeStyle = INKC; ctx.lineWidth = 2; ell(hx, hy + 3, 6.2, 5.6); ctx.fill(); ctx.stroke(); ctx.restore();
 }
 
 // ------------------------------------------------------------------ the camera. It starts exactly where the tracer's last frame left it (centre (876, 884), zoom 3.9, a constant push of +0.0795 ln-zoom per second) and carries on at that speed;

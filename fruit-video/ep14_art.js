@@ -38,6 +38,7 @@
  *   fp14_binder a huge three-ring binder (tabs on the edge, a label); o.binderLabel, o.binderColor, o.binderRot; A14.drawBinder(cx, cy, w, h, o) draws one anywhere (o.color, o.label, o.sub, o.rot, o.cid, o.noLabel)
  *   fp14_binocs binoculars held to the eyes (o.focus 0..1 pulls the barrels out and sharpens the glint; o.binocK 0..1 slides them from the hand (0) to the eyes (1); o.binocA 0..1 brings them out). Registered nearFace. Needs o.grip.l (the left hand on the left barrel).
  *   fp14_napkin a stained paper napkin in the fist (nearFace); fp14_frame a gilt picture frame held round the face, o.frameA 0..1 raises it (nearFace, hold it in the LEFT hand with grip l at about [-92, 14])
+ *  Stateman's lanyard card: o.idLabel 0..1 fades the tiny STATE ID lettering (a scene fades it while somebody passes in front of the card); it is not lettered at all in the 'write' and 'read' poses (the board lies over it)
  *  Accessories (o.acc, any face): fp14_sauce (o.sauce 0..1 dabs of pizza sauce at the mouth, o.sauceSmile 0..1 a wide red smear across the lower face: the Administrator's pizza smile)
  *  The art draws its own tiny dressing text (STATE ID, TRAINEE) only when it would be at least 8 px on the screen, always as set dressing (hero: false). The constructors set no .transit: scenes pass it while a body slides through the frame edge.
  */
@@ -271,7 +272,7 @@ EXT.acc.fp14_id = (o, k, t, layer) => {
   ctx.fillStyle = '#e6e8a0'; ctx.strokeStyle = 'rgba(30,40,20,.7)'; ctx.lineWidth = 1.4; rr(-14, 18, 20, 22, 3); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#5d6b14'; ell(-6, 25, 2, 2.4); ctx.fill(); ell(-1, 25, 2, 2.4); ctx.fill();
   ctx.fillStyle = 'rgba(40,60,100,.55)'; ctx.fillRect(9, 20, 9, 2.6); ctx.fillRect(9, 26, 9, 2.6); ctx.fillRect(9, 32, 6, 2.6); ctx.fillRect(-14, 45, 28, 2.6);
-  if (!o.flip && bigEnough(9.5) && o.pose !== 'write' && o.pose !== 'read') UI.label('STATE ID', 0, 7, { size: 9.5, fill: '#fff', hero: false, spacing: .6, maxW: 36, transit: o.transit, crop: !!o.transit });
+  if (!o.flip && bigEnough(9.5) && o.pose !== 'write' && o.pose !== 'read' && (o.idLabel ?? 1) > .02) { ctx.save(); ctx.globalAlpha *= clamp(o.idLabel ?? 1); UI.label('STATE ID', 0, 7, { size: 9.5, fill: '#fff', hero: false, spacing: .6, maxW: 36, transit: o.transit, crop: !!o.transit }); ctx.restore(); }
   ctx.restore();
   if (o.cap) {   /* the STATE cap of Episode 2: a slate crown with a short brim and a gold star */
     const cy = -k.ry * .82;

@@ -619,7 +619,7 @@ function drawWorld(lt, sh) {
   if (run) { const sp = smoothSpeed(lt); speedLines(lt, so.x - 6, FL - 86 - (so.lift || 0), Math.sign(sxSpeed(lt)) || 1, c01((sp - 110) / 120)); }
   if (lt < CUT.macro0) drawMedCart(cartX(lt), lt);                          /* the cart is behind everyone: it passes behind Banana and the armchair; it is gone after the macro insert */
   const ko = kumO(lt), bo = banO(lt), cast = [cranO(lt), bo, stateO(lt), ko, so].filter(Boolean);
-  const cu = sh && sh.cu, only = sh && sh.only;                                /* a close-up shows whoever is whole in the frame, and nobody who is cut by it; `only` shows her alone */
+  const cu = sh && sh.cu, only = sh && sh.only;                                /* a close-up shows whoever is whole in the frame, and nobody who is cut by it; `only` shows her alone (the closet's first frame culls the observers at the left edge too, so the cut matches) */
   const wk = walkerPose(lt); if (wk && !only) drawWalkerFree(wk);
   drawWallLight(lt);
   for (const c of cast) { if (only && c !== so) continue; if (cu && c !== so && !wholeInFrame(c, c.kind === 'banana' || c.kind === 'cran' ? 6 : 90)) continue; drawChar(autoTransit(c, lt)); }

@@ -463,7 +463,8 @@ function stateO(lt) {
   if (lt >= B('st4').s - .05) { look = [-.05, .02]; expr = 'stateman_brow'; }
   if (lt >= B('st5').s - .05 && lt < B('s2').s) { look = lt < B('st5').s + 1.1 ? [-.15, .5] : [-.05, .02]; expr = 'stateman_brow'; }     /* reads the sheet, then looks up at her */
   if (lt >= B('s2').s + .55) { look = [.05, .03]; expr = 'stateman'; }
-  const extra = { pose, look, expr, stride: 36, plant: true, seed: 141, writing: lt >= 22.0 ? 1 : lt >= 12.45 && lt < 13.3 ? .6 : 0, clipPage: lt < 12.4 ? .2 : lt < 22 ? .4 : .5,
+  const extra = { pose, look, expr, stride: 36, plant: true, seed: 141, writing: lt >= 22.0 ? 1 : lt >= 12.45 && lt < 13.3 ? .6 : 0, clipPage: lt < 12.4 ? .2 : lt < 22 ? .4 : .5, idLabel: 1 - sk(lt, 6.95, 7.0) * (1 - sk(lt, 7.3, 7.4)),   /* (the Kumquat scurries across in front of the lanyard card: its tiny lettering fades while he does) */
+   
     noted: seg(lt, B('st3').s, B('st3').e) * (lt < B('st3').e ? 1 : 0) || (lt >= 22.12 && lt < 22.9 ? seg(lt, 22.12, 22.88) : 0) };
   if (bk > .01 || pt > .01) {   /* the binoculars come out of the jacket and go to his eyes; the clipboard folds away into his hand meanwhile. On "You." they drop and the right hand points */
     const gl = [lerp(-72, -62, bk), lerp(72, -4, bk)], gb = [lerp(84, 62, bk), lerp(98, -4, bk)], gr = [lerp(gb[0], 172, pt), lerp(gb[1], -6, pt)];
@@ -690,7 +691,7 @@ const THUD = { t: 8.84, x: 330, y: 1190 };
 const STING = 23.2;                                                   /* the hard cut to her face */
 const BIN = { cx: 540, cy: 800, r: 450, t0: 14.9, t1: 17.43 };
 // where the bodies are on the screen (an ellipse each): a wall label behind one is not drawn half-covered
-const bodyEll = o => { const k = KINDS[o.kind]; if (!k) return null; const leg = o.noLegs ? 0 : (k.leg || 90), c = toScreen(o.x, o.y - (o.lift || 0) - (leg + k.ry * .9) * o.s); return { ell: true, cx: c[0], cy: c[1], rx: k.rx * o.s * CAM.z * 1.1, ry: k.ry * o.s * CAM.z * 1.1 }; };
+const bodyEll = o => { const k = KINDS[o.kind]; if (!k) return null; const leg = o.noLegs ? 0 : (k.leg || 90), z = o.s * CAM.z, c = toScreen(o.x, o.y - (o.lift || 0) - (leg + k.ry * .9) * o.s); return { ell: true, cx: c[0], cy: c[1] - k.ry * z * .3, rx: k.rx * z * 1.15, ry: k.ry * z * 1.5 }; };   /* (taller than the body: it takes in the cap, the leaf, the hat) */
 HIDE = (lt, own = '') => {
   const out = [], Fr = frame(lt);
   for (const id of ALL) if (shows(lt, id)) { const e = bodyEll(Fr[id]); if (e) out.push(e); }

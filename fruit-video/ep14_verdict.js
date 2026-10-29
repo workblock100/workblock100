@@ -1,18 +1,28 @@
 'use strict';
 /* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: verdict (4:48 PM, THE EXIT CONFERENCE, 41.0 s). Scene builder E14-F. Registers window.__EP14_SCENES.verdict.
  *
- * The exit conference: a flat, frontal, full-frame conference room (one set of its own, in the dollhouse's cutaway language), a long walnut table, the staff standing behind it, Melon at the head with
- * a pizza box, the surveyors at the left end, a tall window with blinds, and one big prop that owns the room: the severity board, a 12-slot Plinko on an easel. The camera cuts and pushes
- * between close-ups; the form (UI.table) and the stamps are full-frame inserts. The scene ends on a pull-back through the window into the dollhouse (S14).
+ * The exit conference: a flat, frontal, full-frame conference room of its own (one set, in the dollhouse's cutaway language), a long walnut table, the staff standing behind it, Melon at the head with
+ * a pizza box, the surveyors at the left end, a tall window with blinds, and one big prop that owns the room: the severity board, a 12-slot Plinko on an easel. The camera cuts and pushes between close-ups;
+ * the form (UI.table) and its stamps are full-frame inserts. The scene ends on a pull-back through the window into the dollhouse (S14).
  *
  * WORLD (scene px, zoom 1 = the 1080 x 1920 frame). Floor line F = 1230 (feet of everyone behind the table), adult scale SA = .46. Left to right: the door with its call-light dome (x 24..132),
- * Stateman 215, the Kumquat 320, the ball on its cushion 378, then behind the table (x 430..1066, top 1190, front to 1330): Lemon 480, Mango 586, Clementine 692, Strawberry 798, Melon 946.
- * The board: centre x 815, lane unit L = 200 (the field is x 615..1015), panel y 250..1020, pegs on rows y 410 + 40 r, slots y 886..962, letters y 962..1008, the funnel above peg 0.
+ * Stateman 215, the Kumquat 320, the ball on its cushion 378, then behind the table (x 430..1066, top 1190, front to 1330): Lemon 480, Mango 586, Clementine 692, Strawberry 806, Melon 950.
+ * The board: centre x 815, lane unit L = 200 (the field is x 615..1015), face y 50..820, peg rows y 210 + 40 r (r = 0..11), slots y 686..762 (A..L, 33.3 px each), letters y 762..808, the funnel above peg 0.
  *
- * SOUND CUES (scene-local; the picture hits the video frame NEAREST each cue, snapT()): stamp 4.1 (the D), the 12 plinks 14.363..16.513 (the ball touches peg n on frame snapT(cue n)),
- * plinkland 18.066 (the ball lands in slot L), siren 19.025, klaxon 19.125, thud 19.425, stamp 23.075 (NEW TAG), sit 33.879 34.179 34.479 34.779, chair 35.079, ding1 35.629, sting 39.863.
+ * SHOTS (scene-local seconds). wide 0-1.10 | st1a 1.10 Stateman CU | form1 1.95 insert (F-761 typed, the D stamp) | me1 5.05 Melon CU | a1 6.757 Melon CU | st2 8.598 Stateman, the evidence bag, EXHIBIT A |
+ * st3a 10.165 | kum1 10.95 and kum2 13.2 the Kumquat lifts the ball (CU) | toss 13.51 whip pan to the board (8 shutter samples) | b1 14.12 the board, a camera that tilts with the ball (plinks 1 to 11) |
+ * m1 16.20 Melon rises (CU, inside the long hop between plinks 11 and 12: no contact is hidden) | b3 16.40 the last peg, the hang | a2 16.713 Melon CU | b4 17.35 the hang, the drop, slot L |
+ * b5 18.20 tilt up to the bell and the lamp | st4 18.55 | j1 18.925 wide, the beacon, IMMEDIATE JEOPARDY | j2 19.358 Melon faints (CU) | j3 19.75 wide | s5a 20.075 | form2 20.93 insert (F-999 typed, NEW TAG) |
+ * s5b 24.45 four-shot reactions | s5c 25.15 Strawberry's eyes shine | a3 25.985 Melon, pizza on his face | st6 27.385 "It is now." (dim room, rim light, no move) | st7a-c 28.421 | s1 31.36 | st8 32.18 |
+ * sit 33.68 the four sit | sit2 34.95 Strawberry and Melon (the box goes under him) | ring1 35.53 the dome | ring2 35.9 the staff's reflex | st9a 36.48 Stateman and the Kumquat to the door |
+ * st9b 37.95 Strawberry's smile | out 38.85 push through the window, white-out, then the dollhouse pull-back, settled on the sting.
  *
- * Text: everything goes through the UI kit (UI.sign / label / table / stamp / tag); the board's letters, the form and the stamps are hero text; wall dressing is hero:false + crop:true.
+ * SOUND CUES (scene-local; the picture hits the video frame NEAREST each cue, snapT()): stamp 4.1 (the D), the 12 plinks 14.363..16.513 (the ball touches peg n on frame snapT(cue n), centre at the exact
+ * contact distance), plinkland 18.066 (the ball lands in slot L: light, ring, sparks, BONG!, bell, beacon), siren 19.025 (IMMEDIATE JEOPARDY slams), klaxon 19.125 (pulse), thud 19.425 (Melon's head,
+ * contact frame 19.424), stamp 23.075 (NEW TAG), sit 33.879 34.179 34.479 34.779, chair 35.079, ding1 35.629 (dome), sting 39.863 (the dollhouse settles).
+ *
+ * Text: everything goes through the UI kit (UI.sign / label / table / stamp / tag); the board's letters, the form and the stamps are hero text (a label that nears an edge, the caption zone or the pill
+ * fades out with safeK instead of being cut); wall dressing is hero:false + crop:true. window.__VERDICT_DBG exposes the ball model so the peg contacts can be re-verified (see ballAt, TV, CP).
  */
 (() => {
 if (!window.TIMELINE_EP14) return;
@@ -599,7 +609,7 @@ const SHOTS = [
   { id: 'ring2', t0: 35.9, t1: 36.48, cam: pcam([721, 1120, 1.8], [721, 1120, 1.84]) },
   { id: 'st9a', t0: 36.48, t1: 37.95, cam: pcam([330, 1090, 2.0], [250, 1085, 2.3]) },
   { id: 'st9b', t0: 37.95, t1: 38.85, cam: fcam('straw', 4.8, 5.4, 180), dof: 11 },
-  { id: 'out', t0: 38.85, t1: 99, type: 'out', blur: lt => lt < T_OUTX ? 8 : lt < T_OUTZ + .05 ? 6 : 1, cam: (lt, u) => lt < T_OUTX ? [560, 900, 1] : outCam(lt) },
+  { id: 'out', t0: 38.85, t1: 99, type: 'out', blur: lt => lt < 38.88 ? 1 : lt < T_OUTX ? 6 : lt < T_OUTZ + .05 ? 5 : 1, cam: (lt, u) => lt < T_OUTX ? [560, 900, 1] : outCam(lt) },
 ];
 const shotAt = lt => { for (const s of SHOTS) if (lt < s.t1) return s; return SHOTS[SHOTS.length - 1]; };
 
@@ -630,7 +640,7 @@ function drawStageBody(lt, sh) {
     const o = id === 'kum' ? kumO : CASTFN[id](lt), v = visFrac(o);
     let show = true;
     if (v.x1 < 0 || v.x0 > W) show = false;
-    else if (!v.ok) { if (!sh.pan) show = false; else o.transit = true; }
+    else if (!v.ok) { if (!sh.pan || sh.cull) show = false; else o.transit = true; }
     if (show && sh.pan) o.transit = true;                         /* a whip: nobody is a subject while the camera is crossing the room */
     if (show && !sh.pan && faceInZone(o)) show = false;           /* a face never sits under the captions or on the frame's bottom edge: that character is out of the shot */
     list.push([id, o, show]);
@@ -710,7 +720,7 @@ function formRows(lt, F_, which) {
 function drawForm(lt, which) {
   const F_ = which === 0 ? FT.f1 : FT.f2, t0 = F_.t0 - (which === 0 ? .0 : .0), inK = easeBack(c01((lt - (which === 0 ? 1.95 : 20.93)) / .24));
   const rot = -.012 + .01 * (1 - inK), slide = (1 - c01(inK)) * 700;
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.translate(540, 810 + slide); ctx.rotate(rot); ctx.translate(-540, -810);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha *= c01(inK / .3); ctx.translate(540, 810 + slide); ctx.rotate(rot); ctx.translate(-540, -810);
   /* the clipboard: a hardboard back, a steel clip, the paper */
   ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 18;
   ctx.fillStyle = lg(0, FORM.y, 0, FORM.y + FORM.h, [[0, '#c4925c'], [1, '#8e6238']]); rr(FORM.x, FORM.y, FORM.w, FORM.h, 30); ctx.fill();
@@ -753,11 +763,11 @@ function drawForm(lt, which) {
   }
   /* the stamps, in the SEVERITY column only (or, for NEW TAG, in the empty part of the paper under the table) */
   const sevCx = T.x + W3[0] + W3[1] + W3[2] / 2, rowCy = r => T.y + T.rowH * (r + .5);
-  const sD = which === 0 ? slam(lt, F_.stamp, 2.3) : { k: 1, a: .94, age: 9 };
+  const sD = which === 0 ? slam(lt, F_.stamp, 1.3) : { k: 1, a: .94, age: 9 };
   if (sD) { ctx.save(); ctx.translate(sevCx, rowCy(0)); ctx.scale(sD.k, sD.k); ctx.translate(-sevCx, -rowCy(0)); UI.stamp('D', sevCx, rowCy(0), { size: 84, color: '#1d2a5a', rot: -.11, alpha: sD.a, id: 'stampD' }); ctx.restore(); if (sD.age >= -1e-6 && sD.age < .5) sring(sevCx, rowCy(0), (sD.age + .03) / .5, { r0: 40, r1: 170, lw: 7, color: '40,60,120', alpha: .8, bloom: 0 }); }
   if (which === 1) { UI.stamp('L', sevCx, rowCy(1), { size: 84, color: RED_F, rot: .08, alpha: .94, id: 'stampL' }); }
   if (which === 1) {
-    const sN = slam(lt, F_.stamp, 2.6);
+    const sN = slam(lt, F_.stamp, 1.45);
     if (sN) {
       const cxn = 540, cyn = 1166, sz = UI.sizeOf('NEW TAG', { size: 176, font: 'Bangers', lw: 8 }), pw_ = sz.w + 176, ph_ = sz.cap + 120;
       if (sN.age >= -1e-6) V2.glow(cxn, cyn, 760, '255,226,120', .55 * Math.exp(-sN.age / .7), 'screen', .9);
@@ -851,8 +861,8 @@ EXT.prop.fp14v_bag = (side, o, t) => {   /* the evidence bag: a clear zip bag he
 // ------------------------------------------------------------------ the IMMEDIATE JEOPARDY stamp (screen space): slams on the siren, pulses on the klaxon, rises out of the way of Melon's face, fades
 function overBong(lt) {   /* the bell, as a word, on the landing frame: pops, wobbles, fades before the cut to the surveyor */
   const age = lt - T_LAND;
-  if (age < -1e-6 || age > .44) return;
-  const pop = age < .12 ? easeBack(c01(age / .12)) : 1, fade = 1 - sstep(lt, T_LAND + .3, T_LAND + .44), wob = Math.sin(age * 38) * .035 * Math.exp(-age / .16), k = .45 + .55 * pop;
+  if (age < -1e-6 || age > .24) return;
+  const pop = age < .12 ? easeBack(c01(age / .12)) : 1, fade = 1 - sstep(lt, T_LAND + .1, T_LAND + .22), wob = Math.sin(age * 38) * .035 * Math.exp(-age / .16), k = .45 + .55 * pop;
   ctx.save(); ctx.translate(380, 560); ctx.scale(k, k);
   UI.label('BONG!', 0, 0, { size: 150, font: 'Bangers', fill: '#ffd23a', stroke: '#3a1204', lw: 14, spacing: 4, rot: -.1 + wob, alpha: fade, hero: true, shadow: 10, id: 'bong' });
   ctx.restore();
@@ -860,7 +870,7 @@ function overBong(lt) {   /* the bell, as a word, on the landing frame: pops, wo
 function overJeopardy(lt) {
   const t0 = snapT(CUE.siren), kl = snapT(CUE.klaxon);
   if (lt < t0 - .11 || lt > 20.25) return;
-  const sl = slam(lt, t0, 2.8); if (!sl) return;
+  const sl = slam(lt, t0, 2.0); if (!sl) return;
   const mv = sstep(lt, 19.36, 19.5), fade = 1 - sstep(lt, 19.95, 20.2), cx = lerp(540, 650, mv), cy = lerp(452, 392, mv), sc = lerp(1, .6, mv) * (1 + .06 * Math.max(0, pulse(lt, kl, 30, .08)));
   ctx.save(); ctx.translate(cx, cy); ctx.scale(sl.k * sc, sl.k * sc); ctx.translate(-cx, -cy); ctx.globalAlpha *= fade;
   UI.sign([cx - 380, cy - 150, 760, 300], [{ t: 'IMMEDIATE', size: 150 }, { t: 'JEOPARDY', size: 150 }], { font: 'Bangers', ink: '#ffffff', tstroke: '#7a0c18', tlw: 10, spacing: 4, fill: 'rgba(206,30,48,.88)', stroke: '#ffffff', lw: 10, r: 26, pad: 26, rot: -.07, alpha: sl.a, id: 'jeo', text: { tilt: .2, crop: sl.k > 1.03, hero: true } });
@@ -902,7 +912,7 @@ function drawOut(lt, sh) {
   if (lt < T_OUTX) {
     const u = easeIn(c01((lt - T_OUT0) / (T_OUTX - T_OUT0))), z = lerp(1.0, 3.6, u), cx = lerp(560, 190, u), cy = lerp(900, 600, u);
     ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.translate(540, 960); ctx.scale(z, z); ctx.translate(-cx, -cy);
-    drawStageBody(lt, { pan: true, type: 'room' });
+    drawStageBody(lt, { pan: true, cull: true, type: 'room' });
     ctx.restore();
   } else drawDollhouse(lt);
   const wash = lt < T_OUTX ? .95 * sstep(lt, T_OUT0 + .25, T_OUTX) : .95 * (1 - sstep(lt, T_OUTX, T_OUTX + .32));
