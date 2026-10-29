@@ -360,14 +360,14 @@ const lookAt = (o, p, k = 280) => { if (!p) return [0, 0]; const [fx, fy] = face
 const gazeAt = (o, keys, lt) => { const pts = keys.map(([t, p]) => [t, p || [o.x, faceC(o)[1]]]); return lookAt(o, key(pts, lt, easeOut)); };
 const T_TH = snapT(CUE.thud), atTh = lt => lt >= T_TH - 1e-6;   /* the thud lands on this video frame */
 const SIT_DY = 36;
-const SIT_T = { lemon: CUE.sit[0], mango: CUE.sit[1], clem: CUE.sit[2], straw: CUE.sit[3], melon: CUE.chair };
+const SIT_T = { lemon: snapT(CUE.sit[0]), mango: snapT(CUE.sit[1]), clem: snapT(CUE.sit[2]), straw: snapT(CUE.sit[3]), melon: snapT(CUE.chair) };   /* each lands on the video frame nearest its cue */
 /* standing to seated, landing on the cue time tc: the body lowers over `dur`, lands with a small bounce and a squash (shoes planted) */
 function seat(lt, tc, dur = .6) {
-  const k = sstep(lt, tc - dur, tc), after = lt > tc ? pulse(lt, tc, 20, .09) : 0;
+  const k = sstep(lt, tc - dur, tc), after = lt >= tc - 1e-6 ? pulse(lt, tc, 20, .09) : 0;
   return { dy: SIT_DY * k + 4 * after, sq: lt > tc ? .08 * Math.max(0, after) : .05 * Math.sin(k * PI), k: lt >= tc ? 1 : k };
 }
 /* the reflex when the call light chimes: every nurse starts to stand, a hair, and freezes */
-const reflex = (lt, i) => { const t0 = CUE.ding + i * .05; return -22 * sstep(lt, t0, t0 + .1) * (1 - sstep(lt, t0 + .5, t0 + .85)); };
+const reflex = (lt, i) => { const t0 = snapT(CUE.ding) + i * .05; return -22 * sstep(lt, t0, t0 + .1) * (1 - sstep(lt, t0 + .5, t0 + .85)); };
 /* a walker's gait fields from the distance walked so far (local units), so the planted foot stays planted and the footstep tool hears it */
 const gaitOf = (dist, dir, s, speed) => Math.abs(speed) > 20 ? { gaitW: dist / s, axis: 'x', dir, vx: speed } : {};
 
@@ -648,7 +648,7 @@ function drawStageBody(lt, sh) {
   for (const [id, o, show] of list) if (show && id !== 'star' && id !== 'kum') drawChair(XS[id], chairOpts(XS[id], lt));
   { const wk = sstep(lt, 32.0, 33.4) * (1 - sstep(lt, 34.8, 35.5)); if (wk > .02) { V2.glow(XS.straw, 1135, 170, '255,222,160', .55 * wk, 'screen', .35); V2.glow(XS.straw, 1100, 90, '255,240,200', .3 * wk, 'screen', .2); } }   /* the chair that has been waiting for her: a pool of warm light */
   for (const [id, o, show] of list) if (show) drawChar(o);
-  drawTableTop(lt); drawTableDressing(lt, { boxOpen: 1 - sstep(lt, 34.82, 34.97), boxDy: 62 * sstep(lt, 34.97, 35.12) - 14 * Math.sin(PI * c01((lt - 34.8) / .2)) }); drawTableFront(lt);
+  drawTableTop(lt); drawTableDressing(lt, { boxOpen: 1 - sstep(lt, 34.82, 34.97), boxDy: 62 * sstep(lt, 34.94, SIT_T.melon) - 14 * Math.sin(PI * c01((lt - 34.8) / .2)) }); drawTableFront(lt);
   drawCushion(lt); thudFx(lt);
   const b = ballAt(lt);
   if (b.phase === 'rest' || lt < TOSS.tr) { const [hx, hy] = heldBall(lt, kumO); drawBallAt(hx, hy, { sq: 0 }); } else drawBall(lt);

@@ -1,6 +1,18 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: closet (3:21 PM, THE SHOWER ROOM, 10.68 s). Builder E14-B. (the header and the shot list are written last)
- * Registers window.__EP14_SCENES.closet. Everything is a pure function of the scene time `lt`: the avalanche is a table of waypoints computed once from a seed at first use. */
+/* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: closet (3:21 PM, THE SHOWER ROOM, 10.68 s). Builder E14-B.
+ * Registers window.__EP14_SCENES.closet. Everything is a pure function of the scene time `lt`: the avalanche is a table of waypoints computed once from a seed at first use (c1: PLAN), then evaluated at any frame.
+ * THE FIRST FRAME IS THE TRACER'S LAST FRAME (ep14_tracer.js, builder D): the same camera (centre (876, 884), zoom 3.9, the push continuing at +0.0795 ln-zoom per second), the same light and grade, S14.back with the shower
+ * door shut (stash 4, bulge 1), Strawberry's glove on the knob (A11.straw x 828, grip [161.4, -8.5]), the call light no. 3 on the wall at (880, 916), nobody else in frame (Stateman at 690 is culled until the camera backs away;
+ * the Kumquat waits at x 700 off screen and scoots in to 758 as the frame widens).
+ *   tight   0.0 to 1.0    the push-in on the door and her glove; creak 0.30 (a thread of dust shakes loose, her eyes go up)
+ *   back    1.0 to 1.77   "Stand back." (0.9 to 1.67): her free hand comes out from behind her back, palm to the people behind her; she lets go of the knob; the camera backs away to a medium wide (zoom 2.45)
+ *   slide   1.77 to 4.4   SLOW MOTION. 1.774 the latch gives (the kit's stash is swapped for the same sprites drawn by us, rim light fading in), 1.874 rumble (the camera shakes), 2.274 CRASH 1 (the leaf is flung to its stop,
+ *                         four boxes land in front of the door, the left glass pane goes: shards and a flash), 2.674 clatter (the second layer lands), 3.274 CRASH 2 (the TV and the wheelchair land on the people, a flash),
+ *                         3.674 clatter (the Christmas tree, unfolded as it fell, and the rest); tinsel, dust, the HOURS SINCE THE Q WORD sign flips and lands face up (00), the Kumquat disappears under three boxes and a wheelchair.
+ *   wreck   4.4 to 6.6    "Concealment is not a strategy." Hold on the heap: dust settling in the lamp's shaft, tinsel drifting, a lone sock floating down onto the pile; Strawberry unmoved, Stateman's eyebrow up.
+ *   kumquat 6.6 to 8.3    "Is the Christmas tree a tag?": the pile bobs and one arm in a dark sleeve comes up out of it holding the huge clipboard, bobbing on every word.
+ *   stateman 8.3 to 10.7  a .3 s pan to Stateman: "It is a tag." (the Noted gesture, a nod) and a red stamp-ring with a tick punches onto his clipboard on "tag" (9.2); the sad trombone (9.78 to 10.44): the clipboard sinks into the pile.
+ * Gate: bash /tmp/shift_tools/audit_scene.sh 14 closet (every frame). */
 (() => {
 if (!window.TIMELINE_EP14 || !window.S14) return;
 const { zoomTo } = window.H6;

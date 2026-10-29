@@ -1,6 +1,23 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: adapt (3:04 PM, THE ADAPTATION, 24.4 s). Builder E14-B. (header is written last; see the shot list at the end of the file's build)
- * Registers window.__EP14_SCENES.adapt and exports the junk catalogue on window.FP14J for ep14_closet.js. Everything is a pure function of the scene time `lt`. */
+/* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: adapt (3:04 PM, THE ADAPTATION, 24.4 s). Builder E14-B.
+ * Registers window.__EP14_SCENES.adapt and exports the junk catalogue on window.FP14J. Everything is a pure function of the scene time `lt` (no state is carried from frame to frame).
+ * Five behaviors of the colony, each with its own shot and its own field-guide tag (BEHAVIOR n OF 5, Latin name; one tag at a time, top right, y 48); the dollhouse is the kit S14 and the people are
+ * the cast at the dollhouse scale; everybody who walks or runs goes through S14.walk / S14.run (the footstep tool reads the gait).
+ *   A  0.0 to 7.4   CONCEALMENT (n2, m1, c1, pop, l1). Medium shot of the shower closet and room 7, a slow push-in (z 1.86 to 2.04). Three waves of two runners (Mango and Clementine, in file so that no face is ever
+ *                   covered) throw six pieces into the doorway (the kit's own stash sprites; the stash level rises 2 to 4, the door bulges); Lemon strolls in after the last wave and watches with her arms folded;
+ *                   Mango leans on the door ("Does it close?" 4.17), Clementine shoves ("Sure!" 5.08), the door bursts on the crash cue (5.71: camera shake, flash, ring) and flings both out over Lemon's head
+ *                   and out of the left edge (transit); the junk spills; Lemon walks to the door and puts one finger on the knob on "closes", and the junk obeys (the spill runs backwards into the closet).
+ *   whip 7.26 to 7.64 from A to B (the swap of the people happens at 7.40, inside the blur).
+ *   B  7.4 to 9.9   CHARTING (n3). The nurses' station: Lemon types at a blur from the typing cue (7.95), a stack of charts grows on the counter, sheets flutter off; a calendar card tears off backwards (28 to 07, the
+ *                   clock spinning backwards) and a LATE ENTRY stamp slams down on each stamp cue (8.351, 8.901, 9.451; the page shakes on each).
+ *   crane 9.72 to 11.05 up to the med room (tag 3 arrives with it).
+ *   C  9.9 to 12.64 INSULIN PENS (n4). Clementine opens the lit fridge, glances over her shoulder and dates the pens one by one (the kit's pens turn fresh).
+ *   D  12.64 to 14.1 the camera trap (hard cut): night-vision grade, scanlines, CAM 03 MED ROOM HUD, timestamp, REC, MOTION box; infrared flashes on the shutter cues (12.79, 13.69), the scribble (12.99), CAUGHT.
+ *   E  14.1 to 19.46 CALL LIGHTS (n5). The whole building; a staff member planted beside each call light like a goalkeeper; a dome rings, the keeper swats it in one frame; the HUD reads RESPONSE 0:09 and stays
+ *                   green; STAFFING UNCHANGED, and on "Position" all four take one step to the left (POSITION CHANGED).
+ *   F  19.46 to 24.4 THE DISPLAY (n6, a1). The Administrator's office; the pizza fan opens behind him on the pizza box cue (22.03), sparkles on 22.33, "We love surveys!" (22.23); Strawberry (per diem) watches him.
+ * Gate: bash /tmp/shift_tools/audit_scene.sh 14 adapt (every frame).
+ */
 (() => {
 if (!window.TIMELINE_EP14 || !window.S14) return;
 const { zoomTo, faceZoom, drawBg } = window.H6;
@@ -831,7 +848,7 @@ function overE(lt) {
   const b = sstep(lt, 16.8, 17.0) * (1 - sstep(lt, 19.3, 19.44)); if (b > .01) {
     const chg = lt >= STEP_T(), col = chg ? AMBER : GREEN_HUD, str = chg ? 'POSITION CHANGED' : 'STAFFING UNCHANGED';
     ctx.save(); ctx.globalAlpha *= b;
-    const pill = UI.pill(str, 1032, 220, { anchor: 'right', size: 32, weight: 900, spacing: 3, ink: col, fill: 'rgba(6,22,14,.84)', stroke: col, lw: 3.4, padX: 24, h: 58, id: 'staff14' });
+    const pill = UI.pill(str, 1032, 214, { anchor: 'right', size: 32, weight: 900, spacing: 3, ink: col, fill: 'rgba(6,22,14,.84)', stroke: col, lw: 3.4, padX: 24, h: 58, id: 'staff14' });
     regOverlay([pill.x0, pill.y0, pill.x1, pill.y1], 'staff14');
     ctx.restore();
   }

@@ -733,7 +733,7 @@ function drawMacro(lt) {
 // ------------------------------------------------------------------ the HUD (screen space, in over())
 const HUD = { right: 1040 };
 function hudTally(lt) {
-  const t0 = CUE.whoosh - .12, t1 = bs('st2') - .1, a = sstep(lt, t0, t0 + .2) * (1 - sstep(lt, t1, t1 + .25));
+  const t0 = CUE.whoosh - .12, t1 = bs('st2') - .36, a = sstep(lt, t0, t0 + .2) * (1 - sstep(lt, t1, t1 + .25));   /* gone before the hard cut to the eyebrow close-up */
   if (a <= .01) return;
   const n = placed(lt), size = 30, h = 64, lab = 'CALL LIGHTS IN REACH', li = UI.sizeOf(lab, { size, weight: 900, spacing: 1.5 });
   const dw = 30, w = 28 + li.w + 22 + dw * 3 + 26, x0 = HUD.right - w, y0 = 284;
