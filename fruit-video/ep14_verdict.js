@@ -890,11 +890,14 @@ function drawDollhouse(lt) {
   const o = { t: lt, rooms: { station: { calls: callsAt(lt) } } };
   S14.back(lt, o);
   const fl = S14.rect('med').floor, rc = S14.rect('conf');
-  /* the staff, seated at the conference table in its cell (small: the cell is 250 px wide), the Administrator at the head */
-  const seated = [['lemon', A7.lemon, .12], ['mango', A7.mango, .29], ['clem', A10.clem, .46], ['straw', A11.straw, .63]], ss = S14.S * .55;
-  const tr = lt < T_OUTZ + .02;
-  for (const [id, ctor, u] of seated) { const [x, y] = S14.at('conf', u, -22); drawChar(ctor({ x, y, s: ss, noLegs: true, plant: true, t: lt, transit: tr, expr: id === 'straw' ? 'happy' : 'chill', lid: .25, look: [.1, .05], arms: { l: 'rest', r: 'rest' }, sparkle: id === 'straw' })); }
-  const mx = S14.at('conf', .85, -22); drawChar(A9.melon({ x: mx[0], y: mx[1], s: ss * 1.2, noLegs: true, plant: true, t: lt, transit: tr, expr: 'weak', look: [-.4, .1], arms: { l: 'rest', r: 'rest' } }));
+  /* the staff, seated behind the conference table in its cell (the cell is 250 px wide): the four chairs across the far side (room-local x 56, 102, 148, 194; the four sit a little closer, x 44 to 170, so that Melon at the end chair, x 226, clears Strawberry's face), then the table's top and front drawn over their laps;
+     the Administrator at the end chair (local x 224) in front of the table's end */
+  const seated = [['lemon', A7.lemon, 44], ['mango', A7.mango, 86], ['clem', A10.clem, 128], ['straw', A11.straw, 170]], ss = S14.S * .55;
+  const tr = lt < T_OUTZ + .02, lx = u => rc.x0 + u, ly = v => rc.y0 + v;
+  for (const [id, ctor, u] of seated) drawChar(ctor({ x: lx(u), y: ly(248), s: ss, noLegs: true, plant: true, t: lt, transit: tr, expr: id === 'straw' ? 'happy' : 'chill', lid: .25, look: [.1, .05], arms: { l: 'rest', r: 'rest' }, sparkle: id === 'straw' }));
+  { const tp = (pts, fill, lw) => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(lx(x), ly(y)) : ctx.moveTo(lx(x), ly(y))); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = '#1d1a22'; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.stroke(); };
+    ctx.save(); tp([[30, 236], [220, 236], [212, 252], [38, 252]], lg(0, ly(236), 0, ly(252), [[0, '#c98f5a'], [1, '#bd824e']]), 1.8); tp([[38, 252], [212, 252], [212, 260], [38, 260]], '#8f5e36', 1.6); ctx.restore(); }
+  drawChar(A9.melon({ x: lx(226), y: ly(268), s: ss * 1.2, noLegs: true, plant: true, t: lt, transit: tr, expr: 'weak', look: [-.4, .1], arms: { l: 'rest', r: 'rest' } }));
   /* the surveyor crosses the middle floor toward the call, the trainee trotting behind */
   const path = S14.move(39.3, 41.4, [S14.at('r4', .4)[0], fl], [S14.at('r7', .58)[0], fl], easeIO), path2 = S14.move(39.5, 41.5, [S14.at('r4', .06)[0], fl], [S14.at('r7', .2)[0], fl], easeIO);
   if (lt >= 39.3) {

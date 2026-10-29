@@ -1,7 +1,6 @@
 'use strict';
 /* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: closet (3:21 PM, THE SHOWER ROOM, 10.68 s). Builder E14-B. (the header and the shot list are written last)
  * Registers window.__EP14_SCENES.closet. Everything is a pure function of the scene time `lt`: the avalanche is a table of waypoints computed once from a seed at first use. */
-window.__DUMP14 = true;
 (() => {
 if (!window.TIMELINE_EP14 || !window.S14) return;
 const { zoomTo } = window.H6;
@@ -172,7 +171,6 @@ function buildSim() {
   }
   for (const it of items) if (it.stay) { Object.assign(it, { tL: 99, tE: 99, tI: 99, tEnd: 99, segs: [{ type: 'air', t0: 99, t1: 100, x0: it.C0[0], y0: it.C0[1], x1: it.C0[0], y1: it.C0[1], r0: it.th0, r1: it.th0, vx: 0, vy: 0 }], ew: it.spr.w, eh: it.spr.h, yR: it.C0[1], xR: it.C0[0], sup: 0 }); }
   events.push({ t: CUE.crash1, x: 950, y: FL, a: .9, id: 'DOOR', lane: 'B' }, { t: CUE.crash2, x: 790, y: FL, a: .8, id: 'DOOR', lane: 'B' });
-  if (window.__DUMP14) console.error('SIMDUMP ' + items.map(it => { const s0 = it.segs[0], ap = s0.type === 'air' ? Math.min(s0.y0, s0.y1) - (s0.vy < 0 ? s0.vy * s0.vy / (2 * G) : 0) : 0; return [it.id, it.lane, 'tL' + it.tL, 'tI' + it.tI, 'y0 ' + Math.round(it.C0[1]), 'yR ' + Math.round(it.yR), 'apexY ' + Math.round(ap), 'vy ' + Math.round(s0.vy || 0), 'vx ' + Math.round(s0.vx || 0), 'sup ' + Math.round(it.sup)].join(' '); }).join('\n'));
   return { items, events: events.sort((a, b) => a.t - b.t), Hf };
 }
 const sim = () => SIM || (SIM = buildSim());
@@ -245,7 +243,7 @@ function strawC(lt) {
 }
 
 // ------------------------------------------------------------------ Mr. Stateman: the half-step back, the eyebrow on the first crash, the "Noted." nod and the tick on "tag"
-const ST_X = lt => CHAR.star - 14 * sstep(lt, 1.2, 1.7);
+const ST_X = lt => CHAR.star - 8 * sstep(lt, 1.2, 1.7);
 function stateC(lt) {
   const o = A14.stateman({ x: ST_X(lt), y: FL, s: SS, t: lt + 3.1, who: 'star', pose: 'carry', look: [.9, .05], stride: 38 });
   let look = [.9, .05], expr = 'neutral';
@@ -350,7 +348,7 @@ function sockShape(sc = 1) {
   ctx.save(); ctx.clip(); ctx.fillStyle = '#c23a2b'; for (const x of [6, 14]) ctx.fillRect(x, -2, 3.4, 12); ctx.fillStyle = '#2b5fc2'; ctx.fillRect(26, -2, 8, 12); ctx.restore();
   ctx.restore();
 }
-const SOCK = { t0: 3.7, t1: 6.5, x0: 920, y0: 655, x1: 892 };   /* born at the top of the closet's air, comes to rest on the heap at x1 (the heap's height there is read from the sim) */
+const SOCK = { t0: 3.9, t1: 6.5, x0: 925, y0: 712, x1: 892 };   /* born at the top of the closet's air, comes to rest on the heap at x1 (the heap's height there is read from the sim) */
 function drawSock(lt) {
   if (lt < SOCK.t0) return;
   const S = sim(), u = cl01((lt - SOCK.t0) / (SOCK.t1 - SOCK.t0)), top = FLB - S.Hf.B[Math.round((SOCK.x1 - HX0) / HDX)] - 7;
@@ -363,6 +361,11 @@ function drawSock(lt) {
 function doorSock(lt) {
   const d = doorAt(lt); if (d > .3) return;
   ctx.save(); ctx.translate(RS.x0 + 90, RS.y0 + 307); ctx.rotate(.04); sockShape(1); ctx.restore();
+}
+/* the creak: a thread of dust shakes loose from the top edge of the straining door */
+function creakDust(lt) {
+  const k = (lt - CUE.creak) / 1.1; if (k < 0 || k >= 1) return;
+  for (let i = 0; i < 3; i++) blob(906 + i * 30 + 6 * Math.sin(lt * 7 + i), 796 + 26 * k * (1 + i * .3), 9 + 14 * k, DUSTC, .34 * (1 - k) * (1 - k));
 }
 /* the flashes: the door leaf slams into its stop (a ring and a puff of the wall), the left pane goes (a bright burst), the second crash shakes the floor */
 function flashes(lt) {
@@ -463,7 +466,8 @@ function drawWorld(lt) {
   kumHand(lt);
   lanePass('F', lt); lanePass('G', lt);
   S14.front(lt, { rooms });
-  floorHaze(lt); impactDust(lt); tinsel(lt); shards(lt); lampShaft(lt); flashes(lt);
+  drawTick(lt);
+  creakDust(lt); floorHaze(lt); impactDust(lt); tinsel(lt); shards(lt); lampShaft(lt); flashes(lt);
 }
 
 /* the Kumquat's hand: his body is under the pile; one arm in a dark sleeve comes up out of the stack holding the clipboard, bobs on each word of "Is the Christmas tree a tag?" and sinks back with the sad trombone.
@@ -482,12 +486,26 @@ function kumHand(lt) {
   ctx.save(); ctx.fillStyle = '#f6f6fa'; ctx.strokeStyle = INKC; ctx.lineWidth = 2; ell(hx, hy + 3, 6.2, 5.6); ctx.fill(); ctx.stroke(); ctx.restore();
 }
 
+/* the tick: on "tag" a red stamp-ring with a check mark punches onto Stateman's clipboard (graphics only, no lettering). It is drawn in the world, on the board, after the armchair's arm that half hides the board. */
+function drawTick(lt) {
+  const t0 = wordT('st1', 'tag', 9.19) + .02, k = seg(lt, t0, t0 + .16); if (k <= 0) return;
+  const o = stateC(lt), [cx, cy] = H6.localToScreen(o, -13.6, 110.1), R = 19, sc = lerp(1.55, 1, easeOut(k)), a = Math.min(1, k * 6);
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy); ctx.rotate(-.14); ctx.scale(sc, sc); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(40,10,8,.55)'; ctx.lineWidth = R * .26; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke();
+  ctx.strokeStyle = '#c23a2b'; ctx.lineWidth = R * .16; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke();
+  const tk = () => { ctx.beginPath(); ctx.moveTo(-R * .5, R * .02); ctx.lineTo(-R * .12, R * .42); ctx.lineTo(R * .56, -R * .4); };
+  ctx.strokeStyle = 'rgba(40,10,8,.55)'; ctx.lineWidth = R * .3; tk(); ctx.stroke();
+  ctx.strokeStyle = '#c23a2b'; ctx.lineWidth = R * .2; tk(); ctx.stroke();
+  ctx.restore();
+  if (lt - t0 < .5) V2.ring(cx, cy, (lt - t0) / .5, { r0: R * .8, r1: R * 2.1, lw: 2, color: '255,200,190', alpha: .5, bloom: 0 });
+}
+
 // ------------------------------------------------------------------ the camera. It starts exactly where the tracer's last frame left it (centre (876, 884), zoom 3.9, a constant push of +0.0795 ln-zoom per second) and carries on at that speed;
 // it backs away on "Stand back.", holds a medium wide on the avalanche, drifts out on the wreck, pushes to the buried Kumquat for his question and whips (.3 s) to Stateman for the tick.
 const PUSH = lt => { const e = lt + 1 / 30; return { x: 876 - 2.31 * e, y: 884 + 2.31 * e, z: 3.9 * Math.exp(.0795 * e) }; };
-const WIDE = { x: 850, y: 878, z: 2.45 };
+const WIDE = { x: 836, y: 878, z: 2.45 };
 const mixPose = (a, b, k) => ({ x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), z: Math.exp(lerp(Math.log(a.z), Math.log(b.z), k)) });
-const DRIFT = lt => ({ x: 850 - 1.1 * (lt - 1.9), y: 878 - 1.7 * (lt - 1.9), z: 2.45 * Math.exp(-.04 * (lt - 1.9)) });
+const DRIFT = lt => ({ x: 836 - .9 * (lt - 1.9), y: 878 - 1.7 * (lt - 1.9), z: 2.45 * Math.exp(-.04 * (lt - 1.9)) });
 const KUMP = lt => ({ x: 790 - 1.6 * (lt - 6.85), y: 906, z: 2.7 * Math.exp(.03 * (lt - 6.85)) });
 const STP = lt => ({ x: 718, y: 888, z: 3.0 * Math.exp(.045 * (lt - 8.62)) });
 function camAt(lt) {
@@ -518,26 +536,6 @@ const blurAt = lt => {
   return n;
 };
 
-// ------------------------------------------------------------------ the tick: on "tag" a red stamp-ring with a check mark punches onto Stateman's clipboard (graphics only, no lettering)
-function clipScreen(lt) {
-  const o = stateC(lt), c = camAt(lt), [wx, wy] = H6.localToScreen(o, -13.6, 110.1), sh = shakeAt(lt);
-  return [(wx - c.x) * c.z + 540, (wy - c.y) * c.z + 960, c.z];
-}
-function overTick(lt) {
-  const t0 = wordT('st1', 'tag', 9.19) + .02, k = seg(lt, t0, t0 + .16); if (k <= 0) return;
-  const [cx, cy, z] = clipScreen(lt), R = 44 * z / 3.1 + 14, sc = lerp(1.55, 1, easeOut(k)), a = Math.min(1, k * 6);
-  ctx.save(); ctx.globalAlpha *= a; ctx.translate(cx, cy); ctx.rotate(-.14); ctx.scale(sc, sc);
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.strokeStyle = 'rgba(40,10,8,.55)'; ctx.lineWidth = R * .26; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke();
-  ctx.strokeStyle = '#c23a2b'; ctx.lineWidth = R * .16; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke();
-  const tk = () => { ctx.beginPath(); ctx.moveTo(-R * .5, R * .02); ctx.lineTo(-R * .12, R * .42); ctx.lineTo(R * .56, -R * .4); };
-  ctx.strokeStyle = 'rgba(40,10,8,.55)'; ctx.lineWidth = R * .3; tk(); ctx.stroke();
-  ctx.strokeStyle = '#c23a2b'; ctx.lineWidth = R * .2; tk(); ctx.stroke();
-  ctx.restore();
-  if (lt - t0 < .5) { ctx.save(); V2.ring(cx, cy, (lt - t0) / .5, { r0: R * .8, r1: R * 2.1, lw: 5, color: '255,200,190', alpha: .5, bloom: 0 }); ctx.restore(); }
-  reg('overlay', [cx - R * sc - 8, cy - R * sc - 8, cx + R * sc + 8, cy + R * sc + 8], { id: 'tick14' });
-}
-
 // ------------------------------------------------------------------ the scene
 const SC = {
   shot: lt => shotOf(lt),
@@ -545,7 +543,7 @@ const SC = {
   draw: lt => drawWorld(lt),
   fx: lt => fxAt(lt),
   blur: lt => blurAt(lt),
-  over(lt) { overTick(lt); },
+  over(lt) {},
 };
 window.__EP14_SCENES = window.__EP14_SCENES || {};
 window.__EP14_SCENES.closet = SC;
