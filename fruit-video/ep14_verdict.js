@@ -55,7 +55,7 @@ const CUE = {
 
 // ------------------------------------------------------------------ layout (world px)
 const F = 1230, SA = .46;
-const XS = { star: 215, kum: 320, lemon: 480, mango: 586, clem: 692, straw: 798, melon: 946 };
+const XS = { star: 215, kum: 320, lemon: 480, mango: 586, clem: 692, straw: 806, melon: 950 };
 const CUSH = { x: 378, y: F - 6 };                                      /* the ball waits on its cushion on the floor, beside the Kumquat */
 const TB = { x0: 430, x1: 1066, y0: 1190, y1: 1238, y2: 1330 };           /* the table: top surface y0..y1, front panel y1..y2 */
 const BD = { cx: 815, L: 200, top: 50, bottom: 820, row0: 210, P: 40, slotTop: 686, slotBot: 762, strip: 808 };   /* the board is lifted so that, in a tight shot of the slot row, the staff's faces fall below the frame */
@@ -231,7 +231,7 @@ function pizzaBox(x, y, open, o = {}) {   /* the Administrator's box on the tabl
 }
 function drawTableDressing(lt, o = {}) {
   const y = TB.y0 + 32;
-  binderStack(533, y, 3, 1); binderStack(639, y, 2, 3); binderStack(745, y - 2, 3, 7);
+  binderStack(533, y, 3, 1); binderStack(639, y, 2, 3); binderStack(772, y - 2, 3, 7);
   ctx.fillStyle = '#fbf8ee'; ctx.strokeStyle = 'rgba(60,50,30,.5)'; ctx.lineWidth = 1.6; for (let i = 0; i < 3; i++) { rr(838 + i * 2, y - 3 - i * 3, 52, 4, 1); ctx.fill(); ctx.stroke(); }   /* sign-in sheets */
   pizzaBox(o.boxX ?? XS.melon, y - 2 + (o.boxDy || 0), o.boxOpen ?? 1);
   /* a water jug and two glasses */
@@ -396,7 +396,7 @@ function castStraw(lt) {
 }
 function castMelon(lt) {
   const sat = 34;   /* he sits a little lower than the others: a bigger chair, a smaller man */
-  const rise = sstep(lt, 13.3, 13.75), back = Math.pow(c01((lt - 19.16) / (T_TH - 19.16)), 2.2), up = sstep(lt, 25.985, 26.4), sit = seat(lt, SIT_T.melon, .3);
+  const rise = sstep(lt, 16.12, 16.42), back = Math.pow(c01((lt - 19.16) / (T_TH - 19.16)), 2.2), up = sstep(lt, 25.985, 26.4), sit = seat(lt, SIT_T.melon, .3);
   let dy = sat - (sat + 6) * rise;
   dy = lt < 19.16 ? dy : lt < 25.985 ? lerp(-6, 62, back) : lt < 33.0 ? lerp(62, -6, up) : -6 + (sat - (-6)) * sit.k + 4 * (lt > SIT_T.melon ? pulse(lt, SIT_T.melon, 20, .09) : 0);
   const o = A9.melon({ x: XS.melon, y: F + dy, s: SA * 1.22, plant: true, t: lt, expr: exprOf('melon', lt), arms: { l: 'rest', r: 'rest' } });
@@ -571,13 +571,13 @@ const SHOTS = [
   { id: 'st3a', t0: 10.165, t1: 10.95, cam: fcam('star', 5.0, 5.2, 190), dof: 10 },
   { id: 'kum1', t0: 10.95, t1: 13.2, cam: fcam('kum', 7.4, 8.6, 130, 4), dof: 10 },
   { id: 'kum2', t0: 13.2, t1: TOSS.tr, cam: fcam('kum', 8.6, 7.8, 130, 4), dof: 10 },
-  { id: 'toss', t0: TOSS.tr, t1: T_APEX, pan: true, blur: 10, cam: (lt, u) => mixA(fcam('kum', 7.8, 7.8, 130, 4)(TOSS.tr, 1), BCAM(T_APEX), easeIO(c01((lt - TOSS.tr) / .55))) },
+  { id: 'toss', t0: TOSS.tr, t1: T_APEX, pan: true, blur: 8, cam: (lt, u) => mixA(fcam('kum', 7.8, 7.8, 130, 4)(TOSS.tr, 1), BCAM(T_APEX), easeIO(c01((lt - TOSS.tr) / .55))) },
   { id: 'b1', t0: T_APEX, t1: T_BEND, cam: (lt, u) => BCAM(lt) },
-  { id: 'm1', t0: T_BEND, t1: 16.40, cam: fcam('melon', 4.4, 4.6, 190), dof: 10 },
+  { id: 'm1', t0: T_BEND, t1: 16.40, cam: () => { const f = faceC(castMelon(16.3)); return [f[0] + 6, f[1] + 190 / 4.4, 4.4]; }, dof: 10 },
   { id: 'b3', t0: 16.40, t1: 16.713, cam: (lt, u) => mixA(BCAM(lt), LCAM, easeOut(c01((lt - 16.40) / .3))) },
   { id: 'a2', t0: 16.713, t1: 17.35, cam: fcam('melon', 4.8, 5.2, 190), dof: 11 },
   { id: 'b4', t0: 17.35, t1: 18.2, cam: pcam(LCAM, [LCAM[0], LCAM[1] + 10, 2.7]) },
-  { id: 'b5', t0: 18.2, t1: 18.55, pan: true, blur: 8, cam: (lt, u) => mixA([LCAM[0], LCAM[1] + 10, 2.7], [BD.cx + 70, 170, 1.7], easeIO(c01((lt - 18.2) / .22))) },
+  { id: 'b5', t0: 18.2, t1: 18.55, pan: true, blur: 6, cam: (lt, u) => mixA([LCAM[0], LCAM[1] + 10, 2.7], [BD.cx + 70, 170, 1.7], easeIO(c01((lt - 18.2) / .22))) },
   { id: 'st4', t0: 18.55, t1: 18.925, cam: fcam('star', 5.2, 5.3, 190), dof: 10 },
   { id: 'j1', t0: 18.925, t1: 19.358, cam: pcam([640, 960, 1.3], [640, 960, 1.34]) },
   { id: 'j2', t0: 19.358, t1: 19.75, cam: fcam('melon', 4.4, 4.4, 150), dof: 10 },
@@ -599,7 +599,7 @@ const SHOTS = [
   { id: 'ring2', t0: 35.9, t1: 36.48, cam: pcam([721, 1120, 1.8], [721, 1120, 1.84]) },
   { id: 'st9a', t0: 36.48, t1: 37.95, cam: pcam([330, 1090, 2.0], [250, 1085, 2.3]) },
   { id: 'st9b', t0: 37.95, t1: 38.85, cam: fcam('straw', 4.8, 5.4, 180), dof: 11 },
-  { id: 'out', t0: 38.85, t1: 99, type: 'out', blur: 6, cam: (lt, u) => lt < T_OUTX ? [560, 900, 1] : outCam(lt) },
+  { id: 'out', t0: 38.85, t1: 99, type: 'out', blur: lt => lt < T_OUTX ? 8 : lt < T_OUTZ + .05 ? 6 : 1, cam: (lt, u) => lt < T_OUTX ? [560, 900, 1] : outCam(lt) },
 ];
 const shotAt = lt => { for (const s of SHOTS) if (lt < s.t1) return s; return SHOTS[SHOTS.length - 1]; };
 
@@ -624,7 +624,7 @@ function drawBack(lt) { drawRoomAll(lt); drawBoard(lt, boardSt(lt)); }
 function drawStageBody(lt, sh) {
   lightRig(lt, sh);
   if (sh.dof) V2.dof(sh.dof, () => drawBack(lt)); else drawBack(lt);
-  if (sh.dim) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(${sh.dimC || '10,8,20'},${sh.dim})`; ctx.fillRect(0, 0, W, H); ctx.restore(); if (sh.glowOn) { const f = faceC(CASTFN[sh.glowOn](lt)); V2.glow(f[0], f[1] + 20, 330, '255,206,140', .78, 'screen', .7); V2.glow(f[0], f[1] + 20, 640, '255,190,120', .34, 'screen', .3); } }
+  if (sh.dim) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(${sh.dimC || '10,8,20'},${sh.dim})`; ctx.fillRect(0, 0, W, H); ctx.restore(); if (sh.glowOn) { const f = faceC(CASTFN[sh.glowOn](lt)); V2.glow(f[0], f[1] + 10, 250, '255,196,120', .42, 'screen', .4); V2.glow(f[0], f[1] + 10, 460, '255,170,100', .16, 'screen', .2); } }
   const kumO = CASTFN.kum(lt), list = [];
   for (const id of CASTORDER) {
     const o = id === 'kum' ? kumO : CASTFN[id](lt), v = visFrac(o);
@@ -636,6 +636,7 @@ function drawStageBody(lt, sh) {
     list.push([id, o, show]);
   }
   for (const [id, o, show] of list) if (show && id !== 'star' && id !== 'kum') drawChair(XS[id], chairOpts(XS[id], lt));
+  { const wk = sstep(lt, 32.0, 33.4) * (1 - sstep(lt, 34.8, 35.5)); if (wk > .02) { V2.glow(XS.straw, 1135, 170, '255,222,160', .55 * wk, 'screen', .35); V2.glow(XS.straw, 1100, 90, '255,240,200', .3 * wk, 'screen', .2); } }   /* the chair that has been waiting for her: a pool of warm light */
   for (const [id, o, show] of list) if (show) drawChar(o);
   drawTableTop(lt); drawTableDressing(lt, { boxOpen: 1 - sstep(lt, 34.82, 34.97), boxDy: 62 * sstep(lt, 34.97, 35.12) - 14 * Math.sin(PI * c01((lt - 34.8) / .2)) }); drawTableFront(lt);
   drawCushion(lt); thudFx(lt);
@@ -848,6 +849,14 @@ EXT.prop.fp14v_bag = (side, o, t) => {   /* the evidence bag: a clear zip bag he
 };
 
 // ------------------------------------------------------------------ the IMMEDIATE JEOPARDY stamp (screen space): slams on the siren, pulses on the klaxon, rises out of the way of Melon's face, fades
+function overBong(lt) {   /* the bell, as a word, on the landing frame: pops, wobbles, fades before the cut to the surveyor */
+  const age = lt - T_LAND;
+  if (age < -1e-6 || age > .44) return;
+  const pop = age < .12 ? easeBack(c01(age / .12)) : 1, fade = 1 - sstep(lt, T_LAND + .3, T_LAND + .44), wob = Math.sin(age * 38) * .035 * Math.exp(-age / .16), k = .45 + .55 * pop;
+  ctx.save(); ctx.translate(380, 560); ctx.scale(k, k);
+  UI.label('BONG!', 0, 0, { size: 150, font: 'Bangers', fill: '#ffd23a', stroke: '#3a1204', lw: 14, spacing: 4, rot: -.1 + wob, alpha: fade, hero: true, shadow: 10, id: 'bong' });
+  ctx.restore();
+}
 function overJeopardy(lt) {
   const t0 = snapT(CUE.siren), kl = snapT(CUE.klaxon);
   if (lt < t0 - .11 || lt > 20.25) return;
@@ -925,8 +934,8 @@ const SCENE = {
   },
   draw: guard('draw', lt => drawStage(lt, shotAt(lt)), () => { ctx.fillStyle = '#2b2740'; ctx.fillRect(0, 0, W, H); }),
   fx: lt => fxAt(lt),
-  blur: lt => shotAt(lt).blur || 1,
-  over: guard('over', lt => { overJeopardy(lt); }),
+  blur: lt => { const b = shotAt(lt).blur; return typeof b === 'function' ? b(lt) : (b || 1); },
+  over: guard('over', lt => { overBong(lt); overJeopardy(lt); }),
 };
 window.__VERDICT_DBG = { ballAt, TV, CP, PLINK, START, T_LAND, T_REL, TOSS, T_APEX, HOP, snapT, DC, RB, RP, SQ, laneX, rowY, LANE_PATH };
 window.__EP14_SCENES = window.__EP14_SCENES || {};

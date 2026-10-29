@@ -51,7 +51,7 @@ const ft = lt => lt - Math.max(0, Math.min(lt, RELEASE) - FREEZE);
 // ------------------------------------------------------------------ the alarm chain: which room gets which phone
 const BUZZ_ROOMS = ['office', 'r14', 'r4', 'r7', 'med'];
 const BUZZ = CUE.buzz.map((t0, i) => ({ id: BUZZ_ROOMS[i], t0 }));
-const BUBBLE_AT = { office: 'top', r14: 'top', r4: 'top', r7: 'above', med: 'above' };   /* the middle row's bubbles are wider than a room: r7 and med sit above their rooms so none of them touches another */
+const BUBBLE_TXT = 'SURVEY\nIN THE\nBUILDING';             /* three short lines: the bubble is narrower than its room, so no two bubbles touch and none covers a face */
 const BUBBLE_OUT = [21.42, 21.66];                           /* the bubbles leave just before the meerkats */
 const buzzOf = id => (BUZZ.find(b => b.id === id) || {}).t0;
 
@@ -61,7 +61,7 @@ function roomsAt(lt) {
   for (const b of BUZZ) {
     const a1 = lt >= b.t0 && lt < b.t0 + .8 ? 1 - seg(lt, b.t0, b.t0 + .8) : 0, a2 = lt >= b.t0 + .36 && lt < b.t0 + .95 ? .55 * (1 - seg(lt, b.t0 + .36, b.t0 + .95)) : 0;
     const pop = seg(lt, b.t0, b.t0 + .26), out = 1 - seg(lt, BUBBLE_OUT[0], BUBBLE_OUT[1]);
-    R[b.id] = { alert: Math.max(a1, a2), bubble: lt >= b.t0 && out > 0 ? { t: 'SURVEY IN THE BUILDING', k: Math.min(pop, out) >= 1 ? 1 : Math.min(pop, out), at: BUBBLE_AT[b.id] } : null };
+    R[b.id] = { alert: Math.max(a1, a2), bubble: lt >= b.t0 && out > 0 ? { t: BUBBLE_TXT, k: Math.min(pop, out) >= 1 ? 1 : Math.min(pop, out), at: 'top', dy: -12 } : null };
   }
   const fl = lt >= RELEASE && lt < bs('n5') + 2.4 ? .5 : 0;
   for (const id of S14.ids) R[id] = Object.assign(R[id] || {}, { flicker: fl });
@@ -221,7 +221,8 @@ const KF = [
   [21.90, 546, 944, 1.02, 'lin'],         /* held wide for the buzzes and the spring */
   [23.20, 552, 1080, 1.10, 'io'],         /* a slow push toward the frozen ground floor, every head of the colony still whole in the frame */
   [25.70, 540, 955, 0.98, 'io'],          /* the colony adapts: out to the whole building again */
-  [26.84, 3400, 880, 1.2, 'in'],          /* WHIP right on the sting, off the building */
+  [25.89, 540, 955, 0.98, 'lin'],         /* held wide until the sting */
+  [26.84, 838, 944, 1.86, 'out'],         /* WHIP on the sting (25.89): a snap to the right half of the building that settles on the next scene's first frame (adapt opens on (838, 944) at z 1.86) */
 ];
 const CUT_T = [12.552, 14.15];
 const EASE = { io: easeIO, out: easeOut, in: easeIn, lin: u => u, cut: u => (u >= 1 ? 1 : 0) };
@@ -240,17 +241,17 @@ function carAt(lt) {
 }
 const STATE_T0 = CUE.car + 1.3;
 function statemanPath(lt) {
-  const g = S14.carGeom({ x: 225, k: 1 }), u = sk(lt, STATE_T0, STATE_T0 + .8);
-  return [lerp(g.x + 40, g.x - 78, u), g.exit[1]];
+  const g = S14.carGeom({ x: 225, k: 1 }), u = sk(lt, STATE_T0, STATE_T0 + .9);
+  return [lerp(g.x + 40, g.x - 140, u), g.exit[1]];
 }
 function statemanO(lt) {
   if (lt < STATE_T0 - .02 || lt >= CUT_T[0]) return null;   /* he is only in the lot shot: afterwards the camera is elsewhere and his head would sit under the captions */
-  const done = lt > STATE_T0 + .85, brow = sk(lt, STATE_T0 + .95, STATE_T0 + 1.2);
+  const done = lt > STATE_T0 + .95, brow = sk(lt, STATE_T0 + 1.05, STATE_T0 + 1.3);
   return S14.walk(A14.stateman, statemanPath, lt, { t: lt, expr: done && brow > .5 ? 'stateman_brow' : 'neutral', look: done ? [-.4, -.2] : [-.8, .1], alpha: clamp(seg(lt, STATE_T0 - .02, STATE_T0 + .1)) });
 }
 /* his long shadow: a five-pointed star lying on the asphalt, thrown away from the low sun, with the thin shadows of his legs leading to it */
 function starShadow(lt) {
-  const k = sk(lt, STATE_T0 + .1, STATE_T0 + .95); if (k <= 0) return;
+  const k = sk(lt, STATE_T0 + .1, STATE_T0 + 1.05); if (k <= 0) return;
   const [fx, fy] = statemanPath(lt);
   ctx.save(); ctx.translate(fx, fy + 3);
   ctx.shadowColor = 'rgba(16,20,44,.5)'; ctx.shadowBlur = 6; ctx.fillStyle = 'rgba(16,20,44,.5)';
@@ -268,6 +269,8 @@ function pillTag(lines, cx, cy, t0, t1, lt, o = {}) {
   ctx.save(); ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
   const r = UI.tag(lines, cx, cy, Object.assign({ fill: '#f7ecc8', stroke: '#1f3a28', lw: 5, ink: '#1f3a28', size: 34, hero, crop: !hero, alpha: a, holeFill: '#1f3a28', shadow: 20 }, o));
   ctx.restore();
+  if (r) r.a = a;
+  if (r && window.__TAGLOG) window.__TAGLOG.push([lines[0].t, Math.round(r.x0), Math.round(r.y0), Math.round(r.x1), Math.round(r.y1)]);
   return r;
 }
 function leader(lt, tag, wx, wy, a = 1) {
@@ -276,20 +279,30 @@ function leader(lt, tag, wx, wy, a = 1) {
   ctx.save(); ctx.globalAlpha *= a; ctx.strokeStyle = '#f2e8cf'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(sx, sy); ctx.stroke(); ctx.strokeStyle = '#24402e'; ctx.lineWidth = 1.4; ctx.stroke();
   ctx.fillStyle = '#f2e8cf'; ctx.strokeStyle = '#24402e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, 6, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
 }
+/* when each tag is up (scene-local) and where it sits on the screen; the kit's dressing lettering gives way to these rectangles (S14.keepOut) so a half-covered whiteboard never peeks out from behind a tag */
+const CEN = [[wordT('n2', 'forty', 5.02), 'RESIDENTS', '40'], [wordT('n2', 'four', 6.05), 'STAFF', '4'], [wordT('n2', 'one', 6.85), 'SHOWER ROOMS', '1']];
+const CEN_T1 = i => (i < 2 ? CEN[i + 1][0] + .05 : wordT('n2', 'open', 8.3) + .25);
+const TAGT = { star: [CUE.car + 1.45, 12.5], mango: [bs('m1') + .12, be('m1') - .02], lemon: [bs('l1') + .05, be('l1') + .0], straw: [bs('s1') - .05, be('s1') + .45] };
+const TAGBOX = { cen: [340, 450, 740, 590], star: [93, 1126, 507, 1266], mango: [156, 400, 504, 540], lemon: [110, 1100, 490, 1240], straw: [316, 1100, 804, 1240] };   /* the station tags sit on the counter front, below the speakers: a leader from above would run through the whiteboard */
+function tagRects(lt) {
+  const R = [], pr = (t0, t1) => Math.min(clamp((lt - t0) / .24), clamp((t1 - lt) / .18));
+  CEN.forEach(([t0], i) => { const k = pr(t0, CEN_T1(i)); if (k > 0) R.push(TAGBOX.cen.concat(k)); });
+  for (const n of ['star', 'mango', 'lemon', 'straw']) { const k = pr(TAGT[n][0], TAGT[n][1]); if (k > 0) R.push(TAGBOX[n].concat(k)); }
+  return R;
+}
 function drawTags(lt) {
   /* the census, in the sky: RESIDENTS 40, STAFF 4, SHOWER ROOMS 1, each on its word */
-  const cen = [[wordT('n2', 'forty', 5.02), 'RESIDENTS', '40'], [wordT('n2', 'four', 6.05), 'STAFF', '4'], [wordT('n2', 'one', 6.85), 'SHOWER ROOMS', '1']];
-  cen.forEach(([t0, a, b], i) => { const t1 = i < 2 ? cen[i + 1][0] + .05 : wordT('n2', 'open', 8.3) + .25; pillTag([{ t: a, size: 34, weight: 900, spacing: 2 }, { t: b, size: 84, font: 'Bangers', fill: '#c23a2b' }], 540, 520, t0, t1, lt, { size: 34, w: 400 }); });
+  CEN.forEach(([t0, a, b], i) => { pillTag([{ t: a, size: 34, weight: 900, spacing: 2 }, { t: b, size: 84, font: 'Bangers', fill: '#c23a2b' }], 540, 520, t0, CEN_T1(i), lt, { size: 34, w: 400 }); });
   /* the specimens: one at a time, each with a leader to the animal */
-  const T = { star: [CUE.car + 1.45, 12.5], mango: [bs('m1') + .12, be('m1') - .02], lemon: [bs('l1') + .05, be('l1') + .0], straw: [bs('s1') - .05, be('s1') + .45] };
+  const T = TAGT;
   let tg = pillTag([{ t: 'Averrhoa carambola', size: 32, italic: true, weight: 800 }, { t: 'STATE SURVEYOR', size: 34, weight: 900, spacing: 1 }], 300, 1196, T.star[0], T.star[1], lt, { size: 34 });
-  if (tg) { const [sx, sy] = statemanPath(lt); leader(lt, tg, sx, sy - 70, 1); }
+  if (tg) { const [sx, sy] = statemanPath(lt); leader(lt, tg, sx, sy - 70, tg.a); }
   tg = pillTag([{ t: 'Mangifera indica', size: 32, italic: true, weight: 800 }, { t: 'CNA', size: 38, weight: 900, spacing: 2 }], 330, 470, T.mango[0], T.mango[1], lt, { size: 34 });
-  if (tg) leader(lt, tg, RC('lobby').x0 + .72 * RC('lobby').w, RC('lobby').floor - 125);
-  tg = pillTag([{ t: 'Citrus limon', size: 32, italic: true, weight: 800 }, { t: 'CHARGE NURSE', size: 34, weight: 900, spacing: 1 }], 300, 560, T.lemon[0], T.lemon[1], lt, { size: 34 });
-  if (tg) leader(lt, tg, RC('station').x0 + ST_U.lemon * RC('station').w, RC('station').floor - 135);
-  tg = pillTag([{ t: 'Fragaria per diem', size: 32, italic: true, weight: 800 }, { t: 'NURSE  UNSCHEDULED', size: 32, weight: 900, spacing: 1 }], 520, 560, T.straw[0], T.straw[1], lt, { size: 34 });
-  if (tg) leader(lt, tg, RC('station').x0 + ST_U.straw * RC('station').w, RC('station').floor - 135);
+  if (tg) leader(lt, tg, RC('lobby').x0 + .72 * RC('lobby').w, RC('lobby').floor - 125, tg.a);
+  tg = pillTag([{ t: 'Citrus limon', size: 32, italic: true, weight: 800 }, { t: 'CHARGE NURSE', size: 34, weight: 900, spacing: 1 }], 300, 1170, T.lemon[0], T.lemon[1], lt, { size: 34 });
+  if (tg) leader(lt, tg, RC('station').x0 + ST_U.lemon * RC('station').w, RC('station').floor - 135, tg.a);
+  tg = pillTag([{ t: 'Fragaria per diem', size: 32, italic: true, weight: 800 }, { t: 'NURSE  UNSCHEDULED', size: 32, weight: 900, spacing: 1 }], 560, 1170, T.straw[0], T.straw[1], lt, { size: 34 });
+  if (tg) leader(lt, tg, RC('station').x0 + ST_U.straw * RC('station').w, RC('station').floor - 135, tg.a);
 }
 
 
@@ -374,12 +387,14 @@ const SC = {
     const rs = roomsAt(lt), car = carAt(lt);
     V2.setLight({ key: [-.55, -.72], keyColor: '#ffe3ac', keyA: .26, rim: '#9fc4ff', rimA: .38, shadow: '#1a1030', shadowA: .3, bounce: '#ffd9a0', bounceA: .16 });
     for (const id of S14.ids) if (rs[id] && rs[id].alert > .02) { const r = RC(id); V2.addLight({ x: r.cx, y: r.cy, r: 330, color: '255,226,70', a: .5 * rs[id].alert }); }
+    S14.keepOut = tagRects(lt);
     S14.back(lt, { t: ft(lt), rooms: rs, car, carDoor: car.door, carLeaf: 'front' });
     if (lt < 3.4 && A7 && A7.birds) A7.birds(lt, -820, -160, { n: 7, seed: 21, speed: 64, size: 1.7 });
     starShadow(lt);
     /* the colony, room by room */
     putCast(lt);
     S14.front(lt, { t: ft(lt), rooms: rs, car, carDoor: car.door, carLeaf: 'front' });
+    S14.keepOut = [];
   },
   fx(lt) {
     const stab = lt >= CUE.stab && lt < CUE.stab + .5 ? 1 - seg(lt, CUE.stab, CUE.stab + .5) : 0, frozen = lt >= FREEZE && lt < RELEASE, sting = lt >= CUE.sting ? seg(lt, CUE.sting, 26.8) : 0;

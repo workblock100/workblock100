@@ -4,7 +4,18 @@
  * One nurse, followed everywhere: a documentary tracking shot along the middle floor of the dollhouse (S14: MED ROOM, ROOM 4, ROOM 7, SHOWER ROOM, left to right).
  * Strawberry (per diem) is the subject; Mr. Stateman (A14.stateman) and the Kumquat (A14.kumquat) are the observers; Mr. Banana and Mrs. Cranberry are the residents.
  *
- * STATUS: layer 1 (stage, cast, camera, HUD) -- see the shot list below.  Layout numbers live in the STAGE block; everything else is derived from S14.rect().
+ * STATUS: complete (stage, cast, camera, grade, HUD, effects). Everything is a pure function of the scene-local time; every action hangs on a beat start, a spoken word or a sound cue.
+ * SHOTS (scene-local seconds; `cu` shots show only characters who are whole in the frame; blur 1 within .04 s of a cut, otherwise as many samples as the fastest motion needs):
+ *   wide 0-.2 whole building | dive .2-.9 onto the med room | n1 .9-3.9 med room, tag TRACER: SUBJECT A, the shadow-step gag on "followed everywhere" | st1 3.9-6.1 slow push |
+ *   snap 6.1-6.66 face zoom on "Run." | run 6.66-9.95 whip-track right (whoosh 6.658, scramble 6.758, dings 7.758 / 8.758 / 9.558 place the three call lights; she hurdles Mrs. Cranberry) |
+ *   two 9.95-11.82 wide two-shot, "Everything is perfect." | brow 11.82-13.18 close-up of Stateman's eyebrow | pen 13.18-15.42 ROOM 7, the pen, the magnifier | cuS2 15.42-16.29 |
+ *   macro 16.29-17.79 insert of the pen label, 6/12 in marker, ringed on "June." (the relocation of the group is hidden here) | cuS3 17.79-18.88 the thousand-yard stare |
+ *   slip 18.88-22.98 (peel 19.026, boing 19.276, INCIDENTS 48 -> 49 on the boing, Banana lands head right, the Kumquat catches the peel, she hauls him up by the walker) |
+ *   door 22.98-24.59 | cuS5 24.59-25.30 "Showers." | tight 25.30-27.06 door and hand, a constant-speed push-in.
+ * LAST FRAME (27.026), for the closet scene's first frame: camera centre (876, 884), zoom 3.9; Strawberry alone at x 828 (A11.straw, s .44, y = FL 986, expr 'dead', lid .42, look [.95, .1],
+ *   right arm 'hold' with grip [161.4, -8.5], hand 'grip' on the knob at world [901, 896]); S14 rooms { shower: { stash: 4, bulge: 1, door: 0 } }; wall call light no. 3 at (880, 916) drawn before the cast;
+ *   fx { bloom .45, vignette .36, grain .05, contrast .14, sat .1 }; V2.setLight as in drawWorld; zoom growth +0.0795 per second (ln), centre drift 2 px/s. Builder B built the closet's first frame from these numbers.
+ * Layout numbers live in the STAGE block; everything else is derived from S14.rect().
  */
 (() => {
 if (!window.TIMELINE_EP14 || !window.S14) return;
@@ -67,7 +78,7 @@ const STAGE = {
   sMed: 202, stMed: 116, kMed: 72, cartMed: 264,
   // the three call lights: where the handset lands (x, px above the floor) and where her hand is when it does (no. 3 sits on the left jamb of the shower door, whose leaf is x 890..978)
   light1: [402, 64], light2: [640, 62], light3: [880, 70],
-  contact1: 346, hurdle: [8.46, 9.02], contact3: 796, halt: 826,
+  contact1: 346, hurdle: [8.42, 9.04], hurdleX: [511, 750], hurdleH: 150, contact3: 796, halt: 826,
   // residents (the armchair is fixed by the kit: centre 626, cushion 50 px above the floor)
   banR4: 424, cranR7: 626, seatY: 50,
   // the pen scene at the cart (ROOM 7), then the group relocates LEFT while the macro hides it (the armchair is empty: Mrs. Cranberry has gone), Banana arrives on the right and slips, a cut
@@ -82,13 +93,13 @@ const CUT = { st3: 13.184, macro0: 16.294, macro1: 17.793, door: 22.976 };      
 /* Strawberry: the shadow-step gag in n1, the churn, then dash - stop at ROOM 4 - hurdle the armchair - stop at the wall - halt, then inch to the cart's other side */
 const SXf = lazy(() => {
   const f = wordT('n1', 'followed', 2.54), e = wordT('n1', 'everywhere', 3.0), w = CUE.whoosh, c1 = CUE.ding1, c2 = CUE.ding2, c3 = CUE.ding3, h = bs('run') + 3.52;
-  const [h0, h1] = STAGE.hurdle;
+  const [h0, h1] = STAGE.hurdle, [X0h, X1h] = STAGE.hurdleX;
   return pchip([
     [0, STAGE.sMed], [f, STAGE.sMed], [f + .3, STAGE.sMed - 30], [e + .05, STAGE.sMed - 30], [e + .4, STAGE.sMed],
     [w + .3, STAGE.sMed - 4], [w + .31, STAGE.sMed - 4],                                  /* held by the squash while the legs spin */
     [w + .55, STAGE.sMed + 52], [w + .8, STAGE.sMed + 110], [c1 - .22, STAGE.contact1 - 18], [c1 - .05, STAGE.contact1 - 6], [c1 + .05, STAGE.contact1],
-    [c1 + .12, STAGE.contact1 + 14], [c1 + .28, STAGE.contact1 + 110], [h0 - .15, 548], [h0, 574], [c2, 626], [h1, 682], [h1 + .2, 738],
-    [c3 - .1, STAGE.contact3 - 10], [c3 + .05, STAGE.contact3],
+    [c1 + .12, STAGE.contact1 + 1], [c1 + .19, STAGE.contact1 + 7], [c1 + .26, STAGE.contact1 + 20], [c1 + .33, STAGE.contact1 + 41], [c1 + .4, STAGE.contact1 + 67], [h0, X0h],
+    [h1, X1h], [h1 + .1, X1h + 12], [c3 - .2, STAGE.contact3 - 16], [c3 - .06, STAGE.contact3 - 2], [c3 + .05, STAGE.contact3],
     [h - .1, STAGE.halt - 4], [h + .15, STAGE.halt + 6], [h + .45, STAGE.halt],
     [CUT.st3, STAGE.sR7], [CUT.macro0 + .05, STAGE.sR7], [CUT.macro1 - .1, STAGE.sSL], [bs('st5') + .1, STAGE.sSL], [bs('s4') - .35, STAGE.sHaul], [CUT.door, STAGE.sHaul],
   ]);
@@ -96,7 +107,7 @@ const SXf = lazy(() => {
 const SXb = lazy(() => pchip([[CUT.door, STAGE.sDoor], [30, STAGE.sDoor]]));            /* at the door she stands still: only her arm moves, to the knob on "Open it." */
 const SX = lt => lt < CUT.door ? SXf()(lt) : SXb()(lt);
 /* the arc of the hurdle: 0 outside it, 4u(1-u) inside, in px of lift */
-const hurdleLift = lt => { const [a, b] = STAGE.hurdle; return lt > a && lt < b ? 100 * 4 * ((lt - a) / (b - a)) * (1 - (lt - a) / (b - a)) : 0; };
+const hurdleLift = lt => { const [a, b] = STAGE.hurdle; if (!(lt > a && lt < b)) return 0; const u = (lt - a) / (b - a), w = u + .5 * Math.sin(2 * PI * u) / (2 * PI); return STAGE.hurdleH * 4 * w * (1 - w); };   /* a little hang time at the top */
 /* the cart: parked beside her, shoved at the launch, coasting to rest in ROOM 7 */
 const CARTf = lazy(() => {
   const t0 = CUE.whoosh + .5, t1 = CUE.whoosh + 3.3, x0 = STAGE.cartMed + 26, v0 = 2 * (STAGE.cartR7 - x0) / (t1 - t0);
@@ -154,7 +165,6 @@ function gripAt(o, side, wx, wy, frac = .94) {
 }
 
 // ------------------------------------------------------------------ Strawberry
-const FACE = { x: 0 };
 function strawO(lt) {
   const w0 = CUE.whoosh, x = SX(lt), v = sxSpeed(lt), av = Math.abs(v), t = lt, c1 = CUE.ding1, c2 = CUE.ding2, c3 = CUE.ding3, h = bs('run') + 3.52;
   const [h0, h1] = STAGE.hurdle, lift = hurdleLift(lt), air = lift > 6, running = lt >= w0 - .05 && lt < h + .05;
@@ -221,7 +231,7 @@ function strawO(lt) {
   if (acc) o.acc = acc;
   if (lt >= bs('s3') && lt < bs('slip')) o.face = { pup: .55 };                           /* the thousand-yard stare */
   if (moving) { o.gaitW = ph * 4 * A; o.axis = 'x'; o.dir = Math.sign(v) || 1; o.vx = v; }
-  if (av > 150 || air || (lt > h0 - .2 && lt < h1 + .15)) o.transit = true;                                               /* a whip pass: a blur crossing a neighbour is not a covered face */
+  if (av > 150 || air) o.transit = true;                                               /* a whip pass: a blur crossing a neighbour is not a covered face */
   return o;
 }
 
@@ -410,9 +420,9 @@ const SHOTS = [
   { id: 'n1', t0: .9, t1: 3.9, cam: lt => mixCam(camFloor(278, 2.1), camFloor(266, 2.24), easeIO(seg(lt, .9, 3.9))) },
   { id: 'st1', t0: 3.9, t1: 6.1, cam: lt => mixCam(camFloor(266, 2.24), camFloor(250, 2.4), easeIO(seg(lt, 3.9, 6.1))) },
   { id: 'snap', t0: 6.1, t1: 6.66, cam: lt => { const f = camFace(strawO(lt), 3.0, 250); f[0] -= 8; return mixCam(camFloor(250, 2.4), f, easeOut(seg(lt, 6.1, 6.34))); } },
-  { id: 'run', t0: 6.66, t1: 9.95, cam: lt => { const k = easeOut(seg(lt, 6.66, 7.2)), a = camFace(strawO(lt), 3.0, 250), b = camFloor(Math.min(SX(lt - .1) + 110, 850), 1.8, 1240); return mixCam(a, b, k); } },
+  { id: 'run', t0: 6.66, t1: 9.95, cam: lt => { const q = seg(lt, 6.66, 7.3), k = 1 - Math.pow(1 - q, 2.2), a = camFace(strawO(lt), 3.0, 250), b = camFloor(Math.min(SX(lt - .1) + 110, 850), 1.8, 1240); return mixCam(a, b, k); } },
   { id: 'two', t0: 9.95, t1: 11.816, cam: lt => { const k = easeIO(seg(lt, 9.95, 10.7)); return mixCam(camFloor(Math.min(SX(9.85) + 110, 850), 1.8, 1240), camFloor(582, 1.65, 1250), k); } },
-  { id: 'brow', t0: 11.816, t1: 13.184, cu: true, cam: lt => { const a = camFace(stateO(lt), 2.7, 235); a[0] += 38; return a; } },
+  { id: 'brow', t0: 11.816, t1: 13.184, cu: true, cam: lt => { const a = camFace(stateO(lt), lerp(3.3, 3.55, seg(lt, 11.816, 13.184)), 250); a[0] += 20; return a; } },
   { id: 'pen', t0: 13.184, t1: 15.424, cam: lt => camFloor(lerp(786, 796, seg(lt, 13.184, 15.424)), 2.1) },
   { id: 'cuS2', t0: 15.424, t1: 16.294, cu: true, cam: lt => camFace(strawO(lt), 3.0, 255) },
   { id: 'macro', t0: 16.294, t1: 17.793, cam: lt => camFloor(626, 3.4, 1230) },
@@ -438,25 +448,6 @@ function pendant(x, y, rot, led = 0, k = 1.45) {
   ctx.fillStyle = 'rgba(255,255,255,.7)'; ell(-1.4, 7, 1.4, 1); ctx.fill();
   ctx.fillStyle = led > .05 ? '#7dff9c' : '#2f4a35'; ell(0, 19, 2.3, 2.3); ctx.fill(); ctx.stroke();
   if (led > .05) V2.glow(0, 19, 26, '110,255,150', .8 * led, 'screen', .6);
-  ctx.restore();
-}
-/* the med cart seen from the front, feet on y = FL: drawn at its centre x (a copy of the look of ep9_floor.js `cart`, reshaped front-on). rattle 0..1 shakes the tray */
-function drawCart(x, lt, rattle = 0) {
-  const y = FL, rt = rattle * (hn(lt, 40, 3) * 1.6), rx = rattle * hn(lt, 33, 5) * 1.2;
-  ctx.save(); ctx.translate(x + rx, y);
-  ctx.fillStyle = 'rgba(8,6,20,.28)'; ell(0, 3, 50, 6); ctx.fill();
-  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.fillStyle = '#23272e'; for (const dx of [-32, 32]) { ell(dx, -7, 7, 7); ctx.fill(); ell(dx, -7, 2.6, 2.6); ctx.fillStyle = '#9aa3b2'; ctx.fill(); ctx.fillStyle = '#23272e'; }
-  ctx.strokeStyle = INK_; ctx.lineWidth = 3;
-  ctx.fillStyle = V2.grad(0, -78, 0, -16, [[0, '#4f8ae6'], [1, '#2a62c4']]); rr(-40, -78, 80, 60, 7); ctx.fill(); ctx.stroke();
-  for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) { ctx.fillStyle = '#6aa0f0'; ctx.lineWidth = 2; rr(-35 + c * 36, -73 + r * 27, 33, 23, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#e4ecf5'; rr(-24 + c * 36, -64 + r * 27, 11, 4, 2); ctx.fill(); }
-  ctx.lineWidth = 3; ctx.fillStyle = '#eef2f8'; rr(-46, -88 + rt, 92, 11, 4); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#9aa3b2'; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(-44, -70); ctx.lineTo(-60, -70); ctx.lineTo(-60, -46); ctx.stroke();
-  // the tray: med cups and a row of insulin pens
-  ctx.save(); ctx.translate(0, -88 + rt);
-  for (let i = 0; i < 3; i++) { ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.strokeStyle = INK_; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(-36 + i * 11, -13); ctx.lineTo(-27 + i * 11, -13); ctx.lineTo(-28.5 + i * 11, 0); ctx.lineTo(-34.5 + i * 11, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  for (let i = 0; i < 4; i++) { ctx.save(); ctx.translate(2 + i * 10, -3); ctx.rotate(-.5 + i * .12); ctx.fillStyle = ['#2a6fdb', '#e8a020', '#2f9a4a', '#8a46c8'][i]; ctx.strokeStyle = INK_; ctx.lineWidth = 1.6; rr(-3, -22, 6, 24, 2.2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#f4f4f8'; rr(-3, -29, 6, 8, 2); ctx.fill(); ctx.stroke(); ctx.restore(); }
-  ctx.restore();
   ctx.restore();
 }
 /* Banana's walker (front view, tennis balls on the front feet). The prop is drawn around his LEFT hand (the grip target l); the right hand grips 165 local units to the right. */
@@ -633,10 +624,29 @@ function drawWorld(lt, sh) {
   drawWallLight(lt);
   for (const c of cast) { if (only && c !== so) continue; if (cu && c !== so && !wholeInFrame(c, c.kind === 'banana' || c.kind === 'cran' ? 6 : 90)) continue; drawChar(autoTransit(c, lt)); }
   if (!only) drawPeel(lt, ko);
+  if (!only) drawImpacts(lt);
   drawPlaced(lt, true);
   const cs = capState(lt, so); if (cs) drawCap(so, cs);
   if (held(lt) > 0 && lt > bs('s1') + .05) drawBundle(lt, so, held(lt));
   drawFront(lt, o, sh);
+}
+/* the small impacts: spring lines and sparkles at the boing, a floor dust ring where Banana lands, a puff where she lands from the hurdle */
+function drawImpacts(lt) {
+  const a = lt - CUE.boing;
+  if (a >= 0 && a < .55) {
+    const x = STAGE.banSlip + 41, y = FL - 20, k = a / .55;
+    ctx.save(); ctx.globalAlpha *= 1 - k; ctx.strokeStyle = '#fff3b0'; ctx.lineCap = 'round';
+    for (let i = 0; i < 10; i++) {
+      const an = i / 10 * TAU + .3, r0 = 16 + 38 * easeOut(k), r1 = r0 + 24 * (1 - k); ctx.lineWidth = 1 + 4 * (1 - k);
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(an) * r0, y + Math.sin(an) * r0 * .8); ctx.lineTo(x + Math.cos(an) * r1, y + Math.sin(an) * r1 * .8); ctx.stroke();
+    }
+    ctx.restore();
+    V2.sparks(x, y, lt, CUE.boing, { n: 12, speed: 300, life: .5, color: '255,240,160', g: 700, size: 3.2, seed: 11 });
+  }
+  const l = lt - BAN.land;
+  if (l >= 0 && l < .75) for (const [dx, sz, dl] of [[-52, 1, 0], [50, 1.1, .04], [0, .8, .08]]) puff(STAGE.banLand + dx, FL + 1, c01((l - dl) / .6), sz);
+  const h = lt - STAGE.hurdle[1];
+  if (h >= 0 && h < .65) for (const [dx, sz, dl] of [[-22, .9, 0], [26, .8, .05]]) puff(STAGE.hurdleX[1] + dx, FL + 1, c01((h - dl) / .6), sz);
 }
 function drawPeel(lt, ko) {
   const pp = peelPose(lt); if (!pp) return;
@@ -777,13 +787,29 @@ function hudTag(lt) {
   ctx.restore();
 }
 
+// ------------------------------------------------------------------ shutter blur: as many samples as the fastest thing in the frame needs (about 3 px between samples, 1 when nothing moves much)
+const SHUT = .6 / 30;                                                                    /* the engine's shutter: .6 of a frame */
+function blurSamples(lt) {
+  const f = t => shotAt(t).cam(t), dt = .024, a = f(lt - dt / 2), b = f(lt + dt / 2), z = (a[2] + b[2]) / 2;
+  const dlz = Math.abs(Math.log(b[2] / a[2])) / dt, vx = Math.abs(b[0] - a[0]) / dt, vy = Math.abs(b[1] - a[1]) / dt;
+  const vCam = z * (vx + vy) + 1500 * dlz;                                               /* the world at the frame edges, under the pan and the zoom */
+  const vS = Math.abs(sxSpeed(lt)) * z;
+  const bp = t => { const q = banState(t); return [q.x, -q.lift]; }, p0 = bp(lt - dt / 2), p1 = bp(lt + dt / 2), vB = lt > CUE.peel - .05 && lt < BAN.haul1 + .2 ? Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / dt * z : 0;
+  const n = Math.ceil(Math.max(vCam, vS, vB) * SHUT / 3);
+  return n <= 1 ? 1 : Math.min(10, n);
+}
+
 // ------------------------------------------------------------------ the scene
 const SC = {
   shot: lt => shotAt(lt).id,
-  cam(lt) { const D = window.TR_DEBUG; if (D) { zoomTo(D.cx, D.cy, D.z); CAM.r = 0; return; } const [cx, cy, z, r] = shotAt(lt).cam(lt); zoomTo(cx, cy, z); CAM.r = r; },
-  draw(lt) { if (window.TR_DEBUG && window.TR_DEBUG.nocast) { V2.setLight({}); S14.back(lt, { t: lt }); S14.front(lt, { t: lt }); return; } (shotAt(lt).id === 'macro' ? drawMacro(lt) : drawWorld(lt, shotAt(lt))); },
+  cam(lt) {
+    const sh = shotAt(lt), [cx, cy, z, r] = sh.cam(lt); zoomTo(cx, cy, z); CAM.r = r;
+    const kick = (t0, k) => lt >= t0 ? Math.exp(-(lt - t0) * k) : 0;                    /* a hint of handheld, and a jolt on each impact; the tight shot is steady (the closet carries it on) */
+    CAM.shake = sh.id === 'tight' ? 0 : .5 + 5 * kick(CUE.boing, 9) + 4 * kick(BAN.land, 10) + 3 * kick(STAGE.hurdle[1], 12) + 3 * kick(CUE.whoosh + .3, 9);
+  },
+  draw(lt) { const sh = shotAt(lt); sh.id === 'macro' ? drawMacro(lt) : drawWorld(lt, sh); },
   fx: lt => shotAt(lt).id === 'macro' ? { bloom: .55, vignette: .55, grain: .05, contrast: .18, sat: .12, tint: [['#ffb878', .1, 'soft-light']] } : { bloom: .45, vignette: .36, grain: .05, contrast: .14, sat: .1 },
-  blur: lt => cutNear(lt) ? 1 : (lt > .2 && lt < .95) || (lt > bs('s1') + .05 && lt < bs('run') + 3.7) || (lt > bs('slip') && lt < be('slip') + .1) ? 3 : 1,
+  blur: lt => cutNear(lt) ? 1 : blurSamples(lt),
   over(lt) { hudTag(lt); hudTally(lt); hudIncidents(lt); },
 };
 window.__EP14_SCENES = window.__EP14_SCENES || {};

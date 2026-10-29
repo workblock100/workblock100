@@ -529,7 +529,7 @@ function actCran(lt, sh) {
   o.wet = .2 + .7 * tell; o.sparkle = inR(lt, 6.5, 11);
   o.squint = .08 + .14 * sk(lt, 9.8, 10.1) * (1 - sk(lt, 10.9, 11.6));
   o.face = { curve: .85 + .15 * sk(lt, 9.8, 10.1), lid: .22 - .07 * tell, raise: 6 + 3 * tell };
-  o.rot = .03 * Math.sin(lt * 1.25 + 1) + .03 * pulse(lt, 9.95, .45);
+  o.rot = .042 * Math.sin(lt * 1.25 + 1) + .035 * pulse(lt, 9.95, .5);
   o.glint = 1;
   const ck = choK(lt); o.who = choWho('cran', lt); o.look = choLook(lt, o.look); o.rot *= 1 - ck;
   if (ck > 0) { o.face = Object.assign({}, o.face, { curve: lerp(o.face.curve, .5, ck), lid: lerp(o.face.lid, .06, ck), raise: lerp(o.face.raise, 8, ck) }); o.squash = -.03 * pulse(lt, CHO()[0] - .02, .3); o.wet = Math.max(o.wet, .5 * ck); }
@@ -738,7 +738,7 @@ function actStrawDoor(lt) {
     if (lt < SD_[4]) { rx = lerp(tx + 10, o.x + 114, eW); ry = lerp(ty + 26, o.y + 26, eW) + 80 * Math.sin(PI * eW); }
     else { const k = sk(lt, SD_[4], SD_[4] + .15); rx = lerp(o.x + 114, o.x + 70, k); ry = lerp(o.y + 26, o.y + 120, k); }
   }
-  o.hold = { r: eWatch > .3 && lt < SD_[4] + .1 ? 'fp14v_watch' : undefined };
+  o.hold = { r: sk(lt, SD_[3] + .02, SD_[3] + .18) > .8 && lt < SD_[4] + .08 ? 'fp14v_watch' : undefined };
   o.grip = { l: gripTo(o, -1, lx + 6 * up, ly), r: gripTo(o, 1, rx + wr, ry) };
   o.tx = tx; o.ty = ty; o.tumbler = up;
   return o;
@@ -945,14 +945,14 @@ const SHOTS = [
   { id: 'file', a: 1.0, b: 3.77, show: ['kum', 'star', 'cran', 'pear', 'goji', 'lemon', 'mango', 'clem', 'straw'], dof: 1.5, cam: (lt, u) => zoomTo(lerp(450, 440, easeIO(u)), 985, lerp(1.22, 1.3, u)) },
   { id: 'straw', a: 3.77, b: 4.565, show: ['straw'], dof: 8, cam: (lt, u) => camOn('straw', lt, lerp(2.3, 2.45, u), 540, 720) },
   { id: 'st2', a: 4.565, b: 6.731, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 320], cam: (lt, u) => camOn('star', lt, lerp(2.9, 3.2, u), 470, 740) },
-  { id: 'cr1', a: 6.731, b: 10.14, show: ['cran'], dof: 10, bgDy: 110, chairsBg: true, halo: ['cran', .5, 380], glow: 1.5, cam: (lt, u) => camOn('cran', lt, lerp(2.8, 3.15, u), 620, 730) },
+  { id: 'cr1', a: 6.731, b: 10.14, show: ['cran'], dof: 10, bgDy: 110, chairsBg: true, halo: ['cran', .6, 420], glow: 1.5, cam: (lt, u) => camOn('cran', lt, lerp(3.35, 3.85, u), 610, 720) },
   { id: 'smile', a: 10.14, b: 10.62, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 320], cam: (lt, u) => camOn('star', lt, lerp(3.35, 3.5, u), 470, 740) },
   { id: 'pr1', a: 10.62, b: 14.089, show: ['pear'], dof: 9, bgDy: 110, chairsBg: true, halo: ['pear', .3, 340], cam: (lt, u) => camOn('pear', lt, lerp(2.5, 2.75, u), 560, 740) },
   { id: 'b1', a: 14.089, b: 16.282, show: ['banana'], dof: 8, bgDy: 90, halo: ['banana', .3, 300], cam: (lt, u) => { const k = easeIO(sk(lt, 14.94, 15.9)), [fx, fy] = faceNow('banana', lt); zoomTo(lerp(fx + (540 - 600) / 2.9, X.banana + 8, k), lerp(fy + (960 - 610) / 2.9, 1066, k), lerp(2.9, 1.75, k)); } },
   { id: 'st3', a: 16.282, b: 17.75, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 300], cam: (lt, u) => camOn('star', lt, lerp(3.0, 3.25, u), 500, 700) },
   { id: 'goji', a: 17.75, b: 18.593, show: ['goji'], dof: 9, bgDy: 110, chairsBg: true, halo: ['goji', .26, 320], cam: (lt, u) => camOn('goji', lt, lerp(3.0, 3.15, u), 560, 740) },
   { id: 'ra4', a: 18.593, b: 20.35, show: ['cran', 'pear', 'goji', 'banana'], dof: 5, bgDy: 70, chairsBg: true, glow: 1.3, cam: (lt, u) => zoomTo(690, lerp(1052, 1044, u), lerp(1.45, 1.62, easeIO(u))) },
-  { id: 'door', a: 20.35, b: 22.903, view: 'door', show: [], cam: (lt, u) => zoomTo(lerp(598, 628, u), lerp(800, 770, u), lerp(1.05, 1.3, easeIO(u))) },
+  { id: 'door', a: 20.35, b: 22.903, view: 'door', show: [], cam: (lt, u) => zoomTo(lerp(598, 628, u), lerp(860, 830, u), lerp(1.05, 1.3, easeIO(u))) },
   { id: 'st4', a: 22.903, b: 23.5, show: ['star'], dof: 9, bgDy: 110, chairsBg: true, halo: ['star', .28, 320], cam: (lt, u) => camOn('star', lt, lerp(3.1, 3.25, u), 480, 740) },
   { id: 'clip', a: 23.5, b: 24.7, view: 'clip', show: [], cam: (lt, u) => zoomTo(lerp(540, 575, u), lerp(1010, 1130, u), lerp(1.0, 1.22, u)) },
 ];

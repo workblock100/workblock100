@@ -1,7 +1,6 @@
 'use strict';
-/* KIT STATUS: v1. Every room is drawn with its live parts and front layers; the building, roof (with the hero sign), sky and lot are in; the shower room has its glass front, door, tape, sign, sock and stash; the
- * med room its lit fridge with 18 pens. Still to land, each saved as it arrives: the State's car (o.car, o.carDoor), the alert pulses and chat bubbles (o.rooms[id].alert, .bubble), room name plates, polish.
- * The geometry and every name below are final.
+/* KIT STATUS: v2. All eleven rooms are drawn and live (lamps, flicker, call-light domes, Q sign, med fridge with 18 pens, the shower room's glass front, door, tape, sign, sock, stash and jolt), the building, roof with the
+ * hero sign, sky, lot and the State's car are in, and so are the alert pulses, chat bubbles, name plates and the dressing-text guard below. The geometry and every name below are final.
  * SHIFT HAPPENS, Episode 14: the dollhouse kit, window.S14. The building at Fruit Bowl Rehab & Nursing as a cutaway: a dollhouse seen straight on, one room per cell, every room lit
  * and furnished on its own. Shared by the colony, adapt, tracer and closet scenes (and the title and end card if they want the building).
  *
@@ -34,6 +33,12 @@
  *                            o.lotSign: the RESERVED / ADMINISTRATOR sign is drawn only while the camera is aimed at the lot (camera y > 1380) unless you force it with true / false. o.plates false hides the room name plates.
  *   S14.front(lt, o)         draws what sits in front of the characters (counter fronts, desks, tables, blankets, armchair arms, bubbles). Call it after the characters; same o as back.
  *   S14.GEOM                 the numbers: { T, RW, RH, X0, Y0, COL, ROW }
+ *   S14.keepOut              [[x0, y0, x1, y1, k], ...] screen rectangles (px) of a scene's own hero overlays (field-guide tags, lower thirds; k 0..1 = how present) that the dressing lettering must give way to; set it before
+ *                            S14.back and reset it to [] after S14.front (default []). The kit adds its own chat bubbles.
+ *   DRESSING LETTERING        every string in the rooms (wall charts, signs, calendars, name plates, the car's decal, the Q sign) is set dressing (hero: false, crop: true) and the kit keeps it honest: it fades out BEFORE it would be
+ *                            cut by the frame edge (it keeps 44 px), sit under the caption zone (y 1374..1706), the clock pill, or a keep-out rectangle or a chat bubble, so a scene never shows sliced, half-covered or captioned-over lettering;
+ *                            the art stays, only the lettering goes. The roof sign, RESERVED, DO NOT OPEN and the bubbles are hero text whenever they are whole, at least 31 px on screen and clear of the edge, the caption zone and the pill
+ *                            (a dressing sign fades as a whole otherwise).
  *   S14.walk(ctor, pathFn, lt, extra)       a walker: the drawChar options of ctor at pathFn(lt) = [x, y] in WORLD (scene) coordinates (y = the floor line, S14.rect(id).floor; s defaults to S14.S).
  *                                           Same contract as H6.person (ep6.js): speed from a centred difference, then gaitW (distance walked, in the character's LOCAL units = scene px / s, so
  *                                           the planted foot does not slide at the dollhouse scale), axis 'x', dir = sign(vx), vx = on-screen px/s; the footstep tool (render.js events) sees them.
@@ -43,7 +48,7 @@
  * Per-room options, o.rooms[id] = { ... } (every one optional; pass the same o to S14.back and S14.front):
  *   any room   lamp 0..1 (the ceiling light's strength; default 1, the locked break room 'rest' defaults to .6), flicker 0..1 (the lamp stutters),
  *              alert 0..1 (the alarm call: a yellow wash and rim on the room, a ring from alertAt [x, y] (room coordinates, default the middle), a phone buzzing at phoneAt [x, y] (default top right);
- *              1 at the buzz, falling to 0 as the ring expands), bubble 'text' | { t, k (the pop 0..1, 1 = settled), dx, dy, at ('top' default, inside the room's top | 'above', entirely above the room | 'bottom'), tail (x of the tail in room coordinates) }:
+ *              1 at the buzz, falling to 0 as the ring expands), bubble 'text' | { t ('\n' starts a new line; lines wrap at 270 px), k (the pop 0..1, 1 = settled), dx, dy, at ('top' default, inside the room's top | 'above', entirely above the room | 'bottom'), tail (x of the tail in room coordinates) }:
  *              a blue chat bubble inside the top of the room; its text is 32 px at zoom 1 and about 34 px at any zoom above that (the bubble scales down as the camera comes in), and it is kept whole inside the safe frame.
  *   office     desk (false leaves the Administrator's desk out of S14.front). He sits behind it: noLegs, x = x0 + 150, y = floor - 42; the desk top is at y0 + 226.
  *   r4         peel 0..1 (the banana peel decal on the floor, default 1 = shown; 0 hides it. The tracer draws its own peel: pass peel: 0).
@@ -206,7 +211,7 @@ function heroNow(x0, y0, x1, y1, sizePx) {
 /* The gate lets set dressing be cut by the frame, run under the captions or the clock pill and hide behind things (crop: true), but a viewer still reads a half-sliced word at the frame edge,
  * or a menu board running through the caption words, as broken text. So dressing lettering (and a dressing sign as a whole) fades out before it reaches the frame edge, the caption zone
  * or the clock pill: the room art stays, the lettering goes. Returns 0..1 for the screen box of a local rectangle: 1 while the box keeps the hero margins (44 px from the edge, clear of
- * the caption zone and the pill), falling to 0 over 40 px of intrusion. */
+ * the caption zone and the pill), falling to 0 over 20 px of intrusion (so a half-faded ghost is never left on screen). */
 /* S14.keepOut: [[x0, y0, x1, y1, k], ...] screen rectangles (px) of a scene's own hero overlays (field-guide tags, lower thirds) that the dressing lettering must give way to; k 0..1 is how present the
  * overlay is (a pop-in or a fade). The kit adds its own chat bubbles. Lettering under a rectangle (or within 6 px of it) fades out; lettering clear of it by 6 px or more is untouched. */
 S14.keepOut = [];
@@ -216,7 +221,7 @@ function dressGuard(x0, y0, x1, y1) {
   let d = Math.min(b.x0 - 44, b.y0 - 44, W - 44 - b.x1, H - 44 - b.y1);
   if (!S.noScrim) d = Math.min(d, Math.max(1374 - b.y1, b.y0 - 1706));
   if (!S.noChyron) d = Math.min(d, Math.max(44 - b.x1, b.x0 - 506, 110 - b.y1, b.y0 - 250));
-  let a = d >= 0 ? 1 : clamp01(1 + d / 40);
+  let a = d >= 0 ? 1 : clamp01(1 + d / 20);
   for (const R of (S14.keepOut || []).concat(KO_INT)) {
     const gap = Math.max(R[0] - b.x1, b.x0 - R[2], R[1] - b.y1, b.y0 - R[3]), ar = gap >= 6 ? 1 : clamp01((gap + 6) / 12);
     a = Math.min(a, 1 - (R[4] ?? 1) * (1 - ar));
@@ -1515,7 +1520,7 @@ LIVE.med = (r, t, st) => {
 
 // ================================================================================================ the alarm call: alert pulses, buzzing phones, chat bubbles; and the brass name plates on the floor slabs
 /* o.rooms[id].alert 0..1: the strength of the pulse at this moment (1 at the buzz, falling to 0): a yellow rim and wash on the room, a ring from the phone, the phone buzzing. alertAt: [x, y] in room coordinates (default the middle of the room, y 170)
- * o.rooms[id].bubble: 'text' or { t, k (the pop 0..1; 1 = settled), dx, dy (nudge, px), at ('top' (default) | 'bottom'), tail (x of the tail tip in room coordinates; default the middle) }: a chat bubble inside the top of the room (kept 44 px inside the frame) */
+ * o.rooms[id].bubble: 'text' or { t ('\n' starts a new line; long lines wrap at 270 px), k (the pop 0..1; 1 = settled), dx, dy (nudge, px), at ('top' (default) | 'bottom' | 'above'), tail (x of the tail tip in room coordinates; default the middle) }: a chat bubble inside the top of the room (kept 44 px inside the frame) */
 function alertBack(r, t, st) {
   const a = clamp01(st.alert || 0); if (a <= 0) return;
   ctx.save(); ctx.beginPath(); ctx.rect(r.x0, r.y0, r.w, r.h); ctx.clip();
@@ -1542,7 +1547,7 @@ function bubbleGeom(r, st) {
   const B = typeof st.bubble === 'string' ? { t: st.bubble } : st.bubble, k = clamp01(B.k ?? 1);
   if (k <= 0) return null;
   const z = CAM && CAM.z || 1, sc = Math.min(1, 1.05 / z), size = 32 * sc;
-  const lines = UI.wrap(String(B.t), 270 * sc, { size, weight: 900 }), L = lines.length, lw = Math.max(...lines.map(s => UI.sizeOf(s, { size, weight: 900 }).w));
+  const lines = String(B.t).split('\n').flatMap(q => Array.from(UI.wrap(q, 270 * sc, { size, weight: 900 }))), L = lines.length, lw = Math.max(...lines.map(s => UI.sizeOf(s, { size, weight: 900 }).w));
   const bw = Math.max(120 * sc, lw + 44 * sc), bh = L * size * 1.18 + 30 * sc, inset = (bw - lw) / 2, cam = CAM || { x: W / 2, y: H / 2 };
   const sx0 = cam.x - (W / 2 - 46) / z, sx1 = cam.x + (W / 2 - 46) / z, sy0 = cam.y - (H / 2 - 252) / z, sy1 = cam.y + (1370 - H / 2) / z;
   let bx = r.cx - bw / 2 + (B.dx || 0), by = (B.at === 'bottom' ? r.y1 - bh - 30 * sc : B.at === 'above' ? r.y0 - bh - 22 * sc : r.y0 + 16 * sc) + (B.dy || 0);

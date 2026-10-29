@@ -1,5 +1,5 @@
 'use strict';
-/* ART STATUS: v1  (Mr. Stateman and the Kumquat are real; props fp14_clip, fp14_pen, fp14_binder, fp14_binocs exist; refinements follow)
+/* ART STATUS: v1  (final for Episode 14: Mr. Stateman and the Kumquat, props fp14_clip, fp14_pen, fp14_binder, fp14_binocs, fp14_napkin, fp14_frame, accessory fp14_sauce; the API below is complete)
  *
  * SHIFT HAPPENS, Episode 14 art kit, shared by every Episode 14 scene module. Exposed as window.A14. Constructors return the options object for drawChar, like A7 / A10 / A13.
  * Registers through the engine's EXT hooks (kinds star14 and kumquat, accessories and props with the prefix fp14_), so earlier episodes are untouched. Owner: E14-C.

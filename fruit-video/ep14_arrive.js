@@ -74,7 +74,7 @@ const SCN = {
   draw(lt) { drawWorld(lt); },
   fx(lt) {
     const sh = shotAt(lt).id, back = 1 - sk(lt, 1.0, 2.8);
-    if (sh === 'binoc') return { bloom: .35, vignette: .1, grain: .06, contrast: .22, sat: .12, tint: [['#9fd4ff', .12, 'soft-light']] };
+    if (sh === 'binoc') return { bloom: .35, vignette: 0, grain: .06, contrast: .22, sat: .12, tint: [['#9fd4ff', .12, 'soft-light']] };
     return { bloom: .5 + .1 * back, vignette: .36, grain: .05, contrast: .17, sat: .13, tint: [['#ffc98a', .16, 'soft-light'], ['#8fb4ff', .07 * back, 'soft-light']] };
   },
   blur(lt) { const sh = shotAt(lt); if (lt - sh.t0 < .06 || sh.id === 'binoc') return 1; return sh.id === 'walk' || sh.id === 'wide' ? 2 : 1; },
@@ -228,7 +228,8 @@ const gateOf = (b, px, want = false, own = '') => {
   if (hid.some(r => r.circle ? (b[0] + b[2]) / 2 > 0 && Math.hypot((b[0] + b[2]) / 2 - r.cx, (b[1] + b[3]) / 2 - r.cy) > r.r - 8 : r.ell ? !want && pts.some(q => ((q[0] - r.cx) / r.rx) ** 2 + ((q[1] - r.cy) / r.ry) ** 2 < 1) : hits(b, r))) return { skip: true };
   const cut = b[0] < 1 || b[1] < 1 || b[2] > W - 1 || b[3] > H - 1, safe = b[0] >= 44 && b[1] >= 44 && b[2] <= W - 44 && b[3] <= H - 44;
   const cap = b[3] > 1380 && b[1] < 1700, pill = b[2] > 48 && b[0] < 500 && b[3] > 116 && b[1] < 244;
-  if (cut || pill) return { skip: true };   /* no text is ever shown sliced by the frame or half under the clock pill (a sign that does not fit the shot simply is not lettered in it) */
+  if (cut || pill) return { skip: true };   /* no text is ever shown sliced by the frame or half under the clock pill (a sign that does not fit the shot simply is not lettered in it), blurred or not */
+  if (REG.suppress) return { hero: false, crop: false };      /* the out-of-focus set (V2.dof inside REG.suppress) is dressing: drawn whole, never audited */
   return want && safe && px >= 30 && !cap && !pill ? { hero: true } : { hero: false, crop: cut };
 };
 // a binder seen from the front of its spine: vinyl in a colour, a label window, the cover edge; the label is live text
@@ -517,12 +518,15 @@ function melonO(lt) {
 // ------------------------------------------------------------------ the staff (chunk 6b): a guard of honour that is not at ease
 const EXH = 22.15;                                                      /* "Perfect." and the whole room breathes out, one after the other */
 const exh = (lt, d = 0) => bump(lt, EXH + d, EXH + d + 1.0);
+const dart = (lt, k) => lt < 1.3 ? [0, 0] : [.12 * vnoise(lt * 1.5 + k * 7.1), .07 * vnoise(lt * 1.3 + k * 3.3 + 5)];       /* tiny eye darts: nobody's eyes are perfectly still (but at the start they are frozen like a school photo) */
 const gaze = (o, st, amp = 1) => [clamp((st.x - o.x) / (230 * (o.s || 1) * 1.25), -1, 1) * amp, clamp(((st.y - 190 * st.s) - (o.y - 200 * o.s)) / (320 * (o.s || 1)), -.5, .5)];
 const stiff = (lt, a = 0) => ({ arms: { l: 'down', r: 'down' }, plant: true });
 function lemonO(lt, st) {
   const q = V2.at(POS.lemon, ROW), side = sk(lt, 13.45, 14.25) * (1 - sk(lt, 22.35, 22.95));                                         /* she sidles left, behind the plant */
   const o = Object.assign(V2.at(POS.lemon - 112 * side, ROW + 0));
   let look = lt < 1.1 ? [0, 0] : gaze(o, st, .9), expr = 'happy', lid = 0, squash = 0, rot = 0;
+  if (lt >= 1.3) look = [look[0] + dart(lt, 1)[0], look[1] + dart(lt, 1)[1]];
+  if (lt >= 3.0 && lt < 3.45) look = [.8, .05];                                                  /* a nervous glance at Mango, and back */
   const fl = wordT('a2', 'staff', 11.74) + .2, flinch = bump(lt, fl, fl + .5);
   if (flinch > 0 && lt < fl + .5) { expr = 'shock'; squash = .14 * flinch; rot = -.05 * flinch; look = [.2, .1]; }
   if (side > .02) { expr = 'chill'; look = [.4, -.3]; squash = Math.max(squash, .16 * side); lid = .35; }
@@ -532,6 +536,8 @@ function lemonO(lt, st) {
 function mangoO(lt, st) {
   const o = V2.at(POS.mango, ROW), fr = sk(lt, 13.7, 14.3);
   let look = lt < 1.1 ? [0, 0] : gaze(o, st, .9), expr = 'happy', lid = 0, extra = {};
+  if (lt >= 1.3) look = [look[0] + dart(lt, 2)[0], look[1] + dart(lt, 2)[1]];
+  if (lt >= 3.3 && lt < 3.75) look = [-.8, .05];                                                 /* ... and Mango glances back at Lemon */
   if (fr > .01) { look = [0, 0]; expr = 'neutral'; lid = .1; extra = { arms: { l: 'hold', r: 'hold' }, grip: { l: [-92, 14], r: [92, 14] }, hold: { l: 'fp14_frame' }, frameA: fr }; }
   if (lt >= 22.12) { extra = { frameA: 1 - sk(lt, 22.12, 22.5), arms: { l: 'hold', r: 'hold' }, grip: { l: [-92, 14], r: [92, 14] }, hold: { l: 'fp14_frame' } }; if (lt >= 22.5) extra = {}; expr = 'chill'; look = [.3, .1]; }
   return A7.mango(Object.assign(o, { t: lt, look, expr, lid, plant: true, arms: { l: 'down', r: 'down' }, id: 'mango', face: expr === 'happy' ? { curve: 1.2 } : undefined, seed: 22, squash: .1 * exh(lt, .06) }, extra));
@@ -539,6 +545,7 @@ function mangoO(lt, st) {
 function clemO(lt, st) {
   const o = V2.at(POS.clem, ROW), fr = sk(lt, 14.0, 14.35), nod = fr * (1 - sk(lt, 22.1, 22.4));
   let look = lt < 1.1 ? [0, 0] : gaze(o, st, .9), expr = 'happy', lid = 0;
+  if (lt >= 1.3) look = [look[0] + dart(lt, 3)[0], look[1] + dart(lt, 3)[1]];
   if (fr > .02) { look = [0, .45]; expr = 'hopeful'; }
   const t = lt < 14 ? lt : 14.0;                                                                         /* frozen mid-nod: her clock stops */
   return A10.clem(Object.assign(o, { t: lt, look, expr, lid, plant: true, arms: { l: 'down', r: 'down' }, id: 'clem', rot: .04 * nod, squash: .1 * nod + .1 * exh(lt, .12), face: expr === 'happy' ? { curve: 1.2 } : undefined, seed: 33 }));
@@ -546,6 +553,8 @@ function clemO(lt, st) {
 function strawO(lt, st) {
   const o = V2.at(POS.straw, ROW);
   let look = lt < 1.1 ? [0, 0] : gaze(o, st, .9), expr = 'happy', lid = .22;
+  if (lt >= 1.3) look = [look[0] + dart(lt, 4)[0], look[1] + dart(lt, 4)[1]];
+  if (lt >= 2.9 && lt < 3.7) { look = [.25, -.9]; lid = .4; }                                    /* "Don't mind me." She rolls her eyes up at the ceiling */
   if (lt >= 13.5) { expr = 'dead'; lid = .5; look = [-.5, .05]; }
   if (lt >= B('st4').s - .3) { look = [-.15, .02]; }
   if (lt >= B('s1').s) { look = [-.1, .0]; lid = .5; }
@@ -589,17 +598,23 @@ function drawBigBinder(lt, kq) {
   ctx.restore();
 }
 // ------------------------------------------------------------------ the world, back to front (chunk 7)
+/* depth of field: in a close-up the set behind the subject is out of focus (a long lens). [blur px, the depth of the focal plane]; everything deeper than the focal plane (and the whole shell of the room) is drawn blurred,
+   the characters and what stands level with them stay sharp. The wide shots, the exhale and the binocular view are deep focus. */
+const DOFS = { ask: [5, 1190], melon: [4, 1700], kum: [5, 1690], melon2: [5, 1700], lemon: [6, 1450], noted: [6, 1190], kumw: [5, 1690], rise: [6, 1190], you: [6, 1190], straw1: [6, 1450], sheet: [6, 1190], straw2: [6, 1450], hit: [6, 1450] };
 function drawWorld(lt) {
   NOW = lt;
   const F = frame(lt);
   lightFor(lt);
-  ctx.fillStyle = '#cfc6b0'; ctx.fillRect(-1200, -1200, W + 2400, H + 2400);
-  const open = sk(lt, .3, 1.0), back = 1 - sk(lt, 1.15, 2.8);
-  drawCeiling(); drawFloor(); drawBackWall(); drawClockAndBoard(); drawShelves(); drawBanner(lt);
-  drawDoors(open, { burn: .34 + .3 * back, core: .9 * back * (.4 + .6 * open), between: () => { if (lt < 1.3) { silhouette(F.st, 1); silhouette(F.kq, 1); } } });
-  drawPanels(1);
-  drawRack();
-  floorLight(lt, open, back);
+  const open = sk(lt, .3, 1.0), back = 1 - sk(lt, 1.15, 2.8), dof = DOFS[shotAt(lt).id];
+  ctx.fillStyle = dof ? grad(0, 0, 0, H, [[0, '#e0ddd2'], [.4, '#e6dac0'], [.62, '#d6d0b6'], [1, '#a4b08e']]) : '#cfc6b0'; ctx.fillRect(-1200, -1200, W + 2400, H + 2400);   /* (under a blurred set: the blur's soft edge fades into this) */
+  const shell = () => {
+    drawCeiling(); drawFloor(); drawBackWall(); drawClockAndBoard(); drawShelves(); drawBanner(lt);
+    if (back > .01) { ctx.fillStyle = `rgba(38,32,44,${.36 * back})`; ctx.fillRect(-100, -100, W + 200, H + 200); }   /* the camera is exposed for the blaze at the door: the room is dark until he walks in */
+    drawDoors(open, { burn: .34 + .3 * back, core: .9 * back * (.4 + .6 * open), between: () => { if (lt < 1.3) { silhouette(F.st, 1); silhouette(F.kq, 1); } } });
+    drawPanels(1);
+    drawRack();
+    floorLight(lt, open, back);
+  };
   const dy = 5 * Math.max(0, pulse(lt, 8.84, 26, .13)), desk = { dy, bell: Math.max(0, pulse(lt, 8.88, 30, .22)) };
   const items = [
     { z: 1715, fn: () => { if (shows(lt, 'me')) drawChar(F.me); } },
@@ -614,7 +629,11 @@ function drawWorld(lt) {
     { z: lt < 8.85 ? KQ_ROUTE(lt)[1] : 0, fn: () => { if (lt >= 1.3 && lt < 8.85 && shows(lt, 'kq')) { drawChar(F.kq); silhouette(F.kq, 1 - sk(lt, 1.3, 1.75)); } } },
   ];
   items.sort((a, b) => b.z - a.z);
-  for (const it of items) it.fn();
+  if (dof) {
+    REG.suppress++;
+    try { V2.dof(dof[0], () => { shell(); for (const it of items) if (it.z > dof[1] + 50) it.fn(); }); } finally { REG.suppress--; }
+    for (const it of items) if (it.z <= dof[1] + 50) it.fn();
+  } else { shell(); for (const it of items) it.fn(); }
   thudDust(lt);
   breathPuffs(lt, F);
   sunRays(lt, open, back);
