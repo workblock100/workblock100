@@ -1,6 +1,7 @@
 'use strict';
 /* SHIFT HAPPENS, Episode 14: "The Survey". Scene module: closet (3:21 PM, THE SHOWER ROOM, 10.68 s). Builder E14-B. (the header and the shot list are written last)
  * Registers window.__EP14_SCENES.closet. Everything is a pure function of the scene time `lt`: the avalanche is a table of waypoints computed once from a seed at first use. */
+window.__DUMP14 = true;
 (() => {
 if (!window.TIMELINE_EP14 || !window.S14) return;
 const { zoomTo } = window.H6;
@@ -99,31 +100,31 @@ function pendant(x, y, rot, led = 0, k = 1.45) {
 const G = 260;
 /* id, tL (release), tI (first impact), xR (rest, centre x), lane, rr (rest turn: 0 upright, 1.5708 on its side), turns (extra half-turns in flight, signed), hop (first hop, s), tE (leaves the closet: drawn by the kit's hook before it) */
 const PLAN = [
-  /* the stack behind the door sags out: four boxes land in front of the door on crash 1 */
-  { id: 'cbox1', tL: 1.78, tI: 2.274, xR: 868, lane: 'B', rr: 0, turns: 0, tE: 1.95 }, { id: 'cbox3', tL: 1.77, tI: 2.274, xR: 903, lane: 'B', rr: 0, turns: 0, tE: 1.95 },
-  { id: 'cbox2', tL: 1.80, tI: 2.274, xR: 930, lane: 'B', rr: 0, turns: 0, tE: 1.97 }, { id: 'cbox4', tL: 1.77, tI: 2.274, xR: 958, lane: 'B', rr: 0, turns: 0, tE: 1.97 },
+  /* the stack behind the door sags out: four boxes land in front of the door on crash 1 (xP: where the piece would like to come to rest; the heap's height profile decides the exact place) */
+  { id: 'cbox1', tL: 1.78, tI: 2.274, xP: 850, lo: 700, hi: 900, lane: 'B', rr: 0, turns: 0, tE: 1.95 }, { id: 'cbox3', tL: 1.77, tI: 2.274, xP: 892, lo: 700, hi: 940, lane: 'B', rr: 0, turns: 0, tE: 1.95 },
+  { id: 'cbox2', tL: 1.80, tI: 2.274, xP: 934, lo: 860, hi: 980, lane: 'B', rr: 0, turns: 0, tE: 1.97 }, { id: 'cbox4', tL: 1.77, tI: 2.274, xP: 976, lo: 900, hi: 1030, lane: 'B', rr: 0, turns: 0, tE: 1.97 },
   /* the wheelchair behind them rolls out and away along the back of the floor, behind the people's legs */
   { id: 'wheelchair2', tL: 1.9, tI: 3.9, xR: 706, lane: 'B', rr: 0, slide: true, tE: 2.1 },
   /* the second layer, clatter 1 */
-  { id: 'cbag', tL: 2.0, tI: 2.674, xR: 912, lane: 'B', rr: 0, turns: 0, tE: 2.12 }, { id: 'cbox5', tL: 2.05, tI: 2.674, xR: 884, lane: 'B', rr: 0, turns: 1, tE: 2.17 },
-  { id: 'cbox6', tL: 2.1, tI: 2.69, xR: 940, lane: 'B', rr: 0, turns: -1, tE: 2.2 }, { id: 'cbox7', tL: 2.15, tI: 2.72, xR: 920, lane: 'B', rr: 0, turns: 1, tE: 2.25 },
-  { id: 'cbox8', tL: 2.2, tI: 2.78, xR: 966, lane: 'B', rr: 0, turns: -1, tE: 2.3 },
+  { id: 'cbag', tL: 2.0, tI: 2.674, xP: 905, lo: 885, hi: 1000, lane: 'F', rr: 0, turns: 0, tE: 2.12 }, { id: 'cbox5', tL: 2.05, tI: 2.674, xP: 780, lo: 700, hi: 900, lane: 'B', rr: 0, turns: 1, tE: 2.17 },
+  { id: 'cbox6', tL: 2.1, tI: 2.69, xP: 950, lo: 885, hi: 1036, lane: 'F', rr: 0, turns: -1, tE: 2.2 }, { id: 'cbox7', tL: 2.15, tI: 2.72, xP: 740, lo: 700, hi: 860, lane: 'B', rr: 0, turns: 1, tE: 2.25 },
+  { id: 'cbox8', tL: 2.2, tI: 2.78, xP: 1000, lo: 885, hi: 1036, lane: 'F', rr: 0, turns: -1, tE: 2.3 },
   /* the top of the stack comes down and goes left */
-  { id: 'bag1', tL: 2.3, tI: 3.1, xR: 846, lane: 'B', rr: 0, turns: 1, tE: 2.4 }, { id: 'box4', tL: 2.3, tI: 3.15, xR: 878, lane: 'B', rr: 0, turns: 2, tE: 2.4 },
-  { id: 'box9', tL: 2.45, tI: 3.3, xR: 905, lane: 'B', rr: 0, turns: -1, tE: 2.55 }, { id: 'box10', tL: 2.5, tI: 3.35, xR: 944, lane: 'B', rr: 0, turns: 1, tE: 2.6 },
-  { id: 'box11', tL: 2.6, tI: 3.45, xR: 925, lane: 'B', rr: 0, turns: -2, tE: 2.7 },
+  { id: 'bag1', tL: 2.3, tI: 3.1, xP: 720, lo: 700, hi: 900, lane: 'B', rr: 0, turns: 1, tE: 2.4 }, { id: 'box4', tL: 2.3, tI: 3.15, xP: 760, lo: 700, hi: 940, lane: 'B', rr: 0, turns: 2, tE: 2.4 },
+  { id: 'box9', tL: 2.45, tI: 3.3, xP: 800, lo: 700, hi: 1000, lane: 'B', rr: 0, turns: -1, tE: 2.55 }, { id: 'box10', tL: 2.5, tI: 3.35, xP: 975, lo: 885, hi: 1036, lane: 'F', rr: 0, turns: 1, tE: 2.6 },
+  { id: 'box11', tL: 2.6, tI: 3.45, xP: 840, lo: 700, hi: 980, lane: 'B', rr: 0, turns: -2, tE: 2.7 },
   /* the left pane bursts at crash 1: the left half of the stash is thrown at the people */
-  { id: 'bucket', tL: 2.274, tI: 3.15, xR: 716, lane: 'F', rr: 1.5708, turns: 2, tE: 2.274 }, { id: 'rail', tL: 2.3, tI: 3.0, xR: 792, lane: 'B', rr: 1.5708, turns: 2, tE: 2.3 },
+  { id: 'bucket', tL: 2.274, tI: 3.15, xP: 740, lo: 700, hi: 820, lane: 'B', rr: 1.5708, turns: 2, tE: 2.274 }, { id: 'rail', tL: 2.3, tI: 3.0, xP: 790, lo: 700, hi: 860, lane: 'B', rr: 1.5708, turns: 2, tE: 2.3 },
   { id: 'box3', tL: 2.3, tI: 3.05, xR: 736, lane: 'F', rr: 0, turns: 3, tE: 2.3 }, { id: 'wheelchair', tL: 2.274, tI: 3.274, xR: 758, lane: 'F', rr: 0, turns: 0, hop: .55, tE: 2.274 },
-  { id: 'tv', tL: 2.274, tI: 3.274, xR: 802, lane: 'B', rr: 1.5708, turns: 2, hop: .5, tE: 2.274 },
+  { id: 'tv', tL: 2.274, tI: 3.274, xP: 800, lo: 700, hi: 870, lane: 'B', rr: 1.5708, turns: 2, hop: .5, tE: 2.274 },
   { id: 'box7', tL: 2.6, tI: 3.5, xR: 762, lane: 'F', rr: 0, turns: 1, tE: 2.6 }, { id: 'box8', tL: 2.8, tI: 3.65, xR: 750, lane: 'F', rr: 0, turns: -1, tE: 2.8 },
-  { id: 'box12', tL: 2.9, tI: 3.7, xR: 820, lane: 'B', rr: 0, turns: 2, tE: 2.9 }, { id: 'qsign', tL: 3.2, tI: 4.2, xR: 940, lane: 'B', rr: 0, turns: 4, tE: 3.2, tilt: -.1 },
-  /* the right half pours through the door and lands as clatter 2 */
-  { id: 'box1', tL: 2.7, tI: 3.4, xR: 1034, lane: 'B', rr: 0, turns: 1, tE: 2.85 }, { id: 'box2', tL: 2.75, tI: 3.45, xR: 1000, lane: 'B', rr: 0, turns: -1, tE: 2.9 },
-  { id: 'fan', tL: 2.8, tI: 3.55, xR: 1018, lane: 'B', rr: 0, turns: 2, tE: 2.95 }, { id: 'tree', tL: 2.75, tI: 3.674, xR: 1008, lane: 'B', rr: 1.5708, turns: 3, hop: .5, tE: 2.9 },
-  { id: 'ivpole', tL: 2.9, tI: 3.8, xR: 972, lane: 'B', rr: 1.36, turns: 4, tE: 3.05 }, { id: 'banner', tL: 3.0, tI: 3.85, xR: 958, lane: 'B', rr: 0, turns: 1, tE: 3.1 },
-  { id: 'box5', tL: 3.0, tI: 3.75, xR: 1030, lane: 'B', rr: 0, turns: 1, tE: 3.1 }, { id: 'box6', tL: 3.1, tI: 3.9, xR: 988, lane: 'B', rr: 0, turns: -2, tE: 3.2 },
-  { id: 'bag2', tL: 3.3, tI: 4.3, xR: 948, lane: 'B', rr: 0, turns: 1, tE: 3.4 },
+  { id: 'box12', tL: 2.9, tI: 3.7, xP: 780, lo: 700, hi: 860, lane: 'B', rr: 0, turns: 2, tE: 2.9 }, { id: 'qsign', tL: 3.2, tI: 4.2, xP: 935, lo: 880, hi: 990, lane: 'B', rr: 0, turns: 4, tE: 3.2, tilt: -.1, top: true },
+  /* the right half pours through the door toward the camera and lands in front of it as clatter 2; the two bottom boxes on the right stay in the closet */
+  { id: 'box1', stay: true, lane: 'B' }, { id: 'box2', stay: true, lane: 'B' },
+  { id: 'fan', tL: 2.8, tI: 3.55, xP: 930, lo: 885, hi: 1030, lane: 'F', rr: 0, turns: 2, tE: 2.95 }, { id: 'tree', tL: 2.75, tI: 3.674, xP: 860, lo: 700, hi: 1000, lane: 'B', rr: 1.5708, turns: 3, hop: .5, tE: 2.9 },
+  { id: 'ivpole', tL: 2.9, tI: 3.8, xP: 830, lo: 700, hi: 1000, lane: 'B', rr: 1.36, turns: 4, tE: 3.05 }, { id: 'banner', tL: 3.0, tI: 3.85, xP: 960, lo: 885, hi: 1020, lane: 'F', rr: 0, turns: 1, tE: 3.1 },
+  { id: 'box5', tL: 2.95, tI: 3.55, inside: true, onY: 938, lane: 'B', rr: 0, tilt: .03, hop: .3, tE: 99 }, { id: 'box6', tL: 3.1, tI: 3.75, inside: true, onY: 900, lane: 'B', rr: 0, tilt: -.04, hop: .3, tE: 99 },
+  { id: 'bag2', tL: 3.3, tI: 4.3, xP: 900, lo: 885, hi: 1000, lane: 'F', rr: 0, turns: 1, tE: 3.4 },
 ];
 let SIM = null;
 const FLOORS = { B: FLB, F: FLF }, HX0 = 560, HDX = 2;
@@ -136,13 +137,23 @@ function buildSim() {
     const C0 = [k.x + c * spr.cx - s * spr.cy, k.y + s * spr.cx + c * spr.cy];
     items.push(Object.assign({ k, spr, C0, th0: k.rot, z: k.z, tilt: p.tilt ?? (rand() - .5) * .5, creep: 5 + 9 * rand(), hop: p.hop ?? .42 + .14 * rand() }, p));
   }
-  const order = items.slice().sort((a, b) => a.tI - b.tI);
+  const PROF = { B: x => lerp(0, 175, cl01((x - 700) / 260)) * (x > 980 ? lerp(1, .85, cl01((x - 980) / 70)) : 1), F: x => x < 880 ? 70 : 125 };   /* the tallest the heap may be at x, per lane: low toward the people, tall in front of the door */
+  const order = items.filter(i => !i.stay).sort((a, b) => a.tI - b.tI);
+  const supAt = (lane, x, ew) => { const i0 = Math.max(0, Math.floor((x - ew / 2 - HX0) / HDX)), i1 = Math.min(259, Math.ceil((x + ew / 2 - HX0) / HDX)); let m = 0; for (let i = i0; i <= i1; i++) m = Math.max(m, Hf[lane][i]); return m; };
   for (const it of order) {
     const { spr, lane } = it, side = Math.abs(Math.sin(it.rr)) > .7, ew = side ? spr.h : spr.w, eh = side ? spr.w : spr.h, floor = FLOORS[lane];
+    if (it.inside) it.xR = it.C0[0] + (it.id === 'box6' ? -4 : 0);
+    if (it.xR == null) {   /* choose the resting place: the free spot nearest to where the piece would like to land whose top stays under the heap's profile (the tolerance grows until one is found) */
+      let best = null;
+      for (let tol = it.top ? 40 : 18; tol <= 400 && !best; tol += 22) {
+        for (let x = it.lo; x <= it.hi; x += 4) { const sup = supAt(lane, x, ew), top = sup + eh; if (top > PROF[lane](x) + tol) continue; const sc = Math.abs(x - it.xP) + .25 * sup - (it.top ? .6 * sup : 0); if (!best || sc < best.sc) best = { x, sc }; }
+      }
+      it.xR = best ? best.x : it.xP;
+    }
     const dir = Math.sign(it.xR - it.C0[0]) || 1, xI = it.xR - dir * it.creep;
     const i0 = Math.max(0, Math.floor((it.xR - ew / 2 - HX0) / HDX)), i1 = Math.min(259, Math.ceil((it.xR + ew / 2 - HX0) / HDX));
-    let sup = 0; for (let i = i0; i <= i1; i++) sup = Math.max(sup, Hf[lane][i]);
-    const yR = floor - sup - eh / 2; for (let i = i0; i <= i1; i++) Hf[lane][i] = sup + eh;
+    const sup = it.slide || it.inside ? 0 : supAt(lane, it.xR, ew);
+    const yR = it.inside ? it.onY - eh / 2 : floor - sup - eh / 2; if (!it.slide && !it.inside) for (let i = i0; i <= i1; i++) Hf[lane][i] = sup + eh;
     Object.assign(it, { ew, eh, yR, xI, dir, sup });
     const segs = [];
     if (it.slide) {   /* rolls out along the floor and away: x eased out, y the resting height, no turning */
@@ -159,7 +170,9 @@ function buildSim() {
     for (const sg of segs) { const d = sg.t1 - sg.t0; sg.vx = (sg.x1 - sg.x0) / d; sg.vy = (sg.y1 - sg.y0 - .5 * G * d * d) / d; }
     it.segs = segs; it.tEnd = segs[segs.length - 1].t1;
   }
+  for (const it of items) if (it.stay) { Object.assign(it, { tL: 99, tE: 99, tI: 99, tEnd: 99, segs: [{ type: 'air', t0: 99, t1: 100, x0: it.C0[0], y0: it.C0[1], x1: it.C0[0], y1: it.C0[1], r0: it.th0, r1: it.th0, vx: 0, vy: 0 }], ew: it.spr.w, eh: it.spr.h, yR: it.C0[1], xR: it.C0[0], sup: 0 }); }
   events.push({ t: CUE.crash1, x: 950, y: FL, a: .9, id: 'DOOR', lane: 'B' }, { t: CUE.crash2, x: 790, y: FL, a: .8, id: 'DOOR', lane: 'B' });
+  if (window.__DUMP14) console.error('SIMDUMP ' + items.map(it => { const s0 = it.segs[0], ap = s0.type === 'air' ? Math.min(s0.y0, s0.y1) - (s0.vy < 0 ? s0.vy * s0.vy / (2 * G) : 0) : 0; return [it.id, it.lane, 'tL' + it.tL, 'tI' + it.tI, 'y0 ' + Math.round(it.C0[1]), 'yR ' + Math.round(it.yR), 'apexY ' + Math.round(ap), 'vy ' + Math.round(s0.vy || 0), 'vx ' + Math.round(s0.vx || 0), 'sup ' + Math.round(it.sup)].join(' '); }).join('\n'));
   return { items, events: events.sort((a, b) => a.t - b.t), Hf };
 }
 const sim = () => SIM || (SIM = buildSim());

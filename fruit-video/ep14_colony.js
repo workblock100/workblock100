@@ -2,24 +2,30 @@
 /* SHIFT HAPPENS, Episode 14, scene `colony` (26.84 s, 3:02 PM, THE COLONY): the documentary opens on the habitat, a cutaway dollhouse (the kit S14), the visitor, the alarm call and the meerkats.
  * Builder E14-K. Registers window.__EP14_SCENES.colony. Everything is a pure function of the scene time `lt`; the building comes from ep14_house.js, the cast from the Episode 7 to 14 art kits.
  *
- * SHOT LIST (scene-local seconds; every cut is a hard cut with `blur` 1 on its frame, every move has a reason)
- *   0.00-1.50  open    CRANE DOWN from the sky (gold afternoon, clouds, birds on the `birds` cue at 0.2) past the roof sign onto the whole building: the camera eases from y -520 to the wide at 1.5.
- *   1.50-5.00  n1      WIDE, z 1.0 creeping to 1.05. The colony at home: Mrs. Cranberry rocks, Mr. Banana tests his walker, Mr. Goji stares at the empty pitcher, the Administrator eats pizza, Lemon is on
- *                      hold, Strawberry charts, Clementine nods at nothing, Mango minds the lobby desk, two residents lunch. The clock on the station wall and the lamps are alive.
- *   5.00-9.25  n2      CENSUS TAGS pop in the sky on the words (RESIDENTS 40, STAFF 4, SHOWER ROOMS 1) while the camera starts to push at 6.3 and PUSHES IN to the shower room (z 3.05 at 8.3): the stash behind the glass,
- *                      the door straining under it, the OUT OF ORDER tape, DO NOT OPEN, the sock. Held, with air around it; the door creaks on "Do not open it."
+ * SHOT LIST (scene-local seconds; every cut is a hard cut with `blur` 1 on its frame, every move has a reason; cues from python3 /tmp/shift_tools/cues.py 14 colony)
+ *   0.00-1.50  open    CRANE DOWN from the sky (gold afternoon, clouds, birds on the `birds` cue at 0.2) past the roof sign onto the whole building (camera y -560 to 950); the cast fades in as it enters the safe band.
+ *   1.50-6.70  n1 n2   WIDE, z 1.0 creeping to 1.05 with the roof sign kept just under the clock pill. The colony at home: Mrs. Cranberry rocks, Mr. Banana tests his walker, Mr. Goji stares at the empty pitcher,
+ *                      the Administrator eats pizza, Lemon is on hold, Strawberry charts, Clementine nods at nothing, Mango minds the lobby desk, two residents lunch. CENSUS TAGS pop in the sky on the words
+ *                      (RESIDENTS 40 at 5.02, STAFF 4 at 6.05, SHOWER ROOMS 1 at 6.85).
+ *   6.70-9.25  n2      PUSH IN to the shower room (z 3.05 at 8.30), then held with air around it: the stash behind the glass, the door straining, the OUT OF ORDER tape, DO NOT OPEN, the sock. On the `creak` cue
+ *                      (7.945, the word "Do") the pile shoves back: the leaf bows and shakes, the tape stretches, the sock is jolted out, the stash level steps up (a rolled banner and the Q sign slide into view),
+ *                      dust shakes loose, the camera shivers 2.6 px.
  *   9.25-12.50 n3      WHIP DOWN to the lot (9.25-9.95, heavy blur), then HELD on the lot: the white sedan rolls in from the left on the `car` cue (10.18), pulls into the Administrator's reserved bay, the driver's door
- *                      opens, Mr. Stateman steps out (his field-guide tag), and his shadow is a long five-pointed star across the asphalt; the door shuts on `carclose` (11.88).
+ *                      opens, Mr. Stateman steps out and walks clear of the door decal (his field-guide tag), his shadow is a long five-pointed star across the asphalt; the door shuts on `carclose` (11.88, camera slam).
  *   12.55-14.0 m1      CUT to the LOBBY, z 3.1: Mango at the desk sees the white car through the glass doors: "The State is in the lot." (Mangifera indica, CNA).
- *   14.15-18.6 l1 s1 l2 CUT to the STATION two-shot (z 2.0 drifting in): Lemon "Everyone act normal." (she stiffens), Strawberry "What's normal?", then a PUSH-IN on Lemon (z 3.1) for "What we do when someone's
- *                      watching." (Citrus limon / CHARGE NURSE, Fragaria per diem / NURSE UNSCHEDULED as lower thirds, one at a time).
- *   18.4-19.4 n4       PULL OUT to the whole building (z 1.0). The three at the station and Mango have slipped behind their counters. The `buzz` cues (19.43, 19.83, 20.18, 20.53, 20.88) are five phones in five
- *                      rooms: the room pulses yellow and the phone shakes, a SURVEY IN THE BUILDING bubble pops, the occupant reacts (the Administrator chokes on his pizza, Mr. Goji's ears shoot up, Mr. Banana nearly
- *                      falls, Mrs. Cranberry turns to the radio, the med fridge slams shut).
- *   21.89-23.2 meer    THE MEERKATS: on the squeaks (21.99, 22.01, 22.03) all four pop up above their counters at once, stiff, eyes left on the lobby; the stab (22.04) freezes every room. A slow push toward the ground floor.
- *   23.24-25.64 n5     The freeze breaks: the lamps flicker, everyone moves at once, the shower door strains further; the camera eases out to the whole building.
- *   25.8-26.84 end     WHIP to the right on the `sting` (25.89), the camera racing off the building toward the shower room of the next scene (motion blur at the top).
+ *   14.15-18.6 l1 s1 l2 CUT to the STATION two-shot (z 2.0 drifting to 2.3): Lemon "Everyone act normal." (she stiffens), Strawberry "What's normal?", then a PUSH-IN on Lemon (z 2.6) for "What we do when
+ *                      someone's watching." The species tags (Citrus limon / CHARGE NURSE, Fragaria per diem / NURSE UNSCHEDULED) sit on the counter front, below the speakers, so no leader crosses the whiteboard.
+ *   18.4-19.4 n4       PULL OUT to the whole building (z 1.0). The three at the station and Mango slip behind their counters. The `buzz` cues (19.43, 19.83, 20.18, 20.53, 20.88) are five phones in five rooms: the
+ *                      room pulses yellow and the phone shakes, a three-line SURVEY / IN THE / BUILDING bubble pops above its occupant (narrower than the room, so none touches another or covers a face), the occupant
+ *                      reacts (the Administrator chokes on his pizza, Mr. Goji's ears shoot up, Mr. Banana nearly falls, Mrs. Cranberry turns to the radio, the med fridge slams shut).
+ *   21.89-23.2 meer    THE MEERKATS: on the first squeak (21.989) the clock of the whole picture stops dead (ft: every idle loop, lamp, hand of the clock) and all four staff pop above their counters in two frames,
+ *                      stiff, eyes left on the lobby; the stab (22.039) thumps the camera, splits the colour and flashes. Frozen until 23.239 under a slow push (z 1.02 to 1.10) toward the ground floor
+ *                      (the score is silent from 21.80 to 23.20: only the squeaks and the stab are heard).
+ *   23.24-25.64 n5     The freeze breaks: the lamps flicker, everyone moves at once, the shower stash and door strain further; the camera eases out to the whole building.
+ *   25.89-26.84 end    WHIP on the `sting` (25.891): the camera snaps to the right half of the building (motion blur at the top) and settles on (838, 944) at z 1.86, the first frame of the next scene (adapt).
  *
+ * TEXT: dressing lettering in the rooms fades out before it would be sliced by the frame, the caption zone, the clock pill, a field-guide tag or a chat bubble (the kit's dressGuard and S14.keepOut); a cast member whose head
+ * is not whole and clear of those borders is faded out for a quarter second either side (headVis), so no face is ever cut, covered or under the pill.
  * LAYOUT: the building is at zoom 1 centred on (540, 960) (the clear band y 244 to 1380 holds the whole building: y 340 to 1342). Floor lines: top 656, middle 986, ground 1316.
  * Text: the kit's own (roof sign, plates, bubbles) and the field-guide tags here (UI.tag, hero, on the over() layer, always whole and clear of the pill and the captions). */
 (() => {
@@ -357,6 +363,7 @@ function placeChar(o, lt, mk, room) {
   const a = headVis(tt => stand(mk(tt), room), stand(o, room), lt);
   if (a <= .01) return null;
   o.alpha = (o.alpha ?? 1) * a;
+  if (room && o.y > RC(room).floor + .5) o.transit = true;      /* sinking behind (or springing up from) the counter: the counter hides the face, so the gate's caption-cover check is exempted for those few frames */
   return stripLetters(o, lt);
 }
 /* the cast: [name, builder, room whose counter hides it while it sinks] */

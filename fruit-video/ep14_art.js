@@ -93,7 +93,7 @@ function stPose(name, o) {
   /* the face box reaches down to y 60 (an open mouth), so every board hangs from a hand at y >= 66 */
   if (name === 'write') return { arms: { l: 'hold', r: 'hold' }, grip: { l: [-40, 74], r: [24 + scrib[0], 94 + scrib[1]] }, hold: { l: 'fp14_clip', r: 'fp14_pen' }, clipAt: [.1, .08], clipRot: .0, penAng: -.35 };
   if (name === 'read') return { arms: { l: 'hold', r: 'hold' }, grip: { l: [-46, 70], r: [30, 96] }, hold: { l: 'fp14_clip', r: 'fp14_pen' }, clipAt: [.1, .08], clipRot: .05, penAng: -.4 };
-  return { arms: { l: 'hold', r: 'hold' }, grip: { l: [-72, 72], r: [84, 98 - tap] }, hold: { l: 'fp14_clip', r: 'fp14_pen' }, clipAt: [.2, .1], clipRot: -.1, penAng: -1.9 };
+  return { arms: { l: 'hold', r: 'hold' }, grip: { l: [-85, 72], r: [84, 98 - tap] }, hold: { l: 'fp14_clip', r: 'fp14_pen' }, clipAt: [.2, .1], clipRot: -.1, penAng: -1.9 };
 }
 A.stateman = o => {
   o = o || {};
@@ -271,7 +271,7 @@ EXT.acc.fp14_id = (o, k, t, layer) => {
   ctx.fillStyle = '#e6e8a0'; ctx.strokeStyle = 'rgba(30,40,20,.7)'; ctx.lineWidth = 1.4; rr(-14, 18, 20, 22, 3); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#5d6b14'; ell(-6, 25, 2, 2.4); ctx.fill(); ell(-1, 25, 2, 2.4); ctx.fill();
   ctx.fillStyle = 'rgba(40,60,100,.55)'; ctx.fillRect(9, 20, 9, 2.6); ctx.fillRect(9, 26, 9, 2.6); ctx.fillRect(9, 32, 6, 2.6); ctx.fillRect(-14, 45, 28, 2.6);
-  if (!o.flip && bigEnough(9.5)) UI.label('STATE ID', 0, 7, { size: 9.5, fill: '#fff', hero: false, spacing: .6, maxW: 36, transit: o.transit, crop: !!o.transit });
+  if (!o.flip && bigEnough(9.5) && o.pose !== 'write' && o.pose !== 'read') UI.label('STATE ID', 0, 7, { size: 9.5, fill: '#fff', hero: false, spacing: .6, maxW: 36, transit: o.transit, crop: !!o.transit });
   ctx.restore();
   if (o.cap) {   /* the STATE cap of Episode 2: a slate crown with a short brim and a gold star */
     const cy = -k.ry * .82;
@@ -554,7 +554,7 @@ EXT.prop.fp14_frame = (side, o, t) => {
   ctx.fillStyle = '#f6dc84'; for (const sx of [-1, 1]) for (const sy of [-1, 1]) { ell(sx * (fw + 2), sy * (fh + 2), 10, 10); ctx.fill(); ctx.strokeStyle = 'rgba(40,24,6,.8)'; ctx.lineWidth = 2.4; ctx.stroke(); }
   ctx.restore();
 };
-PROP_BOX.fp14_frame = Object.assign([-110, -150, 110, 120], { nearFace: true });
+PROP_BOX.fp14_frame = o => { const k = lerp(.6, 1, clamp(o.frameA ?? 1)); return Object.assign([-110 * k, -150 * k, 110 * k, 120 * k], { nearFace: true }); };   /* the box shrinks with the frame as it is lowered */
 
 // ------------------------------------------------------------------ the rest of the cast (delegates)
 A.pear = o => (window.A7 && A7.pear ? A7.pear(Object.assign({ s: SC, y: G }, o)) : Object.assign({ kind: 'pear', id: 'pear', who: 'pear', s: SC, y: G, expr: 'neutral' }, o));

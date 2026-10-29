@@ -621,7 +621,7 @@ function drawWorld(lt) {
     { z: 1690, fn: drawStool },
     { z: 1688, fn: () => { if (lt >= 8.85 && shows(lt, 'kq')) drawChar(F.kq); } },
     { z: 1600, fn: () => drawDeskBody(desk) },
-    { z: 1599, fn: () => { drawDeskTop(desk, lt); drawBigBinder(lt, F.kq); } },
+    { z: 1599, fn: () => { drawDeskTop(desk, lt); thudDust(lt); drawBigBinder(lt, F.kq); } },   /* (the shock ring and the dust lie on the desk top, under the binder, never across its label) */
     { z: 1540, fn: drawCart },
     { z: ROW, fn: () => { for (const id of ['le', 'ma', 'sw', 'cl']) if (shows(lt, id)) drawChar(F[id]); } },   /* (Clementine last: her NEW badge stays whole beside Strawberry's arm) */
     { z: PLANT[1], fn: () => { if (shotAt(lt).id !== 'lemon') drawPlant(lt); } },   /* (the close-up of Lemon is shot from where the plant is not) */
@@ -634,7 +634,6 @@ function drawWorld(lt) {
     try { V2.dof(dof[0], () => { shell(); for (const it of items) if (it.z > dof[1] + 50) it.fn(); }); } finally { REG.suppress--; }
     for (const it of items) if (it.z <= dof[1] + 50) it.fn();
   } else { shell(); for (const it of items) it.fn(); }
-  thudDust(lt);
   breathPuffs(lt, F);
   sunRays(lt, open, back);
 }
