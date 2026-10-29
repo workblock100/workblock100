@@ -714,7 +714,7 @@ EXT.prop.fp14v_watch = (side, o, t) => {   /* a little wrist watch: leather stra
   ctx.strokeStyle = '#2a2630'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(11, 22); ctx.lineTo(11, 16.4); ctx.moveTo(11, 22); ctx.lineTo(14.6, 24); ctx.stroke();
   ctx.restore();
 };
-PROP_BOX.fp14v_watch = [-4, 8, 28, 36];
+PROP_BOX.fp14v_watch = [0, 12, 22, 34];
 const SD_ = [20.35, 20.8, 21.2, 21.85, 22.35];   /* clipboard mime | cap | ear | (hearing nothing) | watch */
 function actStrawDoor(lt) {
   const o = A11.straw(Object.assign({ x: lerp(540, 560, sk(lt, 20.5, 21)) + 190 * sk(lt, 22.3, 22.85), y: 690, s: 1.25, who: 'straw', id: 'straw' }, SEATED));
@@ -738,7 +738,7 @@ function actStrawDoor(lt) {
     if (lt < SD_[4]) { rx = lerp(tx + 10, o.x + 114, eW); ry = lerp(ty + 26, o.y + 26, eW) + 80 * Math.sin(PI * eW); }
     else { const k = sk(lt, SD_[4], SD_[4] + .15); rx = lerp(o.x + 114, o.x + 70, k); ry = lerp(o.y + 26, o.y + 120, k); }
   }
-  o.hold = { r: sk(lt, SD_[3] + .02, SD_[3] + .18) > .8 && lt < SD_[4] + .08 ? 'fp14v_watch' : undefined };
+  o.hold = { r: sk(lt, SD_[3] + .02, SD_[3] + .18) > .92 && lt < SD_[4] + .08 ? 'fp14v_watch' : undefined };
   o.grip = { l: gripTo(o, -1, lx + 6 * up, ly), r: gripTo(o, 1, rx + wr, ry) };
   o.tx = tx; o.ty = ty; o.tumbler = up;
   return o;
