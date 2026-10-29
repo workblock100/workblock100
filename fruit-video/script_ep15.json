@@ -1,0 +1,1601 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 15: The Merger",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "clem": {
+   "name": "NEW NURSE CLEMENTINE",
+   "voice": "af_kore",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff8a1a",
+   "pan": -0.3
+  },
+  "arti": {
+   "name": "MR. ARTICHOKE, CEO",
+   "voice": "bm_daniel",
+   "lang": "en-gb",
+   "speed": 0.93,
+   "semis": -2,
+   "color": "#8fbf5a",
+   "pan": 0.22
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "broc": {
+   "name": "BROCCOLI, GREENLEAF",
+   "voice": "bm_lewis",
+   "lang": "en-gb",
+   "speed": 0.98,
+   "semis": -3,
+   "color": "#5fbf5f",
+   "pan": 0.25
+  },
+  "carrot": {
+   "name": "CARROT, GREENLEAF",
+   "voice": "am_liam",
+   "lang": "en-us",
+   "speed": 1.06,
+   "semis": 0,
+   "color": "#ff9a3c",
+   "pan": 0.3
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  },
+  "chor": {
+   "name": "ALL THE STRAWBERRIES",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "af_bella",
+    "af_kore",
+    "af_nicole",
+    "af_sky",
+    "af_nova"
+   ],
+   "lang": "en-us",
+   "speed": 1.02,
+   "semis": 0,
+   "color": "#ff4d6d",
+   "pan": 0
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 6.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "click",
+       0.95,
+       0.4,
+       -0.15
+      ],
+      [
+       "click",
+       1.9,
+       0.4,
+       0.2
+      ],
+      [
+       "merge",
+       2.1,
+       0.6,
+       0
+      ],
+      [
+       "textding",
+       3.8,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "announce",
+   "clock": "3:00 PM",
+   "label": "THE ANNOUNCEMENT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "callconnect",
+       0.2,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Team. Big news. Fruit Bowl is merging.",
+     "text": "Team. Big news. Fruit Bowl is merging.",
+     "gap": 0.2
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "With who?",
+     "text": "With who?",
+     "gap": 0.1
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "Greenleaf Senior Living.",
+     "text": "Greenleaf Senior Living.",
+     "gap": 0.2
+    },
+    {
+     "id": "ar1",
+     "who": "arti",
+     "say": "We value our people. At our core.",
+     "text": "We value our people. At our core.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "peel",
+       1.5,
+       0.4,
+       0.25
+      ],
+      [
+       "heartbeat",
+       2.1,
+       0.3,
+       0.25
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "What changes?",
+     "text": "What changes?",
+     "gap": 0.1
+    },
+    {
+     "id": "ar2",
+     "who": "arti",
+     "say": "Nothing. Nothing changes.",
+     "text": "Nothing. Nothing changes.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "glitch",
+       1.55,
+       0.45,
+       0.25
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "You're frozen.",
+     "text": "You're frozen.",
+     "gap": 0.1
+    },
+    {
+     "id": "stuck",
+     "pause": 0.7,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "spinner",
+       0.05,
+       0.25,
+       0.25
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're merging two facilities. Would you like help?",
+     "text": "It looks like you're merging two facilities. Would you like help?",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! I'll help.",
+     "text": "Great! I'll help.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "grin",
+       0.55,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Which one is the top left?",
+     "text": "Which one is the top left?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "dialog",
+       -0.6,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Greenleaf!",
+     "text": "Greenleaf!",
+     "gap": 0.1
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "What happens to the other value?",
+     "text": "What happens to the other value?",
+     "gap": 0.1
+    },
+    {
+     "id": "b4",
+     "who": "bind",
+     "say": "It is discarded!",
+     "text": "It is discarded!",
+     "gap": 0.15
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.35,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 1.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "merge",
+       0.05,
+       0.7,
+       0
+      ],
+      [
+       "whoosh",
+       0.5,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dock",
+   "clock": "3:20 PM",
+   "label": "THE MERGE",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "day",
+    "gain": 0.15
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "cranemotor",
+       0,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Merging cells!",
+     "text": "Merging cells!",
+     "gap": 0.1
+    },
+    {
+     "id": "lower",
+     "pause": 4.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "cranemotor",
+       0,
+       0.4,
+       0
+      ],
+      [
+       "cablecreak",
+       1.2,
+       0.35,
+       0.1
+      ],
+      [
+       "dockimpact",
+       3.6,
+       0.9,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "settle",
+     "pause": 2.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "groan",
+       0.1,
+       0.45,
+       0
+      ],
+      [
+       "cablewhip",
+       0.3,
+       0.35,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Welcome to the family!",
+     "text": "Welcome to the family!",
+     "gap": 0.15
+    },
+    {
+     "id": "br1",
+     "who": "broc",
+     "say": "We brought salad.",
+     "text": "We brought salad.",
+     "gap": 0.1
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "We brought pizza.",
+     "text": "We brought pizza.",
+     "gap": 0.1
+    },
+    {
+     "id": "br2",
+     "who": "broc",
+     "say": "Pizza is not a vegetable.",
+     "text": "Pizza is not a vegetable.",
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "It is if you count the sauce.",
+     "text": "It is if you count the sauce.",
+     "gap": 0.15
+    },
+    {
+     "id": "l0",
+     "who": "lemon",
+     "say": "Are you a fruit or a vegetable?",
+     "text": "Are you a fruit or a vegetable?",
+     "gap": 0.1
+    },
+    {
+     "id": "t1b",
+     "who": "tom",
+     "say": "Pending.",
+     "text": "Pending.",
+     "gap": 0.2
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "One at a time. Zipper merge.",
+     "text": "One at a time. Zipper merge.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "After you.",
+     "text": "After you.",
+     "gap": 0.05
+    },
+    {
+     "id": "ca1",
+     "who": "carrot",
+     "say": "No, after you.",
+     "text": "No, after you.",
+     "gap": 0.05
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "After you.",
+     "text": "After you.",
+     "gap": 0.05
+    },
+    {
+     "id": "ca2",
+     "who": "carrot",
+     "say": "No, after you.",
+     "text": "No, after you.",
+     "gap": 0.05
+    },
+    {
+     "id": "bonk",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "bonk",
+       0.1,
+       0.55,
+       0.1
+      ],
+      [
+       "stars",
+       0.15,
+       0.3,
+       0.1
+      ]
+     ]
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "That's a merge.",
+     "text": "That's a merge.",
+     "gap": 0.2
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Compliance has arrived.",
+     "text": "Compliance has arrived.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       1.4,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "I'm not crying. You are.",
+     "text": "I'm not crying. You are.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sob",
+       1.5,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 0.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "model1",
+   "clock": "3:45 PM",
+   "label": "THE MODEL",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "keyboard",
+       0.1,
+       0.35,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "We will now optimize.",
+     "text": "We will now optimize.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sniffle",
+       1.2,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Row one. The Executive Suite.",
+     "text": "Row one. The Executive Suite.",
+     "gap": 0.15
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Inserting row!",
+     "text": "Inserting row!",
+     "gap": 0.05
+    },
+    {
+     "id": "insert",
+     "pause": 4.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "insertrow",
+       0.1,
+       0.5,
+       0
+      ],
+      [
+       "cranemotor",
+       0.3,
+       0.35,
+       0
+      ],
+      [
+       "rumble",
+       1.2,
+       0.5,
+       0
+      ],
+      [
+       "sink",
+       1.8,
+       0.6,
+       0
+      ],
+      [
+       "thud",
+       3.6,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Where did the lobby go?",
+     "text": "Where did the lobby go?",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Below the sheet.",
+     "text": "Below the sheet.",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "How do residents come in?",
+     "text": "How do residents come in?",
+     "gap": 0.1
+    },
+    {
+     "id": "t3",
+     "who": "tom",
+     "say": "Through the window.",
+     "text": "Through the window.",
+     "gap": 0.25
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Next. Remove duplicates.",
+     "text": "Next. Remove duplicates.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.5,
+       0.35,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Twelve duplicate values found and removed!",
+     "text": "Twelve duplicate values found and removed!",
+     "gap": 0.05
+    },
+    {
+     "id": "vanish",
+     "pause": 2.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "poof",
+       0.1,
+       0.45,
+       -0.4
+      ],
+      [
+       "poof",
+       0.5,
+       0.45,
+       0.3
+      ],
+      [
+       "poof",
+       0.9,
+       0.4,
+       -0.2
+      ],
+      [
+       "poof",
+       1.3,
+       0.4,
+       0.4
+      ],
+      [
+       "poof",
+       1.7,
+       0.4,
+       0
+      ],
+      [
+       "dialog",
+       2.2,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Four plus four equals five. That is synergy!",
+     "text": "Four plus four equals five. That is synergy!",
+     "gap": 0.1
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "Four plus four is eight.",
+     "text": "Four plus four is eight.",
+     "gap": 0.1
+    },
+    {
+     "id": "t4a",
+     "who": "tom",
+     "say": "Not anymore.",
+     "text": "Not anymore.",
+     "gap": 0.2
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "There were two of us.",
+     "text": "There were two of us.",
+     "gap": 0.1
+    },
+    {
+     "id": "t4",
+     "who": "tom",
+     "say": "Now there is one.",
+     "text": "Now there is one.",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Which one?",
+     "text": "Which one?",
+     "gap": 0.1
+    },
+    {
+     "id": "t5",
+     "who": "tom",
+     "say": "The one with seniority.",
+     "text": "The one with seniority.",
+     "gap": 0.2
+    },
+    {
+     "id": "end",
+     "pause": 0.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "model2",
+   "clock": "4:20 PM",
+   "label": "THE FILL",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "We need coverage for forty residents.",
+     "text": "We need coverage for forty residents.",
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Per policy, one nurse.",
+     "text": "Per policy, one nurse.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sniffle",
+       1.1,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Efficiency.",
+     "text": "Efficiency.",
+     "gap": 0.15
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "I'll help! Fill down!",
+     "text": "I'll help! Fill down!",
+     "gap": 0.05
+    },
+    {
+     "id": "clones",
+     "pause": 4.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "click",
+       0.1,
+       0.35,
+       0
+      ],
+      [
+       "fillpop",
+       0.7,
+       0.4,
+       -0.5
+      ],
+      [
+       "fillpop",
+       1.0,
+       0.4,
+       -0.3
+      ],
+      [
+       "fillpop",
+       1.3,
+       0.4,
+       -0.1
+      ],
+      [
+       "fillpop",
+       1.55,
+       0.4,
+       0.1
+      ],
+      [
+       "fillpop",
+       1.8,
+       0.4,
+       0.3
+      ],
+      [
+       "fillpop",
+       2.0,
+       0.4,
+       0.5
+      ],
+      [
+       "fillpop",
+       2.2,
+       0.4,
+       -0.4
+      ],
+      [
+       "fillpop",
+       2.35,
+       0.4,
+       -0.2
+      ],
+      [
+       "fillpop",
+       2.5,
+       0.4,
+       0
+      ],
+      [
+       "fillpop",
+       2.65,
+       0.4,
+       0.2
+      ],
+      [
+       "fillpop",
+       2.8,
+       0.4,
+       0.4
+      ],
+      [
+       "fillpop",
+       2.95,
+       0.4,
+       -0.3
+      ],
+      [
+       "fillpop",
+       3.1,
+       0.4,
+       0.1
+      ],
+      [
+       "fillpop",
+       3.25,
+       0.4,
+       0.3
+      ],
+      [
+       "fillpop",
+       3.4,
+       0.4,
+       -0.1
+      ],
+      [
+       "crowd",
+       3.6,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I'm one person.",
+     "text": "I'm one person.",
+     "gap": 0.1
+    },
+    {
+     "id": "ch1",
+     "who": "chor",
+     "say": "I'm one person.",
+     "text": "I'm one person.",
+     "gap": 0.15
+    },
+    {
+     "id": "t3",
+     "who": "tom",
+     "say": "Forty nurses!",
+     "text": "Forty nurses!",
+     "gap": 0.1
+    },
+    {
+     "id": "ch2",
+     "who": "chor",
+     "say": "I'm tired.",
+     "text": "I'm tired.",
+     "gap": 0.2
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Looking up Strawberry.",
+     "text": "Looking up Strawberry.",
+     "gap": 0.05
+    },
+    {
+     "id": "lookup",
+     "pause": 1.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "typing",
+       0.1,
+       0.35,
+       0
+      ],
+      [
+       "error",
+       1.0,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Not found!",
+     "text": "Not found!",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I never am.",
+     "text": "I never am.",
+     "gap": 0.2
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Then who are they?",
+     "text": "Then who are they?",
+     "gap": 0.1
+    },
+    {
+     "id": "b4",
+     "who": "bind",
+     "say": "Unassigned!",
+     "text": "Unassigned!",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "replace",
+   "clock": "5:05 PM",
+   "label": "FIND AND REPLACE",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.6,
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Policy conflict.",
+     "text": "Policy conflict.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sniffle",
+       0.8,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Fruit Bowl: a thirty-minute break.",
+     "text": "Fruit Bowl: a thirty-minute break.",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Greenleaf: breaks as needed.",
+     "text": "Greenleaf: breaks as needed.",
+     "gap": 0.15
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Compliance will decide.",
+     "text": "Compliance will decide.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sob",
+       1.2,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "I'll help! Find: break. Replace with: pending.",
+     "text": "I'll help! Find: break. Replace with: pending.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "typing",
+       0.9,
+       0.35,
+       0
+      ],
+      [
+       "typing",
+       2.4,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Don't.",
+     "text": "Don't.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Replace all!",
+     "text": "Replace all!",
+     "gap": 0.05,
+     "sfx": [
+      [
+       "click",
+       0.5,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "replace",
+     "pause": 4.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "flip",
+       0.15,
+       0.4,
+       -0.3
+      ],
+      [
+       "flip",
+       0.55,
+       0.4,
+       0.2
+      ],
+      [
+       "flip",
+       1.0,
+       0.4,
+       -0.1
+      ],
+      [
+       "flip",
+       1.5,
+       0.4,
+       0.3
+      ],
+      [
+       "flip",
+       2.0,
+       0.4,
+       0
+      ],
+      [
+       "flip",
+       2.5,
+       0.4,
+       -0.2
+      ],
+      [
+       "counter",
+       0.2,
+       0.45,
+       0
+      ],
+      [
+       "dialog",
+       3.8,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Two hundred fourteen replacements!",
+     "text": "Two hundred fourteen replacements!",
+     "gap": 0.2
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "My break?",
+     "text": "My break?",
+     "gap": 0.05
+    },
+    {
+     "id": "b4",
+     "who": "bind",
+     "say": "Pending!",
+     "text": "Pending!",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Mine?",
+     "text": "Mine?",
+     "gap": 0.05
+    },
+    {
+     "id": "b5",
+     "who": "bind",
+     "say": "Pending!",
+     "text": "Pending!",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "How long is pending?",
+     "text": "How long is pending?",
+     "gap": 0.05
+    },
+    {
+     "id": "b6",
+     "who": "bind",
+     "say": "Pending!",
+     "text": "Pending!",
+     "gap": 0.25
+    },
+    {
+     "id": "end",
+     "pause": 0.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "close",
+   "clock": "6:00 PM",
+   "label": "THE CLOSING",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "day",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "banner",
+       0.1,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Are we a salad now?",
+     "text": "Are we a salad now?",
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "We're a salad.",
+     "text": "We're a salad.",
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Who's the dressing?",
+     "text": "Who's the dressing?",
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Corporate.",
+     "text": "Corporate.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sob",
+       0.5,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Better together. Tossed!",
+     "text": "Better together. Tossed!",
+     "gap": 0.2
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Pizza is still in the budget.",
+     "text": "Pizza is still in the budget.",
+     "gap": 0.15
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Per policy, pizza is a vegetable.",
+     "text": "Per policy, pizza is a vegetable.",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Counted.",
+     "text": "Counted.",
+     "gap": 0.2
+    },
+    {
+     "id": "ar1",
+     "who": "arti",
+     "say": "We value our people. Somewhere in here.",
+     "text": "We value our people. Somewhere in here.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "heartbeat",
+       1.6,
+       0.3,
+       0.25
+      ]
+     ]
+    },
+    {
+     "id": "undo",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "key",
+       0.2,
+       0.4,
+       0
+      ],
+      [
+       "key",
+       0.4,
+       0.4,
+       0
+      ],
+      [
+       "error",
+       1.2,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Can't undo!",
+     "text": "Can't undo!",
+     "gap": 0.1
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Of course.",
+     "text": "Of course.",
+     "gap": 0.25
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "It looks like you're trying to take a break. Would you like help?",
+     "text": "It looks like you're trying to take a break. Would you like help?",
+     "gap": 0.15
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b4",
+     "who": "bind",
+     "say": "Great! I'll help.",
+     "text": "Great! I'll help.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "grin",
+       0.55,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 2.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "pending",
+       0.1,
+       0.5,
+       0
+      ],
+      [
+       "sting",
+       0.5,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "click",
+       3.0,
+       0.4,
+       0
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.4,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "announce",
+  "to_": "close",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

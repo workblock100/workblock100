@@ -1,0 +1,1407 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 14: The Survey",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "clem": {
+   "name": "NEW NURSE CLEMENTINE",
+   "voice": "af_kore",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff8a1a",
+   "pan": -0.3
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a",
+   "pan": 0.35
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "narr": {
+   "name": "NARRATOR",
+   "voice": "bm_george",
+   "lang": "en-gb",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#e8e8e8"
+  },
+  "star": {
+   "name": "MR. STATEMAN, STATE SURVEYOR",
+   "voice": "af_nicole",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#c9d22a",
+   "pan": 0.12
+  },
+  "kum": {
+   "name": "TRAINEE KUMQUAT",
+   "voice": "bf_lily",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#ff9a1f",
+   "pan": -0.24
+  },
+  "rall": {
+   "name": "THE RESIDENTS",
+   "voice": "am_fenrir",
+   "chorus": [
+    "am_fenrir",
+    "am_echo",
+    "bf_emma",
+    "am_puck"
+   ],
+   "speed": 0.95,
+   "semis": 0,
+   "color": "#c9d22a",
+   "pan": 0,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 4.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "birds",
+       0,
+       0.3,
+       0
+      ],
+      [
+       "theme7",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "textding",
+       2.5,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "colony",
+   "clock": "3:02 PM",
+   "label": "THE COLONY",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "day",
+    "gain": 0.2
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.1,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "birds",
+       0,
+       0.25,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Fruit Bowl Rehab and Nursing. Three oh two P M.",
+     "text": "Fruit Bowl Rehab and Nursing. Three oh two P M.",
+     "gap": 0.2
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "Forty residents. Four staff. One shower room. Do not open it.",
+     "text": "Forty residents. Four staff. One shower room. Do not open it.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "creak",
+       2.93,
+       0.3,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "n3",
+     "who": "narr",
+     "say": "Once a year, without warning, the State arrives.",
+     "text": "Once a year, without warning, the State arrives.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "car",
+       0.9,
+       0.3,
+       -0.4
+      ],
+      [
+       "carclose",
+       2.6,
+       0.4,
+       -0.4
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "The State is in the lot.",
+     "text": "The State is in the lot.",
+     "gap": 0.15
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Everyone act normal.",
+     "text": "Everyone act normal.",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "What's normal?",
+     "text": "What's normal?",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "What we do when someone's watching.",
+     "text": "What we do when someone's watching.",
+     "gap": 0.25
+    },
+    {
+     "id": "n4",
+     "who": "narr",
+     "say": "The alarm call travels faster than the visitor.",
+     "text": "The alarm call travels faster than the visitor.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "buzz",
+       0.55,
+       0.35,
+       -0.5
+      ],
+      [
+       "buzz",
+       0.95,
+       0.3,
+       0.5
+      ],
+      [
+       "buzz",
+       1.3,
+       0.3,
+       -0.2
+      ],
+      [
+       "buzz",
+       1.65,
+       0.3,
+       0.35
+      ],
+      [
+       "buzz",
+       2.0,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "meer",
+     "pause": 1.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "squeak",
+       0.1,
+       0.4,
+       -0.5
+      ],
+      [
+       "squeak",
+       0.1,
+       0.4,
+       -0.15
+      ],
+      [
+       "squeak",
+       0.12,
+       0.4,
+       0.2
+      ],
+      [
+       "squeak",
+       0.14,
+       0.4,
+       0.5
+      ],
+      [
+       "stab",
+       0.15,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "n5",
+     "who": "narr",
+     "say": "Eleven seconds. The colony adapts.",
+     "text": "Eleven seconds. The colony adapts.",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "adapt",
+   "clock": "3:04 PM",
+   "label": "THE ADAPTATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.15
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.4,
+     "gap": 0.1
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "Concealment. The shower room now holds the second floor.",
+     "text": "Concealment. The shower room now holds the second floor.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Does it close?",
+     "text": "Does it close?",
+     "gap": 0.1
+    },
+    {
+     "id": "c1",
+     "who": "clem",
+     "say": "Sure!",
+     "text": "Sure!",
+     "gap": 0.1
+    },
+    {
+     "id": "pop",
+     "pause": 0.7,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "crash",
+       0.1,
+       0.45,
+       0.3
+      ],
+      [
+       "clatter",
+       0.15,
+       0.35,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "It closes.",
+     "text": "It closes.",
+     "gap": 0.25
+    },
+    {
+     "id": "n3",
+     "who": "narr",
+     "say": "Charting. Three weeks, in nine minutes.",
+     "text": "Charting. Three weeks, in nine minutes.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "typing",
+       0.4,
+       0.4,
+       -0.3
+      ],
+      [
+       "stamp",
+       0.8,
+       0.4,
+       -0.2
+      ],
+      [
+       "stamp",
+       1.35,
+       0.4,
+       0
+      ],
+      [
+       "stamp",
+       1.9,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "n4",
+     "who": "narr",
+     "say": "Every insulin pen is born today.",
+     "text": "Every insulin pen is born today.",
+     "gap": 0.1
+    },
+    {
+     "id": "cam",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "shutter",
+       0.1,
+       0.4,
+       0
+      ],
+      [
+       "scribble",
+       0.3,
+       0.35,
+       0
+      ],
+      [
+       "shutter",
+       1.0,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "n5",
+     "who": "narr",
+     "say": "Call lights are answered in nine seconds. Staffing has not changed. Position has.",
+     "text": "Call lights are answered in nine seconds. Staffing has not changed. Position has.",
+     "gap": 0.2
+    },
+    {
+     "id": "n6",
+     "who": "narr",
+     "say": "The Administrator performs his display.",
+     "text": "The Administrator performs his display.",
+     "gap": 0.1
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "We love surveys!",
+     "text": "We love surveys!",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "pizzabox",
+       -0.2,
+       0.4,
+       0.3
+      ],
+      [
+       "sparkle",
+       0.1,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 0.5,
+     "gap": 0.05
+    }
+   ]
+  },
+  {
+   "id": "arrive",
+   "clock": "3:09 PM",
+   "label": "THE ENTRANCE CONFERENCE",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "lobby",
+   "amb": {
+    "name": "lobby",
+    "gain": 0.2
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "Good afternoon. Don't mind me. I'm just going to observe.",
+     "text": "Good afternoon. Don't mind me. I'm just going to observe.",
+     "gap": 0.2
+    },
+    {
+     "id": "st2",
+     "who": "star",
+     "say": "I'll need your staffing sheet.",
+     "text": "I'll need your staffing sheet.",
+     "gap": 0.15
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "It's in the binder.",
+     "text": "It's in the binder.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "thud",
+       0.7,
+       0.6,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "k1",
+     "who": "kum",
+     "say": "Is there anything that isn't in the binder?",
+     "text": "Is there anything that isn't in the binder?",
+     "gap": 0.15
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "The staff.",
+     "text": "The staff.",
+     "gap": 0.25
+    },
+    {
+     "id": "st3",
+     "who": "star",
+     "say": "Noted.",
+     "text": "Noted.",
+     "gap": 0.2
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "He selects a subject: the one nobody briefed.",
+     "text": "He selects a subject: the one nobody briefed.",
+     "gap": 0.15
+    },
+    {
+     "id": "scan",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slowwhoosh",
+       0,
+       0.3,
+       0
+      ],
+      [
+       "click",
+       0.8,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "st4",
+     "who": "star",
+     "say": "You.",
+     "text": "You.",
+     "gap": 0.1
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Strawberry. Per dee um.",
+     "text": "Strawberry. Per diem.",
+     "gap": 0.15
+    },
+    {
+     "id": "st5",
+     "who": "star",
+     "say": "You are not on the sheet.",
+     "text": "You are not on the sheet.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I never am.",
+     "text": "I never am.",
+     "gap": 0.15
+    },
+    {
+     "id": "st6",
+     "who": "star",
+     "say": "Perfect.",
+     "text": "Perfect.",
+     "gap": 0.2
+    },
+    {
+     "id": "end",
+     "pause": 0.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tracer",
+   "clock": "3:15 PM",
+   "label": "THE TRACER",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.15
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.6,
+     "gap": 0.1
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "The tracer. The subject is followed everywhere.",
+     "text": "The tracer. The subject is followed everywhere.",
+     "gap": 0.15
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "Carry on as you normally would.",
+     "text": "Carry on as you normally would.",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Run.",
+     "text": "Run.",
+     "gap": 0.1
+    },
+    {
+     "id": "run",
+     "pause": 3.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "whoosh",
+       0,
+       0.4,
+       0
+      ],
+      [
+       "scramble",
+       0.1,
+       0.35,
+       0
+      ],
+      [
+       "ding1",
+       1.1,
+       0.25,
+       -0.3
+      ],
+      [
+       "ding1",
+       2.1,
+       0.25,
+       0.3
+      ],
+      [
+       "ding1",
+       2.9,
+       0.25,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "k1",
+     "who": "kum",
+     "say": "Everything is perfect.",
+     "text": "Everything is perfect.",
+     "gap": 0.1
+    },
+    {
+     "id": "st2",
+     "who": "star",
+     "say": "It is suspicious.",
+     "text": "It is suspicious.",
+     "gap": 0.2
+    },
+    {
+     "id": "st3",
+     "who": "star",
+     "say": "This pen has no open date.",
+     "text": "This pen has no open date.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It's day one.",
+     "text": "It's day one.",
+     "gap": 0.1
+    },
+    {
+     "id": "st4",
+     "who": "star",
+     "say": "The label says June.",
+     "text": "The label says June.",
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "It's a long day.",
+     "text": "It's a long day.",
+     "gap": 0.2
+    },
+    {
+     "id": "slip",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "peel",
+       0.15,
+       0.5,
+       0.3
+      ],
+      [
+       "boing",
+       0.4,
+       0.35,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "banana",
+     "say": "Forty-nine!",
+     "text": "Forty-nine!",
+     "gap": 0.1
+    },
+    {
+     "id": "st5",
+     "who": "star",
+     "say": "That is a fall.",
+     "text": "That is a fall.",
+     "gap": 0.1
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "That is a hobby.",
+     "text": "That is a hobby.",
+     "gap": 0.2
+    },
+    {
+     "id": "st6",
+     "who": "star",
+     "say": "What is behind this door?",
+     "text": "What is behind this door?",
+     "gap": 0.1
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "Showers.",
+     "text": "Showers.",
+     "gap": 0.1
+    },
+    {
+     "id": "st7",
+     "who": "star",
+     "say": "Open it.",
+     "text": "Open it.",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.4,
+     "gap": 0.05
+    }
+   ]
+  },
+  {
+   "id": "closet",
+   "clock": "3:21 PM",
+   "label": "THE SHOWER ROOM",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "break",
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "creak",
+       0.1,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Stand back.",
+     "text": "Stand back.",
+     "gap": 0.1
+    },
+    {
+     "id": "slide",
+     "pause": 2.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slowmo",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "rumble",
+       0.1,
+       0.5,
+       0
+      ],
+      [
+       "crash",
+       0.5,
+       0.55,
+       -0.2
+      ],
+      [
+       "clatter",
+       0.9,
+       0.45,
+       0.2
+      ],
+      [
+       "crash",
+       1.5,
+       0.45,
+       0.3
+      ],
+      [
+       "clatter",
+       1.9,
+       0.4,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Concealment is not a strategy.",
+     "text": "Concealment is not a strategy.",
+     "gap": 0.2
+    },
+    {
+     "id": "k1",
+     "who": "kum",
+     "say": "Is the Christmas tree a tag?",
+     "text": "Is the Christmas tree a tag?",
+     "gap": 0.15
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "It is a tag.",
+     "text": "It is a tag.",
+     "gap": 0.2
+    },
+    {
+     "id": "end",
+     "pause": 0.4,
+     "gap": 0.05
+    }
+   ]
+  },
+  {
+   "id": "voices",
+   "clock": "3:40 PM",
+   "label": "THE RESIDENTS",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "gap": 0.1
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "I'd like to speak with the residents. Alone.",
+     "text": "I'd like to speak with the residents. Alone.",
+     "gap": 0.15
+    },
+    {
+     "id": "st2",
+     "who": "star",
+     "say": "Do the staff treat you with dignity?",
+     "text": "Do the staff treat you with dignity?",
+     "gap": 0.15
+    },
+    {
+     "id": "cr1",
+     "who": "cran",
+     "say": "The girl with the badge sits with me. She says it's nineteen sixty-two. So it is.",
+     "text": "The girl with the badge sits with me. She says it's nineteen sixty-two. So it is.",
+     "gap": 0.2
+    },
+    {
+     "id": "pr1",
+     "who": "pear",
+     "say": "She never takes her break. It's in my contract. I checked.",
+     "text": "She never takes her break. It's in my contract. I checked.",
+     "gap": 0.15
+    },
+    {
+     "id": "b1",
+     "who": "banana",
+     "say": "She catches me.",
+     "text": "She catches me.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "banana",
+     "say": "Not the first forty-seven.",
+     "text": "Not the first forty-seven.",
+     "gap": 0.2
+    },
+    {
+     "id": "st3",
+     "who": "star",
+     "say": "Anything you would like the State to know?",
+     "text": "Anything you would like the State to know?",
+     "gap": 0.2
+    },
+    {
+     "id": "ra1",
+     "who": "rall",
+     "say": "Give her a break.",
+     "text": "Give her a break.",
+     "gap": 0.3
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "The State is not known to be moved.",
+     "text": "The State is not known to be moved.",
+     "gap": 0.1
+    },
+    {
+     "id": "st4",
+     "who": "star",
+     "say": "Noted.",
+     "text": "Noted.",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.5,
+     "gap": 0.05
+    }
+   ]
+  },
+  {
+   "id": "verdict",
+   "clock": "4:48 PM",
+   "label": "THE EXIT CONFERENCE",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "drumroll",
+       0,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "F seven sixty-one. An insulin pen without an open date.",
+     "text": "F seven sixty-one. An insulin pen without an open date.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "stamp",
+       3.0,
+       0.5,
+       -0.5
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "That's the same tag as last time.",
+     "text": "That's the same tag as last time.",
+     "gap": 0.1
+    },
+    {
+     "id": "st2",
+     "who": "star",
+     "say": "It is the same pen.",
+     "text": "It is the same pen.",
+     "gap": 0.2
+    },
+    {
+     "id": "st3",
+     "who": "star",
+     "say": "F seven twenty-five. Sufficient nursing staff.",
+     "text": "F seven twenty-five. Sufficient nursing staff.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "drumroll",
+       1.0,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "ball",
+     "pause": 2.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "plink",
+       0.0,
+       0.34,
+       0.02
+      ],
+      [
+       "plink",
+       0.17,
+       0.34,
+       0.14
+      ],
+      [
+       "plink",
+       0.34,
+       0.34,
+       0.26
+      ],
+      [
+       "plink",
+       0.5,
+       0.34,
+       0.38
+      ],
+      [
+       "plink",
+       0.66,
+       0.34,
+       0.5
+      ],
+      [
+       "plink",
+       0.82,
+       0.34,
+       0.62
+      ],
+      [
+       "plink",
+       0.98,
+       0.34,
+       0.5
+      ],
+      [
+       "plink",
+       1.14,
+       0.34,
+       0.62
+      ],
+      [
+       "plink",
+       1.32,
+       0.34,
+       0.74
+      ],
+      [
+       "plink",
+       1.52,
+       0.34,
+       0.86
+      ],
+      [
+       "plink",
+       1.78,
+       0.34,
+       0.74
+      ],
+      [
+       "plink",
+       2.15,
+       0.34,
+       0.86
+      ]
+     ]
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "We had five nurses.",
+     "text": "We had five nurses.",
+     "gap": 0.1
+    },
+    {
+     "id": "st4",
+     "who": "star",
+     "say": "You had one.",
+     "text": "You had one.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "plinkland",
+       0.05,
+       0.6,
+       0.917
+      ]
+     ]
+    },
+    {
+     "id": "jeopardy",
+     "pause": 1.1,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "siren",
+       0.1,
+       0.4,
+       0
+      ],
+      [
+       "klaxon",
+       0.2,
+       0.3,
+       0
+      ],
+      [
+       "thud",
+       0.5,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "st5",
+     "who": "star",
+     "say": "However. F nine nine nine. The facility failed to cover its staff.",
+     "text": "However. F nine nine nine. The facility failed to cover its staff.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "stamp",
+       3.0,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "a3",
+     "who": "melon",
+     "say": "That is not a real tag.",
+     "text": "That is not a real tag.",
+     "gap": 0.1
+    },
+    {
+     "id": "st6",
+     "who": "star",
+     "say": "It is now.",
+     "text": "It is now.",
+     "gap": 0.2
+    },
+    {
+     "id": "st7",
+     "who": "star",
+     "say": "Thirty minutes. Seated. Mandatory.",
+     "text": "Thirty minutes. Seated. Mandatory.",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Can I sit?",
+     "text": "Can I sit?",
+     "gap": 0.1
+    },
+    {
+     "id": "st8",
+     "who": "star",
+     "say": "It is mandatory.",
+     "text": "It is mandatory.",
+     "gap": 0.15
+    },
+    {
+     "id": "sit",
+     "pause": 1.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sit",
+       0.2,
+       0.4,
+       -0.3
+      ],
+      [
+       "sit",
+       0.5,
+       0.4,
+       0.3
+      ],
+      [
+       "sit",
+       0.8,
+       0.4,
+       -0.1
+      ],
+      [
+       "sit",
+       1.1,
+       0.4,
+       0.2
+      ],
+      [
+       "chair",
+       1.4,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "ring",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "ding1",
+       0.1,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "st9",
+     "who": "star",
+     "say": "Don't mind me. I'm just going to help.",
+     "text": "Don't mind me. I'm just going to help.",
+     "gap": 0.2
+    },
+    {
+     "id": "end",
+     "pause": 0.7,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "stamp",
+       2.34,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "colony",
+  "to_": "verdict",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

@@ -1,0 +1,1122 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 6: Alarm Fatigue",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "lime": {
+   "name": "MR. LIME",
+   "voice": "bm_fable",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#9be564",
+   "pan": -0.35,
+   "lang": "en-us"
+  },
+  "chair": {
+   "name": "CHAIR ALARM",
+   "voice": "af_sarah",
+   "speed": 0.9,
+   "semis": 0,
+   "color": "#ffb347",
+   "fx": "robot",
+   "pan": -0.4,
+   "lang": "en-us"
+  },
+  "pa": {
+   "name": "OVERHEAD PAGE",
+   "voice": "af_sarah",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#e8a86a",
+   "fx": "pa",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "marshal": {
+   "name": "FIRE MARSHAL POMEGRANATE",
+   "voice": "bm_daniel",
+   "speed": 0.93,
+   "semis": -2,
+   "color": "#ff6b3d",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "all": {
+   "name": "EVERYONE",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "am_fenrir",
+    "bf_emma",
+    "am_michael"
+   ],
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#7b61ff",
+   "pan": 0,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "lobby",
+   "clock": "2:59 PM",
+   "label": "THE LOBBY",
+   "head": 0.3,
+   "tail": 0.5,
+   "room": "lobby",
+   "amb": {
+    "name": "lobby",
+    "gain": 0.5
+   },
+   "beats": [
+    {
+     "id": "door",
+     "pause": 1.7,
+     "sfx": [
+      [
+       "slidedoor",
+       0.2,
+       0.5,
+       0
+      ],
+      [
+       "birds6",
+       0.0,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Two fifty-nine. Warm light. Birds.",
+     "text": "Two fifty-nine. Warm light. Birds.",
+     "gap": 0.45
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Nothing is beeping.",
+     "text": "Nothing is beeping.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "a_chair",
+       "end",
+       0.5,
+       -0.5
+      ],
+      [
+       "a_pump",
+       "end",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "beep",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "a_chair",
+       0.0,
+       0.45,
+       -0.55
+      ],
+      [
+       "a_pulse",
+       0.35,
+       0.4,
+       0.5
+      ],
+      [
+       "a_bed",
+       0.6,
+       0.38,
+       -0.1
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "I said it out loud.",
+     "text": "I said it out loud."
+    }
+   ]
+  },
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 4.6,
+     "sfx": [
+      [
+       "theme6",
+       0.0,
+       0.8,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "station",
+   "clock": "3:05 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "alarms",
+    "gain": 0.5,
+    "ramp": [
+     0.5,
+     1.0
+    ]
+   },
+   "beds_gain": 1,
+   "beats": [
+    {
+     "id": "start",
+     "pause": 0.5
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Is anyone going to get that?",
+     "text": "Is anyone going to get that?",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Chair alarm. Room twelve.",
+     "text": "Chair alarm. Room twelve.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "a_chair",
+       0.0,
+       0.7,
+       -0.55
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "He's not leaving. He just likes the attention.",
+     "text": "He's not leaving. He just likes the attention.",
+     "gap": 0.2
+    },
+    {
+     "id": "c1",
+     "who": "chair",
+     "say": "Please remain seated.",
+     "text": "Please remain seated.",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lime",
+     "say": "Whee.",
+     "text": "Whee.",
+     "gap": 0.35
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "How do you know?",
+     "text": "How do you know?",
+     "gap": 0.2
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Pitch. A real one is flat. That one is joyful.",
+     "text": "Pitch. A real one is flat. That one is joyful.",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Pump. Room four. Occlusion.",
+     "text": "Pump. Room four. Occlusion.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "a_pump",
+       0.0,
+       0.7,
+       0.45
+      ]
+     ]
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "Is it...",
+     "text": "Is it...",
+     "gap": 0.1
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "It's the tubing. It's always the tubing.",
+     "text": "It's the tubing. It's always the tubing.",
+     "gap": 0.3
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "Pulse ox. Room seven. It fell off.",
+     "text": "Pulse ox. Room seven. It fell off.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "a_pulse",
+       0.0,
+       0.7,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "m4",
+     "who": "mango",
+     "say": "His finger?",
+     "text": "His finger?",
+     "gap": 0.1
+    },
+    {
+     "id": "s7",
+     "who": "straw",
+     "say": "His finger is fine. The probe is dramatic.",
+     "text": "His finger is fine. The probe is dramatic.",
+     "gap": 0.3
+    },
+    {
+     "id": "s8",
+     "who": "straw",
+     "say": "Exit door. Mr. Pear. Three-twenty.",
+     "text": "Exit door. Mr. Pear. Three-twenty.",
+     "gap": 0.12,
+     "sfx": [
+      [
+       "a_door",
+       0.0,
+       0.65,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "s9",
+     "who": "straw",
+     "say": "Every day. You could set a watch.",
+     "text": "Every day. You could set a watch.",
+     "gap": 0.15
+    },
+    {
+     "id": "p1",
+     "who": "pear",
+     "say": "Right on time.",
+     "text": "Right on time.",
+     "gap": 0.3
+    },
+    {
+     "id": "m5",
+     "who": "mango",
+     "say": "How many are there?",
+     "text": "How many are there?",
+     "gap": 0.15
+    },
+    {
+     "id": "s10",
+     "who": "straw",
+     "say": "Thirty-one.",
+     "text": "Thirty-one.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "stamp6",
+       "end",
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m6",
+     "who": "mango",
+     "say": "How many matter?",
+     "text": "How many matter?",
+     "gap": 0.15
+    },
+    {
+     "id": "s11",
+     "who": "straw",
+     "say": "Four.",
+     "text": "Four.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "stamp6",
+       "end",
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m7",
+     "who": "mango",
+     "say": "Which four?",
+     "text": "Which four?",
+     "gap": 0.35
+    },
+    {
+     "id": "s12",
+     "who": "straw",
+     "say": "We find out when we get there.",
+     "text": "We find out when we get there.",
+     "gap": 0.2
+    }
+   ]
+  },
+  {
+   "id": "run",
+   "clock": "4:10 PM",
+   "label": "THE HALLWAY",
+   "head": 0.1,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "alarms",
+    "gain": 0.42,
+    "ramp": [
+     1.0,
+     1.3
+    ]
+   },
+   "beats": [
+    {
+     "id": "montage",
+     "pause": 6.2
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "I'll help! I'll silence them!",
+     "text": "I'll help! I'll silence them!",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Don't press that.",
+     "text": "Don't press that.",
+     "gap": 0.15
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "It's the silence button.",
+     "text": "It's the silence button.",
+     "gap": 0.12
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It silences the alarm. Not the problem.",
+     "text": "It silences the alarm. Not the problem.",
+     "gap": 0.3
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "...That's actually deep.",
+     "text": "...That's actually deep.",
+     "gap": 0.3
+    },
+    {
+     "id": "chime",
+     "pause": 0.8,
+     "sfx": [
+      [
+       "pa_chime",
+       0.0,
+       0.5,
+       0
+      ]
+     ],
+     "gap": 0
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Attention staff. To support resident rest, alarm volume has been reduced by forty percent.",
+     "text": "Attention staff. To support resident rest, alarm volume has been reduced by forty percent.",
+     "gap": 0.25
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Quieter. Not fewer.",
+     "text": "Quieter. Not fewer.",
+     "gap": 0.3
+    },
+    {
+     "id": "m4",
+     "who": "mango",
+     "say": "So what do we do?",
+     "text": "So what do we do?",
+     "gap": 0.12
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Listen harder.",
+     "text": "Listen harder.",
+     "gap": 0.4
+    },
+    {
+     "id": "m5",
+     "who": "mango",
+     "say": "To what?",
+     "text": "To what?",
+     "gap": 0.15
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "The building.",
+     "text": "The building."
+    }
+   ]
+  },
+  {
+   "id": "still",
+   "clock": "6:30 PM",
+   "label": "THE HALLWAY",
+   "head": 0.1,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.5
+   },
+   "beats": [
+    {
+     "id": "hush",
+     "pause": 2.3
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Is it over?",
+     "text": "Is it over?",
+     "gap": 0.35,
+     "speed": 0.95
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Never say that.",
+     "text": "Never say that.",
+     "gap": 0.2,
+     "speed": 0.95
+    },
+    {
+     "id": "chirp1",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "a_chirp",
+       0.25,
+       0.85,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "What was that?",
+     "text": "What was that?",
+     "gap": 0.15
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That's not one of ours.",
+     "text": "That's not one of ours.",
+     "gap": 0.35
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Thirty-two.",
+     "text": "Thirty-two.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "stamp6",
+       "end",
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "hunt",
+     "pause": 6.0,
+     "sfx": [
+      [
+       "a_chirp",
+       0.55,
+       0.8,
+       0.6
+      ],
+      [
+       "a_chirp",
+       2.0,
+       0.8,
+       -0.6
+      ],
+      [
+       "a_chirp",
+       3.45,
+       0.8,
+       0.25
+      ],
+      [
+       "a_chirp",
+       4.9,
+       0.8,
+       -0.35
+      ],
+      [
+       "whoosh2",
+       1.72,
+       0.5,
+       -0.3
+      ],
+      [
+       "whoosh2",
+       2.1,
+       0.5,
+       0.3
+      ],
+      [
+       "whoosh2",
+       2.48,
+       0.5,
+       -0.3
+      ],
+      [
+       "whoosh2",
+       2.86,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lime",
+     "say": "I hear a chirp.",
+     "text": "I hear a chirp.",
+     "gap": 0.15
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "That's your hearing aid.",
+     "text": "That's your hearing aid.",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lime",
+     "say": "What?",
+     "text": "What?",
+     "gap": 0.3
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "It stops when we walk in.",
+     "text": "It stops when we walk in.",
+     "gap": 0.2
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "It knows we are looking.",
+     "text": "It knows we are looking.",
+     "gap": 0.12
+    },
+    {
+     "id": "m4",
+     "who": "mango",
+     "say": "It's gaslighting us.",
+     "text": "It's gaslighting us.",
+     "gap": 0.35
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "Everyone. Freeze.",
+     "text": "Everyone. Freeze.",
+     "gap": 0.1
+    },
+    {
+     "id": "freeze",
+     "pause": 3.3,
+     "sfx": [
+      [
+       "a_chirp",
+       3.0,
+       0.85,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "m5",
+     "who": "mango",
+     "say": "It's directly above me.",
+     "text": "It's directly above me.",
+     "gap": 0.2
+    },
+    {
+     "id": "s7",
+     "who": "straw",
+     "say": "It's been directly above you the whole time.",
+     "text": "It's been directly above you the whole time.",
+     "gap": 0.35
+    },
+    {
+     "id": "m6",
+     "who": "mango",
+     "say": "Don't say anything about my posture.",
+     "text": "Don't say anything about my posture.",
+     "gap": 0.12
+    },
+    {
+     "id": "s8",
+     "who": "straw",
+     "say": "Hold still.",
+     "text": "Hold still.",
+     "gap": 0.1
+    },
+    {
+     "id": "pull",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "battery",
+       0.5,
+       0.8,
+       0
+      ]
+     ],
+     "gap": 0.4
+    },
+    {
+     "id": "m7",
+     "who": "mango",
+     "say": "You said don't press the button.",
+     "text": "You said don't press the button.",
+     "gap": 0.2
+    },
+    {
+     "id": "s9",
+     "who": "straw",
+     "say": "I didn't press. I pulled.",
+     "text": "I didn't press. I pulled."
+    }
+   ]
+  },
+  {
+   "id": "ding",
+   "clock": "7:00 PM",
+   "label": "THE BREAK ROOM",
+   "head": 0.1,
+   "tail": 0.4,
+   "room": "break",
+   "amb": {
+    "name": "break",
+    "gain": 0.5
+   },
+   "beats": [
+    {
+     "id": "calm",
+     "pause": 1.4
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Finally. Peace.",
+     "text": "Finally. Peace.",
+     "gap": 0.1,
+     "speed": 1.0
+    },
+    {
+     "id": "ding",
+     "pause": 0.4,
+     "sfx": [
+      [
+       "a_ding",
+       0.0,
+       0.9,
+       0
+      ]
+     ],
+     "gap": 0
+    },
+    {
+     "id": "stampede",
+     "pause": 4.4,
+     "sfx": [
+      [
+       "stampede",
+       0.0,
+       0.9,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Please do not run in the hallway.",
+     "text": "Please do not run in the hallway.",
+     "gap": 0.3
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "That's mine.",
+     "text": "That's mine.",
+     "gap": 0.25
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That was twelve minutes.",
+     "text": "That was twelve minutes.",
+     "gap": 0.15
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "It said popcorn.",
+     "text": "It said popcorn.",
+     "gap": 0.15
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Two minutes, Mango.",
+     "text": "Two minutes, Mango.",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Is it supposed to smell like that?",
+     "text": "Is it supposed to smell like that?",
+     "gap": 0.15
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "It's flavored.",
+     "text": "It's flavored."
+    }
+   ]
+  },
+  {
+   "id": "marshal",
+   "clock": "7:05 PM",
+   "label": "THE BREAK ROOM",
+   "head": 0.1,
+   "tail": 0.4,
+   "room": "break",
+   "amb": {
+    "name": "break",
+    "gain": 0.5
+   },
+   "beats": [
+    {
+     "id": "bang",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "doorbang",
+       0.0,
+       0.9,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "f1",
+     "who": "marshal",
+     "say": "Fire Marshal Pomegranate. Who is in charge?",
+     "text": "Fire Marshal Pomegranate. Who is in charge?",
+     "gap": 0.15
+    },
+    {
+     "id": "point",
+     "pause": 1.1,
+     "gap": 0.1
+    },
+    {
+     "id": "f2",
+     "who": "marshal",
+     "say": "Why is nobody evacuating?",
+     "text": "Why is nobody evacuating?",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "The alarm didn't go off.",
+     "text": "The alarm didn't go off.",
+     "gap": 0.15
+    },
+    {
+     "id": "f3",
+     "who": "marshal",
+     "say": "Because there is no battery.",
+     "text": "Because there is no battery.",
+     "gap": 0.15
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It was chirping.",
+     "text": "It was chirping.",
+     "gap": 0.1
+    },
+    {
+     "id": "f4",
+     "who": "marshal",
+     "say": "It was chirping because it needed a battery.",
+     "text": "It was chirping because it needed a battery.",
+     "gap": 0.2
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "...And now it doesn't chirp.",
+     "text": "...And now it doesn't chirp.",
+     "gap": 0.1
+    },
+    {
+     "id": "f5",
+     "who": "marshal",
+     "say": "That is worse.",
+     "text": "That is worse.",
+     "gap": 0.3,
+     "speed": 0.9
+    },
+    {
+     "id": "f6",
+     "who": "marshal",
+     "say": "Tonight you answered one alarm. The broken one.",
+     "text": "Tonight you answered one alarm. The broken one.",
+     "gap": 0.2
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "And the microwave.",
+     "text": "And the microwave.",
+     "gap": 0.1
+    },
+    {
+     "id": "f7",
+     "who": "marshal",
+     "say": "The microwave is not an alarm.",
+     "text": "The microwave is not an alarm.",
+     "gap": 0.15
+    },
+    {
+     "id": "a1",
+     "who": "all",
+     "say": "It is to us.",
+     "text": "It is to us.",
+     "gap": 0.5
+    },
+    {
+     "id": "install",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "battery",
+       0.2,
+       0.8,
+       0
+      ],
+      [
+       "a_fire",
+       1.0,
+       0.9,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "Is that one of the four?",
+     "text": "Is that one of the four?",
+     "gap": 0.1
+    },
+    {
+     "id": "f8",
+     "who": "marshal",
+     "say": "It's the only one.",
+     "text": "It's the only one.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "We find out when we get there.",
+     "text": "We find out when we get there.",
+     "gap": 0.1
+    },
+    {
+     "id": "f9",
+     "who": "marshal",
+     "say": "There is a fire.",
+     "text": "There is a fire."
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "sfx": [
+      [
+       "theme6",
+       0.0,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "post",
+   "clock": "7:31 PM",
+   "label": "THE PARKING LOT",
+   "head": 0.1,
+   "tail": 0.75,
+   "room": "outside",
+   "beats": [
+    {
+     "id": "lot",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "a_chirp",
+       0.5,
+       0.8,
+       0.2
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Thirty-three.",
+     "text": "Thirty-three.",
+     "gap": 0.15
+    },
+    {
+     "id": "f1",
+     "who": "marshal",
+     "say": "No.",
+     "text": "No.",
+     "sfx": [
+      [
+       "a_chirp",
+       1.1,
+       0.85,
+       0.2
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "lobby",
+  "to_": "marshal",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}
