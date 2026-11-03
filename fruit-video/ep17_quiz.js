@@ -108,6 +108,8 @@ function sides(lt) {
   wallR(-1, 262, 810, 296, 350, '#7a4a58', 'rgba(25,16,30,.4)', 1.6); wallR(-1, 262, 810, 712, 766, '#7a4a58', 'rgba(25,16,30,.4)', 1.6);
   wallR(1, 250, 470, -380, -120, '#b98a5a', 'rgba(25,16,30,.7)', 3);
   for (const [z, y, c] of [[-340, 400, '#fff3a6'], [-260, 330, '#ffb3c6'], [-190, 410, '#bfe3ff'], [-160, 300, '#d8ffb0']]) wallR(1, y, y + 54, z - 34, z + 34, c, 'rgba(25,16,30,.35)', 1.4);
+  wallR(1, 0, 462, 1030, 1292, '#c9a06a', 'rgba(25,16,30,.6)', 3); wallR(1, 8, 452, 1044, 1278, '#d8b27c', 'rgba(25,16,30,.5)', 2); wallR(1, 250, 410, 1090, 1230, '#9fc1c6', 'rgba(25,16,30,.5)', 2);
+  wallR(1, 500, 556, 1100, 1220, '#1f8a4a', 'rgba(10,40,20,.8)', 2.5);
   const ch = { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.4 };
   for (let i = 0; i < 4; i++) boxR(790, 888, i * 46, i * 46 + 40, 660 + i * 6, 800 + i * 6, ch);
 }
@@ -424,7 +426,7 @@ const SC = {
     const sh = shotAt(lt), u = c01((lt - sh.s) / Math.max(.001, sh.e - sh.s)), c = Object.assign(lens({}), sh.cam(u, lt, sh));
     sh.cc = c;
     V2.setCam({ f: c.f, cz: c.cz, cy: c.cy, hy: c.hy, cx: c.cx });
-    const punch = lt >= CUE.error && lt < CUE.error + .5 ? .035 * Math.exp(-(lt - CUE.error) * 12) : lt >= CUE.sting && lt < CUE.sting + .6 ? .03 * Math.exp(-(lt - CUE.sting) * 11) : 0;
+    const punch = lt >= CUE.sniffle && lt < CUE.sniffle + .5 ? .025 * Math.exp(-(lt - CUE.sniffle) * 12) : lt >= CUE.error && lt < CUE.error + .5 ? .035 * Math.exp(-(lt - CUE.error) * 12) : lt >= CUE.sting && lt < CUE.sting + .6 ? .03 * Math.exp(-(lt - CUE.sting) * 11) : 0;
     zoomTo(c.fx, c.fy, c.z * (1 + punch));
   },
   draw(lt) { drawWorld(lt, shotAt(lt)); },

@@ -150,11 +150,16 @@ function tableDraw(lt) {
   const leg = { color: '#6a5a4a', top: '#8a7a68', front: '#5a4a3c', side: '#4a3c30', lw: 1 };
   for (const sx of [0, 1]) for (const sz of [0, 1]) boxR(sx ? TB.x1 - 54 : TB.x0 + 30, sx ? TB.x1 - 30 : TB.x0 + 54, 0, TB.h, sz ? TB.z1 - 40 : TB.z0 + 16, sz ? TB.z1 - 16 : TB.z0 + 40, leg);
   boxR(TB.x0, TB.x1, TB.h, TB.top, TB.z0, TB.z1, { color: '#c9a06a', top: '#e8c58f', front: '#b08850', side: '#9a7440', lw: 2 });
+  for (let i = 1; i < 7; i++) { const zc = TB.z0 + i * (TB.z1 - TB.z0) / 7; polyR([[TB.x0, TB.top + .3, zc], [TB.x1, TB.top + .3, zc], [TB.x1, TB.top + .3, zc + 2.5], [TB.x0, TB.top + .3, zc + 2.5]], i % 2 ? 'rgba(120,76,32,.17)' : 'rgba(255,240,200,.16)'); }
+  for (const xg of [-380, -60, 300]) polyR([[xg, TB.top + .3, TB.z0], [xg + 3, TB.top + .3, TB.z0], [xg + 3, TB.top + .3, TB.z1], [xg, TB.top + .3, TB.z1]], 'rgba(120,76,32,.12)');
 }
 const PAPER = { color: '#f1eee4', top: '#ffffff', front: '#ece8da', side: '#d3cfc0', lw: 1.4 };
 const PILES = [[80, 240, 262, 350, 40], [300, 400, 262, 330, 24], [-300, -190, 330, 380, 30], [230, 330, 336, 386, 26], [-540, -450, 276, 340, 16], [520, 590, 300, 360, 14]];
 function tableItems(lt) {
   for (const [x0, x1, z0, z1, h] of PILES) { boxR(x0, x1, TB.top, TB.top + h, z0, z1, PAPER); for (let j = 1; j < 4; j++) { const y = TB.top + h * j / 4; polyR([[x0, y, z0], [x1, y, z0], [x1, y + .8, z0], [x0, y + .8, z0]], 'rgba(60,50,40,.28)'); } }
+  { const mug = { color: '#ece4d2', top: '#5a3a22', front: '#e2d9c4', side: '#c9bfa6', lw: 1.6 };
+    for (const mx of [-90, 70]) boxR(mx - 24, mx + 24, TB.top, TB.top + 54, 352, 400, mug);
+    boxR(10, 60, TB.top, TB.top + 5, 344, 351, { color: '#2a58d8', top: '#5a82f0', front: '#2448b0', side: '#1c3a90', lw: 1 }); }
   /* the clear box, emptied and lying on its side: translucent acrylic, a slot on top, a few stray ballots inside */
   { const x0 = -610, x1 = -430, z0 = 270, z1 = 388, h = 104, b = { color: 'rgba(205,232,255,.30)', top: 'rgba(225,242,255,.45)', front: 'rgba(185,218,246,.26)', side: 'rgba(170,206,236,.34)', edge: 'rgba(110,160,205,.95)', lw: 2.2 };
     boxR(x0 + 20, x1 - 20, TB.top + 2, TB.top + 12, z0 + 24, z1 - 24, PAPER);
@@ -294,7 +299,7 @@ const CTOR = { mango: o => A7.mango(o), lemon: o => A7.lemon(o), onion: o => A15
 const ACT = {};
 function exprAt(list, lt) { let r = list[0][1]; for (const [t, e] of list) if (lt >= t) r = e; return r; }
 function person(name, lt) {
-  const [xr, zr, face] = SEATS[name], a = (window.__ACTOFF ? null : ACT[name] ? ACT[name](lt) : null) || {}, stand = name === 'tom' || name[0] === 'e';
+  const [xr, zr, face] = SEATS[name], a = (ACT[name] ? ACT[name](lt) : null) || {}, stand = name === 'tom' || name[0] === 'e';
   const toCam = (face > 0) === (D.dir === 'r'), X = mapX(xr), Z = mapZ(zr), q = V2.at(X, Z), y = stand ? q.y : V2.p2(X, SEAT_Y, Z)[1];
   const turn = p => toCam ? (D.dir === 'f' ? p : -p) : PI - (D.dir === 'f' ? p : -p);
   const o = Object.assign({ x: q.x, y, s: q.s * (a.k ?? (stand ? .92 : .86)), t: lt, expr: 'neutral', arms: { l: 'hold', r: 'hold' }, grip: toCam ? { l: [-26, 14], r: [26, 14] } : { l: [26, 14], r: [-26, 14] } },
@@ -311,7 +316,7 @@ ACT.onion = lt => {
   const c = Math.floor(tally(lt).b + tally(lt).p), flick = lt > 1.0 && lt < 2.3 ? Math.sin(lt * 17) : lt > 2.3 && lt < 5.5 ? Math.sin(lt * 5) * .35 : 0;
   const psiH = lt < T_TURN ? key([[0, 0], [5.4, 0], [5.9, .15], [8.4, 0], [9.5, .2], [12, 0]], lt) : TURN(lt, T_TURN, -.75);
   return { psiB: lt < T_TURN ? 0 : TURN(lt, T_TURN, -.5), psiH, look: lt < T_TURN ? [lt < 5.5 ? .05 : 0, lt < 5.5 ? .5 : .1] : [-.6, .1], expr: 'onion_cry',
-    o: { sob: sobK(lt), arms: { l: 'hold', r: 'hold' }, grip: { l: [-62 + 16 * flick, 64 - 14 * Math.abs(flick)], r: [112, 74] }, hold: window.__noHold ? undefined : { r: 'fp16_clicker' }, clickN: c, clickPress: lt > 1 && lt < 2.3 ? Math.max(0, Math.sin(lt * 17 + 1.4)) : 0 } };
+    o: { sob: sobK(lt), arms: { l: 'hold', r: 'hold' }, grip: { l: [-62 + 16 * flick, 64 - 14 * Math.abs(flick)], r: [112, 74] }, hold: { r: 'fp16_clicker' }, clickN: c, clickPress: lt > 1 && lt < 2.3 ? Math.max(0, Math.sin(lt * 17 + 1.4)) : 0 } };
 };
 ACT.lemon = lt => {
   const psiH = lt < T_TURN ? key([[0, 0], [3.9, 0], [4.1, -.5], [4.45, .5], [4.8, -.3], [5.2, 0]], lt) : TURN(lt, T_TURN, .7);
@@ -415,6 +420,7 @@ const T_BIND = bS('o5') + .02;
 function binderOpts(lt) {
   const k = eb(sg(lt, T_BIND, T_BIND + .38)), kk = kAt(336), X = mapX(LAPX), Z = mapZ(336);
   const rise = (1 - k) * 220, base = V2.p2(X, TB.top + 290, Z), grin = ss(lt, CUE.grin - .034, CUE.grin + .07);
+  if (k > .2) V2.glow(base[0], base[1] + rise * kk, 260 * kk * k, '255,226,130', .22 * k, 'screen', .6);
   return A15.binder({ x: base[0], y: base[1] + rise * kk, s: kk * 1.0 * Math.max(.01, k), t: lt, who: 'bind', pose: lt < bS('b1') ? 'helpful' : 'wave', grin, glint: Math.max(grin * .5, lt >= CUE.sting ? Math.exp(-(lt - CUE.sting) * 4) : 0), look: [lt < bS('b1') ? .2 : 0, .1], hover: false, bob: 1, acc: ['fp16_crown'], crownK: ss(lt, T_BIND + .15, T_BIND + .4), expr: 'bind_happy' });
 }
 const HEADS = [['e1', 1], ['e2', 2], ['tom', 3], ['mango', 4], ['lemon', 5], ['onion', 6], ['straw', 7], ['e4', 8], ['e3', 9]];
@@ -500,9 +506,9 @@ function drawWorld(lt, sh) {
     if (n[0] === 'e') { add(zr, () => { const po = person(n, lt); drawChar(po); }); continue; }
     add(zr, () => { const w = 118; boxR(xr - w, xr + w, SEAT_Y - 14, SEAT_Y + 4, zr - 70, zr + 70, { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.6 }); }, mapZ(zr) - 70);
     add(zr + (toCam ? -1 : 1) * 2, () => { const w = 96, bz = zr - face * 66; boxR(xr - w, xr + w, SEAT_Y + 4, SEAT_Y + 200, bz - 8, bz + 8, { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.6 }); }, mapZ(zr - face * 66) - 8);
-    add(zr + (toCam ? 0 : -3) * 0, () => { ctx.save(); const po = person(n, lt); (window.__cntDbg = window.__cntDbg || {})[n] = { x: po.x, y: po.y, s: po.s, yaw: po.yaw, kind: po.kind }; drawChar(po); if (n === 'onion') { const u = Math.max(sobK(lt) - .1, 0) * (lt >= CUE.sob ? 1 : 0) + (lt > 8.4 && lt < 11 ? .25 : 0); if (u > .02) A15.tearsAura(po.x, po.y - 130 * po.s, Math.min(1, u), { r: 190 * po.s, n: 40, t: lt, size: Math.max(.5, po.s * .9), seed: 4 }); } ctx.restore(); });
+    add(zr + (toCam ? 0 : -3) * 0, () => { ctx.save(); const po = person(n, lt); drawChar(po); if (n === 'onion') { const u = Math.max(sobK(lt) - .1, 0) * (lt >= CUE.sob ? 1 : 0) + (lt > 8.4 && lt < 11 ? .25 : 0); if (u > .02) A15.tearsAura(po.x, po.y - 130 * po.s, Math.min(1, u), { r: 190 * po.s, n: 40, t: lt, size: Math.max(.5, po.s * .9), seed: 4 }); } ctx.restore(); });
   }
-  if (sh.table !== false && !window.__NOTABLE) { const tzn = Math.min(mapZ(TB.z0), mapZ(TB.z1)) - 2; add(315, () => tableDraw(lt), tzn); add(314, () => { tableItems(lt); flicks(lt); }, tzn); }
+  if (sh.table !== false) { const tzn = Math.min(mapZ(TB.z0), mapZ(TB.z1)) - 2; add(315, () => tableDraw(lt), tzn); add(314, () => { tableItems(lt); flicks(lt); }, tzn); }
   if (sh.binder && lt >= T_BIND) add(336, () => drawChar(binderOpts(lt)));
   items.sort((a, b) => b.z - a.z); for (const it of items) it.fn();
   if (sh.chips) nineChips(lt);
@@ -534,7 +540,7 @@ const SC = {
     const sh = shotAt(lt), u = c01((lt - sh.s) / Math.max(.001, sh.e - sh.s)), c = Object.assign(lens({}), sh.cam(u, lt, sh));
     sh.cc = c;
     V2.setCam({ f: c.f, cz: c.cz, cy: c.cy, hy: c.hy, cx: c.cx });
-    const punch = lt >= CUE.dialog && lt < CUE.dialog + .6 ? .05 * Math.exp(-(lt - CUE.dialog) * 14) : lt >= CUE.sting && lt < CUE.sting + .6 ? .03 * Math.exp(-(lt - CUE.sting) * 12) : 0;
+    const punch = lt >= CUE.sob && lt < CUE.sob + .5 ? .03 * Math.exp(-(lt - CUE.sob) * 12) : lt >= CUE.dialog && lt < CUE.dialog + .6 ? .05 * Math.exp(-(lt - CUE.dialog) * 14) : lt >= CUE.sting && lt < CUE.sting + .6 ? .03 * Math.exp(-(lt - CUE.sting) * 12) : 0;
     zoomTo(c.fx, c.fy, c.z * (1 + punch));
   },
   draw(lt) { drawWorld(lt, shotAt(lt)); },

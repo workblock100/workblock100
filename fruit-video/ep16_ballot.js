@@ -87,7 +87,7 @@ function room(lt, sh) {
   const on = FLICK(lt);
   S6.breakRoom({ door: 0, sky: ['#2b3a78', '#e98a5a'] });
   S6.wallClock(-460, 520, 1500, -1, 30, 6, 40);                                  /* the wall clock reads 6:30 */
-  for (const z of [520, 1000, 1480, 1960]) if (z > V2.P.cz + 260) for (const X of [-170, 170]) S6.ceilingLamp(X, z, CH, .35 + .65 * on, '255,244,214', 90, 160);
+  for (const z of [520, 1000, 1480, 1960]) if (z > V2.P.cz + 260 && V2.P.cy < CH - 30) for (const X of [-170, 170]) S6.ceilingLamp(X, z, CH, .35 + .65 * on, '255,244,214', 90, 160);
   /* the VOTE BINDER banner across the far wall, above the door and the window: Binder's face, the slogan, the footnote */
   { const x0 = -400, x1 = 400, y0 = 482, y1 = 586, z = ZB - 4;
     polyW([[x0 - 8, y0 - 8, z], [x1 + 8, y0 - 8, z], [x1 + 8, y1 + 8, z], [x0 - 8, y1 + 8, z]], '#2c2f3a', 'rgba(25,16,30,.7)', 2.4);
@@ -159,11 +159,11 @@ function lidDraw(lt, st) {
   const L = sim() ? window.__EP16_SIMS.ballot.lidPose(lt) : { x: 0, y: -(BXH + 8), angle: 0 }, hw = 88, hh = 8, zn = BOX.z - BOX.d / 2 - 4, zf = BOX.z + BOX.d / 2 + 4;
   const cX = BOX.x + L.x, cY = TOP - L.y, ca = Math.cos(L.angle), sa = Math.sin(L.angle);
   const c = (lx, ly, z) => [cX + lx * ca + ly * sa, cY - lx * sa + ly * ca, z];
-  const col = { top: '#e9ecf2', front: '#c9ced9', side: '#aab1c0' };
+  const col = { top: 'rgba(233,238,246,.5)', front: 'rgba(201,210,224,.62)', side: 'rgba(170,181,200,.5)' };   /* a clear smoked lid: whoever stands behind the box shows through */
   polyW([c(-hw, hh, zf), c(-hw, -hh, zf), c(-hw, -hh, zn), c(-hw, hh, zn)], col.side, 'rgba(30,34,50,.7)', 1.6);
   polyW([c(hw, hh, zf), c(hw, -hh, zf), c(hw, -hh, zn), c(hw, hh, zn)], col.side, 'rgba(30,34,50,.7)', 1.6);
   polyW([c(-hw, hh, zn), c(hw, hh, zn), c(hw, hh, zf), c(-hw, hh, zf)], col.top, 'rgba(30,34,50,.75)', 1.8);
-  polyW([c(-34, hh, BOX.z - 8), c(34, hh, BOX.z - 8), c(34, hh, BOX.z + 8), c(-34, hh, BOX.z + 8)], '#1a1c26', 'rgba(255,255,255,.5)', 1.2);
+  polyW([c(-34, hh, BOX.z - 8), c(34, hh, BOX.z - 8), c(34, hh, BOX.z + 8), c(-34, hh, BOX.z + 8)], 'rgba(26,28,38,.9)', 'rgba(255,255,255,.5)', 1.2);
   polyW([c(-hw, hh, zn), c(hw, hh, zn), c(hw, -hh, zn), c(-hw, -hh, zn)], col.front, 'rgba(30,34,50,.8)', 2);
 }
 function burst(lt, t0, x, y, r, dur) {   /* a star flash on a cue */
@@ -483,7 +483,7 @@ const SC = {
   },
   over(lt) {
     const sh = shotAt(lt);
-    if (sh.binder) { const bp = binderFlat(lt, sh.binder); bubble(lt, bp); }
+    if (sh.binder) { burst(lt, CUE.binderpop, 540, 800, 330, .3); const bp = binderFlat(lt, sh.binder); bubble(lt, bp); }
   },
   clock: () => SCN.clock, label: () => SCN.label,
 };
