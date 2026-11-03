@@ -142,23 +142,24 @@ function tally(lt) {
 }
 
 // ------------------------------------------------------------------ the table, its paper and the clear box
-const TB = { x0: -640, x1: 640, z0: 230, z1: 470, h: 200, top: 218 };
+const LAPX = -20;
+const TB = { x0: -640, x1: 640, z0: 230, z1: 400, h: 200, top: 218 };
 function tableDraw(lt) {
   const leg = { color: '#6a5a4a', top: '#8a7a68', front: '#5a4a3c', side: '#4a3c30', lw: 1 };
   for (const sx of [0, 1]) for (const sz of [0, 1]) boxR(sx ? TB.x1 - 54 : TB.x0 + 30, sx ? TB.x1 - 30 : TB.x0 + 54, 0, TB.h, sz ? TB.z1 - 40 : TB.z0 + 16, sz ? TB.z1 - 16 : TB.z0 + 40, leg);
   boxR(TB.x0, TB.x1, TB.h, TB.top, TB.z0, TB.z1, { color: '#c9a06a', top: '#e8c58f', front: '#b08850', side: '#9a7440', lw: 2 });
 }
 const PAPER = { color: '#f1eee4', top: '#ffffff', front: '#ece8da', side: '#d3cfc0', lw: 1.4 };
-const PILES = [[80, 240, 262, 350, 40], [300, 400, 262, 336, 24], [-350, -220, 380, 444, 30], [330, 450, 392, 452, 26], [-540, -450, 276, 340, 16], [520, 590, 300, 360, 14]];
+const PILES = [[80, 240, 262, 350, 40], [300, 400, 262, 330, 24], [-300, -190, 330, 380, 30], [230, 330, 336, 386, 26], [-540, -450, 276, 340, 16], [520, 590, 300, 360, 14]];
 function tableItems(lt) {
   for (const [x0, x1, z0, z1, h] of PILES) { boxR(x0, x1, TB.top, TB.top + h, z0, z1, PAPER); for (let j = 1; j < 4; j++) { const y = TB.top + h * j / 4; polyR([[x0, y, z0], [x1, y, z0], [x1, y + .8, z0], [x0, y + .8, z0]], 'rgba(60,50,40,.28)'); } }
   /* the clear box, emptied and lying on its side: translucent acrylic, a slot on top, a few stray ballots inside */
-  { const x0 = -610, x1 = -420, z0 = 296, z1 = 420, h = 104, b = { color: 'rgba(205,232,255,.30)', top: 'rgba(225,242,255,.45)', front: 'rgba(185,218,246,.26)', side: 'rgba(170,206,236,.34)', edge: 'rgba(110,160,205,.95)', lw: 2.2 };
+  { const x0 = -610, x1 = -430, z0 = 270, z1 = 388, h = 104, b = { color: 'rgba(205,232,255,.30)', top: 'rgba(225,242,255,.45)', front: 'rgba(185,218,246,.26)', side: 'rgba(170,206,236,.34)', edge: 'rgba(110,160,205,.95)', lw: 2.2 };
     boxR(x0 + 20, x1 - 20, TB.top + 2, TB.top + 12, z0 + 24, z1 - 24, PAPER);
     boxR(x0, x1, TB.top, TB.top + h, z0, z1, b);
     polyR([[x0 + 60, TB.top + h + .5, z0 + 56], [x1 - 60, TB.top + h + .5, z0 + 56], [x1 - 60, TB.top + h + .5, z0 + 70], [x0 + 60, TB.top + h + .5, z0 + 70]], '#1c2230'); }
   /* the laptop at the middle of the table (its back to the TV end, its screen to the cast) */
-  { const [lx, ly] = P(0, TB.top, 336), k = kAt(336); A15.laptop(lx, ly, { lapScale: k * 2.5, lapBack: D.dir === 'r', lapScreen: true, rot: 0 }); }
+  { const [lx, ly] = P(LAPX, TB.top, 336), k = kAt(336); A15.laptop(lx, ly, { lapScale: k * 1.8, lapBack: D.dir === 'r', lapScreen: true, rot: 0 }); }
 }
 /* the ballots Onion flicks onto the counted pile while she counts (1.0 to 2.2) */
 function flicks(lt) {
@@ -166,7 +167,7 @@ function flicks(lt) {
   for (let i = 0; i < 15; i++) {
     const t0 = 1.0 + i * .078, a = (lt - t0) / .2;
     if (a < 0 || a > 1) continue;
-    const xr = lerp(160, 350, a) + (hash(i) - .5) * 24, zr = 302 + (hash(i + 3) - .5) * 40, y = TB.top + 40 + Math.sin(a * PI) * 90;
+    const xr = lerp(160, 350, a) + (hash(i) - .5) * 24, zr = 302 + (hash(i + 3) - .5) * 40, y = TB.top + 40 + Math.sin(a * PI) * 46;
     const [x, yy] = P(xr, y, zr), k = kAt(zr), w = 64 * k, h = 84 * k * (.45 + .55 * Math.abs(Math.cos(a * 5 + i))), rot = (hash(i + 7) - .5) * 1.4 + a * 2.2;
     ctx.save(); ctx.translate(x, yy); ctx.rotate(rot); ctx.fillStyle = '#fbfaf5'; ctx.strokeStyle = 'rgba(40,30,20,.55)'; ctx.lineWidth = Math.max(1.4, 2 * k); rr(-w / 2, -h / 2, w, h, 2 * k); ctx.fill(); ctx.stroke(); ctx.restore();
   }
@@ -274,8 +275,8 @@ function drawTags(lt) {
   if (lt < T_TAGS) return;
   for (const c of CROWD) {
     const u = c01((lt - T_TAGS - c.r * .05 - hash(c.id * 2.3) * .08) / .22); if (u <= 0) continue;
-    const q = V2.at(mapX(c.xr), mapZ(c.zr)), sc = q.s * CS, size = Math.max(8, 36 * sc), x = q.x, y = q.y - 410 * sc * .98, w = UI.sizeOf('UNASSIGNED', { size, weight: 900 }).w + size * .9, pop = eb(u);
-    if (w > 150 * q.s * .9) continue;
+    const q = V2.at(mapX(c.xr), mapZ(c.zr)), sc = q.s * CS, size = Math.min(36 * sc, 185 * q.s * .8 / 7.6), x = q.x, y = q.y - 425 * sc, w = UI.sizeOf('UNASSIGNED', { size, weight: 900 }).w + size * .9, pop = eb(u);
+    if (size < 6) continue;
     ctx.save(); ctx.translate(x, y); ctx.scale(pop, pop); ctx.translate(-x, -y);
     UI.panel([x - w / 2, y - size * .78, w, size * 1.56], { id: 'ctag' + c.id, kind: 'tag', fill: '#ffbf1f', stroke: 'rgba(30,20,30,.85)', lw: Math.max(1, size * .08), r: size * .45, pad: 0, shadow: 0, hero: false, crop: true });
     UI.label('UNASSIGNED', x, y, { size: size * .74, fill: '#22262b', hero: false, crop: true, grp: 'un', cid: 'ctag' + c.id, maxW: w - size * .4 });
@@ -285,7 +286,7 @@ function drawTags(lt) {
 
 // ------------------------------------------------------------------ the cast: seats, turns, acting
 const SEAT_Y = 128;
-const SEATS = { mango: [-450, 130, 1], lemon: [-150, 130, 1], onion: [150, 130, 1], straw: [450, 130, 1], e1: [-450, 600, -1], e2: [-150, 600, -1], e3: [150, 600, -1], e4: [450, 600, -1], tom: [-540, 1330, -1] };
+const SEATS = { mango: [-450, 130, 1], lemon: [-150, 130, 1], onion: [150, 130, 1], straw: [450, 130, 1], e1: [-340, 520, -1], e2: [-150, 520, -1], e3: [150, 520, -1], e4: [340, 520, -1], tom: [-470, 1330, -1] };
 const EXTRA = { e1: { kind: 'pine', acc: ['lanyard7'], seed: 31 }, e2: { kind: 'kiwi', acc: ['badge7'], seed: 47 }, e3: { kind: 'apple', acc: ['lanyard7'], seed: 53 }, e4: { kind: 'grape', acc: ['badge7'], seed: 61 } };
 const CTOR = { mango: o => A7.mango(o), lemon: o => A7.lemon(o), onion: o => A15.onion(o), straw: o => A11.straw(o), tom: o => A15.tomato(o) };
 const ACT = {};
@@ -332,6 +333,7 @@ const SORT = (id, k) => lt => {   /* a ballot sorter: eyes on the piles, a flick
 ACT.e1 = SORT('e1', 0); ACT.e2 = SORT('e2', 1); ACT.e3 = SORT('e3', 2); ACT.e4 = SORT('e4', 3);
 
 // ------------------------------------------------------------------ hero-text helpers for anything drawn in a scaled frame (the TV): hero only when big enough and wholly in the safe area
+let TVH = true;
 const scaleNow = () => { const m = ctx.getTransform(); return Math.hypot(m.a, m.b); };
 function safeBox(x0, y0, x1, y1, mg = 44) {
   const m = ctx.getTransform(), xs = [x0, x1].map(x => m.a * x + m.c * y0 + m.e), ys = [y0, y1].map(y => m.b * x0 + m.d * y + m.f), L = Math.min(...xs), R = Math.max(...xs), T = Math.min(...ys), B = Math.max(...ys);
@@ -342,7 +344,7 @@ function safeBox(x0, y0, x1, y1, mg = 44) {
 }
 function tvLabel(str, cx, cy, o = {}) {
   const sc = scaleNow(), size = o.size || 40, ink = UI.sizeOf(str, { size, weight: o.weight || 900, font: o.font }), left = o.align === 'left', right = o.align === 'right';
-  const x0 = left ? cx : right ? cx - ink.w : cx - ink.w / 2, hero = o.hero !== false && size * sc >= 31 && safeBox(x0, cy - size * .4, x0 + ink.w, cy + size * .4, 44);
+  const x0 = left ? cx : right ? cx - ink.w : cx - ink.w / 2, hero = o.hero !== false && TVH && size * sc >= 31 && safeBox(x0, cy - size * .4, x0 + ink.w, cy + size * .4, 44);
   return UI.label(str, cx, cy, Object.assign({}, o, { hero, crop: !hero }));
 }
 
@@ -395,7 +397,7 @@ function chartWin(lt) {
   }
   if (lt >= T_INC) {
     const u = eb(sg(lt, T_INC, T_INC + .25)); ctx.save(); ctx.translate(640, 590); ctx.scale(u, u); ctx.translate(-640, -590);
-    UI.pill('DEFAULT: INCUMBENT WINS', 640, 590, { size: 46, fill: '#ffbf1f', ink: '#22262b', stroke: 'rgba(30,20,30,.8)', lw: 4, hero: u >= 1 && scaleNow() * 46 >= 31, crop: !(u >= 1) }); ctx.restore();
+    UI.pill('DEFAULT: INCUMBENT WINS', 640, 590, { size: 54, fill: '#ffbf1f', ink: '#22262b', stroke: 'rgba(30,20,30,.8)', lw: 4, hero: u >= 1 && TVH && scaleNow() * 54 >= 31, crop: !(u >= 1 && TVH) }); ctx.restore();
   }
 }
 function paintTV(lt, scr) {
@@ -410,11 +412,11 @@ function paintTV(lt, scr) {
 // ------------------------------------------------------------------ Binder (the laptop's, crowned), the nine chips, the confetti
 const T_BIND = bS('o5') + .02;
 function binderOpts(lt) {
-  const k = eb(sg(lt, T_BIND, T_BIND + .38)), kk = kAt(336), X = mapX(0), Z = mapZ(336);
-  const rise = (1 - k) * 220, base = V2.p2(X, TB.top + 330, Z), grin = ss(lt, CUE.grin, CUE.grin + .1);
+  const k = eb(sg(lt, T_BIND, T_BIND + .38)), kk = kAt(336), X = mapX(LAPX), Z = mapZ(336);
+  const rise = (1 - k) * 220, base = V2.p2(X, TB.top + 290, Z), grin = ss(lt, CUE.grin, CUE.grin + .1);
   return A15.binder({ x: base[0], y: base[1] + rise * kk, s: kk * 1.0 * Math.max(.01, k), t: lt, who: 'bind', pose: lt < bS('b1') ? 'helpful' : 'wave', grin, glint: Math.max(grin * .5, lt >= CUE.sting ? Math.exp(-(lt - CUE.sting) * 4) : 0), look: [lt < bS('b1') ? .2 : 0, .1], hover: false, bob: 1, acc: ['fp16_crown'], crownK: ss(lt, T_BIND + .15, T_BIND + .4), expr: 'bind_happy' });
 }
-const HEADS = [['tom', 1], ['e1', 2], ['mango', 3], ['e2', 4], ['lemon', 5], ['e3', 6], ['onion', 7], ['e4', 8], ['straw', 9]];
+const HEADS = [['tom', 1], ['mango', 2], ['e1', 3], ['e2', 4], ['lemon', 5], ['onion', 6], ['e3', 7], ['e4', 8], ['straw', 9]];
 const T_NINE = wS('l1', 1) - .04;
 function nineChips(lt) {
   HEADS.forEach(([n, num]) => {
@@ -439,35 +441,36 @@ function confetti(lt) {
 // ------------------------------------------------------------------ the shot table: each shot is a camera (lens, position, then a 2D zoom) and the set of people on screen
 const BASEF = 1100;
 const lens = o => Object.assign({ dir: 'f', f: BASEF, cz: -1250, cy: 700, hy: 640, cx: 0, z: 1, fx: W / 2, fy: H / 2 }, o);
-const wideF = (z = 1, o = {}) => lens(Object.assign({ dir: 'f', cz: -1250, cy: 700, hy: 640, z }, o));
+const wideF = (z = 1, o = {}) => lens(Object.assign({ dir: 'f', cz: -1700, cy: 860, hy: 560, z }, o));
 const tvCam = (wpx, yc = 780, o = {}) => lens(Object.assign({ dir: 'f', cz: (RM.zTV - 110) - 720 * BASEF / wpx, cy: TVG.bot + TVG.h / 2, hy: yc, cx: TVG.cx }, o));
-const faceCam = (xr, k, yf = 780, o = {}) => lens(Object.assign({ dir: 'r', cz: (RM.zTV - 130) - BASEF / k, cy: 292, hy: yf, cx: -xr }, o));
-const wideR = (o = {}) => lens(Object.assign({ dir: 'r', cz: -250, cy: 760, hy: 540, cx: 0 }, o));
+const faceCam = (xr, k, hy = 540, o = {}) => lens(Object.assign({ dir: 'r', cz: (RM.zTV - 130) - BASEF / k, cy: 430, hy, cx: -xr }, o));
+const wideR = (o = {}) => lens(Object.assign({ dir: 'r', cz: -250, cy: 1100, hy: 470, cx: 0 }, o));
 const SHOTS = [];
 const shot = (id, s, e, cam, o = {}) => SHOTS.push(Object.assign({ id, s, e, cam }, o));
 const shotAt = lt => { let r = SHOTS[0]; for (const sh of SHOTS) if (lt >= sh.s) r = sh; return r; };
 const ALLF = ['tom', 'e1', 'e2', 'e3', 'e4', 'mango', 'lemon', 'onion', 'straw'], ALLR = ['mango', 'lemon', 'onion', 'straw'];
 const T_REV = bS('o2');
 shot('w0', 0, 1.0, u => wideF(lerp(1, 1.05, u)), { cast: ALLF });
-shot('hands', 1.0, 2.123, u => faceCam(150, 1.75, 740, { z: lerp(1, 1.05, u) }), { cast: ['onion'], dofBack: 6, tvPeek: false });
+shot('hands', 1.0, 2.123, u => faceCam(150, 1.75, 430, { z: lerp(1, 1.05, u) }), { cast: ['onion'], dofBack: 6, tvPeek: false });
 shot('tv1', 2.123, 3.412, u => tvCam(lerp(1000, 1060, u), 800), { cast: ['tom'], tvHero: true });
-shot('lem1', 3.412, 4.10, u => faceCam(-150, 2.0, 760, { z: lerp(1, 1.05, u) }), { cast: ['lemon'], dofBack: 6 });
+shot('lem1', 3.412, 4.10, u => faceCam(-150, 2.0, 470, { z: lerp(1, 1.05, u) }), { cast: ['lemon'], dofBack: 6 });
 shot('nine', 4.10, 5.2, u => wideF(lerp(1.02, 1.06, u), { cx: lerp(-30, 30, u) }), { cast: ALLF, chips: true });
-shot('lem2', 5.2, T_REV, u => faceCam(-150, 2.1, 760, { z: lerp(1.02, 1.0, u) }), { cast: ['lemon'], dofBack: 6 });
-shot('rev', T_REV, 7.592, u => { const k = ss(u, .1, .62); return lens({ dir: 'r', cz: lerp(1370 - BASEF / 1.5, -250, k), cy: lerp(292, 780, k), hy: lerp(760, 540, k), cx: lerp(-150, 0, k), z: 1 }); }, { cast: ALLR, crowd: true, tag: true, blurK: 1 });
-shot('st1', 7.592, 8.496, u => faceCam(450, 2.0, 760, { z: lerp(1, 1.05, u), yaw: 0 }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 });
-shot('on1', 8.496, 10.0, u => faceCam(150, 1.85, 760, { z: lerp(1, 1.04, u) }), { cast: ['onion'], crowd: true, dofBack: 7, dofCrowd: 7 });
-shot('crowd', 10.0, 10.9, u => wideR({ z: lerp(1.0, 1.05, u) }), { cast: ALLR, crowd: true });
+shot('lem2', 5.2, T_REV, u => faceCam(-150, 2.1, 470, { z: lerp(1.02, 1.0, u) }), { cast: ['lemon'], dofBack: 6 });
+shot('rev', T_REV, 7.592, u => { const k = ss(u, .08, .6); return lens({ dir: 'r', cz: lerp(1370 - BASEF / 1.75, -250, k), cy: lerp(430, 1100, k), hy: lerp(430, 470, k), cx: lerp(-150, 0, k), z: lerp(1, 1.12, k) }); }, { cast: ALLR.concat(['e1', 'e2', 'e3', 'e4']), crowd: true, tag: true });
+shot('st1', 7.592, 8.496, u => faceCam(450, 2.0, 540, { z: lerp(1, 1.05, u), yaw: 0 }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 });
+shot('on1', 8.496, 10.0, u => faceCam(150, 1.85, 430, { z: lerp(1, 1.04, u) }), { cast: ['onion'], crowd: true, dofBack: 7, dofCrowd: 7 });
+shot('crowd', 10.0, 10.9, u => lens({ dir: 'r', cz: 250, cy: 820, hy: 470, cx: lerp(-150, -100, u), z: lerp(1, 1.05, u) }), { cast: ALLR, crowd: true });
 shot('tv2', 10.9, 12.0, u => tvCam(lerp(1000, 1040, u), 800), { cast: ['tom'], tvHero: true });
-shot('bal', 12.0, CUE.dialog, u => faceCam(450, 1.9, 800, { z: lerp(1, 1.06, u) }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 });
+shot('bal', 12.0, CUE.dialog, u => faceCam(450, 1.9, 540, { z: lerp(1, 1.06, u) }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 });
 shot('tv3', CUE.dialog, 14.1, u => tvCam(lerp(1040, 1000, ss(u, 0, .25)), 800), { cast: ['tom'], tvHero: true });
-shot('on2', 14.1, 15.64, u => faceCam(150, 1.85, 760, { z: lerp(1, 1.05, u) }), { cast: ['onion'], crowd: true, dofBack: 7, dofCrowd: 7 });
-shot('tom3', 15.64, 17.686, u => tvCam(lerp(1500, 1180, ss(u, 0, 1)), 760, { cx: lerp(-250, 0, ss(u, 0, 1)) }), { cast: ['tom'], tvHero: true });
-shot('man', 17.686, bS('o5'), u => faceCam(-450, 1.95, 760, { z: lerp(1, 1.05, u) }), { cast: ['mango'], crowd: true, dofBack: 7, dofCrowd: 7 });
+shot('on2', 14.1, 15.64, u => faceCam(150, 1.85, 430, { z: lerp(1, 1.05, u) }), { cast: ['onion'], crowd: true, dofBack: 7, dofCrowd: 7 });
+shot('tom3a', 15.64, 16.7, u => tvCam(780, 780, { cx: lerp(-115, -105, u), z: lerp(1, 1.03, u) }), { cast: ['tom'], tvHero: true });
+shot('tom3b', 16.7, 17.686, u => tvCam(lerp(1000, 1080, u), 780), { cast: [], tvHero: true });
+shot('man', 17.686, bS('o5'), u => faceCam(-450, 1.95, 480, { z: lerp(1, 1.05, u) }), { cast: ['mango'], crowd: true, dofBack: 7, dofCrowd: 7 });
 shot('turn', bS('o5'), 19.977, u => wideF(lerp(1.06, 1.1, u), { cz: -1000, cy: 640, hy: 620 }), { cast: ALLF, binder: true, tvHero: false });
-shot('st2', 19.977, 21.549, u => faceCam(450, 2.0, 760, { z: lerp(1, 1.04, u) }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 });
+shot('st2', 19.977, 21.549, u => faceCam(450, 2.0, 540, { z: lerp(1, 1.04, u) }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 });
 shot('bnd', 21.549, CUE.sting, u => wideF(lerp(1.5, 1.7, u), { cz: -500, cy: 640, hy: 700, cx: 0, fx: 540, fy: 700 }), { cast: [], binder: true });
-shot('end', CUE.sting, 23.79, u => wideR({ z: lerp(1.0, 1.06, u) }), { cast: ALLR, crowd: true, binder: true });
+shot('end', CUE.sting, 23.79, u => wideR({ z: lerp(1.08, 1.14, u) }), { cast: ALLR.concat(['e1', 'e2', 'e3', 'e4']), crowd: true, binder: true });
 
 // ------------------------------------------------------------------ the world: one function draws the room for either direction, far to near
 function setLight(sh) {
@@ -477,20 +480,20 @@ function setLight(sh) {
 }
 const doorOpen = lt => ss(lt, T_REV + .05, T_REV + .5);
 function drawWorld(lt, sh) {
-  const c = sh.cc; D.dir = c.dir; setLight(sh); V2.opts.reflect = false;
+  const c = sh.cc; D.dir = c.dir; setLight(sh); V2.opts.reflect = false; TVH = sh.tvHero === true;
   const back = () => { shell(lt); sides(lt); if (D.dir === 'f') tvWall(lt); else rearWall(lt, doorOpen(lt)); };
   if (sh.dofBack) V2.dof(sh.dofBack, back); else back();
   const items = [], near = V2.P.cz + 170;
   const add = (zr, fn, zNear) => { const z = mapZ(zr); if ((zNear === undefined ? z : zNear) < near) return; items.push({ z, fn }); };
   if (D.dir === 'f') add(RM.zTV - 90, () => { tvCart(lt, scr => paintTV(lt, scr)); });
   if (D.dir === 'r' && sh.crowd && lt >= T_POP) add(-100, () => { const g = () => { drawCrowd(lt); drawTags(lt); }; if (sh.dofCrowd) V2.dof(sh.dofCrowd, g); else g(); });
-  if (sh.cast.indexOf('tom') >= 0 && D.dir === 'f') add(SEATS.tom[1], () => drawChar(person('tom', lt)));
-  for (const n of sh.cast) {
+  if ((typeof sh.cast === 'function' ? sh.cast(lt) : sh.cast).indexOf('tom') >= 0 && D.dir === 'f') add(SEATS.tom[1], () => drawChar(person('tom', lt)));
+  for (const n of (typeof sh.cast === 'function' ? sh.cast(lt) : sh.cast)) {
     if (n === 'tom') continue;
     const [xr, zr, face] = SEATS[n], toCam = (face > 0) === (D.dir === 'r');
     add(zr, () => { const w = 118; boxR(xr - w, xr + w, SEAT_Y - 14, SEAT_Y + 4, zr - 70, zr + 70, { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.6 }); }, mapZ(zr) - 70);
-    add(zr + (toCam ? -1 : 1) * 2, () => { const w = 118, bz = zr - face * 66; boxR(xr - w, xr + w, SEAT_Y + 4, SEAT_Y + 230, bz - 8, bz + 8, { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.6 }); }, mapZ(zr - face * 66) - 8);
-    add(zr + (toCam ? 0 : -3) * 0, () => { const po = person(n, lt); (window.__cntDbg = window.__cntDbg || {})[n] = { x: po.x, y: po.y, s: po.s, yaw: po.yaw, kind: po.kind }; drawChar(po); });
+    add(zr + (toCam ? -1 : 1) * 2, () => { const w = 96, bz = zr - face * 66; boxR(xr - w, xr + w, SEAT_Y + 4, SEAT_Y + 200, bz - 8, bz + 8, { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.6 }); }, mapZ(zr - face * 66) - 8);
+    add(zr + (toCam ? 0 : -3) * 0, () => { ctx.save(); if (n[0] === 'e') ctx.globalAlpha *= ss(depthOf(zr), 520, 760); const po = person(n, lt); (window.__cntDbg = window.__cntDbg || {})[n] = { x: po.x, y: po.y, s: po.s, yaw: po.yaw, kind: po.kind }; drawChar(po); ctx.restore(); });
   }
   if (sh.table !== false && !window.__NOTABLE) { if (!window.__NOTOP) add(350, () => tableDraw(lt), mapZ(470) - 2); add(349, () => { if (!window.__NOITEMS) tableItems(lt); if (!window.__NOFLICK) flicks(lt); }, mapZ(470) - 2); }
   if (sh.binder && lt >= T_BIND) add(336, () => drawChar(binderOpts(lt)));

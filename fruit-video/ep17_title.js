@@ -437,4 +437,275 @@ const TITLE = {
   over() {},
 };
 window.__EP17_SCENES.title = TITLE;
+
+// =====================================================================================================================================================================================================
+// END (7.0 s, noScrim, noChyron): THE COMPLETION ROSTER. The same floating GridSheet window as Episode 15's end card on the indigo desk; tab Completion: NAME | MODULE 7 | BREAK with the portraits and a status icon in front of
+// every MODULE 7 entry (icon and text centred as one group) (a check, a clock for the expired certificate, a loader that never finishes for the 99 percent rows, a signal meter for the laggy CEO). Layout (window-local): title block A1:D2 (84 + 116, indigo:
+// THANKS FOR WATCHING over SHIFT HAPPENS), header row 56, nine rows of 116 (portrait 96 | NAME 232 | MODULE 7 456 | BREAK 256 = 1040, symmetric about the frame's centre), a footnote row of 52; the zone under the table is
+// the stamp's, then the teaser banner's.
+//   Cues (scene-local s): theme15 .10 | typing 1.10 | click 3.10 | stamp 4.00 | textding 5.10.
+//   0.00-0.10 fade up.   0.12-0.85 THANKS FOR WATCHING types in, SHIFT HAPPENS pops in (the theme), the header row types.
+//   1.10-2.36 the roster types in, one row every 0.14 s (the portrait pops, then NAME, MODULE 7 with its icon, BREAK), the selection hops along the cells being typed, the formula bar follows.
+//   2.50 the Save As dialog pops in over the dimmed sheet; 2.64-2.98 the file name types in; the pointer arrives and PRESSES SAVE on the click (3.10); 3.14-3.32 the dialog closes, the title bar reads MODULE7_FINAL_REAL_v3.
+//   4.00 STAMP: CERTIFICATE EXPIRED slams down in the empty zone under the table (a ring, a shake of the camera), gone by 4.5.
+//   4.46-4.76 a new tab, Sheet18 (amber), grows at the end of the tab bar, glows, and LIFTS OFF (4.76-5.04) as the banner NEXT: EPISODE 18 / THE FIRE DRILL.   5.10 textding: a gloss sweeps across THE FIRE DRILL and SHIFT HAPPENS, stars.
+//   Idle to 6.8: the portraits breathe and blink, Tomato changes her mind every 1.6 s, Mr. Artichoke glitches (the laggy call), the loaders turn, Strawberry's expired row pulses red, the tab glows, a light sweeps the window.   6.8-7.0 fade to dark. */
+const WIN = { x: 20, y: 20, w: 1040, h: 1880, r: 28 };
+const EC = { A: 96, B: 232, C: 456, D: 256 };
+const ER = (() => { const r = { 1: 84, 2: 116, 3: 56, 13: 52 }; for (let i = 4; i <= 12; i++) r[i] = 116; return r; })();
+const TONE = {
+  err: { color: '#d93025', fill: '#fde7e5' }, amber: { color: '#8f5600', fill: '#fff1c4' }, green: { color: '#0f6b3c', fill: '#e3f4ea' }, blue: { color: '#2f35b8', fill: '#e1e2fb' }, plain: { color: '#22262b', fill: null },
+  grey: { color: '#6b7380', fill: '#eef0f3' },
+};
+const ROSTER = [
+  { name: 'Strawberry', mod: 'COMPLETE (EXPIRED)', mt: 'err', icon: 'clock', brk: 'PENDING', bt: 'amber', bg: '#ffe2cf', ring: ORANGE, ctor: 'straw', expr: 'weak', s: .27 },
+  { name: 'Lemon', mod: 'IN PROGRESS (99%)', mt: 'blue', icon: 'spin', brk: 'PENDING', bt: 'amber', bg: '#fff3b8', ring: ORANGE, ctor: 'lemon', expr: 'sour', s: .27 },
+  { name: 'Mango', mod: 'IN PROGRESS (99%)', mt: 'blue', icon: 'spin', brk: 'PENDING', bt: 'amber', bg: '#ffe7c2', ring: ORANGE, ctor: 'mango', expr: 'neutral', s: .25 },
+  { name: 'Clementine', mod: 'NOT STARTED', mt: 'grey', icon: 'dash', brk: 'SURE!', bt: 'green', bg: '#ffe2cf', ring: ORANGE, ctor: 'clem', expr: 'happy', s: .29 },
+  { name: 'Melon', mod: 'EXEMPT', mt: 'plain', icon: 'dash', brk: 'PIZZA', bt: 'plain', bg: '#f4ead2', ring: ORANGE, ctor: 'melon', expr: 'smug', s: .27 },
+  { name: 'Onion', mod: 'COMPLETE', mt: 'green', icon: 'check', brk: 'CRYING', bt: 'blue', bg: '#e6e2fb', ring: '#6d5bd0', ctor: 'onion', expr: null, s: .26 },
+  { name: 'Tomato', mod: 'ASSIGNED', mt: 'amber', icon: 'dash', brk: 'EFFICIENCY', bt: 'amber', bg: '#e6e2fb', ring: '#6d5bd0', ctor: 'tomato', expr: null, s: .26 },
+  { name: 'Binder', mod: 'COMPLETE (PROCTOR)', mt: 'green', icon: 'check', brk: 'HERE TO HELP', bt: 'blue', bg: '#e5e8ec', ring: '#5b6470', ctor: 'bind', expr: null, s: .3 },
+  { name: 'Mr. Artichoke', mod: 'UNAVAILABLE (LAGGY)', mt: 'amber', icon: 'bars', brk: 'VALUED', bt: 'green', bg: '#d9f3e4', ring: '#2fa36b', ctor: 'arti', expr: null, s: .27 },
+];
+const STAMP_SIZE = 88, STAMP_TXT = 'CERTIFICATE EXPIRED', STAMP_COL = '#d93025', STAMP_RING = '255,130,110', BANNER = ['#2f2a8a', '#17134f'], TEASER_A = 'NEXT: EPISODE 18', TEASER_B = TEASER18;
+const FILES = ['MODULE7_FINAL_REAL_v2.gsx', 'MODULE7_FINAL_REAL.gsx', 'QUIZ_ANSWERS_PENDING.gsx', 'CERTIFICATE_EXPIRED_COPY.gsx'], FOLDER = 'Training';
+const E = { type0: 1.10, dt: .14, dlgIn: 2.50, nameA: 2.66, nameB: 2.98, click: 3.10, dlgOut: 3.14, dlgGone: 3.34, stamp: 4.0, stampOut: 4.4, tab: 4.46, lift: 5.04, ding: 5.10, out: 6.8 };
+const rowT = i => E.type0 + i * E.dt;
+const FILE = 'MODULE7_FINAL_REAL_v3', NEWTAB = 'Sheet18', TABS = ['Roster', 'Completion'];
+const EBASE = {
+  w: WIN.w, h: WIN.h, doc: 'MODULE_7_COMPLETION', saved: false, cols: EC, rows: ER, merges: ['A1:D2', 'A13:D13'], handle: false,
+  ribbon: { collapsed: true, tab: 'Home' }, show: { title: true, ribbon: true, formula: true, headers: false, sheetTabs: true, status: true },
+};
+let EGEO = null;
+function egeo() {
+  if (EGEO) return EGEO;
+  const o = Object.assign({}, EBASE, { tabs: TABS }), L = SH.layout(o);
+  EGEO = { L, o, rc: ref => SH.cellRect(ref, o), gx0: L.gx0, gy0: L.gy0, gx1: L.gx1, gy1: L.gy1 };
+  return EGEO;
+}
+const tabsFor = lt => TABS.concat(lt >= E.tab ? [{ name: NEWTAB, u: eIO(sg(lt, E.tab, E.tab + .3)), color: '#ffbf1f' }] : []);
+/* the window-local rectangle of a sheet tab (the kit's own formulas) */
+function tabRect(name, lt) {
+  const G = egeo(), tabs = tabsFor(lt), y0 = G.L.stabs[0], h = G.L.stabs[1];
+  let x = 84;
+  for (const tb of tabs) { const n = typeof tb === 'object' ? tb.name : tb, w = UI.sizeOf(n, { size: 22, weight: 800 }).w + 44; if (n === name) return { x, y: y0, w, h, cx: x + w / 2, cy: y0 + h / 2 }; x += w; }
+  return null;
+}
+
+/* the cells of the moment: the title block, the header, the roster typing in; the selection hops along the cell being typed */
+function endState(lt) {
+  const cells = { A1: { v: '', fill: '#1a1450' } }, hero = !(lt >= E.dlgIn && lt < E.dlgGone);   /* under the dim of the dialog nothing is hero */
+  const hk = sg(lt, .55, .85), hdr = { fill: '#1a1450', color: CREAM, size: 26, weight: 900, spacing: 3, hero: false };
+  cells.A3 = { v: '', fill: '#1a1450' }; cells.B3 = Object.assign({ v: 'NAME', typed: hk }, hdr); cells.C3 = Object.assign({ v: 'MODULE 7', typed: hk, align: 'center' }, hdr); cells.D3 = Object.assign({ v: 'BREAK', typed: hk }, hdr);
+  cells.A13 = { v: '* Clock-out requires a taken break. Breaks are pending.', typed: sg(lt, 2.2, 2.5), italic: true, size: 30, weight: 700, color: '#5b6470', align: 'center', hero: hero && !(lt >= E.stamp - .16 && lt < E.stampOut + .1), fill: '#ffffff' };
+  let active = 'A1', ftxt = '', fk = 1;
+  ROSTER.forEach((p, i) => {
+    const r = 4 + i, t0 = rowT(i), zebra = lt < t0 ? undefined : i % 2 ? '#f4f3fb' : '#ffffff', tm = TONE[p.mt], tb = TONE[p.bt];
+    const kB = sg(lt, t0 + .02, t0 + .12), kC = sg(lt, t0 + .06, t0 + .18), kD = sg(lt, t0 + .10, t0 + .22);
+    cells['A' + r] = { v: '', fill: zebra };
+    cells['B' + r] = { v: p.name, typed: kB, fill: zebra, size: 30, weight: 900, color: '#15123a', hero, pad: 12 };
+    cells['C' + r] = { v: p.mod, typed: kC, fill: lt < t0 + .1 ? zebra : tm.fill || zebra, size: 30, weight: 900, color: tm.color, hero, pad: 12, align: 'center' };
+    cells['D' + r] = { v: p.brk, typed: kD, fill: lt < t0 + .1 ? zebra : tb.fill || zebra, size: 30, weight: 900, color: tb.color, hero, pad: 16, align: 'left' };
+    if (lt >= t0 + .02) { const pick = lt < t0 + .06 ? ['B', p.name, kB] : lt < t0 + .10 ? ['C', p.mod, kC] : ['D', p.brk, kD]; active = pick[0] + r; ftxt = pick[1]; fk = pick[2]; }
+  });
+  return { cells, active, ftxt, fk };
+}
+function endOpts(lt) {
+  const st = endState(lt), dlg = lt >= E.dlgIn && lt < E.dlgGone, last = 4 + ROSTER.length - 1;
+  const o = Object.assign({}, EBASE, {
+    cells: st.cells, tabs: tabsFor(lt), tab: 'Completion', status: 'Ready', stats: lt > E.type0 + ROSTER.length * E.dt ? ['Count: 9'] : [],
+    sel: st.active, active: st.active, nameBox: st.active, formula: { text: st.ftxt, typed: st.fk }, selFill: false,
+  });
+  const saved = lt >= E.dlgOut;
+  o.doc = saved ? FILE : EBASE.doc; o.saved = saved ? 'Saved' : false;
+  if (lt >= E.type0 + ROSTER.length * E.dt + .1) { o.sel = 'D' + last; o.active = 'D' + last; o.nameBox = 'D' + last; o.formula = { text: 'VALUED', typed: 1 }; }
+  if (lt >= E.dlgIn) { o.sel = 'D' + last; o.selK = 0; }
+  if (dlg) o.dressing = true;
+  return o;
+}
+
+// ------------------------------------------------------------------ the portraits: the sprites at small scale, cropped to a disc, centred in column A of their row (ep15_title.js; Mr. Artichoke glitches: the laggy call)
+const PORT_FALLBACK = new Set();
+function portraitCtor(key) {
+  const g = window;
+  return { straw: () => (g.A11 && g.A11.straw) || (g.A7 && g.A7.straw), lemon: () => g.A7 && g.A7.lemon, mango: () => g.A7 && g.A7.mango, clem: () => g.A10 && g.A10.clem, melon: () => g.A9 && g.A9.melon,
+    arti: () => g.A15 && g.A15.artichoke, onion: () => g.A15 && g.A15.onion, tomato: () => g.A15 && g.A15.tomato, bind: () => g.A15 && g.A15.binder }[key]();
+}
+function portrait(p, i, lt) {
+  const t0 = rowT(i), k = sg(lt, t0, t0 + .2);
+  if (k <= 0) return;
+  const R = egeo().rc('A' + (4 + i)), cx = WIN.x + R.cx, cy = WIN.y + R.cy, rad = 40, pop = back(k, 2.4);
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy); ctx.globalAlpha *= sg(k, 0, .35);
+  ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.fillStyle = p.bg; ctx.fill();
+  const ctor = portraitCtor(p.ctor);
+  if (ctor) {
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, rad - 1, 0, TAU); ctx.clip();
+    try {
+      const x = { t: lt, noLegs: true, noShadow: true, noReflect: true, s: p.s, x: 0, y: 0 };
+      if (p.ctor === 'tomato') { const ph = Math.max(0, lt - t0 - .3), n = Math.floor(ph / 1.6), pose = n % 2 ? 'veg' : 'fruit'; Object.assign(x, { tomPose: pose, tomFrom: n % 2 ? 'fruit' : 'veg', flipT: n > 0 || ph > 0 ? Math.min(.6, ph - n * 1.6) : 1 }); }
+      if (p.ctor === 'bind') Object.assign(x, { grin: .55, glint: .5 + .5 * Math.sin(lt * 2.4), center: true, bob: 0, hover: 0 });
+      if (p.expr) x.expr = p.expr;
+      if (p.ctor === 'onion') x.pose = 'rest';
+      if (p.ctor === 'tomato') x.formsN = 0;
+      const o = Object.assign(ctor(x), x);
+      if (p.ctor === 'tomato' || p.ctor === 'onion') o.hold = {};   /* a portrait carries no props: they would cover the small faces */
+      if (p.ctor === 'bind') { o.x = cx; o.y = cy - 12 * p.s; }
+      else { const [fx, fy] = window.H6.faceC(o); o.x = cx - fx; o.y = cy - fy + 4; }
+      if (p.ctor === 'arti' && window.A15 && window.A15.draw) { const ph = (lt - t0) % 1.5; if (ph > 0 && ph < .16) o.glitch = { k: 1 - ph / .16, y: .46, h: .13, dx: 34, seed: Math.floor((lt - t0) / 1.5) }; window.A15.draw(o); }
+      else drawChar(o);
+    } catch (e) { if (!PORT_FALLBACK.has(p.name)) { PORT_FALLBACK.add(p.name); console.error('CARDS17 portrait ' + p.name + ': ' + e.message); } }
+    ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.lineWidth = 4; ctx.strokeStyle = p.ring; ctx.stroke();
+  ctx.restore();
+}
+/* the status icons in front of the MODULE 7 entries, and the red alarm pulse round Strawberry's expired row */
+function statusIcon(kind, x, y, lt, k) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const disc = c => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(0, 0, 20, 0, TAU); ctx.fill(); };
+  if (kind === 'check') { disc('#1e8e5a'); ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-9, 1); ctx.lineTo(-3, 8); ctx.lineTo(10, -7); ctx.stroke(); }
+  else if (kind === 'clock') { disc('#d93025'); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(0, 0); ctx.lineTo(8, 5); ctx.stroke(); }
+  else if (kind === 'spin') { spinnerRing(0, 0, 14, lt, { color: '#2f35b8', track: 'rgba(47,53,184,.22)', lw: 5, speed: 6.6 }); }
+  else if (kind === 'bars') { disc('#f0a800'); ctx.fillStyle = '#fff'; [[-10, 6], [-3, 11], [4, 16], [11, 21]].forEach(([bx, bh], i) => { ctx.globalAlpha = i === 0 ? 1 : .35; ctx.fillRect(bx - 2.5, 10 - bh, 5, bh); }); ctx.globalAlpha = 1; }
+  else { disc('#c4cad3'); ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(9, 0); ctx.stroke(); }
+  ctx.restore();
+}
+function rowExtras(lt) {
+  const G = egeo();
+  ROSTER.forEach((p, i) => {
+    const t0 = rowT(i), R = G.rc('C' + (4 + i)), k = back(sg(lt, t0 + .1, t0 + .3), 2.2);
+    if (lt < t0 + .1) return;
+    const tw = UI.sizeOf(p.mod, { size: 30, weight: 900 }).w;   /* the icon and the text are one group, centred in the cell */
+    statusIcon(p.icon, WIN.x + R.x + R.w / 2 - tw / 2 - 27, WIN.y + R.cy, lt, k * .86);
+  });
+  if (lt >= rowT(0) + .5) {
+    const R = G.rc('B4'), R2 = G.rc('D4'), pulse = .5 + .5 * Math.sin(lt * 4.2);
+    ctx.save(); ctx.strokeStyle = `rgba(217,48,37,${.55 + .35 * pulse})`; ctx.lineWidth = 5; ctx.shadowColor = 'rgba(217,48,37,.6)'; ctx.shadowBlur = 12 + 10 * pulse; ctx.globalAlpha *= sg(lt, rowT(0) + .5, rowT(0) + .8);
+    ctx.beginPath(); ctx.roundRect(WIN.x + R.x + 2, WIN.y + R.y + 2, R2.x1 - R.x - 4, R.h - 4, 10); ctx.stroke(); ctx.restore();
+  }
+}
+
+// ------------------------------------------------------------------ the title block, the stamp, the teaser banner
+let ZC = null;
+const zoneCy = () => ZC ?? (ZC = Math.round((WIN.y + egeo().rc('A13').y1 + WIN.y + egeo().L.stabs[0]) / 2));   /* the empty zone under the table (screen): the stamp lands here, then the banner lifts into it */
+function endTitle(lt, dim) {
+  const gy = WIN.y + egeo().gy0, k1 = sg(lt, .12, .42), p = sg(lt, .2, .6), pop = back(p, 2.0), ds = lt - E.ding;
+  if (k1 > 0) UI.label('THANKS FOR WATCHING', 540, gy + 45, { font: 'Nunito', weight: 900, size: 32, spacing: 7, fill: CREAM, reveal: k1, hero: k1 >= 1 && !dim, crop: k1 < 1 || dim, maxW: 900 });
+  if (p > 0) {
+    const cy = gy + 118, sc = lp(1.28, 1, pop);
+    ctx.save(); ctx.translate(540, cy); ctx.scale(sc, sc); ctx.translate(-540, -cy);
+    bevelText('SHIFT HAPPENS', 540, cy, 104, { face: FACE_LOGO, extr: .35, lwK: .13, alpha: sg(p, 0, .3), hero: p >= 1 && !dim, shine: ds > .15 ? eIO(sg(ds, .15, .85)) : -1, shineA: .8, grp: 'bv:end-logo' });
+    ctx.restore();
+  }
+}
+function stampFx(lt) {
+  const age = lt - E.stamp, Z = zoneCy();
+  if (lt < E.stamp - .1 || lt > E.tab + .3) return;
+  const k = sg(lt, E.stamp - .09, E.stamp), a = 1 - sg(lt, E.stampOut, E.stampOut + .15), settle = lt >= E.stamp ? 1 + .06 * Math.sin(Math.min(1, age / .16) * PI) * (1 - Math.min(1, age / .16)) * 2 : 1;
+  const sc = lt < E.stamp ? lp(1.8, 1, eI(k)) : 1 / settle, hero = lt >= E.stamp + .17 && lt < E.stampOut - .02;
+  if (a <= .01) return;
+  ctx.save(); ctx.globalAlpha *= a * (lt < E.stamp ? sg(k, 0, .5) : 1);
+  ctx.translate(540, Z); ctx.scale(sc, sc); ctx.translate(-540, -Z);
+  UI.stamp(STAMP_TXT, 540, Z, { font: 'Bangers', size: STAMP_SIZE, color: STAMP_COL, rot: -.1, lw: STAMP_SIZE * .093, padX: STAMP_SIZE * .56, padY: STAMP_SIZE * .32, alpha: .94, hero, crop: !hero, id: 'fp17a.stamp' });
+  ctx.restore();
+  if (age >= 0 && age < .7) {
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(540, Z, age / .7, { r0: 90, r1: 560, lw: 14, color: STAMP_RING, alpha: .85, bloom: .5, squash: .55 }); ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation = 'screen'; const f = ringK(age, .09), g = ctx.createRadialGradient(540, Z, 0, 540, Z, 520); g.addColorStop(0, `rgba(${STAMP_RING},${.45 * f})`); g.addColorStop(1, `rgba(${STAMP_RING},0)`); ctx.fillStyle = g; ctx.fillRect(0, Z - 520, W, 1040); ctx.restore();
+  }
+}
+function tabGlow(lt) {
+  if (lt < E.tab) return;
+  const t = tabRect(NEWTAB, lt), ku = eIO(sg(lt, E.tab, E.tab + .3));
+  if (!t || ku <= .02) return;
+  const x = WIN.x + t.x, y = WIN.y + t.y, w = t.w * eO(ku), pulse = .5 + .5 * Math.sin(lt * 5.2);
+  ctx.save();
+  ctx.fillStyle = '#ffbf1f'; ctx.beginPath(); ctx.roundRect(x, y + 1, w, t.h - 1, [0, 0, 10, 10]); ctx.fill();   /* a solid amber tab over the kit's own: same rectangle */
+  ctx.fillStyle = '#ffe9a8'; ctx.beginPath(); ctx.roundRect(x, y + 1, w, 6, 3); ctx.fill();
+  if (ku >= .6) UI.label(NEWTAB, x + w / 2, y + t.h / 2 + 2, { size: 22, weight: 900, fill: '#3b2a00', alpha: sg(ku, .6, 1), hero: false, crop: true, maxW: w - 24 });
+  ctx.globalCompositeOperation = 'screen'; const g = ctx.createRadialGradient(x + w / 2, y + t.h / 2, 0, x + w / 2, y + t.h / 2, 130); g.addColorStop(0, `rgba(255,200,60,${.4 * ku * (.55 + .45 * pulse)})`); g.addColorStop(1, 'rgba(255,200,60,0)'); ctx.fillStyle = g; ctx.fillRect(x - 130, y - 110, w + 260, 240);
+  ctx.restore();
+}
+function nextBanner(lt) {
+  const t = tabRect(NEWTAB, lt), Z = zoneCy();
+  if (!t || lt < E.tab + .1) return;
+  const p = sg(lt, E.tab + .1, E.lift), e = back(p, 1.5), bw = 880, bh = 168, bx = 540 - bw / 2, by = Z - bh / 2 + 2 * Math.sin(lt * 2.2) * sg(lt, E.lift, E.lift + .3);
+  const tx = WIN.x + t.x, ty = WIN.y + t.y, X = lp(tx, bx, e), Y = lp(ty, by, e), Wd = lp(t.w, bw, e), Hd = lp(t.h, bh, e), r = lp(10, 26, Math.min(1, e));
+  const rest = p >= 1;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 36 * Math.min(1, e); ctx.shadowOffsetY = 14 * Math.min(1, e);
+  const g = ctx.createLinearGradient(0, Y, 0, Y + Hd); g.addColorStop(0, BANNER[0]); g.addColorStop(1, BANNER[1]);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(X, Y, Wd, Hd, r); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.strokeStyle = '#ffbf1f'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(X + 2, Y + 2, Wd - 4, Hd - 4, r - 2); ctx.stroke(); ctx.restore();
+  const ta = sg(p, .5, .9);
+  if (ta > 0) {
+    const ds = lt - E.ding, cy1 = Y + 46, cy2 = Y + 114;
+    UI.label(TEASER_A, 540, cy1, { font: 'Nunito', weight: 900, size: 34, spacing: 6, fill: CREAM, alpha: ta, hero: rest, crop: !rest, maxW: 800 });
+    bevelText(TEASER_B, 540, cy2, 96, { face: FACE, extr: .3, lwK: .12, alpha: ta, hero: rest, shine: ds > 0 ? eIO(sg(ds, 0, .8)) : -1, grp: 'bv:teaser' });
+  }
+}
+function endFx(lt) {
+  const ds = lt - E.ding, Z = zoneCy(), top = WIN.y + egeo().gy0 + 118;
+  if (ds < -.05 || ds > 2.2) return;
+  ctx.save(); ctx.globalCompositeOperation = 'screen';
+  const spots = [[-300, Z - 74, 30, 0], [-120, Z - 108, 24, .1], [170, Z - 102, 28, .2], [330, Z - 46, 26, .32], [40, Z + 84, 22, .42], [-380, top - 30, 30, .05], [350, top - 60, 28, .25]];
+  for (const [dx, y, r, d] of spots) { const k = sg(ds, d, d + .5); star(540 + dx, y, r * Math.sin(Math.PI * k), 1, k * .8); }
+  ctx.restore();
+}
+
+// ------------------------------------------------------------------ the Save As dialog and its pointer
+function dlgOpts(lt) {
+  const n = Math.round(FILE.length * sg(lt, E.nameA, E.nameB)), p = savePointer(lt);
+  return { kind: 'saveAs', w: WIN.w, h: WIN.h, at: [WIN.w / 2, 700], name: [FILE, SH.typed(n, FILE.length)], press: { id: 'save', k: p.press }, btnFocus: 'save', t: lt, files: FILES, folder: FOLDER, path: 'Documents  /  ' + FOLDER };
+}
+function savePointer(lt) {
+  const aim = SH.dialogRect({ kind: 'saveAs', w: WIN.w, h: WIN.h, at: [WIN.w / 2, 700] }, 'save').aim;
+  const c = SH.cursorPath([{ t: 2.52, x: 900, y: 1190, kind: 'arrow' }, { t: 3.04, x: aim[0], y: aim[1], kind: 'arrow', click: [E.click - .09, E.click + .1], over: .04 }, { t: 3.4, x: aim[0] + 14, y: aim[1] + 10, kind: 'arrow' }], lt);
+  return { x: c.x, y: c.y, press: c.press, alpha: sg(lt, 2.52, 2.7) * (1 - sg(lt, 3.2, 3.33)) };
+}
+function endDraw(lt) {
+  stage(lt);
+  const o = endOpts(lt), dlgOn = lt >= E.dlgIn && lt < E.dlgGone;
+  ctx.save(); ctx.translate(WIN.x, WIN.y);
+  shadowOf(() => { ctx.beginPath(); ctx.roundRect(0, 0, WIN.w, WIN.h, WIN.r); }, .6);
+  SH.sheet(Object.assign({}, o, { r: WIN.r }), lt);
+  ctx.restore();
+  ROSTER.forEach((p, i) => portrait(p, i, lt));
+  rowExtras(lt);
+  endTitle(lt, dlgOn);
+  tabGlow(lt);
+  if (dlgOn) {
+    ctx.save(); ctx.translate(WIN.x, WIN.y);
+    const u = Math.min(sg(lt, E.dlgIn, E.dlgIn + .16), 1 - sg(lt, E.dlgOut, E.dlgOut + .2));
+    SH.dialog(dlgOpts(lt), u);
+    ctx.restore();
+  }
+  stampFx(lt);
+  nextBanner(lt);
+  endFx(lt);
+  // a soft light sweeps the window now and then
+  const sw = ((lt - 5.6) % 3.4 + 3.4) % 3.4 / 1.1;
+  if (lt > 5.6 && sw < 1) { ctx.save(); ctx.globalCompositeOperation = 'screen'; const x = lp(-200, 1280, eIO(sw)), g = ctx.createLinearGradient(x - 160, 0, x + 160, 380); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.10)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(WIN.x, WIN.y, WIN.w, WIN.h, WIN.r); ctx.fill(); ctx.restore(); }
+  if (lt >= 2.5 && lt < 3.62) {
+    const pp = savePointer(lt);
+    if (pp.alpha > .01) { ctx.save(); ctx.translate(WIN.x, WIN.y); ctx.globalAlpha *= pp.alpha; SH.pointer(pp.x, pp.y, { kind: 'arrow', press: pp.press, s: 1.25 }); ctx.restore(); }
+  }
+}
+const END = {
+  noChyron: true, noScrim: true,
+  shot() { return 'sheet'; },
+  cam(lt) {
+    zoomTo(540, 960, 1 + .022 * eIO(sg(lt, 0, 7)));
+    CAM.shake = 5 * (lt >= E.stamp ? ringK(lt - E.stamp, .05) : 0);
+  },
+  draw: endDraw,
+  fx(lt) {
+    const fin = lt < .1 ? 1 - lt / .1 : 0, fout = sg(lt, E.out, 7), st = lt >= E.stamp ? ringK(lt - E.stamp, .1) : 0, dd = lt >= E.ding ? ringK(lt - E.ding, .5) : 0;
+    return { bloom: .4 + .35 * st + .25 * dd, vignette: .16, grain: .045, contrast: .1, sat: .05, aberr: 3 * st, tint: [['#ffb86b', .05, 'soft-light']], fade: Math.max(fin, fout), fadeColor: '4,2,14' };
+  },
+  blur(lt) { return (lt > 2.7 && lt < 3.1) ? 4 : (lt > E.stamp - .12 && lt < E.stamp + .12) ? 6 : (lt > E.tab && lt < E.lift + .05) ? 5 : 2; },
+  over() {},
+  label: () => 'THANKS FOR WATCHING',
+};
+window.__EP17_SCENES.end = END;
 })();
