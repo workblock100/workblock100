@@ -51,7 +51,7 @@ function ST(lt) { return { exec: 1, sink: 1, tod: 1, t: lt, signs: { 'door:rest'
 // ------------------------------------------------------------------ the tablet (a prop in Tomato's hand): a black slab with a lit screen that shows a miniature of the card (no lettering in the sprite)
 const TW = 74, TH = 98;
 EXT.prop.fp17_tablet = (side, o, t) => {
-  const S = o.tabScale || 1, w = TW * S, h = TH * S, at = o.tabAt || [.5, .62], lit = o.tabLit ?? 1;
+  const S = o.tabScale || 1, w = TW * S, h = TH * S, at = o.tabAt || [.9, .12], lit = o.tabLit ?? 1;
   ctx.save(); ctx.rotate(o.tabRot ?? -.04); ctx.translate(-w * at[0], -h * at[1]);
   ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 8 * S; ctx.shadowOffsetY = 3 * S;
   ctx.fillStyle = '#17181d'; ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.lineWidth = 2.6 * S; rr(0, 0, w, h, 7 * S); ctx.fill(); ctx.stroke(); ctx.shadowColor = 'transparent';
@@ -69,7 +69,7 @@ EXT.prop.fp17_tablet = (side, o, t) => {
   }
   ctx.restore();
 };
-PROP_BOX.fp17_tablet = o => { const S = o.tabScale || 1, w = TW * S, h = TH * S, at = o.tabAt || [.5, .62]; return [-w * at[0] - 4, -h * at[1] - 6, w * (1 - at[0]) + 8, h * (1 - at[1]) + 4]; };
+PROP_BOX.fp17_tablet = o => { const S = o.tabScale || 1, w = TW * S, h = TH * S, at = o.tabAt || [.9, .12]; return [-w * at[0] - 2, -h * at[1] - 2, w * (1 - at[0]) + 4, h * (1 - at[1]) + 2]; };
 /* where the tablet's screen is, in world coordinates, for the glow and Binder's pop (Tomato's left hand, from her options) */
 
 // ------------------------------------------------------------------ the cast: where they stand and what they do (a pure function of scene time)
@@ -78,10 +78,10 @@ function cast(lt, st) {
   const C = {}, id = shotAt(lt).id, sp = b => lt >= bS(b) && lt < bE(b);
   /* the nurses stand with their backs to us, turned toward Tomato (a face is visible only in the close-ups of their own lines); the last wide turns them to the camera, deflated */
   const BACK = id === 'tom1' || id === 'wide' || id === 'tom2', LAST = id === 'wide2';
-  C.tom = who('station', A15.tomato, .8, { yaw: K([[0, -.7], [3, -.6], [7, -.35], [12, -.55]], lt), headYaw: K([[0, -.7], [3, -.55], [7, -.1], [8.2, -.5], [12, -.3]], lt), tomPose: 'fruit', arms: { l: 'hold', r: 'rest' }, grip: { l: [-80, 34] }, hold: { l: 'fp17_tablet' }, tabLit: lt < CUE.click ? 0 : 1, tabRot: -.06, expr: 'tom_fruit' }, 14);
+  C.tom = who('station', A15.tomato, .8, { yaw: -.55, headYaw: K([[0, -.7], [3, -.55], [7, -.1], [8.2, -.5], [12, -.3]], lt), tomPose: 'fruit', arms: { l: 'rest', r: 'hold' }, grip: { r: [8, 88] }, hold: { r: 'fp17_tablet' }, tabScale: .86, tabAt: [.9, .12], tabLit: lt < CUE.click ? 0 : 1, tabRot: -.06, expr: 'tom_fruit' }, 14);
   C.mango = who('station', A7.mango, .16, { yaw: BACK ? 2.65 : LAST ? .25 : .62, headYaw: BACK ? 2.35 : LAST ? .1 : .5, expr: sp('m1') ? 'sad' : LAST ? 'sad' : 'neutral', lid: LAST ? .45 : undefined }, 14);
-  C.lemon = who('station', A7.lemon, .32, { yaw: BACK ? 2.75 : LAST ? .1 : .66, headYaw: BACK ? 2.4 : id === 'lemon' && lt > 5.5 ? -.95 : LAST ? 0 : .55, expr: 'neutral', lid: LAST ? .5 : undefined }, 14);
-  C.straw = who('station', A11.straw, .48, { yaw: BACK ? 2.6 : LAST ? -.12 : .6, headYaw: BACK ? 2.3 : LAST ? -.05 : .5, expr: id === 'straw' ? 'sour' : 'dead', lid: .5 }, 14);
+  C.lemon = who('station', A7.lemon, .32, { yaw: BACK ? 2.75 : LAST ? .1 : .66, headYaw: BACK ? K([[0, 2.45], [2.2, 2.45], [2.6, 2.1], [3.1, 2.1], [3.3, 2.45]], lt) : id === 'lemon' && lt > 5.5 ? -.95 : LAST ? 0 : .55, expr: 'neutral', lid: LAST ? .5 : undefined }, 14);
+  C.straw = who('station', A11.straw, .48, { yaw: BACK ? 2.6 : LAST ? -.12 : .42, headYaw: BACK ? K([[0, 2.3], [1.3, 2.3], [1.7, 2.0], [2.9, 2.0], [3.1, 2.3]], lt) : LAST ? -.05 : .4, expr: id === 'straw' ? 'sour' : 'dead', lid: .5 }, 14);
   return C;
 }
 
@@ -94,8 +94,8 @@ const SHOTS = [
   { id: 'lemon',  s: 4.911, e: 5.75, k: 'world', show: 'l' },
   { id: 'lights', s: 5.75, e: 6.4,   k: 'world', show: '' },
   { id: 'lemon2', s: 6.4,  e: 7.025, k: 'world', show: 'l' },
-  { id: 'tom2',   s: 7.025, e: 7.995, k: 'world', show: 't' },
-  { id: 'bub1',   s: 7.995, e: 9.876, k: 'bubble' },
+  { id: 'tom2',   s: 7.025, e: 7.845, k: 'world', show: 't' },
+  { id: 'bub1',   s: 7.845, e: 9.876, k: 'bubble' },
   { id: 'straw',  s: 9.876, e: 10.3, k: 'world', show: 's' },
   { id: 'bub2',   s: 10.3, e: 10.974, k: 'bubble' },
   { id: 'grin',   s: 10.974, e: 11.416, k: 'binder' },
@@ -107,8 +107,8 @@ const shotAt = lt => { let r = SHOTS[0]; for (const sh of SHOTS) if (lt >= sh.s 
 
 // ------------------------------------------------------------------ the world: the tower, the station, the cast
 let FRAME = null;                 /* { C: cast options, st: tower state, sh: the shot } of the frame being drawn (built in cam()) */
-const handOf = o => { const [cx, cy] = A15.centre(o), g = (o.grip && o.grip.l) || [-70, 70]; return [cx + g[0] * o.s, cy + g[1] * o.s]; };
-const tabPos = C => { const [hx, hy] = handOf(C.tom); return [hx - 1 * C.tom.s, hy - .12 * TH * C.tom.s]; };   /* the tablet's centre in the tower's coordinates */
+const handOf = o => { const [cx, cy] = A15.centre(o), g = (o.grip && o.grip.r) || [8, 88]; return [cx + g[0] * o.s, cy + g[1] * o.s]; };
+const tabPos = C => { const [hx, hy] = handOf(C.tom), S = C.tom.s * .86; return [hx - .4 * TW * S, hy + .38 * TH * S]; };   /* the tablet's centre in the tower's coordinates */
 function drawWorld(lt) {
   const st = FRAME.st, C = FRAME.C, sh = FRAME.sh; STATE = st;
   const dof = sh.dof || 0;
@@ -127,7 +127,7 @@ function drawWorld(lt) {
     if (k > 0 && k < 1) { V2.ring(tx, ty, k, { r0: 6, r1: 56, color: '170,255,210', lw: 3, alpha: .9 }); }
     V2.glow(tx, ty, 54, '190,255,220', .3 + .18 * Math.sin(lt * 5), 'screen', .3);
   }
-  smallBinder(lt, C, has('t'));
+  smallBinder(lt, C, sh.id === 'wide2');
 }
 /* the lit call light on the station's board (room coordinates of S14: the dome at 45 + 13.5 i, 64 + 12.6 j): an extra red glow and a ring on every pulse, so it reads in the close-ups and in the wide */
 function callLight(lt, sh) {
@@ -139,10 +139,10 @@ function callLight(lt, sh) {
 /* Binder out of the tablet: a hop with a pop ring on the cue, then a hover above the screen */
 function smallBinder(lt, C, vis) {
   if (lt < CUE.binderpop) return;
-  const [tx, ty] = tabPos(C), k = sg(lt, CUE.binderpop, CUE.binderpop + .16), hop = Math.sin(PI * sg(lt, CUE.binderpop, CUE.binderpop + .3)) * 14;
-  const bob = Math.sin(lt * 3.2) * 2.5;
-  if (vis && k < 1) V2.ring(tx, ty - 6, k, { r0: 6, r1: 50, color: '255,236,160', lw: 4, alpha: .9 });
-  const o = A15.binderSmall({ x: tx - 26, y: ty - 44 - hop + bob, s: .42 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, pose: lt < 8.3 ? 'ears' : 'helpful', grin: lt >= CUE.grin ? ss(lt, CUE.grin, CUE.grin + .15) : .25, look: [-.5, .3], hover: 6 });
+  const [tx, ty] = tabPos(C), k = sg(lt, CUE.binderpop, CUE.binderpop + .16), f = ss(lt, CUE.binderpop + .04, CUE.binderpop + .5), bob = Math.sin(lt * 3.2) * 2.5;
+  const fx = ss(lt, CUE.binderpop + .02, CUE.binderpop + .26), x = lerp(tx, tx - 74, fx), y = lerp(ty - 8, ty - 46, f) - Math.sin(PI * f) * 20 + bob * f;
+  if (vis && k < 1) V2.ring(tx, ty - 4, k, { r0: 6, r1: 50, color: '255,236,160', lw: 4, alpha: .9 });
+  const o = A15.binderSmall({ x, y, s: .4 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, pose: lt < 8.3 ? 'ears' : 'helpful', grin: lt >= CUE.grin ? ss(lt, CUE.grin, CUE.grin + .15) : .25, glint: lt >= CUE.sting ? Math.max(0, 1 - (lt - CUE.sting) / .5) : 0, look: [.5, .3], hover: 6 });
   if (vis) drawChar(o);
 }
 
@@ -158,12 +158,12 @@ function camAt(lt, C, st, sh) {
   STATE = st;
   const r = R('station'), id = sh.id, u = sg(lt, sh.s, sh.e);
   if (id === 'wide') return lerpCam(wideCam(), roomCam('station', 1.9), eo(lt / 1.1));
-  if (id === 'wide2') return lerpCam(roomCam('station', 1.9), roomCam('station', 1.62), ss(lt, sh.s, 13.9));
-  if (id === 'tom1') { const a = faceCam(C.tom, 2.55, 150), b = faceCam(C.tom, 2.85, 150); a[0] -= 112; b[0] -= 104; return lerpCam(a, b, u); }
+  if (id === 'wide2') { const b = at(572, R('station').y0 + 215, 2.15); return lerpCam(roomCam('station', 1.9), b, ss(lt, sh.s, 13.9)); }
+  if (id === 'tom1') { const a = faceCam(C.tom, 2.3, 150), b = faceCam(C.tom, 2.55, 150); a[0] = 574; b[0] = 584; return lerpCam(a, b, u); }
   if (id === 'mango') return lerpCam(faceCam(C.mango, 4.4, 150), faceCam(C.mango, 4.8, 150), u);
   if (id === 'lemon' || id === 'lemon2') return lerpCam(faceCam(C.lemon, 4.4, 150), faceCam(C.lemon, 4.8, 150), id === 'lemon' ? u : 1 - u * .5);
   if (id === 'lights') return lerpCam(at(r.x0 + 92, r.y0 + 90, 5.6), at(r.x0 + 92, r.y0 + 90, 6.0), u);
-  if (id === 'tom2') return lerpCam(faceCam(C.tom, 4.2, 120), faceCam(C.tom, 4.6, 120), u);
+  if (id === 'tom2') { const a = faceCam(C.tom, 3.5, 130), b = faceCam(C.tom, 3.8, 130); a[0] -= 36; b[0] -= 36; return lerpCam(a, b, u); }
   if (id === 'straw') return lerpCam(faceCam(C.straw, 5.0, 150), faceCam(C.straw, 5.3, 150), u);
   return roomCam('station', 1.9);   /* the inserts: the world is under them */
 }
@@ -228,7 +228,7 @@ function typedAt(id, text, lt) {   /* the share of the letters shown at lt, in s
   }
   return lt >= wE(id, words.length - 1) ? 1 : c01(shown / n);
 }
-const BIG = { x: 300, y: 1040, s: 1.3 };                        /* Binder in the bubble inserts */
+const BIG = { x: 350, y: 1060, s: 1.75 };                        /* Binder in the bubble inserts */
 const BUBX = 110, BUBW = 860, BUBBOT = 760, RP = [[0, 0], [230, 50], [150, 190], [190, 330]];
 const RUN = { t0: 10.37, t1: 10.95 };
 const runU = lt => sg(lt, RUN.t0 + .04, RUN.t1);
@@ -237,7 +237,7 @@ function bubbleOpts(lt) {
   const second = lt >= bS('b2'); o.text = second ? BTXT2 : BTXT1;
   const h = SH15.binderRect(Object.assign({ at: [0, 0] }, o)).h; o.at = [BUBX, BUBBOT - h];     /* bottom-anchored: the buttons stay where they are when the text gets shorter */
   o.typed = second ? typedAt('b2', BTXT2, lt) : typedAt('b1', BTXT1, lt);
-  o.runaway = runU(lt); o.pop = ss(lt, bS('b1'), bS('b1') + .3);
+  o.runaway = runU(lt); o.pop = ss(lt, bS('b1'), bS('b1') + .3);   /* the bubble grows out of its tail as he starts to speak */
   o.tail = [BIG.x + 40 * BIG.s, BIG.y - 70 * BIG.s];
   return o;
 }
@@ -261,7 +261,13 @@ function insertBubble(lt, sh) {
   cardDraw(lt, { k: 1.0, blank: true });
   ctx.fillStyle = 'rgba(8,14,18,.62)'; ctx.fillRect(0, 0, W, H);   /* the tablet is pushed back: its screen is lit but empty, Binder has just left it */
   const bo = bubbleOpts(lt);
-  bigBinder(lt, { grin: lt >= bS('b2') ? .5 : .15, pose: lt < bS('b2') ? 'helpful' : 'rest', look: [.5, -.4] });
+  /* Binder pops out of the tablet's screen on the cue: a ring and a flash on the glass, he grows out of it with an overshoot and rises to his place */
+  const pk = sg(lt, CUE.binderpop, CUE.binderpop + .34), mv = ss(pk, .12, 1), grow = eb(sg(lt, CUE.binderpop, CUE.binderpop + .24));
+  if (lt >= CUE.binderpop && lt < CUE.binderpop + .5) { const q = (lt - CUE.binderpop) / .5; V2.ring(540, 800, q, { r0: 30, r1: 360, color: '170,255,210', lw: 8, alpha: .8 * (1 - q) }); V2.glow(540, 800, 420 * (1 - .4 * q), '190,255,220', .5 * (1 - q), 'screen', .3); }
+  if (lt >= CUE.binderpop) {
+    const px = lerp(540, BIG.x, mv), py = lerp(800, BIG.y, mv) - Math.sin(PI * mv) * 150;
+    bigBinder(lt, { x: px, y: py + Math.sin(lt * 3) * 6 * mv, s: BIG.s * grow, grin: lt >= bS('b2') ? .5 : .15, pose: lt < bS('b2') ? (mv < 1 ? 'ears' : 'helpful') : 'rest', look: [.5, -.4] });
+  }
   const bub = SH15.binder(bo, lt);
   // the pointer chases "No thanks"
   if (sh.id === 'bub2') {
@@ -293,7 +299,7 @@ const SC = {
   },
   draw(lt) { drawWorld(lt); },
   fx(lt) {
-    const fx = { bloom: .5, vignette: .42, grain: .045, contrast: .13, sat: .1 };
+    const fx = { bloom: .5 + .9 * Math.max(0, 1 - Math.abs(lt - CUE.sting - .05) / .22), vignette: .42, grain: .045, contrast: .13, sat: .1 };
     if (lt < .25) { fx.fade = 1 - sg(lt, 0, .25); fx.fadeColor = '16,12,24'; }
     return fx;
   },
