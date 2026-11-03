@@ -449,7 +449,7 @@ function endState(lt) {
   const cells = { A1: { v: '', fill: DEEP } }, hero = !(lt >= E.dlgIn && lt < E.dlgGone);   /* under the dim of the dialog nothing is hero */
   const hk = sg(lt, .55, .85), hdr = { fill: DEEP, color: CREAM, size: 26, weight: 900, spacing: 3, hero: false };
   cells.A3 = { v: '', fill: DEEP }; cells.B3 = Object.assign({ v: 'NAME', typed: hk }, hdr); cells.C3 = Object.assign({ v: 'ROLE', typed: hk }, hdr); cells.D3 = Object.assign({ v: 'STATUS', typed: hk }, hdr);
-  cells.A15 = { v: '* Per diem is not in the headcount.', typed: sg(lt, 2.5, 2.9), italic: true, size: 30, weight: 700, color: '#5b6470', align: 'center', hero, fill: '#ffffff' };
+  cells.A15 = { v: '* Per diem is not in the headcount.', typed: sg(lt, 2.5, 2.9), italic: true, size: 30, weight: 700, color: '#5b6470', align: 'center', hero: hero && !(lt >= E.stamp - .16 && lt < E.stamp + .1), fill: '#ffffff' };   /* the stamp swoops over the footnote on its way in */
   let active = 'A1', ftxt = '', fk = 1, sel = null;
   ROSTER.forEach((p, i) => {
     const r = 4 + i, t0 = rowT(i), zebra = lt < t0 ? undefined : i % 2 ? '#f2f8f4' : '#ffffff', tn = TONE[p.tone];

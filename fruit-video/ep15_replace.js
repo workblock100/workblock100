@@ -46,7 +46,8 @@ for (const k in CUE) CUE[k] = Array.isArray(CUE[k]) ? CUE[k].map(snapT) : snapT(
 // ------------------------------------------------------------------ the tower's state: sunk one floor, the Executive Suite on top, dusk; the signs flip through st.signs
 const SIGNS = {};     /* filled in below: id -> a function (box) that draws the label for the flip progress of this frame */
 const FLIP = { u: [0, 0, 0, 0, 0, 0] };   /* the flip progress 0..1 of each of the six replacements at the frame being drawn (set in draw) */
-const flipU = i => c01((CUR_LT - CUE.flip[i]) / .5);
+const FLIPD = .4;                                          /* how long one sign takes to flip (s): snappy, so most of them finish inside their short stop of the tour */
+const flipU = i => c01((CUR_LT - CUE.flip[i]) / FLIPD);
 let CUR_LT = 0;
 function ST(lt) { return { stack: 1, exec: 1, sink: 1, tod: .74, t: lt, signs: { 'door:rest': box => flipLabel(box, 0, 'BREAK ROOM', 'PENDING ROOM', { size: 11 }), 'plate:rest': box => flipLabel(box, 0, 'BREAK ROOM', 'PENDING ROOM', { size: 7.4, spacing: .4 }) }, rooms: { rest: { lamp: .75 } } }; }
 /* a flipping label inside a plate box (SH15.flipText: the old letters roll away, the new ones roll in, upright and exact at rest) */
@@ -108,8 +109,9 @@ function lobbyPoster(lt) {
   UI.label('GREENLEAF CARES', x + w / 2, y + 93, Object.assign({ size: 6.4, weight: 800, fill: '#5b6470', spacing: .8 }, ink));
 }
 /* Strawberry's badge: STRAWBERRY, RN and the line that flips (BREAKS: 30 MIN to BREAKS: PENDING); drawn at her chest, upright, from her options (the badge turns with nothing: a plastic card on a clip) */
+const badgePos = o => { const s = o.s || 1, [cx, cy] = A15.centre(o); return [cx + (o.flipX ? -1 : 1) * 4 * s, cy + 30 * s]; };   /* on her chest, clear of the lobby desk beside her */
 function nameBadge(o, lt) {
-  const s = o.s || 1, [cx, cy] = A15.centre(o), k = KINDS[o.kind], bx = cx + (o.flipX ? -1 : 1) * 30 * s, by = cy + 30 * s, w = 78 * s, h = 46 * s;
+  const s = o.s || 1, [bx, by] = badgePos(o), w = 78 * s, h = 46 * s;
   ctx.save(); ctx.translate(bx, by);
   ctx.strokeStyle = '#4a4f5a'; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.moveTo(0, -h / 2 - 8 * s); ctx.lineTo(0, -h / 2 + 3 * s); ctx.stroke();
   ctx.shadowColor = 'rgba(20,10,20,.4)'; ctx.shadowBlur = 6 * s; ctx.shadowOffsetY = 2 * s;
@@ -141,7 +143,7 @@ function cast(lt, st) {
   // Lemon behind the counter at the left; Strawberry arrives at the station's right (and is in the lobby for the tour); Mango waits at the break room's door
   C.lemon = who('station', A7.lemon, .12, { yaw: .5, headYaw: .35, expr: lt > 7 ? 'sad' : 'neutral' });
   C.straw = lt < 11.3 ? who('station', A11.straw, .93, { yaw: -.55, headYaw: -.6, expr: lt < 9.95 ? 'chill' : 'dead', lid: lt > 9.9 ? .5 : undefined }) : who('lobby', A11.straw, .42, { yaw: .5, headYaw: .55, expr: 'dead', lid: .5 });
-  C.mango = who('rest', A7.mango, .34, { yaw: .55, headYaw: .6, expr: 'sad' });
+  C.mango = who('rest', A7.mango, .34, { yaw: .2, headYaw: .5, expr: 'sad' });
   C.clem = who('dining', A10.clem, .5, { yaw: .4, headYaw: .5, expr: 'happy' });
   return C;
 }
@@ -204,8 +206,8 @@ const PILL = [48, 116, 500, 244];
 function clearOf(o, avoid) {
   const m = ctx.getTransform(), k = KINDS[o.kind], s = o.s || 1, [fx, fy] = faceC(o), z = Math.hypot(m.a, m.b);
   const X = m.a * fx + m.c * fy + m.e, Y = m.b * fx + m.d * fy + m.f;
-  const b = [X - 1.5 * k.rx * s * z, Y - 1.4 * k.ry * s * z, X + 1.5 * k.rx * s * z, Y + 1.5 * k.ry * s * z];
-  let d = Math.min(b[0] - 24, 1080 - 24 - b[2], b[1] - 24, 1440 - b[3]);
+  const b = [X - 1.2 * k.rx * s * z, Y - 1.8 * k.ry * s * z, X + 1.2 * k.rx * s * z, Y + 1.4 * k.ry * s * z];
+  let d = Math.min(b[0] - 24, 1080 - 24 - b[2], b[1] - 24, 1360 - b[3]);
   for (const r of [PILL].concat(avoid || [])) d = Math.min(d, Math.max(r[0] - b[2], b[0] - r[2], r[1] - b[3], b[1] - r[3]) - 12);
   return ss(d, 0, 70);
 }
@@ -236,7 +238,7 @@ function drawWorld(lt) {
   smallBinder(lt);
   // a ring of light where each sign flips
   { const a = S15.sign('door:rest', st), b = R('lobby'), s2 = R('station'), d = R('dining');
-    ringAt(a.cx, a.cy, 0, lt); ringAt(b.x0 + 194, b.y0 + 130, 1, lt); ringAt(C.straw.x + 30 * C.straw.s, C.straw.y - 112 * C.straw.s, 2, lt); ringAt(s2.x0 + 224, s2.y0 + 88, 3, lt); ringAt(s2.x0 + 318, s2.y0 + 100, 4, lt); ringAt(d.x0 + 205, d.y0 + 135, 5, lt); }
+    ringAt(a.cx, a.cy, 0, lt); ringAt(b.x0 + 194, b.y0 + 130, 1, lt); ringAt(...badgePos(C.straw), 2, lt); ringAt(s2.x0 + 224, s2.y0 + 88, 3, lt); ringAt(s2.x0 + 318, s2.y0 + 100, 4, lt); ringAt(d.x0 + 205, d.y0 + 135, 5, lt); }
 }
 
 // ------------------------------------------------------------------ the cameras (tower coordinates [x, y, zoom]; the frame centre is the point, lifted into the clear band)
@@ -273,7 +275,7 @@ function camAt(lt, C, st) {
     const [lx, ly] = lapPos(); return at(lx, ly - 50, 3.6);
   }
   if (lt < 15.87) {
-    const bx = C.straw.x + 30 * C.straw.s, by = C.straw.y - 112 * C.straw.s;
+    const [bx, by] = badgePos(C.straw);
     return path([[11.32, roomCam('rest', 3.4), 0], [FLIPS[1] - .03, at(lob.x0 + 150, lob.y0 + 140, 3.6), .12], [FLIPS[2] - .03, [bx, by + 60 / 5.4, 5.4], .22], [FLIPS[3] - .03, at(stR.x0 + 230, stR.y0 + 82, 3.6), .12],
       [FLIPS[4] - .03, at(stR.x0 + 312, stR.y0 + 86, 4.6), .2], [FLIPS[5] - .03, at(din.x0 + 178, din.y0 + 176, 3.8), .12], [14.9, wideCam(), .9]], lt);
   }
@@ -290,7 +292,9 @@ function camAt(lt, C, st) {
 const PTR = { find: null };
 function drawWindow(lt) {
   const k = winK(lt); if (k <= .002) return;
-  const e = eo(k), L = LAPR || { x: 540, y: 820, w: 120, h: 76 }, full = k >= 1;
+  const L0 = LAPR || { x: 540, y: 820, w: 120, h: 76 }, e = eo(k), full = k >= 1;
+  /* the window grows out of the laptop's screen; when the laptop is out of frame (a close-up on someone else) it grows from the nearest spot inside the frame */
+  const L = { w: L0.w, h: L0.h, x: Math.max(30, Math.min(1080 - 30 - L0.w, L0.x)), y: Math.max(270, Math.min(1300 - L0.h, L0.y)) };
   const r = { x: lerp(L.x, WIN.x, e), y: lerp(L.y, WIN.y, e), w: lerp(L.w, WIN.w, e), h: lerp(L.h, WIN.h, e) }, sc = r.w / WIN.w;
   ctx.save(); ctx.globalAlpha *= ss(k, 0, .15); rr(r.x, r.y, r.w, r.h, 18 * sc); ctx.clip(); ctx.translate(r.x, r.y); ctx.scale(sc, sc);
   SH15.sheet(sheetOpts(lt, full), lt);
@@ -357,7 +361,7 @@ const SC = {
     if (lt < 11.3 || lt > 15.2) return 1;
     const sp = d => { const st = ST(lt + d); STATE = st; return camAt(lt + d, cast(lt + d, st), st); };
     const a = sp(-.017), b = sp(.017), z = Math.sqrt(a[2] * b[2]), px = Math.hypot(b[0] - a[0], b[1] - a[1]) * z / .034 + Math.abs(Math.log(b[2] / a[2])) * 900 / .034;
-    return Math.max(1, Math.min(24, Math.round(px / 900)));
+    return Math.max(1, Math.min(24, Math.round(px / 450)));
   },
   over(lt) { drawWindow(lt); doneDialog(lt); counter(lt); bigBinder(lt); },
   clock: () => SCN.clock, label: () => SCN.label,

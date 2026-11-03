@@ -5,7 +5,12 @@
  * Every operation is performed in the sheet FIRST (a full-size GridSheet window grown out of the laptop: SH15) and then the world does it (the tower: S15): Insert Row (the Executive Suite is set on the roof by the
  * crane and the whole tower sinks one floor into the ground, the lobby goes below the sheet), Remove Duplicates (five poofs; the sheet strip pinned over the world collapses a row per poof), =4+4 (synergy).
  *
- * @@SHOTS@@
+ * SHOTS (scene seconds): open 0-1.0 wide tower, crane, the suite on its hook (keyboard 0.3) | onion 1.0 | tomato 2.67 | binder 4.57 (the Insert Row window grows out of the laptop 4.92; cue insertrow 5.52) |
+ * sink 6.0-9.97 (crane carries the suite to the roof 6.55-6.98, whole tower sinks one floor from 7.22 with spring overshoot, thud 9.02, dust and quake, camera cranes down) | mango 9.97 "Where did the lobby go?" |
+ * tomato2 11.26 "Below the sheet." (A14 cell tag) | straw 12.35 | window 13.78-15.03 "Through the window." (Mrs. Cranberry and her walker, two Greenleaf aides) | onion2 15.03 (Remove Duplicates window, click 15.53, dialog) |
+ * v1/v2 19.09-20.6 (the sheet strip pinned over the world, one row collapses per poof: 19.19, 19.59, 19.99, 20.39) | v3 20.6 + lawn2 21.29 (Carrot's poof 20.79, his lanyard stays on the chair; result dialog 21.29) |
+ * =4+4 -> 5 (typed 22.04, enter 22.6, green check 22.9, confetti 23.47) | mango2 24.06 | tomato3 25.49 | lemon1 26.59 | tomato4 27.9 | lemon2 29.13 | lemon3 30.04-32.56 (badge YEARS OF SERVICE 22, slow push-in, sting 31.7 punch-in).
+ * Text gate: audited every frame (0 issue-frames). Sims: none (the bounces and the sink are authored deterministic curves).
  */
 (() => {
 if (!window.TIMELINE_EP15 || !window.S15 || !window.H6 || !window.UI) return;
@@ -415,8 +420,8 @@ function drawWalker(x, y, lift = 0, tilt = 0) {
 /* the A14 tag: a cell reference in the sheet's name-box style floating over the lobby (it has gone below the sheet's visible rows) */
 function drawA14(lt, t0, x, y) {
   const a = lt - t0; if (a < 0) return;
-  const k = eback(a / .35), bob = Math.sin(a * 3.2) * 4;
-  ctx.save(); ctx.translate(x, y + bob); ctx.scale(k, k);
+  const u = c01(a / .3), k = .86 + .14 * eback(u), bob = Math.sin(a * 3.2) * 4;                          /* scale .86 -> 1 with a fade: the text never drops under the hero size */
+  ctx.save(); ctx.globalAlpha *= c01(u * 1.8); ctx.translate(x, y + bob); ctx.scale(k, k);
   ctx.strokeStyle = 'rgba(30,142,90,.55)'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(0, 18); ctx.lineTo(0, 62); ctx.stroke(); ctx.setLineDash([]);                   /* a dashed leader down to the lobby */
   polyp([[-7, 62], [7, 62], [0, 74]], '#1e8e5a', null);
   UI.sign([-36, -20, 72, 40], [{ t: 'A14', size: 26, weight: 900 }], { fill: '#ffffff', stroke: '#1e8e5a', lw: 3.4, ink: '#1e8e5a', r: 7, shadow: 10, pad: 4, id: 'a14', kind: 'tag' });
@@ -554,7 +559,7 @@ function drawI2(lt) {
   SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.25 });
   binderUI(lt, 'b2', { at: [690, 680], w: 380, tail: [920, 900], mascot: [940, 960], size: 32, transit: !!MOVING.v, hero: !MOVING.v });
 }
-// ---- the strip: the same sheet squeezed into the top of the frame (zoomed out, clipped) while the world plays below it (19.09 to 21.29)
+// ---- the strip: the same sheet squeezed into the top of the frame (zoomed out, clipped) while the world plays below it (19.09 to 21.05, growing back into the window until 21.29)
 const STRIP = { z: .64, h: 470, grid: 340 };
 function stripXf(k) { const e = eio(k); return { zoom: lerp(1, STRIP.z, e), ty: lerp(WIN_Y, WIN_Y - STRIP.grid, e), h: lerp(WIN_H, STRIP.h, e) }; }
 function drawStrip(lt, k) {
@@ -567,8 +572,8 @@ function drawStrip(lt, k) {
   ctx.save(); ctx.shadowColor = 'rgba(8,13,19,.55)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6; ctx.fillStyle = '#1a2129'; ctx.fillRect(0, y - 2, WIN_W, 10); ctx.restore();
   ctx.fillStyle = C.green; ctx.fillRect(0, y + 8, WIN_W, 4);
 }
-// ---- I3 + I4: the result dialog (21.4 to 22.0), then Binder's =4+4 in the SYNERGY column (22.04 to 24.06)
-const I3 = { pop: 21.4, ok: [21.88, 22.0], out: 22.0 };
+// ---- I3 + I4: the result dialog (21.29 to 22.0), then Binder's =4+4 in the SYNERGY column (22.04 to 24.06)
+const I3 = { pop: 21.29, ok: [21.88, 22.0], out: 22.0 };
 const SYN = { type: [22.04, 22.55], enter: 22.6, flip: [22.7, 22.9], check: 22.9, boom: 23.47 };
 const RES_O = Object.assign({ stage: 'result', removed: 12, remain: 28 }, DLG_O);
 function drawI34(lt) {
@@ -588,7 +593,7 @@ function drawI34(lt) {
     if (tk > 0) { ctx.save(); ctx.globalAlpha *= tk; UI.pill('Optimized!', R.cx - 40, R.y + R.h + 38 + 6 * (1 - tk), { size: 24, fill: '#1e8e5a', ink: '#fff', hero: false, crop: true, padX: 18 }); ctx.restore(); }
   }
   const ok = SH15.dialogRect(RES_O, 'ok');
-  const cp = SH15.cursorPath([{ t: 21.4, x: 800, y: 760, kind: 'arrow' }, { t: 21.84, x: ok.aim[0], y: ok.aim[1], click: I3.ok }, { t: 22.5, x: R.cx - 120, y: R.y + R.h + 90 }], lt);
+  const cp = SH15.cursorPath([{ t: 21.29, x: 800, y: 760, kind: 'arrow' }, { t: 21.84, x: ok.aim[0], y: ok.aim[1], click: I3.ok }, { t: 22.5, x: R.cx - 120, y: R.y + R.h + 90 }], lt);
   SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.25 });
   binderUI(lt, 'b3', { at: [690, 700], w: 380, tail: [920, 900], mascot: [940, 960], size: 32, transit: !!MOVING.v, hero: !MOVING.v, grin: c01((lt - 22.9) / .2), glint: c01((lt - 23.1) / .3) });
   return R;
@@ -684,7 +689,7 @@ const pairCam = (z0, z1, x0, x1, t0, t1, up = 190) => lt => { const k = eio((lt 
 const FACE_Y = 1268, LEM_FACE_Y = 1226;                                          /* approximate face heights of the standing and the seated characters (faceC gives the exact ones) */
 
 // ---- part one: the desk, the crane, the sink, the lobby, the window
-shot('open', 0, 1.0, lt => { const k = lt; return [lerp(330, 300, k), lerp(480, 520, k), lerp(.42, .5, eio(k))]; }, GROUP, { dof: 0 });
+shot('open', 0, 1.0, lt => { const k = lt; return [lerp(300, 214, eio(k)), lerp(480, 520, k), lerp(.42, .5, eio(k))]; }, GROUP, { dof: 0 });
 const PX = (LW.O + LW.T) / 2 + 14;                                                /* the middle of the two consultants */
 shot('onion', 1.0, 2.67, pairCam(2.7, 3.0, PX, PX - 14, 1.0, 2.67, 70), PAIR, { dof: 3 });
 shot('tomato', 2.67, 4.57, pairCam(2.9, 3.3, PX + 30, PX + 70, 2.67, 4.57, 70), PAIR, { dof: 3 });
@@ -747,7 +752,7 @@ function drawLawn(lt, sh, st) {
   if (lt >= 30.1 && shown.some(o => o.kind === 'lemon')) drawLemonBadge(lt);
   drawTableFront(lt, q);
 }
-const FULLWIN1 = lt => (lt >= 5.05 && lt < 6.1) || (lt >= 15.4 && lt < 19.09) || (lt >= 21.55 && lt < 24.2);
+const FULLWIN1 = lt => (lt >= 5.05 && lt < 6.1) || (lt >= 15.4 && lt < 19.09) || (lt >= 21.3 && lt < 24.2);
 function drawWorld(lt) {
   const sh = shotAt(lt), st = towerState(lt);
   S15.light(st);
@@ -755,6 +760,7 @@ function drawWorld(lt) {
   if (px > .5) V2.dof(px, () => S15.tower(lt, st)); else S15.tower(lt, st);
   if (lt >= 6 && lt < T_UNHOOK + 1.5) drawCabBinder(lt, st);
   if (!FULLWIN1(lt)) drawLawn(lt, sh, st);
+  if (sh.rooms && lt >= CUE.poof[0]) drawItems(lt);                                  /* the cap, the stethoscope, the clipboard and the badge they leave behind */
   if (px > .5) V2.dof(px, () => S15.front(lt, st)); else S15.front(lt, st);
   if (sh.a14 != null) drawA14(lt, sh.a14, 38, GY - 62);
   drawDust(lt);
@@ -775,7 +781,7 @@ function drawSheetOverlay(lt) {
   if (lt >= 15.2 && lt < 24.3) {                                                     /* I2, the strip, I3 and I4: one session of the window */
     const from = POP2 || (POP2 = lapRectScreen(15.2)), pop = c01((lt - 15.2) / .3), out = c01((lt - 23.98) / .26);
     let sk = 0;
-    if (lt >= 19.09 && lt < 21.29) sk = c01((lt - 19.09) / .23); else if (lt >= 21.29 && lt < 21.52) sk = 1 - c01((lt - 21.29) / .23);
+    if (lt >= 19.09 && lt < 21.05) sk = c01((lt - 19.09) / .23); else if (lt >= 21.05 && lt < 21.29) sk = 1 - c01((lt - 21.05) / .24);          /* the strip grows back into the window so that the result dialog pops on the cue (21.29) */
     dimWorld(.55 * pop * (1 - sk) * (1 - out));
     const mv = pop < 1 || out > 0 || sk > .001; MOVING.v = mv; if (mv) REG.suppress++;
     try {
@@ -791,8 +797,9 @@ function drawSheetOverlay(lt) {
 const SC = {
   shot: lt => shotAt(lt).id,
   cam(lt) {
-    const c = camOf(lt); zoomTo(c[0], c[1], c[2]); CAM.r = c[3];
-    CAM.shake = .4 + 11 * quakeAt(lt);
+    const c = camOf(lt), pk = lt >= CUE.sting ? Math.exp(-(lt - CUE.sting) * 8) : 0;                    /* the sting (31.7): a small punch-in that settles */
+    zoomTo(c[0], c[1], c[2] * (1 + .05 * pk)); CAM.r = c[3];
+    CAM.shake = .4 + 11 * quakeAt(lt) + 2.5 * pk;
   },
   draw(lt) { drawWorld(lt); },
   fx: lt => ({ bloom: .5, vignette: .4, grain: .045, contrast: .13, sat: .12 }),

@@ -488,16 +488,16 @@ function tvShare(lt, sh) {
   let ptr;
   if (lt < RUN.t0) ptr = SH15.cursorPath([{ t: 12.95, x: 1010, y: 330 }, { t: 14.4, x: 1040, y: 320 }, { t: RUN.t0 - .02, x: nr.x + nr.w * .72, y: nr.y + nr.h * .8 }], lt);
   else if (lt < RUN.t1 + .25) ptr = { x: nrPrev.x + nrPrev.w * .72, y: nrPrev.y + nrPrev.h * .8, press: lt < RUN.t0 + .22 ? Math.sin(PI * sg(lt, RUN.t0 - .02, RUN.t0 + .2)) : 0, kind: 'arrow' };
-  else { const okr = SH15.dialogRect(DLG, 'ok'); ptr = SH15.cursorPath([{ t: RUN.t1 + .25, x: nrPrev.x + nrPrev.w * .72, y: nrPrev.y + nrPrev.h * .8 }, { t: CUE.click - .1, x: okr.x + okr.w * .93, y: okr.y + okr.h * .9, click: [CUE.click - .15, CUE.click + .14] }], lt); }
+  else { const okr = SH15.dialogRect(DLG, 'ok'); ptr = SH15.cursorPath([{ t: RUN.t1 + .25, x: nrPrev.x + nrPrev.w * .72, y: nrPrev.y + nrPrev.h * .8 }, { t: CUE.click - .1, x: okr.x + okr.w * .95, y: okr.y + okr.h * .93, click: [CUE.click - .15, CUE.click + .14] }], lt); }
   const du = dlgU(lt) * dlgOut(lt);
   if (du > 0) SH15.dialog(Object.assign({}, DLG, { dressing: !hero, press: lt > CUE.click - .15 ? { id: 'ok', k: ptr.press } : undefined }), lt >= CUE.click + .06 ? du : dlgU(lt));
   // Binder, over the dialog: he points a handle at A1 on "Greenleaf!", grins on "I'll help"
   const bpop = ss(lt, CUE.binderpop, CUE.binderpop + .3), grin = ss(lt, CUE.grin - .05, CUE.grin + .5), pointing = lt >= bS('b3') - .05 && lt < bE('b3') + .45;
   const pk = ss(lt, bS('b3') - .05, bS('b3') + .2) * (1 - ss(lt, bE('b3') + .1, bE('b3') + .45));
-  const at = [lerp(BINDER_AT[0], 520, pk), lerp(BINDER_AT[1], 262, pk)];
+  const at = [lerp(BINDER_AT[0], 520, ss(pk, .3, 1)), lerp(BINDER_AT[1], 262, ss(pk, 0, .8))];
   const bi = A15.binder({ x: at[0], y: at[1], s: lerp(.78, .62, pk) * eb(bpop), center: true, noLegs: true, who: 'bind', t: lt, pose: lt > bS('b2') ? 'helpful' : 'rest', handles: pk > .01 ? { l: [lerp(106, 150, pk), lerp(-34, -70, pk), lerp(118, 232, pk), lerp(36, -128, pk)], r: [106, -34, 118, 36] } : undefined, grin, glint: grin > .9 ? sg(lt, CUE.grin + .4, CUE.grin + .7) : 0, look: [.25, .1], hover: 6 });
   if (bpop > 0 && lt < CUE.click + .3) { REG.suppress++; try { drawChar(bi); } finally { REG.suppress--; } }
-  if (lt > 12.95 && lt < CUE.click + .5) SH15.pointer(ptr.x, ptr.y, { kind: 'arrow', press: ptr.press, s: 1.2 });
+  if (lt > 12.95 && lt < CUE.click + .5) SH15.pointer(ptr.x, ptr.y, { kind: 'arrow', press: ptr.press, s: .95 });
   ctx.restore();
   // the slim presenting bar and his frozen picture in the corner (the call's own furniture, dressing)
   ctx.fillStyle = '#10161d'; ctx.fillRect(0, 0, 1280, SHW.y);

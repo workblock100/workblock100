@@ -19,7 +19,7 @@
  *   26.65-31.9 line     "That's a merge." (the queue backs up, fruit, vegetable, fruit, vegetable); Onion comes up: her tears spread to everyone in range; sob (31.168), sting (31.43).
  * Sound cues are hit by the sim (collisions) and by the picture: dockimpact on the first-touch frame (5.833), groan 6.371 (the crane's jib bows), cablewhip 6.571 (the slings flick), bonk 25.901, sniffle 29.263, sob 31.168. */
 (() => {
-if (!window.TIMELINE_EP15 || !window.S15 || !window.H6) return;
+if (!window.TIMELINE_EP15 || !window.S15 || !window.H6 || !window.A15 || !window.A7 || !window.A9 || !window.A10 || !window.A6) return;
 const { zoomTo } = window.H6;
 const A6 = window.A6, A7 = window.A7, A9 = window.A9, A10 = window.A10, A11 = window.A11, A15 = window.A15;
 const TLS = window.TIMELINE_EP15.scenes.find(s => s.id === 'dock'), BT = TLS.beats;
@@ -213,11 +213,14 @@ function drawStaff1(lt, z) {
   sliceFly(lt);
 }
 /* a face is whole, clear of the frame, the clock pill and the caption zone, or the character is not drawn; one that is leaving or entering the frame at its edge is drawn as `transit` and faded (a quarter second of margin, as in Episode 14's headVis) */
+/* a caption is on screen (the caption zone y 1380 to 1700 is only reserved while someone speaks) */
+const SPOKEN = Object.keys(LINES);
+const capOn = lt => lt != null && SPOKEN.some(id => lt >= bs(id) - .1 && lt <= be(id) + .4);
 function faceVis(o) {
   const k = (o.s || SS) / .44, hx = (o.x - CAM.x) * CAM.z + W / 2, hy = (o.y - 118 * k * (o.noLegs ? .75 : 1) - CAM.y) * CAM.z + H / 2, r = 54 * k * CAM.z;
-  const m = Math.min(hx - r, W - (hx + r), hy - r);                         /* how far the face box is inside the left, right and top edges of the frame */
+  const m = Math.min(hx - r, W - (hx + r), hy - r, H - (hy + r));                         /* how far the face box is inside the left, right and top edges of the frame */
   const inBox = (x0, y0, x1, y1) => hx + r > x0 && hx - r < x1 && hy + r > y0 && hy - r < y1;
-  if (inBox(48, 116, 500, 244) || inBox(0, 1380, W, 1700)) return { a: 0, transit: false };
+  if (inBox(48, 116, 500, 244) || (capOn(o.t) && inBox(0, 1380, W, 1700))) return { a: 0, transit: false };
   if (m >= 0) return { a: 1, transit: false };
   return { a: clamp(1 + m / (r * .8)), transit: true };
 }
@@ -410,27 +413,27 @@ function saladSled(x, y, rot, k = 1) {
   ctx.restore();
 }
 /* positions of the four over the act (conference room x 284..534, floor 656). The handshake is at x 384; Tomato steps in between them and they make room for her. */
-const M_X = [[9.12, 306], [10.0, 306], [10.5, 318], [12.9, 318], [13.3, 306], [15.1, 306], [15.13, 262], [20, 262]];
-const B_X = [[10.3, 452], [10.7, 452], [13.2, 456], [15.1, 456], [15.13, 474], [20, 474]];
-const T_X = [[15.13, 366], [20, 366]];
-const L_X = [[9.12, 150], [20, 150]];
+const M_X = [[9.12, 298], [10.0, 298], [10.5, 318], [12.9, 318], [13.3, 306], [15.1, 306], [15.13, 300], [20, 300]];
+const B_X = [[10.3, 452], [10.7, 452], [13.2, 456], [15.1, 456], [15.13, 515], [20, 515]];
+const T_X = [[15.13, 410], [20, 410]];
+const L_X = [[9.12, 190], [20, 190]];
 const handshakeT = 13.36;
 const MS = SS * 1.12;
 function melonG(lt) {
-  const x = kf(lt, M_X), dx = (lt < 15.3 ? kf(lt, B_X) : kf(lt, T_X)) - x, shaking = lt >= handshakeT && lt < 15.1;
+  const x = kf(lt, M_X), dx = (lt < 15.3 ? kf(lt, B_X) : kf(lt, T_X)) - x, shaking = lt >= handshakeT && lt < 15.13;
   const box = lt >= 11.55 && lt < 15.13, up = lt >= 11.72 && lt < 12.9 ? so(lt, 11.55, 11.95) : 0;
   const arms = lt < 10.3 ? { l: 'offer', r: 'offer' } : shaking ? { l: 'hold', r: 'reach' } : box ? { l: 'hold', r: 'rest' } : { l: 'rest', r: 'rest' };
   const sq = shaking ? .1 * decayAt(lt, handshakeT, .12) + .05 * Math.max(0, Math.sin((lt - handshakeT) * 16)) * Math.exp(-(lt - handshakeT) / .9) : 0;
   const o = { x, y: FLOOR - 42, s: MS, t: lt, who: 'melon', noLegs: true, noShadow: true, plant: true, yaw: yawTo(dx), expr: lt < 15.2 ? 'happy' : lt < 18.9 ? 'neutral' : 'sour', look: [.5, 0], arms, squash: sq, rot: .012 * hz(lt, .4) + (shaking ? .03 * hz(lt, 3) : 0) };
   if (shaking) o.grip = Object.assign({}, o.grip, { r: [150, 34] });
-  if (box) { o.hold = { l: 'pizzabox9' }; o.grip = Object.assign({}, o.grip, { l: shaking ? [-84, 56] : [-112 - 10 * up, 52 - 28 * up] }); }
+  if (box) { o.hold = { l: 'pizzabox9' }; o.grip = Object.assign({}, o.grip, { l: shaking ? [-100, 84] : [-112 - 10 * up, 52 - 28 * up] }); }
   return A9.melon(o);
 }
 function brocG(lt) {
   const r = brocRide(lt); if (!r) return null;
   const standing = !r.riding && lt >= RIDE1 + .35, hop = !r.riding ? seg(lt, RIDE1 + .15, RIDE1 + .4) * (1 - seg(lt, RIDE1 + .4, RIDE1 + .7)) : 0;
   const x = r.riding ? r.x : (standing ? kf(lt, B_X) : r.x);
-  const shaking = lt >= handshakeT && lt < 15.1, dxm = (lt < 15.3 ? kf(lt, M_X) : kf(lt, T_X)) - x;
+  const shaking = lt >= handshakeT && lt < 15.13, dxm = (lt < 15.3 ? kf(lt, M_X) : kf(lt, T_X)) - x;
   const o = { x, y: r.riding ? r.y : FLOOR - 52 * hop, s: SS, t: lt, who: 'broc', yaw: r.riding ? .55 : yawTo(dxm, .62), bowl: !r.riding && lt >= RIDE1 + .45, noLegs: r.riding, expr: lt >= 12.79 && lt < 15.2 ? 'broc_stern' : 'broc_boom', look: [-.4, 0] };
   if (r.riding) { o.arms = { l: 'up', r: 'up' }; o.rot = .12 * Math.sin(lt * 14); o.squash = .05 * Math.sin(lt * 20); }
   else if (shaking) { o.arms = { l: 'reach', r: 'rest' }; o.hold = {}; o.bowl = false; o.grip = { l: [-170, 30] }; o.squash = .08 * decayAt(lt, handshakeT, .15); }
@@ -460,7 +463,7 @@ function lemonG(lt) {
   return P(A7.lemon, x, FLOOR, o);
 }
 /* the coverage: cuts on the lines. y is chosen so the floor sits at py about 1150 (heads clear of the caption zone) */
-const SHOT_G = [[9.12, 10.42, 392, 2.3, 2.42], [10.42, 12.79, 392, 2.55, 2.7], [12.79, 15.13, 384, 3.1, 3.3], [15.13, 18.84, 350, 2.05, 2.2]];
+const SHOT_G = [[9.12, 10.42, 392, 2.3, 2.42], [10.42, 12.79, 392, 2.55, 2.7], [12.79, 15.13, 384, 3.1, 3.3], [15.13, 18.84, 380, 2.05, 2.2]];
 function camGreet(lt) {
   for (const [a, b, x, z0, z1] of SHOT_G) if (lt < b) { const z = lerp(z0, z1, seg(lt, a, b)); return { x, y: FLOOR - 190 / z * (z > 2.9 ? 1.1 : 1), z }; }
   /* "Pending.": the close-up on Tomato's face, frozen half and half */
@@ -553,8 +556,8 @@ const T_BONK = 25.901, T_STARS = 25.951, T_SNIFF = 29.263, T_SOB = 31.168, T_STI
 const PS = .56, QS = .38;                                   /* the pair's scale, the line's scale */
 const toScr = (wx, wy) => [(wx - CAM.x) * CAM.z + W / 2, (wy - CAM.y) * CAM.z + H / 2];
 /* where the pair stand (x on the stair): they walk in, stop nose to nose, step back politely on each "After you.", then both go at once: the foreheads meet on the bonk cue */
-const MX = [[19.75, 554], [22.0, 554], [22.12, 540], [22.7, 540], [23.0, 554], [23.84, 554], [24.2, 540], [24.64, 540], [24.95, 554], [25.74, 554], [T_BONK, 568], [26.15, 548], [26.6, 536], [27.2, 536], [60, 536]];
-const CXS = [[19.75, 662], [22.62, 662], [22.74, 676], [23.5, 676], [23.9, 662], [24.57, 662], [24.69, 676], [25.3, 676], [25.55, 662], [25.74, 662], [T_BONK, 652], [26.15, 668], [26.6, 684], [27.2, 684], [60, 684]];
+const MX = [[19.75, 554], [22.0, 554], [22.12, 540], [22.7, 540], [23.0, 554], [23.84, 554], [24.2, 540], [24.64, 540], [24.95, 554], [25.74, 554], [T_BONK, 561], [26.15, 548], [26.6, 536], [27.2, 536], [60, 536]];
+const CXS = [[19.75, 662], [22.62, 662], [22.74, 676], [23.5, 676], [23.9, 662], [24.57, 662], [24.69, 676], [25.3, 676], [25.55, 662], [25.74, 662], [T_BONK, 659], [26.15, 668], [26.6, 684], [27.2, 684], [60, 684]];
 const QLOW = [466, 396, 326, 266], QUP = [748, 820, 892, 960];
 const queueMk = [
   [x => A15.greenleaf(A6.lime(x)), 1], [x => (A11 || A7).straw(x), 1], [x => A15.greenleaf(A7.pear(x)), 1], [x => A10.clem(x), 1],
@@ -568,7 +571,6 @@ function mangoS(lt) {
   const o = { x, y: stairY(x), s: PS, t: lt, who: 'mango', yaw: PI / 2, expr: lt < 21.9 ? 'neutral' : lunge ? 'angry' : hit ? (lt < 27 ? 'dead' : 'sour') : 'neutral', look: [.8, .1] };
   if (walking) Object.assign(o, walkOpts(x, 300, PS, 1, 140));
   else if ((lt >= 21.89 && lt < 22.6) || (lt >= 23.84 && lt < 24.55)) { o.arms = { l: 'rest', r: 'offer' }; o.rot = .06; }
-  if (lunge) o.rot = .1 * seg(lt, 25.74, T_BONK);
   if (hit) { o.sx = 1 - .2 * k; o.rot = -.3 * k - (lt > 26.4 ? .05 : 0); o.arms = { l: 'down', r: 'down' }; }
   if (lt >= T_STARS && lt < 28.2) o.mouthOpen = .2;
   return cry(A7.mango(o), x, lt);
@@ -578,7 +580,6 @@ function carrotS(lt) {
   const o = { x, y: stairY(x), s: PS, t: lt, who: 'carrot', yaw: -PI / 2, expr: lt < 22.6 ? 'carrot_calm' : lunge ? 'carrot_firm' : hit ? (lt < 27 ? 'dead' : 'carrot_polite') : 'carrot_polite', look: [-.8, .1] };
   if (walking) Object.assign(o, walkOpts(x, 930, PS, -1, 150));
   else if ((lt >= 22.64 && lt < 23.8) || (lt >= 24.59 && lt < 25.75)) { o.arms = { l: 'offer', r: 'rest' }; o.rot = -.05; }
-  if (lunge) o.rot = -.2 * seg(lt, 25.74, T_BONK);
   if (hit) { o.sx = 1 - .2 * k; o.rot = .3 * k; o.arms = { l: 'down', r: 'down' }; }
   return cry(A15.carrot(o), x, lt);
 }
@@ -629,7 +630,7 @@ function drawAct2(lt) {
   if (oni) drawFaded(oni, lt < 28.4);
   drawFaded(lem);
   /* the whistle at Lemon's mouth during "One at a time. Zipper merge.", a tweet at the end of it */
-  if (lt >= 19.75 && lt < 21.8) { const [hx, hy] = headAt(lem, .52); whistle(hx + 30, hy + 14, .9, -.3); tweet(hx + 62, hy + 12, seg(lt, 21.5, 21.8), 1); }
+  if (lt >= 19.75 && lt < 21.8) { const [hx, hy] = headAt(lem, .52); whistle(hx + 34, hy + 3, .9, -.25); tweet(hx + 66, hy + 2, seg(lt, 21.5, 21.8), 1); }
   /* tears around Onion, and around the line once the wave is through */
   if (oni) A15.tearsAura(oni.x, oni.y - 60, clamp(.4 + (lt - 28) * .3), { r: 90, n: 14, t: lt, size: 5, seed: 3 });
   /* the stars on the bonk cue (one half second later than the hit, the cue says so) */
@@ -680,7 +681,7 @@ function over2(lt) {
   if (lt < T_STAIRS) {
     const b = brocG(lt), t = tomG(lt);
     if (b) speciesTag(lt, 'broc', RIDE1 + .1, 11.1, 640, 470, b.x, b.y - 118);
-    if (t) speciesTag(lt, 'tom', 15.2, 16.55, 330, 500, t.x, t.y - 118);
+    if (t) speciesTag(lt, 'tom', 15.2, 16.55, 372, 500, t.x, t.y - 118);
     return;
   }
   const car = carrotS(lt), oni = onionS(lt);

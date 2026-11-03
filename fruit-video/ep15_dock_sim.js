@@ -12,7 +12,7 @@
 (function () {
 const P = (typeof module === 'object' && module.exports) ? require('./phys2d.js') : (typeof window !== 'undefined' ? window.PHYS2D : null);
 
-const G = 1100, T_RUN = 10.0, T_SCENE = 32.38, TC = 5.821, T_LOWER = 2.221;
+const G = 1100, T_RUN = 9.3, T_SCENE = 32.38, TC = 5.821, T_LOWER = 2.221;
 const GL_H = 1002, GL_DOCK_BOT = 274, GL_CY_DOCK = GL_DOCK_BOT - GL_H / 2;      /* -227 */
 const SIGN_TOP = 190, RIDGE = 274, FLOOR_Y = 656, CEIL_Y = 380;
 const SLING_DX = [-400, -140, 140, 400], EYE_DY = 109, LUG_DY = -523, SLING_L = 251;

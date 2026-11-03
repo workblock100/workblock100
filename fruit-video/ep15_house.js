@@ -795,7 +795,7 @@ GLF.gstation = (r, t, st) => {
   });
   const x0 = r.x0 + 125;
   ln(x0 - 40, r.y0 + 14, x0 - 40, r.y0 + 28, 'rgba(90,60,30,.9)', 1.6); ln(x0 + 40, r.y0 + 14, x0 + 40, r.y0 + 28, 'rgba(90,60,30,.9)', 1.6);
-  plate([x0 - 56, r.y0 + 26, 112, 32], 'ORGANIC', { fill: '#2f7a42', stroke: '#f6f3e8', lw: 3, ink: '#f6f3e8', size: 22, spacing: 3, pad: 4, r: 8, heroSize: 22, id: 'k15.organic' });
+  plate([x0 - 56, r.y0 + 26, 112, 32], 'ORGANIC', { fill: '#2f7a42', stroke: '#f6f3e8', lw: 3, ink: '#f6f3e8', size: 22, spacing: 3, pad: 4, r: 8, heroSize: 22, hero: false, id: 'k15.organic' });
 };
 
 GLS.gmed = (w, h) => {        /* Med Room: pale green, a herbal tea cabinet, a locked med cabinet with a leaf, a pill-organiser wall, a sink */

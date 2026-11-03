@@ -181,7 +181,9 @@ function drawBannerText(lt, st, bs, o = {}) {
   ctx.save(); ctx.translate(bar.x, bar.y + 9); ctx.rotate(bar.angle);
   if (!roll.done) { ctx.beginPath(); ctx.rect(-700, -20, 1400, Math.max(0, roll.y - bar.y - 9) + 20); ctx.clip(); }   /* the lettering shows only on the cloth that has come down */
   const cy = [164, 290, 382], wantHero = down && o.hero !== false, tt0 = (sim() && sim().meta.tossT) || 7.1, tossing = lt > tt0 + .2 && lt < tt0 + 2.7;   /* the tossed lettuce flies across the lettering for a moment: it is dressing then */
-  const ok1 = wantHero && heroOK(-460, cy[0] - 60, 460, cy[0] + 60, 150), ok2 = wantHero && heroOK(-400, cy[1] - 40, 400, cy[1] + 40, 92), ok3 = wantHero && !tossing && heroOK(-360, cy[2] - 24, 360, cy[2] + 24, 52);
+  const hw = (t, o) => { try { return UI.sizeOf(t, o).w / 2 + 14; } catch (e) { return 460; } };   /* half the real width of a line (the gate's box is as wide as the ink, no wider) */
+  const w1 = hw('FRUIT SALAD', { font: 'Bangers', size: 150, spacing: 5 }), w2 = hw('REHAB & NURSING', { font: 'Bangers', size: 92, spacing: 6 }), w3 = hw('Better together. Tossed.', { font: 'Nunito', weight: 900, italic: true, size: 52 });
+  const ok1 = wantHero && heroOK(-w1, cy[0] - 60, w1, cy[0] + 60, 150), ok2 = wantHero && heroOK(-w2, cy[1] - 40, w2, cy[1] + 40, 92), ok3 = wantHero && !tossing && heroOK(-w3, cy[2] - 24, w3, cy[2] + 24, 52);
   if (FP) FP.bevelText('FRUIT SALAD', 0, cy[0], 150, { face: FP.FACE_LOGO, extr: .3, lwK: .12, alpha: a, hero: ok1, grp: 'bn:fs', spacing: 5 });
   else UI.label('FRUIT SALAD', 0, cy[0], { font: 'Bangers', size: 150, fill: '#ffe135', stroke: '#07170f', lw: 18, alpha: a, hero: ok1, crop: !ok1 });
   UI.label('REHAB & NURSING', 0, cy[1], { font: 'Bangers', size: 92, spacing: 6, fill: '#f6efd2', stroke: '#07170f', lw: 12, shadow: 10, alpha: a, hero: ok2, crop: !ok2 });
@@ -300,17 +302,30 @@ shot('m1', 4.22, 5.32, 'B', lt => ({ x: B_X + 40, y: 1255, z: lp(2.9, 3.2, sg(lt
 });
 // o1: Onion in close-up (she cries)
 shot('o1', 5.32, 6.3, 'B', lt => ({ x: B_X + 30, y: 1262, z: lp(3.4, 3.8, sg(lt, 5.3, 6.3)) }), lt => {
-  bChar('onion', lt, { x: B_X + 30, s: .5, yaw: .35, headYaw: .4, look: [.1, .1], cry: .9, sob: sg(lt, 5.8, 6.1) * .8, t: lt });
+  bChar('onion', lt, { x: B_X + 30, s: .5, yaw: .35, headYaw: .4, look: [.1, .1], cry: .9, sob: eO(sg(lt, CUE.sob - .14, CUE.sob + .08)) * .85, t: lt + .0741 });   /* the first hiccup (a peak of sin(13.5 t)) lands on the sob cue */
 });
 // ------------------------------------------------------------------ props of the toss and the reactions: lettuce, badges, giant tongs, the COUNTED form
 const GREENS = ['#4aa85a', '#6cc46a', '#8fd36a', '#3e9b4f'];
-function leafShape(s, hue, rot = 0) {
+function leafShape(s, hue, rot = 0) {   /* a ruffled lettuce leaf: a pointed oval with scalloped edges, a midrib and side veins */
   ctx.save(); ctx.rotate(rot);
-  const pts = [[-s * 1.1, 0], [-s * .5, -s * .8], [s * .4, -s * .9], [s * 1.2, -s * .1], [s * .5, s * .7], [-s * .6, s * .6]];
-  ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
-  ctx.fillStyle = mixh(GREENS[0], GREENS[2], hue); ctx.fill(); ctx.strokeStyle = '#1f5a32'; ctx.lineWidth = Math.max(1.4, s * .12); ctx.lineJoin = 'round'; ctx.stroke();
-  ctx.strokeStyle = 'rgba(230,255,220,.7)'; ctx.lineWidth = Math.max(1, s * .09); ctx.beginPath(); ctx.moveTo(-s * .9, 0); ctx.lineTo(s * .9, -s * .1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-s * 1.15, 0);
+  ctx.quadraticCurveTo(-s * .95, -s * .5, -s * .5, -s * .6); ctx.quadraticCurveTo(-s * .4, -s * .98, s * .1, -s * .84); ctx.quadraticCurveTo(s * .3, -s * 1.12, s * .78, -s * .6);
+  ctx.quadraticCurveTo(s * 1.2, -s * .5, s * 1.32, -s * .04);
+  ctx.quadraticCurveTo(s * 1.12, s * .5, s * .7, s * .62); ctx.quadraticCurveTo(s * .55, s * .98, s * .02, s * .76); ctx.quadraticCurveTo(-s * .12, s * .98, -s * .56, s * .54); ctx.quadraticCurveTo(-s * .9, s * .6, -s * 1.15, 0);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(-s * 1.1, 0, s * 1.3, 0); g.addColorStop(0, mixh(GREENS[3], GREENS[0], hue)); g.addColorStop(1, mixh(GREENS[1], GREENS[2], hue));
+  ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#1f5a32'; ctx.lineWidth = Math.max(1.4, s * .13); ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.strokeStyle = 'rgba(232,255,214,.78)'; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1, s * .1); ctx.beginPath(); ctx.moveTo(-s * 1.0, 0); ctx.lineTo(s * 1.05, -s * .04); ctx.stroke();
+  ctx.lineWidth = Math.max(.8, s * .06); ctx.strokeStyle = 'rgba(232,255,214,.5)'; ctx.beginPath();
+  for (const [x, dy] of [[-.4, .45], [.05, .55], [.5, .45]]) { ctx.moveTo(s * x, -s * .02); ctx.lineTo(s * (x + .3), -s * dy); ctx.moveTo(s * x, -s * .02); ctx.lineTo(s * (x + .3), s * dy); }
+  ctx.stroke();
   ctx.restore();
+}
+/* a leaf of the toss still falling: it drifts down in a lazy sway from (x0, y0) at t0 and lies at (x1, y1) from t1 on */
+function fallLeaf(lt, t0, t1, x0, y0, x1, y1, s, hue, rot) {
+  if (lt < t0) return;
+  const k = Math.min(1, (lt - t0) / (t1 - t0)), e = k * k * (3 - 2 * k) * .35 + k * .65, sway = Math.sin(k * 11 + x1 * .05) * (1 - k);
+  ctx.save(); ctx.translate(lp(x0, x1, e) + sway * 26, lp(y0, y1, e)); leafShape(s, hue, rot + sway * .9); ctx.restore();
 }
 function badgeShape() {
   ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(-10, -14, 20, 28, 3); ctx.fill(); ctx.stroke();
@@ -379,8 +394,8 @@ shot('a1', 7.68, 9.28, 'B', lt => ({ x: B_X + 10, y: 1262, z: lp(2.55, 2.85, sg(
   const sp = eIO(sg(lt, BEAT.a1[0], BEAT.a1[0] + .3));
   bChar('melon', lt, { x: B_X - 100, s: .5, yaw: .4, headYaw: .3, look: [.5, 0], expr: 'smug', hold: { r: 'pizzabox9' }, grip: { r: [205, 112] }, arms: { r: 'hold' } });
   bChar('broc', lt, { x: B_X + 105, s: .5, yaw: -.42, headYaw: -.35, look: [-.4, 0] });
-  ctx.save(); ctx.translate(B_X - 100, 1180); leafShape(13, .3, .5); ctx.translate(26, -20); leafShape(11, .7, -.4); ctx.restore();   /* lettuce on the Administrators */
-  ctx.save(); ctx.translate(B_X + 130, 1124); leafShape(12, .5, -.3); ctx.restore();
+  fallLeaf(lt, 7.68, 8.2, B_X - 150, 880, B_X - 104, 1181, 14, .3, .4);   /* lettuce from the toss comes down on the Administrators */
+  fallLeaf(lt, 7.68, 8.45, B_X + 40, 860, B_X + 124, 1132, 13, .6, -.35);
 });
 // o2 (B): Onion sobbing, Tomato changing her mind beside her
 shot('o2', 9.28, 11.63, 'B', lt => ({ x: B_X + 12, y: 1262, z: lp(2.7, 3.0, sg(lt, 9.3, 11.6)) }), lt => {
@@ -388,7 +403,7 @@ shot('o2', 9.28, 11.63, 'B', lt => ({ x: B_X + 12, y: 1262, z: lp(2.7, 3.0, sg(l
   const fl = lt >= f2 ? lt - f2 : lt >= f1 ? lt - f1 : 1;
   bChar('onion', lt, { x: B_X - 62, s: .5, yaw: .4, headYaw: .35, look: [.3, .1], cry: .95, sob: .7, t: lt });
   bChar('tom', lt, { x: B_X + 95, s: .5, yaw: -.45, headYaw: -.4, look: [-.4, 0], tomPose: ph, tomFrom: ph === 'veg' && lt >= f2 ? 'fruit' : lt >= f1 ? 'veg' : 'veg', flipT: Math.min(.6, fl) });
-  ctx.save(); ctx.translate(B_X - 62, 1112); leafShape(11, .4, .3); ctx.restore();
+  fallLeaf(lt, 9.3, 10.3, B_X - 120, 880, B_X - 44, 1190, 13, .45, .35);   /* and one on the visor of Onion */
 });
 // t2 (B): Tomato in the upper half, the form with its COUNTED stamp below
 shot('t2', 11.63, 12.5, 'B', lt => ({ x: B_X, y: 1352, z: 3.0 }), lt => {
@@ -418,7 +433,7 @@ function petalPile(rect, floorY, seed) {
 }
 let simLt = 0;
 /* two beats of a small fast heart: lub-dub every 0.82 s, the first one on the sound cue */
-function heartK(lt) { const ph = ((lt - CUE.heartbeat) % .82 + .82) % .82; return Math.max(Math.exp(-ph / .07), .7 * Math.exp(-Math.max(0, ph - .2) / .07) * (ph > .2 ? 1 : 0)) * (lt > 12.8 ? 1 : 0); }
+function heartK(lt) { const ph = ((lt - CUE.heartbeat) % .82 + .82) % .82; return Math.max(Math.exp(-ph / .07), .7 * Math.exp(-Math.max(0, ph - .2) / .07) * (ph > .2 ? 1 : 0)) * (lt >= CUE.heartbeat - .03 ? 1 : 0); }
 function artiTile(rect, tt) {
   const g = ctx.createLinearGradient(0, rect.y, 0, rect.y + rect.h); g.addColorStop(0, '#d9c7a4'); g.addColorStop(.7, '#bba47c'); g.addColorStop(.72, '#7d5a3a'); g.addColorStop(1, '#5e4228');
   ctx.fillStyle = g; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
@@ -546,10 +561,10 @@ function spinner(lt) {
   const age = lt - CUE.pending, a = eO(sg(age, 0, .5)), rot = lt * 1.3, cx = 540, cy = 300, R = 690 * (1 + .04 * ringK(lt - CUE.sting, .25));
   if (a <= .01) return;
   ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha *= a; ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(255,236,170,.18)'; ctx.lineWidth = 34; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();   /* the track */
-  for (let i = 0; i < 12; i++) {   /* the bright arc: a comet of segments, the head ahead */
-    const k = 1 - i / 12, a0 = rot - i * .095, a1 = a0 + .12;
-    ctx.strokeStyle = `rgba(255,${200 + 40 * k | 0},${120 + 60 * k | 0},${.15 + .85 * k * k})`; ctx.lineWidth = 34 * (.55 + .45 * k); ctx.shadowColor = 'rgba(255,190,80,.95)'; ctx.shadowBlur = 36 * k;
+  ctx.strokeStyle = 'rgba(255,236,170,.26)'; ctx.lineWidth = 40; ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();   /* the track */
+  for (let i = 0; i < 18; i++) {   /* the bright arc: a comet of segments, the head ahead */
+    const k = 1 - i / 18, a0 = rot - i * .105, a1 = a0 + .13;
+    ctx.strokeStyle = `rgba(255,${200 + 40 * k | 0},${120 + 60 * k | 0},${.2 + .8 * k * k})`; ctx.lineWidth = 48 * (.5 + .5 * k); ctx.shadowColor = 'rgba(255,190,80,.95)'; ctx.shadowBlur = 44 * k;
     ctx.beginPath(); ctx.arc(cx, cy, R, a0, a1); ctx.stroke();
   }
   ctx.restore();

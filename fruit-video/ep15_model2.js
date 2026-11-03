@@ -5,7 +5,10 @@
  * the sheet window grows out of the laptop, the fill handle is dragged, and the window shrinks into a picture-in-picture at the top of the frame while FORTY STRAWBERRIES pop into the hall, row by row
  * (cached small sprites, mixed yaw, who 'chor': the whole crowd mouths the chorus), the real one in front looking at them. The lookup returns #N/A, the clones get an #N/A tag and fade, then UNASSIGNED.
  *
- * @@SHOTS@@
+ * SHOTS (scene seconds): open 0-1.0 empty hall | desk 1.0-6.77 (Onion, Tomato, Binder close-ups; sniffle 4.10; Binder "I'll help!") | fill 6.77-10.37 (the window grows out of the laptop 6.45, click 6.87, the handle is dragged 40 rows in step
+ * with the fillpops 7.47-10.17, window shrinks into a picture-in-picture with the clone count) | reveal 10.37 (the hall camera cranes up on the crowd) | cuS 11.32 (Strawberry "I'm one person.") | crowd 12.36-19.34 (chorus with every mouth moving,
+ * Tomato close-up 13.75, "I'm tired." synchronized slump 14.98 with one clone late) | lookup window 16.3-19.15 (typed 17.3, #N/A 18.2 with its tooltip) | cuS 19.34 "I never am." | tags 20.28-23.5 (#N/A tags 20.3, then UNASSIGNED 21.7, sting 22.55 punch-in).
+ * Text gate: audited every frame (0 issue-frames).
  */
 (() => {
 if (!window.TIMELINE_EP15 || !window.S6 || !window.H6 || !window.UI) return;
@@ -286,7 +289,7 @@ const CT = {
 const win = (lt, a, b) => c01((lt - a) / (b - a));
 const pulseW = (lt, t0, d) => lt < t0 || lt > t0 + d ? 0 : Math.sin(PI * (lt - t0) / d);
 const DCOL = ['#a8744f', '#7d9a6a', '#6f8fb5', '#b98a5a'], DOORS = [];
-for (let j = 0; j < 9; j++) for (const side of [1, -1]) DOORS.push({ side, z: (side > 0 ? 1500 : 1900) + 520 * j, n: String(side > 0 ? 1 + 2 * j : 2 + 2 * j), color: DCOL[(j + (side > 0 ? 0 : 2)) % 4] });
+for (let j = 0; j < 9; j++) for (const side of [1, -1]) DOORS.push({ side, z: (side > 0 ? 1500 : 1900) + 520 * j, n: '', color: DCOL[(j + (side > 0 ? 0 : 2)) % 4] });
 DOORS.sort((a, b) => a.z - b.z);
 let HCAM = { cy: HALL.cy, hy: HALL.hy };
 function drawHall(lt) {
@@ -295,22 +298,22 @@ function drawHall(lt) {
   V2.opts.reflect = false;
   S6.corridor({ doors: DOORS, fog: '#b4bfd0', fogAmt: .5, wall: '#e9e0cb', wain: '#5c9298', bright: 1, signs: [] });
 }
-const DESK = { X: -168, Z: 1010, cs: .66 };
+const DESK = { X: -151, Z: 1010, cs: .66 }, OX = -262, TX = -40, BX = -160;           /* desk, Onion, Tomato and the Binder (hall units): the gap between the two heads fits the Binder */
 const deskQ = () => V2.at(DESK.X, DESK.Z);
 const dsc = () => deskQ().s * DESK.cs;                                           /* the standing scale at the desk */
 const atX = (X, Z = DESK.Z) => { const q = V2.at(X, Z); return { x: q.x, y: q.y, s: q.s * DESK.cs }; };
 function onionD(lt, ov = {}) {
-  const p = atX(-262), sp = talkOf('onion'), sob = pulseW(lt, CUE.sniffle, .55);
+  const p = atX(OX), sp = talkOf('onion'), sob = pulseW(lt, CUE.sniffle, .55);
   return Object.assign(CT.onion({ x: p.x, y: p.y, s: p.s, t: lt, yaw: .45, look: [.8, .15], cry: c01(.5 + .3 * sp), expr: 'onion_cry', sob, arms: { l: 'rest', r: 'hold' }, grip: { r: [64, 82] }, hold: { r: 'fp15_tabletclip' }, tabAt: [-.3, .12], tabRot: .05 }), ov);
 }
 function tomatoD(lt, ov = {}) {
-  const p = atX(-76), clap = lt > 13.9 && lt < 14.9 ? Math.abs(Math.sin((lt - 13.9) * 22)) : 0;
+  const p = atX(TX), clap = lt > 13.9 && lt < 14.9 ? Math.abs(Math.sin((lt - 13.9) * 22)) : 0;
   const arms = clap > 0 || (lt > 13.75 && lt < 15) ? { l: 'hold', r: 'hold' } : { l: 'rest', r: 'rest' };
   return Object.assign(CT.tomato({ x: p.x, y: p.y, s: p.s, t: lt, yaw: -.4, look: [-.7, .2], arms, grip: { l: [-34 + 22 * clap, 70], r: [34 - 22 * clap, 70] }, hand: { l: 'flat', r: 'flat' }, expr: lt > 13.75 && lt < 15.2 ? 'happy' : undefined }), ov);
 }
 function binderD(lt, ov = {}) {
-  const p = atX(-168), bob = Math.sin(lt * 3.1) * 4 * p.s + 2 * Math.sin(lt * 5.3 + 1) * p.s;
-  return Object.assign(CT.binder({ x: p.x, y: p.y - 215 * p.s + bob, s: p.s * .72, t: lt, center: true, noLegs: true, hover: 100, look: [Math.sin(lt * .9) * .5, .35], pose: 'helpful' }), ov);
+  const p = atX(BX), bob = Math.sin(lt * 3.1) * 4 * p.s + 2 * Math.sin(lt * 5.3 + 1) * p.s;
+  return Object.assign(CT.binder({ x: p.x, y: p.y - 232 * p.s + bob, s: p.s * .64, t: lt, center: true, noLegs: true, hover: 100, look: [Math.sin(lt * .9) * .5, .35], pose: 'helpful' }), ov);
 }
 function strawR(lt, ov = {}) {
   const q = V2.at(REAL.X, REAL.Z), slump = c01((lt - 14.98) / .5);
@@ -408,7 +411,7 @@ const hcamAt = lt => { const k = eio((lt - CUE.crowd) / 1.3); return { cy: lerp(
 /* returns [cx, cy, z, dof px] for scene time lt; the hall camera is set first because the cast positions depend on it */
 function camOf2(lt) {
   HCAM = hcamAt(lt); V2.setCam({ f: HALL.f, cy: HCAM.cy, hy: HCAM.hy });
-  const pO = atX(-262), pT = atX(-76), eye = HCAM.hy - (860 - 1180);               /* the scene y that keeps the old composition when the horizon moves */
+  const pO = atX(OX), pT = atX(TX), eye = HCAM.hy - (860 - 1180);               /* the scene y that keeps the old composition when the horizon moves */
   const wideY = lt < CUE.crowd ? 1180 : lerp(1180, 1300, eio((lt - CUE.crowd) / 1.3));
   const k = lt / 1.0;
   if (lt < 1.0) return [540, 1180, lerp(1.0, 1.06, eio(k)), 0];
@@ -436,12 +439,11 @@ function drawWorld(lt) {
   const bg = () => { drawHall(lt); drawCrowd(lt); };
   if (px > .5) V2.dof(px, bg); else bg();
   if (FULL_WIN(lt)) return;
-  const cast = [];
-  if (lt < 6.4 || lt > 19.6) cast.push(binderD(lt));
-  cast.push(onionD(lt), tomatoD(lt));
-  const seen = o => o.kind === 'bind' || wholeInFrame(o, 4) || faceInFrame(o);
+  const cast = [onionD(lt), tomatoD(lt)];
+  const seen = o => wholeInFrame(o, 4) || faceInFrame(o);
   for (const o of cast) if (seen(o)) drawChar(o);
   drawDesk(lt);
+  if (lt < 6.4 || lt > 19.6) { const b = binderD(lt); if (seen(b)) drawChar(b); }          /* the Binder floats in front, in the gap between the two heads */
   const sr = strawR(lt); if (seen(sr)) drawChar(sr);
   if (lt >= 20.3) drawTags(lt);
 }
@@ -477,7 +479,7 @@ function drawOverlay(lt) {
 // ------------------------------------------------------------------ the scene
 const SC = {
   shot: lt => lt < 1 ? 'open' : lt < 6.77 ? 'desk' : lt < CUE.crowd ? 'fill' : lt < 11.32 ? 'reveal' : lt < 19.34 ? 'crowd' : lt < 20.28 ? 'cuS' : 'tags',
-  cam(lt) { const c = camOf2(lt); zoomTo(c[0], c[1], c[2]); CAM.shake = .3; },
+  cam(lt) { const c = camOf2(lt), pk = lt >= CUE.sting ? Math.exp(-(lt - CUE.sting) * 7) : 0; zoomTo(c[0], c[1], c[2] * (1 + .035 * pk)); CAM.shake = .3 + 2 * pk; },   /* the sting (22.55): a small punch-in */
   draw(lt) { drawWorld(lt); },
   fx: lt => ({ bloom: .4, vignette: .38, grain: .045, contrast: .12, sat: .1 }),
   blur: lt => nearCut(lt) ? 1 : blurN(camSpeed(cam3, lt)),
