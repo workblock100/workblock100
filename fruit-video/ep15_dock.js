@@ -214,7 +214,7 @@ function drawStaff1(lt, z) {
 }
 /* a face is whole, clear of the frame, the clock pill and the caption zone, or the character is not drawn; one that is leaving or entering the frame at its edge is drawn as `transit` and faded (a quarter second of margin, as in Episode 14's headVis) */
 function faceVis(o) {
-  const k = (o.s || SS) / .44, hx = (o.x - CAM.x) * CAM.z + W / 2, hy = (o.y - 118 * k * (o.noLegs ? .75 : 1) - CAM.y) * CAM.z + H / 2, r = 48 * k * CAM.z;
+  const k = (o.s || SS) / .44, hx = (o.x - CAM.x) * CAM.z + W / 2, hy = (o.y - 118 * k * (o.noLegs ? .75 : 1) - CAM.y) * CAM.z + H / 2, r = 54 * k * CAM.z;
   const m = Math.min(hx - r, W - (hx + r), hy - r);                         /* how far the face box is inside the left, right and top edges of the frame */
   const inBox = (x0, y0, x1, y1) => hx + r > x0 && hx - r < x1 && hy + r > y0 && hy - r < y1;
   if (inBox(48, 116, 500, 244) || inBox(0, 1380, W, 1700)) return { a: 0, transit: false };
@@ -410,20 +410,20 @@ function saladSled(x, y, rot, k = 1) {
   ctx.restore();
 }
 /* positions of the four over the act (conference room x 284..534, floor 656). The handshake is at x 384; Tomato steps in between them and they make room for her. */
-const M_X = [[9.12, 306], [10.0, 306], [10.5, 318], [12.9, 318], [13.3, 306], [15.1, 306], [15.13, 268], [20, 268]];
-const B_X = [[10.3, 452], [10.7, 452], [13.2, 456], [15.1, 456], [15.13, 458], [20, 458]];
-const T_X = [[14.2, 640], [14.9, 520], [15.12, 400], [15.13, 358], [20, 358]];
-const L_X = [[9.12, 175], [20, 175]];
+const M_X = [[9.12, 306], [10.0, 306], [10.5, 318], [12.9, 318], [13.3, 306], [15.1, 306], [15.13, 262], [20, 262]];
+const B_X = [[10.3, 452], [10.7, 452], [13.2, 456], [15.1, 456], [15.13, 474], [20, 474]];
+const T_X = [[15.13, 366], [20, 366]];
+const L_X = [[9.12, 150], [20, 150]];
 const handshakeT = 13.36;
 const MS = SS * 1.12;
 function melonG(lt) {
   const x = kf(lt, M_X), dx = (lt < 15.3 ? kf(lt, B_X) : kf(lt, T_X)) - x, shaking = lt >= handshakeT && lt < 15.1;
-  const box = lt >= 11.55 && lt < 15.9, up = lt >= 11.72 && lt < 12.9 ? so(lt, 11.55, 11.95) : 0;
+  const box = lt >= 11.55 && lt < 15.13, up = lt >= 11.72 && lt < 12.9 ? so(lt, 11.55, 11.95) : 0;
   const arms = lt < 10.3 ? { l: 'offer', r: 'offer' } : shaking ? { l: 'hold', r: 'reach' } : box ? { l: 'hold', r: 'rest' } : { l: 'rest', r: 'rest' };
   const sq = shaking ? .1 * decayAt(lt, handshakeT, .12) + .05 * Math.max(0, Math.sin((lt - handshakeT) * 16)) * Math.exp(-(lt - handshakeT) / .9) : 0;
   const o = { x, y: FLOOR - 42, s: MS, t: lt, who: 'melon', noLegs: true, noShadow: true, plant: true, yaw: yawTo(dx), expr: lt < 15.2 ? 'happy' : lt < 18.9 ? 'neutral' : 'sour', look: [.5, 0], arms, squash: sq, rot: .012 * hz(lt, .4) + (shaking ? .03 * hz(lt, 3) : 0) };
   if (shaking) o.grip = Object.assign({}, o.grip, { r: [150, 34] });
-  if (box) { o.hold = { l: 'pizzabox9' }; o.grip = Object.assign({}, o.grip, { l: [-100 - 8 * up, 40 - 46 * up] }); }
+  if (box) { o.hold = { l: 'pizzabox9' }; o.grip = Object.assign({}, o.grip, { l: shaking ? [-84, 56] : [-112 - 10 * up, 52 - 28 * up] }); }
   return A9.melon(o);
 }
 function brocG(lt) {
@@ -439,8 +439,8 @@ function brocG(lt) {
   return A15.broccoli(o);
 }
 function tomG(lt) {
-  if (lt < 14.1) return null;
-  const x = kf(lt, T_X), walking = lt < 15.3, tS = wordT('t1', 'sauce', 16.0), flipT = lt >= tS ? lt - tS : null;
+  if (lt < 15.13) return null;                                  /* she steps in on the cut: no crossing in front of Broccoli */
+  const x = kf(lt, T_X), walking = false, tS = wordT('t1', 'sauce', 16.0), flipT = lt >= tS ? lt - tS : null;
   /* fruit while she arrives, veg on "sauce", then she cannot decide while Lemon asks (a slow flip back and forth), frozen half and half on "Pending." */
   const ph = lt < 16.8 ? (lt < tS ? 0 : 1) : lt < 18.84 ? (Math.floor((lt - 16.8) / .62) % 2 ? 0 : 1) : .5;
   const o = { x, y: FLOOR + 8, s: SS * 1.04, t: lt, who: 'tom', yaw: yawTo((lt < 16.7 ? kf(lt, M_X) : kf(lt, L_X)) - x, .5), tomPose: ph === .5 ? .5 : ph ? 'veg' : 'fruit' };
@@ -449,6 +449,7 @@ function tomG(lt) {
   const f0 = flips.filter(q => lt >= q && lt - q < .6).pop();
   if (f0 != null) { o.flipT = lt - f0; o.tomFrom = ph ? 'fruit' : 'veg'; }
   if (lt >= 18.84) o.tagSel = .5;
+  if (lt < 15.45) { o.squash = .1 * decayAt(lt, 15.13, .12); o.rot = -.06 * decayAt(lt, 15.13, .15); }
   return A15.tomato(o);
 }
 function lemonG(lt) {
@@ -459,7 +460,7 @@ function lemonG(lt) {
   return P(A7.lemon, x, FLOOR, o);
 }
 /* the coverage: cuts on the lines. y is chosen so the floor sits at py about 1150 (heads clear of the caption zone) */
-const SHOT_G = [[9.12, 10.42, 392, 2.3, 2.42], [10.42, 12.79, 392, 2.55, 2.7], [12.79, 15.13, 384, 3.1, 3.3], [15.13, 18.84, 385, 2.15, 2.3]];
+const SHOT_G = [[9.12, 10.42, 392, 2.3, 2.42], [10.42, 12.79, 392, 2.55, 2.7], [12.79, 15.13, 384, 3.1, 3.3], [15.13, 18.84, 350, 2.05, 2.2]];
 function camGreet(lt) {
   for (const [a, b, x, z0, z1] of SHOT_G) if (lt < b) { const z = lerp(z0, z1, seg(lt, a, b)); return { x, y: FLOOR - 190 / z * (z > 2.9 ? 1.1 : 1), z }; }
   /* "Pending.": the close-up on Tomato's face, frozen half and half */
@@ -552,9 +553,9 @@ const T_BONK = 25.901, T_STARS = 25.951, T_SNIFF = 29.263, T_SOB = 31.168, T_STI
 const PS = .56, QS = .38;                                   /* the pair's scale, the line's scale */
 const toScr = (wx, wy) => [(wx - CAM.x) * CAM.z + W / 2, (wy - CAM.y) * CAM.z + H / 2];
 /* where the pair stand (x on the stair): they walk in, stop nose to nose, step back politely on each "After you.", then both go at once: the foreheads meet on the bonk cue */
-const MX = [[19.75, 300], [21.55, 554], [22.0, 554], [22.12, 540], [22.7, 540], [23.0, 554], [23.84, 554], [24.2, 540], [24.64, 540], [24.95, 554], [25.74, 554], [T_BONK, 575], [26.15, 552], [26.6, 516], [27.2, 506], [60, 506]];
-const CXS = [[19.75, 930], [21.55, 662], [22.62, 662], [22.74, 676], [23.5, 676], [23.9, 662], [24.57, 662], [24.69, 676], [25.3, 676], [25.55, 662], [25.74, 662], [T_BONK, 645], [26.15, 670], [26.6, 700], [27.2, 710], [60, 710]];
-const QLOW = [494, 424, 354, 284], QUP = [732, 804, 876, 948];
+const MX = [[19.75, 554], [22.0, 554], [22.12, 540], [22.7, 540], [23.0, 554], [23.84, 554], [24.2, 540], [24.64, 540], [24.95, 554], [25.74, 554], [T_BONK, 568], [26.15, 548], [26.6, 536], [27.2, 536], [60, 536]];
+const CXS = [[19.75, 662], [22.62, 662], [22.74, 676], [23.5, 676], [23.9, 662], [24.57, 662], [24.69, 676], [25.3, 676], [25.55, 662], [25.74, 662], [T_BONK, 652], [26.15, 668], [26.6, 684], [27.2, 684], [60, 684]];
+const QLOW = [466, 396, 326, 266], QUP = [748, 820, 892, 960];
 const queueMk = [
   [x => A15.greenleaf(A6.lime(x)), 1], [x => (A11 || A7).straw(x), 1], [x => A15.greenleaf(A7.pear(x)), 1], [x => A10.clem(x), 1],
   [x => A7.papaya(x), -1], [x => A15.tomato(Object.assign(x, { tomPose: 'veg', headset: false, formsN: 0 })), -1], [x => A7.banana(x), -1], [x => A7.cran(x), -1],
@@ -563,16 +564,17 @@ const crySince = (lt, x) => { const t0 = 27.95 + Math.abs(x - 98) / 380; return 
 const sobK = lt => decayAt(lt, T_SOB, .35);
 function walkOpts(x, x0, s, dir, v) { return { gaitW: Math.abs(x - x0) / s, axis: 'x', dir, vx: v * dir }; }
 function mangoS(lt) {
-  const x = kf(lt, MX), walking = lt < 21.55, lunge = lt >= 25.74 && lt < T_BONK, hit = lt >= T_BONK, k = decayAt(lt, T_BONK, .22);
+  const x = kf(lt, MX), walking = false, lunge = lt >= 25.74 && lt < T_BONK, hit = lt >= T_BONK, k = decayAt(lt, T_BONK, .22);
   const o = { x, y: stairY(x), s: PS, t: lt, who: 'mango', yaw: PI / 2, expr: lt < 21.9 ? 'neutral' : lunge ? 'angry' : hit ? (lt < 27 ? 'dead' : 'sour') : 'neutral', look: [.8, .1] };
   if (walking) Object.assign(o, walkOpts(x, 300, PS, 1, 140));
   else if ((lt >= 21.89 && lt < 22.6) || (lt >= 23.84 && lt < 24.55)) { o.arms = { l: 'rest', r: 'offer' }; o.rot = .06; }
+  if (lunge) o.rot = .1 * seg(lt, 25.74, T_BONK);
   if (hit) { o.sx = 1 - .2 * k; o.rot = -.3 * k - (lt > 26.4 ? .05 : 0); o.arms = { l: 'down', r: 'down' }; }
   if (lt >= T_STARS && lt < 28.2) o.mouthOpen = .2;
   return cry(A7.mango(o), x, lt);
 }
 function carrotS(lt) {
-  const x = kf(lt, CXS), walking = lt < 21.55, lunge = lt >= 25.74 && lt < T_BONK, hit = lt >= T_BONK, k = decayAt(lt, T_BONK, .22);
+  const x = kf(lt, CXS), walking = false, lunge = lt >= 25.74 && lt < T_BONK, hit = lt >= T_BONK, k = decayAt(lt, T_BONK, .22);
   const o = { x, y: stairY(x), s: PS, t: lt, who: 'carrot', yaw: -PI / 2, expr: lt < 22.6 ? 'carrot_calm' : lunge ? 'carrot_firm' : hit ? (lt < 27 ? 'dead' : 'carrot_polite') : 'carrot_polite', look: [-.8, .1] };
   if (walking) Object.assign(o, walkOpts(x, 930, PS, -1, 150));
   else if ((lt >= 22.64 && lt < 23.8) || (lt >= 24.59 && lt < 25.75)) { o.arms = { l: 'offer', r: 'rest' }; o.rot = -.05; }
@@ -598,7 +600,7 @@ function lemonS(lt) {
 function onionS(lt) {
   if (lt < 27.8) return null;
   const x = kf(lt, [[27.86, -80], [29.2, 84], [60, 84]]), walking = lt < 29.2, c = clamp(.5 + .5 * seg(lt, 27.86, 29.0)), sb = sobK(lt);
-  const o = { x, y: SW.YS + 6, s: PS * .98, t: lt, who: 'onion', yaw: walking ? PI / 2 : V2C.turnLerp(PI / 2, .55, seg(lt, 29.05, 29.45)), cry: c, sob: lt >= T_SOB ? sb : 0, expr: 'onion_cry', look: [.5, .1] };
+  const o = { x, y: SW.YS + 6, s: PS * .98, t: lt, who: 'onion', grip: { l: [-66, 106] }, yaw: walking ? PI / 2 : V2C.turnLerp(PI / 2, .55, seg(lt, 29.05, 29.45)), cry: c, sob: lt >= T_SOB ? sb : 0, expr: 'onion_cry', look: [.5, .1] };
   if (walking) Object.assign(o, walkOpts(x, -80, o.s, 1, 100), { transit: lt < 28.3 });
   if (lt >= T_SOB) o.squash = .07 * sb * Math.abs(Math.sin((lt - T_SOB) * 22));
   return A15.onion(o);
@@ -677,7 +679,7 @@ function speciesTag(lt, id, t0, t1, cx, cy, wx, wy) {
 function over2(lt) {
   if (lt < T_STAIRS) {
     const b = brocG(lt), t = tomG(lt);
-    if (b) speciesTag(lt, 'broc', RIDE1 + .1, 11.1, 800, 470, b.x, b.y - 118);
+    if (b) speciesTag(lt, 'broc', RIDE1 + .1, 11.1, 640, 470, b.x, b.y - 118);
     if (t) speciesTag(lt, 'tom', 15.2, 16.55, 330, 500, t.x, t.y - 118);
     return;
   }

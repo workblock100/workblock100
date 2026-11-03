@@ -657,10 +657,11 @@ function drawItems(lt) {
 }
 /* Lemon's lanyard badge: YEARS OF SERVICE 22 (world units; drawn after the character, before the table front) */
 function drawLemonBadge(lt) {
-  const k = eback((lt - 30.1) / .3); if (k <= 0) return;
-  const x = LW.lemon + 6, y = 1262;
-  ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
-  UI.sign([-44, -20, 88, 40], [{ t: 'YEARS OF SERVICE', size: 7.2, weight: 900 }, { t: '22', size: 24, weight: 900 }], { fill: '#fffdf4', stroke: '#1e8e5a', lw: 2.2, ink: '#22262b', r: 5, pad: 2, id: 'lembadge', kind: 'tag', shadow: 6 });
+  const u = c01((lt - 30.1) / .3); if (u <= 0) return;
+  const k = .9 + .1 * eback(u), sw = Math.sin(lt * 2.3) * .015 * (1 - .6 * c01((lt - 30.6) / 1.2));   /* the text never drops under the hero size during the pop: scale .9 -> 1 and a fade */
+  const x = LW.lemon + 6, y = 1272;
+  ctx.save(); ctx.globalAlpha *= c01(u * 1.6); ctx.translate(x, y - 24); ctx.rotate(sw); ctx.scale(k, k); ctx.translate(0, 24);
+  UI.sign([-58, -24, 116, 50], [{ t: 'YEARS OF SERVICE', size: 9.2, weight: 900 }, { t: '22', size: 26, weight: 900 }], { fill: '#fffdf4', stroke: '#1e8e5a', lw: 2.2, ink: '#22262b', r: 5, pad: 2, id: 'lembadge', kind: 'tag', shadow: 6 });
   ctx.restore();
 }
 function lemonActing(lt) {                                                       /* what Lemon's eyes do in the last beats: the badge, the empty chair, the camera */
@@ -700,7 +701,7 @@ shot('onion2', 15.03, 19.09, pairCam(3.0, 3.4, PX, PX + 30, 15.03, 19.09, 70), P
 shot('v1', 19.09, 19.88, lt => [540, 826, 1.0, 0], lt => vanishers(lt).filter(o => ['fig', 'pine'].includes(o.kind)).concat(ROOM_FIGS(lt).filter(o => o.kind === 'melon')), { dof: 0, rooms: true });
 shot('v2', 19.88, 20.6, lt => [540, 1156, 1.0, 0], lt => vanishers(lt).filter(o => ['blue', 'apple'].includes(o.kind)).concat(ROOM_FIGS(lt).filter(o => o.kind === 'cran')), { dof: 0, rooms: true });
 const LCX = (LW.lemon + LW.carrot) / 2;                                           /* the middle of the two chairs */
-shot('v3', 20.6, 21.29, lt => [LCX + 10, 1250, 2.2, 0], finaleCast, { dof: 0 });
+shot('v3', 20.6, 21.29, lt => [LCX - 34, 1250, 1.9, 0], finaleCast, { dof: 0 });
 shot('lawn2', 21.29, 24.06, lt => [LW.laptop + 140, 1190, 1.7, 0], finaleCast, { dof: 3 });
 shot('mango2', 24.06, 25.49, lt => [...faceCam(mangoO(lt), 3.6, 200, 0), 0], lt => [mangoO(lt, { yaw: 0, look: [0, 0], expr: 'dead', lid: .5 })], { dof: 3 });
 shot('tomato3', 25.49, 26.59, lt => [...faceCam(tomatoO(lt), 3.6, 200, 0), 0], lt => [tomatoO(lt, { yaw: .25, look: [.2, .1], arms: { l: 'shrug', r: 'shrug' } })], { dof: 3 });

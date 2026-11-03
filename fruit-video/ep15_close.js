@@ -180,8 +180,8 @@ function drawBannerText(lt, st, bs, o = {}) {
   if (a <= .01) return;
   ctx.save(); ctx.translate(bar.x, bar.y + 9); ctx.rotate(bar.angle);
   if (!roll.done) { ctx.beginPath(); ctx.rect(-700, -20, 1400, Math.max(0, roll.y - bar.y - 9) + 20); ctx.clip(); }   /* the lettering shows only on the cloth that has come down */
-  const cy = [164, 290, 382], wantHero = down && o.hero !== false;
-  const ok1 = wantHero && heroOK(-460, cy[0] - 60, 460, cy[0] + 60, 150), ok2 = wantHero && heroOK(-400, cy[1] - 40, 400, cy[1] + 40, 92), ok3 = wantHero && heroOK(-360, cy[2] - 24, 360, cy[2] + 24, 52);
+  const cy = [164, 290, 382], wantHero = down && o.hero !== false, tt0 = (sim() && sim().meta.tossT) || 7.1, tossing = lt > tt0 + .2 && lt < tt0 + 2.7;   /* the tossed lettuce flies across the lettering for a moment: it is dressing then */
+  const ok1 = wantHero && heroOK(-460, cy[0] - 60, 460, cy[0] + 60, 150), ok2 = wantHero && heroOK(-400, cy[1] - 40, 400, cy[1] + 40, 92), ok3 = wantHero && !tossing && heroOK(-360, cy[2] - 24, 360, cy[2] + 24, 52);
   if (FP) FP.bevelText('FRUIT SALAD', 0, cy[0], 150, { face: FP.FACE_LOGO, extr: .3, lwK: .12, alpha: a, hero: ok1, grp: 'bn:fs', spacing: 5 });
   else UI.label('FRUIT SALAD', 0, cy[0], { font: 'Bangers', size: 150, fill: '#ffe135', stroke: '#07170f', lw: 18, alpha: a, hero: ok1, crop: !ok1 });
   UI.label('REHAB & NURSING', 0, cy[1], { font: 'Bangers', size: 92, spacing: 6, fill: '#f6efd2', stroke: '#07170f', lw: 12, shadow: 10, alpha: a, hero: ok2, crop: !ok2 });
@@ -202,7 +202,7 @@ function drawBanner(lt, o = {}) {
 const STREET_Y = 1342;
 const CAST = {
   straw: () => (window.A11 && A11.straw) || (window.A7 && A7.straw), lemon: () => window.A7 && A7.lemon, mango: () => window.A7 && A7.mango, clem: () => window.A10 && A10.clem, melon: () => window.A9 && A9.melon,
-  tom: () => window.A15 && A15.tomato, onion: () => window.A15 && A15.onion, broc: () => window.A15 && A15.broccoli, carrot: () => window.A15 && A15.carrot, bind: () => window.A15 && A15.binder, arti: () => window.A15 && A15.artichoke,
+  tom: () => window.A15 && A15.tomato, onion: () => window.A15 && A15.onion && (o => A15.onion(Object.assign({ grip: { l: [-62, 94] }, tabAt: [.3, .0] }, o))), broc: () => window.A15 && A15.broccoli, carrot: () => window.A15 && A15.carrot, bind: () => window.A15 && A15.binder, arti: () => window.A15 && A15.artichoke,
 };
 const WARNED = new Set();
 function dc(id, o) {   /* draw one character through its constructor; a missing kit or a throwing sprite never stops the scene */
@@ -359,7 +359,7 @@ function countedForm(lt) {
   if (k > 0) {
     const sc = lt < t0 ? lp(2.4, 1, eI(k)) : 1 + .05 * Math.sin(Math.min(1, age / .16) * Math.PI) * (1 - Math.min(1, age / .16));
     ctx.save(); ctx.translate(x + w * .62, y + h * .62); ctx.scale(sc, sc); ctx.translate(-(x + w * .62), -(y + h * .62)); ctx.globalAlpha *= sg(k, 0, .4);
-    UI.stamp('COUNTED', x + w * .62, y + h * .62, { font: 'Bangers', size: 112, color: '#d93025', rot: -.12, padX: 52, padY: 26, lw: 10, alpha: .93, hero: lt >= t0 + .2, crop: lt < t0 + .2, id: 'fp15c.counted' });
+    UI.stamp('COUNTED', x + w * .62, y + h * .62, { font: 'Bangers', size: 112, color: '#d93025', rot: -.12, padX: 56, padY: 38, lw: 10, alpha: .93, hero: lt >= t0 + .2, crop: lt < t0 + .2, id: 'fp15c.counted' });
     ctx.restore();
   }
   ctx.restore();
@@ -411,7 +411,7 @@ function petalPile(rect, floorY, seed) {
     if (!layer) {
       const hb = heartK(simLt);
       ctx.save(); ctx.translate(rect.x + rect.w / 2, floorY - 6); ctx.scale(1 + .16 * hb, 1 + .16 * hb); ctx.translate(-(rect.x + rect.w / 2), -(floorY - 6));
-      if (window.A15) { try { drawChar(A15.artichoke({ x: rect.x + rect.w / 2, y: floorY - 6, s: 3.4, peel: 1, who: 'arti', noShadow: true, t: simLt })); } catch (e) { /* kit */ } }
+      if (window.A15) { if (typeof REG !== 'undefined') REG.suppress++; try { drawChar(A15.artichoke({ x: rect.x + rect.w / 2, y: floorY - 6, s: 3.4, peel: 1, who: 'arti', noShadow: true, t: simLt })); } catch (e) { /* kit */ } finally { if (typeof REG !== 'undefined') REG.suppress--; } }
       ctx.restore();
     }
   }
@@ -481,7 +481,7 @@ function undoScreen(lt) {
   rows.forEach((r, i) => { cells['A' + (i + 2)] = { v: r[0] + ' →', size: 30, weight: 700, color: '#8a929c' }; cells['B' + (i + 2)] = { v: r[1], size: 30, weight: 900, color: '#103a2c', pulse: .4 }; });
   const o = Object.assign({}, SHEET_SM, { cells, cols: { A: 600, B: 360 }, rows: { 1: 190 }, sel: 'B1', active: 'B1', formula: { text: String(n), typed: 1 }, dressing: dlg, handle: false });
   SH15.sheet(o, lt);
-  if (dlg) SH15.dialog({ kind: 'cantUndo', w: 960, h: 642, at: [480, 270], s: .86, dressing: false, t: lt }, du);
+  if (dlg) SH15.dialog({ kind: 'cantUndo', w: 960, h: 642, at: [480, 270], s: .97, dressing: false, t: lt }, du);
 }
 function undoKeys(lt) {
   const p1 = sg(lt, CUE.key1 - .04, CUE.key1 + .02) * (1 - sg(lt, 15.95, 16.02)), p2 = sg(lt, CUE.key2 - .04, CUE.key2 + .02) * (1 - sg(lt, 15.86, 15.92));

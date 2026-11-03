@@ -133,7 +133,7 @@ function cast(lt, st) {
   // Onion (Compliance): turned toward the laptop, crying; the sniffle (1.70) and the sob (7.16) shake her
   const sn = Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .15) / .45), sb = lt >= CUE.sob ? Math.max(0, 1 - (lt - CUE.sob) / 1.4) : 0;
   const cry = lerp(.55, .95, Math.max(sn, ss(lt, 5.96, 7.2))) * 1, sob = Math.max(sn * .7, sb);
-  C.onion = who('station', A15.onion, .3, { yaw: K([[0, .4], [1.2, .55], [6.2, .55], [7.0, .3]], lt), headYaw: K([[0, .5], [.9, .62], [3, .3], [5.6, .6]], lt), cry, sob, expr: lt > 5.9 ? 'onion_wail' : 'onion_cry', look: [.5, .25] });
+  C.onion = who('station', A15.onion, .3, { yaw: K([[0, .4], [1.2, .55], [6.2, .55], [7.0, .3]], lt), headYaw: K([[0, .5], [.9, .62], [3, .3], [5.6, .6]], lt), cry, sob, expr: lt > 5.9 ? 'onion_wail' : 'onion_cry', look: [.5, .25], grip: { l: [-62, 98] }, tabAt: [.3, .03] });
   // Tomato (HR): a bright fruit while she reads Fruit Bowl's policy, a stern vegetable for Greenleaf's (the face flips at 4.33); she tears up when Onion sobs
   const tf = lt - 4.33, tcry = ss(lt, 7.1, 7.9) * .8;
   C.tom = who('station', A15.tomato, .62, { yaw: K([[0, -.5], [2.3, -.5], [3.0, -.25], [4.2, -.5]], lt), headYaw: K([[0, -.5], [2.3, -.5], [3.0, -.2], [4.3, -.5]], lt), tomPose: lt < 4.33 ? 'fruit' : 'veg', flipT: tf >= 0 && tf < .6 ? tf : undefined, look: [-.5, .2], cry: tcry });
@@ -174,7 +174,7 @@ function diffCells(lt, hero) {
 }
 function sheetOpts(lt, hero) {
   const typedFind = typedN('break', CUE.type1, .075), typedRep = typedN('pending', CUE.type2, .075);
-  const o = { w: WIN.w, h: WIN.h, ui: 1, dressing: !hero, r: 18, shadow: 40, doc: 'POLICY_COMPARE_v3_FINAL', saved: false, show: { ribbon: false }, cols: { A: 150, B: 360, C: 400, D: 106 }, rows: { 1: 78, 2: 96, 3: 84, 4: 84 }, cells: diffCells(lt, hero && lt < 7.9),
+  const o = { w: WIN.w, h: WIN.h, ui: 1, dressing: !hero || lt >= 7.9, r: 18, shadow: 40, doc: 'POLICY_COMPARE_v3_FINAL', saved: false, show: { ribbon: false }, cols: { A: 150, B: 360, C: 400, D: 106 }, rows: { 1: 78, 2: 96, 3: 84, 4: 84 }, cells: diffCells(lt, hero && lt < 7.9),
     active: lt >= wS('t2', 1) - .04 ? 'C2' : lt >= wS('t1', 3) - .04 ? 'B2' : 'B1', sel: lt >= wS('t2', 1) - .04 ? 'C2' : lt >= wS('t1', 3) - .04 ? 'B2' : 'B1', formula: lt >= wS('t2', 1) - .04 ? 'BREAK: AS NEEDED' : lt >= wS('t1', 3) - .04 ? 'BREAK: 30 MIN' : 'FRUIT BOWL', status: 'Ready' };
   o.nameBox = o.active;
   void typedFind; void typedRep;
@@ -198,6 +198,21 @@ function smallBinder(lt) {
   const o = A15.binderSmall({ x: lx + 52, y: ly - 96 - hop, s: .52 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, pose: lt < 8.3 ? 'ears' : 'helpful', grin: .3, look: [-.5, .3], hover: 8 });
   drawChar(o);
 }
+/* who the camera is on (that character is always drawn, framed by the camera); everyone else is background and is drawn only while the head and props are clear of the frame edges, the clock pill, the caption panel and Binder */
+const SUBJ = lt => lt < .9 ? '' : lt < 2.46 ? 'onion' : lt < 3.1 ? 'tom' : lt < 4.33 ? '' : lt < 4.9 ? 'tom' : lt < 5.96 ? '' : lt < 7.5 ? 'onion' : lt < 9.95 ? '' : lt < 10.46 ? 'straw' : lt < 12.1 ? '' : lt < 12.7 ? 'straw' : lt < 17.63 ? '' : lt < 19.05 ? 'mango' : lt < 20.36 ? 'lemon' : 'straw';
+const PILL = [48, 116, 500, 244];
+function clearOf(o, avoid) {
+  const m = ctx.getTransform(), k = KINDS[o.kind], s = o.s || 1, [fx, fy] = faceC(o), z = Math.hypot(m.a, m.b);
+  const X = m.a * fx + m.c * fy + m.e, Y = m.b * fx + m.d * fy + m.f;
+  const b = [X - 1.5 * k.rx * s * z, Y - 1.4 * k.ry * s * z, X + 1.5 * k.rx * s * z, Y + 1.5 * k.ry * s * z];
+  let d = Math.min(b[0] - 24, 1080 - 24 - b[2], b[1] - 24, 1440 - b[3]);
+  for (const r of [PILL].concat(avoid || [])) d = Math.min(d, Math.max(r[0] - b[2], b[0] - r[2], r[1] - b[3], b[1] - r[3]) - 12);
+  return ss(d, 0, 70);
+}
+function bgDraw(o, subject, avoid, extra) {
+  const a = subject ? 1 : clearOf(o, avoid); if (a <= .01) return;
+  ctx.save(); ctx.globalAlpha *= a; drawChar(o); if (extra) extra(); ctx.restore();
+}
 function drawWorld(lt) {
   CUR_LT = lt;
   const st = FRAME.st, C = FRAME.C; STATE = st;
@@ -205,9 +220,10 @@ function drawWorld(lt) {
   S15.tower(lt, st);
   scheduleBoard(lt); clockSign(lt); vending(lt); lobbyPoster(lt);
   // the characters (each stands in a room of the tower; the counter in S15.front hides the station staff below the waist)
-  drawChar(C.mango); drawChar(C.clem); if (lt >= 18.3) drawChar(C.lemon);
-  if (lt < 15.9) { drawChar(C.onion); drawChar(C.tom); }
-  if (lt >= 9.8) { drawChar(C.straw); nameBadge(C.straw, lt); }
+  const sj = SUBJ(lt), av = binderAvoid(lt);
+  bgDraw(C.mango, sj === 'mango', av); bgDraw(C.clem, sj === 'clem', av); bgDraw(C.lemon, sj === 'lemon', av);
+  if (lt < 15.9) { bgDraw(C.onion, sj === 'onion', av); bgDraw(C.tom, sj === 'tom', av); }
+  if (lt >= 9.8) bgDraw(C.straw, sj === 'straw', av, () => nameBadge(C.straw, lt));
   S15.front(lt, st);
   const scr = laptopDrawW(lt); LAPR = null; { const m = ctx.getTransform(); LAPR = { x: m.a * scr.x + m.e, y: m.d * scr.y + m.f, w: m.a * scr.w, h: m.d * scr.h }; }
   /* the laptop's own screen: a miniature of the sheet window (set dressing) */
@@ -258,7 +274,7 @@ function camAt(lt, C, st) {
   }
   if (lt < 15.87) {
     const bx = C.straw.x + 30 * C.straw.s, by = C.straw.y - 112 * C.straw.s;
-    return path([[11.32, roomCam('rest', 3.4), 0], [FLIPS[1] - .03, at(lob.x0 + 150, lob.y0 + 140, 3.6), .12], [FLIPS[2] - .03, at(bx, by, 5.4), .22], [FLIPS[3] - .03, at(stR.x0 + 230, stR.y0 + 82, 3.6), .12],
+    return path([[11.32, roomCam('rest', 3.4), 0], [FLIPS[1] - .03, at(lob.x0 + 150, lob.y0 + 140, 3.6), .12], [FLIPS[2] - .03, [bx, by + 60 / 5.4, 5.4], .22], [FLIPS[3] - .03, at(stR.x0 + 230, stR.y0 + 82, 3.6), .12],
       [FLIPS[4] - .03, at(stR.x0 + 312, stR.y0 + 86, 4.6), .2], [FLIPS[5] - .03, at(din.x0 + 178, din.y0 + 176, 3.8), .12], [14.9, wideCam(), .9]], lt);
   }
   if (lt < 17.63) return lerpCam(wideCam(), at(stR.x0 + 256, stR.y0 + 160, 1.5), ss(lt, 15.87, 17.4));
@@ -266,7 +282,8 @@ function camAt(lt, C, st) {
   if (lt < 20.36) return faceCam(C.lemon, 5.0, 170);
   const sc = faceCam(C.straw, 5.0, 170); sc[0] += 34;
   if (lt < 22.23) return sc;
-  return lerpCam(sc, at(lob.x0 + 130, lob.y0 + 150, 3.0), ss(lt, 22.23, 22.83));
+  const [ex, ey] = faceC(C.straw), ec = [ex + 230 / 3.0, ey + 170 / 3.0, 3.0];
+  return lerpCam(sc, ec, ss(lt, 22.23, 22.83));
 }
 
 // ------------------------------------------------------------------ the overlays (screen space, after the grade): the sheet window, the counter, the dialog, Binder
@@ -291,11 +308,11 @@ function drawWindow(lt) {
 /* the counter: a big sheet-style status in the corner, REPLACEMENTS: n, exact (214) at the end */
 function counter(lt) {
   const a = ss(lt, 11.4, 11.6) * (1 - ss(lt, 15.55, 15.8)); if (a <= 0) return;
-  const n = Math.round(214 * easeIO(sg(lt, CUE.counter, 14.95))), x = 520, y = 132, w = 512, h = 120, cx = x + w / 2, pop = eb(sg(lt, 11.4, 11.65));
+  const n = Math.round(214 * easeIO(sg(lt, CUE.counter, 14.95))), x = 520, y = 116, w = 512, h = 156, cx = x + w / 2, pop = eb(sg(lt, 11.4, 11.65));
   ctx.save(); ctx.globalAlpha *= Math.min(1, a * 1.4); ctx.translate(cx, y + h / 2); ctx.scale(pop, pop); ctx.translate(-cx, -(y + h / 2));
   UI.panel([x, y, w, h], { r: 20, fill: '#103a2c', stroke: '#1e8e5a', lw: 4, id: 'counter', kind: 'panel', shadow: 16, pad: 10 });
-  UI.label('REPLACEMENTS', cx, y + 30, { size: 30, weight: 800, fill: '#9fe0bf', spacing: 4, cid: 'counter', maxW: w - 40, hero: pop >= 1 });
-  UI.label(String(n), cx, y + 82, { size: 76, font: 'Bangers', weight: 400, fill: '#ffe135', stroke: '#0a241a', lw: 6, spacing: 3, cid: 'counter', maxW: w - 40, hero: pop >= 1 });
+  UI.label('REPLACEMENTS', cx, y + 34, { size: 30, weight: 800, fill: '#9fe0bf', spacing: 4, cid: 'counter', maxW: w - 40, hero: pop >= 1 });
+  UI.label(String(n), cx, y + 100, { size: 76, font: 'Bangers', weight: 400, fill: '#ffe135', stroke: '#0a241a', lw: 6, spacing: 3, cid: 'counter', maxW: w - 40, hero: pop >= 1 });
   ctx.restore();
 }
 const doneU = lt => eb(sg(lt, CUE.dialog, CUE.dialog + .3)) * (1 - sg(lt, 15.78, 15.86));
@@ -304,15 +321,21 @@ function doneDialog(lt) {
   SH15.dialog({ kind: 'info', w: W, h: H, at: [540, 780], s: 1.05, title: 'Find and Replace', text: 'Done. 214 replacements made.', dressing: false }, u);
 }
 /* Binder, big: a hero in the middle on his line, then a face in the corner of every question-and-answer close-up (three-quarter, turned toward the person he answers) */
+function binderPlace(lt) {
+  if (lt < 15.87) return null;
+  if (lt < 17.63) return { x: 540, y: 960, s: lerp(1.1, 1.3, sg(lt, 15.87, 17.43)), yaw: 0, pose: 'cheer', grin: .8, glint: 0, up: 205 };
+  if (lt < 19.05) return { x: 840, y: 1090, s: 1.45, yaw: -.5, pose: 'rest', grin: lt >= bS('b4') ? .9 : .5, glint: 0, up: 125 };
+  if (lt < 20.36) return { x: 240, y: 1090, s: 1.45, yaw: .5, pose: 'rest', grin: lt >= bS('b5') ? .9 : .5, glint: 0, up: 125 };
+  if (lt < 22.23) return { x: 840, y: 1090, s: lerp(1.45, 1.7, ss(lt, 21.4, 21.6)), yaw: -.5, pose: 'rest', grin: lt >= bS('b6') ? lerp(.5, 1, ss(lt, 21.45, 22.2)) : .4, glint: 0, up: 125 };
+  const k = ss(lt, 22.23, 22.55);   /* the end: he glides to the right of the frame as the camera pulls back, and holds the grin (the sting at 22.325) */
+  return { x: lerp(840, 760, k), y: lerp(1090, 920, k), s: lerp(1.7, 1.55, k) + .1 * sg(lt, 22.55, 23.28), yaw: lerp(-.5, -.25, k), pose: 'rest', grin: 1, glint: Math.max(0, Math.sin((lt - 22.4) * 5)) ** 4, up: 125 };
+}
+/* the screen rectangle he fills (with a margin), for the characters that must keep clear of him */
+const binderAvoid = lt => { const p = binderPlace(lt); return p ? [[p.x - 125 * p.s - 20, p.y - p.up * p.s - 20, p.x + 125 * p.s + 20, p.y + 100 * p.s + 20]] : []; };
 function bigBinder(lt) {
-  if (lt < 15.87) return;
-  let x, y, s, yaw = 0, pose = 'rest', grin = .5, glint = 0;
-  if (lt < 17.63) { x = 540; y = 960; s = lerp(1.1, 1.3, sg(lt, 15.87, 17.43)); pose = 'cheer'; grin = .8; }
-  else if (lt < 19.05) { x = 840; y = 1090; s = 1.45; yaw = -.5; grin = lt >= bS('b4') ? .9 : .5; }
-  else if (lt < 20.36) { x = 240; y = 1090; s = 1.45; yaw = .5; grin = lt >= bS('b5') ? .9 : .5; }
-  else if (lt < 22.23) { x = 840; y = 1090; s = lerp(1.45, 1.7, ss(lt, 21.4, 21.6)); yaw = -.5; grin = lt >= bS('b6') ? lerp(.5, 1, ss(lt, 21.45, 22.2)) : .4; }
-  else { x = 540; y = 900; s = lerp(1.4, 1.6, sg(lt, 22.23, 23.28)); grin = 1; glint = Math.max(0, Math.sin((lt - 22.4) * 5)) ** 4; }
-  const o = A15.binder({ x, y, s: s * eb(sg(lt, lt < 17.63 ? 15.87 : 0, lt < 17.63 ? 16.1 : .01)), center: true, noLegs: true, who: 'bind', t: lt, yaw, pose, grin, glint, look: [yaw ? -Math.sign(yaw) * .4 : 0, .1], hover: 6 });
+  const p = binderPlace(lt); if (!p) return;
+  const pop = lt < 17.63 ? eb(sg(lt, 15.87, 16.1)) : 1;
+  const o = A15.binder({ x: p.x, y: p.y, s: p.s * pop, center: true, noLegs: true, who: 'bind', t: lt, yaw: p.yaw, pose: p.pose, grin: p.grin, glint: p.glint, look: [p.yaw ? -Math.sign(p.yaw) * .4 : 0, .1], hover: 6 });
   ctx.save(); ctx.shadowColor = 'rgba(10,8,16,.4)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 12; drawChar(o); ctx.restore();
 }
 
