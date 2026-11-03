@@ -587,7 +587,7 @@ function dlgOpts(lt) {
 }
 function savePointer(lt) {
   const aim = SH.dialogRect({ kind: 'saveAs', w: WIN.w, h: WIN.h, at: [WIN.w / 2, 700] }, 'save').aim;
-  const c = SH.cursorPath([{ t: 2.52, x: 900, y: 1190, kind: 'arrow' }, { t: 3.04, x: aim[0], y: aim[1], kind: 'arrow', click: [E.click - .09, E.click + .1], over: .04 }, { t: 3.4, x: aim[0] + 14, y: aim[1] + 10, kind: 'arrow' }], lt);
+  const c = SH.cursorPath([{ t: 2.52, x: 900, y: 1190, kind: 'arrow' }, { t: 3.04, x: aim[0] + 46, y: aim[1] + 10, kind: 'arrow', click: [E.click - .09, E.click + .1], over: .04 }, { t: 3.4, x: aim[0] + 58, y: aim[1] + 18, kind: 'arrow' }], lt);
   return { x: c.x, y: c.y, press: c.press, alpha: sg(lt, 2.52, 2.7) * (1 - sg(lt, 3.2, 3.33)) };
 }
 function endDraw(lt) {
