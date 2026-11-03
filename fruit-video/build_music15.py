@@ -131,12 +131,12 @@ def mt_bar1(T, D, t0, full=1.0):
     T.put(pad([48, 52, 55, 60], 1.8, .5, .35, 1500), t0, .09 * full)
     T.put(pad([53, 57, 60, 65], BL + .1, .1, .2, 1700), t0 + 3 * BL, .09 * full)
     for k in range(3):
-        T.put(ubass(36 if k < 3 else 41, .4, .7), t0 + k * BL, .17 * full, -.1)
+        T.put(ubass(36, .4, .7), t0 + k * BL, .17 * full, -.1)
     T.put(ubass(41, .5, .8), t0 + 3 * BL, .18 * full, -.1)
     for k in (1, 3):
         D.put(clap(), t0 + k * BL, .1 * full, .2)
-    for j in range(4):
-        D.put(snap(), t0 + (4 + j) * BL / 2 + BL * 0, .05 * full, -.3 + .2 * j) if j else None
+    for j in range(3):
+        D.put(snap(), t0 + (4 + 2 * j) * BL / 2 + BL / 4, .05 * full, -.3 + .3 * j)
     D.put(roll(160, 2 * BL * .95, 10) * .5, t0 + 2 * BL, .05 * full, 0)
 
 
@@ -310,6 +310,8 @@ def cue_announce15(T, t0, d, beats, D):
     a1, ar1, ar2, m1, b1, s2, b2, l2, b4, c1, en = (beats[k] for k in ("a1", "ar1", "ar2", "m1", "b1", "s2", "b2", "l2", "b4", "c1", "end"))
     T.put(pad([48, 55, 60, 64], 1.2, .4, .5, 1400), t0 + .4, .05)
     stock(T, D, t0 + .9, ar1[0] - .1, 104, .9)
+    for j, m in enumerate((79, 84, 88)):
+        T.put(celesta(m, 1.0, .7), t0 + 5.55 + .1 * j, .05, -.2 + .2 * j)
     T.fade(ar1[0] - .35, ar1[0] - .05, 1, 0)
     D.fade(ar1[0] - .35, ar1[0] - .05, 1, 0)
     V = Track(T.N)                                                                                    # the Artichoke theme, on the TV
@@ -416,8 +418,8 @@ def cue_dock15(T, t0, d, beats, D):
         t += iv
         iv = max(.2, iv * .9)
     T.put(glass(100, 2.2, .5, .6), t0 + 3.42, .03, .4)
-    T.fade(land - .5, land - .01, 1, 1.6)
-    MUTES.append((land - .015, t0 + 9.0, .01))
+    T.fade(land - .5, land - .09, 1, 1.5)
+    MUTES.append((land - .085, t0 + 9.0, .008))                                                        # a breath of near-silence just before the hit, then the drop-out
     march(T, D, a1[0], l1[0] - .03, 112, 1.0)
     for j, m in enumerate(SALAD):
         T.put(bassoon(m, .2, .9), br1[0] + .05 + j * .15, .12, -.3)
@@ -473,7 +475,7 @@ def cue_model1_15(T, t0, d, beats, D):
     for j, ch in enumerate((TP_MAJ, TP_MIN, TP_MAJ, TP_MIN)):
         for q, m in enumerate(ch):
             T.put(pizz(midi(m + 12), .16), o1[1] + .12 + j * .3 + q * .05, .06, .3)
-    fanfare(T, D, W("t1", "Executive") - .05, .9)
+    fanfare(T, D, W("t1", "Executive") - .05, .5)
     bounce(T, b1[0] + .05, BJ, .07, .13, .1)
     T.put(strings([33, 40, 45], 3.0, .8, .8, 8.0, 900) * 1.0, t0 + 5.52, .08)
     D.put(roll(55, 1.6, 30), t0 + 5.52, .08, 0)
@@ -651,10 +653,15 @@ def cue_close15(T, t0, d, beats, D):
     T.put(bell(midi(103), 1.4) * .6, pk + .02, .05, .3)
     march(T, D, l1[0], ar1[0] - .1, 108, .75)
     bounce(T, b1[0] + .03, BJ, .08, .13, .1)
-    T.put(bell(midi(100), 1.0) * .5, b1[0] + .6, .04, .3)
+    for j, m in enumerate((72, 76, 79, 84)):
+        T.put(whistle(m + 12, .22, .8), b1[0] + .62 + j * .11, .05, -.2)
+        T.put(bell(midi(m + 24), .8) * .4, b1[0] + .62 + j * .11, .03, .3)
     T.put(sob_clar(79, 74, .55, .7), W("o1", "Corporate") + .5, .06, -.3)
     D.put(woodblock(), t2[0] + .05, .1, .2)
     D.put(pizz(midi(52), .3), t2[0] + .05, .1, 0)
+    for ln_, ch_ in ((t1, TP_MAJ), (t2, TP_MIN)):
+        for q, m in enumerate(ch_):
+            T.put(pizz(midi(m + 12), .16), ln_[1] + .05 + q * .06, .06, .3)
     V = Track(T.N)
     at_theme(V, ar1[0] - .02, t0 + 15.49, 1.0, prog=("Cmaj9", "Dm9", "G13", "Cmaj9"))
     i0, i1 = int((ar1[0] - .1) * SR), int((t0 + 15.6) * SR)
@@ -701,11 +708,22 @@ def cue_end15(T, t0, d, beats, D):
 
 
 CUES = {"title": cue_title15, "announce": cue_announce15, "dock": cue_dock15, "model1": cue_model1_15, "model2": cue_model2_15, "replace": cue_replace15, "close": cue_close15, "end": cue_end15}
-LEVEL15 = {"title": .9, "announce": 1.0, "dock": 1.0, "model1": 1.0, "model2": 1.0, "replace": 1.0, "close": 1.0, "end": .95}
+LEVEL15 = {"title": .9, "announce": 1.25, "dock": 1.1, "model1": 1.25, "model2": 1.15, "replace": 1.25, "close": 1.15, "end": .95}
 TAIL15 = {"title": .6, "announce": .5, "dock": .5, "model1": .4, "model2": .4, "replace": .4, "close": .8, "end": 1.0}
 DIP15 = {"title": 1.0, "announce": .6, "dock": .6, "model1": .6, "model2": .6, "replace": .6, "close": .6, "end": 1.0}
 REVERB15 = {"title": (.4, 1.2), "announce": (.3, .9), "dock": (.3, 1.3), "model1": (.3, 1.0), "model2": (.3, 1.0), "replace": (.3, 1.0), "close": (.35, 1.2), "end": (.4, 1.2)}
 DIPS15 = {"merge": (6, .25, .3), "click": (3, .1, .1)}
+
+
+def bridges(B, S):
+    """Gestures that carry one scene into the next (dry, added after the scenes' own reverb): announce to dock, the building waking up: a low brass swell that begins a second and a half
+    before the cut and grows into the crane's drone; replace to close, a reversed cymbal that climbs into the banner's swell."""
+    a, d_ = S["announce"], S["dock"]
+    end_a = a["start"] + a["dur"]
+    B.put(brass([29, 36, 41], 1.6, 1.3, .08, 500, swell=.6), end_a - 1.3, .06, 0)
+    r_, c_ = S["replace"], S["close"]
+    end_r = r_["start"] + r_["dur"]
+    B.put(revcym(1.0, 2000, 9000), end_r - .7, .05, 0)
 
 
 # ================================================================ the score (cues are added above, one scene at a time; this stays at the end of the file)
@@ -739,6 +757,9 @@ def score(script, scenes, lines, N):
         if dips is None:
             dips = DIPCACHE[key] = _speech_dip(lines, N, key)
         out[:, a:b] += seg * LEVEL15.get(sc["id"], 1.0) * dips[a:b][None, :]
+    br = Track(N)
+    bridges(br, {sc["id"]: sc for sc in scenes})
+    out = out + br.buf
     out = out * MUSIC_GAIN * cue_dips(script, scenes, N, DIPS15)[None, :]
     for m in MUTES:
         out = _mute(out, *m)

@@ -16,7 +16,7 @@
  *   3.62-3.95  the tagline types in.   4.00 textding: a gloss sweeps across THE MERGER, four stars twinkle.   4.0-6.4 a held, centred card with a slow push-in; 6.48-6.6 a dip to black.
  * END: see the second half of this file. */
 /* the title of the next episode, shown in the end card's teaser banner under NEXT: EPISODE 16 (the lead confirms it: change this one constant) */
-const TEASER16 = 'THE POTLUCK';
+const TEASER16 = 'THE VOTE';
 (() => {
 if (!window.TIMELINE_EP15 || !window.SH15 || !window.UI || !window.H6) return;
 const SH = window.SH15, { zoomTo } = window.H6;
@@ -530,11 +530,11 @@ function stampFx(lt) {
   const age = lt - E.stamp;
   if (lt < E.stamp - .1 || lt > E.tab + .3) return;
   const k = sg(lt, E.stamp - .09, E.stamp), a = (1 - sg(lt, 4.45, 4.64)), settle = lt >= E.stamp ? 1 + .06 * Math.sin(Math.min(1, age / .16) * PI) * (1 - Math.min(1, age / .16)) * 2 : 1;
-  const sc = lt < E.stamp ? lp(2.1, 1, eI(k)) : 1 / settle;
+  const sc = lt < E.stamp ? lp(1.8, 1, eI(k)) : 1 / settle;
   if (a <= .01) return;
   ctx.save(); ctx.globalAlpha *= a * (lt < E.stamp ? sg(k, 0, .5) : 1);
   ctx.translate(540, ZONE.cy); ctx.scale(sc, sc); ctx.translate(-540, -ZONE.cy);
-  UI.stamp('SAVED', 540, ZONE.cy, { font: 'Bangers', size: 118, color: '#1e8e5a', rot: -.1, lw: 11, padX: 62, padY: 30, alpha: .94, hero: lt >= E.stamp + .17 && lt < 4.4, crop: !(lt >= E.stamp + .17 && lt < 4.4), id: 'fp15a.stamp' });
+  UI.stamp('SAVED', 540, ZONE.cy, { font: 'Bangers', size: 118, color: '#1e8e5a', rot: -.1, lw: 11, padX: 62, padY: 37, alpha: .94, hero: lt >= E.stamp + .17 && lt < 4.4, crop: !(lt >= E.stamp + .17 && lt < 4.4), id: 'fp15a.stamp' });
   ctx.restore();
   if (age >= 0 && age < .7) {
     ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.ring(540, ZONE.cy, age / .7, { r0: 90, r1: 560, lw: 14, color: '120,235,170', alpha: .85, bloom: .5, squash: .55 }); ctx.restore();

@@ -43,7 +43,7 @@ from build_audio14 import _res, _band, _unit, _key
 
 HERE = A6.HERE
 SCRIPT = "script_ep15.json"
-FXV = "15.3"             # bump to rebuild every treated voice line
+FXV = "15.4"             # bump to rebuild every treated voice line
 
 
 def _n(d):
@@ -152,22 +152,26 @@ def _env10(x, hop=480):
 
 
 def _match_active_rms(y, ref):
-    """Scale y so that its active-speech RMS equals that of ref (the mixer's own measure: frames above a tenth of the loudest frame)."""
+    """Scale y so that its active-speech RMS equals that of ref (the mixer's own measure: frames above a tenth of the loudest frame). A stereo y is matched on its POWER against the same
+    clip panned to the centre by the mixer (each ear gets 0.707 of it), so a chorus spread across the field is exactly as loud as a single voice."""
     def act(x):
-        e = _env10(np.mean(x, axis=0) if x.ndim == 2 else x, 960)
+        if x.ndim == 2:
+            e = np.sqrt((_env10(x[0], 960) ** 2 + _env10(x[1], 960) ** 2) / 2)
+        else:
+            e = _env10(x, 960)
         return np.sqrt(np.mean(e[e > .1 * e.max()] ** 2))
-    a, b = act(y), act(ref)
+    a, b = act(y), act(ref) * (0.7071 if y.ndim == 2 else 1.0)
     return y * (b / a) if a > 0 else y
 
 
 def fx_arti(x, seed, glitch_t=None, drops=1):
-    """Mr. Artichoke on a laggy video call. The voice stays deep and smooth (that is the joke) but the call shows through: band-limited to 140 Hz .. 5.2 kHz, a faint codec comb (1.3 ms),
+    """Mr. Artichoke on a laggy video call. The voice stays deep and smooth (that is the joke) but the call shows through: band-limited to 85 Hz .. 5.2 kHz, a faint codec comb (1.3 ms),
     a soft saturation, a jitter buffer that wanders (0.25 ms at 0.7 Hz and 0.1 ms at 5 Hz), a faint hiss, and the damage: a held vowel (a 20 ms grain of a voiced stretch looped for 60 to 90
     ms: the robot hold of packet-loss concealment) and, in a pause between words, a dropout with a click. Where the script has a glitch cue the line stutters there (the 60 ms before it,
     twice, bit-crushed) so the picture's freeze is heard. Nothing is removed from the middle of a word."""
     n = len(x)
     r = rng6(seed)
-    y = _bp4(x, 140, 5200, 2)
+    y = _bp4(x, 85, 5200, 2)
     y = y + _delay(y, 1.3, .09)
     pk = np.max(np.abs(y)) + 1e-9
     y = np.tanh(1.5 * y / pk) * pk / 1.2
@@ -486,21 +490,23 @@ def sfx_keyboard():
     x = np.zeros(_n(.7))
     t = .02
     for i in range(10):
-        _place(x, _key(1661 + i, i == 5), t, r.uniform(.45, 1.0))
+        g_ = r.uniform(.45, 1.0)
+        _place(x, _key(1661 + i, i == 5), t, g_)
+        _place(x, _band(1675 + i, .012, 2500, 7000) * expdecay(.012, .0015), t, g_ * .35)
         t += r.uniform(.045, .085) + (.08 if i == 4 else 0)
     return norm6(_edge(_lp4(x, 4500, 2), .001, .05), .6)
 
 
 def sfx_key():
-    """A single keycap press (0.14 s). The first cue is Ctrl (a heavy modifier: a low thock at 300 Hz and a soft click), the second is Z (a lighter, brighter key: a tick at 2.4 kHz and
+    """A single keycap press (0.14 s). The first cue is Ctrl (a heavy modifier: a low thock at 300 Hz and a clear click), the second is Z (a lighter, brighter key: a tick at 2.4 kHz and
     a 600 Hz knock). Ctrl then Z, the way a nurse undoes."""
     k, scene, i = _ctx("key")
     t = tarr(.06)
     if i % 2 == 0:
-        x = np.sin(2 * np.pi * 300 * t) * np.exp(-t / .012) * .9 + _band(1670, .06, 500, 2200) * expdecay(.06, .006) * .7 + _band(1671, .06, 2500, 6500) * expdecay(.06, .0014) * .25
-        x = _lp4(x, 5000, 2)
+        x = np.sin(2 * np.pi * 300 * t) * np.exp(-t / .012) * .8 + _band(1670, .06, 500, 2200) * expdecay(.06, .006) * .8 + _band(1671, .06, 2500, 6500) * expdecay(.06, .0014) * .6
+        x = _lp4(x, 6000, 2)
     else:
-        x = np.sin(2 * np.pi * 600 * t) * np.exp(-t / .007) * .5 + _band(1672, .06, 1000, 3400) * expdecay(.06, .005) * .8 + _band(1673, .06, 3000, 8000) * expdecay(.06, .0012) * .5
+        x = np.sin(2 * np.pi * 600 * t) * np.exp(-t / .007) * .5 + _band(1672, .06, 1000, 3400) * expdecay(.06, .005) * .8 + _band(1673, .06, 3000, 8000) * expdecay(.06, .0012) * .6
     return norm6(_edge(x, .0003, .02), .65)
 
 
@@ -557,16 +563,16 @@ def sfx_flip():
 
 
 def sfx_insertrow():
-    """A row slid into a table (0.75 s): a slide (a band of air swept up 300 to 2400 Hz with a sine whine under it, 0.34 s) that ends in a click and a low thunk of the row seating (a 105 Hz
+    """A row slid into a table (0.8 s): a slide (a band of air swept up 300 to 2400 Hz with a sine whine under it, 0.34 s) that ends in a click and a low thunk of the row seating (a 105 Hz
     body with a soft rap on top)."""
     x = np.zeros(_n(.8))
     d = .34
     t = tarr(d)
     sw = np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.2
     air = _tv_filter(noise6(d, 1720), _glide(300, 2400, d), 1.8, "bp") * sw
-    _place(x, air * .9 + _sin_of(_glide(400, 900, d)) * sw * .12, .0, 1.0)
-    _place(x, _band(1721, .03, 1800, 7000) * expdecay(.03, .0016) * .9, d, .8)
-    _place(x, _sum(_thump(150, 70, .22, .06) * 1.2, _band(1722, .06, 300, 1400) * expdecay(.06, .01) * .5), d + .012, .9)
+    _place(x, air * 1.8 + _sin_of(_glide(400, 900, d)) * sw * .15, .0, 1.0)
+    _place(x, _band(1721, .03, 1800, 7000) * expdecay(.03, .0016) * 1.0, d, .9)
+    _place(x, _sum(_thump(150, 70, .22, .06) * 1.0, _band(1722, .06, 300, 1400) * expdecay(.06, .01) * .8), d + .012, .9)
     return norm6(_edge(x, .001, .1), .8)
 
 
@@ -602,32 +608,32 @@ def _vowel(f, d, f1=500.0, f2=1300.0, q=3.0):
 
 
 def sfx_binderpop():
-    """Binder appears (0.4 s): a cartoon pop (a sine that jumps from 300 to 1500 Hz in 25 ms, plus a tick) and the springy boing of a wire handle (a sine at 330 Hz that sags to 240 with a
-    16 Hz wobble that dies in 0.3 s, a hair of twang)."""
+    """Binder appears (0.4 s): a cartoon pop (a sine that jumps from 300 to 1500 Hz in 25 ms, plus a bright tick) and the springy boing of a wire handle (a sine at 330 Hz that sags to 240
+    with a 16 Hz wobble that dies in 0.3 s, a hair of twang under the pop)."""
     x = np.zeros(_n(.4))
     t = tarr(.1)
     f = 300 + 1200 * (1 - np.exp(-t / .008))
-    _place(x, _sin_of(f) * np.exp(-t / .02) + _band(1800, .1, 2500, 8000) * expdecay(.1, .002) * .4, 0.0, 1.0)
+    _place(x, _sum(_sin_of(f) * np.exp(-t / .02) * 1.3, _band(1800, .1, 2500, 8000) * expdecay(.1, .002) * .7), 0.0, 1.0)
     d = .34
     t = tarr(d)
     fb = (330 - 90 * (1 - np.exp(-t / .12))) * (1 + .08 * np.sin(2 * np.pi * 16 * t) * np.exp(-t / .12))
-    _place(x, (_sin_of(fb) + .3 * _sin_of(2 * fb)) * np.exp(-t / .09) * np.minimum(1, t / .004), .03, .45)
+    _place(x, (_sin_of(fb) + .5 * _sin_of(2 * fb) + .25 * _sin_of(3 * fb)) * np.exp(-t / .09) * np.minimum(1, t / .004), .03, .3)
     return norm6(_edge(x, .0004, .08), .7)
 
 
 def sfx_grin():
-    """A menacing glint (1.2 s): a tiny rising bell (E7 then B7, 70 ms apart, each with a little upward slide) and a low sustain that swells under it (A2 and B-flat2 saws, a minor
-    second, through a 450 Hz low-pass), the kind of sound a friendly assistant should not make."""
-    x = np.zeros(_n(1.3))
+    """A menacing glint (1.3 s): a tiny rising bell (E7 then B7, 70 ms apart, each with a little upward slide: loud enough to be heard first) and a low sustain that swells under it (A2
+    and B-flat2 saws, a minor second, through a 450 Hz low-pass, with their octave up at 220 Hz so a phone has it), the kind of sound a friendly assistant should not make."""
+    x = np.zeros(_n(1.4))
     for j, f in enumerate((2637.0, 3951.0)):
-        d = .4
+        d = .5
         t = tarr(d)
         fr = f * (.97 + .03 * np.minimum(1, t / .05))
-        _place(x, _sin_of(fr) * np.exp(-t / .16) * np.minimum(1, t / .002) + .2 * _sin_of(fr * 2.76) * np.exp(-t / .05), .07 * j, .7 - .2 * j)
-    d = 1.1
+        _place(x, _sin_of(fr) * np.exp(-t / .2) * np.minimum(1, t / .002) + .25 * _sin_of(fr * 2.76) * np.exp(-t / .06), .07 * j, 1.5 - .3 * j)
+    d = 1.15
     t = tarr(d)
-    low = _lp4(osc("saw", 110.0, d) + osc("saw", 116.5, d) + .6 * osc("saw", 55.0, d), 450, 2)
-    _place(x, low * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.6 * (1 + .12 * np.sin(2 * np.pi * 5 * t)), .05, .6)
+    low = _lp4(osc("saw", 110.0, d) + osc("saw", 116.5, d) + .6 * osc("saw", 55.0, d), 450, 2) + .7 * _lp4(osc("saw", 220.0, d) + osc("saw", 233.0, d), 900, 2)
+    _place(x, low * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.6 * (1 + .12 * np.sin(2 * np.pi * 5 * t)), .05, .35)
     return norm6(_edge(x, .0005, .25), .65)
 
 
@@ -653,8 +659,8 @@ def sfx_peel():
 
 
 def sfx_heartbeat():
-    """A tiny, fast heart (anxious): lub-dub at 150 a minute, pitched up (a 230 Hz thump that sags to 120 Hz in 40 ms with a tick, then a smaller 270 Hz one 130 ms later). The announce's
-    is 1.0 s (it must be gone before 'What changes?'); the closing's is 1.5 s and swells."""
+    """A tiny, fast heart (anxious): lub-dub at 150 a minute, pitched up (a 230 Hz thump that sags to 120 Hz in 40 ms with a clear tick on the front, then a smaller 270 Hz one 130 ms later).
+    The announce's is 1.0 s (it must be gone before 'What changes?'); the closing's is 1.5 s and swells."""
     k, scene, i = _ctx("heartbeat")
     d = 1.0 if scene == "announce" else 1.5
     x = np.zeros(_n(d + .15))
@@ -664,9 +670,9 @@ def sfx_heartbeat():
         u = t / d
         g = (1.0 - .5 * u) if scene == "announce" else (.55 + .45 * np.sin(np.pi * u))
         tt = tarr(.1)
-        _place(x, _sin_of(230 * (1 - .48 * (1 - np.exp(-tt / .02)))) * np.exp(-tt / .028) + _band(1870 + j, .1, 900, 2200) * expdecay(.1, .003) * .25, t, g)
+        _place(x, _sum(_sin_of(230 * (1 - .48 * (1 - np.exp(-tt / .02)))) * np.exp(-tt / .028), _band(1870 + j, .1, 900, 2600) * expdecay(.1, .004) * .7), t, g)
         tt = tarr(.08)
-        _place(x, _sin_of(270 * (1 - .45 * (1 - np.exp(-tt / .02)))) * np.exp(-tt / .024), t + .13, g * .6)
+        _place(x, _sum(_sin_of(270 * (1 - .45 * (1 - np.exp(-tt / .02)))) * np.exp(-tt / .024), _band(1880 + j, .08, 900, 2600) * expdecay(.08, .003) * .4), t + .13, g * .6)
         t += .4
         j += 1
     return norm6(_edge(x, .001, .12), .6)
@@ -734,17 +740,17 @@ def sfx_poof():
 
 
 def sfx_bonk():
-    """Two foreheads (0.6 s): a woody cartoon bonk. A hollow block (a sine that falls 540 to 300 Hz in 60 ms with a 2.4x partial and a knock of band-passed noise), the thump of two heads
-    (a 110 Hz body) and, after it, a loose springy 'doing' (a sine that wobbles 230 to 170 Hz at 14 Hz for 0.3 s)."""
+    """Two foreheads (0.7 s): a woody cartoon bonk. A hollow block (a sine that falls 540 to 300 Hz in 60 ms with a 2.4x partial and a bright knock of band-passed noise at 700 to 3500
+    Hz), the thump of two heads (a 110 Hz body) and, after it, a loose springy 'doing' (a sine that wobbles 230 to 170 Hz at 14 Hz for 0.3 s)."""
     x = np.zeros(_n(.7))
     t = tarr(.35)
     f = 300 + 240 * np.exp(-t / .02)
-    _place(x, _sin_of(f) * np.exp(-t / .06) + .45 * _sin_of(f * 2.4) * np.exp(-t / .03) + _band(1950, .35, 500, 2500) * expdecay(.35, .008) * .7, 0.0, 1.0)
-    _place(x, _sum(_thump(130, 60, .2, .05) * 1.1, _band(1951, .02, 1500, 5000) * expdecay(.02, .002) * .5), 0.0, .8)
+    _place(x, _sin_of(f) * np.exp(-t / .06) + .7 * _sin_of(f * 2.4) * np.exp(-t / .03) + _band(1950, .35, 700, 3500) * expdecay(.35, .008) * 1.3, 0.0, 1.0)
+    _place(x, _sum(_thump(130, 60, .2, .05) * 1.1, _band(1951, .02, 1500, 5000) * expdecay(.02, .002) * .8), 0.0, .8)
     d = .33
     t = tarr(d)
     f = _glide(230, 170, d) * (1 + .1 * np.sin(2 * np.pi * 14 * t) * np.exp(-t / .15))
-    _place(x, _sin_of(f) * np.exp(-t / .1) * np.minimum(1, t / .004), .09, .4)
+    _place(x, (_sin_of(f) + .4 * _sin_of(2 * f)) * np.exp(-t / .1) * np.minimum(1, t / .004), .09, .4)
     return norm6(_edge(x, .0004, .1), .8)
 
 
@@ -797,7 +803,9 @@ def sfx_typing():
     x = np.zeros(_n(d + .1))
     t = .03
     for j in range(strokes):
-        _place(x, _key(1971 + 11 * k + j, j == 6 and strokes > 10), t, r.uniform(.5, 1.0))
+        g_ = r.uniform(.5, 1.0)
+        _place(x, _key(1971 + 11 * k + j, j == 6 and strokes > 10), t, g_)
+        _place(x, _band(2000 + 13 * k + j, .012, 2500, 7000) * expdecay(.012, .0015), t, g_ * .35)
         t += iv * r.uniform(.75, 1.3) + (.05 if j in (3, 8) else 0)
     _place(x, _key(1990 + k) * 1.2, min(t + .04, d - .05), .9)
     _place(x, _thump(210, 110, .05, .015) * .4, min(t + .04, d - .05), .9)
@@ -827,24 +835,26 @@ def _hit_train(seed, d, n, lo, hi, tau, g0, g1, t0=0.0, t1=None, shape=1.0):
 
 
 def sfx_cranemotor():
-    """A crane (variable length): a diesel hum, a firing rate of 26 Hz with an uneven beat (a saw through a 190 Hz low-pass and a rumble of noise pulsed with it), a winch whine
-    (a sine near 480 Hz with its 2nd and 3rd, rising and falling with the load) and the drum's ratchet ticks. The first (1.1 s) is the engine catching and settling into idle, gone before
-    Binder speaks; the second (3.6 s) is the lowering, the whine climbing, then easing, and cut dead as the building lands; the third (2.4 s, the row going in) is lighter."""
+    """A crane (variable length): a diesel with a firing rate of 26 Hz and an uneven beat (a saw through a 420 Hz low-pass and a noise pulsed with it), the knock of its injectors (a 400 to 2200
+    Hz band pulsed at the firing rate, so a phone speaker has something to play), a winch whine (a sine near 480 Hz with its 2nd and 3rd, rising and falling with the load) and the drum's
+    ratchet ticks. The first (1.1 s) is the engine catching and settling into idle, gone before Binder speaks; the second (3.6 s) is the lowering, the whine climbing, then easing, and
+    cut dead as the building lands; the third (2.4 s, the row going in) is lighter."""
     k, scene, i = _ctx("cranemotor")
-    d, whine = ((1.1, .35) if (scene == "dock" and i == 0) else (3.6, 1.0) if scene == "dock" else (2.4, .6))
+    d, whine = ((1.1, .5) if (scene == "dock" and i == 0) else (3.6, 1.0) if scene == "dock" else (2.4, .7))
     t = tarr(d)
     wob = 1 + .06 * np.sin(2 * np.pi * 1.3 * t) + .04 * np.sin(2 * np.pi * 3.7 * t + 1)
     fire = 26 * wob * np.interp(t, [0, .25, d], [1.5 if d < 2 else 1.2, 1.0, 1.0])
     ph = np.cumsum(fire) / SR
-    eng = _lp4(2 * (ph % 1) - 1, 190, 2) * 1.2
-    pulse = (1 + .6 * np.cos(2 * np.pi * ph)) * _lp4(noise6(d, 2100 + k), 240, 2) * 1.4
-    wf = np.interp(t, [0, d * .45, d * .8, d], [430, 640 if whine > .5 else 520, 560, 500]) * (1 + .01 * np.sin(2 * np.pi * 7 * t))
-    wn = _sin_of(wf) + .4 * _sin_of(2 * wf) + .2 * _sin_of(3 * wf)
-    wamp = whine * .09 * np.interp(t, [0, d * .2, d * .85, d], [0, 1, 1, 1 if d > 3 else 0])
-    x = (eng + pulse) * .8 + wn * wamp
+    eng = _lp4(2 * (ph % 1) - 1, 420, 2) * 1.0
+    pulse = (1 + .6 * np.cos(2 * np.pi * ph)) * _lp4(noise6(d, 2100 + k), 300, 2) * 1.2
+    knock = _band(2105 + k, d, 400, 2200) * (np.maximum(0, np.cos(2 * np.pi * ph)) ** 3) * 1.1
+    wf = np.interp(t, [0, d * .45, d * .8, d], [430, 640 if whine > .6 else 520, 560, 500]) * (1 + .01 * np.sin(2 * np.pi * 7 * t))
+    wn = _sin_of(wf) + .5 * _sin_of(2 * wf) + .3 * _sin_of(3 * wf)
+    wamp = whine * .22 * np.interp(t, [0, d * .2, d * .85, d], [0, 1, 1, 1 if d > 3 else 0])
+    x = (eng + pulse) * .7 + knock * .5 + wn * wamp
     rr = rng6(2110 + k)
     for a in np.arange(.15, d - .05, .2 + .05 * (k % 2)):
-        _place(x, _band(2120 + int(a * 10), .01, 1500, 4500) * expdecay(.01, .002), a + rr.uniform(0, .03), .12 * whine)
+        _place(x, _band(2120 + int(a * 10), .01, 1500, 4500) * expdecay(.01, .002), a + rr.uniform(0, .03), .2 * whine)
     x *= np.interp(t, [0, .15, d - .1, d], [0, 1, 1, 0 if d < 3 else .9])
     if d > 3:
         x = _edge(x, .05, .02)
@@ -869,18 +879,34 @@ def sfx_cablecreak():
     return norm6(_edge(_lp4(x, 7000, 2), .01, .08), .65)
 
 
-IMPACT_PEAK = .62    # the dock impact's peak (before the mixer's gain), tuned from the measured build: -4 dBFS before the master chain
+IMPACT_PEAK = .65    # the dock impact's peak (before the mixer's gain): tuned from the measured build so the finished file peaks near 0.70 there and the master limiter never touches it
+
+
+def _squash(x, thr, rel=.1, look=.004):
+    """A look-ahead compressor for a stereo clip: peaks over `thr` are pulled down by a gain that follows the envelope (instant attack over `look`, release `rel`), so the body of a hit is as
+    loud as its crack. It works on the envelope, not the waveform (the release is long against a bass cycle), so it does not distort the boom."""
+    from scipy.ndimage import maximum_filter1d, uniform_filter1d
+    p = maximum_filter1d(np.abs(x).max(axis=0), int(look * SR) * 2 + 1)
+    a = np.exp(-1 / (rel * SR))
+    env = np.empty_like(p)
+    e = 0.0
+    for i in range(len(p)):
+        e = p[i] if p[i] > e else e * a
+        env[i] = e
+    g = uniform_filter1d(np.minimum(1.0, thr / np.maximum(env, 1e-9)), int(look * SR) | 1)
+    return x * g
 
 
 def sfx_dockimpact():
-    """THE BIG ONE (5.0 s, stereo): a building lands on a roof. A contact crack (1.5 to 9 kHz, 12 ms), a boom that falls from 104 Hz to 34 Hz over 0.75 s with a second body, a sub at 27 Hz,
-    the crunch of concrete (a 900 Hz low-passed body, 0.22 s) and timber (six resonant snaps between 500 and 1500 Hz in the first 0.6 s), a metal ring (inharmonic partials from 310 Hz, ringing
-    1.2 s), gravel and debris scattered across the stereo field for four seconds and a rumble of the floor settling. The energy is in the low end; the sum is shaped, never clipped
-    (the peak is IMPACT_PEAK, a smooth tanh only on the very lowest part of the mix to keep the boom round)."""
+    """THE BIG ONE (5.0 s, stereo): a building lands on a roof. A contact crack (1.5 to 9 kHz, 12 ms), a boom that falls from 133 Hz to 48 Hz over 0.75 s with a second body, a sub at 27 Hz
+    underneath, the crunch of concrete (a 900 Hz low-passed body, 0.22 s) and timber (six resonant snaps between 500 and 1500 Hz in the first 0.6 s), a metal ring (inharmonic partials from
+    310 Hz, ringing 1.2 s), gravel and debris scattered across the stereo field for four seconds and a rumble of the floor settling. The energy is in the low end but not in the very
+    lowest octave (phones play 50 Hz and not 30), and the sum is shaped for loudness without clipping: an envelope compressor that only holds the top 3 dB (threshold 0.5 of the peak, release 80 ms, so the
+    boom still decays: 3.4 dB down at 0.4 s, 10 dB at 1.0 s) and a gentle soft knee (tanh at drive 1.2), then set to IMPACT_PEAK. Measured alone at the same peak it is 3 LU louder (momentary) than a plain sum of the parts; in the film it is the loudest momentary block by 2 LU."""
     d = 5.0
     t = tarr(d)
-    f = 34 + 70 * np.exp(-t / .18)
-    boom = _sin_of(f) * np.exp(-t / .75) + .55 * _sin_of(52 + 120 * np.exp(-t / .12)) * np.exp(-t / .35) + .35 * _sin_of(2 * f) * np.exp(-t / .28) + .5 * np.sin(2 * np.pi * 27 * t) * np.exp(-t / 1.1)
+    f = 48 + 85 * np.exp(-t / .18)
+    boom = _sin_of(f) * np.exp(-t / .75) + .55 * _sin_of(62 + 120 * np.exp(-t / .12)) * np.exp(-t / .35) + .35 * _sin_of(2 * f) * np.exp(-t / .28) + .35 * np.sin(2 * np.pi * 27 * t) * np.exp(-t / 1.1)
     boom = np.tanh(1.1 * boom) / 1.1 * np.minimum(1, t / .003)
     body = _lp4(noise6(d, 2310), 900, 2) * np.exp(-t / .22) * 1.0 + _band(2311, d, 90, 450) * np.exp(-t / .5) * .9
     crack = _band(2312, d, 1500, 9000) * np.exp(-t / .012) * .9
@@ -892,32 +918,37 @@ def sfx_dockimpact():
         _place(snaps, sn, a + rr.uniform(0, .02), rr.uniform(.4, .9))
     ring = sum(g * np.sin(2 * np.pi * 310 * r_ * t) * np.exp(-t / (tau)) for r_, g, tau in ((1.0, .35, 1.2), (2.32, .22, .8), (3.9, .15, .5), (5.7, .1, .3)))
     rumble = _lp4(noise6(d, 2330), 160, 2) * np.exp(-t / 1.4) * .9 * np.minimum(1, t / .05)
-    mono = boom * 1.0 + body * .55 + crack * .45 + snaps * .5 + ring * .12 + rumble * .5
+    wall = _band(2350, d, 220, 3500) * np.exp(-t / .3) * np.minimum(1, t / .004)
+    mono = boom * 1.0 + body * .9 + crack * .6 + snaps * .7 + ring * .15 + rumble * .5 + wall * .5
     deb = _hit_train(2340, d, 90, 800, 6000, .006, .18, .04, .1, 4.2, 1.8)
     deb2 = _hit_train(2341, d, 14, 2500, 9000, .02, .1, .02, .15, 3.0, 1.3)
     out = np.stack([mono, mono]) + deb * .55 + deb2 * .4
     out *= np.interp(t, [0, 4.0, d], [1, 1, 0])[None, :]
+    out = out / np.max(np.abs(out))
+    out = _squash(out, .5, .08)
+    out = np.tanh(1.2 * out / np.max(np.abs(out))) / np.tanh(1.2)
     out = _edge(out, .0002, .4)
     return out * (IMPACT_PEAK / np.max(np.abs(out)))
 
 
 def sfx_groan():
     """The tower settling (2.7 s): structural groans in a long decay. Three stick-slip wooden groans (a saw that slides 64 to 46 Hz with jitter, through a 900 Hz low-pass, each shorter and
-    quieter than the last), a steel answer to each (a saw near 110 Hz sliding down, through a narrow band) and the tink of a bolt letting go, over a low settle."""
+    quieter than the last, with a body formant at 250 to 700 Hz so they are heard on a phone), a steel answer to each (a saw near 110 Hz sliding down, through a narrow band) and the tink
+    of a bolt letting go, over a low settle."""
     d = 2.7
     t = tarr(d)
     x = np.zeros(len(t))
     for j, (at, dd, g) in enumerate(((.0, .9, 1.0), (.8, .75, .7), (1.55, .65, .45))):
         tt = tarr(dd)
         fw = _glide(64 - 4 * j, 46 - 3 * j, dd) * (1 + .08 * _smooth_rand(dd, 2400 + j, 10))
-        w = osc("saw", fw, dd) * (.55 + .45 * np.sign(np.sin(2 * np.pi * (9 + 2 * j) * tt)))
-        w = _lp4(w, 900, 2) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** .8
-        _place(x, w, at, g * 1.1)
+        w0 = osc("saw", fw, dd) * (.55 + .45 * np.sign(np.sin(2 * np.pi * (9 + 2 * j) * tt)))
+        w = _lp4(w0, 900, 2) * .7 + _tv_filter(w0, _glide(520, 330, dd), 2.2, "bp") * 1.6
+        _place(x, w * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** .8, at, g * 1.1)
         fs = _glide(115 - 6 * j, 92 - 4 * j, dd * .8) * (1 + .05 * _smooth_rand(dd * .8, 2410 + j, 14))
-        s = _tv_filter(osc("saw", fs, dd * .8), 700 + 200 * j, 5.0, "bp") * np.sin(np.pi * np.clip(tarr(dd * .8) / (dd * .8), 0, 1))
-        _place(x, s, at + .22, g * .35)
-        _place(x, _glass(1500 - 150 * j, .35, .1, .001), at + .5 + .1 * j, .05 * g)
-    x += _lp4(noise6(d, 2420), 90, 2) * np.exp(-t / 1.2) * .5
+        s_ = _tv_filter(osc("saw", fs, dd * .8), 700 + 200 * j, 5.0, "bp") * np.sin(np.pi * np.clip(tarr(dd * .8) / (dd * .8), 0, 1))
+        _place(x, s_, at + .22, g * .5)
+        _place(x, _glass(1500 - 150 * j, .35, .1, .001), at + .5 + .1 * j, .07 * g)
+    x += _lp4(noise6(d, 2420), 90, 2) * np.exp(-t / 1.2) * .4
     return norm6(_edge(_lp4(x, 3000, 2), .02, .35), .7)
 
 
@@ -938,43 +969,46 @@ def sfx_cablewhip():
 
 
 def sfx_rumble():
-    """A building rumbling (2.35 s), for the row going in: a bed of sub (30, 38 and 46 Hz sines that drift), a low noise (a 130 Hz low-pass) that flutters at 9 Hz as if the floors were
-    grinding, and a crumbling patter of fine gravel that grows; it swells for two seconds and is gone before the building stops."""
+    """A building rumbling (2.35 s), for the row going in: a bed of sub (30, 38 and 46 Hz sines that drift), a grinding of the floors that a phone can play (noise between 90 and 700 Hz
+    fluttering at 9 Hz, and a mid growl of 150 to 450 Hz that swells) and a crumbling patter of fine gravel that grows; it swells for two seconds and is gone before the building stops."""
     d = 2.35
     t = tarr(d)
     x = sum(g * np.sin(2 * np.pi * np.cumsum(f0 * (1 + .04 * np.sin(2 * np.pi * r_ * t))) / SR) for f0, g, r_ in ((30, 1.0, .6), (38, .8, .9), (46, .55, 1.3)))
-    fl = _lp4(noise6(d, 2600), 130, 2) * (.6 + .4 * np.sin(2 * np.pi * 9 * t + 3 * _smooth_rand(d, 2601, 4)))
-    x = x * .7 + fl * 1.8
-    x += _hit_train(2610, d, 60, 600, 4000, .004, .02, .12, 0.2, d - .2, .8)[0] * .6
+    fl = (.6 + .4 * np.sin(2 * np.pi * 9 * t + 3 * _smooth_rand(d, 2601, 4)))
+    grind = _band(2602, d, 90, 700) * fl
+    growl = _band(2603, d, 150, 450) * (.5 + .5 * np.sin(2 * np.pi * 5.5 * t + 2 * _smooth_rand(d, 2604, 3))) * np.interp(t, [0, d * .8, d], [.2, 1, .8])
+    x = x * .45 + grind * 1.8 + growl * 1.4
+    x += _hit_train(2610, d, 90, 500, 4000, .004, .05, .25, 0.2, d - .2, .8)[0] * 1.0
     x *= np.interp(t, [0, 1.8, 2.15, d], [.08, 1.0, .9, 0])
     return norm6(x, .75)
 
 
 def sfx_sink():
-    """The tower sinks one floor (1.5 s): a deep earth rumble that falls from 62 to 32 Hz, the crunch of soil (fine noise bursts between 200 and 1500 Hz, dense and then fewer), a stone grinding
-    (a band at 150 to 600 Hz chopped at 18 Hz, in the middle) and a soft settle at the end."""
+    """The tower sinks one floor (1.5 s): a deep earth rumble that falls from 62 to 32 Hz, the crunch of soil (fine noise bursts between 200 and 1500 Hz, dense and then fewer: loud enough
+    for a phone), a stone grinding (a band at 150 to 700 Hz chopped at 18 Hz, in the middle) and a soft settle at the end."""
     d = 1.5
     t = tarr(d)
-    x = _sin_of(_glide(62, 32, d)) * np.interp(t, [0, .1, 1.1, d], [0, 1, .8, 0]) * 1.0 + _lp4(noise6(d, 2700), 120, 2) * .8 * np.interp(t, [0, .2, 1.2, d], [0, 1, .6, 0])
-    x += _hit_train(2710, d, 70, 200, 1500, .01, .25, .08, 0.0, 1.3, 1.2)[0] * .8
-    gr = _band(2720, d, 150, 600) * (.5 + .5 * np.sign(np.sin(2 * np.pi * 18 * t + 2 * _smooth_rand(d, 2721, 5)))) * np.interp(t, [.2, .5, 1.0, 1.3], [0, 1, 1, 0])
-    x += gr * .7
+    x = _sin_of(_glide(62, 32, d)) * np.interp(t, [0, .1, 1.1, d], [0, 1, .8, 0]) * .8 + _lp4(noise6(d, 2700), 120, 2) * .6 * np.interp(t, [0, .2, 1.2, d], [0, 1, .6, 0])
+    x += _hit_train(2710, d, 90, 200, 1500, .01, .6, .2, 0.0, 1.3, 1.2)[0] * 1.6
+    gr = _band(2720, d, 150, 700) * (.5 + .5 * np.sign(np.sin(2 * np.pi * 18 * t + 2 * _smooth_rand(d, 2721, 5)))) * np.interp(t, [.2, .5, 1.0, 1.3], [0, 1, 1, 0])
+    x += gr * 1.5
+    x += _band(2722, d, 600, 3000) * np.interp(t, [0, .1, .6, 1.2], [0, .6, .3, 0]) * (.5 + .5 * np.sin(2 * np.pi * 23 * t)) * .5
     _place(x, _thump(75, 36, .3, .09), 1.18, .8)
     return norm6(_edge(x, .003, .1), .8)
 
 
 def sfx_thud():
-    """The tower stops (1.5 s): one very large, very low thud (a sine that falls 95 to 38 Hz, 0.16 s) with a wooden knock on top, a short groan as the frame takes the weight (a 58 Hz saw
-    through 700 Hz, 0.5 s) and a patter of dust and small things coming down, fading."""
+    """The tower stops (1.5 s): one very large, very low thud (a sine that falls 95 to 38 Hz, 0.16 s) with a wooden knock and a slap of concrete on top (a phone has something to play), a
+    short groan as the frame takes the weight (a 58 Hz saw through 700 Hz, 0.5 s) and a patter of dust and small things coming down, fading."""
     k, scene, i = _ctx("thud")
     d = 1.5
     t = tarr(d)
-    x = _sin_of(38 + 57 * np.exp(-t / .06)) * np.exp(-t / .22) * 1.2 + np.sin(2 * np.pi * 30 * t) * np.exp(-t / .5) * .5
-    x += _lp4(noise6(d, 2800), 700, 2) * np.exp(-t / .08) * .9 + _band(2801, d, 700, 3000) * expdecay(d, .01) * .5
+    x = _sin_of(38 + 57 * np.exp(-t / .06)) * np.exp(-t / .22) * .9 + np.sin(2 * np.pi * 30 * t) * np.exp(-t / .5) * .4
+    x += _lp4(noise6(d, 2800), 900, 2) * np.exp(-t / .1) * 1.5 + _band(2801, d, 700, 3500) * expdecay(d, .012) * 1.0 + _band(2802, d, 150, 500) * np.exp(-t / .15) * 1.2
     gd = .5
     tt = tarr(gd)
-    _place(x, _lp4(osc("saw", _glide(60, 52, gd), gd) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 10 * tt))), 700, 2) * np.sin(np.pi * np.clip(tt / gd, 0, 1)) * .4, .12, 1.0)
-    x += _hit_train(2810, d, 26, 800, 5000, .005, .1, .01, .1, 1.4, 1.0)[0] * .6
+    _place(x, _lp4(osc("saw", _glide(60, 52, gd), gd) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 10 * tt))), 800, 2) * np.sin(np.pi * np.clip(tt / gd, 0, 1)) * .6, .12, 1.0)
+    x += _hit_train(2810, d, 30, 800, 5000, .005, .2, .02, .1, 1.4, 1.0)[0] * .9
     return norm6(_edge(x, .0004, .3), .85)
 
 
@@ -1049,15 +1083,15 @@ def sfx_sting():
     v = {"dock": 0, "model1": 1, "model2": 2, "replace": 3, "close": 4}.get(scene, k % 5)
     x = np.zeros(_n(1.5))
     if v == 0:
-        for at, f in ((0.0, 58.3), (.3, 46.2)):
+        for at, f in ((0.0, 116.5), (.3, 92.4)):
             dd = .5
             t = tarr(dd)
             sw = osc("saw", f * (1 - .03 * t / dd), dd) + .5 * osc("saw", f * 1.004, dd)
-            _place(x, _lp4(sw, 800, 2) * ar(dd, .02, .2) * 1.2, at, 1.0)
+            _place(x, _lp4(sw, 1400, 2) * ar(dd, .02, .2) * 1.2, at, 1.0)
             _place(x, _band(3100 + int(at * 10), .03, 1500, 5000) * expdecay(.03, .004) * .4, at, 1.0)
     elif v == 1:
-        _place(x, BA.brass_chord([36, 43, 46, 51], .3, 1300), 0.0, 1.0)
-        _place(x, _thump(100, 40, .7, .2), 0.0, .8)
+        _place(x, BA.brass_chord([48, 55, 58, 63], .3, 1500), 0.0, 1.0)
+        _place(x, _thump(100, 40, .7, .2), 0.0, .6)
         _place(x, _glass(2960.0, .8, .25, .002), .02, .12)
     elif v == 2:
         for at, f, dd in ((0.0, 466.2, .24), (.27, 440.0, .24), (.55, 415.3, .7)):
@@ -1177,9 +1211,16 @@ def sfx_phys():
 
 
 # ================================================================ registration (keep this at the end of the sfx section)
+BOOST = {   # sustained textures that sat 15 to 20 dB under the voice at the script's gains: lifted so they register (the dialogue dip still takes them down under speech)
+    "banner": 1.8, "sniffle": 1.4, "sob": 1.3, "stars": 1.4, "spinner": 1.4, "flip": 1.3, "typing": 1.4, "peel": 1.4, "cablewhip": 1.4, "keyboard": 1.3, "counter": 1.3, "heartbeat": 1.2,
+}
+
+
 def _tagged(name, fn):
+    k = BOOST.get(name, 1.0)
+
     def run():
-        return _Tag(fn(), name)
+        return _Tag(fn() * k, name)
     run.__doc__ = fn.__doc__
     return run
 
