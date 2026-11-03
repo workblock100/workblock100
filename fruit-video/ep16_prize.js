@@ -191,7 +191,7 @@ function engrave(str, cx, cy, o) {
 }
 
 // ------------------------------------------------------------------ the plaque and its stand (world units; the text is drawn live)
-function plaque(lt, st) {
+function plaque(lt, st, mid) {
   const { x, y, w, h, cx } = PQ, shake = st.shake || 0;
   ctx.save(); ctx.translate(shake * 5, -Math.abs(shake) * 2);
   /* the wooden base block and the shadow on the bench */
@@ -206,6 +206,7 @@ function plaque(lt, st) {
   ctx.strokeStyle = 'rgba(110,76,10,.85)'; ctx.lineWidth = 3; ctx.stroke(); ctx.strokeStyle = 'rgba(255,248,205,.75)'; ctx.lineWidth = 1.6; rr(px + 4, py + 4, pw2 - 8, ph - 8, 6); ctx.stroke();
   ctx.strokeStyle = 'rgba(120,86,14,.12)'; ctx.lineWidth = 1; ctx.beginPath(); for (let i = 0; i < 30; i++) { const yy = py + 8 + i * 8.1; ctx.moveTo(px + 8, yy); ctx.lineTo(px + pw2 - 8, yy); } ctx.stroke();
   for (const [sx, sy] of [[px + 16, py + 16], [px + pw2 - 16, py + 16], [px + 16, py + ph - 16], [px + pw2 - 16, py + ph - 16]]) { ell(sx, sy, 6, 6); ctx.fillStyle = '#b48a2a'; ctx.fill(); ctx.strokeStyle = 'rgba(80,54,6,.9)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.beginPath(); ctx.moveTo(sx - 3.4, sy - 1.4); ctx.lineTo(sx + 3.4, sy + 1.4); ctx.stroke(); }
+  if (mid) mid();                                     /* sparks and dust: in front of the brass, behind the lettering (so they never cover a letter) */
   /* the lines */
   const r1 = engrave('EMPLOYEE OF THE MONTH', cx, PQL.l1, { size: 34, spacing: .8, maxW: pw2 - 56 });
   ctx.strokeStyle = 'rgba(70,48,8,.8)'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(cx - 150, PQL.rule); ctx.lineTo(cx - 14, PQL.rule); ctx.moveTo(cx + 14, PQL.rule); ctx.lineTo(cx + 150, PQL.rule); ctx.stroke();
@@ -248,10 +249,10 @@ function sparks(lt, t0, t1, tipAt) {
   }
   for (let i = 0; i < Math.round((t1 - t0) * 40); i++) {
     const b = t0 + i / 40, age = lt - b; if (age < 0 || age > .9) continue;
-    const [tx, ty] = tipAt(Math.min(b, t1)), x = tx + (sr(i, 5) - .3) * 120 * age, y = ty - 40 * age + 30 * age * age + (sr(i, 6) - .5) * 20, f = 1 - age / .9;
+    const [tx, ty] = tipAt(Math.min(b, t1)), x = tx + 8 + (.15 + .85 * sr(i, 5)) * 120 * age, y = ty - 40 * age + 30 * age * age + (sr(i, 6) - .5) * 20, f = 1 - age / .9;
     ctx.fillStyle = `rgba(235,200,100,${.5 * f})`; ell(x, y, 2.4, 2.4); ctx.fill();
   }
-  V2.glow(...tipAt(Math.min(lt, t1)), 34, '255,200,110', .4, 'screen', .3);
+  { const [gx, gy] = tipAt(Math.min(lt, t1)); V2.glow(gx + 16, gy, 28, '255,200,110', .4, 'screen', .3); }
 }
 
 // ------------------------------------------------------------------ Carrot's hand and tools (a sleeve from the frame edge, an orange mitt): the engraver and the rubber stamp
@@ -407,7 +408,7 @@ function drawWorld(lt) {
   const bg = () => { wall(lt); pegboard(lt); lamp(lt); };
   if (sh.dof) V2.dof(sh.dof, bg); else bg();
   if (on > .02) { V2.addLight({ x: LAMP.x, y: LAMP.y + 40, r: 1100, color: '255,226,160', a: .6 * on }); V2.beam(LAMP.x, LAMP.y + 50, 560, 1090, 60, 700, '255,226,150', .2 * on, 'screen'); }
-  NOHERO = lt >= CUE.stamp - .02 && lt < CUE.stamp + .3;
+  NOHERO = lt >= CUE.stamp - .24 && lt < CUE.stamp + .3;
   const C = sh.cast || {};
   if (C.melon) drawChar(mk(A9.melon, lt, Object.assign({ o: actMelon(lt).o }, C.melon)));
   if (C.lemon) drawChar(mk(A7.lemon, lt, Object.assign({ o: actLemon(lt).o }, C.lemon)));
@@ -416,14 +417,13 @@ function drawWorld(lt) {
   bench(lt);
   if (sh.plq != null) {
     ctx.save(); ctx.translate(sh.plq, 0);
-    const info = plaque(lt, st); pendingInk(lt, st);
+    const ln = activeLine(lt);
+    const info = plaque(lt, st, () => { if (sh.tool && ln) sparks(lt, LINES[ln].t0, LINES[ln].t1, u => tipOf(ln, u)); }); pendingInk(lt, st);
     const bs = sh.bind ? sh.bind.s : .55;
     drawChar(bindOpts(lt, { x: PQ.cx, y: PQ.y - BD_RY * bs + 8, s: bs }));
     hearts(lt, PQ.cx, PQ.y - BD_RY * bs + 8, bs * 1.6);
-    const ln = activeLine(lt);
     if (sh.tool && ln) {
-      const spin = lt * 90, tip = (u) => tipOf(ln, u);
-      sparks(lt, LINES[ln].t0, LINES[ln].t1, tip);
+      const spin = lt * 90;
       const [tx, ty] = tipOf(ln, Math.min(lt, LINES[ln].t1));
       engraver(tx + 2, ty + 3 + Math.sin(lt * 120) * 1.4, PI + .26 + Math.sin(lt * 70) * .01, spin);
     }

@@ -509,7 +509,7 @@ function tabRect(name, lt) {
 function endState(lt) {
   const cells = { A1: { v: '', fill: '#1a1450' } }, hero = !(lt >= E.dlgIn && lt < E.dlgGone);   /* under the dim of the dialog nothing is hero */
   const hk = sg(lt, .55, .85), hdr = { fill: '#1a1450', color: CREAM, size: 26, weight: 900, spacing: 3, hero: false };
-  cells.A3 = { v: '', fill: '#1a1450' }; cells.B3 = Object.assign({ v: 'NAME', typed: hk }, hdr); cells.C3 = Object.assign({ v: 'MODULE 7', typed: hk, align: 'center' }, hdr); cells.D3 = Object.assign({ v: 'BREAK', typed: hk }, hdr);
+  cells.A3 = { v: '', fill: '#1a1450' }; cells.B3 = Object.assign({ v: 'NAME', typed: hk }, hdr); cells.C3 = Object.assign({ v: 'MODULE 7', typed: hk, align: 'center' }, hdr); cells.D3 = Object.assign({ v: 'BREAK', typed: hk, pad: 14 }, hdr);
   cells.A13 = { v: '* Clock-out requires a taken break. Breaks are pending.', typed: sg(lt, 2.2, 2.5), italic: true, size: 30, weight: 700, color: '#5b6470', align: 'center', hero: hero && !(lt >= E.stamp - .16 && lt < E.stampOut + .1), fill: '#ffffff' };
   let active = 'A1', ftxt = '', fk = 1;
   ROSTER.forEach((p, i) => {

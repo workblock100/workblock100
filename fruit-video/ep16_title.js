@@ -425,7 +425,7 @@ function tabRect(name, lt) {
 function endState(lt) {
   const cells = { A1: { v: '', fill: '#13285a' } }, hero = !(lt >= E.dlgIn && lt < E.dlgGone);   /* under the dim of the dialog nothing is hero */
   const hk = sg(lt, .55, .85), hdr = { fill: '#13285a', color: CREAM, size: 26, weight: 900, spacing: 3, hero: false };
-  cells.A3 = { v: '', fill: '#13285a' }; cells.B3 = Object.assign({ v: 'NAME', typed: hk }, hdr); cells.C3 = Object.assign({ v: 'VOTES', typed: hk }, hdr); cells.D3 = Object.assign({ v: 'STATUS', typed: hk }, hdr);
+  cells.A3 = { v: '', fill: '#13285a' }; cells.B3 = Object.assign({ v: 'NAME', typed: hk }, hdr); cells.C3 = Object.assign({ v: 'VOTES', typed: hk, pad: 22 }, hdr); cells.D3 = Object.assign({ v: 'STATUS', typed: hk, pad: 16 }, hdr);   /* header text starts where the cell text starts */
   cells.A13 = { v: '* 40 unassigned voters were eligible. Per policy.', typed: sg(lt, 2.2, 2.5), italic: true, size: 30, weight: 700, color: '#5b6470', align: 'center', hero: hero && !(lt >= E.stamp - .16 && lt < E.stampOut + .1), fill: '#ffffff' };
   let active = 'A1', ftxt = '', fk = 1;
   ROSTER.forEach((p, i) => {

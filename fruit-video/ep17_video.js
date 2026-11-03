@@ -138,7 +138,7 @@ function doorWall(lt) {
   wallR(s, 0, h + 34, z0 - 26, z1 + 26, '#5a3c22', 'rgba(25,16,30,.6)', 2.2);
   if (depthOf(z0) > 160 && depthOf(z1) > 160) {
     const a = P(s * RM.hw, h * .5, z0), b = P(s * RM.hw, h * .5, z1);
-    wallR(s, 0, h, z0, z1, V2.grad(a[0], a[1], b[0], b[1], [[0, '#efe3c6'], [1, '#bfae8a']]), 'rgba(25,16,30,.55)', 2);
+    wallR(s, 0, h, z0, z1, V2.grad(a[0], a[1], b[0], b[1], [[0, '#b9a884'], [1, '#7f7152']]), 'rgba(25,16,30,.55)', 2);
   } else wallR(s, 0, h, z0, z1, '#e6d9b8');
   /* inside: the corridor's far wall, a resident's door and the lamp over it */
   const zf = lerp(z0, z1, .72);
@@ -148,8 +148,9 @@ function doorWall(lt) {
   const [lx, ly] = P(X, 262, zf - 4);
   if (depthOf(zf) > 160) {
     const k = kAt(zf);
-    ctx.save(); ctx.fillStyle = rgba('#ff6a58', .5 + .5 * pk); ell(lx, ly, 15 * k, 11 * k); ctx.fill(); ctx.strokeStyle = 'rgba(60,10,10,.8)'; ctx.lineWidth = Math.max(1.4, 2.2 * k); ctx.stroke(); ctx.restore();
-    V2.glow(lx, ly, 120 * k * (.8 + .5 * pk), '255,60,50', .55 + .4 * pk, 'screen', .3);
+    ctx.save(); ctx.fillStyle = rgba('#ff5a48', .65 + .35 * pk); ell(lx, ly, 26 * k, 19 * k); ctx.fill(); ctx.strokeStyle = 'rgba(60,10,10,.85)'; ctx.lineWidth = Math.max(1.4, 3 * k); ctx.stroke(); ctx.restore();
+    V2.glow(lx, ly, 300 * k * (.8 + .4 * pk), '255,50,40', Math.min(1, .6 + .4 * pk), 'screen', .3);
+    { const ph = (lt * .9) % 1; V2.ring(lx, ly, ph, { r0: 24 * k, r1: 420 * k, color: '255,90,80', lw: 4, alpha: .6 * (1 - ph) }); }
   }
   /* the red light spills into the room */
   if (D.dir === 'f') V2.addLight({ x: lx, y: ly + 40, r: 900, color: '255,70,60', a: .22 * pk }); else V2.addLight({ x: lx, y: ly + 40, r: 1100, color: '255,70,60', a: .26 * pk });
@@ -490,7 +491,7 @@ shot('open', 0, 1.0, u => Object.assign({}, WIDE, { z: lerp(1.16, 1.24, u) }), {
 shot('tv1', 1.0, 3.2, u => tvAim(640, 380, lerp(.78, .83, u)), { cast: [] });
 shot('aud1', 3.2, 4.89, u => faceCam(SEATX.lemon, 1.32, 790, { z: lerp(1, 1.04, u) }), { cast: ALL3, rows2: false });
 shot('proc', 4.89, 6.45, u => tvAim(1072, 250, lerp(2.1, 2.3, u)), { cast: [], tvHero: true });
-shot('s1', 6.45, 6.95, u => faceCam(SEATX.straw, 1.95, 800, { z: lerp(1.02, 1.08, u) }), { cast: ['straw'], rows2: false });
+shot('s1', 6.45, 6.95, u => faceCam(SEATX.straw, 1.95, 800, { z: lerp(1.02, 1.08, u), dx: 560 * Math.pow(sg(u, .78, 1), 2) }), { cast: ['straw'], rows2: false });   /* the last frames whip toward the door */
 shot('door', 6.95, 7.54, u => lens({ f: BASEF, cz: 120, cy: 160, hy: 780, cx: lerp(-40, -10, u), z: lerp(1.5, 1.9, u), lamp: true }), { cast: [], corridor: true });
 shot('pause', 7.54, 8.55, u => tvAim(640, 380, lerp(.8, .84, u)), { cast: [], tvHero: true });
 shot('s1b', 8.55, 9.04, u => faceCam(SEATX.straw, 1.95, 800, { z: lerp(1.05, 1.0, u) }), { cast: ['straw'], rows2: false });
@@ -501,7 +502,7 @@ shot('tv3', 13.8, 16.29, u => tvAim(640, 380, lerp(.8, .86, u)), { cast: [] });
 shot('s2', 16.29, 17.41, u => faceCam(SEATX.straw, 2.05, 800, { z: lerp(1.0, 1.06, u) }), { cast: ['straw'], rows2: false });
 shot('tv4', 17.41, 19.58, u => tvAim(640, 380, lerp(.8, .86, u)), { cast: [], tvHero: true });
 shot('bar', 19.58, 20.97, u => tvAim(860, 630, lerp(1.25, 1.34, u)), { cast: [], tvHero: true });
-shot('s3', 20.97, 22.35, u => faceCam(-500, lerp(1.2, 1.3, u), 800, { z: 1 }), { cast: ['straw'], rows2: false });
+shot('s3', 20.97, 22.35, u => faceCam(-500, lerp(1.25, 1.45, u), 800, { z: 1 }), { cast: ['straw'], rows2: false });
 shot('wide2', 22.35, 23.4, u => faceCam(-330, lerp(.84, .78, u), 790, { z: 1 }), { cast: ALL3, rows2: false });
 for (const sh of SHOTS) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
 
@@ -554,7 +555,7 @@ const SC = {
     sh.cc = c; D.dir = c.dir;
     V2.setCam({ f: c.f, cz: c.cz, cy: c.cy, hy: c.hy, cx: c.cx });
     let fx = c.fx, fy = c.fy, z = c.z;
-    if (c.lamp) { const [lx, ly] = V2.p2(-COR.hw + 6, 292, 1190); fx = lx + 150; fy = ly + 190; }   /* the corridor shot pushes in on the call light */
+    if (c.lamp) { const [lx, ly] = V2.p2(-COR.hw + 6, 292, 1190); fx = lx + 150 - 560 / z * Math.pow(1 - ss(u, 0, .3), 2); fy = ly + 190; }   /* the corridor shot pushes in on the call light */
     if (c.aim) {
       const scr = facing(TVG.cx - TVG.w / 2, TVG.cx + TVG.w / 2, TVG.bot, TVG.bot + TVG.h, RM.zTV - 110), s0 = scr.w / 1280;
       z = c.aim[2] / s0; fx = scr.x + scr.w * c.aim[0] / 1280; fy = scr.y + scr.h * c.aim[1] / 720 + BANDY / z;
@@ -570,7 +571,10 @@ const SC = {
     if (lt < .3) { fx.fade = 1 - sg(lt, 0, .3); fx.fadeColor = '10,12,24'; }
     return fx;
   },
-  blur: () => 1,
+  blur(lt) {   /* the whip to the corridor (6.8 .. 7.2) is shutter-blurred; the frames at the cut stay sharp (a cut inside a blur window would double-expose) */
+    for (const q of SHOTS) if (Math.abs(lt - q.s) < .045) return 1;
+    return lt > 6.8 && lt < 7.2 ? 16 : 1;
+  },
   over(lt) {
     /* the call light's chime: a red pulse over the picture on the ding, and again with the sting */
     const a = lt >= CUE.ding ? .22 * Math.exp(-(lt - CUE.ding) * 5) : 0, b = lt >= CUE.sting ? .2 * Math.exp(-(lt - CUE.sting) * 6) : 0;

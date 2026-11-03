@@ -125,7 +125,8 @@ function drawWorld(lt) {
   if (has('t') && lt >= CUE.click) {   /* the tablet wakes: a ring of light, then a steady glow on Tomato and the counter */
     const k = (lt - CUE.click) / .5;
     if (k > 0 && k < 1) { V2.ring(tx, ty, k, { r0: 6, r1: 90, color: '170,255,210', lw: 5, alpha: .95 * (1 - k * .5) }); V2.glow(tx, ty, 60 + 50 * k, '210,255,230', .7 * (1 - k), 'screen', .3); }
-    V2.glow(tx, ty, 54, '190,255,220', .3 + .18 * Math.sin(lt * 5), 'screen', .3);
+    const ant = ss(lt, 7.45, CUE.binderpop);   /* the screen swells with light just before Binder pops out of it */
+    V2.glow(tx, ty, 54 + 80 * ant, '190,255,220', Math.min(1, .3 + .18 * Math.sin(lt * 5) + .55 * ant), 'screen', .3);
   }
   smallBinder(lt, C, sh.id === 'wide2');
 }

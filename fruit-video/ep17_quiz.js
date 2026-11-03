@@ -63,6 +63,7 @@ const polyR = (pts, fill, stroke, lw) => polyW(pts.map(p => [mapX(p[0]), p[1], m
 const wallR = (side, y0, y1, z0, z1, fill, stroke, lw) => polyR([[side * RM.hw, y0, z0], [side * RM.hw, y1, z0], [side * RM.hw, y1, z1], [side * RM.hw, y0, z1]], fill, stroke, lw);
 function boxR(xa, xb, y0, y1, za, zb, o) {   /* a box in room coordinates (sorted so box3 sees x0 < x1 and z0 < z1 in the shot's direction) */
   const xs = [mapX(xa), mapX(xb)].sort((a, b) => a - b), zs = [mapZ(za), mapZ(zb)].sort((a, b) => a - b);
+  if (Math.min(zs[0], zs[1]) < V2.P.cz + 100) return;   /* a box behind the lens would project to garbage */
   return S6.box3(Object.assign({ x0: xs[0], x1: xs[1], y0, y1, z0: zs[0], z1: zs[1] }, o));
 }
 const facing = (x0, x1, y0, y1, zr) => { const a = P(x0, y1, zr), b = P(x1, y0, zr); return { x: Math.min(a[0], b[0]), y: Math.min(a[1], b[1]), w: Math.abs(b[0] - a[0]), h: Math.abs(b[1] - a[1]) }; };
@@ -111,16 +112,16 @@ function sides(lt) {
   for (let i = 0; i < 4; i++) boxR(790, 888, i * 46, i * 46 + 40, 660 + i * 6, 800 + i * 6, ch);
 }
 const TVG = { cx: -120, bot: 262, w: 720, h: 405, bez: 26 };
-const CLK = { x: TVG.cx, y: 850, R: 100 };
+const CLK = { x: TVG.cx, y: 890, R: 90, cs: .9 };
 const PCK = { x: 715, y: 250, w: 150, h: 200 };
-const PRT = { x: 380, z: 1380 };
+const PRT = { x: 440, z: 1380 };
 
 // ------------------------------------------------------------------ the wall clock (10:59, the second hand ticks, then the spinner and the flipping label), the punch clock, the printer and the certificate
 const SEC0 = 41;
 function bigClock(lt, big) {
   const z = RM.zTV - 8, k = kAt(z); if (depthOf(z) < 140) return;
-  const [x, y] = P(CLK.x, CLK.y, z), R = CLK.R, sp = ss(lt, CUE.pending, CUE.pending + .35);
-  ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const [x, y] = P(CLK.x, CLK.y, z), R = 100, sp = ss(lt, CUE.pending, CUE.pending + .35);
+  ctx.save(); ctx.translate(x, y); ctx.scale(k * CLK.cs, k * CLK.cs); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.fillStyle = 'rgba(20,12,30,.25)'; ell(0, 8, R + 12, R + 12); ctx.fill();
   ctx.fillStyle = '#24202c'; ell(0, 0, R + 10, R + 10); ctx.fill();
   ctx.fillStyle = lg(0, -R, 0, R, [[0, '#fffefa'], [1, '#e9e6dc']]); ell(0, 0, R, R); ctx.fill();
@@ -136,9 +137,9 @@ function bigClock(lt, big) {
     ctx.restore();
   }
   /* the plaque under the clock: BREAK IN 1 MIN becomes BREAK PENDING, letter by letter */
-  const py = R + 52, pw = 300, ph = 54, u = sg(lt, CUE.pending, CUE.pending + .8);
+  const py = R + 44, pw = 300, ph = 50, u = sg(lt, CUE.pending, CUE.pending + .8);
   UI.panel([-pw / 2, py - ph / 2, pw, ph], { id: 'clkplate', kind: 'sign', fill: '#1d2a3a', stroke: '#e8e0cf', lw: 3, r: 10, pad: 4, hero: false });
-  SH15.flipText('BREAK IN 1 MIN', 'BREAK PENDING', u, { cx: 0, cy: py, size: 26, weight: 900, fill: '#eaf6ff', maxW: pw - 24, cid: 'clkplate', center: true, hero: TVH && big });
+  SH15.flipText('BREAK IN 1 MIN', 'BREAK PENDING', u, { cx: 0, cy: py, size: 26, weight: 900, fill: '#eaf6ff', maxW: pw - 24, cid: 'clkplate', center: true, hero: TVH && big && scaleNow() * 26 >= 31 });
   ctx.restore();
 }
 function punchClock(lt) {
@@ -147,18 +148,18 @@ function punchClock(lt) {
   ctx.save(); ctx.translate(x, y); ctx.scale(k, k); ctx.lineJoin = 'round';
   ctx.fillStyle = 'rgba(20,12,30,.3)'; rr(-PCK.w / 2 + 6, -PCK.h / 2 + 10, PCK.w, PCK.h, 18); ctx.fill();
   ctx.fillStyle = lg(0, -PCK.h / 2, 0, PCK.h / 2, [[0, '#b9bec9'], [1, '#7e8594']]); ctx.strokeStyle = 'rgba(20,22,30,.9)'; ctx.lineWidth = 4; rr(-PCK.w / 2, -PCK.h / 2, PCK.w, PCK.h, 18); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = err ? rgba('#3a0a0a', 1) : '#06140c'; ctx.strokeStyle = '#15171c'; ctx.lineWidth = 4; rr(-60, -88, 120, 58, 6); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = err ? rgba('#3a0a0a', 1) : '#06140c'; ctx.strokeStyle = '#15171c'; ctx.lineWidth = 4; rr(-60, -92, 120, 56, 6); ctx.fill(); ctx.stroke();
   const lines = lt < bS('o2') ? ['10:59 PM'] : err ? ['ERROR', 'BREAK PENDING'] : ['CLOCK OUT', 'BREAK REQUIRED'], col = err ? rgba('#ff5a4a', blink) : lt < bS('o2') ? '#58ff7a' : '#ffbf1f';
-  if (lines.length === 1) tvLabel(lines[0], 0, -59, { size: 24, weight: 900, fill: col, maxW: 108, hero: false });
-  else { tvLabel(lines[0], 0, -73, { size: 17, weight: 900, fill: col, maxW: 108 }); tvLabel(lines[1], 0, -49, { size: 13.5, weight: 900, fill: col, maxW: 108 }); }
-  ctx.fillStyle = '#15171c'; rr(-44, -14, 88, 14, 4); ctx.fill();
-  ctx.fillStyle = '#fbf6e4'; ctx.strokeStyle = 'rgba(30,26,20,.8)'; ctx.lineWidth = 2.4; rr(-30, -46, 60, 66, 3); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#c43a2a'; ctx.fillRect(-30, -40, 60, 8); ctx.fillStyle = 'rgba(60,60,80,.5)'; for (let i = 0; i < 4; i++) ctx.fillRect(-22, -22 + i * 9, 44 - (i % 2) * 14, 3);
-  ctx.fillStyle = '#15171c'; rr(-44, -8, 88, 20, 4); ctx.fill();
+  if (lines.length === 1) tvLabel(lines[0], 0, -64, { size: 24, weight: 900, fill: col, maxW: 108, hero: false });
+  else { tvLabel(lines[0], 0, -78, { size: 17, weight: 900, fill: col, maxW: 108 }); tvLabel(lines[1], 0, -53, { size: 13.5, weight: 900, fill: col, maxW: 108 }); }
+  ctx.fillStyle = '#15171c'; rr(-44, 4, 88, 18, 4); ctx.fill();
+  ctx.fillStyle = '#fbf6e4'; ctx.strokeStyle = 'rgba(30,26,20,.8)'; ctx.lineWidth = 2.4; rr(-30, -30, 60, 44, 3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#c43a2a'; ctx.fillRect(-30, -26, 60, 7); ctx.fillStyle = 'rgba(60,60,80,.5)'; for (let i = 0; i < 3; i++) ctx.fillRect(-22, -12 + i * 8, 44 - (i % 2) * 14, 3);
+  ctx.fillStyle = '#15171c'; rr(-44, 10, 88, 12, 4); ctx.fill();
   for (const [bx, c] of [[-28, err ? rgba('#ff3a2a', .55 + .45 * blink) : '#2fbf6a'], [0, '#e8a31f'], [28, '#c43a2a']]) { ctx.fillStyle = c; ctx.strokeStyle = '#15171c'; ctx.lineWidth = 3; ell(bx, 60, 12, 12); ctx.fill(); ctx.stroke(); }
-  if (err && et < .6) { ctx.strokeStyle = `rgba(255,70,50,${.8 * (1 - et / .6)})`; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, -59, 50 + et * 260, 0, TAU); ctx.stroke(); }
+  if (err && et < .6) { ctx.strokeStyle = `rgba(255,70,50,${.8 * (1 - et / .6)})`; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, -64, 50 + et * 260, 0, TAU); ctx.stroke(); }
   ctx.restore();
-  if (err && blink > .6 && et < 1.4) V2.glow(x, y - 59 * k, 170 * k, '255,80,60', .4, 'screen', .5);
+  if (err && blink > .6 && et < 1.4) V2.glow(x, y - 64 * k, 170 * k, '255,80,60', .4, 'screen', .5);
 }
 const T_PRINT = CUE.textding, T_PEND = 0;
 function printerDraw(lt) {
@@ -238,8 +239,8 @@ function quizHeader(lt, hero) {
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 1280, 80); ctx.fillStyle = '#d9e0ea'; ctx.fillRect(0, 80, 1280, 2);
   ctx.fillStyle = '#1e8e5a'; ell(60, 40, 22, 22); ctx.fill(); ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(52, 50); ctx.quadraticCurveTo(48, 28, 70, 28); ctx.quadraticCurveTo(70, 46, 52, 50); ctx.closePath(); ctx.fill();
   UI.label('LearnWell', 100, 40, { size: 34, weight: 900, fill: '#16202e', align: 'left', hero: false, crop: true });
-  UI.label('MODULE 7 OF 7', 760, 40, { size: 26, weight: 900, fill: '#5b6470', align: 'right', hero: false, crop: true });
-  for (let i = 0; i < 7; i++) { ctx.fillStyle = '#1e8e5a'; rr(782 + i * 46, 33, 38, 14, 7); ctx.fill(); }
+  UI.label('MODULE 7 OF 7', 600, 40, { size: 26, weight: 900, fill: '#5b6470', align: 'right', hero: false, crop: true });
+  for (let i = 0; i < 7; i++) { ctx.fillStyle = '#1e8e5a'; rr(624 + i * 46, 33, 38, 14, 7); ctx.fill(); }
   UI.label('S. STRAWBERRY', 1230, 40, { size: 24, weight: 800, fill: '#5b6470', align: 'right', hero: false, crop: true });
 }
 function webcamTile(lt) {
@@ -248,7 +249,7 @@ function webcamTile(lt) {
   ctx.fillStyle = lg(x, y, x, y + h, [[0, '#6b7a99'], [1, '#2c3550']]); ctx.fillRect(x, y, w, h);
   ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fillRect(x, y + h * .62, w, 4);
   REG.suppress++;
-  try { drawChar((A11 || A7).straw({ x: x + w / 2, y: y + h + 112, s: .68, noLegs: true, noShadow: true, noReflect: true, plant: true, t: lt, who: 'straw', expr: 'weak', lid: .3, look: [0, .1], arms: { l: 'rest', r: 'rest' } })); } finally { REG.suppress--; }
+  try { drawChar((A11 || A7).straw({ x: x + w / 2, y: y + h + 62, s: .78, noLegs: true, noShadow: true, noReflect: true, plant: true, t: lt, who: 'straw', expr: 'weak', lid: .3, look: [0, .1], arms: { l: 'rest', r: 'rest' } })); } finally { REG.suppress--; }
   ctx.restore();
   ctx.fillStyle = rgba('#ff3a2a', .6 + .4 * Math.sin(lt * 4)); ell(x + 22, y + 24, 7, 7); ctx.fill();
   UI.label('PROCTOR CAM', x + 40, y + 24, { size: 20, weight: 900, fill: '#ffffff', align: 'left', hero: false, crop: true });
@@ -300,8 +301,8 @@ function quizWin(lt) {
       const a = ss(lt, T_TRK, T_TRK + .25);
       ctx.save(); ctx.globalAlpha *= a; UI.panel([60, 190, 760, 250], { id: 'trk', kind: 'sign', fill: '#ffffff', stroke: '#d7dde6', lw: 3, r: 20, pad: 8, hero: false });
       tvLabel('BREAK:', 150, 315, { size: 72, weight: 900, fill: '#16202e', align: 'left', hero: a >= 1, maxW: 260 });
-      tvLabel('PENDING', 440, 315, { size: 90, weight: 900, fill: '#c97a00', align: 'left', hero: a >= 1, maxW: 340 });
-      spinner(740, 315, 34, lt, '#e8a31f'); ctx.restore();
+      tvLabel('PENDING', 440, 315, { size: 84, weight: 900, fill: '#c97a00', align: 'left', hero: a >= 1, maxW: 270 });
+      spinner(774, 315, 28, lt, '#e8a31f'); ctx.restore();
       UI.label('REQUESTED: SINCE THE MERGER', 60, 500, { size: 28, weight: 800, fill: '#7a8494', align: 'left', hero: false, crop: true });
       webcamTile(lt);
     } else {   /* the loop: CLOCK OUT to BREAK to CLOCK OUT, a dot chasing round it */
@@ -355,9 +356,9 @@ function person(name, lt) {
 }
 const sw = (lt, f, ph, amp) => Math.sin(lt * f + ph) * amp;
 ACT.straw = lt => ({ psiB: 0, psiH: sw(lt, .7, 0, .06), expr: exprAt([[0, 'weak'], [17.6, 'sad']], lt), lid: .3, look: lt > 7 && lt < 8 ? [.2, 0] : [0, 0],
-  o: { arms: { l: 'rest', r: 'hold' }, grip: { r: [62, 44] }, hold: { r: 'fp17_mouse' }, mouseP: Math.max(0, 1 - Math.abs(lt - CUE.click) * 9) + (lt > 7.8 && lt < 7.95 ? 1 : 0) + (lt > CUE.click0 - .08 && lt < CUE.click0 + .12 ? 1 : 0) } });
-ACT.lemon = lt => ({ psiB: .3, psiH: .3 + sw(lt, .6, 1, .06), expr: exprAt([[0, 'neutral'], [11.97, 'sour'], [13.4, 'neutral']], lt), look: [0, 0] });
-ACT.mango = lt => ({ psiB: .4, psiH: .4 + sw(lt, .8, 2, .08), expr: exprAt([[0, 'neutral'], [2.8, 'sour'], [4.5, 'neutral'], [9.6, 'shock'], [12, 'neutral']], lt), look: [.1, 0] });
+  o: { arms: { l: 'rest', r: 'hold' }, grip: { r: [100, 72] }, hold: { r: 'fp17_mouse' }, mouseP: Math.max(0, 1 - Math.abs(lt - CUE.click) * 9) + (lt > 7.8 && lt < 7.95 ? 1 : 0) + (lt > CUE.click0 - .08 && lt < CUE.click0 + .12 ? 1 : 0) } });
+ACT.lemon = lt => ({ psiB: .3, psiH: .3 + sw(lt, .6, 1, .06), expr: 'neutral', lid: lt > 11.9 && lt < 13.2 ? .4 : undefined, look: [0, 0] });
+ACT.mango = lt => ({ psiB: .4, psiH: .4 + sw(lt, .8, 2, .08), expr: exprAt([[0, 'neutral'], [2.8, 'hopeful'], [4.5, 'neutral'], [9.6, 'shock'], [12, 'neutral']], lt), look: [.1, 0] });
 ACT.onion = lt => ({ psiB: -.35, psiH: -.35 + sw(lt, .5, 3, .05), expr: 'onion_cry', look: [0, .1], o: { sob: Math.max(.12, lt >= CUE.sniffle ? Math.exp(-(lt - CUE.sniffle) / .5) : 0), arms: { l: 'rest', r: 'rest' }, pose: 'rest' } });
 ACT.tom = lt => ({ psiB: -.45, psiH: -.45 + sw(lt, .9, 4, .06), expr: exprAt([[0, 'happy']], lt), look: [0, 0], o: { hold: {}, arms: { l: 'rest', r: 'rest' } } });
 
@@ -377,8 +378,8 @@ shot('b1', bS('b1'), bS('m1'), u => tvCam(lerp(1000, 1050, u), 800), { cast: [],
 shot('m1', bS('m1'), bS('b2'), u => faceCam('mango', 1.9, 660, { z: lerp(1, 1.05, u) }), { cast: ['mango'], dofBack: 6 });
 shot('b2', bS('b2'), bS('s1'), u => tvCam(lerp(1000, 1060, u), 800), { cast: [], tvHero: true });
 shot('s1', bS('s1'), bS('b3'), u => tvCam(lerp(1150, 1230, u), 800, { cx: TVG.cx - 120 }), { cast: [], tvHero: true });
-shot('cert', bS('b3'), bS('o1'), u => lens({ dir: 'f', cz: 230, cy: 330, hy: 880, cx: 130, z: lerp(1, 1.06, u) }), { cast: [] });
-shot('c1', bS('o1'), CUE.sniffle - .06, u => lens({ dir: 'f', cz: PRT.z - 46 - 1100 / 2.9, cy: 359, hy: 900, cx: PRT.x, z: lerp(1, 1.04, u) }), { cast: [], tvHero: true });
+shot('cert', bS('b3'), bS('o1'), u => lens({ dir: 'f', cz: -45, cy: 330, hy: 880, cx: 110, z: lerp(1, 1.05, u) }), { cast: [] });
+shot('c1', bS('o1'), CUE.sniffle - .06, u => lens({ dir: 'f', cz: PRT.z - 46 - 1100 / 2.9, cy: 359, hy: 900, cx: PRT.x, z: lerp(1, 1.04, u) }), { cast: [], tvHero: true, noTV: true });
 shot('o1', CUE.sniffle - .06, bS('l1'), u => faceCam('onion', 2.1, 540, { z: lerp(1, 1.05, u) }), { cast: ['onion'], dofBack: 6 });
 shot('l1', bS('l1'), bS('t1'), u => faceCam('lemon', 1.9, 660, { z: lerp(1, 1.05, u) }), { cast: ['lemon'], dofBack: 6 });
 shot('t1', bS('t1'), bS('s2'), u => faceCam('tom', 1.9, 620, { z: lerp(1, 1.05, u) }), { cast: ['tom'], dofBack: 6 });
@@ -388,7 +389,7 @@ shot('o2', bS('o2') + 1.15, bS('s3'), u => faceCam('onion', 2.0, 540, { z: lerp(
 shot('trk', bS('s3'), bS('t2'), u => tvCam(lerp(1000, 1050, u), 800), { cast: [], tvHero: true });
 shot('loop', bS('t2'), bE('t2') + .25, u => tvCam(lerp(1000, 1040, u), 800), { cast: [], tvHero: true });
 shot('pc2', bE('t2') + .25, CUE.pending, pcCam, { cast: [], tvHero: true });
-shot('clk', CUE.pending, 99, u => lens({ dir: 'f', cz: (RM.zTV - 8) - 1100 / lerp(1.55, 2.7, easeIO(u)), cy: 810, hy: 930, cx: CLK.x, z: 1 }), { cast: [], tvHero: true });
+shot('clk', CUE.pending, 99, u => lens({ dir: 'f', cz: (RM.zTV - 8) - 1100 / lerp(1.6, 2.9, easeIO(u)), cy: 838, hy: 940, cx: CLK.x, z: 1 }), { cast: [], tvHero: true });
 SHOTS[SHOTS.length - 1].e = SCN.dur;
 
 // ------------------------------------------------------------------ the world
@@ -403,7 +404,7 @@ function drawWorld(lt, sh) {
   if (sh.dofBack) V2.dof(sh.dofBack, back); else back();
   const items = [], near = V2.P.cz + 100;
   const add = (zr, fn, zNear) => { const z = mapZ(zr); if ((zNear === undefined ? z : zNear) < near) return; items.push({ z, fn }); };
-  if (D.dir === 'f') { add(RM.zTV - 90, () => { tvCart(lt, scr => paintTV(lt, scr)); }); add(PRT.z, () => { printerDraw(lt); certificate(lt); }, mapZ(PRT.z + 50) - 2); }
+  if (D.dir === 'f') { if (!sh.noTV) add(RM.zTV - 90, () => { tvCart(lt, scr => paintTV(lt, scr)); }); add(PRT.z, () => { printerDraw(lt); certificate(lt); }, mapZ(PRT.z + 50) - 2); }
   for (const n of sh.cast) add(SEATS[n][1], () => drawChar(person(n, lt)));
   items.sort((a, b) => b.z - a.z); for (const it of items) it.fn();
 }

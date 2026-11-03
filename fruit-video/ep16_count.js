@@ -60,6 +60,7 @@ const polyR = (pts, fill, stroke, lw) => polyW(pts.map(p => [mapX(p[0]), p[1], m
 const wallR = (side, y0, y1, z0, z1, fill, stroke, lw) => polyR([[side * RM.hw, y0, z0], [side * RM.hw, y1, z0], [side * RM.hw, y1, z1], [side * RM.hw, y0, z1]], fill, stroke, lw);
 function boxR(xa, xb, y0, y1, za, zb, o) {   /* a box in room coordinates (sorted so box3 sees x0 < x1 and z0 < z1 in the shot's direction) */
   const xs = [mapX(xa), mapX(xb)].sort((a, b) => a - b), zs = [mapZ(za), mapZ(zb)].sort((a, b) => a - b);
+  if (Math.min(zs[0], zs[1]) < V2.P.cz + 100) return;   /* a box behind the lens would project to garbage */
   return S6.box3(Object.assign({ x0: xs[0], x1: xs[1], y0, y1, z0: zs[0], z1: zs[1] }, o));
 }
 const facing = (x0, x1, y0, y1, zr) => { const a = P(x0, y1, zr), b = P(x1, y0, zr); return { x: Math.min(a[0], b[0]), y: Math.min(a[1], b[1]), w: Math.abs(b[0] - a[0]), h: Math.abs(b[1] - a[1]) }; };
@@ -144,7 +145,7 @@ function tally(lt) {
 // ------------------------------------------------------------------ the table, its paper and the clear box
 const LAPX = -20;
 let NOLAP = false;
-const TB = { x0: -640, x1: 640, z0: 230, z1: 400, h: 200, top: 218 };
+const TB = { x0: -640, x1: 640, z0: 230, z1: 400, h: 174, top: 190 };
 function tableDraw(lt) {
   const leg = { color: '#6a5a4a', top: '#8a7a68', front: '#5a4a3c', side: '#4a3c30', lw: 1 };
   for (const sx of [0, 1]) for (const sz of [0, 1]) boxR(sx ? TB.x1 - 54 : TB.x0 + 30, sx ? TB.x1 - 30 : TB.x0 + 54, 0, TB.h, sz ? TB.z1 - 40 : TB.z0 + 16, sz ? TB.z1 - 16 : TB.z0 + 40, leg);
@@ -160,7 +161,7 @@ function tableItems(lt) {
     boxR(x0, x1, TB.top, TB.top + h, z0, z1, b);
     polyR([[x0 + 60, TB.top + h + .5, z0 + 56], [x1 - 60, TB.top + h + .5, z0 + 56], [x1 - 60, TB.top + h + .5, z0 + 70], [x0 + 60, TB.top + h + .5, z0 + 70]], '#1c2230'); }
   /* the laptop at the middle of the table (its back to the TV end, its screen to the cast); left out of the close-ups, where it would sit between the lens and the face */
-  if (!NOLAP) { const [lx, ly] = P(LAPX, TB.top, 336), k = kAt(336); A15.laptop(lx, ly, { lapScale: k * 1.8, lapBack: D.dir === 'r', lapScreen: true, rot: 0 }); }
+  if (!NOLAP) { const [lx, ly] = P(LAPX, TB.top, 336), k = kAt(336); A15.laptop(lx, ly, { lapScale: k * 1.5, lapBack: D.dir === 'r', lapScreen: true, rot: 0 }); }
 }
 /* the ballots Onion flicks onto the counted pile while she counts (1.0 to 2.2) */
 function flicks(lt) {
@@ -325,7 +326,7 @@ ACT.straw = lt => {
     o: up > .02 ? { arms: { l: 'hold', r: 'hold' }, grip: { l: [-140, lerp(40, -26, up)], r: [92, lerp(40, 26, up)] }, hold: { l: 'fp16_ballot', r: 'fp16_pen' }, penRot: .7 + Math.sin(lt * 9) * .12 * up } : undefined };
 };
 ACT.tom = lt => ({ psiB: .35, psiH: lt > 15.6 && lt < 17.6 ? .1 : .3, expr: exprAt([[0, 'happy'], [11.9, 'neutral'], [15.5, 'happy']], lt), look: [.5, 0],
-  o: { arms: { l: 'rest', r: 'point' }, hold: {}, tomPose: lt > 12.9 ? 'veg' : 'fruit' } });
+  o: { arms: { l: 'rest', r: 'rest' }, hold: {}, tomPose: lt > 12.9 ? 'veg' : 'fruit' } });
 const EDIR = { e1: 1, e2: 1, e3: -1, e4: -1 };   /* the watchers along the side walls: three-quarter to the TV, heads turn to the laptop on "Binder." */
 const WATCH = (id, k) => lt => { const d = EDIR[id], ph = k * 1.9, sh = lt < T_TURN ? Math.sin(lt * .8 + ph) * .1 : 0;
   return { psiB: d * .32 + (lt < T_TURN ? 0 : TURN(lt, T_TURN + k * .06, d * .35)), psiH: d * .32 + sh + (lt < T_TURN ? 0 : TURN(lt, T_TURN + k * .06, d * .55)), expr: exprAt([[0, 'neutral'], [5.6, 'shock'], [7.6, 'neutral']], lt), look: [0, 0],
@@ -458,10 +459,10 @@ const T_REV = bS('o2');
 shot('w0', 0, 1.0, u => wideF(lerp(1, 1.05, u)), { cast: ALLF });
 shot('hands', 1.0, 2.123, u => faceCam(110, 2.5, 250, { z: lerp(1, 1.05, u) }), { cast: ['onion'], dofBack: 6, tvPeek: false , noLap: true });
 shot('tv1', 2.123, 3.412, u => tvCam(lerp(1000, 1060, u), 800), { cast: ['tom'], tvHero: true });
-shot('lem1', 3.412, 4.10, u => faceCam(-110, 2.0, 340, { z: lerp(1, 1.05, u) }), { cast: ['lemon'], dofBack: 6 , noLap: true });
+shot('lem1', 3.412, 4.10, u => faceCam(-110, 2.0, 270, { z: lerp(1, 1.05, u) }), { cast: ['lemon'], dofBack: 6 , noLap: true });
 shot('nine', 4.10, 5.2, u => wideF(lerp(1.02, 1.06, u), { cx: lerp(-30, 30, u) }), { cast: ALLF, chips: true });
-shot('lem2', 5.2, T_REV, u => faceCam(-110, 2.1, 340, { z: lerp(1.02, 1.0, u) }), { cast: ['lemon'], dofBack: 6 , noLap: true });
-shot('rev', T_REV, 7.592, u => { const k = ss(u, .08, .6); return lens({ dir: 'r', cz: lerp(212, -250, k), cy: lerp(430, 1100, k), hy: lerp(800, 470, k), cx: lerp(-50, 0, k), z: lerp(1, 1.12, k) }); }, { cast: ALLR, crowd: true, tag: true });
+shot('lem2', 5.2, T_REV, u => faceCam(-110, 2.1, 270, { z: lerp(1.02, 1.0, u) }), { cast: ['lemon'], dofBack: 6 , noLap: true });
+shot('rev', T_REV, 7.592, u => { const k = ss(u, .08, .6); return lens({ dir: 'r', cz: lerp(212, -250, k), cy: lerp(760, 1100, k), hy: lerp(440, 470, k), cx: lerp(-50, 0, k), z: lerp(1, 1.12, k) }); }, { cast: ALLR, crowd: true, tag: true });
 shot('st1', 7.592, 8.496, u => faceCam(330, 2.0, 430, { z: lerp(1, 1.05, u) }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 , noLap: true });
 shot('on1', 8.496, 10.0, u => faceCam(110, 2.4, 250, { z: lerp(1, 1.04, u) }), { cast: ['onion'], crowd: true, dofBack: 7, dofCrowd: 7 , noLap: true });
 shot('crowd', 10.0, 10.9, u => lens({ dir: 'r', cz: 524, cy: 620, hy: 380, cx: lerp(-110, -100, u), z: lerp(1.15, 1.2, u) }), { cast: ['straw', 'onion', 'lemon'], crowd: true, noLap: true });
@@ -471,7 +472,7 @@ shot('tv3', CUE.dialog, 14.1, u => tvCam(lerp(1040, 1000, ss(u, 0, .25)), 800), 
 shot('on2', 14.1, 15.64, u => faceCam(110, 2.4, 250, { z: lerp(1, 1.05, u) }), { cast: ['onion'], crowd: true, dofBack: 7, dofCrowd: 7 , noLap: true });
 shot('tom3a', 15.64, 16.7, u => lens({ dir: 'f', f: 2400, cz: (RM.zTV - 110) - 2400 / 1.5, cy: TVG.bot + TVG.h / 2, hy: 470, cx: lerp(-570, -540, u), z: lerp(1, 1.04, u) }), { cast: ['tom'], tvHero: false, table: false, dofBack: 6 });
 shot('tom3b', 16.7, 17.686, u => tvCam(lerp(1000, 1080, u), 780), { cast: [], tvHero: true });
-shot('man', 17.686, bS('o5'), u => faceCam(-330, 1.95, 300, { z: lerp(1, 1.05, u) }), { cast: ['mango'], crowd: true, dofBack: 7, dofCrowd: 7 , noLap: true });
+shot('man', 17.686, bS('o5'), u => faceCam(-330, 1.95, 240, { z: lerp(1, 1.05, u) }), { cast: ['mango'], crowd: true, dofBack: 7, dofCrowd: 7 , noLap: true });
 shot('turn', bS('o5'), 19.977, u => wideF(lerp(1.1, 1.16, u), { cx: -20, fy: 900 }), { cast: ALLF, binder: true, tvHero: false });
 shot('st2', 19.977, 21.549, u => faceCam(330, 2.0, 430, { z: lerp(1, 1.04, u) }), { cast: ['straw'], crowd: true, dofBack: 7, dofCrowd: 7 , noLap: true });
 shot('bnd', 21.549, CUE.sting, u => wideF(lerp(1.5, 1.7, u), { cz: -500, cy: 640, hy: 700, cx: 0, fx: 540, fy: 830 }), { cast: [], binder: true });
@@ -501,7 +502,7 @@ function drawWorld(lt, sh) {
     add(zr + (toCam ? -1 : 1) * 2, () => { const w = 96, bz = zr - face * 66; boxR(xr - w, xr + w, SEAT_Y + 4, SEAT_Y + 200, bz - 8, bz + 8, { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.6 }); }, mapZ(zr - face * 66) - 8);
     add(zr + (toCam ? 0 : -3) * 0, () => { ctx.save(); const po = person(n, lt); (window.__cntDbg = window.__cntDbg || {})[n] = { x: po.x, y: po.y, s: po.s, yaw: po.yaw, kind: po.kind }; drawChar(po); if (n === 'onion') { const u = Math.max(sobK(lt) - .1, 0) * (lt >= CUE.sob ? 1 : 0) + (lt > 8.4 && lt < 11 ? .25 : 0); if (u > .02) A15.tearsAura(po.x, po.y - 130 * po.s, Math.min(1, u), { r: 190 * po.s, n: 40, t: lt, size: Math.max(.5, po.s * .9), seed: 4 }); } ctx.restore(); });
   }
-  if (sh.table !== false && !window.__NOTABLE) { if (!window.__NOTOP) add(350, () => tableDraw(lt), mapZ(470) - 2); add(349, () => { if (!window.__NOITEMS) tableItems(lt); if (!window.__NOFLICK) flicks(lt); }, mapZ(470) - 2); }
+  if (sh.table !== false && !window.__NOTABLE) { const tzn = Math.min(mapZ(TB.z0), mapZ(TB.z1)) - 2; add(315, () => tableDraw(lt), tzn); add(314, () => { tableItems(lt); flicks(lt); }, tzn); }
   if (sh.binder && lt >= T_BIND) add(336, () => drawChar(binderOpts(lt)));
   items.sort((a, b) => b.z - a.z); for (const it of items) it.fn();
   if (sh.chips) nineChips(lt);
