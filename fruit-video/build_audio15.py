@@ -358,7 +358,7 @@ def tts15(kokoro, v, say):
 # ---------------------------------------------------------------- place2, patched: voices place their treated version; cues dip under speech
 DUCK_DB = {   # how far a cue is dipped (dB) while a voice speaks, by effect name; anything missing here is not dipped. The hits the picture lands on are never dipped.
     "peel": 11, "heartbeat": 9, "typing": 8, "keyboard": 8, "sniffle": 8, "sob": 6, "spinner": 7, "counter": 7, "flip": 7, "cranemotor": 9, "cablecreak": 7, "groan": 8,
-    "rumble": 8, "sink": 6, "banner": 6, "crowd": 6, "fillpop": 7, "poof": 6, "phys": 12, "step": 7, "grin": 8, "dialog": 7, "glitch": 5, "stars": 7, "cablewhip": 5, "error": 5,
+    "rumble": 8, "stairstep": 9, "sink": 6, "banner": 6, "crowd": 6, "fillpop": 7, "poof": 6, "phys": 12, "step": 7, "grin": 8, "dialog": 7, "glitch": 5, "stars": 7, "cablewhip": 5, "error": 5,
 }
 _WIN = {}
 _SM = [None]
@@ -1210,6 +1210,27 @@ def sfx_phys():
     return norm6(_edge(x, .0003, .02), .7)
 
 
+def sfx_stairstep():
+    """One step of the stairwell procession (0.17 s): a soft shoe on a concrete stair. The sole lands (a thump that falls 125 to 72 Hz in 35 ms and a low-passed noise, 200 to 1700 Hz,
+    14 ms), the stair's edge grits a little (a quiet 2 to 5 kHz tick on two steps in three) and the stairwell rings hollow for an instant (a 330 Hz partial, 40 ms). Every call is
+    different: the pitch moves within 12 percent, one step in five scuffs (a 90 ms band of noise, 600 to 3000 Hz), and the weight varies. Quiet by design: it is a bed, not a hit."""
+    k = _nth("stairstep")
+    r = rng6(5000 + k)
+    ps = r.uniform(.88, 1.12)
+    d = .17
+    t = tarr(d)
+    x = _sin_of(ps * (72 + 53 * np.exp(-t / .012))) * np.exp(-t / .03) * .9
+    x += _band(5100 + k, d, 200, 1700) * np.exp(-t / .014) * 1.0
+    x += np.sin(2 * np.pi * 330 * ps * t) * np.exp(-t / .04) * .18
+    if r.uniform() < .66:
+        x += _band(5200 + k, d, 2000, 5000) * np.exp(-t / .003) * .22
+    if r.uniform() < .2:
+        sd = .09
+        st = tarr(sd)
+        _place(x, _band(5300 + k, sd, 600, 3000) * np.sin(np.pi * np.clip(st / sd, 0, 1)) * .25, .03, 1.0)
+    return norm6(_edge(x, .0004, .04), .6)
+
+
 # ================================================================ registration (keep this at the end of the sfx section)
 BOOST = {   # sustained textures that sat 15 to 20 dB under the voice at the script's gains: lifted so they register (the dialogue dip still takes them down under speech)
     "banner": 1.8, "sniffle": 1.4, "sob": 1.3, "stars": 1.4, "spinner": 1.4, "flip": 1.3, "typing": 1.4, "peel": 1.4, "cablewhip": 1.4, "keyboard": 1.3, "counter": 1.3, "heartbeat": 1.2,
@@ -1317,6 +1338,42 @@ def _select_phys(phys, scripted):
     return out
 
 
+STAIR_WALKERS = ((-.75, .94), (-.45, 1.0), (-.15, 1.05), (.2, .97), (.5, 1.02), (.78, 1.07))   # (pan, period factor) of the six profile walkers of the dock stairwell
+STAIR_VOL = .10
+
+
+def _stair_events(tab):
+    """The dock stairwell (a procession of about six profile walkers climbing, for which the animation detector found no steps): from the start of 'One at a time. Zipper merge.' (19.75 s
+    scene-local) to a few hundredths before the bonk (25.90 s): each walker steps about every 0.45 s (the walkers' periods differ by a few percent, each step has up to 25 ms of jitter, from a
+    seeded generator, so a build is deterministic), panned where the walker is, quiet; the density is capped at three steps in any 150 ms so it is a patter and not a roll; in the last
+    second before the bonk the walkers bunch up and stumble (the periods shrink to 70 percent), and nothing is placed after 25.86 s. Ducking under 'After you.' and 'No, after you.' is
+    done by place2 (see DUCK_DB)."""
+    dock = next((x for x in tab if x[0] == "dock"), None)
+    if dock is None:
+        return []
+    t0, beats = dock[1], dock[3]
+    a0 = t0 + beats["l1"]["s"]
+    end = t0 + beats["bonk"]["s"] + .1 - .04
+    r = rng6(1501)
+    ev = []
+    for w, (pan, pf) in enumerate(STAIR_WALKERS):
+        t = a0 + .08 * w + r.uniform(0, .12)
+        j = 0
+        while t < end:
+            left = end - t
+            per = .45 * pf * (.7 if left < 1.0 else 1.0)
+            ev.append({"t": round(t + r.uniform(-.025, .025), 3), "name": "stairstep", "vol": round(STAIR_VOL * r.uniform(.6, 1.0), 4),
+                       "pan": round(float(np.clip(pan + .12 * np.sin(j * .7 + w), -.95, .95)), 3), "room": "hall"})
+            t += per * r.uniform(.94, 1.06)
+            j += 1
+    ev = sorted((e for e in ev if e["t"] < end), key=lambda e: e["t"])
+    keep = []
+    for e in ev:
+        if len([x for x in keep if e["t"] - x["t"] < .15]) < 3:
+            keep.append(e)
+    return keep
+
+
 def _make_events(src, phys_src, out_dir):
     """Write <out_dir>/events.tuned.json from the footsteps (src) and the collisions (phys_src); returns its path, or '' when there is nothing to place."""
     tab = _scene_table()
@@ -1324,6 +1381,7 @@ def _make_events(src, phys_src, out_dir):
     phys = json.load(open(phys_src)) if phys_src and os.path.exists(phys_src) else []
     ev = _tune_steps(steps, tab) + _select_phys(phys, _scripted(tab))
     PHYS_EVENTS[:] = [e for e in ev if e.get("name") == "phys"]
+    ev += _stair_events(tab)
     if not ev:
         return ""
     dst = os.path.join(out_dir, "events.tuned.json")
@@ -1457,6 +1515,11 @@ def write_cue_report(out_dir):
     for e in PHYS_EVENTS:
         per[_scene_of(e["t"], tab)] = per.get(_scene_of(e["t"], tab), 0) + 1
     lines.append(f"physics foley placed: {len(PHYS_EVENTS)} " + str(per))
+    try:
+        tuned = json.load(open(os.path.join(HERE, out_dir, "events.tuned.json")))
+        lines.append(f"stairwell patter (dock): {sum(1 for e in tuned if e.get('name') == 'stairstep')} steps; animation footsteps: {sum(1 for e in tuned if e.get('name') == 'step')}")
+    except (OSError, ValueError):
+        pass
     open(os.path.join(HERE, out_dir, "cue_report.txt"), "w").write("\n".join(lines) + "\n")
 
 

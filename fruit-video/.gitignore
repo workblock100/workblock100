@@ -73,3 +73,17 @@ build/ep15/*
 !build/ep15/events.json
 !build/ep15/phys_events.json
 !build/ep15/phys_sims.json
+!build/ep16/
+build/ep16/*
+!build/ep16/timeline.js
+!build/ep16/audio.m4a
+!build/ep16/events.json
+!build/ep16/phys_events.json
+!build/ep16/phys_sims.json
+!build/ep17/
+build/ep17/*
+!build/ep17/timeline.js
+!build/ep17/audio.m4a
+!build/ep17/events.json
+!build/ep17/phys_events.json
+!build/ep17/phys_sims.json
