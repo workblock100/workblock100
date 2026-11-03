@@ -206,7 +206,7 @@ def cue_quiz17(T, t0, d, beats, D):
         at += 1.1
         n += 1
     T.put(sub_swell(33, 36, 6.6) * .5, c1, .05, 0)
-    MUTES.append((t0 + 19.96, t0 + d + 1.0, .01))
+    MUTES.append((t0 + 19.96, t0 + d - .02, .01))                                                     # the last second is quiet; the span ends with the scene, never into the end card
     T.fade(t0 + d - .5, t0 + d, 1, 0)
     D.fade(t0 + d - .5, t0 + d, 1, 0)
 

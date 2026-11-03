@@ -157,7 +157,7 @@ function twinkles(lt, T, tw) {
 }
 
 // ------------------------------------------------------------------ the title: cues, the final card's layout (every element ink-centred on x 540) and the LearnWell page's geometry
-const CLICK1 = 1.2, SPIN = 1.8, CLICK2 = 2.8, IRIS0 = 2.92, IRIS1 = 3.5, LAND = 3.46, DING = 4.0, TAG0 = 3.52, TAG1 = 3.95;
+const CLICK1 = 1.2, SPIN = 1.8, CLICK2 = 2.8, IRIS0 = 2.98, IRIS1 = 3.46, T0 = 3.20, LAND = 3.54, DING = 4.0, TAG0 = 3.58, TAG1 = 3.97;
 const CARD = { cx: 540, shift: { cy: 698, size: 128 }, pill: { cy: 832, size: 54, h: 88 }, title: { cy: 1002, size: 208 }, tag: { cy: 1168, size: 46 }, load: { cy: 1254, r: 26, size: 44 } };
 const PG = { x: 60, y: 236, w: 960, h: 1368, r: 36 };                         /* the course card */
 const TH = { x: 100, y: 356, w: 880, h: 560 };                                /* the thumbnail */
@@ -177,7 +177,7 @@ function pointer(lt) {
     { t: 3.2, x: 470, y: 1580, kind: 'arrow' },
   ], lt);
   const a1 = lt - CLICK1, a2 = lt - CLICK2;
-  return { x: c.x, y: c.y, press: c.press, kind: c.kind, alpha: sg(lt, .62, .8) * (1 - sg(lt, 2.96, 3.12)), ripple: a1 >= 0 && a1 < .45 ? sg(a1, 0, .45) : a2 >= 0 && a2 < .45 ? sg(a2, 0, .45) : 0 };
+  return { x: c.x, y: c.y, press: c.press, kind: c.kind, alpha: sg(lt, .62, .8) * (1 - sg(lt, 3.0, 3.14)), ripple: a1 >= 0 && a1 < .45 ? sg(a1, 0, .45) : a2 >= 0 && a2 < .45 ? sg(a2, 0, .45) : 0 };
 }
 
 // ------------------------------------------------------------------ small drawn icons (no text)
@@ -199,7 +199,7 @@ function navIcon(kind, x, y, col) {
 }
 /* the thumbnail: a break room (window, wall clock at 10:59, a table with a steaming mug, a sofa) and a play button */
 function thumb(lt, dim) {
-  const { x, y, w, h } = TH;
+  const { x, y, w, h } = TH, A0 = ctx.globalAlpha;
   ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, w, h, 28); ctx.clip();
   let g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, '#d6eef5'); g.addColorStop(1, '#a6d6e4'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = '#7fb6c8'; ctx.fillRect(x, y + h * .72, w, h * .28);
@@ -213,8 +213,8 @@ function thumb(lt, dim) {
   const mx = x + 420, my = y + h * .64;   /* the mug and its steam */
   ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect(mx - 34, my - 62, 68, 62, 10); ctx.fill(); ctx.lineWidth = 9; ctx.strokeStyle = '#ffffff'; ctx.beginPath(); ctx.arc(mx + 36, my - 32, 17, -1.3, 1.3); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 6;
-  for (let i = 0; i < 3; i++) { const ph = (lt * .8 + i * .33) % 1; ctx.globalAlpha = (1 - ph) * .9; ctx.beginPath(); for (let j = 0; j <= 12; j++) { const t = j / 12, yy = my - 72 - ph * 40 - t * 56, xx = mx - 18 + i * 18 + Math.sin(t * 6 + lt * 3 + i) * 7; j ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); } ctx.stroke(); }
-  ctx.globalAlpha = 1;
+  for (let i = 0; i < 3; i++) { const ph = (lt * .8 + i * .33) % 1; ctx.globalAlpha = A0 * (1 - ph) * .9; ctx.beginPath(); for (let j = 0; j <= 12; j++) { const t = j / 12, yy = my - 72 - ph * 40 - t * 56, xx = mx - 18 + i * 18 + Math.sin(t * 6 + lt * 3 + i) * 7; j ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); } ctx.stroke(); }
+  ctx.globalAlpha = A0;
   ctx.fillStyle = '#ff8d74'; ctx.beginPath(); ctx.roundRect(x + 640, y + h * .5, 190, 150, [40, 40, 10, 10]); ctx.fill(); ctx.fillStyle = '#ff775a'; ctx.beginPath(); ctx.roundRect(x + 630, y + h * .5 + 70, 210, 78, 22); ctx.fill();   /* the sofa */
   const sh = ((lt * .5) % 2.4) / 1.2; if (sh < 1) { g = ctx.createLinearGradient(x + lp(-300, w + 100, sh) - 90, y, x + lp(-300, w + 100, sh) + 90, y + h); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(.5, 'rgba(255,255,255,.18)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
   if (dim > 0) { ctx.fillStyle = `rgba(20,16,70,${.42 * dim})`; ctx.fillRect(x, y, w, h); }
@@ -249,7 +249,7 @@ function topBar(lt) {
   ctx.restore();
 }
 function drawBanner(lt) {
-  const e = ent(lt, .45), calm = e.done && lt < IRIS0 - .02;
+  const e = ent(lt, .40), calm = e.done && lt < IRIS0 - .02;
   ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(0, e.dy);
   ctx.save(); ctx.beginPath(); ctx.roundRect(PG.x, PG.y, PG.w, 84, [PG.r, PG.r, 0, 0]); ctx.clip(); ctx.fillStyle = PINK; ctx.fillRect(PG.x, PG.y, PG.w, 84);
   ctx.fillStyle = 'rgba(255,255,255,.12)'; for (let i = -2; i < 14; i++) { ctx.beginPath(); ctx.moveTo(PG.x + i * 90 + ((lt * 24) % 90), PG.y); ctx.lineTo(PG.x + i * 90 + 40 + ((lt * 24) % 90), PG.y); ctx.lineTo(PG.x + i * 90 - 14 + ((lt * 24) % 90), PG.y + 84); ctx.lineTo(PG.x + i * 90 - 54 + ((lt * 24) % 90), PG.y + 84); ctx.closePath(); ctx.fill(); }
@@ -269,11 +269,11 @@ function drawRows(lt) {
     const e = ent(lt, t0), calm = e.done && lt < IRIS0 - .02;
     ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(0, e.dy); UI.label(str, o.x ?? 540, y, Object.assign({ hero: calm, crop: !calm }, o)); ctx.restore();
   };
-  { const e = ent(lt, .55, .26); ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(0, e.dy); thumb(lt, dim); ctx.restore(); }
-  tt(.70, 'How to Take a Break Safely', 984, { size: 52, weight: 900, fill: PTXT, maxW: 860 });
-  tt(.78, 'Estimated time 4:00:00', 1046, { size: 38, weight: 800, fill: PGREY, maxW: 860 });
-  tt(.84, 'Due: before clock-out', 1096, { size: 32, weight: 800, fill: '#c9302c', maxW: 860 });
-  { const e = ent(lt, .90), calm = e.done && lt < IRIS0 - .02;
+  { const e = ent(lt, .45, .26); ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(0, e.dy); thumb(lt, dim); ctx.restore(); }
+  tt(.60, 'How to Take a Break Safely', 984, { size: 52, weight: 900, fill: PTXT, maxW: 860 });
+  tt(.68, 'Estimated time 4:00:00', 1046, { size: 38, weight: 800, fill: PGREY, maxW: 860 });
+  tt(.74, 'Due: before clock-out', 1096, { size: 32, weight: 800, fill: '#c9302c', maxW: 860 });
+  { const e = ent(lt, .80), calm = e.done && lt < IRIS0 - .02;
     ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(0, e.dy);
     UI.label('Progress', TRACK.x, 1164, { align: 'left', size: 30, weight: 800, fill: PGREY, hero: calm, crop: !calm });
     ctx.fillStyle = '#dedcf2'; ctx.beginPath(); ctx.roundRect(TRACK.x, TRACK.y, TRACK.w, TRACK.h, 14); ctx.fill();
@@ -288,7 +288,7 @@ function drawRows(lt) {
   startButton(lt);
 }
 function skipButton(lt) {
-  const e = ent(lt, 1.08), calm = e.done && lt < IRIS0 - .02, age = lt - CLICK2;
+  const e = ent(lt, .94), calm = e.done && lt < IRIS0 - .02, age = lt - CLICK2;
   const shake = age > 0 ? Math.sin(age * 82) * 10 * Math.exp(-age / .12) : 0, flash = age > 0 ? Math.exp(-age / .45) : 0;
   ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(shake, e.dy);
   UI.pill('SKIP', SKIPB.cx, SKIPB.cy, { font: 'Nunito', weight: 900, size: 40, spacing: 4, fill: mixh('#e6e5f4', '#ffd6d0', flash), ink: mixh('#a09dbd', '#d93025', flash), h: SKIPB.h, minW: SKIPB.w, id: 'fp17a.skip', hero: calm, crop: !calm });
@@ -297,9 +297,9 @@ function skipButton(lt) {
 }
 /* START: a wide button that sinks on the click and shrinks into the round loader (the loader itself is drawn above the page, by loader()) */
 function startButton(lt) {
-  const e = ent(lt, 1.0), m = eIO(sg(lt, 1.24, 1.44));
+  const e = ent(lt, .86), m = eIO(sg(lt, 1.24, 1.44));
   if (m >= 1) return;
-  const calm = e.done && lt < 1.14, press = lt > 1.05 && lt < 1.4 ? pointer(lt).press : 0, w = lp(STARTB.w, STARTB.h, m);
+  const calm = e.done && lt < 1.12, press = lt > 1.05 && lt < 1.4 ? pointer(lt).press : 0, w = lp(STARTB.w, STARTB.h, m);
   ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(0, e.dy);
   ctx.fillStyle = '#2a2478'; ctx.beginPath(); ctx.roundRect(STARTB.cx - w / 2, STARTB.cy - STARTB.h / 2 + 8, w, STARTB.h, STARTB.h / 2); ctx.fill();
   const g = ctx.createLinearGradient(0, STARTB.cy - 58, 0, STARTB.cy + 58); g.addColorStop(0, '#6a5cf2'); g.addColorStop(1, INDIGO);
@@ -320,7 +320,7 @@ function bottomNav(lt) {
 function toast(lt) {
   const t = sg(lt, CLICK2 + .02, CLICK2 + .16);
   if (t <= 0) return;
-  const tw = UI.sizeOf('Skipping is not available', { size: 36, weight: 900 }).w, w = tw + 2 * 76, y = lp(-60, 190, back(t, 1.6)), hero = t >= 1 && lt < IRIS0 + .02;
+  const tw = UI.sizeOf('Skipping is not available', { size: 36, weight: 900 }).w, w = tw + 2 * 76, y = lp(-60, 188, back(t, 1.6)), hero = t >= 1 && lt < IRIS0 + .02;
   shadowOf(() => { ctx.beginPath(); ctx.roundRect(540 - w / 2, y - 42, w, 84, 42); }, .4, 30, 12);
   UI.pill('Skipping is not available', 540, y, { font: 'Nunito', weight: 900, size: 36, fill: PTXT, ink: '#ffffff', h: 84, padX: 76, id: 'fp17a.toast', hero, crop: !hero });
   lockIcon(540 - w / 2 + 44, y - 4, .9, '#ffb4ab');
@@ -335,15 +335,15 @@ function drawPage(lt) {
   drawCardBody(lt);
   drawBanner(lt);
   drawRows(lt);
-  topBar(lt);
   toast(lt);
+  topBar(lt);   /* the toast slides out from under the bar */
   ctx.restore();
   if (ir > 0) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.strokeStyle = `rgba(200,192,255,${.75 * (1 - sg(ir, 1700, 2300))})`; ctx.lineWidth = 12; ctx.shadowColor = 'rgba(160,150,255,.9)'; ctx.shadowBlur = 40; ctx.beginPath(); ctx.arc(540, STARTB.cy, ir, 0, TAU); ctx.stroke(); ctx.restore(); }
 }
 
 // ------------------------------------------------------------------ the loader and its figure: START turns into a round loader that never finishes; both glide to their place under the tagline
 function loaderState(lt) {
-  const lk = eIO(sg(lt, 2.96, 3.5));
+  const lk = eIO(sg(lt, IRIS0, 3.5));
   return { cx: lp(STARTB.cx, loadX(), lk), cy: lp(STARTB.cy, CARD.load.cy, lk), discR: lp(58, 36, lk), discA: 1 - lk, ringR: lp(28, CARD.load.r, lk), lk };
 }
 function loader(lt) {
@@ -360,7 +360,7 @@ function loader(lt) {
   ctx.restore();
 }
 function percent(lt) {
-  const e = ent(lt, .90), lk = eIO(sg(lt, 2.96, 3.5)), size = lp(34, CARD.load.size, lk), finalRight = 540 + (52 + 18 + w99()) / 2, rx = lp(TRACK.x + TRACK.w, finalRight, lk), y = lp(1164, CARD.load.cy, lk);
+  const e = ent(lt, .80), lk = eIO(sg(lt, IRIS0, 3.5)), size = lp(34, CARD.load.size, lk), finalRight = 540 + (52 + 18 + w99()) / 2, rx = lp(TRACK.x + TRACK.w, finalRight, lk), y = lp(1164, CARD.load.cy, lk);
   if (e.a <= .01) return;
   const str = lt < SPIN ? '0%' : '99%', bump = lt >= SPIN ? 1 + .35 * ringK(lt - SPIN, .09) : 1, calm = (e.done && lt < IRIS0 - .02 && !(lt >= SPIN && lt < SPIN + .3)) || lk >= 1;
   ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(rx, y + (lk > 0 ? 0 : e.dy)); ctx.scale(bump, bump); ctx.translate(-rx, -y);
@@ -368,7 +368,7 @@ function percent(lt) {
   ctx.restore();
 }
 function pageLoadBar(lt) {
-  const a = sg(lt, 3.2, 3.5);
+  const a = sg(lt, 3.3, 3.6);
   if (a <= .01) return;
   const x = 90, w = 900, y = 1830, v = .99;
   ctx.save(); ctx.globalAlpha *= a; ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.beginPath(); ctx.roundRect(x, y, w, 10, 5); ctx.fill();
@@ -379,22 +379,22 @@ function pageLoadBar(lt) {
 
 // ------------------------------------------------------------------ the title card's lettering
 function drawLogo(lt) {
-  const p = sg(lt, 3.12, 3.4), pop = back(p, 2.0), ds = lt - DING;
+  const p = sg(lt, T0 + .04, T0 + .32), pop = back(p, 2.0), ds = lt - DING;
   if (p <= 0) return;
   ctx.save(); ctx.translate(540, CARD.shift.cy); ctx.scale(lp(1.28, 1, pop), lp(1.28, 1, pop)); ctx.translate(-540, -CARD.shift.cy);
   bevelText('SHIFT HAPPENS', 540, CARD.shift.cy, CARD.shift.size, { face: FACE_LOGO, extr: .35, lwK: .13, alpha: sg(p, 0, .3), hero: p >= 1, shine: ds > .12 ? eIO(sg(ds, .12, .85)) : -1, shineA: .8, grp: 'bv:logo' });
   ctx.restore();
 }
 function drawTitle(lt) {
-  const k = sg(lt, 3.08, 3.42), a = sg(lt, 3.08, 3.14);
+  const k = sg(lt, T0, T0 + .32), a = sg(lt, T0, T0 + .06);
   if (a <= 0) return;
-  const grow = lt < LAND - .02 ? eIO(sg(lt, 3.08, LAND - .02)) * 1.06 : lp(1.06, 1, eO(sg(lt, LAND - .02, LAND + .12)));
+  const grow = lt < LAND - .02 ? eIO(sg(lt, T0, LAND - .02)) * 1.06 : lp(1.06, 1, eO(sg(lt, LAND - .02, LAND + .12)));
   const size = lp(CARD.title.size * .72, CARD.title.size, grow) * (1 + .03 * (lt >= LAND ? ringK(lt - LAND, .09) : 0)), rest = lt >= LAND + .14, ds = lt - DING;
   bevelText('THE MODULE', 540, CARD.title.cy, size, { extr: sg(size, 90, 190), alpha: a, reveal: k, hero: rest, shine: ds > 0 ? eIO(sg(ds, 0, .78)) : -1, grp: 'bv:tm' });
 }
 function drawPillTag(lt) {
-  const p = sg(lt, 3.26, 3.48);
-  if (p > 0) episodePill('EPISODE 17', 540, CARD.pill.cy, CARD.pill.size, CARD.pill.h, { alpha: sg(p, 0, .25), scale: lp(.5, 1, back(p, 2.2)), hero: lt >= 3.52 });
+  const p = sg(lt, T0 + .14, T0 + .36);
+  if (p > 0) episodePill('EPISODE 17', 540, CARD.pill.cy, CARD.pill.size, CARD.pill.h, { alpha: sg(p, 0, .25), scale: lp(.5, 1, back(p, 2.2)), hero: lt >= T0 + .4 });
   const tg = sg(lt, TAG0, TAG1);
   if (tg > 0) UI.label('Please do not close this window.', 540, CARD.tag.cy, { font: 'Nunito', weight: 900, italic: true, size: CARD.tag.size, fill: CREAM, stroke: DESK_D, lw: 8, shadow: 12, reveal: tg, hero: tg >= 1, crop: tg < 1 });
 }
@@ -404,6 +404,7 @@ function titleDraw(lt) {
   stage(lt);
   drift(lt, LAND + .1);
   drawPage(lt);
+  for (const [t0, x, y] of [[CLICK1, 250, STARTB.cy], [CLICK2, 404, SKIPB.cy]]) { const k = sg(lt, t0, t0 + .42); if (k > 0 && k < 1 && lt < 3.1) { ctx.save(); ctx.strokeStyle = `rgba(74,63,224,${.75 * (1 - k)})`; ctx.lineWidth = 7 * (1 - k) + 2; ctx.beginPath(); ctx.arc(x, y, lp(12, 78, eO(k)), 0, TAU); ctx.stroke(); ctx.restore(); } }
   loader(lt);
   percent(lt);
   burst(lt - LAND, 540, CARD.title.cy);
@@ -414,9 +415,9 @@ function titleDraw(lt) {
   flashRing(lt - LAND, 540, CARD.title.cy, { pre: lt < LAND ? Math.pow(sg(lt, LAND - .16, LAND), 2) : 0 });
   sparkles(lt, CARD.title, DING, [[-372, -78, 38, 0], [-120, -104, 30, .13], [152, -98, 34, .24], [352, -66, 30, .36], [24, 92, 26, .48], [-290, 88, 22, .6], [262, 94, 24, .7]]);
   twinkles(lt, CARD.title, [[4.6, -330, -96, 26], [5.0, 300, 92, 24], [5.45, -60, -108, 28], [5.8, 380, -70, 22]]);
-  if (lt < 3.2) {
+  if (lt < 3.3) {
     const pp = pointer(lt);
-    if (pp.alpha > .01) { ctx.save(); ctx.globalAlpha *= pp.alpha; SH.pointer(pp.x, pp.y, { kind: pp.kind, press: pp.press, s: 1.25, ripple: pp.ripple }); ctx.restore(); }
+    if (pp.alpha > .01) { ctx.save(); ctx.globalAlpha *= pp.alpha; SH.pointer(pp.x, pp.y, { kind: pp.kind, press: pp.press, s: 1.25 }); ctx.restore(); }
   }
 }
 const TITLE = {
@@ -429,9 +430,9 @@ const TITLE = {
   draw: titleDraw,
   fx(lt) {
     const land = lt >= LAND ? ringK(lt - LAND, .12) : 0, fin = lt < .2 ? 1 - lt / .2 : 0, fout = sg(lt, 6.06, 6.2);
-    return { bloom: .42 + .5 * land + .25 * sg(lt, LAND, 4.2), vignette: lp(.14, .4, sg(lt, 2.8, 3.8)), grain: .05, contrast: .12, sat: .06, aberr: 5 * land, tint: [['#b9a8ff', .07 * sg(lt, LAND, 4.4), 'soft-light']], fade: Math.max(fin, fout), fadeColor: '4,2,14' };
+    return { bloom: .42 + .5 * land + .25 * sg(lt, LAND, 4.2), vignette: lp(.14, .4, sg(lt, 2.9, 3.9)), grain: .05, contrast: .12, sat: .06, aberr: 5 * land, tint: [['#b9a8ff', .07 * sg(lt, LAND, 4.4), 'soft-light']], fade: Math.max(fin, fout), fadeColor: '4,2,14' };
   },
-  blur(lt) { return lt < .2 ? 1 : (lt > 1.0 && lt < 1.22) ? 5 : (lt > 2.6 && lt < 2.82) ? 5 : (lt > 2.92 && lt < 3.56) ? 8 : 2; },
+  blur(lt) { return lt < .2 ? 1 : (lt > 1.0 && lt < 1.22) ? 5 : (lt > 2.6 && lt < 2.82) ? 5 : (lt > 2.98 && lt < 3.6) ? 8 : 2; },
   over() {},
 };
 window.__EP17_SCENES.title = TITLE;

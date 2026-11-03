@@ -291,7 +291,7 @@ const CTOR = { mango: o => A7.mango(o), lemon: o => A7.lemon(o), onion: o => A15
 const ACT = {};
 function exprAt(list, lt) { let r = list[0][1]; for (const [t, e] of list) if (lt >= t) r = e; return r; }
 function person(name, lt) {
-  const [xr, zr, face] = SEATS[name], a = (ACT[name] ? ACT[name](lt) : null) || {}, stand = name === 'tom';
+  const [xr, zr, face] = SEATS[name], a = (window.__ACTOFF ? null : ACT[name] ? ACT[name](lt) : null) || {}, stand = name === 'tom';
   const toCam = (face > 0) === (D.dir === 'r'), X = mapX(xr), Z = mapZ(zr), q = V2.at(X, Z), y = stand ? q.y : V2.p2(X, SEAT_Y, Z)[1];
   const turn = p => toCam ? (D.dir === 'f' ? p : -p) : PI - (D.dir === 'f' ? p : -p);
   const o = Object.assign({ x: q.x, y, s: q.s * (a.k ?? (stand ? .95 : .86)), t: lt, expr: 'neutral', arms: { l: 'hold', r: 'hold' }, grip: toCam ? { l: [-26, 14], r: [26, 14] } : { l: [26, 14], r: [-26, 14] } },

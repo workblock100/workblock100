@@ -1117,8 +1117,8 @@ def sfx_sting():
 
 # ================================================================ physics foley: one short impact per collision, by the pair of materials
 PHYS_EVENTS = []      # the tuned events of name 'phys', in the order the mixer asks for them (filled by main)
-LOUD = {"metal": 1.0, "glass": .9, "ceramic": .85, "concrete": 1.0, "wood": 1.0, "plastic": .75, "rubber": .7, "cardboard": .6, "soil": .55, "fabric": .4}
-HARD = ("metal", "glass", "ceramic", "concrete", "wood", "plastic", "rubber", "cardboard", "soil", "fabric")
+LOUD = {"metal": 1.0, "glass": .9, "ceramic": .85, "concrete": 1.0, "wood": 1.0, "plastic": .75, "rubber": .7, "cardboard": .6, "paper": .5, "leaf": .45, "soil": .55, "fabric": .4}
+HARD = ("metal", "glass", "ceramic", "concrete", "wood", "plastic", "rubber", "cardboard", "paper", "leaf", "soil", "fabric")
 
 
 def _m_wood(ps, ds, seed):
@@ -1178,7 +1178,13 @@ def _m_soil(ps, ds, seed):
     return _lp4(noise6(d, seed), 800, 2) * np.exp(-t / (.05 * ds)) + _hit_train(seed + 5, d, 8, 400, 2500, .004, .2, .05)[0] * .5 + np.sin(2 * np.pi * 70 * ps * t) * np.exp(-t / .06) * .5
 
 
-_MV = {"wood": _m_wood, "metal": _m_metal, "plastic": _m_plastic, "glass": _m_glass, "ceramic": _m_ceramic, "cardboard": _m_cardboard, "fabric": _m_fabric, "concrete": _m_concrete,
+def _m_paper(ps, ds, seed):
+    d = .14 * ds
+    t = tarr(d)
+    return _band(seed, d, 1500, 7500) * np.exp(-t / (.02 * ds)) * .9 + _lp4(noise6(d, seed + 3), 500, 2) * np.exp(-t / .012) * .3 + _band(seed + 5, d, 300, 1200) * np.exp(-t / (.04 * ds)) * .25
+
+
+_MV = {"paper": _m_paper, "leaf": _m_paper, "wood": _m_wood, "metal": _m_metal, "plastic": _m_plastic, "glass": _m_glass, "ceramic": _m_ceramic, "cardboard": _m_cardboard, "fabric": _m_fabric, "concrete": _m_concrete,
        "rubber": _m_rubber, "soil": _m_soil}
 
 
