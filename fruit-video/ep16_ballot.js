@@ -102,6 +102,8 @@ function room(lt, sh) {
     sign('VOTE BINDER', cx, cy, 70 * k, { font: 'Bangers', weight: 400, fill: '#c23a2b', stroke: '#fff6d8', lw: 0, spacing: 4 * k, maxW: 560 * k, hero: !(sh && sh.noHero) });
     const [fx2, fy2] = P3(18, y0 + 14, z); sign('(only candidate)', fx2, fy2, 17 * k, { weight: 800, fill: '#5a4a3a', hero: false });
   }
+  { const z = 2036, ns = [[352, 330, '#fff3a6'], [388, 300, '#ffb3c6'], [420, 345, '#bfe3ff'], [366, 262, '#d8ffb0']];
+    for (const [x, y, c] of ns) polyW([[x, y, z], [x + 26, y, z], [x + 26, y + 26, z], [x, y + 26, z]], c, 'rgba(60,40,20,.4)', 1); }
   /* a microwave on the counter by the right wall */
   S6.microwave(350, 1300, { on: 0, display: ' ' });
 }
@@ -182,7 +184,7 @@ function ballotBox(lt, st) {
     for (const b of S.meta.ballots) {
       if (lt < b.t) continue; const q = stt.by[b.id], age = lt - b.t, sc = b.grp === 'drop' ? 1 : (age < .09 ? .3 + .7 * eb(age / .09) : 1);
       const [px, py] = P3(BOX.x + q.x, TOP - q.y, BOX.z);
-      ctx.save(); ctx.translate(px, py); ctx.rotate(q.angle); ctx.scale(sc, sc); ballotSprite(k, false); ctx.restore();
+      ctx.save(); ctx.translate(px, py); ctx.rotate(q.angle); ctx.scale(sc, sc); ballotSprite(k * (lt >= CUE.crowd ? 1.3 : 1), false); ctx.restore();
       if (b.grp === 'pop' || b.grp === 'crowd') spark.push({ t: b.t, x: px, y: py });
     }
     pops(lt, k, spark);
@@ -191,7 +193,7 @@ function ballotBox(lt, st) {
   /* a sheen on the front face and the sticker */
   polyW([[x0 + 10, y1 - 10, zn], [x0 + 38, y1 - 10, zn], [x0 + 12, y0 + 40, zn]], 'rgba(255,255,255,.16)');
   { const q = [[BOX.x - 52, y0 + 100, zn], [BOX.x + 52, y0 + 100, zn], [BOX.x + 52, y0 + 132, zn], [BOX.x - 52, y0 + 132, zn]];
-    polyW(q, '#fff2b0', 'rgba(120,70,10,.9)', 2.2); const [cx, cy] = P3(BOX.x, y0 + 116, zn); sign('VOTE HERE', cx, cy, 19 * k, { fill: '#b3261e', weight: 900, maxW: 98 * k, spacing: .6 * k }); }
+    polyW(q, '#fff2b0', 'rgba(120,70,10,.9)', 2.2); const [cx, cy] = P3(BOX.x, y0 + 116, zn); sign('VOTE HERE', cx, cy, 19 * k, { fill: '#b3261e', weight: 900, maxW: 98 * k, spacing: .6 * k, hero: !st.noSticker }); }
   lidDraw(lt, st);
 }
 
@@ -222,7 +224,7 @@ function actOnion(lt) {
 function actTomato(lt) {
   const finger = ss(lt, wS('t1', 1) - .15, wS('t1', 1) + .05) * (1 - ss(lt, bE('t1') + .1, bE('t1') + .4));
   const veg = lt > bS('t2') + .12;
-  return { tomPose: veg ? 'veg' : 'fruit', flipT: lt > bS('t2') + .12 && lt < bS('t2') + .7 ? lt - bS('t2') - .12 : undefined, expr: lt > bS('t2') ? 'smug' : 'happy', arms: { l: 'rest', r: finger > .5 ? 'up' : 'rest' }, hand: { r: 'point' }, look: [.1, .1], hold: {}, grip: {} };
+  return { tomPose: veg ? 'veg' : 'fruit', flipT: lt > bS('t2') + .12 && lt < bS('t2') + .7 ? lt - bS('t2') - .12 : undefined, expr: lt > bS('t2') ? 'smug' : 'happy', arms: { l: 'rest', r: finger > .5 ? 'up' : 'rest' }, hand: { r: 'point' }, look: [.1, .1] };
 }
 function actStraw(lt) {
   const no = lt >= bS('s2') && lt < bE('s2') + .3, shake = no ? Math.sin((lt - bS('s2')) * 15) * .09 * (1 - sg(lt, bS('s2') + .3, bE('s2') + .3)) : 0;
@@ -232,6 +234,7 @@ const ACTORS = { melon: [A9.melon, actMelon], lemon: [A7.lemon, actLemon], mango
 function flatChar(name, lt, p) {
   const [ctor, act] = ACTORS[name], a = act(lt), o = mkFlat(ctor, lt, Object.assign({}, p, { o: Object.assign({}, a, p.o || {}) }));
   if (a.headShake) o.headYaw = (o.headYaw || 0) + a.headShake;
+  if (name === 'tomato') { o.hold = {}; o.grip = {}; }
   return o;
 }
 /* the same people in the room (perspective): seated beside the table (backs turned: yaw = PI - phi) or standing at its head (facing the camera) */
@@ -250,6 +253,7 @@ function turnFor(name, lt) {   /* the sitters' heads: a glance across the table 
 const HEAD = { melon: [0, 1340, 1.16], onion: [-215, 1290, 1.1], tomato: [230, 1290, 1.1] };
 function standingAt(name, lt, o2 = {}) {
   const [X, Z, k] = HEAD[name], q = V2.at(X, Z), [ctor, act] = ACTORS[name], a = act(lt);
+  if (name === 'tomato') { a.hold = {}; a.grip = {}; }
   const o = ctor(Object.assign({ t: lt, x: q.x, y: q.y, s: q.s * k }, a, o2.o || {}));
   o.yaw = o2.yaw ?? 0; o.headYaw = o2.headYaw ?? o.yaw;
   return o;
@@ -388,13 +392,16 @@ function laptop3(lt) {   /* Binder's laptop at the head of the table, its screen
   const q = [[X - 58, TOP + 6, Z + 30], [X + 58, TOP + 6, Z + 30], [X + 58, TOP + 96, Z + 52], [X - 58, TOP + 96, Z + 52]];
   polyW(q, '#23262e', 'rgba(10,10,14,.9)', 2);
   polyW([[X - 50, TOP + 14, Z + 31], [X + 50, TOP + 14, Z + 31], [X + 50, TOP + 90, Z + 49], [X - 50, TOP + 90, Z + 49]], lg(...P3(X - 50, TOP + 90, Z + 49), ...P3(X + 50, TOP + 14, Z + 31), [[0, '#2c4a8a'], [1, '#1a2b52']]));
+  { const [ix, iy] = P3(X, TOP + 56, Z + 40), k = kz(Z) * .55; ctx.save(); ctx.translate(ix, iy); ctx.scale(k, k);
+    ctx.fillStyle = '#0c0d12'; ctx.beginPath(); ctx.moveTo(-14, -16); ctx.lineTo(14, -16); ctx.lineTo(20, 16); ctx.lineTo(-20, 16); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-6, -2, 5, 0, TAU); ctx.arc(7, -2, 5, 0, TAU); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 6, 7, .2, PI - .2); ctx.stroke(); ctx.restore(); }
   V2.glow(...P3(X, TOP + 55, Z + 40), 70 * kz(Z), '120,170,255', .3 * on, 'screen', .3);
 }
 function drawRoom(lt, sh) {
   V2.opts.reflect = false; setLight(lt);
   const back = () => room(lt, sh);
   if (sh.dof) V2.dof(sh.dof, back); else back();
-  const C = sh.cast || [], st = {};
+  const C = sh.cast || [], st = { noSticker: lt >= CUE.crowd - .02 && lt < CUE.crowd + .35 };
   const flood = lt >= CUE.crowd - .02;
   const look = lt >= CUE.clicks[0] ? [0, .5] : [0, .05];
   for (const n of ['melon', 'onion', 'tomato']) if (C.indexOf(n) >= 0) {
@@ -452,8 +459,8 @@ shot('s2', 18.63, 19.18, u => ({ v2: BACK_F, z: lerp(1.04, 1.1, u) }), { flat: {
 shot('b2', 19.18, 20.22, u => ({ v2: BACK_F, z: lerp(1, 1.06, u) }), { flat: { laptop: true }, binder: { x: 540, y0: 790, y: 730, s: 1.1 } });
 const DROPC = { f: 1400, cz: 400, cy: 480, hy: 400, cx: 0 }, FLOODC = { f: 1400, cz: 250, cy: 300, hy: 860, cx: 0 };
 shot('drop', 20.22, 21.9, u => ({ v2: Object.assign({}, DROPC, { cz: lerp(400, 430, u) }), z: 1 }), { cast: [], dof: 7, hands: true, noHero: true });
-shot('pop', 21.9, 22.82, u => ({ v2: Object.assign({}, DROPC, { cz: lerp(430, 360, u) }), z: 1 }), { cast: [], dof: 7, noHero: true });
-shot('flood', 22.82, 23.87, u => ({ v2: Object.assign({}, FLOODC, { cz: lerp(250, 190, u) }), z: 1 }), { cast: ['melon', 'onion', 'tomato'], dof: 0, noHero: true });
+shot('pop', 21.9, 22.82, u => ({ v2: Object.assign({}, DROPC, { cz: lerp(430, 470, u), hy: lerp(400, 335, u) }), z: 1 }), { cast: [], dof: 7, noHero: true });
+shot('flood', 22.82, 23.87, u => ({ v2: Object.assign({}, FLOODC, { cz: lerp(190, 262, u) }), z: 1 }), { cast: ['melon', 'onion', 'tomato'], dof: 0, noHero: true });
 shot('final', 23.87, 24.82, u => ({ v2: Object.assign({}, WIDE, { cz: lerp(-380, -330, u) }), z: 1 }), { cast: ALL, noHero: true });
 
 const SC = {

@@ -41,7 +41,7 @@ function build(opts) {
 
   /* the ballots: parked where they will appear; slot n of the box fills row by row (5 across, 15 pitch) */
   const jit = (i, k) => { const v = Math.sin(i * 91.7 + k * 17.3) * 43758.5453; return v - Math.floor(v); };
-  const slot = n => ({ x: (n % 5 - 2) * 25 + (jit(n, 1) - .5) * 5, y: -(6 + BH + Math.floor(n / 5) * 15) - 5 - jit(n, 2) * 3, a: (jit(n, 3) - .5) * .35 });
+  const slot = n => ({ x: (n % 5 - 2) * 25 + (jit(n, 1) - .5) * 9, y: -(6 + BH + Math.floor(n / 5) * 15) - 5 - jit(n, 2) * 5, a: (jit(n, 3) - .5) * .8 });
   const mk = (grp, k, t, pos, vel) => {
     const b = W.body({ type: 'dynamic', x: pos.x, y: pos.y, angle: pos.a, box: [BW, BH], mat: 'cardboard', friction: .55, restitution: .12, density: .5, tag: 'ballot', linearDamping: .25, angularDamping: .3, gravityScale: 0, mask: 0, allowSleep: true, vx: 0, vy: 0 });
     meta.ballots.push({ id: b.id, t, grp, k, hero: grp === 'drop' }); b.__t = t; b.__vel = vel || [0, 0, 0]; return b;

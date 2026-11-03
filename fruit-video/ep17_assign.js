@@ -78,10 +78,10 @@ function cast(lt, st) {
   const C = {}, id = shotAt(lt).id, sp = b => lt >= bS(b) && lt < bE(b);
   /* the nurses stand with their backs to us, turned toward Tomato (a face is visible only in the close-ups of their own lines); the last wide turns them to the camera, deflated */
   const BACK = id === 'tom1' || id === 'wide' || id === 'tom2', LAST = id === 'wide2';
-  C.tom = who('station', A15.tomato, .8, { yaw: -.55, headYaw: K([[0, -.7], [3, -.55], [7, -.1], [8.2, -.5], [12, -.3]], lt), tomPose: 'fruit', arms: { l: 'rest', r: 'hold' }, grip: { r: [8, 88] }, hold: { r: 'fp17_tablet' }, tabScale: .86, tabAt: [.9, .12], tabLit: lt < CUE.click ? 0 : 1, tabRot: -.06, expr: 'tom_fruit' }, 14);
-  C.mango = who('station', A7.mango, .16, { yaw: BACK ? 2.65 : LAST ? .25 : .62, headYaw: BACK ? 2.35 : LAST ? .1 : .5, expr: sp('m1') ? 'sad' : LAST ? 'sad' : 'neutral', lid: LAST ? .45 : undefined }, 14);
-  C.lemon = who('station', A7.lemon, .32, { yaw: BACK ? 2.75 : LAST ? .1 : .66, headYaw: BACK ? K([[0, 2.45], [2.2, 2.45], [2.6, 2.1], [3.1, 2.1], [3.3, 2.45]], lt) : id === 'lemon' && lt > 5.5 ? -.95 : LAST ? 0 : .55, expr: 'neutral', lid: LAST ? .5 : undefined }, 14);
-  C.straw = who('station', A11.straw, .48, { yaw: BACK ? 2.6 : LAST ? -.12 : .42, headYaw: BACK ? K([[0, 2.3], [1.3, 2.3], [1.7, 2.0], [2.9, 2.0], [3.1, 2.3]], lt) : LAST ? -.05 : .4, expr: id === 'straw' ? 'sour' : 'dead', lid: .5 }, 14);
+  C.tom = who('station', A15.tomato, .84, { yaw: -.55, headYaw: K([[0, -.7], [3, -.55], [7, -.1], [8.2, -.5], [12, -.3]], lt), tomPose: 'fruit', arms: { l: 'rest', r: 'hold' }, grip: { r: [8, 88] }, hold: { r: 'fp17_tablet' }, tabScale: .86, tabAt: [.9, .12], tabLit: lt < CUE.click ? 0 : 1, tabRot: -.06, expr: 'tom_fruit' }, 14);
+  C.mango = who('station', A7.mango, .13, { yaw: BACK ? 2.65 : LAST ? .25 : .62, headYaw: BACK ? 2.35 : LAST ? .1 : .5, expr: sp('m1') ? 'sad' : LAST ? 'sad' : 'neutral', lid: LAST ? .45 : undefined }, 14);
+  C.lemon = who('station', A7.lemon, .29, { yaw: BACK ? 2.75 : LAST ? .1 : .66, headYaw: BACK ? K([[0, 2.45], [2.2, 2.45], [2.6, 2.1], [3.1, 2.1], [3.3, 2.45]], lt) : id === 'lemon' && lt > 5.5 ? -.95 : LAST ? 0 : .55, expr: 'neutral', lid: LAST ? .5 : undefined }, 14);
+  C.straw = who('station', A11.straw, .45, { yaw: BACK ? 2.6 : LAST ? -.12 : .42, headYaw: BACK ? K([[0, 2.3], [1.3, 2.3], [1.7, 2.0], [2.9, 2.0], [3.1, 2.3]], lt) : LAST ? -.05 : .4, expr: id === 'straw' ? 'sour' : 'dead', lid: .5 }, 14);
   return C;
 }
 
@@ -124,7 +124,7 @@ function drawWorld(lt) {
   const [tx, ty] = tabPos(C);
   if (has('t') && lt >= CUE.click) {   /* the tablet wakes: a ring of light, then a steady glow on Tomato and the counter */
     const k = (lt - CUE.click) / .5;
-    if (k > 0 && k < 1) { V2.ring(tx, ty, k, { r0: 6, r1: 56, color: '170,255,210', lw: 3, alpha: .9 }); }
+    if (k > 0 && k < 1) { V2.ring(tx, ty, k, { r0: 6, r1: 90, color: '170,255,210', lw: 5, alpha: .95 * (1 - k * .5) }); V2.glow(tx, ty, 60 + 50 * k, '210,255,230', .7 * (1 - k), 'screen', .3); }
     V2.glow(tx, ty, 54, '190,255,220', .3 + .18 * Math.sin(lt * 5), 'screen', .3);
   }
   smallBinder(lt, C, sh.id === 'wide2');
@@ -142,7 +142,7 @@ function smallBinder(lt, C, vis) {
   const [tx, ty] = tabPos(C), k = sg(lt, CUE.binderpop, CUE.binderpop + .16), f = ss(lt, CUE.binderpop + .04, CUE.binderpop + .5), bob = Math.sin(lt * 3.2) * 2.5;
   const [fcx, fcy] = faceC(C.tom), fx = ss(lt, CUE.binderpop + .02, CUE.binderpop + .26), x = lerp(tx, fcx - 78, fx), y = lerp(ty - 8, fcy + 8, f) - Math.sin(PI * f) * 20 + bob * f;   /* he ends in the gap between Strawberry and Tomato, at face height */
   if (vis && k < 1) V2.ring(tx, ty - 4, k, { r0: 6, r1: 50, color: '255,236,160', lw: 4, alpha: .9 });
-  const o = A15.binderSmall({ x, y, s: .4 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, pose: lt < 8.3 ? 'ears' : 'helpful', grin: lt >= CUE.grin ? ss(lt, CUE.grin, CUE.grin + .15) : .25, glint: lt >= CUE.sting ? Math.max(0, 1 - (lt - CUE.sting) / .5) : 0, look: [.5, .3], hover: 6 });
+  const o = A15.binderSmall({ x, y, s: .36 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, pose: lt < 8.3 ? 'ears' : 'helpful', grin: lt >= CUE.grin ? ss(lt, CUE.grin, CUE.grin + .15) : .25, glint: lt >= CUE.sting ? Math.max(0, 1 - (lt - CUE.sting) / .5) : 0, look: [.5, .3], hover: 6 });
   if (vis) drawChar(o);
 }
 
@@ -158,8 +158,8 @@ function camAt(lt, C, st, sh) {
   STATE = st;
   const r = R('station'), id = sh.id, u = sg(lt, sh.s, sh.e);
   if (id === 'wide') return lerpCam(wideCam(), roomCam('station', 1.9), eo(lt / 1.1));
-  if (id === 'wide2') { const b = at(572, R('station').y0 + 215, 2.15); return lerpCam(roomCam('station', 1.9), b, ss(lt, sh.s, 13.9)); }
-  if (id === 'tom1') { const a = faceCam(C.tom, 2.3, 150), b = faceCam(C.tom, 2.55, 150); a[0] = 574; b[0] = 584; return lerpCam(a, b, u); }
+  if (id === 'wide2') { const b = at(560, R('station').y0 + 215, 1.98); return lerpCam(roomCam('station', 1.9), b, ss(lt, sh.s, 13.9)); }
+  if (id === 'tom1') { const a = faceCam(C.tom, 2.3, 150), b = faceCam(C.tom, 2.55, 150); a[0] = 586; b[0] = 596; return lerpCam(a, b, u); }
   if (id === 'mango') return lerpCam(faceCam(C.mango, 4.4, 150), faceCam(C.mango, 4.8, 150), u);
   if (id === 'lemon' || id === 'lemon2') return lerpCam(faceCam(C.lemon, 4.4, 150), faceCam(C.lemon, 4.8, 150), id === 'lemon' ? u : 1 - u * .5);
   if (id === 'lights') return lerpCam(at(r.x0 + 92, r.y0 + 90, 5.6), at(r.x0 + 92, r.y0 + 90, 6.0), u);

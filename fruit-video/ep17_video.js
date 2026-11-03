@@ -252,7 +252,7 @@ function artiArms(lt) {
   const talk = (a, b) => lt >= a && lt < b ? 1 : 0, w = (f, p) => .5 + .5 * Math.sin(lt * f + p);
   const sp = Math.max(talk(bS('ar1'), bE('ar1')), talk(bS('ar2'), bE('ar2')), talk(bS('ar3'), bE('ar3')), talk(bS('ar4'), bE('ar4')));
   let r = K([[0, [.28, .25]], [1.0, [.28, .25]], [1.5, [1.25, .3]], [4.5, [1.25, .3]], [4.9, [1.3, .28]], [9.0, [1.3, .28]], [9.4, [1.0, .35]], [13.6, [1.0, .35]], [14.0, [1.7, .1]], [16.0, [1.7, .1]], [16.5, [.28, .25]], [17.3, [.28, .25]], [17.9, [.78, .95]], [30, [.78, .95]]], lt);
-  let l = K([[0, [.28, .25]], [1.4, [.28, .25]], [2.0, [.72, .38]], [4.5, [.72, .38]], [4.9, [.28, .25]], [9.2, [.28, .25]], [9.8, [.8, .4]], [11.6, [.8, .4]], [12.2, [.28, .25]], [13.8, [.28, .25]], [14.3, [1.1, .3]], [16, [1.1, .3]], [16.5, [.28, .25]], [17.3, [.28, .25]], [17.9, [.78, .95]], [30, [.78, .95]]], lt);
+  let l = K([[0, [.28, .25]], [1.4, [.28, .25]], [2.0, [.5, .3]], [4.5, [.5, .3]], [4.9, [.28, .25]], [9.2, [.28, .25]], [9.8, [.8, .4]], [11.6, [.8, .4]], [12.2, [.28, .25]], [13.8, [.28, .25]], [14.3, [1.1, .3]], [16, [1.1, .3]], [16.5, [.28, .25]], [17.3, [.28, .25]], [17.9, [.78, .95]], [30, [.78, .95]]], lt);
   if (sp && lt < 17.3) { r = [r[0] + .22 * Math.sin(lt * 4.1), r[1] + .12 * Math.sin(lt * 3.3)]; l = [l[0] + .16 * Math.sin(lt * 3.4 + 1), l[1]]; }
   void w;
   return { l, r };
@@ -264,11 +264,11 @@ function trainingBack(lt) {   /* the corporate-training set behind him, drawn at
   ctx.fillStyle = lg(0, 90, 0, 330, [[0, '#142a4a'], [1, '#3a5a8a']]); rr(760, 90, 190, 230, 10); ctx.fill(); ctx.strokeStyle = '#efe6d0'; ctx.lineWidth = 10; ctx.stroke();
   ctx.beginPath(); ctx.moveTo(855, 90); ctx.lineTo(855, 320); ctx.moveTo(760, 205); ctx.lineTo(950, 205); ctx.stroke();
   const ph = lt > 1.2 && !paused(lt) && !(lt >= T_RESUME && lt < T_RESUME + .2) && !(lt >= CUE.glitch && lt < CUE.glitch + .9);   /* the poster's lettering is hero only while nothing is over it */
-  ctx.save(); ctx.translate(176, 330); ctx.rotate(-.07);
-  ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6; ctx.fillStyle = '#f7f1dc'; rr(-170, -170, 340, 340, 12); ctx.fill(); ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = '#1e8e5a'; ctx.lineWidth = 8; rr(-156, -156, 312, 312, 8); ctx.stroke();
+  ctx.save(); ctx.translate(160, 330); ctx.rotate(-.07);
+  ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6; ctx.fillStyle = '#f7f1dc'; rr(-150, -170, 300, 340, 12); ctx.fill(); ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = '#1e8e5a'; ctx.lineWidth = 8; rr(-136, -156, 272, 312, 8); ctx.stroke();
   ctx.fillStyle = '#3f9a5c'; ctx.beginPath(); ctx.ellipse(0, -96, 22, 34, .5, 0, TAU); ctx.fill(); ctx.strokeStyle = '#1f5a36'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-10, -70); ctx.lineTo(12, -122); ctx.stroke();
-  tvLabel('YOUR BREAK', 0, -22, { size: 52, weight: 900, fill: '#103a2c', maxW: 300, hero: ph }); tvLabel('IS IMPORTANT', 0, 40, { size: 48, weight: 900, fill: '#103a2c', maxW: 300, hero: ph }); tvLabel('TO US', 0, 102, { size: 52, weight: 900, fill: '#b3261e', maxW: 300, hero: ph });
+  tvLabel('YOUR BREAK', 0, -22, { size: 52, weight: 900, fill: '#103a2c', maxW: 250, hero: ph }); tvLabel('IS IMPORTANT', 0, 40, { size: 48, weight: 900, fill: '#103a2c', maxW: 250, hero: ph }); tvLabel('TO US', 0, 102, { size: 52, weight: 900, fill: '#b3261e', maxW: 250, hero: ph });
   ctx.restore();
 }
 function trainingFront(lt) {   /* the desk in front of him and the plant */
@@ -296,7 +296,7 @@ const awayAt = lt => K([[0, 0], [6.55, 0], [6.8, 1], [8.55, 1], [8.9, 0], [40, 0
 const PR = { x: 902, y: 92, w: 340, h: 236 };                                                  /* the proctor window, in TV coordinates */
 const BAR = { x0: 130, x1: 1000, y: 664 };
 function proctor(lt, sh) {
-  const away = awayAt(lt), red = away > .5, pk = .5 + .5 * Math.sin(lt * 9), col = red ? '#ff3b30' : '#34d17a';
+  const away = awayAt(lt), red = paused(lt), pk = .5 + .5 * Math.sin(lt * 9), col = red ? '#ff3b30' : '#34d17a';
   ctx.save();
   if (red) V2.glow(PR.x + PR.w / 2, PR.y + PR.h / 2, 230, '255,60,48', .3 + .25 * pk, 'screen', .3);
   rr(PR.x - 8, PR.y - 8, PR.w + 16, PR.h + 16, 18); ctx.fillStyle = col; ctx.fill();
@@ -309,7 +309,8 @@ function proctor(lt, sh) {
     drawChar(st);
   } finally { REG.suppress--; }
   /* Binder's gaze dot: a reticle on the screen's plane (green when on it, red and off to the side when not) */
-  { const gx = PR.x + PR.w / 2 + 6 * away + away * 118, gy = PR.y + 118 + away * 6;
+  { const sy = PR.y + ((lt * .9) % 1) * PR.h; ctx.fillStyle = 'rgba(52,209,122,.22)'; ctx.fillRect(PR.x, sy, PR.w, 7); ctx.fillStyle = 'rgba(52,209,122,.10)'; ctx.fillRect(PR.x, sy - 14, PR.w, 14); }
+  { const gx = PR.x + PR.w / 2 + 6 * away + away * 118 + 3 * Math.sin(lt * 13), gy = PR.y + 118 + away * 6 + 2 * Math.sin(lt * 9);
     ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(gx, gy, 30, 0, TAU); ctx.moveTo(gx - 40, gy); ctx.lineTo(gx - 20, gy); ctx.moveTo(gx + 20, gy); ctx.lineTo(gx + 40, gy); ctx.moveTo(gx, gy - 40); ctx.lineTo(gx, gy - 20); ctx.moveTo(gx, gy + 20); ctx.lineTo(gx, gy + 40); ctx.stroke();
     ctx.fillStyle = col; ctx.beginPath(); ctx.arc(gx, gy, 7 + (red ? 2 * pk : 0), 0, TAU); ctx.fill(); }
   /* the proctor's name bar with its mascot */
@@ -374,11 +375,11 @@ function tvPlayer(lt, sh) {
   playBar(lt, sh);
   if (fz || (lt >= T_RESUME && lt < T_RESUME + .15)) {   /* the big pause icon pops on, and goes with the resume */
     const u = fz ? eb(sg(lt, T_PAUSE, T_PAUSE + .2)) : 1 - sg(lt, T_RESUME, T_RESUME + .15);
-    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); ctx.translate(176, 330); ctx.scale(u, u);
+    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); ctx.translate(210, 330); ctx.scale(u, u);
     ctx.fillStyle = 'rgba(8,14,18,.78)'; ctx.beginPath(); ctx.arc(0, 0, 110, 0, TAU); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.stroke();
     ctx.fillStyle = '#fff'; rr(-40, -52, 28, 104, 6); ctx.fill(); rr(12, -52, 28, 104, 6); ctx.fill();
     ctx.restore();
-    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); tvLabel('PAUSED', 176, 478, { size: 56, weight: 900, fill: '#fff', spacing: 6 }); ctx.restore();
+    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); tvLabel('PAUSED', 210, 478, { size: 56, weight: 900, fill: '#fff', spacing: 6 }); ctx.restore();
   }
   /* the glitch: coloured slices over the whole picture while the feed breaks up */
   if (lt >= CUE.glitch && lt < CUE.glitch + .9) {
@@ -454,14 +455,14 @@ ACT.straw = lt => {
   return { psiB: psiH * .35, psiH, dy: sigh, o: { expr: away ? 'neutral' : s2 ? 'sour' : 'dead', look: [away ? -.5 : 0, 0], lid: away ? undefined : s2 ? .55 : s3 ? .42 : .5 } };
 };
 ACT.lemon = lt => {
-  const psiH = K([[0, 0], [12.0, 0], [12.25, -.75], [13.5, -.7], [13.85, 0], [30, 0]], lt);
+  const psiH = K([[0, 0], [3.9, 0], [4.1, .5], [4.7, .45], [4.95, 0], [12.0, 0], [12.25, -.75], [13.5, -.7], [13.85, 0], [30, 0]], lt);
   const l1 = lt >= bS('l1') && lt < bE('l1');
   return { psiB: psiH * .3, psiH, o: { expr: l1 ? 'sour' : lt > 17.4 && lt < 19.5 ? 'sad' : 'neutral', look: [0, 0] } };
 };
 ACT.mango = lt => {
-  const nod = lt < CUE.glitch ? 5 * Math.max(0, Math.sin(lt * 1.3)) ** 3 : 0, jolt = lt >= CUE.glitch && lt < CUE.glitch + .45 ? 7 * Math.exp(-(lt - CUE.glitch) * 7) : 0;
-  const psiH = K([[0, 0], [10.9, 0], [11.1, .35], [11.8, .3], [12.3, 0], [30, 0]], lt);
-  return { psiB: psiH * .3, psiH, dy: nod - jolt, o: { expr: lt >= CUE.glitch && lt < CUE.glitch + 1.0 ? 'shock' : 'neutral', look: [0, 0], lid: lt < CUE.glitch ? .38 : lt > 12.5 ? .4 : undefined } };
+  const J0 = 11.3, nod = lt < J0 ? 5 * Math.max(0, Math.sin(lt * 1.3)) ** 3 : 0, jolt = lt >= J0 && lt < J0 + .5 ? 8 * Math.exp(-(lt - J0) * 7) : 0;
+  const psiH = K([[0, 0], [11.2, 0], [11.4, .35], [11.9, .3], [12.3, 0], [30, 0]], lt);
+  return { psiB: psiH * .3, psiH, dy: nod - jolt, o: { expr: lt >= J0 - .05 && lt < 12.4 ? 'shock' : 'neutral', look: [0, 0], lid: lt < J0 - .05 ? .38 : lt > 12.5 ? .4 : undefined } };
 };
 function person(name, lt) {
   const base = { mango: [A7.mango, SEATX.mango], lemon: [A7.lemon, SEATX.lemon], straw: [A11.straw, SEATX.straw] }[name];
@@ -493,13 +494,13 @@ shot('s1', 6.45, 6.95, u => faceCam(SEATX.straw, 1.95, 800, { z: lerp(1.02, 1.08
 shot('door', 6.95, 7.54, u => lens({ f: BASEF, cz: 120, cy: 160, hy: 780, cx: lerp(-40, -10, u), z: lerp(1.5, 1.9, u), lamp: true }), { cast: [], corridor: true });
 shot('pause', 7.54, 8.55, u => tvAim(640, 380, lerp(.8, .84, u)), { cast: [], tvHero: true });
 shot('s1b', 8.55, 9.04, u => faceCam(SEATX.straw, 1.95, 800, { z: lerp(1.05, 1.0, u) }), { cast: ['straw'], rows2: false });
-shot('tv2', 9.04, 10.5, u => tvAim(640, 380, lerp(.8, .84, u)), { cast: [] });
-shot('glitch', 10.5, 12.1, u => tvAim(640, 380, lerp(.82, .88, u)), { cast: [], tvHero: true });
+shot('tv2', 9.04, 11.3, u => tvAim(640, 380, lerp(.8, .88, u)), { cast: [], tvHero: true });
+shot('mgo', 11.3, 12.1, u => faceCam(SEATX.mango, 1.9, 800, { z: lerp(1, 1.05, u) }), { cast: ['mango'], rows2: false });
 shot('l1', 12.1, 13.8, u => faceCam(SEATX.lemon, 1.95, 800, { z: lerp(1, 1.06, u) }), { cast: ['lemon'], rows2: false });
 shot('tv3', 13.8, 16.29, u => tvAim(640, 380, lerp(.8, .86, u)), { cast: [] });
 shot('s2', 16.29, 17.41, u => faceCam(SEATX.straw, 2.05, 800, { z: lerp(1.0, 1.06, u) }), { cast: ['straw'], rows2: false });
 shot('tv4', 17.41, 19.58, u => tvAim(640, 380, lerp(.8, .86, u)), { cast: [], tvHero: true });
-shot('bar', 19.58, 20.97, u => tvAim(880, 640, lerp(1.4, 1.5, u)), { cast: [], tvHero: true });
+shot('bar', 19.58, 20.97, u => tvAim(860, 630, lerp(1.25, 1.34, u)), { cast: [], tvHero: true });
 shot('s3', 20.97, 22.35, u => faceCam(-500, lerp(1.2, 1.3, u), 800, { z: 1 }), { cast: ['straw'], rows2: false });
 shot('wide2', 22.35, 23.4, u => faceCam(-330, lerp(.84, .78, u), 790, { z: 1 }), { cast: ALL3, rows2: false });
 for (const sh of SHOTS) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
@@ -540,6 +541,7 @@ function drawWorld(lt, sh) {
   for (const n of seats) if (HAS(sh, n) || (D.dir === 'f' && !sh.rows2)) chairLayer(SEATX[n], ROW1, 'seat');
   for (const n of seats) if (HAS(sh, n)) drawChar(person(n, lt));
   for (const n of seats) if (HAS(sh, n) || (D.dir === 'f' && !sh.rows2)) chairLayer(SEATX[n], ROW1, D.dir === 'f' ? 'back' : 'lip');
+  V2.dust(0, 300, W, 1500, lt, { n: 46, seed: 4, size: 2.6, alpha: .45, speed: 8 });
   void dressed;
 }
 

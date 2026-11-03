@@ -303,8 +303,8 @@ function drawLogo(lt) {
 }
 function drawStamp(lt) {
   const age = lt - STAMP;
-  if (lt < STAMP - .1 || lt > BURST + .3) return;
-  const k = sg(lt, STAMP - .09, STAMP), a = 1 - sg(lt, BURST + .02, BURST + .24), settle = lt >= STAMP ? 1 + .06 * Math.sin(Math.min(1, age / .16) * PI) * (1 - Math.min(1, age / .16)) * 2 : 1;
+  if (lt < STAMP - .1 || lt > BURST + .15) return;
+  const k = sg(lt, STAMP - .09, STAMP), a = 1 - sg(lt, BURST - .01, BURST + .1), settle = lt >= STAMP ? 1 + .06 * Math.sin(Math.min(1, age / .16) * PI) * (1 - Math.min(1, age / .16)) * 2 : 1;
   const sc = lt < STAMP ? lp(2.1, 1, eI(k)) : 1 / settle;
   if (a <= .01) return;
   const hero = lt >= STAMP + .17 && lt < BURST - .02;
@@ -318,11 +318,11 @@ function drawTitle(lt) {
   if (a <= 0) return;
   const grow = lt < LAND - .02 ? eIO(sg(lt, 3.10, LAND - .02)) * 1.06 : lp(1.06, 1, eO(sg(lt, LAND - .02, LAND + .12)));
   const size = lp(CARD.title.size * .35, CARD.title.size, grow) * (1 + .03 * (lt >= LAND ? ringK(lt - LAND, .09) : 0)), rest = lt >= LAND + .14, ds = lt - DING;
-  bevelText('THE VOTE', 540, lp(SLIPC[1], CARD.title.cy, e) - 50 * Math.sin(PI * e), size, { extr: sg(size, 90, 260), alpha: a, hero: rest, shine: ds > 0 ? eIO(sg(ds, 0, .78)) : -1, grp: 'swap' });
+  bevelText('THE VOTE', 540, lp(SLIPC[1], CARD.title.cy, e) - 24 * Math.sin(PI * e), size, { extr: sg(size, 90, 260), alpha: a, hero: rest, shine: ds > 0 ? eIO(sg(ds, 0, .78)) : -1, grp: 'swap' });
 }
 function drawPillTag(lt) {
-  const p = sg(lt, 3.22, 3.45);
-  if (p > 0) episodePill('EPISODE 16', 540, CARD.pill.cy, CARD.pill.size, CARD.pill.h, { alpha: sg(p, 0, .25), scale: lp(.5, 1, back(p, 2.2)), hero: lt >= 3.5 });
+  const p = sg(lt, 3.30, 3.54);
+  if (p > 0) episodePill('EPISODE 16', 540, CARD.pill.cy, CARD.pill.size, CARD.pill.h, { alpha: sg(p, 0, .25), scale: lp(.5, 1, back(p, 2.2)), hero: lt >= 3.58 });
   const tg = sg(lt, TAG0, TAG1);
   if (tg > 0) UI.label('Every vote counts. Pending.', 540, CARD.tag.cy, { font: 'Nunito', weight: 900, italic: true, size: CARD.tag.size, fill: CREAM, stroke: NAVY_D, lw: 8, shadow: 12, reveal: tg, hero: tg >= 1, crop: tg < 1 });
 }
