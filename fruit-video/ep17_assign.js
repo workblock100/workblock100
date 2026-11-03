@@ -3,10 +3,11 @@
  *
  * The nurses' station at night (the Episode 15 tower, S15, sunk one floor with the Executive Suite on top; the station room lit by its own lamps). Tomato (HR, headset) stands behind the counter with a
  * tablet that holds the assignment (a learning-platform card: MODULE 7 OF 7, HOW TO TAKE A BREAK SAFELY, 4:00:00, DUE BEFORE CLOCK-OUT). Mango, Lemon and Strawberry stand in front of the counter,
- * three-quarter views. Binder pops out of the tablet, offers help, "No thanks" runs away from Strawberry's pointer, "Great! I'll help.", the DUE 11:00 PM chip stamps onto the card.
+ * backs to us (three-quarter faces in their own close-ups). Binder pops out of the tablet, offers help, "No thanks" runs away from Strawberry's pointer, "Great! I'll help.", the DUE 11:00 PM chip stamps onto the card.
  *
- * Shots (scene-local seconds, see SHOTS below): wide push-in (0-1.1) / Tomato (1.1-3.1) / Mango (3.1-3.9) / tablet card insert, 4:00:00 (3.9-4.9) / Lemon + the call light glance (4.9-7.0) /
- * Tomato "Efficiency." (7.0-7.85) / Binder out of the tablet + the bubble (7.85-9.88) / Strawberry "No." + the pointer chase (9.88-10.42) / Binder grin (10.42-11.42) / the card, the DUE chip (11.42-12.9) / wide.
+ * Shots (scene-local seconds, see SHOTS below): wide push-in (0-1.1) / Tomato with the nurses' backs (1.1-3.13) / Mango (3.13-3.91) / tablet card, 4:00:00 rolls up (3.91-4.91) / Lemon (4.91-5.75) / the call-light board (5.75-6.4) /
+ * Lemon back (6.4-7.03) / Tomato "Efficiency." (7.03-7.85) / Binder pops out of the tablet, bubble (7.85-9.88) / Strawberry "No." (9.88-10.3) / bubble, the pointer chases "No thanks" (10.3-10.97) / Binder grin (10.97-11.42) /
+ * card, DUE 11:00 PM stamps on "clock" (11.42-12.92) / last wide (12.92-13.87). Cues: click 0.5, binderpop 7.845, grin 10.974, sting 13.017.
  */
 (() => {
 if (!window.TIMELINE_EP17 || !window.S15 || !window.H6 || !window.SH15 || !window.A15 || !window.UI) return;

@@ -136,6 +136,7 @@ function bigClock(lt, big) {
     const t = lt - CUE.pending; for (let i = 0; i < 12; i++) { const a = i / 12 * TAU - t * 5.4, al = ((i / 12 - t * .9) % 1 + 1) % 1; ctx.fillStyle = rgba('#bfe6ff', .2 + .8 * (1 - al)); ell(Math.cos(a) * R * .74, Math.sin(a) * R * .74, 9, 9); ctx.fill(); }
     ctx.restore();
   }
+  if (lt >= CUE.sting && lt < CUE.sting + .55) { const g = (lt - CUE.sting) / .55, a = Math.sin(PI * g); ctx.save(); ctx.translate(R * .55, -R * .62); ctx.rotate(g * 1.2); ctx.globalAlpha *= a; ctx.fillStyle = '#ffffff'; ctx.beginPath(); for (let i = 0; i < 8; i++) { const an = i * PI / 4, rr0 = i % 2 ? 7 : 44 * (.6 + .4 * a); ctx.lineTo(Math.cos(an) * rr0, Math.sin(an) * rr0); } ctx.closePath(); ctx.fill(); ctx.restore(); }
   /* the plaque under the clock: BREAK IN 1 MIN becomes BREAK PENDING, letter by letter */
   const py = R + 44, pw = 300, ph = 50, u = sg(lt, CUE.pending, CUE.pending + .8);
   UI.panel([-pw / 2, py - ph / 2, pw, ph], { id: 'clkplate', kind: 'sign', fill: '#1d2a3a', stroke: '#e8e0cf', lw: 3, r: 10, pad: 4, hero: false });
@@ -373,11 +374,11 @@ const shot = (id, s, e, cam, o = {}) => SHOTS.push(Object.assign({ id, s, e, cam
 const shotAt = lt => { let r = SHOTS[0]; for (const sh of SHOTS) if (lt >= sh.s) r = sh; return r; };
 const ALL = ['mango', 'lemon', 'straw', 'onion', 'tom'];
 const pcCam = u => lens({ dir: 'f', cz: (RM.zTV - 12) - 1100 / 3.1, cy: PCK.y, hy: 880, cx: PCK.x, z: lerp(1, 1.05, u) });
-shot('w0', 0, bS('b1'), u => wideF(lerp(1, 1.05, u)), { cast: ALL });
+shot('w0', 0, bS('b1'), u => wideF(lerp(1.12, 1.18, u), { cz: -1250, cy: 700, hy: 470, cx: -60 }), { cast: ALL });
 shot('b1', bS('b1'), bS('m1'), u => tvCam(lerp(1000, 1050, u), 800), { cast: [], tvHero: true });
 shot('m1', bS('m1'), bS('b2'), u => faceCam('mango', 1.9, 660, { z: lerp(1, 1.05, u) }), { cast: ['mango'], dofBack: 6 });
 shot('b2', bS('b2'), bS('s1'), u => tvCam(lerp(1000, 1060, u), 800), { cast: [], tvHero: true });
-shot('s1', bS('s1'), bS('b3'), u => tvCam(lerp(1150, 1230, u), 800, { cx: TVG.cx - 120 }), { cast: [], tvHero: true });
+shot('s1', bS('s1'), bS('b3'), u => tvCam(lerp(1000, 1070, u), 800), { cast: [], tvHero: true });
 shot('cert', bS('b3'), bS('o1'), u => lens({ dir: 'f', cz: -45, cy: 330, hy: 880, cx: 110, z: lerp(1, 1.05, u) }), { cast: [] });
 shot('c1', bS('o1'), CUE.sniffle - .06, u => lens({ dir: 'f', cz: PRT.z - 46 - 1100 / 2.9, cy: 359, hy: 900, cx: PRT.x, z: lerp(1, 1.04, u) }), { cast: [], tvHero: true, noTV: true });
 shot('o1', CUE.sniffle - .06, bS('l1'), u => faceCam('onion', 2.1, 540, { z: lerp(1, 1.05, u) }), { cast: ['onion'], dofBack: 6 });

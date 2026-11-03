@@ -373,12 +373,12 @@ const SHOTS = [];
 const shot = (id, s, e, cam, o) => SHOTS.push(Object.assign({ id, s, e, cam }, o));
 function shotAt(lt) { let r = SHOTS[0]; for (const sh of SHOTS) if (lt >= sh.s) r = sh; return r; }
 shot('open', 0, .9, u => [540, 960, lerp(1, 1.035, u)], { cast: { melon: { x: 160, s: .72, yaw: .5 }, carrot: { x: 940, s: .76, yaw: -.5 } }, plq: 0, bind: { x: 540, s: .55 } });
-shot('a1', .9, 2.6, u => [420, 985, lerp(1.2, 1.3, u)], { cast: { melon: { x: 140, s: .9, yaw: .38 } }, plq: 0, bind: { x: 540, s: .55 } });
+shot('a1', .9, 2.6, u => [420, 985, lerp(1.2, 1.3, u)], { cast: { melon: { x: 140, s: .9, yaw: .38, front: true } }, plq: 0, bind: { x: 540, s: .55 } });
 shot('ca1', 2.6, 3.39, u => [540, 940, lerp(1, 1.05, u)], { cast: { carrot: { x: 540, s: 1.22, yaw: -.42 } }, dof: 5 });
 shot('b1', 3.39, 4.0, u => [540, 1040, lerp(1.55, 1.6, u)], { cast: {}, plq: 0, bind: { x: 540, s: .55 }, tool: 1 });
 shot('ca2', 4.0, 4.79, u => [540, 940, lerp(1.05, 1.1, u)], { cast: { carrot: { x: 540, s: 1.22, yaw: -.3, headYaw: -.1 } }, dof: 5 });
 shot('b2', 4.79, 5.57, u => [540, 1040, lerp(1.55, 1.6, u)], { cast: {}, plq: 0, bind: { x: 540, s: .55 }, tool: 1 });
-shot('l1', 5.57, 6.83, u => [540, 940, lerp(1, 1.06, u)], { cast: { lemon: { x: 300, s: 1.55, yaw: .5, headYaw: .75 } }, plq: 250, bind: { x: 790, s: .62 }, dof: 5 });
+shot('l1', 5.57, 6.83, u => [540, 940, lerp(1, 1.06, u)], { cast: { lemon: { x: 280, s: 1.5, yaw: .5, headYaw: .75 } }, plq: 212, bind: { x: 790, s: .62 }, dof: 5 });
 shot('b3', 6.83, 7.89, u => [540, 865, lerp(2, 2.08, u)], { cast: {}, plq: 0, bind: { s: .55 }, dof: 6 });
 shot('s1', 7.89, 9.08, u => [540, 940, lerp(1, 1.06, u)], { cast: { straw: { x: 540, s: 1.5, yaw: -.4 } }, dof: 5 });
 shot('b4', 9.08, 9.86, u => [540, 865, lerp(2, 2.08, u)], { cast: {}, plq: 0, bind: { s: .55 }, dof: 6 });
@@ -407,10 +407,10 @@ function drawWorld(lt) {
   setLight(lt); V2.opts.reflect = false;
   const bg = () => { wall(lt); pegboard(lt); lamp(lt); };
   if (sh.dof) V2.dof(sh.dof, bg); else bg();
-  if (on > .02) { V2.addLight({ x: LAMP.x, y: LAMP.y + 40, r: 1100, color: '255,226,160', a: .6 * on }); V2.beam(LAMP.x, LAMP.y + 50, 560, 1090, 60, 700, '255,226,150', .2 * on, 'screen'); }
+  if (on > .02) { V2.addLight({ x: LAMP.x, y: LAMP.y + 40, r: 1100, color: '255,226,160', a: .6 * on }); V2.beam(LAMP.x, LAMP.y + 50, 560, 1090, 60, 700, '255,226,150', .2 * on, 'screen'); V2.dust(300, 420, 840, 1060, lt, { n: 36, seed: 7, size: 2.6, alpha: .5 * on, speed: 8 }); }
   NOHERO = lt >= CUE.stamp - .24 && lt < CUE.stamp + .3;
   const C = sh.cast || {};
-  if (C.melon) drawChar(mk(A9.melon, lt, Object.assign({ o: actMelon(lt).o }, C.melon)));
+  if (C.melon && !C.melon.front) drawChar(mk(A9.melon, lt, Object.assign({ o: actMelon(lt).o }, C.melon)));
   if (C.lemon) drawChar(mk(A7.lemon, lt, Object.assign({ o: actLemon(lt).o }, C.lemon)));
   if (C.straw) drawChar(mk(A11.straw, lt, Object.assign({ o: actStraw(lt).o }, C.straw)));
   if (C.carrot) drawChar(mk(A15.carrot, lt, Object.assign({ o: actCarrot(lt).o }, C.carrot)));
@@ -438,6 +438,9 @@ function drawWorld(lt) {
       }
     }
     ctx.restore();
+  }
+  if (C.melon && C.melon.front) {   /* the flourish reaches over the plaque: Melon is drawn after it, cut at the bench's back edge */
+    ctx.save(); ctx.beginPath(); ctx.rect(-600, -600, 3000, 1668 + 600); ctx.clip(); drawChar(mk(A9.melon, lt, Object.assign({ o: actMelon(lt).o }, C.melon))); ctx.restore();
   }
 }
 const BD_RY = 92;

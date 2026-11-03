@@ -385,15 +385,15 @@ function chartWin(lt) {
   });
   if (!voidK) UI.label('BALLOTS COUNTED: ' + (tl.b + tl.p), 640, 470, { size: 34, fill: '#8fb6d6', hero: false, crop: true });
   if (voidK) {   /* the VOID stamp slams on the dialog cue: big, a ring, then it sits */
-    const k = c01(vt / .12), sc = lerp(2.6, 1, k * k) + .05 * Math.sin(Math.min(1, vt / .3) * PI) * (vt < .3 ? 1 : 0), cy = 282, a = c01(vt / .06);
+    const k = c01(vt / .12), sc = lerp(2.6, 1, k * k) + .05 * Math.sin(Math.min(1, vt / .3) * PI) * (vt < .3 ? 1 : 0), cy = 282, a = 1;
     if (vt < .5) { ctx.strokeStyle = `rgba(255,120,100,${.9 * (1 - vt / .5)})`; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(640, cy, 60 + vt * 900, 0, TAU); ctx.stroke(); }
     ctx.save(); ctx.globalAlpha *= a; ctx.translate(640, cy); ctx.scale(sc, sc); ctx.translate(-640, -cy);
     const sOK = vt >= .14 && TVH;
     UI.stamp('VOID', 640, cy, { size: 190, rot: -.14, color: '#e0332a', alpha: .96, hero: sOK, crop: !sOK });
     ctx.restore();
   }
-  if (lt >= CUE.dialog && lt < 14.5) {
-    const u = eb(sg(lt, CUE.dialog, CUE.dialog + .22)), out = 1 - sg(lt, 14.2, 14.45);
+  if (lt >= CUE.dialog - .034 && lt < 14.5) {
+    const u = eb(sg(lt, CUE.dialog - .034, CUE.dialog + .2)), out = 1 - sg(lt, 14.2, 14.45);
     ctx.save(); ctx.globalAlpha *= out; SH15 && SH15.dialog({ kind: 'error', w: 1280, h: 720, at: [640, 592], s: .56, title: 'Tally', text: 'Election void.', buttons: [{ id: 'ok', t: 'OK', def: true }], dressing: true, dim: false, t: lt }, u); ctx.restore();
   }
   if (lt >= T_INC) {
@@ -414,7 +414,7 @@ function paintTV(lt, scr) {
 const T_BIND = bS('o5') + .02;
 function binderOpts(lt) {
   const k = eb(sg(lt, T_BIND, T_BIND + .38)), kk = kAt(336), X = mapX(LAPX), Z = mapZ(336);
-  const rise = (1 - k) * 220, base = V2.p2(X, TB.top + 290, Z), grin = ss(lt, CUE.grin, CUE.grin + .1);
+  const rise = (1 - k) * 220, base = V2.p2(X, TB.top + 290, Z), grin = ss(lt, CUE.grin - .034, CUE.grin + .07);
   return A15.binder({ x: base[0], y: base[1] + rise * kk, s: kk * 1.0 * Math.max(.01, k), t: lt, who: 'bind', pose: lt < bS('b1') ? 'helpful' : 'wave', grin, glint: Math.max(grin * .5, lt >= CUE.sting ? Math.exp(-(lt - CUE.sting) * 4) : 0), look: [lt < bS('b1') ? .2 : 0, .1], hover: false, bob: 1, acc: ['fp16_crown'], crownK: ss(lt, T_BIND + .15, T_BIND + .4), expr: 'bind_happy' });
 }
 const HEADS = [['e1', 1], ['e2', 2], ['tom', 3], ['mango', 4], ['lemon', 5], ['onion', 6], ['straw', 7], ['e4', 8], ['e3', 9]];
