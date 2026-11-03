@@ -182,7 +182,7 @@ function Body(W, def, id) {
   this.pose = typeof def.pose === 'function' ? def.pose : null;
   this.px = this.x; this.py = this.y; this.pa = this.angle;                 // kinematic target for the end of the step
   this.silent = !!def.silent; this.internal = !!def.internal;               // silent: no events. internal: rope particle (not listed by at())
-  this.radius = 0; this.inr = 0; this.slot = -1; this.jlist = []; this.moving = false; this.wild = false; this.def = def;
+  this.radius = 0; this.inr = 0; this.slot = -1; this.jlist = []; this.moving = false; this.wild = false; this.rpk = 0; this.def = def;
 }
 Body.prototype.isDynamic = function () { return this.type === DYNAMIC; };
 /* mass data from the shapes (density x area), centre of mass, inertia; def.mass / def.inertia override */
@@ -244,7 +244,7 @@ function Contact() {
   this.nx = 0; this.ny = 0; this.lnx = 0; this.lny = 0; this.lpx = 0; this.lpy = 0;
   this.p0 = new MPoint(); this.p1 = new MPoint();
   this.block = false; this.k11 = 0; this.k12 = 0; this.k22 = 0; this.i11 = 0; this.i12 = 0; this.i22 = 0;
-  this.slideT = 0; this.rollT = 0; this.silent = false; this.ok = 0; this.stat = false;
+  this.slideT = 0; this.rollT = 0; this.silent = false; this.ok = 0; this.stat = false; this.had = false;
 }
 function rotInvX(b, x, y) { return b.cs * x + b.sn * y; }
 function rotInvY(b, x, y) { return -b.sn * x + b.cs * y; }
@@ -368,11 +368,11 @@ function collide(c, A, B, margin, ktol) {
 // ---------------------------------------------------------------- contact solver: soft step (soft constraints + relax), warm started
 /* Per step the world sets: SB bias rate, SM mass scale, SI impulse scale (b2MakeSoft of the contact frequency), SLP slop, PUSH max push-out speed, IH 1/h.
  * Penetration is removed by a bias velocity (no position teleporting); a relax pass without bias then removes the energy the bias added. */
-let SB = 0, SM = 1, SI = 0, SG = 0, SB2 = 0, SM2 = 1, SI2 = 0, SG2 = 0, SLP = 0, PUSH = 1e9, IH = 240, FLIP = 0;
+let WARM = 1, USEBLOCK = true, SB = 0, SM = 1, SI = 0, SG = 0, SB2 = 0, SM2 = 1, SI2 = 0, SG2 = 0, SLP = 0, PUSH = 1e9, IH = 240, FLIP = 0;
 function initContact(c, ratio) {
   const A = c.A, B = c.B, mA = A.im, mB = B.im, iA = A.ii, iB = B.ii;
   const nx = c.nx, ny = c.ny, tx = ny, ty = -nx, n = c.count;
-  c.nv = n;
+  c.nv = n; c.had = c.p0.jn > 0 || (n > 1 && c.p1.jn > 0); // had: the contact already carried force in the previous step (so a new approach speed is not an impact)
   let vAx = A.vx, vAy = A.vy, wA = A.w, vBx = B.vx, vBy = B.vy, wB = B.w;
   for (let k = 0; k < n; k++) {
     const p = k === 0 ? c.p0 : c.p1;
@@ -385,14 +385,14 @@ function initContact(c, ratio) {
     p.tm = kt > 0 ? 1 / kt : 0;
     const dvx = vBx - wB * p.rby - vAx + wA * p.ray, dvy = vBy + wB * p.rbx - vAy - wA * p.rax;
     p.rel = dvx * nx + dvy * ny;           // approach speed before the solve (restitution, events)
-    p.jn *= ratio; p.jt *= ratio;
+    p.jn *= ratio * WARM; p.jt *= ratio * WARM;
     const Px = p.jn * nx + p.jt * tx, Py = p.jn * ny + p.jt * ty; // warm start
     vAx -= mA * Px; vAy -= mA * Py; wA -= iA * (p.rax * Py - p.ray * Px);
     vBx += mB * Px; vBy += mB * Py; wB += iB * (p.rbx * Py - p.rby * Px);
   }
   A.vx = vAx; A.vy = vAy; A.w = wA; B.vx = vBx; B.vy = vBy; B.w = wB;
   c.block = false;
-  if (n === 2) { // 2-point block solver: only when the 2x2 system is well conditioned, otherwise the second point is redundant
+  if (n === 2 && USEBLOCK) { // 2-point block solver: only when the 2x2 system is well conditioned, otherwise the second point is redundant
     const a = c.p0, b = c.p1;
     const r1A = a.rax * ny - a.ray * nx, r1B = a.rbx * ny - a.rby * nx, r2A = b.rax * ny - b.ray * nx, r2B = b.rbx * ny - b.rby * nx;
     const k11 = mA + mB + iA * r1A * r1A + iB * r1B * r1B, k22 = mA + mB + iA * r2A * r2A + iB * r2B * r2B, k12 = mA + mB + iA * r1A * r2A + iB * r1B * r2B;
@@ -405,7 +405,7 @@ function solveContactV(c, useBias) {
   const nx = c.nx, ny = c.ny, tx = ny, ty = -nx, fr = c.friction, n = c.nv;
   const stat = c.stat, sb = stat ? SB2 : SB, sm = stat ? SM2 : SM, si = stat ? SI2 : SI, sg = stat ? SG2 : SG;
   for (let q = 0; q < n; q++) { // friction first: the normal constraint is the more important one; point order alternates per iteration
-    const p = (q ^ FLIP) === 0 ? c.p0 : c.p1;
+    const p = ((FLIP & (n - 1)) ^ q) === 0 ? c.p0 : c.p1; // point order alternates per iteration (only with 2 points)
     const dvx = vBx - wB * p.rby - vAx + wA * p.ray, dvy = vBy + wB * p.rbx - vAy - wA * p.rax;
     let lam = -p.tm * (dvx * tx + dvy * ty);
     const mf = fr * p.jn, nt = p.jt + lam, nj = nt < -mf ? -mf : (nt > mf ? mf : nt);
@@ -416,7 +416,7 @@ function solveContactV(c, useBias) {
   }
   if (!c.block) {
     for (let q = 0; q < n; q++) {
-      const p = (q ^ FLIP) === 0 ? c.p0 : c.p1;
+      const p = ((FLIP & (n - 1)) ^ q) === 0 ? c.p0 : c.p1; // point order alternates per iteration (only with 2 points)
       const dvx = vBx - wB * p.rby - vAx + wA * p.ray, dvy = vBy + wB * p.rbx - vAy - wA * p.rax;
       const vn = dvx * nx + dvy * ny, s = p.s;
       let bias = 0, ms = 1, is = 0;
@@ -456,7 +456,35 @@ function solveContactV(c, useBias) {
   }
   A.vx = vAx; A.vy = vAy; A.w = wA; B.vx = vBx; B.vy = vBy; B.w = wB;
 }
-/* restitution after the iterations, only for points that really carried an impulse and arrived faster than the threshold */
+/* one more friction pass after the normal impulses are final: friction is solved first inside the iterations, so on its own the last
+ * friction impulse would be limited by the previous normal impulse (a sliding box then feels 1 to 3 percent too little friction) */
+function solveFriction(c) {
+  const A = c.A, B = c.B, mA = A.im, mB = B.im, iA = A.ii, iB = B.ii, tx = c.ny, ty = -c.nx, fr = c.friction, n = c.nv;
+  let vAx = A.vx, vAy = A.vy, wA = A.w, vBx = B.vx, vBy = B.vy, wB = B.w;
+  for (let q = 0; q < n; q++) {
+    const p = q === 0 ? c.p0 : c.p1;
+    const dvx = vBx - wB * p.rby - vAx + wA * p.ray, dvy = vBy + wB * p.rbx - vAy - wA * p.rax;
+    let lam = -p.tm * (dvx * tx + dvy * ty);
+    const mf = fr * p.jn, nt = p.jt + lam, nj = nt < -mf ? -mf : (nt > mf ? mf : nt);
+    lam = nj - p.jt; p.jt = nj;
+    const Px = lam * tx, Py = lam * ty;
+    vAx -= mA * Px; vAy -= mA * Py; wA -= iA * (p.rax * Py - p.ray * Px);
+    vBx += mB * Px; vBy += mB * Py; wB += iB * (p.rbx * Py - p.rby * Px);
+  }
+  A.vx = vAx; A.vy = vAy; A.w = wA; B.vx = vBx; B.vy = vBy; B.w = wB;
+}
+/* Restitution after the iterations, only for points that really carried an impulse and arrived faster than the threshold.
+ * A body squeezed between several contacts must not bounce off all of them at once (that pumps energy into piles), so each body keeps
+ * only its strongest impacts: a point bounces a body only if its approach speed is at least 60 % of the body's strongest. */
+function restitutionPeak(c, thresh) {
+  for (let k = 0; k < c.count; k++) {
+    const p = k === 0 ? c.p0 : c.p1;
+    if (p.rel > -thresh || p.jn <= 0) continue;
+    const a = -p.rel;
+    if (a > c.A.rpk) c.A.rpk = a;
+    if (a > c.B.rpk) c.B.rpk = a;
+  }
+}
 function applyRestitution(c, thresh, bounce) {
   const e = c.rest * bounce;
   if (e <= 0) return;
@@ -464,6 +492,8 @@ function applyRestitution(c, thresh, bounce) {
   for (let k = 0; k < c.nv; k++) {
     const p = k === 0 ? c.p0 : c.p1;
     if (p.rel > -thresh || p.jn <= 0) continue;
+    const a = -p.rel;
+    if ((mA > 0 && a < 0.6 * A.rpk) || (mB > 0 && a < 0.6 * B.rpk)) continue;
     const dvx = B.vx - B.w * p.rby - A.vx + A.w * p.ray, dvy = B.vy + B.w * p.rbx - A.vy - A.w * p.rax;
     let lam = -p.nm * (dvx * nx + dvy * ny + (e > 0.98 ? 0.98 : e) * p.rel);
     const nj = p.jn + lam > 0 ? p.jn + lam : 0;
@@ -962,8 +992,8 @@ function World(opts) {
   const U = this.unit;
   this.dt = opts.dt || 1 / 240; this.rate = Math.round(1 / this.dt);
   this.seed = opts.seed != null ? opts.seed : 1; this._rng = makeRng(this.seed);
-  this.velIters = opts.velIters || 8; this.posIters = opts.posIters != null ? opts.posIters : 3; this.relaxIters = opts.relaxIters != null ? opts.relaxIters : 1;
-  this.contactHz = opts.contactHz || 90; this.contactZeta = opts.contactZeta || 10; this.biasSlop = opts.biasSlop != null ? opts.biasSlop : 0.1; this.staticMul = opts.staticMul || 1;
+  this.velIters = opts.velIters || 12; this.posIters = opts.posIters != null ? opts.posIters : 3; this.relaxIters = opts.relaxIters != null ? opts.relaxIters : 1;
+  this.contactHz = opts.contactHz || 90; this.contactZeta = opts.contactZeta || 10; this.biasSlop = opts.biasSlop != null ? opts.biasSlop : 0.1; this.staticMul = opts.staticMul || 1; this.useBlock = opts.useBlock !== false; this.warmScale = opts.warmScale != null ? opts.warmScale : 1; this.symmetric = !!opts.symmetric; this.minSub = opts.substeps || 2; this._its = 4;
   this.slop = opts.slop != null ? opts.slop : 0.005 * U;          // allowed overlap
   this.margin = opts.margin != null ? opts.margin : 0.02 * U;     // speculative contact distance and AABB fattening
   this.aabbMargin = this.margin;
@@ -1244,7 +1274,7 @@ World.prototype._stepH = function (h, t) {
   const hz = this.contactHz * (1 - 0.8 * soft), om = TWO_PI * hz, a1 = 2 * this.contactZeta + h * om, a2 = h * om * a1, a3 = 1 / (1 + a2);
   const om2 = om * this.staticMul, b1 = 2 * this.contactZeta + h * om2, b2 = h * om2 * b1, b3 = 1 / (1 + b2);
   SB = om / a1; SM = a2 * a3; SI = a3; SG = 1 / a2; SB2 = om2 / b1; SM2 = b2 * b3; SI2 = b3; SG2 = 1 / b2;
-  SLP = this.biasSlop * slop; PUSH = this.pushSpeed; IH = invH;
+  SLP = this.biasSlop * slop; PUSH = this.pushSpeed; IH = invH; USEBLOCK = this.useBlock; WARM = this.warmScale;
   for (let i = 0; i < naj; i++) aj[i].init(h, ratio);
   for (let i = 0; i < nac; i++) initContact(ac[i], ratio);
   if (this._dbg) this._dbg('init', 0, ac, nac, aj, naj);
@@ -1252,11 +1282,13 @@ World.prototype._stepH = function (h, t) {
   let nr = 0;
   for (let i = 0; i < naj; i++) if (aj[i].sweep) ajr[nr++] = aj[i];
   const sweeps = this.ropeSweeps;
-  for (let it = 0; it < this.velIters; it++) {
+  const nIt = this._its;
+  for (let it = 0; it < nIt; it++) {
     FLIP = it & 1;
     for (let k = 0; k < sweeps && nr > 0; k++) for (let i = 0; i < nr; i++) ajr[i].solveV(invH); // ropes converge slowly under heavy loads: extra sweeps (cheap)
     for (let i = 0; i < naj; i++) if (!aj[i].sweep) aj[i].solveV(invH);
     if (this._dbg) this._dbg('jnt', it, ac, nac, aj, naj);
+    if (this.symmetric && (it & 1)) { for (let i = nac - 1; i >= 0; i--) solveContactV(ac[i], true); } else
     for (let i = 0; i < nac; i++) solveContactV(ac[i], true);
     if (this._dbg) this._dbg('vel', it, ac, nac, aj, naj);
   }
@@ -1281,9 +1313,12 @@ World.prototype._stepH = function (h, t) {
     FLIP = it & 1;
     for (let i = 0; i < naj; i++) aj[i].solveV(invH);
     for (let i = 0; i < nac; i++) solveContactV(ac[i], false);
+    if (it === this.relaxIters - 1) for (let i = 0; i < nac; i++) solveFriction(ac[i]);
     if (this._dbg) this._dbg('relax', it, ac, nac, aj, naj);
   }
   const bounce = feel.bounce;
+  for (let i = 0; i < nac; i++) { ac[i].A.rpk = 0; ac[i].B.rpk = 0; }
+  for (let i = 0; i < nac; i++) restitutionPeak(ac[i], this.velThresh);
   for (let i = 0; i < nac; i++) applyRestitution(ac[i], this.velThresh, bounce);
   if (this._dbg) this._dbg('restitution', 0, ac, nac, aj, naj);
   if (this._rec) this._events(ac, nac, h, t);
@@ -1350,7 +1385,9 @@ World.prototype._substeps = function () {
 };
 World.prototype.step = function () {
   if (!this._started) this._prepare();
-  const n = this._substeps(), h = this.dt / n, t0 = this.stepIndex * this.dt;
+  let n = this._substeps(); if (n < this.minSub) n = this.minSub;
+  const h = this.dt / n, t0 = this.stepIndex * this.dt;
+  this._its = Math.max(2, Math.ceil(this.velIters / n)); // velocity iterations per substep: velIters is the budget per 1/240 s step
   for (let i = 0; i < n; i++) this._stepH(h, t0 + i * h);
   for (let i = 0; i < this.cloths.length; i++) this.cloths[i].step(this.dt, t0, this._warm);
   this.stepIndex++; this.time = this.stepIndex * this.dt;
@@ -1380,7 +1417,7 @@ World.prototype._events = function (ac, nac, h, t) {
     if (c.silent) continue;
     let hp = null, hr = 0;
     for (let k = 0; k < c.nv; k++) { const p = k === 0 ? c.p0 : c.p1; if (p.jn > 0 && p.rel < hr) { hr = p.rel; hp = p; } }
-    if (hp !== null && -hr > this.evSpeed) { // an impact: energy of the closing speed on the effective mass at the point
+    if (hp !== null && -hr > (c.had ? 3 * this.evSpeed : this.evSpeed)) { // an impact (a contact that already carried force must be hit much harder to count: soft contacts oscillate): energy of the closing speed on the effective mass at the point
       const mag = this._mag(0.5 * hp.nm * hr * hr);
       if (mag >= this.evMin) this._push('hit', c.A, c.B, c.sa, c.sb, hp.x, hp.y, mag, -hr, te, 0);
     }
@@ -1550,7 +1587,7 @@ World.prototype._rope = function (def) {
   for (let i = 0; i <= N; i++) {
     const t = i / N, s = 4 * sag * t * (1 - t);
     rope.nodes.push(this.body({ type: 'dynamic', x: ax + cx * t + gdx * s, y: ay + cy * t + gdy * s, mass: nm, inertia: 1, fixedRotation: true, circle: collide ? r : undefined, density: 1, mat: mat, tag: tag,
-      internal: true, silent: true, mask: collide ? 0xFFFF : 0, category: 0x4000, linearDamping: def.damping != null ? def.damping : 0.05, allowSleep: def.sleep !== false }));
+      internal: true, silent: true, mask: collide ? (def.mask != null ? def.mask : 0xFFFF) : 0, category: def.category != null ? def.category : 0x4000, linearDamping: def.damping != null ? def.damping : 0.05, allowSleep: def.sleep !== false }));
     if (!collide) { rope.nodes[i].shapes.length = 0; rope.nodes[i].radius = 0; }
   }
   // pins first (so the solver sees the heavy anchors early), then segments, then bends
@@ -1600,9 +1637,11 @@ function Cloth(W, def, id) {
     this.released = 1;
     for (let j = 1; j < rows; j++) for (let i = 0; i < cols; i++) this.iw[j * cols + i] = 0;
     u.A = 3 - u.snap; u.B = u.snap - 2; // E(tau) = A tau^2 + B tau^3 : E(1) = 1, E'(1) = snap
+    const yr0 = y0 + this.rollY(0); for (let j = 1; j < rows; j++) for (let i = 0; i < cols; i++) { const k = j * cols + i; this.py[k] = yr0; this.qy[k] = yr0; } // the wound rows start on the roll (sample 0 shows the roll, not the finished banner)
   }
   this.iters = def.iterations || 8; this.maxStretch = def.maxStretch != null ? def.maxStretch : 0.02; this.drag = def.drag != null ? def.drag : 0.6;
   this.gscale = def.gravityScale != null ? def.gravityScale : 1; this.floorY = def.floorY != null ? def.floorY : 1e30;
+  this.wallZ = def.wallZ != null ? def.wallZ : -1e30;   // optional wall plane: the cloth cannot go behind z = wallZ (a banner hung on a wall)
   const wd = def.wind || {};
   this.wind = [wd.x || 0, wd.y || 0, wd.z || 0]; this.gust = wd.gust || 0; this.gustHz = wd.hz || 0.7; this.gustK = wd.k != null ? wd.k : 0.012; this.windGain = wd.gain != null ? wd.gain : 2.2; this.windPhase = wd.phase || 0;
   this.windOn = this.gust !== 0 || this.wind[0] !== 0 || this.wind[1] !== 0 || this.wind[2] !== 0;
@@ -1646,7 +1685,7 @@ Cloth.prototype.windAt = function (x, y, t, o) {
   let wx = this.wind[0], wy = this.wind[1], wz = this.wind[2];
   if (this.gust !== 0) {
     const f = TWO_PI * this.gustHz, ph = this.windPhase;
-    sincos(f * t - this.gustK * x + ph); const s1 = _sn;
+    sincos(f * t - this.gustK * x - this.gustK * 0.5 * y + ph); const s1 = _sn;
     sincos(f * 1.73 * t - this.gustK * 2.1 * x + 1.3 + ph + y * 0.004); const s2 = _sn;
     sincos(f * 0.37 * t + 0.6 + ph); const s3 = _sn;
     const m = this.gust * (0.65 + 0.35 * s3);
@@ -1719,6 +1758,7 @@ Cloth.prototype.step = function (h, t, warm) {
     if (d > lim) { const s = lim / d; px[b] = px[a] + dx * s; py[b] = py[a] + dy * s; pz[b] = pz[a] + dz * s; }
   }
   if (this.floorY < 1e29) for (let k = 0; k < n; k++) if (py[k] > this.floorY && iw[k] !== 0) { py[k] = this.floorY; qy[k] = py[k]; }
+  if (this.wallZ > -1e29) { const wz = this.wallZ; for (let k = 0; k < n; k++) if (pz[k] < wz && iw[k] !== 0) { pz[k] = wz; qz[k] = wz; } }
 };
 Cloth.prototype.alloc = function (ns) { this.ns = ns; this.buf = new Float32Array(ns * this.n * 3); };
 Cloth.prototype.record = function (si) {
@@ -1804,6 +1844,30 @@ function clothNormals(pts, cols, rows, out) {
   }
   return out;
 }
-return { version: '1.0', world: function (o) { return new World(o); }, eventsToFoley: eventsToFoley, stateHash: stateHash, clothNormals: clothNormals,
+/* outline every body (and the ropes and cloth) of a state from w.at(t) on a 2D canvas context; for debugging, not for the film.
+ * Static bodies grey, kinematic blue, awake dynamic orange, sleeping dynamic pale. */
+function debugDraw(ctx, w, st) {
+  ctx.save(); ctx.lineWidth = 1;
+  for (const e of st.bodies) {
+    const b = w.bodies[e.id];
+    ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle);
+    ctx.strokeStyle = b.type === STATIC ? '#7a7f87' : (b.type === KINEMATIC ? '#2b6cff' : (e.awake ? '#e8731a' : '#c9a98a'));
+    ctx.fillStyle = 'rgba(232,115,26,0.10)';
+    for (const s of b.shapes) {
+      ctx.beginPath();
+      if (s.circle) { ctx.arc(s.cx, s.cy, s.r, 0, TWO_PI); ctx.moveTo(s.cx, s.cy); ctx.lineTo(s.cx + s.r, s.cy); }
+      else { for (let i = 0; i < s.n; i++) { if (i) ctx.lineTo(s.lvx[i], s.lvy[i]); else ctx.moveTo(s.lvx[i], s.lvy[i]); } ctx.closePath(); }
+      if (b.type === DYNAMIC) ctx.fill();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
+  for (const r of st.ropes) { ctx.beginPath(); for (let i = 0; i < r.n; i++) { if (i) ctx.lineTo(r.pts[2 * i], r.pts[2 * i + 1]); else ctx.moveTo(r.pts[2 * i], r.pts[2 * i + 1]); } ctx.stroke(); }
+  ctx.strokeStyle = '#2a7'; ctx.lineWidth = 1;
+  for (const c of st.cloths) for (let j = 0; j < c.rows; j++) { ctx.beginPath(); for (let i = 0; i < c.cols; i++) { const k = 3 * (j * c.cols + i); if (i) ctx.lineTo(c.pts[k], c.pts[k + 1]); else ctx.moveTo(c.pts[k], c.pts[k + 1]); } ctx.stroke(); }
+  ctx.restore();
+}
+return { version: '1.0', world: function (o) { return new World(o); }, eventsToFoley: eventsToFoley, stateHash: stateHash, clothNormals: clothNormals, debugDraw: debugDraw,
   materials: MATERIALS, sin: fsin, cos: fcos, rng: makeRng, STATIC: STATIC, KINEMATIC: KINEMATIC, DYNAMIC: DYNAMIC };
 });

@@ -143,9 +143,9 @@ S15.blockXform = st => { const s = STATE(st); return { dx: s.gx - 540, dy: s.gy 
 /* maps a point given in DOCKED Greenleaf coordinates through the block pose to the world (tower) */
 S15.toWorld = (x, y, st) => { const s = STATE(st), c = Math.cos(s.ga), n = Math.sin(s.ga), px = x - 540, py = y - GL_CY; return [s.gx + px * c - py * n, s.gy + px * n + py * c + s.sink]; };
 /* Fruit Bowl floor band k (0 top, 1 middle, 2 ground): the vertical map of a band under squat and sink: y' = bb' - (bb - y) * sy */
-function bandMap(s, k) {
-  const bb = FB_BAND[k][1], below = 2 - k, sy = 1 - s.squat / (3 * PITCH), dy = s.sink + below * s.squat / 3;
-  return { bb, sy, dy, f: y => bb + dy - (bb - y) * sy };
+function bandMap(s, k) {              /* the squat is a rigid push of the whole building into the ground (the simulation moves Fruit Bowl as one body); the street is drawn over its base again */
+  const bb = FB_BAND[k][1], sy = 1, dy = s.sink + s.squat;
+  return { bb, sy, dy, f: y => y + dy };
 }
 function rectOf(id, s) {
   if (GDEF[id]) {
@@ -347,6 +347,7 @@ function fbPass(lt, st, s, layer) {
     const jx = st.shakeX && k === 0 ? st.shakeX : 0, jy = st.shakeY && k === 0 ? st.shakeY : 0;
     if (jx || jy) ctx.translate(jx, jy);
     try { (layer === 'back' ? S14.back : S14.front)(lt, Object.assign({}, o0, { only: ids })); } finally { if (CAM) CAM.y = cy0; }
+    if (layer === 'back') for (const id of ids) { const o = (st.rooms || {})[id]; if (o && o.dust) dustFall(S14.rect(id), t, o.dust, 31 + id.length * 7); }
     ctx.restore();
   }
 }
@@ -1180,12 +1181,12 @@ function craneRig(lt, st, s) {
     const A = load ? attach[load] : null;
     hook = A ? [A.reduce((m, p) => m + p[0], 0) / 4, A.reduce((m, p) => m + p[1], 0) / 4 - 360] : [c.trolleyX ?? 540, JIB_Y + 200];
   }
-  const trolleyX = c.trolleyX ?? hook[0], sp = hook[1] + 100;
+  const trolleyX = c.trolleyX ?? hook[0], sp = hook[1] + 100, jth = -(c.jibSway || 0) / (CR.mastX - CR.tipX);   /* the jib bows: its tip dips by jibSway px (rotation about the mast head) */
   const eyes = SLING_DX.map(dx => [hook[0] + dx, sp + 9]);
   const A = load ? attach[load] : null;
   const ropes = c.ropes || (A ? eyes.map((p, i) => [p, A[i]]) : []);
   const cab = CR.cab;
-  return { mastX: CR.mastX, jibY: JIB_Y, trolley: [trolleyX, CR.jibBot + 10], hook, spreader: [hook[0], sp], eyes, attach, ropes, load, cab: [cab.x + 18, cab.y + 14, cab.w - 36, cab.h - 44], cabFull: [cab.x, cab.y, cab.w, cab.h] };
+  return { mastX: CR.mastX, jibY: JIB_Y, trolley: [trolleyX, CR.jibBot + 10 + (trolleyX - CR.mastX) * jth], jibTh: jth, hook, spreader: [hook[0], sp], eyes, attach, ropes, load, cab: [cab.x + 18, cab.y + 14, cab.w - 36, cab.h - 44], cabFull: [cab.x, cab.y, cab.w, cab.h] };
 }
 S15.craneRig = (lt, st = {}) => craneRig(lt, st, STATE(st));
 /* a lattice between two chords: dark under-stroke then the crane yellow, batched into one path each */
@@ -1216,16 +1217,22 @@ function craneBack(t, st, s, rig) {
   for (let y = GY - 58 - 55; y > top; y -= 440) rb(mx - hw - 6, y - 7, CR.mastW + 12, 14, '#d99f16', { r: 3, lw: 1.8 });         /* collars between mast sections */
   for (let y = GY - 70; y > top; y -= 440) { ln(mx + hw + 2, y, mx + hw + 24, y - 20, '#3a3f46', 3); }
   /* the jib, the counter-jib, the A-frame and its pendants */
+  const th = rig.jibTh || 0, rot = (x, y) => { const dx = x - mx, dy = y - JIB_Y; return [mx + dx * Math.cos(th) - dy * Math.sin(th), JIB_Y + dx * Math.sin(th) + dy * Math.cos(th)]; };
+  ctx.save(); if (th) { ctx.translate(mx, JIB_Y); ctx.rotate(th); ctx.translate(-mx, -JIB_Y); }        /* the jib and the counter-jib bow together (a groan) */
   latticeH(CR.tipX, mx - hw, CR.jibTop, CR.jibBot, 66);
   latticeH(mx + hw, CR.counterX, CR.jibTop + 14, CR.jibBot, 60);
+  ctx.restore();
   poly([[mx - hw - 8, CR.jibTop], [mx + hw + 8, CR.jibTop], [mx + 10, CR.apexY], [mx - 10, CR.apexY]], null, 'rgba(38,24,40,.8)', 9);
   latticeV(mx - 10, mx + 10, CR.apexY, CR.jibTop, 70);
-  ctx.strokeStyle = 'rgba(38,24,40,.9)'; ctx.lineWidth = 3.4; for (const [x, y] of [[CR.tipX, CR.jibTop], [600, CR.jibTop], [mx + 440, CR.jibTop + 14], [CR.counterX, CR.jibTop + 14]]) { ctx.beginPath(); ctx.moveTo(mx, CR.apexY); ctx.lineTo(x, y); ctx.stroke(); }
-  ctx.strokeStyle = '#8a939c'; ctx.lineWidth = 1.6; for (const [x, y] of [[CR.tipX, CR.jibTop], [600, CR.jibTop], [mx + 440, CR.jibTop + 14], [CR.counterX, CR.jibTop + 14]]) { ctx.beginPath(); ctx.moveTo(mx, CR.apexY); ctx.lineTo(x, y); ctx.stroke(); }
+  const pend = [[CR.tipX, CR.jibTop], [600, CR.jibTop], [mx + 440, CR.jibTop + 14], [CR.counterX, CR.jibTop + 14]].map(q => rot(q[0], q[1]));
+  ctx.strokeStyle = 'rgba(38,24,40,.9)'; ctx.lineWidth = 3.4; for (const [x, y] of pend) { ctx.beginPath(); ctx.moveTo(mx, CR.apexY); ctx.lineTo(x, y); ctx.stroke(); }
+  ctx.strokeStyle = '#8a939c'; ctx.lineWidth = 1.6; for (const [x, y] of pend) { ctx.beginPath(); ctx.moveTo(mx, CR.apexY); ctx.lineTo(x, y); ctx.stroke(); }
   ell(mx, CR.apexY - 6, 9, 9, '#3a3f46', OUT, 1.6); const bl = Math.sin(t * 3.4) > 0; ell(mx, CR.apexY - 20, 5, 5, bl ? '#ff3a3a' : '#7a1a1a', OUT, 1); if (bl) V2.glow(mx, CR.apexY - 20, 60, '255,60,60', .9, 'screen', .6);
   /* counterweights hanging from the end of the counter-jib */
+  ctx.save(); if (th) { ctx.translate(mx, JIB_Y); ctx.rotate(th); ctx.translate(-mx, -JIB_Y); }
   for (let i = 0; i < 3; i++) rb(CR.counterX - 130 + i * 38, CR.jibBot + 4, 36, 70 + (i % 2) * 8, '#8a8d93', { r: 3, lw: 2 }); stripesH(CR.counterX - 128, CR.jibBot + 10, CR.counterX - 18, CR.jibBot + 66, 14, 1.6, 'rgba(40,40,46,.28)');
   rb(mx + hw, CR.jibBot - 34, 110, 44, '#d99f16', { r: 4, lw: 2 });                         /* the machinery house */
+  ctx.restore();
   /* the slewing unit and the operator's cab (left of the mast, under the jib) */
   rb(mx - hw - 4, CR.jibTop - 4, CR.mastW + 8, 24, '#3a3f46', { r: 4, lw: 2 });
   const c = CR.cab;
@@ -1251,7 +1258,11 @@ function craneFront(t, st, s, rig) {
   /* the slings: steel cable, dark under-stroke */
   for (const pts of rig.ropes) {
     if (!pts || pts.length < 2) continue;
-    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    const jt = (st.crane && st.crane.jitter) || 0;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    if (jt > .01) { const A = pts[0], B2 = pts[pts.length - 1], L = Math.hypot(B2[0] - A[0], B2[1] - A[1]) || 1, nx = -(B2[1] - A[1]) / L, ny = (B2[0] - A[0]) / L, P0 = pts.length === 2 ? Array.from({ length: 15 }, (_, k) => [lerp(A[0], B2[0], k / 14), lerp(A[1], B2[1], k / 14)]) : pts;
+      for (let k = 1; k < P0.length; k++) { const u = k / (P0.length - 1), a = Math.sin(u * PI) * jt * Math.sin(t * 61 + u * 17 + A[0]); ctx.lineTo(P0[k][0] + nx * a, P0[k][1] + ny * a); } }
+    else for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(38,24,40,.9)'; ctx.lineWidth = 6.4; ctx.stroke(); ctx.strokeStyle = '#b7bec6'; ctx.lineWidth = 3.2; ctx.stroke(); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1; ctx.setLineDash([3, 7]); ctx.stroke(); ctx.setLineDash([]);
   }
   ctx.restore();
@@ -1331,6 +1342,7 @@ S15.tower = (lt, st = {}) => {
   guard('ground', () => groundDraw(t, V, ground));
   if (st.crane !== false && !(st.crane && st.crane.off)) guard('crane', () => craneBack(t, st, s, rig));
   guard('fb', () => fbPass(lt, st, s, 'back'));
+  if (s.squat > .4 && st.lot !== false && ground < .5) guard('lot2', () => { ctx.save(); ctx.beginPath(); ctx.rect(-2600, GY, 7000, s.squat + 70); ctx.clip(); lotDraw(t, V, 1 - ground, tod); ctx.restore(); });     /* the pavement over the building's base while it squats */
   guard('underground', () => underground(t, s, st, ground));
   guard('roof', () => { roofDraw(t, s, st, roofThick(s, st)); const rp = st.roofParts || (s.stack ? 'rest' : 'intact'); if (rp === 'intact') roofFurniture(t, s, st); else if (rp === 'rest') joinDebris(t, s, st); });
   guard('gl', () => glBlock(lt, st, s, 'back'));
@@ -1380,4 +1392,62 @@ S15.light = (st = {}) => {
 S15.stairs = (lt, st) => { /* filled in with the dock scene: see ep15_dock.js (S15.stairs is replaced there if the scene registers its own) */ };
 S15.drawItem = (k, ...a) => S14.drawItem(k, ...a);
 S15.version = 1;
+
+// ================================================================================================ dynamic props (drawn at a body pose by the scenes) and roof debris: S15.drawProp(kind, x, y, w, h, rot, o)
+/* x, y = the body origin (its centre of mass for these props), w, h = the sprite size in px, rot = the body angle. Drawn with the dollhouse's outlines. o.flip mirrors a chair, o.v (speed) and o.t drive slosh and flutter. */
+const PROP = {};
+PROP.pizza = (w, h, o) => { rb(-w / 2, -h / 2, w, h, '#c9a46a', { r: 1.5, lw: 1.5 }); ln(-w / 2 + 1, -h / 2 + 2.6, w / 2 - 1, -h / 2 + 2.6, 'rgba(90,56,20,.5)', 1); ctx.fillStyle = '#c23a2b'; ctx.fillRect(-w / 2 + 6, -1.6, w - 12, 3.2); ell(0, 0, 2, 1.4, '#ffe9a8'); };
+PROP.fishbowl = (w, h, o) => {
+  const r = w / 2, sl = clamp(((o && o.slosh) || 0), -.5, .5);
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, r - .6, 0, TAU); ctx.clip();
+  ctx.fillStyle = vg(-r, r, 'rgba(210,240,250,.35)', 'rgba(150,210,235,.5)'); ctx.fillRect(-r, -r, 2 * r, 2 * r);
+  ctx.save(); ctx.rotate(-sl); ctx.fillStyle = vg(-3, r, 'rgba(90,170,220,.75)', 'rgba(40,110,170,.85)'); ctx.beginPath(); ctx.moveTo(-r - 4, -r * .28); for (let i = 0; i <= 10; i++) ctx.lineTo(-r + i * r / 5, -r * .28 + Math.sin(i * 1.3 + ((o && o.t) || 0) * 6) * 1.3); ctx.lineTo(r + 4, r + 4); ctx.lineTo(-r - 4, r + 4); ctx.fill(); ctx.restore();
+  ctx.fillStyle = '#e8d0a0'; ctx.fillRect(-r, r * .62, 2 * r, r * .4);
+  ctx.save(); ctx.translate(-2 + Math.sin(((o && o.t) || 0) * 1.5) * 3, 2); ell(0, 0, 4.6, 2.8, '#f2a03c', 'rgba(120,50,10,.7)', .8); ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(-8, -3); ctx.lineTo(-8, 3); ctx.closePath(); ctx.fillStyle = '#f2a03c'; ctx.fill(); ell(2, -.6, .8, .8, '#111'); ctx.restore();
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(40,70,100,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, r - .6, 0, TAU); ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.ellipse(-r * .4, -r * .4, 2.6, 5, -.7, 0, TAU); ctx.fill();
+};
+PROP.tray = (w, h) => { rb(-w / 2, -h / 2, w, h, '#8f99a6', { r: 1.5, lw: 1.3 }); ln(-w / 2 + 2, -h / 2 + 1, w / 2 - 2, -h / 2 + 1, 'rgba(255,255,255,.4)', 1); };
+PROP.cup = (w, h) => { ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 2); ctx.lineTo(w / 2 - 1.2, h / 2); ctx.lineTo(-w / 2 + 1.2, h / 2); ctx.closePath(); ctx.fillStyle = '#f6f8fa'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.2; ctx.stroke(); ctx.fillStyle = '#4c7bd9'; ctx.fillRect(-w / 2 + .6, -1, w - 1.2, 2.6); };
+PROP.paper = (w, h) => { ctx.fillStyle = '#fbf8ee'; ctx.fillRect(-w / 2, -h / 2, w, h); ctx.strokeStyle = 'rgba(60,50,40,.55)'; ctx.lineWidth = .9; ctx.strokeRect(-w / 2, -h / 2, w, h); ln(-w / 2 + 3, 0, w / 2 - 3, 0, 'rgba(60,70,120,.4)', .8); };
+PROP.chair = (w, h, o) => {
+  ctx.save(); if (o && o.flip) ctx.scale(-1, 1);
+  const L = '#7a5a3a', hw = 14;
+  rb(-hw - 2, -h / 2 + 4, 5, 44, L, { r: 2, lw: 1.4 }); ctx.save(); rb(-hw - 1, -h / 2 + 2, 30, 36, '#9a6a44', { r: 6, lw: 1.6 }); for (let i = 1; i < 3; i++) ln(-hw + 2, -h / 2 + 2 + i * 12, hw + 10, -h / 2 + 2 + i * 12, 'rgba(60,36,12,.5)', 1.2); ctx.restore();
+  rb(-w / 2, 2, w, 5, '#9a6a44', { r: 2, lw: 1.5 }); for (const x of [-13, 13]) ln(x, 7, x + (x < 0 ? -1 : 1), h / 2, '#6a737c', 3.6);
+  ctx.restore();
+};
+PROP.plant = (w, h) => {
+  const pw = 28; ctx.beginPath(); ctx.moveTo(-pw / 2, 12); ctx.lineTo(pw / 2, 12); ctx.lineTo(pw * .36, h / 2); ctx.lineTo(-pw * .36, h / 2); ctx.closePath(); ctx.fillStyle = hg(-pw / 2, pw / 2, '#a85a38', '#d8805a'); ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.7; ctx.stroke(); rb(-pw * .56, 8, pw * 1.12, 7, '#b8683f', { r: 3, lw: 1.5 });
+  const r = rnd(11); for (let i = 0; i < 11; i++) { const a = -PI / 2 + (i / 10 - .5) * 2.6 + (r() - .5) * .2, len = 34 + r() * 22; leafAt(0, 8, a + PI / 2, len, 9, ['#4fa85a', '#3f8f4a', '#6fb858'][i % 3]); }
+};
+PROP.clock = (w, h, o) => { const r = w / 2; ell(0, 0, r, r, '#fbf7ea', OUT, 2); ell(0, 0, r - 3, r - 3, null, 'rgba(0,0,0,.25)', 1); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; ln(Math.cos(a) * (r - 5), Math.sin(a) * (r - 5), Math.cos(a) * (r - 3.4), Math.sin(a) * (r - 3.4), '#2a2630', i % 3 ? 1 : 1.8); } ln(0, 0, 0, -r * .5, '#2a2630', 1.8); ln(0, 0, r * .55, r * .2, '#2a2630', 1.4); ell(0, 0, 1.4, 1.4, '#c23a2b'); };
+PROP.bucket = (w, h) => { ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 2); ctx.lineTo(w * .38, h / 2); ctx.lineTo(-w * .38, h / 2); ctx.closePath(); ctx.fillStyle = hg(-w / 2, w / 2, '#7d8794', '#c9d2dc'); ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.6; ctx.stroke(); ln(-w / 2, -h / 2 + 3, w / 2, -h / 2 + 3, 'rgba(255,255,255,.4)', 1.4); };
+PROP.fan = (w, h) => { rb(-13, h / 2 - 6, 26, 6, '#5a6670', { r: 2, lw: 1.4 }); ln(0, h / 2 - 6, 0, -h / 2 + 30, '#8f99a6', 3.4); ell(0, -h / 2 + 18, 15, 15, 'rgba(210,225,240,.35)', '#5a6670', 2); for (let i = 0; i < 3; i++) { ctx.save(); ctx.translate(0, -h / 2 + 18); ctx.rotate(i * TAU / 3 + .4); ctx.beginPath(); ctx.ellipse(0, -7, 3.6, 7, 0, 0, TAU); ctx.fillStyle = '#9ac0e6'; ctx.fill(); ctx.restore(); } ell(0, -h / 2 + 18, 2.4, 2.4, '#3a4450'); };
+PROP.binder = (w, h) => { rb(-w / 2, -h / 2, w, h, '#2f5fc2', { r: 1.5, lw: 1.4 }); ln(-w / 2 + 3, -h / 2 + 1.6, w / 2 - 3, -h / 2 + 1.6, 'rgba(255,255,255,.4)', 1); rb(-w / 2 + 5, -1.6, w - 10, 3.2, '#fbf7ea', { r: 1, lw: .8, flat: true }); };
+PROP.mug = (w, h) => { rb(-w / 2, -h / 2, w, h, '#f1efe8', { r: 2, lw: 1.3 }); ctx.strokeStyle = OUT; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(w / 2, 0, 3.2, -1.3, 1.3); ctx.stroke(); ctx.fillStyle = '#6a4a2a'; ctx.fillRect(-w / 2 + 1, -h / 2 + 1, w - 2, 2); };
+PROP.plate = (w, h) => { rb(-w / 2, -h / 2, w, h, '#f6f8fa', { r: 1.4, lw: 1.2 }); };
+PROP.stool = (w, h) => { rb(-w / 2, -h / 2, w, 7, '#d8bf7a', { r: 3, lw: 1.5 }); for (const x of [-10, 10]) ln(x, -h / 2 + 7, x + (x < 0 ? -2 : 2), h / 2, '#8a6a3a', 3.4); ln(-9, 6, 9, 6, '#8a6a3a', 2); };
+PROP.ivpole = (w, h) => { rb(-w / 2, h / 2 - 5, w, 5, '#8f99a6', { r: 2, lw: 1.3 }); ell(-w / 2 + 3, h / 2 + 1, 2.6, 2, '#2a2630'); ell(w / 2 - 3, h / 2 + 1, 2.6, 2, '#2a2630'); ln(0, h / 2 - 5, 0, -h / 2 + 8, '#b8c4cc', 3); ln(-12, -h / 2 + 6, 12, -h / 2 + 6, '#b8c4cc', 2.4); ctx.beginPath(); ctx.roundRect(-9, -h / 2 + 8, 18, 22, 4); ctx.fillStyle = 'rgba(210,240,230,.7)'; ctx.fill(); ctx.strokeStyle = 'rgba(60,110,100,.8)'; ctx.lineWidth = 1.3; ctx.stroke(); ctx.fillStyle = 'rgba(120,210,170,.7)'; ctx.fillRect(-7.5, -h / 2 + 16, 15, 12); };
+PROP.pillow = (w, h) => { ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, [8, 8, 6, 6]); ctx.fillStyle = vg(-h / 2, h / 2, '#ffffff', '#dcd8e8'); ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.4; ctx.stroke(); };
+PROP.vase = (w, h) => { ctx.beginPath(); ctx.moveTo(-w / 2 + 1, h / 2); ctx.lineTo(-w / 2, -h / 2 + 3); ctx.quadraticCurveTo(0, -h / 2 - 1, w / 2, -h / 2 + 3); ctx.lineTo(w / 2 - 1, h / 2); ctx.closePath(); ctx.fillStyle = 'rgba(190,225,245,.65)'; ctx.fill(); ctx.strokeStyle = 'rgba(40,70,100,.7)'; ctx.lineWidth = 1.2; ctx.stroke(); for (const [dx, c] of [[-3, '#f06a8a'], [0, '#f7c948'], [3, '#fff'], [6, '#c8a0e8']]) { ln(dx, -h / 2 + 4, dx * 2.2, -h / 2 - 14, '#3a8a46', 1.4); ell(dx * 2.2, -h / 2 - 16, 4, 4, c, 'rgba(80,30,30,.5)', .8); } };
+PROP.basin = (w, h) => { ctx.beginPath(); ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, PI); ctx.lineTo(-w / 2, 0); ctx.fillStyle = '#9ad0e6'; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.3; ctx.stroke(); ell(0, -h * .1, w / 2, 2, '#c4e6f2', OUT, 1); };
+PROP.slipper = (w, h) => { rb(-w / 2, -h / 2, w, h, '#e8a8c0', { r: 3, lw: 1.2 }); };
+S15.propKinds = Object.keys(PROP);
+S15.drawProp = (kind, x, y, w, h, rot = 0, o = {}) => {
+  const f = PROP[kind]; if (!f) return;
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot);
+  f(w, h, o);
+  ctx.restore();
+};
+/* roof debris at a pose (the body origin is the part's centre): the sign half, a brick, the chimney cap, the vane, a tile chip. o.scale grows toward the camera, o.dark puts the marquee bulbs out */
+S15.drawDebris = (kind, x, y, rot, o = {}) => {
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); if (o.scale && o.scale !== 1) ctx.scale(o.scale, o.scale);
+  if (kind === 'sign') { const p = o.p; ctx.translate(-p.w / 2, -38); signHalf({ x: 0, y: 0, w: p.w, h: p.h, id: 'sim' + (o.id || '') }, o.t || 0, { moving: true, dark: o.dark, text: p.text }); for (const lx of p.legs || []) signPost(lx - p.x, 76); }
+  else if (kind === 'brick') chimneyBrick(-11, -4.5, 22, 9, o.i || 0);
+  else if (kind === 'cap') chimneyCap(-40, -4.5, 80);
+  else if (kind === 'vane') { ln(0, 19, 0, -19, '#3a3340', 4); ln(-30, -17, 30, -17, '#3a3340', 3.4); poly([[30, -17], [20, -24], [20, -10]], '#c23a2b', OUT, 1.4); ell(-32, -17, 8, 7, '#d8584a', OUT, 1.6); }
+  else if (kind === 'chip') { const w = o.w || 12; ctx.fillStyle = ['#d06d52', '#a74a38', '#b8674a'][(o.i || 0) % 3]; ctx.fillRect(-w / 2, -2, w, 4); ctx.strokeStyle = 'rgba(60,20,12,.7)'; ctx.lineWidth = 1; ctx.strokeRect(-w / 2, -2, w, 4); }
+  ctx.restore();
+};
 })();

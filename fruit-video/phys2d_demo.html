@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHYS2D demo</title>
+<!-- PHYS2D demo page (Episode 15 physics library). Standalone: loads phys2d.js + phys2d_demo.js and draws a simulation on a 1080 x 1920 canvas.
+     ?scene=crane|jenga|banner  (default crane)   ?t=<seconds>  draws that single frame (a pure function of t) and sets window.__ready
+     no ?t=  plays the scene in a loop with a scrubber.   ?ev=0 hides the collision-event rings.   ?debug=1 outlines the physics shapes on top. -->
+<style>
+  html, body { margin: 0; background: #14171c; color: #d6dae0; font: 14px/1.3 system-ui, sans-serif; height: 100%; }
+  #wrap { display: flex; flex-direction: column; align-items: center; height: 100%; }
+  canvas { height: calc(100vh - 44px); width: auto; max-width: 100vw; background: #cfe9ff; display: block; }
+  #bar { height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 12px; box-sizing: border-box; }
+  #bar a { color: #8ab4ff; text-decoration: none; }
+  #bar input[type=range] { width: 360px; }
+  body.still #bar { display: none; } body.still canvas { height: 100vh; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="1080" height="1920"></canvas>
+  <div id="bar"><a href="?scene=crane">crane</a><a href="?scene=jenga">jenga</a><a href="?scene=banner">banner</a>
+    <input id="scrub" type="range" min="0" max="9" step="0.01" value="0"><span id="tt"></span></div>
+</div>
+<script src="phys2d.js"></script>
+<script src="phys2d_demo.js"></script>
+<script>
+'use strict';
+const q = new URLSearchParams(location.search);
+const SCENE = q.get('scene') || 'crane';
+const STILL = q.has('t');
+const SHOW_EV = q.get('ev') !== '0', DEBUG = q.get('debug') === '1';
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+if (STILL) document.body.classList.add('still');
+
+const T0 = performance.now();
+const sim = PHYS2D_DEMO[SCENE]();
+const W = sim.world, META = sim.meta;
+W.run(sim.T, { sampleHz: 120 });
+const BUILD_MS = performance.now() - T0;
+const ST = W.makeState();
+const FOLEY = PHYS2D.eventsToFoley(W.events, { sceneStart: 0, screen: sim.screen });
+
+// ------------------------------------------------------------------ drawing helpers
+const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
+function shapePath(s) {
+  ctx.beginPath();
+  if (s.circle) { ctx.arc(s.cx, s.cy, s.r, 0, Math.PI * 2); return; }
+  for (let i = 0; i < s.n; i++) { if (i) ctx.lineTo(s.lvx[i], s.lvy[i]); else ctx.moveTo(s.lvx[i], s.lvy[i]); }
+  ctx.closePath();
+}
+function fillShapes(b, fillFor, stroke) {
+  for (const s of b.shapes) { shapePath(s); ctx.fillStyle = fillFor(s); ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); } }
+}
+function sky() {
+  const g = ctx.createLinearGradient(0, 0, 0, 1900);
+  g.addColorStop(0, '#9fd0f5'); g.addColorStop(0.55, '#d9ecf7'); g.addColorStop(1, '#f6ecd2');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
+  // soft clouds and a distant skyline (static art)
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  for (const [x, y, s] of [[180, 300, 1], [760, 190, 1.3], [940, 520, 0.8], [90, 760, 0.7]]) { ctx.beginPath(); ctx.ellipse(x, y, 80 * s, 26 * s, 0, 0, 7); ctx.ellipse(x + 50 * s, y + 8 * s, 60 * s, 22 * s, 0, 0, 7); ctx.ellipse(x - 50 * s, y + 10 * s, 55 * s, 20 * s, 0, 0, 7); ctx.fill(); }
+  ctx.fillStyle = 'rgba(150,175,200,0.55)';
+  for (let i = 0; i < 14; i++) { const h = 120 + ((i * 97) % 5) * 55, x = i * 86 - 20; ctx.fillRect(x, 1700 - h, 70, h); }
+}
+function ground(gy) {
+  ctx.fillStyle = '#6f9a58'; ctx.fillRect(0, gy, 1080, 28);
+  ctx.fillStyle = '#8a6a48'; ctx.fillRect(0, gy + 28, 1080, 1920 - gy - 28);
+  ctx.fillStyle = 'rgba(0,0,0,0.12)'; for (let i = 0; i < 20; i++) ctx.fillRect(i * 60 + ((i * 37) % 23), gy + 60 + (i % 4) * 36, 28, 6);
+}
+function roomsOf(e, levelsFrom, nLevels, wall, trim, win) { // wallpaper, window and baseboard of every room, drawn in the body frame
+  const P = META.pitch, SL = META.slab, RH = META.roomH, X = [-225, -75, 75, 225];
+  for (let L = levelsFrom; L < levelsFrom + nLevels; L++) for (let i = 0; i < 4; i++) {
+    const x = X[i], y0 = -L * P - SL - RH;
+    ctx.fillStyle = wall[(i + L) % wall.length]; ctx.fillRect(x - 71, y0, 142, RH);
+    ctx.fillStyle = win; rr(x - 22, y0 + 14, 44, 36, 4); ctx.fill();
+    ctx.strokeStyle = trim; ctx.lineWidth = 3; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 22, y0 + 32); ctx.lineTo(x + 22, y0 + 32); ctx.moveTo(x, y0 + 14); ctx.lineTo(x, y0 + 50); ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = trim; ctx.fillRect(x - 71, y0 + RH - 7, 142, 7);
+  }
+}
+function drawProp(b, e) {
+  ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle);
+  const kind = b.data.kind;
+  if (kind === 'chair') fillShapes(b, () => '#9a6633', '#5b3a1c');
+  else if (kind === 'tray') fillShapes(b, () => '#d4d8de', '#7c828c');
+  else fillShapes(b, s => s.circle ? '#49a85a' : '#c8643b', s => '#4a2a1a');
+  if (kind === 'pot') { ctx.fillStyle = '#6ec47a'; for (const [dx, dy, r] of [[-7, -27, 6], [8, -24, 7], [0, -31, 5]]) { ctx.beginPath(); ctx.arc(dx, dy, r, 0, 7); ctx.fill(); } }
+  ctx.restore();
+}
+function ropeLine(pts, n, w1, c1) {
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); for (let i = 0; i < n; i++) { if (i) ctx.lineTo(pts[2 * i], pts[2 * i + 1]); else ctx.moveTo(pts[2 * i], pts[2 * i + 1]); }
+  ctx.strokeStyle = '#1d2026'; ctx.lineWidth = w1 + 2; ctx.stroke();
+  ctx.strokeStyle = c1; ctx.lineWidth = w1; ctx.stroke();
+}
+function eventRings(t) {
+  if (!SHOW_EV) return;
+  for (const e of W.events) {
+    const age = t - e.t;
+    if (age < 0 || age > 0.35) continue;
+    const k = age / 0.35, r = 14 + 90 * e.mag * k;
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.9 * (1 - k)).toFixed(3) + ')'; ctx.lineWidth = 6 * (1 - k) + 1;
+    ctx.beginPath(); ctx.arc(e.x, e.y, r, 0, 7); ctx.stroke();
+    ctx.strokeStyle = e.kind === 'hit' ? 'rgba(232,80,30,' + (0.8 * (1 - k)).toFixed(3) + ')' : 'rgba(30,120,232,' + (0.8 * (1 - k)).toFixed(3) + ')'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(e.x, e.y, r * 0.8, 0, 7); ctx.stroke();
+  }
+}
+function hud(t, name) {
+  ctx.fillStyle = 'rgba(20,23,28,0.78)'; rr(30, 30, 520, 96, 16); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '900 34px Nunito, system-ui, sans-serif'; ctx.fillText('PHYS2D  ' + name, 52, 72);
+  ctx.font = '700 24px Nunito, system-ui, sans-serif'; ctx.fillStyle = '#b8c4d8';
+  const n = W.events.filter(e => e.t <= t).length;
+  ctx.fillText('t ' + t.toFixed(2) + ' s    events ' + n + '/' + W.events.length + '    bodies ' + W.bodies.length, 52, 108);
+}
+
+// ------------------------------------------------------------------ the three scenes
+function drawCrane(t) {
+  const st = W.at(t, ST), by = id => st.by[id];
+  sky(); ground(META.ground);
+  // crane mast and jib (static art), trolley follows the hook's x
+  ctx.strokeStyle = '#d29b22'; ctx.lineWidth = 6;
+  for (const dx of [0, 60]) { ctx.beginPath(); ctx.moveTo(930 + dx, META.ground); ctx.lineTo(930 + dx, 70); ctx.stroke(); }
+  ctx.lineWidth = 3; ctx.beginPath(); for (let y = META.ground; y > 90; y -= 70) { ctx.moveTo(930, y); ctx.lineTo(990, y - 70); ctx.moveTo(990, y); ctx.lineTo(930, y - 70); } ctx.stroke();
+  ctx.fillStyle = '#e8b53a'; ctx.fillRect(250, 56, 790, 22); ctx.fillStyle = '#c28f1f'; ctx.fillRect(250, 56, 790, 6);
+  ctx.fillStyle = '#555'; ctx.fillRect(1000, 78, 70, 54); ctx.fillStyle = '#e8b53a'; ctx.beginPath(); ctx.moveTo(930, 56); ctx.lineTo(990, 14); ctx.lineTo(1040, 56); ctx.closePath(); ctx.fill();
+  const hk = by(META.hook.body.id);
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(hk.x, 78); ctx.lineTo(hk.x, hk.y - 8); ctx.stroke();
+  ctx.fillStyle = '#444'; ctx.fillRect(hk.x - 16, 74, 32, 14);
+  // tower floors (rooms first, then the structure, then props)
+  META.floors.forEach(f => {
+    const e = by(f.body.id); ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle);
+    roomsOf(e, 0, 1, ['#f6e2b0', '#f1d79a'], '#a9743d', '#bfe0f5');
+    fillShapes(f.body, s => s.n === 4 && Math.abs(s.lvx[1] - s.lvx[0]) > 100 ? '#b98a4e' : '#8f6a3c', '#5b4024');
+    ctx.restore();
+  });
+  const be = by(META.block.body.id);
+  ctx.save(); ctx.translate(be.x, be.y); ctx.rotate(be.angle);
+  roomsOf(be, 0, 3, ['#dff0dc', '#cfe7cc'], '#2f7d4f', '#d8f0ff');
+  fillShapes(META.block.body, s => s.n === 4 && Math.abs(s.lvx[1] - s.lvx[0]) > 100 ? '#2f7d4f' : '#c9b26a', '#1d4d31');
+  ctx.fillStyle = '#f4faf1'; ctx.font = '900 30px Nunito, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('GREENLEAF', 0, -3 * META.pitch - 14); ctx.textAlign = 'left';
+  ctx.restore();
+  META.props.forEach(p => drawProp(p, by(p.id)));
+  // slings and hook
+  st.ropes.forEach(r => ropeLine(r.pts, r.n, 4, '#767c88'));
+  ctx.save(); ctx.translate(hk.x, hk.y); ctx.rotate(hk.angle); ctx.fillStyle = '#e8731a'; rr(-16, -11, 32, 22, 5); ctx.fill(); ctx.strokeStyle = '#222'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 18, 9, 0.2, 3.6); ctx.stroke(); ctx.restore();
+  eventRings(t);
+  if (DEBUG) PHYS2D.debugDraw(ctx, W, st);
+  hud(t, 'crane + tower');
+}
+function drawJenga(t) {
+  const st = W.at(t, ST), by = id => st.by[id], BW = META.BW, BH = META.BH, R = META.R;
+  sky(); ground(META.ground);
+  const hk = by(META.hook.id);
+  // gallows for the wrecking ball: the post stands behind the tower, the arm reaches out to the hook
+  ctx.strokeStyle = '#6b4a2b'; ctx.lineCap = 'square'; ctx.lineWidth = 18; ctx.beginPath(); ctx.moveTo(hk.x + 70, META.ground); ctx.lineTo(hk.x + 70, hk.y - 20); ctx.lineTo(hk.x - 14, hk.y - 20); ctx.stroke();
+  ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(hk.x + 70, hk.y + 120); ctx.lineTo(hk.x + 12, hk.y - 20); ctx.stroke();
+  ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(hk.x, hk.y, 9, 0, 7); ctx.fill();
+  st.ropes.forEach(r => ropeLine(r.pts, r.n, 6, '#8a7a5a'));
+  const pal = ['#e9c46a', '#f4a261', '#e76f51', '#8ab17d', '#6a9fb5', '#b08ac4', '#e9a0b4', '#9ac4a0'];
+  META.boxes.forEach(b => {
+    const e = by(b.id); ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.angle);
+    const l = b.data.level; ctx.fillStyle = pal[l % pal.length]; rr(-BW / 2, -BH / 2, BW, BH, 5); ctx.fill(); ctx.strokeStyle = 'rgba(40,30,20,0.7)'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.fillRect(-BW / 2 + 3, -BH / 2 + 3, BW - 6, 8);
+    ctx.fillStyle = '#2b2118'; ctx.font = '900 22px Nunito, system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.data.label, 0, 3); ctx.restore();
+  });
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  const be = by(META.ball.id); ctx.save(); ctx.translate(be.x, be.y); ctx.rotate(be.angle);
+  const g = ctx.createRadialGradient(-R * 0.3, -R * 0.3, 4, 0, 0, R * 1.1); g.addColorStop(0, '#9aa3b2'); g.addColorStop(1, '#2b3039');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.fill(); ctx.strokeStyle = '#14171c'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = '#d6dae0'; ctx.fillRect(-5, -R, 10, 18); ctx.restore();
+  eventRings(t);
+  if (DEBUG) PHYS2D.debugDraw(ctx, W, st);
+  hud(t, 'jenga collapse');
+}
+// banner art drawn once into a texture (stripes + text), then warped onto the cloth mesh with affine triangles
+let TEX = null, SHB = null;
+function bannerTex() {
+  if (TEX) return TEX;
+  const c = document.createElement('canvas'); c.width = META.BW; c.height = META.BH; const g = c.getContext('2d');
+  for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#f4faf1' : '#2f7d4f'; g.fillRect(i * META.BW / 8, 0, META.BW / 8 + 1, META.BH); }
+  g.fillStyle = '#103a2c'; g.fillRect(0, 150, META.BW, 400); g.fillStyle = '#ffbf1f'; g.fillRect(0, 150, META.BW, 8); g.fillRect(0, 542, META.BW, 8);
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '900 96px Bangers, Impact, system-ui, sans-serif'; g.fillText('FRUIT', META.BW / 2, 270); g.fillText('SALAD', META.BW / 2, 390);
+  g.font = '800 30px Nunito, system-ui, sans-serif'; g.fillStyle = '#ffd966'; g.fillText('BETTER TOGETHER.', META.BW / 2, 480); g.fillText('TOSSED.', META.BW / 2, 514);
+  g.fillStyle = '#103a2c'; g.fillRect(0, META.BH - 26, META.BW, 26);
+  TEX = c; return c;
+}
+function growTri(x0, y0, x1, y1, x2, y2, d) { // the triangle with every edge pushed outwards by d px (so neighbouring triangles overlap and no seam shows)
+  const p = [x0, y0, x1, y1, x2, y2], o = [0, 0, 0, 0, 0, 0], sg = ((x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0)) >= 0 ? 1 : -1;
+  for (let i = 0; i < 3; i++) {
+    const a = (i + 2) % 3, b = (i + 1) % 3, e1x = p[2 * i] - p[2 * a], e1y = p[2 * i + 1] - p[2 * a + 1], e2x = p[2 * b] - p[2 * i], e2y = p[2 * b + 1] - p[2 * i + 1];
+    const l1 = Math.hypot(e1x, e1y) || 1, l2 = Math.hypot(e2x, e2y) || 1, n1x = sg * e1y / l1, n1y = -sg * e1x / l1, n2x = sg * e2y / l2, n2y = -sg * e2x / l2;
+    const f = d / Math.max(1 + n1x * n2x + n1y * n2y, 0.25);
+    o[2 * i] = p[2 * i] + (n1x + n2x) * f; o[2 * i + 1] = p[2 * i + 1] + (n1y + n2y) * f;
+  }
+  return o;
+}
+function drawTri(img, sx0, sy0, sx1, sy1, sx2, sy2, x0, y0, x1, y1, x2, y2) { // draw the image triangle (sx,sy) onto (x,y) with an affine map
+  const d = (sx1 - sx0) * (sy2 - sy0) - (sx2 - sx0) * (sy1 - sy0); if (Math.abs(d) < 1e-9) return;
+  const a = ((x1 - x0) * (sy2 - sy0) - (x2 - x0) * (sy1 - sy0)) / d, c = ((x2 - x0) * (sx1 - sx0) - (x1 - x0) * (sx2 - sx0)) / d;
+  const b = ((y1 - y0) * (sy2 - sy0) - (y2 - y0) * (sy1 - sy0)) / d, dd = ((y2 - y0) * (sx1 - sx0) - (y1 - y0) * (sx2 - sx0)) / d;
+  ctx.save(); ctx.beginPath(); const g = growTri(x0, y0, x1, y1, x2, y2, 0.9);
+  ctx.moveTo(g[0], g[1]); ctx.lineTo(g[2], g[3]); ctx.lineTo(g[4], g[5]); ctx.closePath(); ctx.clip();
+  ctx.transform(a, b, c, dd, x0 - a * sx0 - c * sy0, y0 - b * sx0 - dd * sy0); ctx.drawImage(img, 0, 0); ctx.restore();
+}
+// the banner is drawn in a 3/4 view (yaw about the vertical line x = 540, mild perspective): the cloth's z (toward the viewer) then shows as sideways motion and size
+const YAW = 0.55, CYW = Math.cos(YAW), SYW = Math.sin(YAW), PD = 2600, PCY = 1700;   // the eye is at ground level
+function pj(x, y, z, o) { const dx = x - 540, X = dx * CYW + z * SYW, Z = -dx * SYW + z * CYW, s = PD / (PD - Z); o[0] = 540 + X * s; o[1] = PCY + (y - PCY) * s; o[2] = s; return o; }
+function poly3(pts, fill) { const o = [0, 0, 0]; ctx.beginPath(); pts.forEach((p, i) => { pj(p[0], p[1], p[2], o); if (i) ctx.lineTo(o[0], o[1]); else ctx.moveTo(o[0], o[1]); }); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); }
+function catmull(p0, p1, p2, p3, t) { const t2 = t * t, t3 = t2 * t; return 0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (3 * p1 - p0 - 3 * p2 + p3) * t3); }
+function subdivide(P, cols, rows, S) { // smooth the cloth grid (Catmull-Rom along both axes) so that silhouettes and shading are not faceted
+  const C2 = (cols - 1) * S + 1, R2 = (rows - 1) * S + 1, A = new Float32Array(rows * C2 * 3), B = new Float32Array(R2 * C2 * 3);
+  for (let j = 0; j < rows; j++) for (let i2 = 0; i2 < C2; i2++) {
+    const i = Math.min(cols - 2, (i2 / S) | 0), t = (i2 - i * S) / S, i0 = Math.max(0, i - 1), i3 = Math.min(cols - 1, i + 2);
+    for (let c = 0; c < 3; c++) A[(j * C2 + i2) * 3 + c] = catmull(P[3 * (j * cols + i0) + c], P[3 * (j * cols + i) + c], P[3 * (j * cols + i + 1) + c], P[3 * (j * cols + i3) + c], t);
+  }
+  for (let j2 = 0; j2 < R2; j2++) { const j = Math.min(rows - 2, (j2 / S) | 0), t = (j2 - j * S) / S, j0 = Math.max(0, j - 1), j3 = Math.min(rows - 1, j + 2);
+    for (let i2 = 0; i2 < C2; i2++) for (let c = 0; c < 3; c++) B[(j2 * C2 + i2) * 3 + c] = catmull(A[(j0 * C2 + i2) * 3 + c], A[(j * C2 + i2) * 3 + c], A[((j + 1) * C2 + i2) * 3 + c], A[(j3 * C2 + i2) * 3 + c], t); }
+  return { P: B, C: C2, R: R2 };
+}
+function drawBanner(t) {
+  const st = W.at(t, ST); sky(); ground(1700);
+  // the building (front face z = 0, left side face going back), its parapet and windows, all through the same projection as the cloth
+  const DEP = 320, Y0 = 640, Y1 = 1700;
+  poly3([[170, Y0, 0], [170, Y0, -DEP], [170, Y1, -DEP], [170, Y1, 0]], '#a8977f');
+  poly3([[170, Y0, 0], [910, Y0, 0], [910, Y1, 0], [170, Y1, 0]], '#c9b8a0');
+  poly3([[170, Y0, 0], [910, Y0, 0], [910, Y0 + 14, 0], [170, Y0 + 14, 0]], '#b3a088');
+  poly3([[190, 590, 14], [190, 590, -DEP], [190, 646, -DEP], [190, 646, 14]], '#8d887f');
+  poly3([[190, 590, 14], [890, 590, 14], [890, 646, 14], [190, 646, 14]], '#a9a39a');
+  for (let r = 0; r < 6; r++) {
+    const y = 700 + r * 160;
+    for (const x of [210, 780]) poly3([[x, y, 1], [x + 110, y, 1], [x + 110, y + 100, 1], [x, y + 100, 1]], '#d9c9b0');
+    for (const z of [-50, -190]) poly3([[170, y, z], [170, y, z - 90], [170, y + 100, z - 90], [170, y + 100, z]], '#bba98f');
+  }
+  const cl = st.cloths[0], S = 3, sd = subdivide(cl.pts, cl.cols, cl.rows, S), C = sd.C, R = sd.R, Q = sd.P, img = bannerTex();
+  const nrm = PHYS2D.clothNormals(Q, C, R), o = [0, 0, 0];
+  const SX = new Float32Array(C * R), SY = new Float32Array(C * R);
+  for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) { const k = j * C + i; pj(Q[3 * k], Q[3 * k + 1], Q[3 * k + 2], o); SX[k] = o[0]; SY[k] = o[1]; }
+  // top rail the cloth hangs from
+  { const a = pj(META.x0 - 10, META.y0 - 4, 0, [0, 0, 0]), b = pj(META.x0 + META.BW + 10, META.y0 - 4, 0, [0, 0, 0]); ctx.strokeStyle = '#4a4a52'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }
+  // textured triangles, far (right) to near (left)
+  const uu = META.BW / (C - 1), vv = META.BH / (R - 1);
+  for (let j = 0; j < R - 1; j++) for (let i = C - 2; i >= 0; i--) {
+    const k00 = j * C + i, k10 = k00 + 1, k01 = k00 + C, k11 = k01 + 1;
+    drawTri(img, i * uu, j * vv, (i + 1) * uu, j * vv, i * uu, (j + 1) * vv, SX[k00], SY[k00], SX[k10], SY[k10], SX[k01], SY[k01]);
+    drawTri(img, (i + 1) * uu, j * vv, (i + 1) * uu, (j + 1) * vv, i * uu, (j + 1) * vv, SX[k10], SY[k10], SX[k11], SY[k11], SX[k01], SY[k01]);
+  }
+  // smooth shading: a grey buffer (128 = neutral) gets every triangle drawn with a linear gradient that reproduces the vertex lighting exactly, then it is blended over the cloth with 'overlay'
+  {
+    const LX = -0.35, LY = -0.45, LZ = 0.82, D = new Float32Array(C * R);
+    for (let k = 0; k < C * R; k++) D[k] = nrm[3 * k] * LX + nrm[3 * k + 1] * LY + nrm[3 * k + 2] * LZ - LZ;
+    if (!SHB) { SHB = document.createElement('canvas'); SHB.width = 1080; SHB.height = 1920; }
+    const g = SHB.getContext('2d'); g.fillStyle = 'rgb(128,128,128)'; g.fillRect(0, 0, 1080, 1920);
+    const DA = -0.3, DB = 0.2;
+    const tri = (a, b, c) => {
+      const x0 = SX[a], y0 = SY[a], d0 = D[a], ax = SX[b] - x0, ay = SY[b] - y0, bx = SX[c] - x0, by = SY[c] - y0, det = ax * by - ay * bx;
+      if (Math.abs(det) < 1e-6) return;
+      const gx = ((D[b] - d0) * by - (D[c] - d0) * ay) / det, gy = ((D[c] - d0) * ax - (D[b] - d0) * bx) / det, gg = gx * gx + gy * gy;
+      if (gg < 1e-12) { const v = Math.round(128 + 88 * Math.max(-1, Math.min(1, d0 / (d0 < 0 ? -DA : DB)))); g.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')'; }
+      else {
+        const ta = (DA - d0) / gg, tb = (DB - d0) / gg, gr = g.createLinearGradient(x0 + gx * ta, y0 + gy * ta, x0 + gx * tb, y0 + gy * tb);
+        gr.addColorStop(0, 'rgb(40,40,40)'); gr.addColorStop(-DA / (DB - DA), 'rgb(128,128,128)'); gr.addColorStop(1, 'rgb(200,200,200)'); g.fillStyle = gr;
+      }
+      const q = growTri(SX[a], SY[a], SX[b], SY[b], SX[c], SY[c], 0.9); g.beginPath(); g.moveTo(q[0], q[1]); g.lineTo(q[2], q[3]); g.lineTo(q[4], q[5]); g.closePath(); g.fill();
+    };
+    for (let j = 0; j < R - 1; j++) for (let i = 0; i < C - 1; i++) { const k00 = j * C + i, k10 = k00 + 1, k01 = k00 + C, k11 = k01 + 1; tri(k00, k10, k01); tri(k10, k11, k01); }
+    ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.drawImage(SHB, 0, 0); ctx.restore();
+  }
+  // the roll (a cylinder under the roof edge that falls and shrinks while it unrolls)
+  const rl = cl.roll;
+  if (!rl.done && rl.r > 0.5) {
+    const a = pj(META.x0 - 6, rl.y, 0, [0, 0, 0]), b = pj(META.x0 + META.BW + 6, rl.y, 0, [0, 0, 0]), sc = (a[2] + b[2]) / 2, r = rl.r * sc;
+    ctx.lineCap = 'round'; const seg = (dy, w, c) => { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a[0], a[1] + dy); ctx.lineTo(b[0], b[1] + dy); ctx.stroke(); };
+    seg(0, 2 * r + 4, '#103a2c'); seg(0, 2 * r, '#2f7d4f'); seg(-0.3 * r, 1.1 * r, '#8fc79f'); seg(-0.45 * r, 0.4 * r, '#e9f3e6');
+  }
+  // hem bar along the last row
+  { ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); for (let i = 0; i < C; i++) { const k = (R - 1) * C + i; if (i) ctx.lineTo(SX[k], SY[k]); else ctx.moveTo(SX[k], SY[k]); } ctx.stroke(); }
+  hud(t, 'banner unfurls (cloth)');
+}
+
+// ------------------------------------------------------------------ driver
+const DRAW = { crane: drawCrane, jenga: drawJenga, banner: drawBanner }[SCENE];
+function renderAt(t) { t = Math.max(0, Math.min(sim.T, t)); DRAW(t); document.getElementById('tt').textContent = 't = ' + t.toFixed(2) + ' s  (sim built in ' + BUILD_MS.toFixed(0) + ' ms)'; document.getElementById('scrub').value = t; return t; }
+window.renderAt = renderAt; window.SIM = { world: W, meta: META, T: sim.T, foley: FOLEY, buildMs: BUILD_MS };
+document.getElementById('scrub').max = sim.T;
+if (STILL) { renderAt(parseFloat(q.get('t'))); window.__ready = true; }
+else {
+  let start = null;
+  const sc = document.getElementById('scrub'); let drag = false;
+  sc.addEventListener('input', () => { drag = true; renderAt(parseFloat(sc.value)); });
+  sc.addEventListener('change', () => { drag = false; start = null; });
+  const loop = ts => { if (!drag) { if (start === null) start = ts; renderAt(((ts - start) / 1000) % (sim.T + 0.5)); } requestAnimationFrame(loop); };
+  requestAnimationFrame(loop); window.__ready = true;
+}
+</script>
+</body>
+</html>
