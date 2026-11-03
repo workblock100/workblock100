@@ -12,8 +12,9 @@
  *   3.10-3.50  THE VOTE swells from the stamp (a 3 frame overshoot at 3.40, a ring), the EPISODE 16 pill pops (3.22), the tagline types in (3.52-3.95).   4.00 textding: a gloss crosses THE VOTE and SHIFT HAPPENS, stars.
  *   4.0-6.0 a held, centred card with a slow push-in and ballots drifting down behind the lettering; 6.08-6.2 a dip to black.
  * END: see the second half of this file. */
-const TEASER17 = 'THE MODULE';
 (() => {
+/* the title of the next episode, shown in the end card's teaser banner under NEXT: EPISODE 17 (the lead confirms it: change this one constant) */
+const TEASER17 = 'THE MODULE';
 if (!window.TIMELINE_EP16 || !window.SH15 || !window.UI || !window.H6) return;
 const SH = window.SH15, { zoomTo } = window.H6;
 window.__EP16_SCENES = window.__EP16_SCENES || {};
@@ -34,7 +35,18 @@ const ringK = (age, tau) => age < 0 ? 0 : Math.exp(-age / tau);
 const vgrad = (cap, stops, y0 = -1.03, y1 = .04) => { const g = ctx.createLinearGradient(0, cap * y0, 0, cap * y1); for (const [o, c] of stops) g.addColorStop(o, c); return g; };
 const FACE = [[0, '#fffbd0'], [.2, '#fff06a'], [.47, '#ffd21a'], [.5, '#ffb300'], [1, '#ff8a00']];
 const FACE_LOGO = [[0, '#fff7a8'], [.46, '#ffe135'], [.5, '#ffc800'], [1, '#ffb000']];
-const meas = (...a) => window.FP15A.meas(...a);
+/* measuring on a private canvas (ep15_title.js does the same): ink box and advance of a string, for the shine of the lettering */
+const mcv = document.createElement('canvas'); mcv.width = mcv.height = 8; mcv.__txOK = true;
+const mctx = mcv.getContext('2d'), MM = new Map();
+function meas(str, size, font, weight, spacing) {
+  const spec = `${weight} ${size}px ${font}`, key = spec + '|' + spacing + '|' + str, hit = MM.get(key);
+  if (hit) return hit;
+  mctx.font = spec; mctx.letterSpacing = spacing ? spacing + 'px' : '0px'; mctx.textAlign = 'left'; mctx.textBaseline = 'alphabetic';
+  const m = mctx.measureText(str), r = { l: -m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, adv: m.width };
+  let ok = true; try { ok = document.fonts.check(spec); } catch (e) { /* no font api */ }
+  if (ok) { if (MM.size > 3000) MM.clear(); MM.set(key, r); }
+  return r;
+}
 
 /* Bangers lettering with a body (ep15_title.js, with a navy extrusion): soft drop shadow, a slab of extrusion, dark outline, gold rim, bright gradient face, gloss, sweeping shine. Only the face is the string the viewer
  * reads (hero when `hero`); every other layer is a decorative copy (hero:false, crop:true, one group). */
@@ -266,8 +278,8 @@ function binderChip(x, y, lt) {
   ctx.save(); ctx.fillStyle = '#e5e8ec'; ctx.beginPath(); ctx.arc(x, y, 40, 0, TAU); ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#5b6470'; ctx.stroke();
   ctx.fillStyle = '#15171c'; ctx.beginPath(); ctx.roundRect(x - 20, y - 18, 40, 38, [12, 12, 8, 8]); ctx.fill();
   ctx.strokeStyle = '#9aa2ad'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y - 22, 14, PI, 0); ctx.stroke();
-  const look = Math.sin(lt * 1.3) * 2.2, blink = (lt % 2.6) > 2.5 ? .15 : 1;
-  for (const dx of [-8, 8]) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(x + dx, y - 4, 6.5, 7 * blink, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x + dx + look * .8, y - 3, 3, 0, TAU); ctx.fill(); }
+  const pp = pointer(lt), seek = pp.alpha > .05 ? 1 : 0, lx = seek ? cl((pp.x - x) / 260, -1, 1) * 2.6 : Math.sin(lt * 1.3) * 2.2, ly = seek ? cl((pp.y - y) / 260, -1, 1) * 2 : 0, look = lx, blink = (lt % 2.6) > 2.5 ? .15 : 1;   /* his eyes follow the pointer */
+  for (const dx of [-8, 8]) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(x + dx, y - 4, 6.5, 7 * blink, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(x + dx + look * 1.1, y - 3 + ly, 3, 0, TAU); ctx.fill(); }
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(x, y + 5, 8, .15 * PI, .85 * PI); ctx.stroke();
   ctx.restore();
 }
@@ -487,6 +499,13 @@ function rowExtras(lt) {
     if (p.votes > 0) { const w = Math.max(5, (x1 - x0) * p.votes / 48 * k); ctx.fillStyle = p.bar; ctx.beginPath(); ctx.roundRect(x0, y - 12, w, 24, 8); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.roundRect(x0 + 2, y - 10, Math.max(1, w - 4), 8, 4); ctx.fill(); }
     ctx.restore();
   });
+  if (lt >= rowT(0) + .55) {   /* the incumbent's crown, tilted on his clip */
+    const R = G.rc('A4'), k = back(sg(lt, rowT(0) + .55, rowT(0) + .8), 2.4), bob = Math.sin(lt * 2.6) * 1.2;
+    ctx.save(); ctx.translate(WIN.x + R.cx - 25, WIN.y + R.cy - 38 + bob); ctx.rotate(-.42); ctx.scale(k, k);
+    ctx.fillStyle = '#ffc800'; ctx.strokeStyle = '#7a4a00'; ctx.lineWidth = 3.5; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(-18, 10); ctx.lineTo(-22, -14); ctx.lineTo(-9, -3); ctx.lineTo(0, -19); ctx.lineTo(9, -3); ctx.lineTo(22, -14); ctx.lineTo(18, 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ff5a3c'; ctx.beginPath(); ctx.arc(0, 2, 3.6, 0, TAU); ctx.fill(); ctx.restore();
+  }
   if (lt >= rowT(0) + .5) {
     const a = rowT(0), R = G.rc('B4'), R2 = G.rc('D4'), pulse = .5 + .5 * Math.sin(lt * 3.2);
     ctx.save(); ctx.strokeStyle = `rgba(255,184,0,${.65 + .3 * pulse})`; ctx.lineWidth = 5; ctx.shadowColor = 'rgba(255,184,0,.7)'; ctx.shadowBlur = 14 + 10 * pulse; ctx.globalAlpha *= sg(lt, a + .5, a + .8);
@@ -511,7 +530,7 @@ function stampFx(lt) {
   const age = lt - E.stamp, Z = zoneCy();
   if (lt < E.stamp - .1 || lt > E.tab + .3) return;
   const k = sg(lt, E.stamp - .09, E.stamp), a = 1 - sg(lt, E.stampOut, E.stampOut + .15), settle = lt >= E.stamp ? 1 + .06 * Math.sin(Math.min(1, age / .16) * PI) * (1 - Math.min(1, age / .16)) * 2 : 1;
-  const sc = lt < E.stamp ? lp(1.8, 1, eI(k)) : 1 / settle, hero = lt >= E.stamp + .17 && lt < E.stampOut - .02;
+  const sc = lt < E.stamp ? lp(1.4, 1, eI(k)) : 1 / settle, hero = lt >= E.stamp + .17 && lt < E.stampOut - .02;
   if (a <= .01) return;
   ctx.save(); ctx.globalAlpha *= a * (lt < E.stamp ? sg(k, 0, .5) : 1);
   ctx.translate(540, Z); ctx.scale(sc, sc); ctx.translate(-540, -Z);

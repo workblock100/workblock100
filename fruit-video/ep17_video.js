@@ -69,7 +69,7 @@ function boxR(xa, xb, y0, y1, za, zb, o) {
 const ROOMC = { wall: '#b39d7e', wain: '#52705f', floorA: '#8f7a58', floorB: '#715e42', ceil: '#8f8c87', fog: '#1a1830' };
 function shell(lt) {
   const far = D.dir === 'f' ? RM.zTV : RM.zTV - RM.zRear;
-  S6.shell({ zb: far, hw: RM.hw, ch: RM.ch, rail: RM.rail, wall: ROOMC.wall, wain: ROOMC.wain, floorA: ROOMC.floorA, floorB: ROOMC.floorB, ceil: ROOMC.ceil, fog: ROOMC.fog, fogAmt: .42, tile: 150, bright: .5 });
+  S6.shell({ zb: far, hw: RM.hw, ch: RM.ch, rail: RM.rail, wall: ROOMC.wall, wain: ROOMC.wain, floorA: ROOMC.floorA, floorB: ROOMC.floorB, ceil: ROOMC.ceil, fog: ROOMC.fog, fogAmt: .46, tile: 150, bright: .44 });
   const zs = D.dir === 'f' ? [-100, 360, 820, 1280] : [140, 600, 1060, 1520, 1980];
   for (const X of [-300, 300]) for (const Z of zs) if (Z > V2.P.cz + 260) S6.ceilingLamp(X, Z, RM.ch, .32, '255,226,176', 110, 190);
 }
@@ -130,7 +130,7 @@ function windowsWall(lt) {
     wallR(s, 110, 690, z0 - 70, z0 - 8, '#7c4f4a', 'rgba(60,24,20,.35)', 1.6); wallR(s, 110, 690, z1 + 8, z1 + 70, '#7c4f4a', 'rgba(60,24,20,.35)', 1.6);
   }
 }
-const DOOR = { z0: 330, z1: 650, h: 340 };
+const DOOR = { z0: 300, z1: 700, h: 340 };
 const callPulse = lt => .55 + .45 * Math.sin(lt * 5.2);
 /* the doorway in the left wall: a frame, the lit corridor behind it (a far wall, a resident's door with the call light over it) */
 function doorWall(lt) {
@@ -252,7 +252,7 @@ function artiArms(lt) {
   const talk = (a, b) => lt >= a && lt < b ? 1 : 0, w = (f, p) => .5 + .5 * Math.sin(lt * f + p);
   const sp = Math.max(talk(bS('ar1'), bE('ar1')), talk(bS('ar2'), bE('ar2')), talk(bS('ar3'), bE('ar3')), talk(bS('ar4'), bE('ar4')));
   let r = K([[0, [.28, .25]], [1.0, [.28, .25]], [1.5, [1.25, .3]], [4.5, [1.25, .3]], [4.9, [1.3, .28]], [9.0, [1.3, .28]], [9.4, [1.0, .35]], [13.6, [1.0, .35]], [14.0, [1.7, .1]], [16.0, [1.7, .1]], [16.5, [.28, .25]], [17.3, [.28, .25]], [17.9, [.78, .95]], [30, [.78, .95]]], lt);
-  let l = K([[0, [.28, .25]], [1.4, [.28, .25]], [2.0, [.9, .4]], [4.5, [.9, .4]], [4.9, [.28, .25]], [9.2, [.28, .25]], [9.8, [.8, .4]], [11.6, [.8, .4]], [12.2, [.28, .25]], [13.8, [.28, .25]], [14.3, [1.1, .3]], [16, [1.1, .3]], [16.5, [.28, .25]], [17.3, [.28, .25]], [17.9, [.78, .95]], [30, [.78, .95]]], lt);
+  let l = K([[0, [.28, .25]], [1.4, [.28, .25]], [2.0, [.72, .38]], [4.5, [.72, .38]], [4.9, [.28, .25]], [9.2, [.28, .25]], [9.8, [.8, .4]], [11.6, [.8, .4]], [12.2, [.28, .25]], [13.8, [.28, .25]], [14.3, [1.1, .3]], [16, [1.1, .3]], [16.5, [.28, .25]], [17.3, [.28, .25]], [17.9, [.78, .95]], [30, [.78, .95]]], lt);
   if (sp && lt < 17.3) { r = [r[0] + .22 * Math.sin(lt * 4.1), r[1] + .12 * Math.sin(lt * 3.3)]; l = [l[0] + .16 * Math.sin(lt * 3.4 + 1), l[1]]; }
   void w;
   return { l, r };
@@ -263,11 +263,12 @@ function trainingBack(lt) {   /* the corporate-training set behind him, drawn at
   /* a window of night, a crooked poster, a shelf */
   ctx.fillStyle = lg(0, 90, 0, 330, [[0, '#142a4a'], [1, '#3a5a8a']]); rr(760, 90, 190, 230, 10); ctx.fill(); ctx.strokeStyle = '#efe6d0'; ctx.lineWidth = 10; ctx.stroke();
   ctx.beginPath(); ctx.moveTo(855, 90); ctx.lineTo(855, 320); ctx.moveTo(760, 205); ctx.lineTo(950, 205); ctx.stroke();
-  ctx.save(); ctx.translate(230, 340); ctx.rotate(-.07);
+  const ph = lt > 1.2 && !paused(lt) && !(lt >= T_RESUME && lt < T_RESUME + .2) && !(lt >= CUE.glitch && lt < CUE.glitch + .9);   /* the poster's lettering is hero only while nothing is over it */
+  ctx.save(); ctx.translate(176, 330); ctx.rotate(-.07);
   ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6; ctx.fillStyle = '#f7f1dc'; rr(-170, -170, 340, 340, 12); ctx.fill(); ctx.shadowColor = 'transparent';
   ctx.strokeStyle = '#1e8e5a'; ctx.lineWidth = 8; rr(-156, -156, 312, 312, 8); ctx.stroke();
   ctx.fillStyle = '#3f9a5c'; ctx.beginPath(); ctx.ellipse(0, -96, 22, 34, .5, 0, TAU); ctx.fill(); ctx.strokeStyle = '#1f5a36'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-10, -70); ctx.lineTo(12, -122); ctx.stroke();
-  tvLabel('YOUR BREAK', 0, -22, { size: 52, weight: 900, fill: '#103a2c', maxW: 300 }); tvLabel('IS IMPORTANT', 0, 40, { size: 48, weight: 900, fill: '#103a2c', maxW: 300 }); tvLabel('TO US', 0, 102, { size: 52, weight: 900, fill: '#b3261e', maxW: 300 });
+  tvLabel('YOUR BREAK', 0, -22, { size: 52, weight: 900, fill: '#103a2c', maxW: 300, hero: ph }); tvLabel('IS IMPORTANT', 0, 40, { size: 48, weight: 900, fill: '#103a2c', maxW: 300, hero: ph }); tvLabel('TO US', 0, 102, { size: 52, weight: 900, fill: '#b3261e', maxW: 300, hero: ph });
   ctx.restore();
 }
 function trainingFront(lt) {   /* the desk in front of him and the plant */
@@ -280,7 +281,7 @@ function trainingFront(lt) {   /* the desk in front of him and the plant */
 }
 function artiTile(lt) {
   const vt = vclock(lt), fz = paused(lt), gl = lt >= CUE.glitch && lt < CUE.glitch + .9 ? { k: 1 - sg(lt, CUE.glitch, CUE.glitch + .9), y: .46, h: .13, dx: 34 + 22 * Math.sin(lt * 31), seed: Math.floor(lt * 12) } : null;
-  const arms = artiArms(vt), s = 2.0, x = 520 + (fz ? 0 : Math.sin(vt * .9) * 3);
+  const arms = artiArms(vt), s = 2.0, x = 700 + (fz ? 0 : Math.sin(vt * .9) * 3);
   const happy = lt >= bS('ar4') - .05 && lt < bE('ar4') + .5;
   REG.suppress++;
   try {
@@ -293,7 +294,7 @@ function artiTile(lt) {
 // ------------------------------------------------------------------ the player: title, PROCTORED badge, the proctor window (Strawberry's webcam), the play bar stuck at 99 percent, the pause icon, the lower thirds
 const awayAt = lt => K([[0, 0], [6.55, 0], [6.8, 1], [8.55, 1], [8.9, 0], [40, 0]], lt);      /* how far Strawberry's eyes are off the screen (toward the door) */
 const PR = { x: 902, y: 92, w: 340, h: 236 };                                                  /* the proctor window, in TV coordinates */
-const BAR = { x0: 130, x1: 1010, y: 664 };
+const BAR = { x0: 130, x1: 1000, y: 664 };
 function proctor(lt, sh) {
   const away = awayAt(lt), red = away > .5, pk = .5 + .5 * Math.sin(lt * 9), col = red ? '#ff3b30' : '#34d17a';
   ctx.save();
@@ -328,12 +329,14 @@ function playBar(lt, sh, big) {
   /* play / pause control */
   ctx.fillStyle = '#fff';
   if (fz) { ctx.beginPath(); ctx.moveTo(62, 646); ctx.lineTo(62, 676); ctx.lineTo(90, 661); ctx.closePath(); ctx.fill(); } else { rr(62, 646, 10, 30, 3); ctx.fill(); rr(80, 646, 10, 30, 3); ctx.fill(); }
-  rr(BAR.x0, BAR.y - 8, BAR.x1 - BAR.x0, 16, 8); ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fill();
-  rr(BAR.x0, BAR.y - 8, hx - BAR.x0, 16, 8); ctx.fillStyle = '#2fd07c'; ctx.fill();
+  rr(BAR.x0, BAR.y - 10, BAR.x1 - BAR.x0, 20, 10); ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fill();
+  rr(BAR.x0, BAR.y - 10, hx - BAR.x0, 20, 10); ctx.fillStyle = '#2fd07c'; ctx.fill();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, BAR.y, 13, 0, TAU); ctx.fill();
   const sp = fz ? 0 : lt * 6.2;   /* the spinner circling the head: it is buffering at 99 percent, and it stops with the picture */
   ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(hx, BAR.y, 25, sp, sp + 4.2); ctx.stroke();
-  tvLabel('-3:59:51', 1238, BAR.y, { size: 42, weight: 900, fill: '#fff', align: 'right', maxW: 190 });
+  tvLabel('-3:59:51', 1204, BAR.y, { size: 42, weight: 900, fill: '#fff', align: 'right', maxW: 170 });
+  /* Binder on "Ninety-nine percent complete!": he pops up over the head of the strip */
+  { const bk = sg(lt, bS('b3') - .05, bS('b3') + .2) * (1 - sg(lt, bE('b3') + .3, bE('b3') + .6)); if (bk > .01) { REG.suppress++; try { drawChar(A15.binderSmall({ x: hx - 150, y: BAR.y - 118 - 14 * Math.sin(lt * 5), s: .62 * eb(bk), center: true, noLegs: true, who: 'bind', t: lt, pose: 'cheer', grin: .8, look: [.5, .3], hover: 0 })); } finally { REG.suppress--; } } }
   /* the 99% chip over the head */
   const cw = 108, cx = hx - 4, cy = BAR.y - 56;
   rr(cx - cw / 2, cy - 24, cw, 48, 24); ctx.fillStyle = '#2fd07c'; ctx.fill();
@@ -358,22 +361,24 @@ function tvPlayer(lt, sh) {
   trainingBack(lt); artiTile(lt); trainingFront(lt);
   if (fz) { ctx.fillStyle = 'rgba(10,16,24,.34)'; ctx.fillRect(0, 0, 1280, 720); }
   /* title and the badge */
-  ctx.fillStyle = 'rgba(8,14,18,.62)'; rr(36, 30, 480, 70, 16); ctx.fill();
-  tvLabel('BREAK SAFETY', 276, 65, { size: 46, weight: 900, fill: '#fff', spacing: 3, maxW: 450 });
-  ctx.fillStyle = 'rgba(8,14,18,.62)'; rr(36, 106, 230, 44, 14); ctx.fill();
-  ctx.fillStyle = '#ff3b30'; ctx.beginPath(); ctx.arc(62, 128, 8 + 2 * Math.sin(lt * 6), 0, TAU); ctx.fill();
-  tvLabel('PROCTORED', 82, 128, { size: 30, weight: 900, fill: '#ffd0cc', align: 'left', maxW: 170 });
-  proctor(lt, sh);
+  if (sh.id !== 'bar') {
+    ctx.fillStyle = 'rgba(8,14,18,.62)'; rr(36, 30, 480, 70, 16); ctx.fill();
+    tvLabel('BREAK SAFETY', 276, 65, { size: 46, weight: 900, fill: '#fff', spacing: 3, maxW: 450 });
+    ctx.fillStyle = 'rgba(8,14,18,.62)'; rr(36, 106, 230, 44, 14); ctx.fill();
+    ctx.fillStyle = '#ff3b30'; ctx.beginPath(); ctx.arc(62, 128, 8 + 2 * Math.sin(lt * 6), 0, TAU); ctx.fill();
+    tvLabel('PROCTORED', 82, 128, { size: 30, weight: 900, fill: '#ffd0cc', align: 'left', maxW: 170 });
+  }
+  if (sh.id !== 'bar') proctor(lt, sh);
   lowerThird(lt, 'YOUR BREAK: 11:00 PM', 14.35, 16.1, '#ffd23f', '#2a1c04');
   lowerThird(lt, 'FEEDBACK RECEIVED: PENDING', 17.75, 19.5, '#103a2c', '#fff');
   playBar(lt, sh);
   if (fz || (lt >= T_RESUME && lt < T_RESUME + .15)) {   /* the big pause icon pops on, and goes with the resume */
     const u = fz ? eb(sg(lt, T_PAUSE, T_PAUSE + .2)) : 1 - sg(lt, T_RESUME, T_RESUME + .15);
-    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); ctx.translate(820, 400); ctx.scale(u, u);
+    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); ctx.translate(176, 330); ctx.scale(u, u);
     ctx.fillStyle = 'rgba(8,14,18,.78)'; ctx.beginPath(); ctx.arc(0, 0, 110, 0, TAU); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.stroke();
     ctx.fillStyle = '#fff'; rr(-40, -52, 28, 104, 6); ctx.fill(); rr(12, -52, 28, 104, 6); ctx.fill();
     ctx.restore();
-    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); tvLabel('PAUSED', 820, 538, { size: 56, weight: 900, fill: '#fff', spacing: 6 }); ctx.restore();
+    ctx.save(); ctx.globalAlpha *= Math.min(1, u * 1.5); tvLabel('PAUSED', 176, 478, { size: 56, weight: 900, fill: '#fff', spacing: 6 }); ctx.restore();
   }
   /* the glitch: coloured slices over the whole picture while the feed breaks up */
   if (lt >= CUE.glitch && lt < CUE.glitch + .9) {
@@ -481,22 +486,22 @@ const WIDE = { cz: -900, cy: 760, hy: 620, fx: 540, fy: 880 };
 const tvAim = (tx, ty, sc, o = {}) => Object.assign(tvCam(1280 * .8, 760, o.cam), { aim: [tx, ty, sc] });
 const ALL3 = ['straw', 'lemon', 'mango'];
 shot('open', 0, 1.0, u => Object.assign({}, WIDE, { z: lerp(1.16, 1.24, u) }), { cast: ALL3 });
-shot('tv1', 1.0, 3.2, u => tvAim(640, 380, lerp(.82, .9, u)), { cast: [] });
+shot('tv1', 1.0, 3.2, u => tvAim(640, 380, lerp(.78, .83, u)), { cast: [] });
 shot('aud1', 3.2, 4.89, u => faceCam(SEATX.lemon, 1.32, 790, { z: lerp(1, 1.04, u) }), { cast: ALL3, rows2: false });
 shot('proc', 4.89, 6.45, u => tvAim(1072, 250, lerp(2.1, 2.3, u)), { cast: [], tvHero: true });
 shot('s1', 6.45, 6.95, u => faceCam(SEATX.straw, 1.95, 800, { z: lerp(1.02, 1.08, u) }), { cast: ['straw'], rows2: false });
-shot('door', 6.95, 7.54, u => lens({ f: BASEF, cz: -420, cy: 170, hy: 760, cx: lerp(-30, 10, u), z: lerp(1, 1.08, u) }), { cast: [], corridor: true });
-shot('pause', 7.54, 8.55, u => tvAim(640, 380, lerp(.86, .92, u)), { cast: [], tvHero: true });
+shot('door', 6.95, 7.54, u => lens({ f: BASEF, cz: 120, cy: 160, hy: 780, cx: lerp(-40, -10, u), z: lerp(1.5, 1.9, u), lamp: true }), { cast: [], corridor: true });
+shot('pause', 7.54, 8.55, u => tvAim(640, 380, lerp(.8, .84, u)), { cast: [], tvHero: true });
 shot('s1b', 8.55, 9.04, u => faceCam(SEATX.straw, 1.95, 800, { z: lerp(1.05, 1.0, u) }), { cast: ['straw'], rows2: false });
-shot('tv2', 9.04, 10.5, u => tvAim(640, 380, lerp(.84, .9, u)), { cast: [] });
-shot('glitch', 10.5, 12.1, u => tvAim(640, 380, lerp(.9, .96, u)), { cast: [], tvHero: true });
+shot('tv2', 9.04, 10.5, u => tvAim(640, 380, lerp(.8, .84, u)), { cast: [] });
+shot('glitch', 10.5, 12.1, u => tvAim(640, 380, lerp(.82, .88, u)), { cast: [], tvHero: true });
 shot('l1', 12.1, 13.8, u => faceCam(SEATX.lemon, 1.95, 800, { z: lerp(1, 1.06, u) }), { cast: ['lemon'], rows2: false });
-shot('tv3', 13.8, 16.29, u => tvAim(640, 380, lerp(.86, .94, u)), { cast: [] });
+shot('tv3', 13.8, 16.29, u => tvAim(640, 380, lerp(.8, .86, u)), { cast: [] });
 shot('s2', 16.29, 17.41, u => faceCam(SEATX.straw, 2.05, 800, { z: lerp(1.0, 1.06, u) }), { cast: ['straw'], rows2: false });
-shot('tv4', 17.41, 19.58, u => tvAim(640, 380, lerp(.86, .92, u)), { cast: [], tvHero: true });
-shot('bar', 19.58, 20.97, u => tvAim(790, 640, lerp(1.2, 1.28, u)), { cast: [], tvHero: true });
-shot('s3', 20.97, 22.35, u => faceCam(SEATX.straw, 1.55, 800, { z: lerp(1.0, 1.07, u), dx: -40 }), { cast: ['straw'], rows2: false });
-shot('wide2', 22.35, 23.4, u => faceCam(SEATX.lemon, lerp(.8, .72, u), 780, { z: 1 }), { cast: ALL3 });
+shot('tv4', 17.41, 19.58, u => tvAim(640, 380, lerp(.8, .86, u)), { cast: [], tvHero: true });
+shot('bar', 19.58, 20.97, u => tvAim(880, 640, lerp(1.4, 1.5, u)), { cast: [], tvHero: true });
+shot('s3', 20.97, 22.35, u => faceCam(-500, lerp(1.2, 1.3, u), 800, { z: 1 }), { cast: ['straw'], rows2: false });
+shot('wide2', 22.35, 23.4, u => faceCam(-330, lerp(.84, .78, u), 790, { z: 1 }), { cast: ALL3, rows2: false });
 for (const sh of SHOTS) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
 
 // ------------------------------------------------------------------ the light and the world: one function draws the room for either direction, far to near
@@ -547,6 +552,7 @@ const SC = {
     sh.cc = c; D.dir = c.dir;
     V2.setCam({ f: c.f, cz: c.cz, cy: c.cy, hy: c.hy, cx: c.cx });
     let fx = c.fx, fy = c.fy, z = c.z;
+    if (c.lamp) { const [lx, ly] = V2.p2(-COR.hw + 6, 292, 1190); fx = lx + 150; fy = ly + 190; }   /* the corridor shot pushes in on the call light */
     if (c.aim) {
       const scr = facing(TVG.cx - TVG.w / 2, TVG.cx + TVG.w / 2, TVG.bot, TVG.bot + TVG.h, RM.zTV - 110), s0 = scr.w / 1280;
       z = c.aim[2] / s0; fx = scr.x + scr.w * c.aim[0] / 1280; fy = scr.y + scr.h * c.aim[1] / 720 + BANDY / z;
@@ -566,6 +572,7 @@ const SC = {
   over(lt) {
     /* the call light's chime: a red pulse over the picture on the ding, and again with the sting */
     const a = lt >= CUE.ding ? .22 * Math.exp(-(lt - CUE.ding) * 5) : 0, b = lt >= CUE.sting ? .2 * Math.exp(-(lt - CUE.sting) * 6) : 0;
+    if (shotAt(lt).cc && shotAt(lt).cc.dir === 'r' && !shotAt(lt).corridor) { const pk = callPulse(lt), g = V2.radial(W + 40, 860, 0, 760, [[0, 'rgba(255,60,50,' + (.3 * pk * (lt > CUE.ding ? 1 : .5)) + ')'], [1, 'rgba(255,60,50,0)']]); ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore(); }
     if (a + b > .004) { ctx.save(); ctx.fillStyle = 'rgba(255,50,40,' + (a + b) + ')'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
   },
   clock: () => SCN.clock, label: () => SCN.label,

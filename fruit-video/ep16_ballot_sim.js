@@ -60,7 +60,7 @@ function build(opts) {
   Object.keys(times).forEach(k => W.schedule(+k, w => { for (const b of times[k]) { b.mask = 0xFFFF; b.gscale = 1; b.vx = b.__vel[0]; b.vy = b.__vel[1]; b.w = b.__vel[2]; b.wake(); } }));
   W.schedule(T_CROWD, w => {
     let i = 0;
-    for (const b of all) if (b.__t < T_CROWD && b.mask !== 0) { b.vx = (jit(i, 11) - .5) * 560; b.vy = -(520 + jit(i, 12) * 620); b.w = (jit(i, 13) - .5) * 14; b.wake(); i++; }
+    for (const b of all) if (b.__t < T_CROWD && b.mask !== 0) { b.vx = (jit(i, 11) - .5) * 640; b.vy = -(420 + jit(i, 12) * 620); b.w = (jit(i, 13) - .5) * 14; b.wake(); i++; }
   });
   W.run(opts.T || T_RUN, { sampleHz: 120 });
   return { world: W, T: T_RUN, runT: W.T, screen: { w: 1080, h: 1920, cx: 540, cam: { x: 540, y: 960, z: 1 } }, sceneStart: 0, meta };

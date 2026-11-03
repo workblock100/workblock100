@@ -140,7 +140,7 @@ function callLight(lt, sh) {
 function smallBinder(lt, C, vis) {
   if (lt < CUE.binderpop) return;
   const [tx, ty] = tabPos(C), k = sg(lt, CUE.binderpop, CUE.binderpop + .16), f = ss(lt, CUE.binderpop + .04, CUE.binderpop + .5), bob = Math.sin(lt * 3.2) * 2.5;
-  const fx = ss(lt, CUE.binderpop + .02, CUE.binderpop + .26), x = lerp(tx, tx - 74, fx), y = lerp(ty - 8, ty - 46, f) - Math.sin(PI * f) * 20 + bob * f;
+  const [fcx, fcy] = faceC(C.tom), fx = ss(lt, CUE.binderpop + .02, CUE.binderpop + .26), x = lerp(tx, fcx - 78, fx), y = lerp(ty - 8, fcy + 8, f) - Math.sin(PI * f) * 20 + bob * f;   /* he ends in the gap between Strawberry and Tomato, at face height */
   if (vis && k < 1) V2.ring(tx, ty - 4, k, { r0: 6, r1: 50, color: '255,236,160', lw: 4, alpha: .9 });
   const o = A15.binderSmall({ x, y, s: .4 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, pose: lt < 8.3 ? 'ears' : 'helpful', grin: lt >= CUE.grin ? ss(lt, CUE.grin, CUE.grin + .15) : .25, glint: lt >= CUE.sting ? Math.max(0, 1 - (lt - CUE.sting) / .5) : 0, look: [.5, .3], hover: 6 });
   if (vis) drawChar(o);
