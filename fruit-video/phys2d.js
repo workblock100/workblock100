@@ -1643,7 +1643,7 @@ function Cloth(W, def, id) {
   this.gscale = def.gravityScale != null ? def.gravityScale : 1; this.floorY = def.floorY != null ? def.floorY : 1e30;
   this.wallZ = def.wallZ != null ? def.wallZ : -1e30;   // optional wall plane: the cloth cannot go behind z = wallZ (a banner hung on a wall)
   const wd = def.wind || {};
-  this.wind = [wd.x || 0, wd.y || 0, wd.z || 0]; this.gust = wd.gust || 0; this.gustHz = wd.hz || 0.7; this.gustK = wd.k != null ? wd.k : 0.012; this.windGain = wd.gain != null ? wd.gain : 2.2; this.windPhase = wd.phase || 0;
+  this.wind = [wd.x || 0, wd.y || 0, wd.z || 0]; this.gust = wd.gust || 0; this.gustHz = wd.hz || 0.7; this.gustK = wd.k != null ? wd.k : 0.012; this.windGain = wd.gain != null ? wd.gain : 2.2; this.windPhase = wd.phase || 0; this.gustKy = wd.ky || 0;   // ky: the gust pattern also travels along y (ripples down a hanging banner); 0 = off
   this.windOn = this.gust !== 0 || this.wind[0] !== 0 || this.wind[1] !== 0 || this.wind[2] !== 0;
   // constraints: vertical first (top to bottom), then horizontal, shear, bend
   const C = [], id2 = function (i, j) { return j * cols + i; };
@@ -1685,7 +1685,7 @@ Cloth.prototype.windAt = function (x, y, t, o) {
   let wx = this.wind[0], wy = this.wind[1], wz = this.wind[2];
   if (this.gust !== 0) {
     const f = TWO_PI * this.gustHz, ph = this.windPhase;
-    sincos(f * t - this.gustK * x - this.gustK * 0.5 * y + ph); const s1 = _sn;
+    sincos(f * t - this.gustK * x - this.gustKy * y + ph); const s1 = _sn;
     sincos(f * 1.73 * t - this.gustK * 2.1 * x + 1.3 + ph + y * 0.004); const s2 = _sn;
     sincos(f * 0.37 * t + 0.6 + ph); const s3 = _sn;
     const m = this.gust * (0.65 + 0.35 * s3);

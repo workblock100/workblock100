@@ -1,11 +1,11 @@
 # GUIDE_S15: the tower kit `S15` (ep15_house.js, owner E15-K)
 
 The Fruit Bowl dollhouse (`S14`, drawn underneath, never copied) with the Greenleaf dollhouse stacked on top, an Executive Suite on request, the crane, the sky, the lot, the ground cutaway, the signs. Guard: `if (!window.S15) return;`.
-STATUS: v1 is live (stack, squat, sink, exec, ground, crane with straight slings, signs, cameras; all 12 Greenleaf rooms furnished). The API below is FINAL. Coming: crane slings as PHYS2D ropes in the dock scene, `S15.stairs`, polish. A full-tower frame renders in about 0.15 to 0.2 s.
+STATUS: FINAL (stack, squat, sink, exec, ground, crane with PHYS2D ropes, jib sway, signs, cameras; all 12 Greenleaf rooms furnished). The API below is stable. A full-tower frame renders in about 0.15 to 0.2 s. `S15.stairs` is NOT provided (the dock scene draws its own stairwell set).
 
 ## World (tower coordinates = S14 coordinates; the building is x 10..1070, 1060 wide)
 Ground line `S15.GEOM.GY = 1342` (the street, before any sinking). Fruit Bowl y 340..1342 (room rows 352, 682, 1012; rooms 250 x 318; slabs 12). Greenleaf docked: y -728..274 (its underside rests on the roof's ridge cap at y 274; rows -716, -386, -56), same columns (x0 = 22, 284, 546, 808).
-Executive Suite docked: room y -1046..-728, roof above -1058. One floor = pitch 330, so `sink: 1` drops the tower exactly one floor. Crane mast x 1300, jib y about -1580, jib tip x -300.
+Executive Suite docked: room y -1046..-728, roof above -1058. One floor = pitch 330, so `sink: 1` drops the tower exactly one floor. Crane mast x 1300, jib y -1700, jib tip x -300, apex -2020.
 Floor index (`S15.floorY(i, st)`): 0 FB ground, 1 FB middle, 2 FB top, 3 GL bottom, 4 GL middle, 5 GL top, 6 Executive Suite.
 
 ## Rooms
@@ -26,12 +26,12 @@ S15.front(lt, st);                   // counters, desks, tables, the ORGANIC sig
 `st` (every field optional; a pure function of lt/st):
 - `t` animation clock (default lt) | `tod` time of day 0..1 (0 noon, .45 gold afternoon = default, .8 sunset, 1 dusk with stars).
 - `stack` 1 (default: Greenleaf docked) or 0 (it hangs at `blockPose`) | `blockPose` `{ x, y, angle }` = pose of the CENTRE of the Greenleaf block (docked: x 540, y -227; the block is 1060 x 1002), from the sim. Without a pose a stack-0 block hangs 560 px above its dock.
-- `squat` px 0..~45: Fruit Bowl compresses vertically floor by floor and the Greenleaf block rides it (`rect()` follows). `roof` 0..1 = how cracked the FB roof is under the block (default 1 once docked).
+- `squat` px 0..~45: Fruit Bowl is pushed down into the ground as ONE rigid body (the simulation moves it that way); the street and the hedges are drawn over its base, the Greenleaf block rides it (`rect()` follows). Docked default 0. `roof` 0..1 = how cracked the FB roof is under the block (default 1 once docked).
 - `sink` 0..1+: the whole tower sinks `sink` x 330 px (1.04 for an overshoot is fine). The ground cutaway fades in over the first sixth of the sink (`ground` 0..1 overrides). Sunk: the old ground floor is dark and lit by its own lamps, soil is pressed against the lobby's glass door, a LOBBY sign with an arrow stands in the street, a window ENTRANCE with a ladder appears at the middle floor.
 - `exec` 0|1: the Executive Suite, docked on the Greenleaf roof; `execAt: [x, yBottom]` places it anywhere (bottom centre of its floor slab, e.g. hanging from the hook); `noExecRoof: true` leaves its roof furniture out.
 - `rooms` `{ id: { lamp, flicker, dust, ... } }`: S14's options for Fruit Bowl rooms (lamp, flicker, alert, bubble, station calls, shower bulge ...), Greenleaf and exec rooms understand `lamp` 0..1, `flicker` 0..1, `dust` 0..1 (specks sifting from the ceiling).
 - `roofParts`: 'intact' (default while hanging: FB sign in two halves, chimney of bricks, weathervane), 'rest' (default once docked: the crushed litter at the join), 'sim' or 'none' (the scene draws them itself from the physics; `S15.roofParts` has the rest geometry).
-- `crane` `{ trolleyX, hook: [x, y], ropes: [[[x,y]..]x4], load: 'gl'|'exec'|null, off: true }`: `hook` is the hook-block centre (any path you like; default: above the load), `ropes` four polylines from the spreader eyes to the lugs (PHYS2D points); without `ropes` S15 draws taut straight slings.
+- `crane` `{ trolleyX, hook: [x, y], ropes: [[[x,y]..]x4], load: 'gl'|'exec'|null, off: true, jitter: px (the slings shudder, straight or PHYS2D polylines), jibSway: px (the jib and counter-jib bow: the tip dips by that many px) }`: `hook` is the hook-block centre (any path you like; default: above the load), `ropes` four polylines from the spreader eyes to the lugs (PHYS2D points); without `ropes` S15 draws taut straight slings.
   The load defaults to 'gl' while `stack` is 0. `crane: false` hides the crane. `lot: false` hides the lot.
 - `signs` (see below).
 
@@ -52,4 +52,5 @@ For a lowering: give `blockPose` from the sim and `crane.hook` from the sim's ho
 
 ## Tips
 Dollhouse scale 0.44, feet at `rect.floor`; keep faces out of the caption zone (y 1380..1700) and the pill. Dressing lettering in the rooms fades before it is cut by the frame, like S14's (set `S15.keepOut = [[x0,y0,x1,y1,k]]` for your own hero overlays).
-Static art is cached (3x per room); lettering is always live through `UI`; never cache text. `S15.drawItem` is S14's item library. `S15.stairs(lt, st)` is NOT ready yet (it arrives with the dock scene; do not rely on it).
+Static art is cached (3x per room); lettering is always live through `UI`; never cache text. `S15.drawItem` is S14's item library. `S15.drawProp(kind, x, y, w, h, rot, o)` draws the small prop sprites the dock simulation throws (pizza, fishbowl, tray, cup, paper, chair, plant, clock, bucket, fan, binder, mug, plate, stool, ivpole, pillow, vase, basin, slipper) and `S15.drawDebris(kind, x, y, rot, o)` the roof debris (sign, brick, cap, vane, chip; a tumbling sign board loses its lettering, text stays upright).
+`S15.stairs` does not exist: the stairwell, the hatch and the green chute of the dock scene live in `ep15_dock.js`. The dock simulation is `ep15_dock_sim.js` (`window.__EP15_SIMS.dock.build()`, `module.exports`).

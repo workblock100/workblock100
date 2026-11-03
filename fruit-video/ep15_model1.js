@@ -312,7 +312,7 @@ function drawLanyard(x, lt, o = {}) {                                           
   ln(-18, 3, 18, 3, '#d9a41a', 4);
   ctx.translate(0, 46); rb(-24, 0, 48, 64, '#f7f4ec', { r: 5, lw: 2.2 }); rb(-24, 0, 48, 14, GL_GREEN, { r: 5, lw: 0 });
   disc(0, 29, 9, 11, '#f08a24', OUT, 1.6); polyp([[-3, 17], [0, 12], [3, 17]], '#2fa04a', OUT, 1.2);
-  const th = o.hero !== false;
+  const th = false;
   UI.label('CARROT', 0, 48, { size: 11, fill: '#1d1a22', hero: th, crop: !th, maxW: 42, weight: 900 });
   ctx.restore();
 }
@@ -426,19 +426,19 @@ function drawA14(lt, t0, x, y) {
 /* Binder at the controls of the crane: the cab window shows it (a small clip with big eyes) */
 function drawCabBinder(lt, st) {
   const rig = S15.craneRig(lt, st), r = rig.cab, bx = r[0] + r[2] / 2, by = r[1] + r[3] * .58;
-  ctx.save(); ctx.beginPath(); ctx.rect(r[0], r[1], r[2], r[3]); ctx.clip();
+  REG.suppress++; ctx.save(); ctx.beginPath(); ctx.rect(r[0], r[1], r[2], r[3]); ctx.clip();
   drawChar(CT.binder({ x: bx, y: by + Math.sin(lt * 4) * 1.4, s: .3, t: lt, center: true, noLegs: true, hover: 0, noShadow: true, look: [-.5 + .4 * Math.sin(lt * 2), .3], pose: 'wave', who: undefined }));
-  ctx.restore();
+  ctx.restore(); REG.suppress--;
 }
 /* Mrs. Cranberry's way in: she walks up to the ramp, is hoisted up it and is handed through the window by the two aides (profile, facing right) */
-const CRAN_X = pchip([[13.7, -150], [14.05, -112], [14.38, -88], [14.7, -44], [14.98, -8], [15.3, 42], [15.6, 74]]);
+const CRAN_X = pchip([[13.7, -96], [14.15, -90], [14.45, -66], [14.75, -38], [15.02, -6], [15.3, 34], [15.6, 70]]);
 const cranY = x => x < WIN.ramp[0][0] ? FEET : x < WIN.ramp[1][0] ? lerp(FEET, WIN.floor, (x - WIN.ramp[0][0]) / (WIN.ramp[1][0] - WIN.ramp[0][0])) : WIN.floor - (x > WIN.x1 + 2 ? 0 : 0);
 function gagActors(lt) {
   const cx = CRAN_X(lt), cy = cranY(cx), step = c01((cx + 112) / 70) * (1 - c01((cx + 20) / 60));
   const moving = lt > 13.72 && lt < 15.5, dist = cx + 150;
   const cran = CT.cran({ x: cx, y: cy, s: S, t: lt, yaw: PI / 2, dir: 1, who: undefined, expr: 'hopeful', look: [.9, .1], gaitW: dist / S * .8, axis: 'x', vx: moving ? 80 : 0, arms: { l: 'hold', r: 'hold' }, grip: { l: [92, 88], r: [92, 88] } });
-  const a1x = cx - 104, a1 = CT.greenleaf({ kind: 'apple', id: 'apple', s: S, x: a1x, y: cranY(a1x), t: lt, yaw: PI / 2, dir: 1, expr: 'happy', look: [.9, .1], acc: [], gaitW: (a1x + 200) / S * .8, axis: 'x', vx: moving ? 80 : 0, arms: { l: 'rest', r: 'reach' } });
-  const a2x = 46 - 14 * c01((cx + 30) / 80), a2 = CT.greenleaf({ kind: 'kiwi', id: 'kiwi', s: S, x: a2x, y: WIN.floor, t: lt, yaw: -PI / 2, dir: -1, expr: 'hopeful', look: [-.9, .1], acc: [], arms: { l: 'reach', r: 'reach' } });
+  const a1 = CT.greenleaf({ kind: 'apple', id: 'apple', s: S, x: 162 - 10 * c01((cx + 30) / 80), y: WIN.floor, t: lt, yaw: -PI / 2, dir: -1, expr: 'happy', look: [-.9, .1], acc: [], arms: { l: 'reach', r: 'reach' } });
+  const a2x = 88 - 8 * c01((cx + 30) / 80), a2 = CT.greenleaf({ kind: 'kiwi', id: 'kiwi', s: S, x: a2x, y: WIN.floor, t: lt, yaw: -PI / 2, dir: -1, expr: 'hopeful', look: [-.9, .1], acc: [], arms: { l: 'reach', r: 'reach' } });
   return { cran, a1, a2, wk: { x: cx + 40, y: cy, lift: 4 * Math.max(0, Math.sin(lt * 14)) * (cx > -140 && cx < 40 ? 1 : 0) } };
 }
 
@@ -455,7 +455,7 @@ function floorsSheet(o = {}) {                                                  
   const cells = { A1: { v: 'ROOM', bold: true, fill: HEAD_FILL }, B1: { v: 'WING', bold: true, fill: HEAD_FILL }, C1: { v: 'FLOOR', bold: true, fill: HEAD_FILL, align: 'center' }, D1: { v: 'COST / YR', bold: true, fill: HEAD_FILL, align: 'right' },
     A2: { v: 'TOTAL', bold: true, fill: TOT_FILL }, B2: { v: '', fill: TOT_FILL }, C2: { v: '', fill: TOT_FILL }, D2: Object.assign({ v: usd(FLOORS_SUM), bold: true, fill: TOT_FILL, align: 'right' }, o.total || {}) };
   FLOORS.forEach((r, i) => { cells['A' + (i + 3)] = r[0]; cells['B' + (i + 3)] = r[1]; cells['C' + (i + 3)] = { v: r[2], align: 'center' }; cells['D' + (i + 3)] = { v: r[3], fmt: 'usd0' }; });
-  return Object.assign({}, SO_BASE, { cols: { A: 300, B: 200, C: 120, D: 240 }, tab: 'Floors', cells }, o.sheet || {});
+  return Object.assign({}, SO_BASE, { cols: { A: 240, B: 160, C: 100, D: 200 }, tab: 'Floors', cells }, o.sheet || {});
 }
 /* the staff table: NAME, ROLE, SHIFT, YEARS (rows 2-13 are the visible ones); the duplicates of the first 13 rows are rows 6, 7, 8, 9, 11 (the same ROLE and SHIFT as an earlier row) */
 const STAFF = [['Lemon', 'Charge Nurse', '3-11', 22], ['Mango', 'CNA', '3-11', 7], ['Clementine', 'RN', '3-11', 1], ['Kiwi', 'Aide', '3-11', 4], ['Carrot', 'Charge Nurse', '3-11', 3], ['Fig', 'Aide', '3-11', 2],
@@ -466,7 +466,7 @@ function staffSheet(o = {}) {
   const cells = { A1: { v: 'NAME', bold: true, fill: HEAD_FILL }, B1: { v: 'ROLE', bold: true, fill: HEAD_FILL }, C1: { v: 'SHIFT', bold: true, fill: HEAD_FILL, align: 'center' }, D1: { v: 'YEARS', bold: true, fill: HEAD_FILL, align: 'right' }, F1: { v: 'SYNERGY', bold: true, fill: '#e4edff', align: 'center' } };
   STAFF.forEach((r, i) => { cells['A' + (i + 2)] = r[0]; cells['B' + (i + 2)] = r[1]; cells['C' + (i + 2)] = { v: r[2], align: 'center' }; cells['D' + (i + 2)] = { v: r[3], align: 'right' }; });
   for (let i = STAFF.length + 2; i <= 40; i++) { const f = FIRST_N[i % FIRST_N.length], r = ROLE_N[(i * 3) % ROLE_N.length]; cells['A' + i] = f + (i > 23 ? ' ' + String.fromCharCode(64 + (i % 7)) : ''); cells['B' + i] = r; cells['C' + i] = { v: '3-11', align: 'center' }; cells['D' + i] = { v: 1 + (i * 7) % 19, align: 'right' }; }
-  return Object.assign({}, SO_BASE, { cols: { A: 240, B: 220, C: 130, D: 110, E: 40, F: 220 }, tab: 'Staff', freeze: 1, cells }, o.sheet || {});
+  return Object.assign({}, SO_BASE, { cols: { A: 200, B: 190, C: 110, D: 90, E: 40, F: 210 }, tab: 'Staff', freeze: 1, cells }, o.sheet || {});
 }
 const FIRST_N = ['Plum', 'Quince', 'Lime', 'Guava', 'Papaya', 'Date', 'Cherry', 'Peach', 'Grape', 'Olive', 'Lychee', 'Mulberry'], ROLE_N = ['Aide', 'RN', 'CNA', 'LPN', 'Dietary', 'Charge Nurse', 'PT'];
 
@@ -502,14 +502,15 @@ function dimWorld(a) { if (a <= .01) return; ctx.save(); ctx.fillStyle = `rgba(8
 function binderUI(lt, id, o = {}) {
   const text = lineText(id), l = lineOf(id); if (!SH15 || !l) return;
   const n = typedCount(lt, id, o.lead || 0), pop = o.pop ?? c01((lt - (l.s - CUR.start) + .02) / .22);
-  const bo = { at: o.at || [96, 640], w: o.w || 540, tail: o.tail || [700, 880], text, typed: SH15.typed(n, text.length), pop, size: o.size || 34, hero: true, buttons: [] };
+  const bo = { at: o.at || [96, 640], w: o.w || 540, tail: o.tail || [700, 880], text, typed: SH15.typed(n, text.length), pop, size: o.size || 34, hero: o.hero !== false, dressing: o.hero === false, buttons: [] };
   SH15.binder(bo, lt);
   const m = o.mascot || [800, 930];
-  if (pop > .05) drawChar(CT.binder({ x: m[0], y: m[1], s: o.ms || .74, t: lt, center: true, noLegs: true, hover: 0, noShadow: true, pose: o.pose || 'wave', look: [-.5, .3], grin: o.grin || 0, glint: o.glint || 0, who: 'bind', alpha: c01(pop * 1.4) }));
+  if (pop > .05) drawChar(CT.binder({ x: m[0], y: m[1], s: o.ms || .74, t: lt, center: true, noLegs: true, hover: 0, noShadow: true, pose: o.pose || 'wave', look: [-.5, .3], grin: o.grin || 0, glint: o.glint || 0, who: 'bind', alpha: c01(pop * 1.4), transit: !!o.transit }));
 }
 
 // ---- I1: Insert Row (4.92 to 6.0): the Insert tab, the click on Insert, the Executive Suite grows in at the top, the rows slide down, the total recalculates, the lobby row slides out of the window
 const I1_CLICK = [5.36, 5.5];
+const MOVING = { v: false };                                                    /* the window is popping, shrinking or sliding: its text is dressing and may cross the frame edge */
 function drawI1(lt) {
   const u = c01((lt - CUE.insertrow) / .48), flipU = c01((u - .55) / .4), newTot = usd(FLOORS_SUM + SUITE_ROW[3]);
   const total = flipU > 0 ? { v: newTot, flip: { from: usd(FLOORS_SUM), u: flipU }, pulse: c01((u - .55) / .6), pulseColor: C.amber } : {};
@@ -519,7 +520,7 @@ function drawI1(lt) {
   else SH15.insertRow({ sheet: so, at: 3, fill: '#cfe0ff', row: { A: { v: SUITE_ROW[0], hero: true, size: 32 }, B: SUITE_ROW[1], C: { v: SUITE_ROW[2], align: 'center' }, D: { v: SUITE_ROW[3], fmt: 'usd0' } } }, u, lt);
   const cp = SH15.cursorPath([{ t: 4.9, x: 920, y: 520, kind: 'arrow' }, { t: 5.3, x: b.aim[0], y: b.aim[1], click: I1_CLICK }, { t: 6.1, x: 700, y: 560 }], lt);
   SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.25 });
-  binderUI(lt, 'b1', { at: [150, 700], w: 430, tail: [740, 900], mascot: [820, 950], pop: c01((lt - 5.0) / .22) });
+  binderUI(lt, 'b1', { at: [786, 600], w: 284, tail: [930, 880], mascot: [940, 940], pop: c01((lt - 5.0) / .22), size: 32, transit: !!MOVING.v, hero: !MOVING.v });
 }
 
 // ---- Remove Duplicates: the rows that repeat an earlier ROLE and SHIFT go amber, are struck through and collapse (one per poof)
@@ -551,7 +552,7 @@ function drawI2(lt) {
   const cp = SH15.cursorPath([{ t: 15.2, x: 930, y: 380, kind: 'arrow' }, { t: 15.46, x: dup.aim[0], y: dup.aim[1], click: I2.click }, { t: 15.9, x: 556, y: 424 + 4, click: I2.role }, { t: 16.3, x: 196, y: 486, click: I2.shift },
     { t: 17.7, x: ok.aim[0], y: ok.aim[1], click: I2.ok }, { t: 18.5, x: 900, y: 860 }], lt);
   SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.25 });
-  binderUI(lt, 'b2', { at: [690, 520], w: 360, tail: [900, 880], mascot: [930, 950], size: 32 });
+  binderUI(lt, 'b2', { at: [690, 680], w: 380, tail: [920, 900], mascot: [940, 960], size: 32, transit: !!MOVING.v, hero: !MOVING.v });
 }
 // ---- the strip: the same sheet squeezed into the top of the frame (zoomed out, clipped) while the world plays below it (19.09 to 21.29)
 const STRIP = { z: .64, h: 470, grid: 340 };
@@ -589,7 +590,7 @@ function drawI34(lt) {
   const ok = SH15.dialogRect(RES_O, 'ok');
   const cp = SH15.cursorPath([{ t: 21.4, x: 800, y: 760, kind: 'arrow' }, { t: 21.84, x: ok.aim[0], y: ok.aim[1], click: I3.ok }, { t: 22.5, x: R.cx - 120, y: R.y + R.h + 90 }], lt);
   SH15.pointer(cp.x, cp.y, { kind: cp.kind, press: cp.press, s: 1.25 });
-  binderUI(lt, 'b3', { at: [690, 520], w: 360, tail: [900, 880], mascot: [930, 950], size: 32, grin: c01((lt - 22.9) / .2), glint: c01((lt - 23.1) / .3) });
+  binderUI(lt, 'b3', { at: [690, 700], w: 380, tail: [920, 900], mascot: [940, 960], size: 32, transit: !!MOVING.v, hero: !MOVING.v, grin: c01((lt - 22.9) / .2), glint: c01((lt - 23.1) / .3) });
   return R;
 }
 
@@ -631,6 +632,45 @@ const ROOM_FIGS = lt => {                                                       
   return out;
 };
 
+// ---- what the vanished leave behind: a cap, a stethoscope, a clipboard, a lanyard (authored, deterministic bounces; they fall from where the poof was)
+function bounceH(a, h0, e = .36, g = 1500) {                                          /* height above the floor at age a after a drop from rest at h0 */
+  if (a <= 0) return h0; const t1 = Math.sqrt(2 * h0 / g); if (a < t1) return h0 - .5 * g * a * a;
+  let v = g * t1 * e, tt = a - t1;
+  for (let i = 0; i < 4; i++) { const T2 = 2 * v / g; if (tt < T2) return v * tt - .5 * g * tt * tt; tt -= T2; v *= e; }
+  return 0;
+}
+function drawItem(kind, x, y, rot) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (kind === 'cap') { ctx.fillStyle = '#2f9a56'; ctx.strokeStyle = OUT; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-15, 0); ctx.bezierCurveTo(-15, -20, 15, -20, 15, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); rb(-17, -2, 34, 6, '#238043', { r: 3, lw: 1.6 }); disc(0, -17, 3, 3, '#e6f2e6', OUT, 1.2); }
+  else if (kind === 'steth') { ctx.strokeStyle = '#2a2c32'; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.moveTo(-14, -14); ctx.quadraticCurveTo(-18, 6, 0, 8); ctx.quadraticCurveTo(18, 6, 14, -14); ctx.moveTo(0, 8); ctx.lineTo(0, 18); ctx.stroke(); disc(0, 22, 6.5, 6.5, '#c9ced6', OUT, 2); disc(0, 22, 2.6, 2.6, '#8a939c'); }
+  else if (kind === 'clip') { rb(-13, -18, 26, 36, '#a77a44', { r: 3, lw: 2 }); rb(-10, -14, 20, 30, '#ffffff', { r: 1.5, lw: 1.2 }); rb(-6, -21, 12, 6, '#8a939c', { r: 2, lw: 1.6 }); for (const yy of [-6, 0, 6]) ln(-7, yy, 7, yy, '#9aa3ad', 1.4); }
+  else { ctx.strokeStyle = '#1e8e5a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-18, -10); ctx.quadraticCurveTo(-6, 18, 4, 6); ctx.quadraticCurveTo(14, -6, 20, 8); ctx.stroke(); rb(10, 4, 18, 24, '#f7f4ec', { r: 3, lw: 1.8 }); rb(10, 4, 18, 6, '#1e8e5a', { r: 3, lw: 0 }); }
+  ctx.restore();
+}
+const ITEMS = [['cap', 0, 22, 4.6], ['steth', 1, -18, -5.2], ['clip', 2, 26, 3.4], ['badge', 3, -22, -4.4]];
+function drawItems(lt) {
+  for (const [kind, i, vx, w] of ITEMS) {
+    const v = VAN[i], a = lt - poofT(i) - .05; if (a < 0) continue;
+    const rf = roomFloor()[v.room], h0 = 62, h = bounceH(a, h0), x = v.x + vx * Math.min(a, .9) * (1 - .5 * c01(a / 1.2)), rest = h < 1 && a > .5, rot = rest ? w * .13 : w * Math.min(a, .55) * .9;
+    drawItem(kind, x, rf.floor - 6 - h, rot);
+  }
+}
+/* Lemon's lanyard badge: YEARS OF SERVICE 22 (world units; drawn after the character, before the table front) */
+function drawLemonBadge(lt) {
+  const k = eback((lt - 30.1) / .3); if (k <= 0) return;
+  const x = LW.lemon + 6, y = 1262;
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+  UI.sign([-44, -20, 88, 40], [{ t: 'YEARS OF SERVICE', size: 7.2, weight: 900 }, { t: '22', size: 24, weight: 900 }], { fill: '#fffdf4', stroke: '#1e8e5a', lw: 2.2, ink: '#22262b', r: 5, pad: 2, id: 'lembadge', kind: 'tag', shadow: 6 });
+  ctx.restore();
+}
+function lemonActing(lt) {                                                       /* what Lemon's eyes do in the last beats: the badge, the empty chair, the camera */
+  if (lt < 29.1) return { look: [-.5, .1], expr: 'dead', lid: .3, hy: -.4 };
+  if (lt < 30.3) return { look: [-.55, .2], expr: 'dead', lid: .3, hy: -.4 };
+  if (lt < 31.0) return { look: [.1, .95], expr: 'sad', lid: .45, hy: -.1 };
+  if (lt < 31.45) return { look: [.95, .15], expr: 'sad', lid: .4, hy: .35 };
+  return { look: [0, 0], expr: 'dead', lid: .5, hy: 0 };
+}
+
 // ------------------------------------------------------------------ the world, shot by shot
 const faceCam = (o, z, up = 190, dx = 0) => { const [fx, fy] = faceC(o); return [fx + dx, fy + up / z, z]; };
 const SHOTS = [];
@@ -654,7 +694,7 @@ shot('sink', 6.0, 9.97, lt => { const c = SINK_CAM(lt), p = lt >= CUE.thud ? 1 +
 shot('mango', 9.97, 11.26, lt => [-92, 1262, 1.8, 0], lt => [mangoO(lt, { x: -292, yaw: .6, look: [.55, .85], arms: { l: 'hips', r: 'rest' } })], { dof: 0, free: true });
 shot('tomato2', 11.26, 12.35, lt => [-196, 1262, 1.7, 0], lt => [tomatoO(lt, { x: -418, yaw: .5, look: [.6, .8], arms: { l: 'rest', r: [.85, .1] } }), mangoO(lt, { x: -292, yaw: -.4, look: [.4, .8], arms: { l: 'hips', r: 'rest' } })], { dof: 0, a14: 11.3, free: true });
 shot('straw', 12.35, 13.78, lt => [-230, 1262, 2.5, 0], lt => [strawO(lt, { x: -292, yaw: .35, look: [.7, .1], expr: 'hopeful' })], { dof: 0, free: true });
-shot('window', 13.78, 15.03, lt => [-62, 1283, 2.4, 0], lt => [], { dof: 0, gag: true });
+shot('window', 13.78, 15.03, lt => [60, 1283, 2.6, 0], lt => [], { dof: 0, gag: true });
 // ---- part two: remove duplicates (the sheet is up from 15.2; from 19.09 it is a strip pinned over the world), =4+4, the one with seniority
 shot('onion2', 15.03, 19.09, pairCam(3.0, 3.4, PX, PX + 30, 15.03, 19.09, 70), PAIR, { dof: 3 });
 shot('v1', 19.09, 19.88, lt => [540, 826, 1.0, 0], lt => vanishers(lt).filter(o => ['fig', 'pine'].includes(o.kind)).concat(ROOM_FIGS(lt).filter(o => o.kind === 'melon')), { dof: 0, rooms: true });
@@ -666,8 +706,8 @@ shot('mango2', 24.06, 25.49, lt => [...faceCam(mangoO(lt), 3.6, 200, 0), 0], lt 
 shot('tomato3', 25.49, 26.59, lt => [...faceCam(tomatoO(lt), 3.6, 200, 0), 0], lt => [tomatoO(lt, { yaw: .25, look: [.2, .1], arms: { l: 'shrug', r: 'shrug' } })], { dof: 3 });
 shot('lemon1', 26.59, 27.90, pairCam(3.1, 3.7, LCX - 6, LCX, 26.59, 27.90, 160), finaleCast, { dof: 3 });
 shot('tomato4', 27.90, 29.13, lt => [...faceCam(tomatoO(lt), 3.6, 200, 0), 0], lt => [tomatoO(lt, { yaw: .3, look: [.4, .1], arms: { l: 'rest', r: lt > 28.5 ? 'up' : 'rest' } })], { dof: 3 });
-shot('lemon2', 29.13, 30.04, lt => { const k = eio((lt - 29.13) / .91), z = lerp(3.4, 3.8, k); return [LW.lemon + 20, LEM_FACE_Y + 190 / z, z, 0]; }, lt => [lemonO(lt)], { dof: 4 });
-shot('lemon3', 30.04, 32.56, lt => { const k = eio((lt - 30.04) / 2.5), z = lerp(3.8, 4.7, k); return [LW.lemon + 20, LEM_FACE_Y + 190 / z, z, 0]; }, lt => [lemonO(lt)], { dof: 4 });
+shot('lemon2', 29.13, 30.04, lt => { const k = eio((lt - 29.13) / .91), z = lerp(3.4, 3.8, k); return [LW.lemon + 20, LEM_FACE_Y + 190 / z, z, 0]; }, lt => [lemonO(lt, lemonActing(lt))], { dof: 4 });
+shot('lemon3', 30.04, 32.56, lt => { const k = eio((lt - 30.04) / 2.5), z = lerp(3.8, 4.7, k); return [LW.lemon + 20, LEM_FACE_Y + 190 / z, z, 0]; }, lt => [lemonO(lt, lemonActing(lt))], { dof: 4 });
 
 const camOf = lt => { const c = shotAt(lt).cam(lt); return [c[0], c[1], c[2], c[3] || 0]; };
 const camVelOf = lt => camSpeed(camOf, lt);
@@ -703,15 +743,17 @@ function drawLawn(lt, sh, st) {
   ctx.restore();
   const ord = shown.slice().sort((a, b) => (a.noLegs ? 1 : 0) - (b.noLegs ? 1 : 0));
   for (const o of ord) drawChar(o);
+  if (lt >= 30.1 && shown.some(o => o.kind === 'lemon')) drawLemonBadge(lt);
   drawTableFront(lt, q);
 }
+const FULLWIN1 = lt => (lt >= 5.05 && lt < 6.1) || (lt >= 15.4 && lt < 19.09) || (lt >= 21.55 && lt < 24.2);
 function drawWorld(lt) {
   const sh = shotAt(lt), st = towerState(lt);
   S15.light(st);
   const px = sh.dof || 0;
   if (px > .5) V2.dof(px, () => S15.tower(lt, st)); else S15.tower(lt, st);
   if (lt >= 6 && lt < T_UNHOOK + 1.5) drawCabBinder(lt, st);
-  drawLawn(lt, sh, st);
+  if (!FULLWIN1(lt)) drawLawn(lt, sh, st);
   if (px > .5) V2.dof(px, () => S15.front(lt, st)); else S15.front(lt, st);
   if (sh.a14 != null) drawA14(lt, sh.a14, 38, GY - 62);
   drawDust(lt);
@@ -725,7 +767,8 @@ function drawSheetOverlay(lt) {
   if (lt >= 4.92 && lt < 6.3) {                                                      /* I1: Insert Row */
     const k = c01((lt - 4.92) / .3), out = c01((lt - 6.0) / .26), from = POP0 || (POP0 = lapRectScreen(4.92));
     dimWorld(.55 * k * (1 - out));
-    withWin(winXf(k, from, ei3(out)), () => drawI1(lt));
+    const mv = k < 1 || out > 0; MOVING.v = mv; if (mv) REG.suppress++;
+    try { withWin(winXf(k, from, ei3(out)), () => drawI1(lt)); } finally { if (mv) REG.suppress--; MOVING.v = false; }
     return;
   }
   if (lt >= 15.2 && lt < 24.3) {                                                     /* I2, the strip, I3 and I4: one session of the window */
@@ -733,8 +776,12 @@ function drawSheetOverlay(lt) {
     let sk = 0;
     if (lt >= 19.09 && lt < 21.29) sk = c01((lt - 19.09) / .23); else if (lt >= 21.29 && lt < 21.52) sk = 1 - c01((lt - 21.29) / .23);
     dimWorld(.55 * pop * (1 - sk) * (1 - out));
-    if (sk > .001) { drawStrip(lt, sk); return; }
-    withWin(winXf(pop, from, ei3(out)), () => { if (lt < 21.29) drawI2(lt); else drawI34(lt); });
+    const mv = pop < 1 || out > 0 || sk > .001; MOVING.v = mv; if (mv) REG.suppress++;
+    try {
+      if (sk > .001) drawStrip(lt, sk);
+      else withWin(winXf(pop, from, ei3(out)), () => { if (lt < 21.29) drawI2(lt); else drawI34(lt); });
+    } finally { if (mv) REG.suppress--; MOVING.v = false; }
+    if (sk > .001) return;
     if (lt >= SYN.boom - .02 && lt < 24.3) { const a = lt - SYN.boom; confetti(a, 540, WIN_Y + 520, { n: 110, speed: 1500, seed: 9 }); }
   }
 }

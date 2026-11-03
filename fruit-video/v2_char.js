@@ -461,12 +461,15 @@ const V2C = (() => {
   const sstep = (a, b, x) => { const u = clamp((x - a) / (b - a)); return u * u * (3 - 2 * u); };
   const yawNorm = a => { a = a % TAU; return a > PI ? a - TAU : a <= -PI ? a + TAU : a; };
   const sgn = x => x < 0 ? -1 : 1;
-  function turnLerp(a, b, u) { return a + yawNorm(b - a) * sstep(0, 1, u); }                   // ease a turn from a to b the short way round, u 0..1
-  function turnPair(a, b, u, lead = .3) { return { headYaw: turnLerp(a, b, u / (1 - lead)), yaw: turnLerp(a, b, (u - lead) / (1 - lead)) }; }   // the head finishes `lead` of the time before the body does
+  function turnLerp(a, b, u, dir) { let d = yawNorm(b - a); if (dir > 0 && d < 0) d += TAU; else if (dir < 0 && d > 0) d -= TAU; return a + d * sstep(0, 1, u); }   // ease a turn from a to b, u 0..1: the short way round, or with dir +1 / -1 the way that raises / lowers the yaw (a half turn from +PI/2 to -PI/2 goes through the front with dir -1, through the back with dir +1)
+  function turnPair(a, b, u, lead = .3, dir) { return { headYaw: turnLerp(a, b, u / (1 - lead), dir), yaw: turnLerp(a, b, (u - lead) / (1 - lead), dir) }; }   // the head finishes `lead` of the time before the body does
   function turnYaws(o) {
     let y = o.yaw || 0, h = o.headYaw;
-    if (o.turnTo) y = turnLerp(o.turnTo[0], o.turnTo[1], o.turnTo[2]);
-    if (o.headTurnTo) h = turnLerp(o.headTurnTo[0], o.headTurnTo[1], o.headTurnTo[2]);
+    if (o.turnTo) {   // [yaw0, yaw1, u, lead]: with a lead (0..1, say .3) the head is that much ahead of the body
+      const tt = o.turnTo, lead = tt[3] || 0;
+      if (lead > 0) { const pr = turnPair(tt[0], tt[1], tt[2], lead, tt[4]); y = pr.yaw; h = pr.headYaw; } else y = turnLerp(tt[0], tt[1], tt[2], tt[4]);
+    }
+    if (o.headTurnTo) h = turnLerp(o.headTurnTo[0], o.headTurnTo[1], o.headTurnTo[2], o.headTurnTo[3]);
     y = yawNorm(y); h = h == null ? y : yawNorm(h);
     if (Math.abs(y) < 1e-4 && Math.abs(h) < 1e-4) return null;
     return { y, h, sy: Math.sin(y), cy: Math.cos(y), sh: Math.sin(h), ch: Math.cos(h) };
@@ -474,24 +477,30 @@ const V2C = (() => {
   function yawInfo(o) { return turnYaws(o) || { y: 0, h: 0, sy: 0, cy: 1, sh: 0, ch: 1 }; }
   function faceDir(o) { const Y = turnYaws(o), d = Y && Y.sh < 0 ? -1 : 1; return o.flip ? -d : d; }   // +1 the face points to screen right, -1 to the left (a back view counts as the side it last turned to)
   function yawToward(dx, o = {}) { return (o.max ?? 1.15) * Math.tanh(dx / (o.k ?? 220)); }   // a smooth yaw that points a character toward something dx pixels to the right (negative: left); for a velocity use { max: PI / 2, k: 80 }
+  // face the way you are going: vx is the screen velocity (+ right), `toward` the speed toward the camera (+) or away from it (-); 0 front, +PI/2 walking right, PI walking away, -PI/2 walking left. Below eps the character keeps `rest`.
+  function yawFromMotion(vx, toward = 0, rest = 0, eps = 8) { return Math.hypot(vx, toward) < eps ? rest : Math.atan2(vx, toward); }
   const YAW_ACC = {}, YAW_TEX = {}, YAW_TOP = {};   // per-accessory / per-texture / per-top yaw-aware art, see GUIDE_TURN.md
 
   // ---------------------------------------------------------------- the silhouette of a kind, measured once: its centre line and half width at 48 heights
-  const PROF = {}, pcv = document.createElement('canvas'), pctx = (pcv.width = pcv.height = 4, pcv.getContext('2d'));
+  const PROF = {}, rcv = document.createElement('canvas'), rctx = rcv.getContext('2d', { willReadFrequently: true });
+  // The silhouette is rasterised once (about 0.5 ms) and read back row by row; a kind whose outline is replaced (a kit that changes KINDS[kind] or PATHS[kind] as the character changes) is measured again the moment its path object changes.
   function profile(o, k) {
-    const key = o.kind, c0 = PROF[key];
-    if (c0 && c0.rx === k.rx && c0.ry === k.ry && c0.shape === k.shape) return c0;
-    const path = PATHS[key] || (PATHS[key] = bodyPath(k));
-    const N = 48, y0 = -k.ry * 1.04, dy = k.ry * 2.08 / N, ext = k.rx * 1.5, inside = (x, y) => pctx.isPointInPath(path, x, y);
-    const P = { rx: k.rx, ry: k.ry, shape: k.shape, N, y0, dy, c: [], w: [] };
+    const key = o.kind, path = PATHS[key] || (PATHS[key] = bodyPath(k)), c0 = PROF[key];
+    if (c0 && c0.path === path && c0.rx === k.rx && c0.ry === k.ry && c0.shape === k.shape) return c0;
+    const N = 48, y0 = -k.ry * 1.04, dy = k.ry * 2.08 / N, ext = k.rx * 1.5, res = Math.max(1.4, Math.max(k.rx, k.ry) / 80);
+    const W2 = Math.ceil(2 * ext / res) + 2, H2 = Math.ceil(2.08 * k.ry / res) + 2;
+    rcv.width = W2; rcv.height = H2;
+    rctx.setTransform(1 / res, 0, 0, 1 / res, ext / res, -y0 / res); rctx.fillStyle = '#000'; rctx.fill(path); rctx.setTransform(1, 0, 0, 1, 0, 0);
+    const px = rctx.getImageData(0, 0, W2, H2).data;
+    const P = { path, rx: k.rx, ry: k.ry, shape: k.shape, N, y0, dy, c: [], w: [], yp: {} };
     for (let i = 0; i <= N; i++) {
-      const y = y0 + i * dy; let a = null, b = null;
-      for (let x = -ext; x <= ext; x += 3) if (inside(x, y)) { a = x; break; }
-      for (let x = ext; x >= -ext; x -= 3) if (inside(x, y)) { b = x; break; }
-      if (a == null) { P.c.push(0); P.w.push(0); continue; }
-      let lo = a - 3, hi = a; for (let j = 0; j < 4; j++) { const m = (lo + hi) / 2; if (inside(m, y)) hi = m; else lo = m; } a = hi;
-      lo = b; hi = b + 3; for (let j = 0; j < 4; j++) { const m = (lo + hi) / 2; if (inside(m, y)) lo = m; else hi = m; } b = lo;
-      P.c.push((a + b) / 2); P.w.push((b - a) / 2);
+      const r = clamp(Math.floor((y0 + i * dy - y0) / res), 0, H2 - 1) * W2 * 4;
+      let a = -1, b = -1;
+      for (let x = 0; x < W2; x++) if (px[r + x * 4 + 3] > 0) { a = x; break; }
+      for (let x = W2 - 1; x >= 0; x--) if (px[r + x * 4 + 3] > 0) { b = x; break; }
+      if (a < 0) { P.c.push(0); P.w.push(0); continue; }
+      const xl = (a + 1 - px[r + a * 4 + 3] / 255) * res - ext, xr = (b + px[r + b * 4 + 3] / 255) * res - ext;
+      P.c.push((xl + xr) / 2); P.w.push(Math.max(0, (xr - xl) / 2));
     }
     let asym = 0; for (let i = 0; i <= N; i++) if (P.w[i] > k.rx * .25) asym = Math.max(asym, Math.abs(P.c[i]) / k.rx);
     P.asym = asym;
@@ -502,25 +511,24 @@ const V2C = (() => {
   const profW = (P, y) => Math.max(8, profAt(P, y, P.w)), profC = (P, y) => profAt(P, y, P.c);
 
   // the silhouette at this yaw: the original path for a sphere-like kind, a squeezed copy for a flat sprite, a re-swung centre line for a curved body (cached per angle)
-  const YPATH = {};
   function yawPath(o, k, P, Y) {
     const base = PATHS[o.kind] || (PATHS[o.kind] = bodyPath(k));
     if (P.mode === 'sym') return base;
     const cb = Y.cy;
     if (P.mode === 'flat') {
-      const sx = flatSx(k, Y), key = o.kind + ':f:' + Math.round(sx * 400);
-      if (YPATH[key]) return YPATH[key];
-      const q = new Path2D(); q.addPath(base, new DOMMatrix([sx, 0, 0, 1, 0, 0])); return YPATH[key] = q;
+      const sx = flatSx(k, Y), key = 'f' + Math.round(sx * 400);
+      if (P.yp[key]) return P.yp[key];
+      const q = new Path2D(); q.addPath(base, new DOMMatrix([sx, 0, 0, 1, 0, 0])); return P.yp[key] = q;
     }
-    const key = o.kind + ':t:' + Math.round(cb * 300);
-    if (YPATH[key]) return YPATH[key];
+    const key = 't' + Math.round(cb * 300);
+    if (P.yp[key]) return P.yp[key];
     const R = [], L = [];
     for (let i = 0; i <= P.N; i++) if (P.w[i] > .6) { const y = P.y0 + i * P.dy, c = P.c[i] * cb; R.push([c + P.w[i], y]); L.push([c - P.w[i], y]); }
     const a = R[0], b = R[R.length - 1], pts = [[(a[0] + L[0][0]) / 2, a[1] - P.dy * .6]].concat(R, [[(b[0] + L[L.length - 1][0]) / 2, b[1] + P.dy * .6]], L.slice().reverse());
     const q = new Path2D(), n = pts.length, mid = (u, v) => [(u[0] + v[0]) / 2, (u[1] + v[1]) / 2];
     let m0 = mid(pts[n - 1], pts[0]); q.moveTo(m0[0], m0[1]);
     for (let i = 0; i < n; i++) { const v = pts[i], m = mid(v, pts[(i + 1) % n]); q.quadraticCurveTo(v[0], v[1], m[0], m[1]); }
-    q.closePath(); return YPATH[key] = q;
+    q.closePath(); return P.yp[key] = q;
   }
 
 
@@ -542,16 +550,24 @@ const V2C = (() => {
     const look = o.look || [0, 0], lx = look[0] + .05 * vnoise(t * 1.1 + seed), ly = look[1] + .04 * vnoise(t * .9 + seed + 7);
     const kc = o.colors || k.c, skin = V2.rgba(V2.mix(kc[0], kc[1], .34), 1);
     const ang = faceAng(Y.h), fc = (k.shape === 'banana' ? k.face : 0) * Y.cy;
-    const place = (x, y) => { const R = faceR(k, P, y), lam = Math.asin(clamp(x / R, -.96, .96)), lo = lam + ang, cz = Math.cos(lo); return { X: fc + R * Math.sin(lo), cz, sc: clamp(cz / Math.cos(lam), .1, 1.3), vis: sstep(.04, .26, cz) }; };
+    // a feature at front x, height y: where it has turned to (kept inside the silhouette: hw is its half width), how wide it is, how visible
+    const pf = sstep(.9, 1.3, Math.abs(ang)), lf = 1 - sstep(1.6, 1.95, Math.abs(ang));   // toward profile the eye is drawn wider than the sphere would make it, so a profile still reads as a face at phone size; past profile the whole face is gone by about 115 degrees whatever the kind (the mouth does the same)
+    const place = (x, y, hw = 0, boost = false) => {
+      const R = faceR(k, P, y), lam = Math.asin(clamp(x / R, -.96, .96)), lo = lam + ang, cz = Math.cos(lo);
+      let sc = clamp(cz / Math.cos(lam), .1, 1.3); if (boost && cz > .2) sc = lerp(sc, Math.max(sc, .78), pf);
+      let X = fc + R * Math.sin(lo);
+      if (hw) { const lim = Math.max(0, profW(P, y) * .985 - hw * sc); X = fc + clamp(X - fc, -lim, lim); }
+      return { X, cz, sc, vis: sstep(.12, .34, cz) * lf };
+    };
     const eyes = [];
-    for (const side of [-1, 1]) { const pl = place(side * ex, ey); if (pl.vis > .01) eyes.push({ side, pl }); }
+    for (const side of [-1, 1]) { const pl = place(side * ex, ey, er + 3, true); if (pl.vis > .01) eyes.push({ side, pl }); }
     eyes.sort((a, b) => a.pl.cz - b.pl.cz);   // the far eye first
     let x0 = 1e9, x1 = -1e9;
     ctx.save();
     // cheeks
     ctx.fillStyle = 'rgba(255,110,150,.30)';
     for (const side of [-1, 1]) {
-      const cy = ey + er * 1.55, pl = place(side * (ex + er * .55), cy);
+      const cy = ey + er * 1.55, pl = place(side * (ex + er * .55), cy, er * .78);
       if (pl.vis <= .01) continue;
       ctx.save(); ctx.globalAlpha *= pl.vis; ell(pl.X, cy, er * .78 * pl.sc, er * .42); ctx.fill(); ctx.restore();
     }
@@ -730,9 +746,9 @@ const V2C = (() => {
     const { ry } = k, gy = -ry * .86, c = Y.ch, s = Y.sh;
     const g = ctx.createLinearGradient(0, gy - 50, 0, gy + 20); g.addColorStop(0, '#7ddc5a'); g.addColorStop(1, '#2f8f2a');
     // the calyx is two fans of leaves crossed like a plus seen from above: the front fan narrows as the head turns, the side fan opens
-    const fan = (sx, phase) => { for (let i = 0; i < 7; i++) { const a = -1.35 + i * .45 + phase; leafS(Math.sin(a) * 18, gy + 6, a * 1.05 + (a > 0 ? .5 : -.5), 62 - Math.abs(phase) * 30, 17, g, sx); } };
+    const fan = (sx, phase, step) => { for (let i = 0; i < 7; i += step) { const a = -1.35 + i * .45 + phase; leafS(Math.sin(a) * 18, gy + 6, a * 1.05 + (a > 0 ? .5 : -.5), 62 - Math.abs(phase) * 30, 17, g, sx); } };
     const sA = sgn(c) * Math.max(.14, Math.abs(c)), sB = Math.abs(s);
-    if (sB > .06) { if (Math.abs(c) > sB) { fan(sB, .225); fan(sA, 0); } else { fan(sA, 0); fan(sB, .225); } } else fan(sA, 0);
+    if (sB > .2) { if (Math.abs(c) > sB) { fan(sB, .225, 2); fan(sA, 0, 1); } else { fan(sA, 0, 1); fan(sB, .225, 2); } } else fan(sA, 0, 1);   /* the side fan has four leaves and only appears once it is wide enough to see */
     ctx.fillStyle = '#3a8d2c'; rr(-6, gy - 34, 12, 30, 5); ctx.fill();
     if (o.cap === false) return;
     // the nurse cap: its silhouette is a flattened bowl, the pink band wraps round it, the cross sits on the front and slides round with the head (a plain cap from behind)
@@ -757,6 +773,7 @@ const V2C = (() => {
   // The far leg (the one turned away from the viewer) is drawn first and a touch darker; knees bend toward the face side in profile; shoes point where the face points and show their length.
   const LIMB_FAR = V2.rgba(V2.mix(LIMB, '#000000', .32), 1), LIMB_STEPS = Array.from({ length: 9 }, (_, i) => V2.rgba(V2.mix(LIMB, '#000000', .32 * i / 8), 1));
   const limbTone = f => LIMB_STEPS[Math.round(clamp(f) * 8)];   // 0 = lit limb, 1 = a limb turned away from us
+  const CAP_STEPS = Array.from({ length: 9 }, (_, i) => V2.rgba(V2.mix('#3a3342', '#27222f', i / 8), 1)), CUFF_STEPS = Array.from({ length: 9 }, (_, i) => V2.rgba(V2.mix('#4a4258', '#2e2a38', i / 8), 1));
   function legsYaw(o, k, t, Y, P, silhouette) {
     const hipY = k.shape === 'straw' ? k.ry * .7 : k.shape === 'banana' ? k.ry * .78 : k.shape === 'star' ? k.ry * .74 : k.ry * .8;
     const hx = k.hip || k.rx * .32, L = k.leg || 90, cb = Y.cy, sb = Y.sy, cx = (k.shape === 'banana' ? k.rx * .12 : 0) * cb;
@@ -821,7 +838,13 @@ const V2C = (() => {
     let sol;
     if (grip) {
       const bend = Math.abs(cb) > .25 ? -side * sgn(cb) : fd;
-      sol = ik2(sxw, sy, grip[0], grip[1], L1, L2, bend, `${o.id || o.kind} ${key} arm`);
+      // grip is a target in screen space (the body-local pixels of the front view). With gripSpace 'body' it turns with the body: x foreshortens with cos(yaw) and the hands stay o.gripZ (default half the body radius) in front of it.
+      let gx = grip[0], gy = grip[1];
+      if ((typeof o.gripSpace === 'object' && o.gripSpace ? o.gripSpace[key] : o.gripSpace) === 'body') gx = gx * cb + (o.gripZ ?? k.rx * .5) * sb;
+      // a target that was within reach at the front but is not once the shoulder has moved with the turn: the hand stops at full stretch (a target out of reach at the front is still reported)
+      const reach = L1 + L2 - 1, ddx = gx - sxw, ddy = gy - sy, dd = Math.hypot(ddx, ddy);
+      if (dd > reach && Math.hypot(grip[0] - sx0, grip[1] - sy) <= reach + 12) { const f = reach / dd; gx = sxw + ddx * f; gy = sy + ddy * f; }
+      sol = ik2(sxw, sy, gx, gy, L1, L2, bend, `${o.id || o.kind} ${key} arm`);
     } else {
       const [a1, a2] = poseAngles(pose, t + (side > 0 ? .5 : 0));
       // twist (gesture poses reach toward the face side) and swing (forward / back along the walk)
@@ -854,7 +877,7 @@ const V2C = (() => {
     ctx.save(); if (alpha < 1) ctx.globalAlpha *= alpha;
     const wid = [17, 14.5, 12.5];
     limb([[sx, sy], [sol.ex, sol.ey], [sol.hx, sol.hy]], wid, limbTone(g.tone));
-    ctx.fillStyle = V2.rgba(V2.mix('#3a3342', '#27222f', g.tone), 1); ell(sx, sy, 9.5, 9.5); ctx.fill();   // shoulder cap hides the join with the body
+    ctx.fillStyle = CAP_STEPS[Math.round(clamp(g.tone) * 8)]; ell(sx, sy, 9.5, 9.5); ctx.fill();   // shoulder cap hides the join with the body
     const prop = o.hold && o.hold[key];
     const hx = sol.hx, hy = sol.hy, ang = Math.atan2(hy - sol.ey, hx - sol.ex);
     if (prop) {
@@ -866,7 +889,7 @@ const V2C = (() => {
       }
     }
     ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang); if (g.flip) ctx.scale(1, -1);
-    ctx.fillStyle = V2.rgba(V2.mix('#4a4258', '#2e2a38', g.tone), 1); ctx.beginPath(); ctx.roundRect(-8, -8.5, 10, 17, 3); ctx.fill();
+    ctx.fillStyle = CUFF_STEPS[Math.round(clamp(g.tone) * 8)]; ctx.beginPath(); ctx.roundRect(-8, -8.5, 10, 17, 3); ctx.fill();
     hand((o.hand && o.hand[key]) || (prop ? 'grip' : HAND[pose] || 'open'), side, o);
     ctx.restore(); ctx.restore();
   }
@@ -884,7 +907,7 @@ const V2C = (() => {
   Object.assign(ACC_CLS, { badge: 'decal', badge7: 'decal', unionpin: 'decal', unionpin7: 'decal', perdiem: 'decal', perdiem9: 'decal', nametag: 'decal', nametag9: 'decal', agency: 'decal', pricetag: 'decal', keys: 'decal', keys7: 'decal', rose: 'decal',
     bandage: 'fdecal', bandage7: 'fdecal', partyhat: 'fdecal', partyhat10: 'fdecal' });
   const nameW = o => { ctx.font = '900 15px Nunito'; return Math.max(88, ctx.measureText(o.tag || 'ADMIN').width + 18); };
-  const ACC_W = { nametag9: nameW, nametag: nameW, badge: 44, badge7: 40, perdiem9: 60, perdiem: 60, unionpin: 30, unionpin7: 30, agency: 68, pricetag: 40, rose: 24, keys: 40, keys7: 40, bandage: 58, bandage7: 52, partyhat: 60, partyhat10: 60 };   // front width of each patch, so its two ends can be mapped
+  const ACC_W = { nametag9: nameW, nametag: nameW, badge: 44, badge7: 40, perdiem9: 60, perdiem: 60, unionpin: 30, unionpin7: 30, agency: 68, pricetag: 40, rose: 24, keys: 40, keys7: 40, bandage: 58, bandage7: 52, partyhat: 60, partyhat10: 60 };   // front width of each patch: a label that sits inside the silhouette at the front is kept inside it when it turns
   const ONE_ACC = {};
   function accYaw(o, k, t, layer, Y, P) {
     const list = o.acc;
@@ -912,9 +935,11 @@ const V2C = (() => {
             saveT.call(cx, fx * Y.cy - fx + X, y); return;
           }
           // the patch is moved to where that spot of the sphere has turned to and squeezed by the foreshortening; a wide label is then kept inside the silhouette (it wraps round the curve instead of sticking out past the edge)
-          const lam = Math.asin(clamp(x / R, -.96, .96)), lo = lam + yw, c = Math.cos(lo), vis = sstep(.1, .36, c), sc = clamp(c / Math.cos(lam), .12, 1.3);
-          const w = typeof ACC_W[a] === 'function' ? ACC_W[a](o) : ACC_W[a] || 40, lim = Rs * .97 - w * .5 * sc;
-          let Xc = R * Math.sin(lo); if (lim > 0 && Math.abs(x) + w * .5 <= Rs * .97) Xc = clamp(Xc, -lim, lim);   /* only a label that sits inside the silhouette at the front is kept inside */
+          const lam = Math.asin(clamp(x / R, -.96, .96)), lo = lam + yw, c = Math.cos(lo), vis = sstep(.03, .14, c), sc = clamp(c / Math.cos(lam), .1, 1.3);
+          const w = typeof ACC_W[a] === 'function' ? ACC_W[a](o) : ACC_W[a] || 40, lim = Math.max(Rs * .3, Rs * .97 - w * .5 * sc);
+          let Xc = R * Math.sin(lo);
+          if (Math.abs(x) + w * .5 <= Rs * .97) Xc = clamp(Xc, -lim, lim);   /* a label that sits inside the silhouette at the front is kept inside it */
+          else if (Math.abs(Xc) > lim) Xc = lerp(Xc, Math.sign(Xc) * lim, sstep(0, .5, Math.abs(yw)));   /* one that already pokes out at the front (a bandage on the shoulder) comes back inside the outline as the body turns: gradually, so the front is the old art */
           cx.globalAlpha *= vis; saveT.call(cx, fx * Y.cy - fx + Xc, y); cx.scale(sc, 1);
         };
         try { drawAcc(o, k, t, layer); } finally { delete cx.translate; }
@@ -991,13 +1016,18 @@ const V2C = (() => {
     }
     if (!o.noLegs) legsYaw(o, k, t, Y, P);
     const geoms = o.noArms ? [] : [-1, 1].map(sd => armGeom(o, k, t, sd, Y, P)).filter(Boolean);
-    for (const g of geoms) if (!g.near || g.behindW > 0) armDraw(o, k, t, g, 1);   // the far arm hangs behind the body (so does an arm held out in front of it, once the back is turned)
-    accYaw(o, k, t, 'back', Y, P);
-    bodyYaw(o, k, t, Y, P);
-    accYaw(o, k, t, 'mid', Y, P);
-    faceYaw(o, k, t, seed, Y, P);
-    accYaw(o, k, t, 'front', Y, P);
-    for (const g of geoms) { const a = (g.near ? 1 : g.front) * (1 - g.behindW); if (a > .01 && !(g.behindW > 0 && !g.near && false)) armDraw(o, k, t, g, a); }   // near arms in front; a far arm eases behind the body between 5 and 16 degrees of yaw
+    // props that look at o.grip to find the other hand (the clipboard's pen string) are handed the hands as they really are after the turn
+    const gripKeep = o.grip;
+    if (gripKeep && geoms.length) { const gn = Object.assign({}, gripKeep); for (const g of geoms) if (gripKeep[g.key]) gn[g.key] = [g.sol.hx, g.sol.hy]; o.grip = gn; }
+    try {
+      for (const g of geoms) if (!g.near || g.behindW > 0) armDraw(o, k, t, g, 1);   // the far arm hangs behind the body (so does an arm held out in front of it, once the back is turned)
+      accYaw(o, k, t, 'back', Y, P);
+      bodyYaw(o, k, t, Y, P);
+      accYaw(o, k, t, 'mid', Y, P);
+      faceYaw(o, k, t, seed, Y, P);
+      accYaw(o, k, t, 'front', Y, P);
+      for (const g of geoms) { const a = (g.near ? 1 : g.front) * (1 - g.behindW); if (a > .01) armDraw(o, k, t, g, a); }   // near arms in front; a far arm eases behind the body between 5 and 16 degrees of yaw
+    } finally { o.grip = gripKeep; }
     FLIP = false;
     ctx.restore();
   }
@@ -1030,6 +1060,7 @@ const V2C = (() => {
     if (P.mode !== 'sym') return texFallback(o, k, t, Y, P);
     const z = faceZone(k, P, Y, .62, .44, 22), w = sstep(0, .5, Math.abs(Y.y));   // w 0: the flat lattice of the front art (so a turn begins without a jump), w 1: equal arc length on the sphere
     ctx.fillStyle = '#ffe58a'; ctx.strokeStyle = 'rgba(120,70,0,.6)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();   // the seeds never overlap, so one path, one fill and one stroke draw them all
     for (let row = 0; row < 10; row++) {
       const y = -k.ry * .8 + row * 29, R = profW(P, y), N = Math.max(6, Math.round(TAU * R / 29)), st = row % 2 ? 14 / 29 : 0;
       for (let i = 0; i < N; i++) {
@@ -1038,33 +1069,36 @@ const V2C = (() => {
         if (cz < .08) continue;
         const X = R * Math.sin(lo);
         if (inZone(z, X, y)) continue;
-        ell(X, y, 4 * lerp(1, Math.max(cz, .3), w), 6.5); ctx.fill(); ctx.stroke();
+        const rx = 4 * lerp(1, Math.max(cz, .3), w);
+        ctx.moveTo(X + rx, y); ctx.ellipse(X, y, rx, 6.5, 0, 0, TAU);
       }
     }
+    ctx.fill(); ctx.stroke();
   };
   const dotsTex = (n, off, fillFn, r, wx, wy, dy) => (o, k, t, Y, P) => {
     if (P.mode !== 'sym') return texFallback(o, k, t, Y, P);
-    scatterSkin(P, k, Y, n, i => [(srand(i) * 2 - 1) * k.rx, (srand(i + off) * 2 - 1) * k.ry], wx ? faceZone(k, P, Y, wx, wy, dy) : null, (X, y, cz, i) => { ctx.fillStyle = fillFn(i); ell(X, y, r * Math.max(cz, .3), r); ctx.fill(); });
+    const paths = {};   // one path per fill colour, filled once
+    scatterSkin(P, k, Y, n, i => [(srand(i) * 2 - 1) * k.rx, (srand(i + off) * 2 - 1) * k.ry], wx ? faceZone(k, P, Y, wx, wy, dy) : null, (X, y, cz, i) => {
+      const c = fillFn(i), pa = paths[c] || (paths[c] = new Path2D()), rx = r * Math.max(cz, .3);
+      pa.moveTo(X + rx, y); pa.ellipse(X, y, rx, r, 0, 0, TAU);
+    });
+    for (const c in paths) { ctx.fillStyle = c; ctx.fill(paths[c]); }
   };
   YAW_TEX['shape:lemon'] = dotsTex(90, 99, () => 'rgba(150,110,0,.18)', 2.6, 0);   /* the front art of these two leaves no bare patch under the face */
   YAW_TEX['shape:gfruit'] = dotsTex(90, 99, () => 'rgba(150,40,20,.16)', 2.6, 0);
   YAW_TEX.peel = dotsTex(170, 400, i => i % 5 ? 'rgba(170,70,0,.22)' : 'rgba(255,230,170,.35)', 2.6, .64, .46, 20);
-  YAW_TEX.fuzz = (o, k, t, Y, P) => {
+  const strokesTex = (n, off, aoff, len, lw, colFn, wx, wy, dy) => (o, k, t, Y, P) => {
     if (P.mode !== 'sym') return texFallback(o, k, t, Y, P);
-    ctx.lineCap = 'round'; ctx.lineWidth = 2;
-    scatterSkin(P, k, Y, 220, i => [(srand(i) * 2 - 1) * k.rx, (srand(i + 300) * 2 - 1) * k.ry], faceZone(k, P, Y, .62, .44, 22), (X, y, cz, i) => {
-      const a = srand(i + 700) * PI; ctx.strokeStyle = i % 4 ? 'rgba(60,38,16,.35)' : 'rgba(235,210,160,.35)';
-      ctx.beginPath(); ctx.moveTo(X, y); ctx.lineTo(X + Math.cos(a) * 8 * Math.max(cz, .3), y + Math.sin(a) * 8); ctx.stroke();
+    const paths = {};
+    scatterSkin(P, k, Y, n, i => [(srand(i) * 2 - 1) * k.rx, (srand(i + off) * 2 - 1) * k.ry], faceZone(k, P, Y, wx, wy, dy), (X, y, cz, i) => {
+      const a = srand(i + aoff) * PI, c = colFn(i), pa = paths[c] || (paths[c] = new Path2D()), L = len * Math.max(cz, .3);
+      pa.moveTo(X, y); pa.lineTo(X + Math.cos(a) * L, y + Math.sin(a) * L);
     });
+    ctx.lineCap = 'round'; ctx.lineWidth = lw;
+    for (const c in paths) { ctx.strokeStyle = c; ctx.stroke(paths[c]); }
   };
-  YAW_TEX['shape:coco'] = (o, k, t, Y, P) => {
-    if (P.mode !== 'sym') return texFallback(o, k, t, Y, P);
-    ctx.lineCap = 'round'; ctx.lineWidth = 2.5;
-    scatterSkin(P, k, Y, 140, i => [(srand(i) * 2 - 1) * k.rx, (srand(i + 500) * 2 - 1) * k.ry], faceZone(k, P, Y, .6, .45, 25), (X, y, cz, i) => {
-      const a = srand(i + 900) * PI; ctx.strokeStyle = i % 3 ? 'rgba(40,20,5,.45)' : 'rgba(230,190,140,.35)';
-      ctx.beginPath(); ctx.moveTo(X, y); ctx.lineTo(X + Math.cos(a) * 14 * Math.max(cz, .3), y + Math.sin(a) * 14); ctx.stroke();
-    });
-  };
+  YAW_TEX.fuzz = strokesTex(220, 300, 700, 8, 2, i => i % 4 ? 'rgba(60,38,16,.35)' : 'rgba(235,210,160,.35)', .62, .44, 22);
+  YAW_TEX['shape:coco'] = strokesTex(140, 500, 900, 14, 2.5, i => i % 3 ? 'rgba(40,20,5,.45)' : 'rgba(230,190,140,.35)', .6, .45, 25);
   YAW_TEX.pear = (o, k, t, Y, P) => {
     if (P.mode !== 'sym') return texFallback(o, k, t, Y, P);
     const { rx, ry } = k;
@@ -1102,27 +1136,28 @@ const V2C = (() => {
   // melon netting: the old lattice nodes (so the front matches the old art), carried round the sphere; a second lattice covers the far side
   YAW_TEX.net = (o, k, t, Y, P) => {
     if (P.mode !== 'sym') return texFallback(o, k, t, Y, P);
-    const z = faceZone(k, P, Y, .62, .46, 20);
+    const z = faceZone(k, P, Y, .62, .46, 20), by = Y.y, lim = k.rx * 1.02;
     ctx.strokeStyle = 'rgba(250,236,205,.85)'; ctx.lineWidth = 3.2; ctx.lineCap = 'round';
     const pt = (i, j) => [i * 30 + (j % 2 ? 15 : 0) + (srand(i * 7 + j * 13) - .5) * 12, j * 26 + (srand(i * 11 + j * 5) - .5) * 10];
-    const map = (x, y, b) => { const R = profW(P, y), lam = Math.asin(clamp(x / R, -.995, .995)), lo = (b ? PI - lam : lam) + Y.y, cz = Math.cos(lo); return [R * Math.sin(lo), y, cz]; };
-    for (let b = 0; b < 2; b++) for (let i = -6; i <= 6; i++) for (let j = -6; j <= 6; j++) {
-      const [x, y] = pt(i, j); if (Math.abs(x) > k.rx * 1.02) continue;
-      const A = map(x, y, b); if (A[2] < .05 || inZone(z, A[0], A[1])) continue;
-      for (const [x2, y2] of [pt(i + 1, j), pt(i, j + 1)]) {
-        if (Math.abs(x2) > k.rx * 1.02) continue;
-        const B = map(x2, y2, b); if (B[2] < .05 || inZone(z, B[0], B[1])) continue;
-        ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.quadraticCurveTo((A[0] + B[0]) / 2 + 3, (A[1] + B[1]) / 2 - 3, B[0], B[1]); ctx.stroke();
+    const nodes = [];   // [x, y, ok] on the grid i, j in -6..7, mapped for both hemispheres
+    const map = (x, y, b) => { const R = profW(P, y), lam = Math.asin(clamp(x / R, -.995, .995)), lo = (b ? PI - lam : lam) + by; return Math.cos(lo) < .05 ? null : [R * Math.sin(lo), y]; };
+    const path = new Path2D();
+    for (let b = 0; b < 2; b++) {
+      const grid = [];
+      for (let i = -6; i <= 7; i++) { const col = []; for (let j = -6; j <= 7; j++) { const [x, y] = pt(i, j); const m = Math.abs(x) > lim ? null : map(x, y, b); col.push(m && !inZone(z, m[0], m[1]) ? m : null); } grid.push(col); }
+      for (let a = 0; a < 13; a++) for (let c = 0; c < 13; c++) {
+        const A = grid[a][c]; if (!A) continue;
+        for (const B of [grid[a + 1][c], grid[a][c + 1]]) if (B) { path.moveTo(A[0], A[1]); path.quadraticCurveTo((A[0] + B[0]) / 2 + 3, (A[1] + B[1]) / 2 - 3, B[0], B[1]); }
       }
     }
+    ctx.stroke(path);
   };
-
 
   // ---------------------------------------------------------------- accessories that wrap round the body: necklaces, glasses, the suit
   // A loop worn round the shoulders (stethoscope, lanyard): its front half is a curve in front coordinates, mirrored, closed behind the body at height yBack. Only the half turned toward the viewer is drawn.
   function ringStroke(P, yaw, half, yBack, color, lw, cap = 'round') {
     const pts = half.map(([x, y]) => [Math.asin(clamp(Math.abs(x) / (profW(P, y) * .97), 0, .985)), y]), last = pts[pts.length - 1];
-    for (let i = 1; i <= 12; i++) { const u = i / 12; pts.push([lerp(last[0], PI, u), lerp(last[1], yBack, sstep(0, 1, u))]); }   /* behind the shoulders the loop climbs to the nape, near the top of the head */
+    for (let i = 1; i <= 8; i++) { const u = i / 8; pts.push([lerp(last[0], PI, u), lerp(last[1], yBack, sstep(0, 1, u))]); }   /* behind the shoulders the loop climbs to the nape, near the top of the head */
     ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = cap; ctx.lineJoin = 'round';
     const nFront = half.length, ext = sstep(.03, .3, Math.abs(yaw));   // the part behind the shoulders fades in as the body turns, so the front view is exactly the old V
     for (const sd of [-1, 1]) for (let part = 0; part < 2; part++) {
@@ -1145,7 +1180,7 @@ const V2C = (() => {
   YAW_ACC.steth = (o, k, t, layer, yaw, Y, P) => {
     if (layer !== 'front') return;
     const { rx, ry } = k;
-    ringStroke(P, yaw, quadPts([-rx * .06, ry * .55], [-rx * .62, ry * .5], [-rx * .86, -ry * .08], 14), -ry * .45, '#2f3a4a', 7);
+    ringStroke(P, yaw, quadPts([-rx * .06, ry * .55], [-rx * .62, ry * .5], [-rx * .86, -ry * .08], 9), -ry * .45, '#2f3a4a', 7);
     const tail = quadPts([0, ry * .56], [-4, ry * .68], [14, ry * .74], 8).map(([x, y]) => { const s = surf(P, yaw, x, y); return s && [s[0], y]; }).filter(Boolean);
     if (tail.length > 1) { ctx.strokeStyle = '#2f3a4a'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.beginPath(); tail.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); }
     const cp = surf(P, yaw, 18, ry * .77);
@@ -1156,7 +1191,7 @@ const V2C = (() => {
   const lanyardYaw = (xs, ys, yd, hang) => (o, k, t, layer, yaw, Y, P) => {
     if (layer !== 'front') return;
     const { rx, ry } = k;
-    ringStroke(P, yaw, quadPts([0, ry * yd], [-rx * .2, ry * (yd - .06)], [-rx * xs, ry * ys], 12), -ry * .45, '#2a6fdb', 6, 'butt');
+    ringStroke(P, yaw, quadPts([0, ry * yd], [-rx * .2, ry * (yd - .06)], [-rx * xs, ry * ys], 8), -ry * .45, '#2a6fdb', 6, 'butt');
     const c = surf(P, yaw, 0, ry * hang, profW(P, ry * hang) * .97);
     if (!c) return;
     ctx.save(); ctx.translate(c[0], ry * hang); ctx.scale(c[1], 1); ctx.strokeStyle = '#c0c6cf'; ctx.lineWidth = 3;
@@ -1219,13 +1254,12 @@ const V2C = (() => {
   // ---------------------------------------------------------------- Mr. Stateman (the flat starfruit) and the waist belt
   // The starfruit is a flat sprite: skin and windbreaker squeeze together; from behind the windbreaker has no zip, crest or pocket protector, just a collar, a seam and the stripe. The two sides cross-fade round profile.
   YAW_TEX.star14 = (o, k, t, Y, P) => {
-    const sx = flatSx(k, Y), back = sstep(.12, -.22, Y.cy), E = EXT.tex.star14;
+    const sx = flatSx(k, Y), back = sstep(.08, -.14, Y.cy), E = EXT.tex.star14, y0 = 40;
     ctx.save(); ctx.scale(sx, 1);
-    if (back < .999) { ctx.save(); ctx.globalAlpha *= 1 - back; E(o, k, t); ctx.restore(); }
+    if (back < .999) E(o, k, t);   /* the front, solid: round profile the back is dissolved over it (two opaque layers, so the jacket never turns see-through) */
     if (back > .001) {
       ctx.save(); ctx.globalAlpha *= back;
       const o2 = Object.create(o); o2.jacket = false; E(o2, k, t);
-      const y0 = 40;
       ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       ctx.fillStyle = V2.grad(0, y0 - 6, 0, 136, [[0, '#4d73a6'], [.42, '#33527a'], [1, '#1f3554']]);
       ctx.beginPath(); ctx.moveTo(-210, y0 + 14); ctx.quadraticCurveTo(-120, y0 - 6, 0, y0 - 6); ctx.quadraticCurveTo(120, y0 - 6, 210, y0 + 14); ctx.lineTo(210, 220); ctx.lineTo(-210, 220); ctx.closePath(); ctx.fill();
@@ -1278,11 +1312,11 @@ const V2C = (() => {
     ctx.save(); ctx.clip(yawPath(o, k, P, Y));
     ctx.fillStyle = '#4a3b2a'; ctx.fillRect(-rx * 1.2, ry * .66, rx * 2.4, 26);
     ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 14; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
-    const lam0 = Math.asin(clamp(.74 * rx / profW(P, 0), 0, .97));
+    const R0 = profW(P, 0) * .97, lam0 = Math.asin(clamp(.74 * rx / R0, 0, .97)), w = sstep(0, .5, Math.abs(by));   // w 0: the straight vertical straps of the front art; w 1: straps that follow the curve of the body
     for (const lon of [-lam0, lam0, PI - lam0, PI + lam0]) {
       const lo = lon + by, cz = Math.cos(lo); if (cz < .04) continue;
       ctx.save(); ctx.globalAlpha *= sstep(.04, .2, cz); ctx.beginPath();
-      for (let i = 0; i <= 10; i++) { const y = lerp(-ry * .55, ry * .66, i / 10), X = profW(P, y) * .97 * Math.sin(lo); i ? ctx.lineTo(X, y) : ctx.moveTo(X, y); }
+      for (let i = 0; i <= 10; i++) { const y = lerp(-ry * .55, ry * .66, i / 10), X = lerp(R0 * Math.sin(lo), profW(P, y) * .97 * Math.sin(lo), w); i ? ctx.lineTo(X, y) : ctx.moveTo(X, y); }
       ctx.stroke(); ctx.restore();
     }
     ctx.fillStyle = '#d4af37';
@@ -1295,5 +1329,5 @@ const V2C = (() => {
   // @@TURN-APPEND@@
 
   V2.validators.push(() => { const v = viol.splice(0); return v; });
-  return { drawChar, mouthState, state, ik2, limb, hand, faceDir, yawToward, turnLerp, turnPair, YAW_ACC, YAW_TEX, YAW_TOP, ACC_CLS, yawInfo };
+  return { drawChar, mouthState, state, ik2, limb, hand, faceDir, yawToward, yawFromMotion, turnLerp, turnPair, YAW_ACC, YAW_TEX, YAW_TOP, ACC_CLS, ACC_W, yawInfo, faceAng, profile };
 })();

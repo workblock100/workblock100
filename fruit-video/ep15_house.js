@@ -1443,7 +1443,13 @@ S15.drawProp = (kind, x, y, w, h, rot = 0, o = {}) => {
 /* roof debris at a pose (the body origin is the part's centre): the sign half, a brick, the chimney cap, the vane, a tile chip. o.scale grows toward the camera, o.dark puts the marquee bulbs out */
 S15.drawDebris = (kind, x, y, rot, o = {}) => {
   ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); if (o.scale && o.scale !== 1) ctx.scale(o.scale, o.scale);
-  if (kind === 'sign') { const p = o.p; ctx.translate(-p.w / 2, -38); signHalf({ x: 0, y: 0, w: p.w, h: p.h, id: 'sim' + (o.id || '') }, o.t || 0, { moving: true, dark: o.dark, text: p.text }); for (const lx of p.legs || []) signPost(lx - p.x, 76); }
+  if (kind === 'sign') {
+    const p = o.p, a = Math.abs(((rot || 0) % TAU + TAU + PI) % TAU - PI);
+    ctx.translate(-p.w / 2, -38);
+    if (a < .12) signHalf({ x: 0, y: 0, w: p.w, h: p.h, id: 'sim' + (o.id || '') }, o.t || 0, { moving: true, dark: o.dark, text: p.text });
+    else { ctx.fillStyle = '#24402e'; ctx.strokeStyle = '#d9b45a'; ctx.lineWidth = 5; ctx.beginPath(); ctx.roundRect(0, 0, p.w, p.h, 14); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(242,232,207,.16)'; ctx.fillRect(14, p.h * .5 - 3, p.w - 28, 6); }       /* a tumbling board shows no lettering (text stays upright) */
+    for (const lx of p.legs || []) signPost(lx - p.x, 76);
+  }
   else if (kind === 'brick') chimneyBrick(-11, -4.5, 22, 9, o.i || 0);
   else if (kind === 'cap') chimneyCap(-40, -4.5, 80);
   else if (kind === 'vane') { ln(0, 19, 0, -19, '#3a3340', 4); ln(-30, -17, 30, -17, '#3a3340', 3.4); poly([[30, -17], [20, -24], [20, -10]], '#c23a2b', OUT, 1.4); ell(-32, -17, 8, 7, '#d8584a', OUT, 1.6); }

@@ -36,7 +36,7 @@ function build(opts) {
   const bar = W.body({ type: 'kinematic', box: [BAR.w / 2 + 14, 9], x: BAR.x, y: BAR.y, pose: barPose, tag: 'bar', mat: 'wood', category: 8, mask: 0 });
   const cloth = W.cloth({
     x: BAR.x - BANNER.w / 2, y: BAR.y + 9, width: BANNER.w, height: BANNER.h, cols: 15, rows: 9, body: bar,
-    wind: { z: 64, x: 22, gust: 120, hz: .46, k: .0062 }, unroll: UNROLL, iterations: 4, windGain: 2.4, drag: .62, hem: 2.2, maxStretch: .02,
+    wind: { z: 64, x: 22, gust: 120, hz: .46, k: .0062, gain: 2.4 }, unroll: UNROLL, iterations: 4, drag: .62, hem: 2.2, maxStretch: .02,
   });
   meta.bar = bar.id; meta.cloth = 0;
 

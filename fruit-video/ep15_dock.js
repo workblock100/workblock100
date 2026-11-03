@@ -205,7 +205,7 @@ function binderO(lt) {
   const o = { x: cx, y: cy, s: .4, t: lt, who: 'bind', pose, grin, look: lt < TC ? [-.85, .35] : [-.3, .9], acc: ['fp15_hardhat'], hover: 4, yaw: -.5, center: true, noLegs: true, bob: 1 };
   return (A15 && A15.binderSmall) ? A15.binderSmall(o) : null;
 }
-const drawBinder = lt => { const o = binderO(lt); if (o) drawChar(o); };
+const drawBinder = lt => { const o = binderO(lt); if (o) drawFaded(o); };
 /* the four top-floor staff, back to front of the rooms, in one call (between the building's back and front layers) */
 function drawStaff1(lt, z) {
   if (z < .9) return;
@@ -214,16 +214,16 @@ function drawStaff1(lt, z) {
 }
 /* a face is whole, clear of the frame, the clock pill and the caption zone, or the character is not drawn; one that is leaving or entering the frame at its edge is drawn as `transit` and faded (a quarter second of margin, as in Episode 14's headVis) */
 function faceVis(o) {
-  const k = (o.s || SS) / .44, hx = (o.x - CAM.x) * CAM.z + W / 2, hy = (o.y - 118 * k * (o.noLegs ? .75 : 1) - CAM.y) * CAM.z + H / 2, r = 54 * k * CAM.z;
+  const k = (o.s || SS) / .44, hx = (o.x - CAM.x) * CAM.z + W / 2, hy = (o.y - 118 * k * (o.noLegs ? .75 : 1) - CAM.y) * CAM.z + H / 2, r = 48 * k * CAM.z;
   const m = Math.min(hx - r, W - (hx + r), hy - r);                         /* how far the face box is inside the left, right and top edges of the frame */
   const inBox = (x0, y0, x1, y1) => hx + r > x0 && hx - r < x1 && hy + r > y0 && hy - r < y1;
   if (inBox(48, 116, 500, 244) || inBox(0, 1380, W, 1700)) return { a: 0, transit: false };
   if (m >= 0) return { a: 1, transit: false };
   return { a: clamp(1 + m / (r * .8)), transit: true };
 }
-function drawFaded(o) {
+function drawFaded(o, entering) {
   const v = faceVis(o); if (window.__fadeLog) window.__fadeLog.push([o.who, +v.a.toFixed(2), +CAM.z.toFixed(2), +CAM.x.toFixed(0), +o.x.toFixed(0), +o.y.toFixed(0)]);
-  if (v.a <= .02) return;
+  if (v.a <= .02 || (v.transit && !entering)) return;
   if (v.transit) o.transit = true;
   if (v.a < .99) { ctx.save(); ctx.globalAlpha *= v.a; drawChar(o); ctx.restore(); } else drawChar(o);
 }
@@ -239,7 +239,7 @@ const mixP = (a, b, u) => ({ x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), z: Math
 const cabP = z => { const w = S15.craneRig(0, { stack: 0 }).cab; return { x: w[0] + w[2] / 2 + 6, y: w[1] + w[3] / 2 + BAND / z + 4, z }; };
 const OPEN0 = { x: 600, y: -470, z: .5 }, OPEN1 = { x: 640, y: -520, z: .53 };
 const roomP = (id, z) => { const r = RM(id); return { x: r.cx, y: r.cy + 8 + BAND / z, z }; };
-const CUTS = [bs('lower'), 3.421, 4.05, 4.5, 4.95, 9.12, 10.42, 12.79, 15.13, 18.84, 19.75];
+const CUTS = [bs('lower'), 3.421, 4.05, 4.5, 4.95, 9.12, 10.42, 12.79, 15.13, 18.84, 19.75, 26.65];
 const nearCut = (lt, w) => CUTS.some(c => Math.abs(lt - c) < w);
 /* the join shot: the gap between the block's underside and the roof sign, the sign, the roof, the top floor below */
 const JOIN_A = { x: 540, y: 300, z: 1.12 }, JOIN_B = { x: 540, y: 372, z: 1.62 };
@@ -274,8 +274,8 @@ const shakeAt = lt => {
   return pre + k(TC + .003, 14, .2) + k(5.98, 8, .16) + k(6.37, 2.2, .35) + k(6.571, 1.6, .25);
 };
 function fxAt(lt) {
-  const f = lt >= TC ? Math.exp(-(lt - TC) / .35) : 0, o = { bloom: .5 + .55 * f, vignette: .4 + .1 * seg(lt, 3.5, TC) * (lt < TC ? 1 : 0), grain: .045, contrast: .13 + .12 * f, sat: .12 - .05 * f };
-  o.tint = [['#ffd08a', .06 + .1 * f, 'soft-light']];
+  const f = lt >= TC && lt < 9 ? Math.exp(-(lt - TC) / .35) : 0, sad = seg(lt, 29.2, 31.0), o = { bloom: .5 + .55 * f, vignette: .4 + .1 * seg(lt, 3.5, TC) * (lt < TC ? 1 : 0) + .1 * sad, grain: .045, contrast: .13 + .12 * f, sat: .12 - .05 * f };
+  o.tint = [['#ffd08a', (.06 + .1 * f) * (1 - sad), 'soft-light']]; if (sad > 0) o.tint.push(['#7aa0ff', .1 * sad, 'soft-light']);
   return o;
 }
 function blurAt(lt) {
@@ -410,10 +410,10 @@ function saladSled(x, y, rot, k = 1) {
   ctx.restore();
 }
 /* positions of the four over the act (conference room x 284..534, floor 656). The handshake is at x 384; Tomato steps in between them and they make room for her. */
-const M_X = [[9.12, 306], [10.0, 306], [10.5, 318], [12.9, 318], [13.3, 306], [15.2, 306], [15.8, 296], [20, 296]];
-const B_X = [[10.3, 452], [10.7, 452], [13.2, 456], [15.4, 456], [15.9, 480], [20, 480]];
-const T_X = [[14.2, 640], [14.9, 520], [15.3, 392], [16.7, 392], [17.2, 392], [20, 392]];
-const L_X = [[9.12, 236], [16.2, 236], [16.9, 236], [20, 236]];
+const M_X = [[9.12, 306], [10.0, 306], [10.5, 318], [12.9, 318], [13.3, 306], [15.1, 306], [15.13, 268], [20, 268]];
+const B_X = [[10.3, 452], [10.7, 452], [13.2, 456], [15.1, 456], [15.13, 458], [20, 458]];
+const T_X = [[14.2, 640], [14.9, 520], [15.12, 400], [15.13, 358], [20, 358]];
+const L_X = [[9.12, 175], [20, 175]];
 const handshakeT = 13.36;
 const MS = SS * 1.12;
 function melonG(lt) {
@@ -422,7 +422,8 @@ function melonG(lt) {
   const arms = lt < 10.3 ? { l: 'offer', r: 'offer' } : shaking ? { l: 'hold', r: 'reach' } : box ? { l: 'hold', r: 'rest' } : { l: 'rest', r: 'rest' };
   const sq = shaking ? .1 * decayAt(lt, handshakeT, .12) + .05 * Math.max(0, Math.sin((lt - handshakeT) * 16)) * Math.exp(-(lt - handshakeT) / .9) : 0;
   const o = { x, y: FLOOR - 42, s: MS, t: lt, who: 'melon', noLegs: true, noShadow: true, plant: true, yaw: yawTo(dx), expr: lt < 15.2 ? 'happy' : lt < 18.9 ? 'neutral' : 'sour', look: [.5, 0], arms, squash: sq, rot: .012 * hz(lt, .4) + (shaking ? .03 * hz(lt, 3) : 0) };
-  if (box) { o.hold = { l: 'pizzabox9' }; o.grip = { l: [-92 - 6 * up, 34 - 80 * up] }; }
+  if (shaking) o.grip = Object.assign({}, o.grip, { r: [150, 34] });
+  if (box) { o.hold = { l: 'pizzabox9' }; o.grip = Object.assign({}, o.grip, { l: [-100 - 8 * up, 40 - 46 * up] }); }
   return A9.melon(o);
 }
 function brocG(lt) {
@@ -432,7 +433,7 @@ function brocG(lt) {
   const shaking = lt >= handshakeT && lt < 15.1, dxm = (lt < 15.3 ? kf(lt, M_X) : kf(lt, T_X)) - x;
   const o = { x, y: r.riding ? r.y : FLOOR - 52 * hop, s: SS, t: lt, who: 'broc', yaw: r.riding ? .55 : yawTo(dxm, .62), bowl: !r.riding && lt >= RIDE1 + .45, noLegs: r.riding, expr: lt >= 12.79 && lt < 15.2 ? 'broc_stern' : 'broc_boom', look: [-.4, 0] };
   if (r.riding) { o.arms = { l: 'up', r: 'up' }; o.rot = .12 * Math.sin(lt * 14); o.squash = .05 * Math.sin(lt * 20); }
-  else if (shaking) { o.arms = { l: 'hold', r: 'reach' }; o.squash = .08 * decayAt(lt, handshakeT, .15); }
+  else if (shaking) { o.arms = { l: 'reach', r: 'rest' }; o.hold = {}; o.bowl = false; o.grip = { l: [-170, 30] }; o.squash = .08 * decayAt(lt, handshakeT, .15); }
   const sal = lt >= 10.42 && lt < 12.7 ? so(lt, 10.35, 10.7) * (1 - so(lt, 11.9, 12.4)) : 0;
   if (!r.riding && sal > 0) { o.arms = { l: 'hold', r: 'offer' }; o.grip = { l: [lerp(-118, -84, sal), lerp(98, -10, sal)] }; o.bowlTilt = 0; }
   return A15.broccoli(o);
@@ -470,32 +471,229 @@ function drawGreet(lt, st) {
   if (r && r.riding) { drawFaded(brocG(lt)); saladSled(r.x, r.y + 18, 0.12 * Math.sin(lt * 14), 1); }
   else { const b = brocG(lt); if (b) drawFaded(b); }
   drawFaded(lemonG(lt));
-  const t = tomG(lt); if (t) drawFaded(t);
+  const t = tomG(lt); if (t) drawFaded(t, lt < 15.2);
   drawFaded(melonG(lt));
 }
 
-// ================================================================================================ the second half: dispatch to the acts
+// ================================================================================================ act 2 and 3 set: the stairwell at the join (a vertical cut in stage coordinates: x 0..1080, y 0..1920, zoom 1 shows all of it)
+const SW = { XS: 260, YS: 1180, N: 9, RUN: 84, RISE: 32, SEAM: 700 };
+const smoothS = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+/* the level (in steps) a walker at stage x stands on: it rises over the last part of each tread */
+function stairLevel(x) { const h = (x - SW.XS) / SW.RUN; let L = 0; for (let j = 0; j < SW.N; j++) L += smoothS((h - (j - .22)) / .3); return L; }
+const stairY = x => SW.YS - SW.RISE * stairLevel(x);
+const vgS = (y0, y1, c0, c1) => { const g = ctx.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, c0); g.addColorStop(1, c1); return g; };
+function chuteTube(x, y0, y1, w) {
+  ctx.fillStyle = '#143822'; ctx.fillRect(x - w / 2 - 5, y0, w + 10, y1 - y0); ctx.fillStyle = '#2a7f48'; ctx.fillRect(x - w / 2, y0, w, y1 - y0); ctx.fillStyle = '#56c27c'; ctx.fillRect(x - w / 2 + 8, y0, w - 16, y1 - y0); ctx.fillStyle = 'rgba(210,255,225,.5)'; ctx.fillRect(x - w / 2 + 14, y0, 6, y1 - y0);
+  ctx.strokeStyle = 'rgba(20,70,40,.45)'; ctx.lineWidth = 2.4; for (let y = y0 + 14; y < y1; y += 22) { ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x + w / 2, y); ctx.stroke(); }
+}
+function stairSet(lt) {
+  const X0 = -300, X1 = 1380, Y0 = -300, Y1 = 2300, T = SW;
+  ctx.save();
+  /* the back wall: Greenleaf green above the seam, Fruit Bowl pink below it, painted block, a darker wainscot */
+  ctx.fillStyle = vgS(Y0, T.SEAM, '#a8d4b2', '#d3e9c9'); ctx.fillRect(X0, Y0, X1 - X0, T.SEAM - Y0);
+  ctx.fillStyle = vgS(T.SEAM, Y1, '#ecd0bb', '#c6a28d'); ctx.fillRect(X0, T.SEAM, X1 - X0, Y1 - T.SEAM);
+  ctx.fillStyle = 'rgba(60,90,60,.16)'; ctx.fillRect(X0, T.SEAM - 230, X1 - X0, 230); ctx.fillStyle = 'rgba(110,60,50,.14)'; ctx.fillRect(X0, T.SEAM + 330, X1 - X0, Y1 - T.SEAM - 330);
+  ctx.strokeStyle = 'rgba(40,30,30,.10)'; ctx.lineWidth = 2; ctx.beginPath();
+  for (let y = Y0, r = 0; y < Y1; y += 60, r++) { ctx.moveTo(X0, y); ctx.lineTo(X1, y); for (let x = X0 + (r % 2 ? 60 : 0); x < X1; x += 120) { ctx.moveTo(x, y); ctx.lineTo(x, y + 60); } }
+  ctx.stroke();
+  /* the seam: hazard tape where the two buildings meet */
+  ctx.save(); ctx.beginPath(); ctx.rect(X0, T.SEAM - 14, X1 - X0, 28); ctx.clip(); ctx.fillStyle = '#f2c230'; ctx.fillRect(X0, T.SEAM - 14, X1 - X0, 28); ctx.fillStyle = '#2a2230';
+  for (let x = X0 - 40; x < X1; x += 56) { ctx.beginPath(); ctx.moveTo(x, T.SEAM + 14); ctx.lineTo(x + 28, T.SEAM + 14); ctx.lineTo(x + 56, T.SEAM - 14); ctx.lineTo(x + 28, T.SEAM - 14); ctx.closePath(); ctx.fill(); } ctx.restore();
+  /* the floor above (a slab with the hatch, the green chute coming down from it to the top landing) */
+  ctx.fillStyle = '#7d7a88'; ctx.fillRect(X0, 40, X1 - X0, 46); ctx.fillStyle = '#a8a6b4'; ctx.fillRect(X0, 40, X1 - X0, 8); ctx.fillStyle = 'rgba(30,20,40,.35)'; ctx.fillRect(X0, 78, X1 - X0, 8);
+  const topY = T.YS - T.N * T.RISE, topX = T.XS + T.N * T.RUN;
+  chuteTube(1000, 86, topY - 4, 64);
+  ctx.fillStyle = '#2a7f48'; ctx.strokeStyle = '#143822'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(1000, topY - 2, 44, 10, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  /* the landings: a slab each, Fruit Bowl's at the bottom, Greenleaf's at the top */
+  const slab = (x0, x1, y) => { ctx.fillStyle = '#8b8898'; ctx.fillRect(x0, y, x1 - x0, 44); ctx.fillStyle = '#b4b2c0'; ctx.fillRect(x0, y, x1 - x0, 8); ctx.fillStyle = 'rgba(30,20,40,.4)'; ctx.fillRect(x0, y + 36, x1 - x0, 8); };
+  slab(X0, T.XS + 6, T.YS); slab(topX - 6, X1, topY);
+  /* below the bottom landing: the dark of the floors underneath */
+  ctx.fillStyle = vgS(T.YS + 44, Y1, '#33263a', '#120b16'); ctx.fillRect(X0, T.YS + 44, T.XS + 6 - X0, Y1 - T.YS - 44);
+  /* the stair: a cut sawtooth of concrete with a light edge on every tread; the dark under-stair behind it */
+  ctx.fillStyle = vgS(T.YS, T.YS + 420, '#3a2c42', '#150e1a'); ctx.beginPath(); ctx.moveTo(T.XS, T.YS + 44); ctx.lineTo(topX, topY + 44); ctx.lineTo(topX, Y1); ctx.lineTo(T.XS, Y1); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(T.XS, T.YS); for (let k = 1; k <= T.N; k++) { ctx.lineTo(T.XS + (k - 1) * T.RUN, T.YS - k * T.RISE); ctx.lineTo(T.XS + k * T.RUN, T.YS - k * T.RISE); }
+  ctx.lineTo(topX, topY + 56); ctx.lineTo(T.XS + 8, T.YS + 56); ctx.closePath(); ctx.fillStyle = '#c9bcab'; ctx.fill(); ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 3.4; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.strokeStyle = '#f4e8d2'; ctx.lineWidth = 3; ctx.beginPath(); for (let k = 1; k <= T.N; k++) { ctx.moveTo(T.XS + (k - 1) * T.RUN + 2, T.YS - k * T.RISE + 2); ctx.lineTo(T.XS + k * T.RUN - 1, T.YS - k * T.RISE + 2); } ctx.stroke();
+  ctx.strokeStyle = 'rgba(70,50,60,.28)'; ctx.lineWidth = 2; ctx.beginPath(); for (let k = 1; k <= T.N; k++) { ctx.moveTo(T.XS + (k - 1) * T.RUN + 3, T.YS - (k - 1) * T.RISE); ctx.lineTo(T.XS + (k - 1) * T.RUN + 3, T.YS - k * T.RISE + 8); } ctx.stroke();
+  /* the handrail on the far side (behind the walkers) with its balusters */
+  const rail = (x, d) => T.YS - (x - T.XS) / T.RUN * T.RISE - d;
+  ctx.strokeStyle = 'rgba(40,24,30,.9)'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(T.XS - 20, rail(T.XS - 20, 150)); ctx.lineTo(topX + 20, rail(topX + 20, 150)); ctx.stroke(); ctx.strokeStyle = '#b58a5a'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.strokeStyle = 'rgba(40,24,30,.55)'; ctx.lineWidth = 3; ctx.beginPath(); for (let x = T.XS + 10; x < topX; x += T.RUN) { ctx.moveTo(x, rail(x, 150)); ctx.lineTo(x, stairY(x + 20) - 4); } ctx.stroke();
+  /* the side walls in perspective (dark bevels), as in the dollhouse rooms */
+  const side = (x0, x1, inner) => { ctx.fillStyle = '#3a2a34'; ctx.fillRect(x0, Y0, x1 - x0, Y1 - Y0); ctx.fillStyle = 'rgba(255,230,200,.10)'; ctx.fillRect(inner > x0 ? x1 : x1 - 26, Y0, 26, Y1 - Y0); };
+  side(X0, 44, 1); side(1036, X1, -1);
+  /* the signs: a road sign MERGE on the wall, the door plate of the Fruit Bowl landing */
+  ctx.save(); ctx.translate(560, 392); ctx.rotate(PI / 4); ctx.fillStyle = '#ffd23a'; ctx.strokeStyle = '#1a1420'; ctx.lineWidth = 8; ctx.beginPath(); ctx.roundRect(-72, -72, 144, 144, 16); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#1a1420'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(-60, -60, 120, 120, 10); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = '#1a1420'; ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(548, 440); ctx.lineTo(548, 398); ctx.quadraticCurveTo(548, 372, 566, 356); ctx.lineTo(574, 346); ctx.moveTo(582, 440); ctx.lineTo(582, 346); ctx.stroke(); ctx.fillStyle = '#1a1420'; ctx.beginPath(); ctx.moveTo(582, 322); ctx.lineTo(560, 352); ctx.lineTo(604, 352); ctx.closePath(); ctx.fill();
+  /* the left door and its plate */
+  ctx.fillStyle = '#a9774a'; ctx.strokeStyle = '#2a1a10'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(70, T.YS - 196, 104, 196, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = 'rgba(190,225,255,.5)'; ctx.fillRect(86, T.YS - 172, 72, 66); ctx.strokeRect(86, T.YS - 172, 72, 66); ctx.fillStyle = '#d9b34a'; ctx.beginPath(); ctx.arc(164, T.YS - 92, 5, 0, TAU); ctx.fill();
+  UI.sign([58, T.YS - 244, 128, 34], 'FRUIT BOWL', { fill: '#f2e8cf', ink: '#2a2230', stroke: '#2a2230', lw: 2, size: 22, spacing: 1.4, pad: 5, r: 8, hero: false, crop: true, id: 'k15.stairdoor' });
+  UI.sign([840, T.SEAM - 262, 150, 34], 'GREENLEAF', { fill: '#24402e', ink: '#f2e8cf', stroke: '#d9b45a', lw: 2, size: 22, spacing: 1.4, pad: 5, r: 8, hero: false, crop: true, id: 'k15.stairgl' });
+  ctx.restore();
+}
+/* the whistle: a silver barrel with a cord, drawn at a point (the mouth) */
+function whistle(x, y, s, rot) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
+  ctx.strokeStyle = '#2a2230'; ctx.lineWidth = 3; ctx.fillStyle = '#c9ced6'; ctx.beginPath(); ctx.roundRect(-6, -7, 26, 14, 5); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(20, 0, 9, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7a828a'; ctx.fillRect(-2, -3, 12, 3); ctx.strokeStyle = '#d23a3a'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.quadraticCurveTo(-24, 22, -10, 44); ctx.stroke();
+  ctx.restore();
+}
+/* tweet marks */
+function tweet(x, y, k, dir) { if (k <= 0) return; ctx.save(); ctx.translate(x, y); ctx.globalAlpha *= 1 - k; ctx.strokeStyle = '#fff6d0'; ctx.lineWidth = 4; ctx.lineCap = 'round'; for (const a of [-.5, 0, .5]) { ctx.beginPath(); ctx.moveTo(Math.cos(a) * (24 + 30 * k) * dir, Math.sin(a) * (24 + 30 * k)); ctx.lineTo(Math.cos(a) * (44 + 40 * k) * dir, Math.sin(a) * (44 + 40 * k)); ctx.stroke(); } ctx.restore(); }
+/* stars circling a head */
+function dizzy(x, y, t, R, k = 1) {
+  if (k <= 0) return; ctx.save(); ctx.globalAlpha *= clamp(k);
+  for (let i = 0; i < 5; i++) { const a = t * 6 + i * TAU / 5, X = x + Math.cos(a) * R, Y = y + Math.sin(a) * R * .32, back = Math.sin(a) < 0, sz = back ? 8 : 12; ctx.fillStyle = '#ffd23a'; ctx.strokeStyle = '#6a4a10'; ctx.lineWidth = 2; ctx.beginPath(); for (let j = 0; j < 10; j++) { const r = j % 2 ? sz * .42 : sz, b = -PI / 2 + j * PI / 5; j ? ctx.lineTo(X + Math.cos(b) * r, Y + Math.sin(b) * r) : ctx.moveTo(X + Math.cos(b) * r, Y + Math.sin(b) * r); } ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  ctx.restore();
+}
+
+// ================================================================================================ act 2 (19.75 to 26.65): the zipper merge on the stairs, the bonk; act 3 (26.65 to 31.93): the line, Onion, everyone cries
+const T_BONK = 25.901, T_STARS = 25.951, T_SNIFF = 29.263, T_SOB = 31.168, T_STING = 31.431;
+const PS = .56, QS = .38;                                   /* the pair's scale, the line's scale */
+const toScr = (wx, wy) => [(wx - CAM.x) * CAM.z + W / 2, (wy - CAM.y) * CAM.z + H / 2];
+/* where the pair stand (x on the stair): they walk in, stop nose to nose, step back politely on each "After you.", then both go at once: the foreheads meet on the bonk cue */
+const MX = [[19.75, 300], [21.55, 554], [22.0, 554], [22.12, 540], [22.7, 540], [23.0, 554], [23.84, 554], [24.2, 540], [24.64, 540], [24.95, 554], [25.74, 554], [T_BONK, 575], [26.15, 552], [26.6, 516], [27.2, 506], [60, 506]];
+const CXS = [[19.75, 930], [21.55, 662], [22.62, 662], [22.74, 676], [23.5, 676], [23.9, 662], [24.57, 662], [24.69, 676], [25.3, 676], [25.55, 662], [25.74, 662], [T_BONK, 645], [26.15, 670], [26.6, 700], [27.2, 710], [60, 710]];
+const QLOW = [494, 424, 354, 284], QUP = [732, 804, 876, 948];
+const queueMk = [
+  [x => A15.greenleaf(A6.lime(x)), 1], [x => (A11 || A7).straw(x), 1], [x => A15.greenleaf(A7.pear(x)), 1], [x => A10.clem(x), 1],
+  [x => A7.papaya(x), -1], [x => A15.tomato(Object.assign(x, { tomPose: 'veg', headset: false, formsN: 0 })), -1], [x => A7.banana(x), -1], [x => A7.cran(x), -1],
+];
+const crySince = (lt, x) => { const t0 = 27.95 + Math.abs(x - 98) / 380; return smoothS((lt - t0) / .9); };
+const sobK = lt => decayAt(lt, T_SOB, .35);
+function walkOpts(x, x0, s, dir, v) { return { gaitW: Math.abs(x - x0) / s, axis: 'x', dir, vx: v * dir }; }
+function mangoS(lt) {
+  const x = kf(lt, MX), walking = lt < 21.55, lunge = lt >= 25.74 && lt < T_BONK, hit = lt >= T_BONK, k = decayAt(lt, T_BONK, .22);
+  const o = { x, y: stairY(x), s: PS, t: lt, who: 'mango', yaw: PI / 2, expr: lt < 21.9 ? 'neutral' : lunge ? 'angry' : hit ? (lt < 27 ? 'dead' : 'sour') : 'neutral', look: [.8, .1] };
+  if (walking) Object.assign(o, walkOpts(x, 300, PS, 1, 140));
+  else if ((lt >= 21.89 && lt < 22.6) || (lt >= 23.84 && lt < 24.55)) { o.arms = { l: 'rest', r: 'offer' }; o.rot = .06; }
+  if (hit) { o.sx = 1 - .2 * k; o.rot = -.3 * k - (lt > 26.4 ? .05 : 0); o.arms = { l: 'down', r: 'down' }; }
+  if (lt >= T_STARS && lt < 28.2) o.mouthOpen = .2;
+  return cry(A7.mango(o), x, lt);
+}
+function carrotS(lt) {
+  const x = kf(lt, CXS), walking = lt < 21.55, lunge = lt >= 25.74 && lt < T_BONK, hit = lt >= T_BONK, k = decayAt(lt, T_BONK, .22);
+  const o = { x, y: stairY(x), s: PS, t: lt, who: 'carrot', yaw: -PI / 2, expr: lt < 22.6 ? 'carrot_calm' : lunge ? 'carrot_firm' : hit ? (lt < 27 ? 'dead' : 'carrot_polite') : 'carrot_polite', look: [-.8, .1] };
+  if (walking) Object.assign(o, walkOpts(x, 930, PS, -1, 150));
+  else if ((lt >= 22.64 && lt < 23.8) || (lt >= 24.59 && lt < 25.75)) { o.arms = { l: 'offer', r: 'rest' }; o.rot = -.05; }
+  if (lunge) o.rot = -.2 * seg(lt, 25.74, T_BONK);
+  if (hit) { o.sx = 1 - .2 * k; o.rot = .3 * k; o.arms = { l: 'down', r: 'down' }; }
+  return cry(A15.carrot(o), x, lt);
+}
+/* the tears reach everyone: o.cry level from the wave, a sob hiccup on the sob cue */
+function cry(o, x, lt, own) {
+  const c = own != null ? own : crySince(lt, x), sb = sobK(lt);
+  if (lt >= T_STING && o.yaw != null && Math.abs(o.yaw) > .6) { const sg = o.yaw > 0 ? 1 : -1; o.yaw = sg * lerp(PI / 2, .45, so(lt, T_STING, T_STING + .15)); o.look = [0, 0]; }
+  if (c > .02) { o = A15.cryOn(o, clamp(c * .9)); o.expr = c > .5 && o.expr !== 'dead' && o.who !== 'onion' ? 'sad' : o.expr; }
+  if (lt >= T_SOB) { o.squash = (o.squash || 0) + .07 * sb * Math.abs(Math.sin((lt - T_SOB) * 22)); o.rot = (o.rot || 0) + .04 * sb * Math.sin((lt - T_SOB) * 26); }
+  else if (c > .5) { o.squash = (o.squash || 0) + .025 * Math.abs(Math.sin(lt * 7 + x)); }
+  return o;
+}
+function lemonS(lt) {
+  const x = 205, asking = lt >= bs('l1') && lt < be('l1') + .1, sn = decayAt(lt, T_SNIFF, .25), cl = lt >= T_SNIFF - .02 ? smoothS((lt - T_SNIFF) / .7) : 0;
+  const o = { x, y: SW.YS, s: PS, t: lt, who: 'lemon', yaw: lt < 26.5 ? .75 : V2C.turnLerp(.75, .35, seg(lt, 26.5, 26.75)), expr: lt < T_BONK ? 'neutral' : lt < 26.65 ? 'shock' : 'neutral', look: [.9, 0], arms: asking ? { l: 'up', r: 'rest' } : lt < 26.6 ? { l: 'rest', r: 'rest' } : { l: 'rest', r: 'hips' } };
+  if (lt >= T_SNIFF - .05 && lt < T_SNIFF + .3) { o.rot = -.12 * sn; o.look = [.2, -.8]; o.squash = .06 * sn; }
+  return cry(A7.lemon(o), x, lt, cl);
+}
+function onionS(lt) {
+  if (lt < 27.8) return null;
+  const x = kf(lt, [[27.86, -80], [29.2, 84], [60, 84]]), walking = lt < 29.2, c = clamp(.5 + .5 * seg(lt, 27.86, 29.0)), sb = sobK(lt);
+  const o = { x, y: SW.YS + 6, s: PS * .98, t: lt, who: 'onion', yaw: walking ? PI / 2 : V2C.turnLerp(PI / 2, .55, seg(lt, 29.05, 29.45)), cry: c, sob: lt >= T_SOB ? sb : 0, expr: 'onion_cry', look: [.5, .1] };
+  if (walking) Object.assign(o, walkOpts(x, -80, o.s, 1, 100), { transit: lt < 28.3 });
+  if (lt >= T_SOB) o.squash = .07 * sb * Math.abs(Math.sin((lt - T_SOB) * 22));
+  return A15.onion(o);
+}
+function lineS(lt) {
+  const out = [];
+  const lowSeq = [0, 1, 2, 3], upSeq = [4, 5, 6, 7];
+  const mk = (i, x, dir) => {
+    const [f] = queueMk[i], bounce = lt >= T_BONK && lt < T_BONK + .5 ? Math.max(0, Math.sin((lt - T_BONK) * 12)) * 8 * (1 - seg(lt, T_BONK, T_BONK + .5)) : 0;
+    const o = { x, y: stairY(x) - bounce, s: QS, t: lt, yaw: dir * PI / 2, look: [dir * .8, .1], expr: lt < T_BONK ? 'neutral' : lt < 27 ? 'shock' : 'neutral' };
+    if (lt < T_BONK) { const imp = Math.max(0, hz(lt, .7, i * 1.7)); o.squash = .02 * imp; }
+    return cry(f(o), x, lt);
+  };
+  /* the front of each queue is drawn first, the tail last: a body never covers the face of the one in front of it */
+  for (let i = 0; i < 4; i++) out.push(mk(lowSeq[i + 4 - 4], QLOW[i], 1));
+  for (let i = 0; i < 4; i++) out.push(mk(upSeq[i], QUP[i], -1));
+  return out;
+}
+/* a head's position on the stage, for stars and leaders */
+const headAt = (o, k = 1) => [o.x, o.y - 118 * (o.s / .44) * k];
+function drawAct2(lt) {
+  const car = carrotS(lt), man = mangoS(lt), lem = lemonS(lt), oni = onionS(lt), q = lineS(lt);
+  drawFaded(car); drawFaded(man);
+  for (const o of q.slice(4)) drawFaded(o);            /* the upper line (facing left), front first */
+  for (const o of q.slice(0, 4)) drawFaded(o);         /* the lower line (facing right) */
+  if (oni) drawFaded(oni, lt < 28.4);
+  drawFaded(lem);
+  /* the whistle at Lemon's mouth during "One at a time. Zipper merge.", a tweet at the end of it */
+  if (lt >= 19.75 && lt < 21.8) { const [hx, hy] = headAt(lem, .52); whistle(hx + 30, hy + 14, .9, -.3); tweet(hx + 62, hy + 12, seg(lt, 21.5, 21.8), 1); }
+  /* tears around Onion, and around the line once the wave is through */
+  if (oni) A15.tearsAura(oni.x, oni.y - 60, clamp(.4 + (lt - 28) * .3), { r: 90, n: 14, t: lt, size: 5, seed: 3 });
+  /* the stars on the bonk cue (one half second later than the hit, the cue says so) */
+  if (lt >= T_STARS && lt < 28) { const k = 1 - seg(lt, 27.2, 28), [mx, my] = headAt(man, 1.12), [cx, cy] = headAt(car, 1.05); dizzy(mx, my - 8, lt, 38, k); dizzy(cx, cy - 8, lt, 38, k); }
+  /* the contact burst */
+  if (lt >= T_BONK && lt < T_BONK + .35) { const k = seg(lt, T_BONK, T_BONK + .35), mx = (man.x + car.x) / 2, my = Math.min(man.y, car.y) - 90; ctx.save(); ctx.globalAlpha *= 1 - k; ctx.strokeStyle = '#fff6c0'; ctx.lineWidth = 7; ctx.lineCap = 'round'; for (let i = 0; i < 9; i++) { const a = i * TAU / 9 + .3; ctx.beginPath(); ctx.moveTo(mx + Math.cos(a) * (20 + 30 * k), my + Math.sin(a) * (20 + 30 * k)); ctx.lineTo(mx + Math.cos(a) * (46 + 70 * k), my + Math.sin(a) * (46 + 70 * k)); ctx.stroke(); } ctx.restore(); }
+}
+/* the camera on the stage: feet land at py about 1150 for a head clear of the caption zone */
+const anchor = (x, yf, z) => ({ x, y: yf - 190 / z, z });
+function camStairs(lt) {
+  if (lt < 21.89) return { x: 535, y: 1010, z: lerp(1.12, 1.18, seg(lt, T_STAIRS, 21.89)) };
+  if (lt < 26.65) { const u = seg(lt, 21.89, 26.65), z = lerp(1.9, 2.4, easeIO(u)), k = decayAt(lt, T_BONK, .2); return anchor(600, 1056, z * (1 + .06 * k)); }
+  if (lt < 27.5) return anchor(300, SW.YS, lerp(2.1, 2.05, seg(lt, 26.65, 27.5)));
+  if (lt < 29.67) { const u = easeIO(seg(lt, 27.5, 28.1)); return { x: lerp(300, 310, u), y: lerp(SW.YS - 190 / 2.05, 1053, u), z: lerp(2.05, 1.5, u) + .08 * seg(lt, 28.1, 29.67) }; }
+  if (lt < 31.33) { const u = easeIO(seg(lt, 29.67, 30.2)); return { x: lerp(310, 262, u), y: lerp(1053, 1000, u), z: lerp(1.58, 1.9, u) + .1 * seg(lt, 30.2, 31.33) }; }
+  const u = easeIO(seg(lt, 31.33, 32.1)), k = decayAt(lt, T_STING, .25); return { x: lerp(262, 535, u), y: lerp(1000, 1010, u), z: lerp(2.0, 1.12, u) * (1 + .03 * k) };
+}
+const shotOfStairs = lt => lt < 21.89 ? 'stairs' : lt < 26.65 ? 'pair' : lt < 27.5 ? 'merge' : lt < 29.67 ? 'onion' : lt < 31.33 ? 'tears' : 'end';
+function shakeStairs(lt) { const k = (t0, a, tau) => lt >= t0 ? a * Math.exp(-(lt - t0) / tau) : 0; return k(T_BONK, 9, .18) + k(T_SOB, 3, .3) + k(T_STING, 4, .25); }
+
+// ================================================================================================ the second half: dispatch to the acts, the species tags, the overlay
 const T_STAIRS = 19.75;
-const camAt2 = lt => lt < T_STAIRS ? camGreet(lt) : camGreet(T_STAIRS - .01);
-const shotOf2 = lt => lt < 10.42 ? 'welcome' : lt < 12.79 ? 'salad' : lt < 15.13 ? 'handshake' : lt < 18.84 ? 'tomato' : lt < T_STAIRS ? 'pending' : 'stairs';
+const camAt2 = lt => lt < T_STAIRS ? camGreet(lt) : camStairs(lt);
+const shotOf2 = lt => lt < 10.42 ? 'welcome' : lt < 12.79 ? 'salad' : lt < 15.13 ? 'handshake' : lt < 18.84 ? 'tomato' : lt < T_STAIRS ? 'pending' : shotOfStairs(lt);
 function draw2(lt) {
   const st = stateAt(lt); ST = st; S15.light(st);
+  if (lt >= T_STAIRS) { stairSet(lt); drawAct2(lt); return; }
   S15.tower(lt, st);
   const m = st.__m;
   hatchDraw(lt, st); chuteDraw(lt);
   drawPropsSim(lt, m, 'rest');
-  if (lt < T_STAIRS) drawGreet(lt, st);
+  drawGreet(lt, st);
   drawPropsSim(lt, m, 'office');
   S15.front(lt, st);
 }
-function over2(lt) {}
+/* a field-guide tag on a first appearance: small, whole, above the action, a leader to the head (screen space, on the over layer) */
+function speciesTag(lt, id, t0, t1, cx, cy, wx, wy) {
+  if (lt < t0 || lt > t1) return;
+  const k = clamp((lt - t0) / .24), out = clamp((t1 - lt) / .18), a = Math.min(k, out), pop = k >= 1 ? 1 : easeBack(k), hero = k >= 1 && out >= 1, L = A15.tagFor(id).lines;
+  const [sx, sy] = toScr(wx, wy);
+  ctx.save(); ctx.globalAlpha *= a; ctx.strokeStyle = '#f2e8cf'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx, cy + 40); ctx.lineTo(sx, sy); ctx.stroke(); ctx.strokeStyle = '#24402e'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.fillStyle = '#f2e8cf'; ctx.strokeStyle = '#24402e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, 6, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
+  UI.tag(L, cx, cy, { fill: '#f7ecc8', stroke: '#1f3a28', lw: 5, ink: '#1f3a28', size: 30, hero, crop: !hero, alpha: a, holeFill: '#1f3a28', shadow: 20 });
+  ctx.restore();
+}
+function over2(lt) {
+  if (lt < T_STAIRS) {
+    const b = brocG(lt), t = tomG(lt);
+    if (b) speciesTag(lt, 'broc', RIDE1 + .1, 11.1, 800, 470, b.x, b.y - 118);
+    if (t) speciesTag(lt, 'tom', 15.2, 16.55, 330, 500, t.x, t.y - 118);
+    return;
+  }
+  const car = carrotS(lt), oni = onionS(lt);
+  speciesTag(lt, 'carrot', 22.66, 23.9, 400, 520, car.x, car.y - 140);
+  if (oni) speciesTag(lt, 'onion', 28.0, 29.3, 330, 520, oni.x, oni.y - 118);
+  const [bx, by] = toScr((car.x + 604) / 2 - 20, 840);
+  sfxWord(lt, T_BONK + .002, 'BONK!', clamp(bx, 300, 780), clamp(by - 230, 330, 620), { size: 170, rot: -.07, hold: .6 });
+}
 // ================================================================================================ the scene
 const SC = {
   shot: lt => shotOf(lt),
   cam(lt) {
     const K = KDBG();
     if (K) { const c = S15.cam(K.view || 'wide', K.st || {}, K.o || {}); zoomTo(c.x, c.y, c.z); CAM.shake = 0; return; }
-    const c = camAt(lt); zoomTo(c.x, c.y, c.z); CAM.shake = shakeAt(lt); CAM.r = 0;
+    const c = camAt(lt); zoomTo(c.x, c.y, c.z); CAM.shake = lt >= 19.75 ? shakeStairs(lt) : shakeAt(lt); CAM.r = 0;
   },
   draw(lt) { const K = KDBG(); if (K) { const st = K.st || {}; ST = st; S15.light(st); S15.tower(lt, st); S15.front(lt, st); return; } if (lt >= 9.12) draw2(lt); else draw1(lt); },
   fx: lt => fxAt(lt),

@@ -15,6 +15,8 @@
  *   3.40       LANDING = the flash: a ring, a punch of the camera, a burst of cell shards. 3.40-3.95 UI OUT: the ribbon and title bar slide up, the sheet tabs and status bar slide down, the row numbers slide left.
  *   3.62-3.95  the tagline types in.   4.00 textding: a gloss sweeps across THE MERGER, four stars twinkle.   4.0-6.4 a held, centred card with a slow push-in; 6.48-6.6 a dip to black.
  * END: see the second half of this file. */
+/* the title of the next episode, shown in the end card's teaser banner under NEXT: EPISODE 16 (the lead confirms it: change this one constant) */
+const TEASER16 = 'THE POTLUCK';
 (() => {
 if (!window.TIMELINE_EP15 || !window.SH15 || !window.UI || !window.H6) return;
 const SH = window.SH15, { zoomTo } = window.H6;
@@ -566,7 +568,7 @@ function nextBanner(lt) {
   if (ta > 0) {
     const ds = lt - E.ding, cy1 = Y + 46, cy2 = Y + 114;
     UI.label('NEXT: EPISODE 16', 540, cy1, { font: 'Nunito', weight: 900, size: 34, spacing: 6, fill: CREAM, alpha: ta, hero: rest, crop: !rest, maxW: 800 });
-    bevelText('THE VOTE', 540, cy2, 96, { face: FACE, extr: .3, lwK: .12, alpha: ta, hero: rest, shine: ds > 0 ? eIO(sg(ds, 0, .8)) : -1, grp: 'bv:vote' });
+    bevelText(TEASER16, 540, cy2, 96, { face: FACE, extr: .3, lwK: .12, alpha: ta, hero: rest, shine: ds > 0 ? eIO(sg(ds, 0, .8)) : -1, grp: 'bv:teaser' });
   }
 }
 function endFx(lt) {

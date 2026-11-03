@@ -157,7 +157,7 @@ function laptopDrawW(lt) {
 }
 
 // ------------------------------------------------------------------ the sheet window: the laptop's screen grown to the size of the frame (drawn in over(): crisp, after the grade)
-const WIN = { x: 0, y: 200, w: 1080, h: 1176 };               /* the full-size window (screen px): below the pill, above the caption zone */
+const WIN = { x: 0, y: 252, w: 1080, h: 1124 };               /* the full-size window (screen px): below the pill, above the caption zone */
 let LAPR = null;                                                /* the laptop screen's rectangle in SCREEN px for the frame being drawn (set while the world is drawn) */
 /* the comparison sheet: Fruit Bowl's policy against Greenleaf's, the conflicting cells highlighted, the conflict marker */
 function diffCells(lt, hero) {
@@ -189,5 +189,156 @@ function winK(lt) {
   return Math.max(o(3.0, 3.28) * i(4.26, 4.33), o(4.88, 4.9) * i(5.9, 5.96) + (lt >= 4.33 && lt < 4.9 ? 0 : 0), o(8.02, 8.3) * i(9.9, 9.95), o(10.46, 10.52) * i(11.14, 11.3));
 }
 
-/* @@NEXT@@ */
+// ------------------------------------------------------------------ the world: the tower with the dressing, the cast, the laptop and little Binder
+let FRAME = null;                                                  /* { C: cast options, st } of the frame being drawn (built in cam(), used by draw() and over()) */
+const ringAt = (x, y, i, lt) => { const k = (lt - CUE.flip[i]) / .5; if (k > 0 && k < 1) { V2.ring(x, y, k, { r0: 8, r1: 70, color: '255,236,160', lw: 4, alpha: .9 }); V2.glow(x, y, 46 + 40 * k, '255,236,160', .5 * (1 - k), 'screen', .5); } };
+function smallBinder(lt) {
+  const k = ss(lt, 7.73, 8.05); if (k <= 0 || lt > 11.4) return;
+  const [lx, ly] = lapPos(), hop = Math.max(0, Math.sin(PI * sg(lt, 7.73, 8.1))) * 40;
+  const o = A15.binderSmall({ x: lx + 52, y: ly - 96 - hop, s: .52 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, pose: lt < 8.3 ? 'ears' : 'helpful', grin: .3, look: [-.5, .3], hover: 8 });
+  drawChar(o);
+}
+function drawWorld(lt) {
+  CUR_LT = lt;
+  const st = FRAME.st, C = FRAME.C; STATE = st;
+  S15.light(st);
+  S15.tower(lt, st);
+  scheduleBoard(lt); clockSign(lt); vending(lt); lobbyPoster(lt);
+  // the characters (each stands in a room of the tower; the counter in S15.front hides the station staff below the waist)
+  drawChar(C.mango); drawChar(C.clem); if (lt >= 18.3) drawChar(C.lemon);
+  if (lt < 15.9) { drawChar(C.onion); drawChar(C.tom); }
+  if (lt >= 9.8) { drawChar(C.straw); nameBadge(C.straw, lt); }
+  S15.front(lt, st);
+  const scr = laptopDrawW(lt); LAPR = null; { const m = ctx.getTransform(); LAPR = { x: m.a * scr.x + m.e, y: m.d * scr.y + m.f, w: m.a * scr.w, h: m.d * scr.h }; }
+  /* the laptop's own screen: a miniature of the sheet window (set dressing) */
+  ctx.save(); ctx.beginPath(); ctx.rect(scr.x, scr.y, scr.w, scr.h); ctx.clip(); ctx.fillStyle = '#f6f7f9'; ctx.fillRect(scr.x, scr.y, scr.w, scr.h);
+  ctx.fillStyle = '#e1f3e8'; ctx.fillRect(scr.x + scr.w * .22, scr.y + scr.h * .16, scr.w * .34, scr.h * .3); ctx.fillStyle = '#fdeceb'; ctx.fillRect(scr.x + scr.w * .56, scr.y + scr.h * .16, scr.w * .34, scr.h * .3);
+  ctx.fillStyle = lt >= 3.2 ? 'rgba(255,191,31,.5)' : 'rgba(0,0,0,0)'; ctx.fillRect(scr.x + scr.w * .22, scr.y + scr.h * .5, scr.w * .34, scr.h * .16);
+  ctx.strokeStyle = '#d9dce1'; ctx.lineWidth = .6; for (let i = 1; i < 6; i++) { ctx.beginPath(); ctx.moveTo(scr.x, scr.y + scr.h * i / 6); ctx.lineTo(scr.x + scr.w, scr.y + scr.h * i / 6); ctx.stroke(); }
+  ctx.restore();
+  V2.glow(scr.x + scr.w / 2, scr.y + scr.h * .5, scr.w * 1.1, '210,230,255', .16, 'screen', .3);
+  smallBinder(lt);
+  // a ring of light where each sign flips
+  { const a = S15.sign('door:rest', st), b = R('lobby'), s2 = R('station'), d = R('dining');
+    ringAt(a.cx, a.cy, 0, lt); ringAt(b.x0 + 194, b.y0 + 130, 1, lt); ringAt(C.straw.x + 30 * C.straw.s, C.straw.y - 112 * C.straw.s, 2, lt); ringAt(s2.x0 + 224, s2.y0 + 88, 3, lt); ringAt(s2.x0 + 318, s2.y0 + 100, 4, lt); ringAt(d.x0 + 205, d.y0 + 135, 5, lt); }
+}
+
+// ------------------------------------------------------------------ the cameras (tower coordinates [x, y, zoom]; the frame centre is the point, lifted into the clear band)
+const BAND = 148;
+const at = (x, y, z) => [x, y + BAND / z, z];
+const faceCam = (o, z, up = 150) => { const [fx, fy] = faceC(o); return [fx, fy + up / z, z]; };
+const roomCam = (id, z) => { const c = S15.cam('room:' + id, STATE, z ? { z } : {}); return [c.x, c.y, c.z]; };
+const wideCam = () => { const c = S15.cam('tower', STATE, {}); return [c.x, c.y, c.z]; };
+const lerpCam = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), Math.exp(lerp(Math.log(a[2]), Math.log(b[2]), k))];
+/* a path through stops: [arrival time, camera, travel time]; the camera holds each stop, then moves to the next so as to arrive on its time */
+function path(stops, lt) {
+  if (lt <= stops[0][0]) return stops[0][1];
+  for (let i = 1; i < stops.length; i++) {
+    const [ta, ca, dur] = stops[i], t0 = ta - dur;
+    if (lt < t0) return stops[i - 1][1];
+    if (lt < ta) return lerpCam(stops[i - 1][1], ca, easeIO((lt - t0) / dur));
+  }
+  return stops[stops.length - 1][1];
+}
+const FLIPS = CUE.flip;
+function camAt(lt, C, st) {
+  STATE = st;
+  const stR = R('station'), lob = R('lobby'), din = R('dining');
+  if (lt < 11.32) {
+    if (lt < .9) return lerpCam(wideCam(), roomCam('station', 2.1), eo(lt / .9));
+    if (lt < 2.46) return faceCam(C.onion, 5.4, 150);
+    if (lt < 3.1) return faceCam(C.tom, 5.0, 150);
+    if (lt < 4.33) return roomCam('station', 2.4);
+    if (lt < 4.9) return faceCam(C.tom, 5.0, 150);
+    if (lt < 5.96) return roomCam('station', 2.4);
+    if (lt < 7.73) return lerpCam(faceCam(C.onion, 5.0, 150), roomCam('station', 3.0), ss(lt, 6.9, 7.4));
+    if (lt < 9.95) { const [lx, ly] = lapPos(); return at(lx, ly - 50, 3.6); }
+    if (lt < 10.46) return faceCam(C.straw, 5.4, 150);
+    const [lx, ly] = lapPos(); return at(lx, ly - 50, 3.6);
+  }
+  if (lt < 15.87) {
+    const bx = C.straw.x + 30 * C.straw.s, by = C.straw.y - 112 * C.straw.s;
+    return path([[11.32, roomCam('rest', 3.4), 0], [FLIPS[1] - .03, at(lob.x0 + 150, lob.y0 + 140, 3.6), .12], [FLIPS[2] - .03, at(bx, by, 5.4), .22], [FLIPS[3] - .03, at(stR.x0 + 230, stR.y0 + 82, 3.6), .12],
+      [FLIPS[4] - .03, at(stR.x0 + 312, stR.y0 + 86, 4.6), .2], [FLIPS[5] - .03, at(din.x0 + 178, din.y0 + 176, 3.8), .12], [14.9, wideCam(), .9]], lt);
+  }
+  if (lt < 17.63) return lerpCam(wideCam(), at(stR.x0 + 256, stR.y0 + 160, 1.5), ss(lt, 15.87, 17.4));
+  if (lt < 19.05) return faceCam(C.mango, 5.0, 170);
+  if (lt < 20.36) return faceCam(C.lemon, 5.0, 170);
+  const sc = faceCam(C.straw, 5.0, 170); sc[0] += 34;
+  if (lt < 22.23) return sc;
+  return lerpCam(sc, at(lob.x0 + 130, lob.y0 + 150, 3.0), ss(lt, 22.23, 22.83));
+}
+
+// ------------------------------------------------------------------ the overlays (screen space, after the grade): the sheet window, the counter, the dialog, Binder
+const PTR = { find: null };
+function drawWindow(lt) {
+  const k = winK(lt); if (k <= .002) return;
+  const e = eo(k), L = LAPR || { x: 540, y: 820, w: 120, h: 76 }, full = k >= 1;
+  const r = { x: lerp(L.x, WIN.x, e), y: lerp(L.y, WIN.y, e), w: lerp(L.w, WIN.w, e), h: lerp(L.h, WIN.h, e) }, sc = r.w / WIN.w;
+  ctx.save(); ctx.globalAlpha *= ss(k, 0, .15); rr(r.x, r.y, r.w, r.h, 18 * sc); ctx.clip(); ctx.translate(r.x, r.y); ctx.scale(sc, sc);
+  SH15.sheet(sheetOpts(lt, full), lt);
+  if (lt >= 7.9) {   /* the Find and Replace dialog over the dimmed sheet; Binder in the corner; the pointer goes for Replace All */
+    const foc = lt < 9.9 ? 'find' : 'replace', fs = 'break'.slice(0, nTyped('break', CUE.type1, .09, lt)), rs = 'pending'.slice(0, nTyped('pending', CUE.type2, .08, lt));
+    const D = { kind: 'findReplace', w: WIN.w, h: WIN.h, at: [540, 560], s: 1.0, find: fs, replace: rs, focus: foc, t: lt, dressing: !full };
+    const btn = SH15.dialogRect(D, 'replaceAll'), ptr = SH15.cursorPath([{ t: 10.2, x: 640, y: 330 }, { t: CUE.click - .1, x: btn.x + btn.w * .9, y: btn.y + btn.h * .86, click: [CUE.click - .15, CUE.click + .14] }], lt);
+    SH15.dialog(Object.assign(D, { press: lt > CUE.click - .15 ? { id: 'replaceAll', k: ptr.press } : undefined }), eb(sg(lt, 8.3, 8.6)));
+    const bi = A15.binder({ x: WIN.w - 118, y: WIN.h - 112, s: .7, center: true, noLegs: true, who: 'bind', t: lt, pose: 'helpful', grin: lt > CUE.click ? .8 : .2, look: [-.4, -.2], hover: 6 });
+    REG.suppress++; try { drawChar(bi); } finally { REG.suppress--; }
+    if (lt > 8.8) SH15.pointer(ptr.x, ptr.y, { kind: 'arrow', press: ptr.press, s: 1.2 });
+  }
+  ctx.restore();
+}
+/* the counter: a big sheet-style status in the corner, REPLACEMENTS: n, exact (214) at the end */
+function counter(lt) {
+  const a = ss(lt, 11.4, 11.6) * (1 - ss(lt, 15.55, 15.8)); if (a <= 0) return;
+  const n = Math.round(214 * easeIO(sg(lt, CUE.counter, 14.95))), x = 520, y = 132, w = 512, h = 120, cx = x + w / 2, pop = eb(sg(lt, 11.4, 11.65));
+  ctx.save(); ctx.globalAlpha *= Math.min(1, a * 1.4); ctx.translate(cx, y + h / 2); ctx.scale(pop, pop); ctx.translate(-cx, -(y + h / 2));
+  UI.panel([x, y, w, h], { r: 20, fill: '#103a2c', stroke: '#1e8e5a', lw: 4, id: 'counter', kind: 'panel', shadow: 16, pad: 10 });
+  UI.label('REPLACEMENTS', cx, y + 30, { size: 30, weight: 800, fill: '#9fe0bf', spacing: 4, cid: 'counter', maxW: w - 40, hero: pop >= 1 });
+  UI.label(String(n), cx, y + 82, { size: 76, font: 'Bangers', weight: 400, fill: '#ffe135', stroke: '#0a241a', lw: 6, spacing: 3, cid: 'counter', maxW: w - 40, hero: pop >= 1 });
+  ctx.restore();
+}
+const doneU = lt => eb(sg(lt, CUE.dialog, CUE.dialog + .3)) * (1 - sg(lt, 15.78, 15.86));
+function doneDialog(lt) {
+  const u = doneU(lt); if (u <= 0) return;
+  SH15.dialog({ kind: 'info', w: W, h: H, at: [540, 780], s: 1.05, title: 'Find and Replace', text: 'Done. 214 replacements made.', dressing: false }, u);
+}
+/* Binder, big: a hero in the middle on his line, then a face in the corner of every question-and-answer close-up (three-quarter, turned toward the person he answers) */
+function bigBinder(lt) {
+  if (lt < 15.87) return;
+  let x, y, s, yaw = 0, pose = 'rest', grin = .5, glint = 0;
+  if (lt < 17.63) { x = 540; y = 960; s = lerp(1.1, 1.3, sg(lt, 15.87, 17.43)); pose = 'cheer'; grin = .8; }
+  else if (lt < 19.05) { x = 840; y = 1090; s = 1.45; yaw = -.5; grin = lt >= bS('b4') ? .9 : .5; }
+  else if (lt < 20.36) { x = 240; y = 1090; s = 1.45; yaw = .5; grin = lt >= bS('b5') ? .9 : .5; }
+  else if (lt < 22.23) { x = 840; y = 1090; s = lerp(1.45, 1.7, ss(lt, 21.4, 21.6)); yaw = -.5; grin = lt >= bS('b6') ? lerp(.5, 1, ss(lt, 21.45, 22.2)) : .4; }
+  else { x = 540; y = 900; s = lerp(1.4, 1.6, sg(lt, 22.23, 23.28)); grin = 1; glint = Math.max(0, Math.sin((lt - 22.4) * 5)) ** 4; }
+  const o = A15.binder({ x, y, s: s * eb(sg(lt, lt < 17.63 ? 15.87 : 0, lt < 17.63 ? 16.1 : .01)), center: true, noLegs: true, who: 'bind', t: lt, yaw, pose, grin, glint, look: [yaw ? -Math.sign(yaw) * .4 : 0, .1], hover: 6 });
+  ctx.save(); ctx.shadowColor = 'rgba(10,8,16,.4)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 12; drawChar(o); ctx.restore();
+}
+
+// ------------------------------------------------------------------ the scene object
+const SC = {
+  shot(lt) { return lt < 11.32 ? 'station' : lt < 15.87 ? 'tour' : 'qa'; },
+  cam(lt) {
+    const st = ST(lt); STATE = st; const C = cast(lt, st); FRAME = { C, st };
+    const [x, y, z] = camAt(lt, C, st);
+    zoomTo(x, y, z);
+  },
+  draw(lt) { drawWorld(lt); },
+  fx(lt) {
+    const fx = { bloom: .5, vignette: .4, grain: .045, contrast: .13, sat: .12 };
+    if (lt < .25) { fx.fade = 1 - sg(lt, 0, .25); fx.fadeColor = '16,12,24'; }
+    return fx;
+  },
+  blur(lt) {
+    if (lt < 11.3 || lt > 15.2) return 1;
+    const sp = d => { const st = ST(lt + d); STATE = st; return camAt(lt + d, cast(lt + d, st), st); };
+    const a = sp(-.017), b = sp(.017), z = Math.sqrt(a[2] * b[2]), px = Math.hypot(b[0] - a[0], b[1] - a[1]) * z / .034 + Math.abs(Math.log(b[2] / a[2])) * 900 / .034;
+    return Math.max(1, Math.min(24, Math.round(px / 900)));
+  },
+  over(lt) { drawWindow(lt); doneDialog(lt); counter(lt); bigBinder(lt); },
+  clock: () => SCN.clock, label: () => SCN.label,
+};
+window.__EP15_SCENES = window.__EP15_SCENES || {};
+window.__EP15_SCENES.replace = SC;
 })();

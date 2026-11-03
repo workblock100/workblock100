@@ -138,7 +138,7 @@ function banner() {
   const w = PHYS2D.world({ gravity: [0, G], seed: 3 });
   const roof = w.body({ type: 'static', box: [330, 24], x: 540, y: 620, mat: 'concrete', tag: 'roof' });
   const BW = 400, BH = 700, x0 = 540 - BW / 2, y0 = 644;
-  const cloth = w.cloth({ x: x0, y: y0, width: BW, height: BH, cols: 11, rows: 20, wind: { z: 100, x: 30, gust: 500, hz: 0.45, k: 0.006 }, unroll: { t0: 0.7, dur: 1.5, r0: 17, snap: 0.3 }, iterations: 8, windGain: 2.6, drag: 0.2, wallZ: 0 });
+  const cloth = w.cloth({ x: x0, y: y0, width: BW, height: BH, cols: 11, rows: 20, wind: { z: 100, x: 30, gust: 500, hz: 0.45, k: 0.006, ky: 0.003 }, unroll: { t0: 0.7, dur: 1.5, r0: 17, snap: 0.3 }, iterations: 8, drag: 0.2, wallZ: 0 });
   const meta = { cloth, roof, x0, y0, BW, BH };
   return { world: w, T: 8, screen: { w: 1080, h: 1920, cx: 540, cam: { x: 540, y: 960, zoom: 1 } }, meta };
 }

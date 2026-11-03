@@ -1,0 +1,685 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 16: The Vote",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "carrot": {
+   "name": "CARROT, GREENLEAF",
+   "voice": "am_liam",
+   "lang": "en-us",
+   "speed": 1.06,
+   "semis": 0,
+   "color": "#ff9a3c",
+   "pan": 0.3
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 5.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "click",
+       1.0,
+       0.4,
+       -0.15
+      ],
+      [
+       "click",
+       2.2,
+       0.4,
+       0.2
+      ],
+      [
+       "stamp",
+       2.6,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       3.8,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ballot",
+   "clock": "6:30 PM",
+   "label": "THE BALLOT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.3,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Tonight we vote. Employee of the month.",
+     "text": "Tonight we vote. Employee of the month.",
+     "gap": 0.2
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "We have never had one.",
+     "text": "We have never had one.",
+     "gap": 0.1
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "We have never had a vote.",
+     "text": "We have never had a vote.",
+     "gap": 0.2
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Compliance has prepared the ballots.",
+     "text": "Compliance has prepared the ballots.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sniffle",
+       1.7,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "One choice per person.",
+     "text": "One choice per person.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Who are the candidates?",
+     "text": "Who are the candidates?",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Binder.",
+     "text": "Binder.",
+     "gap": 0.15
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "Who else?",
+     "text": "Who else?",
+     "gap": 0.1
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "Binder is the candidate.",
+     "text": "Binder is the candidate.",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "That's one choice.",
+     "text": "That's one choice.",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Efficiency.",
+     "text": "Efficiency.",
+     "gap": 0.15
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're voting. Would you like help?",
+     "text": "It looks like you're voting. Would you like help?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! I'll help.",
+     "text": "Great! I'll help.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "grin",
+       0.55,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "cast",
+     "pause": 3.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "click",
+       0.3,
+       0.35,
+       -0.3
+      ],
+      [
+       "click",
+       0.7,
+       0.35,
+       0.3
+      ],
+      [
+       "click",
+       1.1,
+       0.35,
+       0
+      ],
+      [
+       "fillpop",
+       1.7,
+       0.4,
+       -0.4
+      ],
+      [
+       "fillpop",
+       1.9,
+       0.4,
+       0.4
+      ],
+      [
+       "fillpop",
+       2.1,
+       0.4,
+       0
+      ],
+      [
+       "fillpop",
+       2.25,
+       0.4,
+       -0.2
+      ],
+      [
+       "fillpop",
+       2.4,
+       0.4,
+       0.2
+      ],
+      [
+       "crowd",
+       2.6,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 0.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "count",
+   "clock": "7:30 PM",
+   "label": "THE COUNT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "typing",
+       0.1,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Counting.",
+     "text": "Counting.",
+     "gap": 0.15
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Binder, forty-eight.",
+     "text": "Binder, forty-eight.",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Forty-eight? There are nine of us.",
+     "text": "Forty-eight? There are nine of us.",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "The other forty are unassigned.",
+     "text": "The other forty are unassigned.",
+     "gap": 0.1
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Those are me.",
+     "text": "Those are me.",
+     "gap": 0.15
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "Unassigned are eligible. Per policy.",
+     "text": "Unassigned are eligible. Per policy.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "sob",
+       1.6,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Pending, one.",
+     "text": "Pending, one.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That one is mine.",
+     "text": "That one is mine.",
+     "gap": 0.15
+    },
+    {
+     "id": "o4",
+     "who": "onion",
+     "say": "One real ballot. The election is void.",
+     "text": "One real ballot. The election is void.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "dialog",
+       -0.2,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "t3",
+     "who": "tom",
+     "say": "A void election goes to the incumbent.",
+     "text": "A void election goes to the incumbent.",
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Who is the incumbent?",
+     "text": "Who is the incumbent?",
+     "gap": 0.1
+    },
+    {
+     "id": "o5",
+     "who": "onion",
+     "say": "Binder.",
+     "text": "Binder.",
+     "gap": 0.2
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "He was the only candidate.",
+     "text": "He was the only candidate.",
+     "gap": 0.1
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Thank you for your support!",
+     "text": "Thank you for your support!",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "grin",
+       1.2,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 0.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "prize",
+   "clock": "8:10 PM",
+   "label": "THE PLAQUE",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.2,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "The plaque. Employee of the month.",
+     "text": "The plaque. Employee of the month.",
+     "gap": 0.1
+    },
+    {
+     "id": "ca1",
+     "who": "carrot",
+     "say": "Name?",
+     "text": "Name?",
+     "gap": 0.1
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Binder.",
+     "text": "Binder.",
+     "gap": 0.1
+    },
+    {
+     "id": "ca2",
+     "who": "carrot",
+     "say": "Prize?",
+     "text": "Prize?",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "A day off!",
+     "text": "A day off!",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "You do not sleep.",
+     "text": "You do not sleep.",
+     "gap": 0.1
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "I love my job!",
+     "text": "I love my job!",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "When is the day off?",
+     "text": "When is the day off?",
+     "gap": 0.1
+    },
+    {
+     "id": "b4",
+     "who": "bind",
+     "say": "Pending!",
+     "text": "Pending!",
+     "gap": 0.25
+    },
+    {
+     "id": "end",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "stamp",
+       0.3,
+       0.5,
+       0
+      ],
+      [
+       "pending",
+       0.6,
+       0.45,
+       0
+      ],
+      [
+       "sting",
+       1.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 6.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "click",
+       3.0,
+       0.4,
+       0
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "ballot",
+  "to_": "prize",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}
