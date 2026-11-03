@@ -308,7 +308,7 @@ ACT.onion = lt => {
   const c = Math.floor(tally(lt).b + tally(lt).p), flick = lt > 1.0 && lt < 2.3 ? Math.sin(lt * 17) : lt > 2.3 && lt < 5.5 ? Math.sin(lt * 5) * .35 : 0;
   const psiH = lt < T_TURN ? key([[0, 0], [5.4, 0], [5.9, .15], [8.4, 0], [9.5, .2], [12, 0]], lt) : TURN(lt, T_TURN, -.75);
   return { psiB: lt < T_TURN ? 0 : TURN(lt, T_TURN, -.5), psiH, look: lt < T_TURN ? [lt < 5.5 ? .05 : 0, lt < 5.5 ? .5 : .1] : [-.6, .1], expr: 'onion_cry',
-    o: { sob: sobK(lt), arms: { l: 'hold', r: 'hold' }, grip: { l: [-40 + 16 * flick, 46 - 14 * Math.abs(flick)], r: [56, 38] }, hold: { r: 'fp16_clicker' }, clickN: c, clickPress: lt > 1 && lt < 2.3 ? Math.max(0, Math.sin(lt * 17 + 1.4)) : 0 } };
+    o: { sob: sobK(lt), arms: { l: 'hold', r: 'hold' }, grip: { l: [-40 + 16 * flick, 46 - 14 * Math.abs(flick)], r: [56, 38] }, hold: window.__noHold ? undefined : { r: 'fp16_clicker' }, clickN: c, clickPress: lt > 1 && lt < 2.3 ? Math.max(0, Math.sin(lt * 17 + 1.4)) : 0 } };
 };
 ACT.lemon = lt => {
   const psiH = lt < T_TURN ? key([[0, 0], [3.9, 0], [4.1, -.5], [4.45, .5], [4.8, -.3], [5.2, 0]], lt) : TURN(lt, T_TURN, .7);
