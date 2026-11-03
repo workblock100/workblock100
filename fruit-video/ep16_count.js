@@ -492,7 +492,7 @@ function drawWorld(lt, sh) {
     add(zr + (toCam ? -1 : 1) * 2, () => { const w = 118, bz = zr - face * 66; boxR(xr - w, xr + w, SEAT_Y + 4, SEAT_Y + 230, bz - 8, bz + 8, { color: '#4a5f86', top: '#6a80a8', front: '#3d4f74', side: '#2f3e5e', lw: 1.6 }); }, mapZ(zr - face * 66) - 8);
     add(zr + (toCam ? 0 : -3) * 0, () => { const po = person(n, lt); (window.__cntDbg = window.__cntDbg || {})[n] = { x: po.x, y: po.y, s: po.s, yaw: po.yaw, kind: po.kind }; drawChar(po); });
   }
-  if (sh.table !== false) { add(350, () => tableDraw(lt), mapZ(470) - 2); add(349, () => { tableItems(lt); flicks(lt); }, mapZ(470) - 2); }
+  if (sh.table !== false && !window.__NOTABLE) { if (!window.__NOTOP) add(350, () => tableDraw(lt), mapZ(470) - 2); add(349, () => { if (!window.__NOITEMS) tableItems(lt); if (!window.__NOFLICK) flicks(lt); }, mapZ(470) - 2); }
   if (sh.binder && lt >= T_BIND) add(336, () => drawChar(binderOpts(lt)));
   items.sort((a, b) => b.z - a.z); for (const it of items) it.fn();
   if (sh.chips) nineChips(lt);

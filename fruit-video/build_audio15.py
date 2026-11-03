@@ -1533,8 +1533,22 @@ def publish(out_dir):
     print("published: build/ep15/audio.wav and build/ep15/audio.m4a")
 
 
-def master(wav):
-    """The loudness trim, peak limiter and AAC guard of Episodes 10 to 14: the finished file measures -14.8 LUFS and its AAC encode stays under -1 dBTP."""
+def end_fade(wav, duration, fade=.18):
+    """The renderer muxes with -shortest, so the audio is cut at the timeline's duration. Fade the last `fade` seconds before that instant with a raised cosine that reaches exactly zero at it
+    (and zero everything after it), so the cut has no tick. Every sample before the fade is untouched (the wav is 16-bit, so reading and writing it back is bit-exact)."""
+    x, sr = sf.read(wav, dtype="float64")
+    n_end = int(round(duration * sr))
+    n0 = n_end - int(fade * sr)
+    if 0 < n0 < n_end <= len(x):
+        g = .5 * (1 + np.cos(np.pi * np.arange(n_end - n0) / (n_end - n0)))
+        x[n0:n_end] *= g[:, None] if x.ndim == 2 else g
+        x[n_end:] = 0.0
+    sf.write(wav, x, sr, subtype="PCM_16")
+    print(f"end fade: {fade * 1000:.0f} ms raised cosine to zero at {n_end / sr:.3f} s (the timeline's end), silence after")
+
+
+def master(wav, duration=None):
+    """The loudness trim, peak limiter, end fade and AAC guard of Episodes 10 to 14: the finished file measures -14.8 LUFS and its AAC encode stays under -1 dBTP."""
     import shutil
     base = wav + ".pre"
     shutil.copyfile(wav, base)
@@ -1553,6 +1567,8 @@ def master(wav):
             break
         target += -14.8 - final
     os.remove(base)
+    if duration:
+        end_fade(wav, duration)
     dips, deep = A10.aac_guard(wav)
     print(f"aac guard: {dips} dip(s), deepest {deep:.2f} dB (keeps the AAC encode under -1 dBTP)")
 
@@ -1612,7 +1628,7 @@ def main():
         except OSError:
             pass
     wav = os.path.join(out_dir, "audio.wav")
-    master(wav)
+    master(wav, json.load(open(os.path.join(out_dir, "timeline.json")))["duration"])
     measure(out)
     if do_publish:
         if bad:

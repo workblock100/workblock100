@@ -111,6 +111,7 @@ function stage(lt, o = {}) {
     ctx.strokeStyle = `rgba(170,160,255,${a * .5 * k})`; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(540, 960, rad, 0, TAU); ctx.stroke();
     ctx.strokeStyle = `rgba(170,160,255,${a * k})`; ctx.beginPath(); ctx.arc(540, 960, rad, lt * sp + i, lt * sp + i + 1.8); ctx.stroke();
   });
+  const vg = ctx.createRadialGradient(540, 960, 480, 540, 960, 1300); vg.addColorStop(0, 'rgba(3,1,16,0)'); vg.addColorStop(1, 'rgba(3,1,16,.55)'); ctx.fillStyle = vg; ctx.fillRect(-400, -400, W + 800, H + 800);   /* the card's own vignette: the engine's would grey the white page */
   ctx.restore();
 }
 
@@ -165,7 +166,7 @@ const STARTB = { cx: 540, cy: 1334, w: 880, h: 116 }, SKIPB = { cx: 540, cy: 148
 const TRACK = { x: 100, y: 1190, w: 880, h: 28 };
 const ent = (lt, t0, d = .22) => { const a = sg(lt, t0, t0 + d); return { a, dy: (1 - eO(a)) * 30, done: a >= 1 }; };
 const w99 = () => UI.sizeOf('99%', { size: CARD.load.size, weight: 900 }).w;
-const loadX = () => 540 - (52 + 18 + w99()) / 2 + 26;                          /* the loader's ring centre in the final row: ring + gap + 99% is one group centred on x 540 */
+const loadX = () => 540 - (59 + 14 + w99()) / 2 + 29.5;                          /* the loader's ring centre in the final row: ring + gap + 99% is one group centred on x 540 */
 
 // ------------------------------------------------------------------ the pointer (screen coordinates): in from the left onto START on click 1, down to the greyed SKIP on click 2
 function pointer(lt) {
@@ -244,8 +245,8 @@ function topBar(lt) {
   const g = ctx.createLinearGradient(0, 0, W, 0); g.addColorStop(0, '#3a2fb8'); g.addColorStop(1, INDIGO_D); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 140);
   ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect(60, 36, 68, 68, 18); ctx.fill();   /* the logo mark: an open book */
   ctx.save(); ctx.translate(94, 72); ctx.strokeStyle = INDIGO; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(0, 18); ctx.moveTo(0, -12); ctx.quadraticCurveTo(-11, -18, -22, -13); ctx.lineTo(-22, 13); ctx.quadraticCurveTo(-11, 8, 0, 18); ctx.quadraticCurveTo(11, 8, 22, 13); ctx.lineTo(22, -13); ctx.quadraticCurveTo(11, -18, 0, -12); ctx.stroke(); ctx.restore();
-  UI.label('LearnWell', 152, 70, { align: 'left', size: 54, weight: 900, fill: '#ffffff', hero: calm, crop: !calm, maxW: 420 });
-  avatar(940, 70, lt);
+  UI.label('LearnWell', 152, 74, { align: 'left', size: 54, weight: 900, fill: '#ffffff', hero: calm, crop: !calm, maxW: 420 });
+  if (lt >= .46) { ctx.save(); ctx.globalAlpha *= sg(lt, .46, .62); avatar(940, 72, lt); ctx.restore(); }   /* the sprite only appears once the bar has landed (a head must not cross the frame edge) */
   ctx.restore();
 }
 function drawBanner(lt) {
@@ -360,7 +361,7 @@ function loader(lt) {
   ctx.restore();
 }
 function percent(lt) {
-  const e = ent(lt, .80), lk = eIO(sg(lt, IRIS0, 3.5)), size = lp(34, CARD.load.size, lk), finalRight = 540 + (52 + 18 + w99()) / 2, rx = lp(TRACK.x + TRACK.w, finalRight, lk), y = lp(1164, CARD.load.cy, lk);
+  const e = ent(lt, .80), lk = eIO(sg(lt, IRIS0, 3.5)), size = lp(34, CARD.load.size, lk), finalRight = 540 + (59 + 14 + w99()) / 2, rx = lp(TRACK.x + TRACK.w, finalRight, lk), y = lp(1164, CARD.load.cy, lk);
   if (e.a <= .01) return;
   const str = lt < SPIN ? '0%' : '99%', bump = lt >= SPIN ? 1 + .35 * ringK(lt - SPIN, .09) : 1, calm = (e.done && lt < IRIS0 - .02 && !(lt >= SPIN && lt < SPIN + .3)) || lk >= 1;
   ctx.save(); ctx.globalAlpha *= e.a; ctx.translate(rx, y + (lk > 0 ? 0 : e.dy)); ctx.scale(bump, bump); ctx.translate(-rx, -y);
@@ -424,13 +425,13 @@ const TITLE = {
   noChyron: true, noScrim: true,
   shot() { return 'page'; },
   cam(lt) {
-    zoomTo(540, 960, 1 + .014 * sg(lt, 0, IRIS0) + .05 * eIO(sg(lt, LAND, 6.2)));
-    CAM.shake = 3 * (lt >= CLICK1 ? ringK(lt - CLICK1, .05) : 0) + 3 * (lt >= CLICK2 ? ringK(lt - CLICK2, .05) : 0) + 5 * (lt >= LAND ? ringK(lt - LAND, .05) : 0);
+    zoomTo(540, 960, 1 + .05 * eIO(sg(lt, LAND, 6.2)));
+    CAM.shake = 2 * (lt >= CLICK1 ? ringK(lt - CLICK1, .05) : 0) + 2 * (lt >= CLICK2 ? ringK(lt - CLICK2, .05) : 0) + 5 * (lt >= LAND ? ringK(lt - LAND, .05) : 0);
   },
   draw: titleDraw,
   fx(lt) {
     const land = lt >= LAND ? ringK(lt - LAND, .12) : 0, fin = lt < .2 ? 1 - lt / .2 : 0, fout = sg(lt, 6.06, 6.2);
-    return { bloom: .42 + .5 * land + .25 * sg(lt, LAND, 4.2), vignette: lp(.14, .4, sg(lt, 2.9, 3.9)), grain: .05, contrast: .12, sat: .06, aberr: 5 * land, tint: [['#b9a8ff', .07 * sg(lt, LAND, 4.4), 'soft-light']], fade: Math.max(fin, fout), fadeColor: '4,2,14' };
+    return { bloom: .42 + .5 * land + .25 * sg(lt, LAND, 4.2), vignette: 0, grain: .05, contrast: .12, sat: .06, aberr: 5 * land, tint: [['#b9a8ff', .07 * sg(lt, LAND, 4.4), 'soft-light']], fade: Math.max(fin, fout), fadeColor: '4,2,14' };
   },
   blur(lt) { return lt < .2 ? 1 : (lt > 1.0 && lt < 1.22) ? 5 : (lt > 2.6 && lt < 2.82) ? 5 : (lt > 2.98 && lt < 3.6) ? 8 : 2; },
   over() {},
