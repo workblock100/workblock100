@@ -462,14 +462,14 @@ function drawLunchbox(c, o = {}) {
   c.fillStyle = 'rgba(150,80,40,.35)'; c.beginPath(); c.ellipse(-30, -8, 14, 6, .2, 0, TAU); c.fill(); c.beginPath(); c.ellipse(34, -40, 8, 4, -.3, 0, TAU); c.fill();   /* rust */
   c.fillStyle = '#d9d2c0'; rr(-8, -52, 16, 8, 2); c.fill(); c.strokeStyle = OUT; c.lineWidth = 2; c.stroke();                                         /* the clasp */
   c.save(); c.translate(0, -26); c.rotate(-.05); c.fillStyle = '#fffdf2'; c.strokeStyle = OUT; c.lineWidth = 2.6; rr(-34, -20, 68, 40, 3); c.fill(); c.stroke();   /* the date sticker */
-  UI.label('2019', 0, -6, { size: 26, font: 'Lucky', weight: 400, fill: '#c4283a', maxW: 60, hero, crop: !hero, id: o.id });
-  UI.label('BRENDA', 0, 13, { size: 9, weight: 900, fill: '#2a2230', spacing: 1.4, maxW: 58, hero: false, crop: true });
+  if (!o.noText) { UI.label('2019', 0, -6, { size: 26, font: 'Lucky', weight: 400, fill: '#c4283a', maxW: 60, hero, crop: !hero, id: o.id });
+  UI.label('BRENDA', 0, 13, { size: 9, weight: 900, fill: '#2a2230', spacing: 1.4, maxW: 58, hero: false, crop: true }); }
   c.restore();
   c.fillStyle = 'rgba(210,205,196,.5)'; c.beginPath(); c.moveTo(-52, -64); c.lineTo(52, -64); c.lineTo(52, -56); c.quadraticCurveTo(0, -48, -52, -56); c.closePath(); c.fill();     /* dust on the lid */
   c.strokeStyle = 'rgba(236,240,238,.7)'; c.lineWidth = 1.2; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(-52 + i * 4, -64); c.quadraticCurveTo(-30 + i * 6, -30 + i * 6, -44, 2 + i * 3); c.stroke(); }
   c.restore();
 }
-EXT.prop.fp19b_lunch = (side, o, t) => { const S = o.lunchScale || .75; ctx.save(); ctx.rotate(o.lunchTilt || 0); ctx.scale(S, S); drawLunchbox(ctx, { open: o.lunchOpen || 0 }); ctx.restore(); };
+EXT.prop.fp19b_lunch = (side, o, t) => { const S = o.lunchScale || .75; ctx.save(); ctx.rotate(o.lunchTilt || 0); ctx.scale(S, S); drawLunchbox(ctx, { open: o.lunchOpen || 0, noText: o.lunchNoText }); ctx.restore(); };
 PROP_BOX.fp19b_lunch = o => { const S = o.lunchScale || .75; return Object.assign([-56 * S, -90 * S, 56 * S, 4 * S], { nearFace: true }); };
 /* the 2019 sandwich: two slices of toast-coloured bread with lettuce gone to paper, cheese and a tomato slice. Local frame: origin = the middle of the bottom edge. o.half 'L' | 'R' draws one torn half (its torn edge zig-zags down the middle, o.pull spreads the two) */
 function drawSandwich(c, o = {}) {
@@ -665,7 +665,7 @@ function actBrenda(lt, sh) {
   const route = BR_R, b1 = bS('br1'), wsnap = wS('br1', 3), out = lt >= b1 + 1.9;
   const hy = key([[0, .2], [b1, .2], [b1 + 1, .45], [bE('br1'), .45], [bS('m1'), -.1], [bS('br2'), .35], [bE('br2') + .2, .35], [bS('br3'), .5], [99, .5]], lt);
   const yaw = key([[0, .2], [b1 + 1.5, .35], [bS('br2'), .5], [99, .55]], lt);
-  const o = person(A13.brenda, route, lt, { t: lt, stride: 22, yaw: walkYaw(route, lt, yaw, .72), headYaw: hy, who: 'brenda', expr: A13.expr(lt < bS('br3') + 1.0 ? (lt < b1 + 1.5 ? 'wake' : 'weak') : 'relief'), lid: lt < b1 + 1.2 ? .26 : .34, look: [clamp(hy * .6, -.55, .55), .05],
+  const o = person(A13.brenda, route, lt, { t: lt, stride: 22, yaw: walkYaw(route, lt, yaw, .45), headYaw: hy, who: 'brenda', expr: A13.expr(lt < bS('br3') + 1.0 ? (lt < b1 + 1.5 ? 'wake' : 'weak') : 'relief'), lid: lt < b1 + 1.2 ? .26 : .34, look: [clamp(hy * .6, -.55, .55), .05],
     web: lt < wsnap ? 1 : 0, webT: lt < wsnap ? -1 : lt - wsnap, dust: lt < bS('br2') ? .8 : lerp(.8, .5, ss(lt, bS('br2'), bS('br3'))), specsDrop: .75,
     arms: { l: 'rest', r: 'hold' }, grip: { r: [100, 40] }, hold: { r: 'fp19b_lunch' }, lunchScale: .85, hand: { r: 'grip' } });
   if (lt < b1 + 1.0) {                                     /* the hand comes round the fridge's edge with the lunchbox, held out at arm's length */
@@ -673,6 +673,7 @@ function actBrenda(lt, sh) {
   }
   const up = ss(lt, wS('br2', 5) - .2, wS('br2', 5) + .1) * (1 - ss(lt, bE('br2') + .1, bE('br2') + .5));        /* "twenty nineteen": the lunchbox up beside her face */
   if (up > .02) { o.grip = { r: [lerp(100, 78, up), lerp(40, -64, up)] }; o.lunchScale = lerp(.85, 1.0, up); }
+  o.lunchNoText = lt >= SHOTS.find(x => x.id === 'b2b').s - .02 && lt < SHOTS.find(x => x.id === 'b2b').e + .02;       /* the insert shows the sticker big: the one in her hand is left blank while it is up */
   const tearK = ss(lt, wS('br3', 3) - .05, wS('br3', 3) + .22), give = ss(lt, wS('br3', 3) + .24, T_TAKE - .02);
   if (lt >= snapT(25.45) && lt < wS('br3', 3) - .05) { o.hold = { l: 'fp19b_sandwich' }; o.sandMode = 'whole'; o.sandScale = 1.1; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-36, 80], r: [40, 82] }; o.hand = { l: 'grip', r: 'grip' }; }
   else if (lt >= wS('br3', 3) - .05 && lt < T_TAKE) { o.hold = { l: 'fp19b_sandwich', r: 'fp19b_sandwich' }; o.sandMode = 'torn'; o.sandPull = 10 * tearK; o.sandScale = 1.1; o.arms = { l: 'hold', r: 'hold' }; o.hand = { l: 'grip', r: 'grip' }; o.grip = { l: [-46 - 12 * tearK, 80], r: [lerp(46 + 12 * tearK, 150, give), lerp(82, 64, give)] }; }
@@ -775,7 +776,7 @@ const SHOT_DEFS = [   /* id, start, framing: p = perspective camera [cx0, cz0, c
   ['m1', 20.43, { p: [-380, 0, -380, 0], foc: 'mango', z: [3.0, 3.1], up: 175, dof: 10, sharp: ['mango'] }],
   ['l1', 21.10, { p: [-300, 0, -300, 0], foc: 'lemon', z: [2.2, 2.35], up: 170, dof: 10, sharp: ['lemon'] }],
   ['b2a', 22.45, { p: [-300, 0, -150, 0], foc: 'brenda', z: [2.0, 2.15], up: 165, dof: 10, sharp: ['brenda'] }],
-  ['b2b', 23.95, { p: [-150, 0, -150, 0], foc: 'brenda', z: [2.0, 2.0], up: 165, dof: 14, sharp: ['brenda'], insert: 'lunch' }],
+  ['b2b', 23.95, { p: [-150, 0, -150, 0], foc: 'brenda', z: [2.0, 2.0], up: 165, dof: 14, sharp: [], insert: 'lunch' }],
   ['b2c', 25.15, { p: [60, 0, 60, 0], pt: [[90, 270, 1620]], z: [1.5, 1.6], dof: 7, sharp: ['brenda', 'straw'] }],
   ['s3', 25.85, { p: [0, 0, 0, 0], foc: 'straw', z: [2.2, 2.3], up: 165, dof: 9, sharp: ['straw'] }],
   ['b3a', 26.61, { p: [-40, 0, -40, 0], foc: 'brenda', z: [2.2, 2.3], up: 165, dof: 9, sharp: ['brenda'] }],
