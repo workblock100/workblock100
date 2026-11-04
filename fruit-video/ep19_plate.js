@@ -71,10 +71,8 @@ const PHASES = [
   { k: 'fly', t0: sn(6.66), t1: sn(6.94), from: 'lemon', to: 'tom' },
   { k: 'held', t0: sn(6.94), t1: sn(8.96), who: 'tom' },
   { k: 'fly', t0: sn(8.96), t1: sn(9.22), from: 'tom', to: 'onion' },
-  { k: 'held', t0: sn(9.22), t1: sn(12.62), who: 'onion' },
-  { k: 'fly', t0: sn(12.62), t1: sn(12.9), from: 'onion', to: 'pear' },
-  { k: 'held', t0: sn(12.9), t1: sn(14.24), who: 'pear' },
-  { k: 'fly', t0: sn(14.24), t1: sn(14.52), from: 'pear', to: 'mango' },
+  { k: 'held', t0: sn(9.22), t1: sn(14.2), who: 'onion' },
+  { k: 'fly', t0: sn(14.2), t1: sn(14.52), from: 'onion', to: 'mango' },
   { k: 'held', t0: sn(14.52), t1: sn(19.4), who: 'mango' },
   { k: 'set', t0: sn(19.4), t1: sn(19.78), from: 'mango' },
   { k: 'cart', t0: sn(19.78), t1: 99 },
@@ -88,6 +86,15 @@ const ST = { hold: snapT(5.037 + .17), fun: snapT(7.652 + .15), label: snapT(10.
 
 // ------------------------------------------------------------------ the cast: drawChar options as a pure function of lt
 const KD = k => KINDS[k];
+/* Mango's ID badge: the same art as the kit's badge7, but its CNA label is dressing that may foreshorten (when she turns to profile the chest squeezes sideways and the audit reads the squeezed matrix as a tilted string) */
+EXT.acc.badgeP19 = (o, k, t, layer) => {
+  if (layer !== 'front') return;
+  ctx.save(); ctx.translate(k.rx * .64, k.ry * .33); ctx.rotate(.08); ctx.scale(.9, .9);
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 3; rr(-22, -14, 44, 56, 5); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#e8193a'; ctx.fillRect(-16, -8, 32, 22);
+  text(o.badgeText || 'NURSE', 0, 28, { size: 10, fill: INK, maxW: 40, crop: true, tilt: 1.4 });
+  ctx.restore();
+};
 const memo = new Map();
 function memoed(key_, fn) { if (memo.size > 90) memo.clear(); let v = memo.get(key_); if (!v) { v = fn(); memo.set(key_, v); } return v; }
 /* the body centre of a character: the feet are at o.y, the centre sits leg + .9 ry above them (scaled), plus the idle bob and the walk bob the engine adds */
@@ -110,7 +117,7 @@ const REST = side => [side * 118, 112];
 const idleHand = (side, lt, k = 1) => { const p = REST(side); return [p[0] + 4 * k * Math.sin(lt * 1.7 + side), p[1] + 5 * k * Math.sin(lt * 2.1 + side * 2)]; };
 
 /* ---- the carry geometry: the plate's bottom centre in body-local px (forward, down) relative to the body centre; `forward` is multiplied by the continuous facing (dirC below) */
-const SPOT = { low: [124, 116], ext: [150, 88], front: [136, 106], present: [196, 14], high: [66, -96], belly: [26, 124], lap: [64, 70] };
+const SPOT = { low: [124, 116], ext: [150, 88], front: [136, 106], present: [196, 14], high: [66, -96], belly: [26, 124], lap: [64, 70], offer: [142, 126] };
 const dirC = yaw => Math.max(-1, Math.min(1, Math.sin(yaw) * 3));   /* a continuous facing: +1 right, -1 left, 0 at the front (the plate crosses the chest as a holder turns) */
 const dirOfYaw = y => y >= 0 ? 1 : -1;
 const NEAR = dirF => dirF >= 0 ? 'l' : 'r';                         /* the arm that is drawn in front of the body when the face points to dirF */
@@ -122,14 +129,14 @@ function spotOf(who, lt) {
       const a = lt < 1.3 ? lerpS(SPOT.low, SPOT.present, ss(lt, .86, 1.3)) : lt < 2.4 ? lerpS(SPOT.present, SPOT.low, ss(lt, 2.1, 2.5)) : lt < 4.1 ? SPOT.low : lerpS(SPOT.low, SPOT.ext, ss(lt, 4.1, 4.44));
       return [a[0], a[1], lt >= 1.3 && lt < 2.4 ? .05 * Math.sin((lt - 1.3) * 3.1) - .06 : 0];
     }
-    if (lt < 14.7) { const a = lerpS(SPOT.ext, SPOT.low, ss(lt, 14.5, 14.7)); return [a[0], a[1], 0]; }
+    if (lt < 14.7) { const a = lt < 14.1 ? SPOT.low : lt < 14.52 ? lerpS(SPOT.low, SPOT.offer, ss(lt, 14.1, 14.3)) : lerpS(SPOT.offer, SPOT.low, ss(lt, 14.52, 14.7)); return [a[0], a[1], 0]; }
     if (lt < 19.0) return [SPOT.low[0], SPOT.low[1], 0];
     const a = lerpS(SPOT.low, SPOT.ext, ss(lt, 19.0, 19.4)); return [a[0], a[1], 0];
   }
   if (who === 'lemon') { const e = lerpS(SPOT.ext, SPOT.front, ss(lt, 4.76, 5.0)), a = lt < 6.3 ? e : lerpS(SPOT.front, SPOT.ext, ss(lt, 6.3, 6.66)); return [a[0], a[1], 0]; }
   if (who === 'tom') { const a = lt < 7.2 ? lerpS(SPOT.ext, SPOT.high, ss(lt, 6.94, 7.2)) : lt < 8.8 ? SPOT.high : lerpS(SPOT.high, SPOT.ext, ss(lt, 8.8, 8.98)); return [a[0], a[1], lt > 7.85 && lt < 9.0 ? .09 * Math.sin((lt - 7.85) * 9) : 0]; }
-  if (who === 'onion') { const a = lt < 9.6 ? lerpS(SPOT.ext, SPOT.belly, ss(lt, 9.22, 9.6)) : lt < 12.3 ? SPOT.belly : lerpS(SPOT.belly, SPOT.ext, ss(lt, 12.3, 12.62)); return [a[0], a[1], 0]; }
-  if (who === 'pear') { const a = lt < 13.1 ? SPOT.lap : lt < 14.2 ? lerpS(SPOT.lap, [58, 40], ss(lt, 13.1, 13.5)) : SPOT.lap; return [a[0], a[1], 0]; }
+  if (who === 'onion') { const a = lt < 9.6 ? lerpS(SPOT.ext, SPOT.belly, ss(lt, 9.22, 9.6)) : lt < 12.3 ? SPOT.belly : lerpS(SPOT.belly, SPOT.offer, ss(lt, 12.3, 12.62)); return [a[0], a[1], 0]; }
+  if (who === 'pear') return [SPOT.lap[0], SPOT.lap[1], 0];
   return [SPOT.low[0], SPOT.low[1], 0];
 }
 /* how much of the plate a character holds at lt (0..1): the giver lets go as the plate leaves, the receiver's hands arrive with it */
@@ -153,6 +160,20 @@ function handsGen(kind, o, yaw, spot, h, gest) {
 function plateFromBody(o, yaw, sp, who) { const d = who === 'pear' ? -1 : dirC(yaw), c = bodyCentre(o); return { x: c[0] + d * sp[0] * o.s, y: c[1] + sp[1] * o.s, rot: d * sp[2], sx: 1, sy: 1 }; }
 function clampReach(kind, yaw, side, g, R = 117) { const k = KD(kind), sd = side === 'l' ? -1 : 1, sx = sd * .92 * k.rx * Math.cos(yaw), sy = .1 * k.ry, dx = g[0] - sx, dy = g[1] - sy, d = Math.hypot(dx, dy); return d > R ? [sx + dx * R / d, sy + dy * R / d] : g; }
 
+/* where the plate roughly is (world x), from the tracks alone: the bystanders' heads and eyes follow it (no recursion into the cast) */
+function plateX(lt) {
+  const p = phaseAt(lt);
+  if (p.k === 'held') return T[p.who].x(lt);
+  if (p.k === 'fly') return mx(T[p.from].x(lt), T[p.to].x(lt), ss(lt, p.t0, p.t1));
+  if (p.k === 'lift') return mx(300, T[p.to].x(lt), ss(lt, p.t0, p.t1));
+  if (p.k === 'set') return mx(T.mango.x(lt), 4620, ss(lt, p.t0, p.t1));
+  return p.k === 'cart' ? 4620 : 300;
+}
+/* a bystander watches the plate: the head turns up to .5 rad toward it, the eyes go all the way */
+function watch(o, lt, yaw, k = 1) {
+  const dx = plateX(lt) - o.x, w = Math.max(-.55, Math.min(.55, dx / 300)) * k;
+  return { hy: yaw + w, look: [Math.max(-.8, Math.min(.8, dx / 260)), .12] };
+}
 // ------------------------------------------------------------------ the cast: drawChar options as a pure function of lt
 function mangoOpts(lt) {
   return memoed('mango@' + lt.toFixed(5), () => {
@@ -163,19 +184,19 @@ function mangoOpts(lt) {
     const present = lt >= 1.14 && lt < 2.4 ? ss(lt, 1.14, 1.4) * (1 - ss(lt, 2.1, 2.45)) : 0;
     const nearM = NEAR(dirF), gest = present > .001 ? { [nearM]: lerpS(restHand('mango', o, yaw, nearM), [-dirF * 6, 96], present) } : null;
     const hands = handsGen('mango', o, yaw, sp, h, gest);
-    const hy = lt < 1.3 ? yaw - .1 : lt < 2.4 ? yaw - .42 * present : yaw;
+    let hy = lt < 1.3 ? yaw - .1 : lt < 2.4 ? yaw - .42 * present : yaw;
     let expr = 'happy', look = [.5 * dirF, .05], browUp = 0;
     if (lt < .84) look = [-.75, .35]; else if (lt < 1.3) look = [-.4, .3];
     else if (lt < 2.4) { look = [.12, -.2]; browUp = 8; }
     else if (lt < 4.1) look = [.55, .05];
-    else if (lt < 12.7) look = [.75, .05];
+    else if (lt < 12.7) { const w = watch(o, lt, yaw); hy = w.hy; look = w.look; }
     else if (run) { expr = lt < 13.3 ? 'panic' : 'weak'; look = [-.7, .1]; }
     else if (lt < 14.3) { expr = lt < 13.64 ? 'weak' : 'neutral'; look = [-.75, .25]; browUp = 6 * ss(lt, 13.6, 13.9); }
     else if (lt < 19.3) look = [.7, 0];
     else if (lt < 20.3) look = [.8, .05];
     else { expr = lt < 21.1 ? 'hopeful' : 'shock'; look = [.55, -.3]; }
     const bounce = lt >= 13.0 && lt < 14.1 ? Math.max(0, 1 - Math.abs(lt - 13.8) / .5) : 0;
-    const r = A7.mango(Object.assign(o, { yaw, headYaw: hy, look, expr, browUp, who: 'mango', arms: { l: 'hold', r: 'hold' }, grip: hands, hold: {} }));
+    const r = A7.mango(Object.assign(o, { yaw, headYaw: hy, look, expr, browUp, who: 'mango', acc: ['badgeP19', 'gaitbelt7', 'keys7'], arms: { l: 'hold', r: 'hold' }, grip: hands, hold: {} }));
     if (run && W.walk > .2) { r.arms = { l: 'run', r: 'run' }; r.grip = undefined; }
     if (bounce > 0) { r.squash = .06 * bounce * Math.max(0, Math.sin(lt * 14)); r.plant = true; }
     return r;
@@ -190,8 +211,9 @@ function lemonOpts(lt) {
     const padK = lt < 3.4 ? ss(lt, 3.2, 3.4) : 1 - ss(lt, 5.28, 5.4), rr = restHand('lemon', o, yaw, 'r');
     const gest = { r: lerpS(rr, [rr[0] - 10, rr[1] - 34 - 22 * peel], padK) };                         /* the pad in her screen-right hand */
     const hands = handsGen('lemon', o, yaw, sp, h, gest);
-    const hy = lt < 4.3 ? yaw - .05 : lt < 5.2 ? yaw + .05 : lt > 6.9 ? yaw - .1 : yaw;
-    const look = lt < 4.6 ? [-.7, .05] : lt < 5.3 ? [-.3, .5] : lt < 6.7 ? [.7, 0] : [.65, 0];
+    let hy = lt < 4.3 ? yaw - .05 : lt < 5.2 ? yaw + .05 : yaw;
+    let look = lt < 4.6 ? [-.7, .05] : lt < 5.3 ? [-.3, .5] : lt < 6.7 ? [.7, 0] : [.65, 0];
+    if (lt > 6.9) { const w = watch(o, lt, yaw); hy = w.hy; look = w.look; }
     return A7.lemon(Object.assign(o, { yaw, headYaw: hy, look, expr: 'neutral', lid: .3, acc: ['readers', 'lanyard7'], face: { curve: .02 }, who: 'lemon', arms: { l: 'hold', r: 'hold' }, grip: hands, hold: padK > .02 ? { r: 'fp19p_pad' } : {}, padK, browUp: lt > 4.1 && lt < 4.7 ? 2 : 0 }));
   });
 }
@@ -206,8 +228,9 @@ function tomOpts(lt) {
     const rl = restHand('tomato', o, yaw, 'l'), rr = restHand('tomato', o, yaw, 'r'), cheerT = [-dirF * 100, -80];
     const gest = { l: lerpS(lerpS(rl, [-60, -90], up), cheerT, cheer * wR), r: lerpS(lerpS(rr, [60, -90], up), cheerT, cheer * (1 - wR)) };
     const hands = handsGen('tomato', o, yaw, sp, h, gest);
-    const hy = lt < 6.4 ? yaw - .05 : lt < 7.9 ? yaw + .35 * ss(lt, 7.4, 7.8) : yaw;
-    return A15.tomato(Object.assign(o, { tomPose: 'fruit', yaw, headYaw: hy, look: lt < 7.7 ? [-.6, -.1] : [.5, -.1], who: 'tom', arms: { l: 'hold', r: 'hold' }, grip: hands, hold: {},
+    let hy = lt < 6.4 ? yaw - .05 : lt < 7.9 ? yaw + .35 * ss(lt, 7.4, 7.8) : yaw, look = lt < 7.7 ? [-.6, -.1] : [.5, -.1];
+    if (lt > 9.1) { const w = watch(o, lt, yaw); hy = w.hy; look = w.look; }
+    return A15.tomato(Object.assign(o, { tomPose: 'fruit', yaw, headYaw: hy, look, who: 'tom', arms: { l: 'hold', r: 'hold' }, grip: hands, hold: {},
       rot: dance ? .08 * Math.sin(lt * 7.5) : 0, squash: dance ? .05 * Math.max(0, Math.sin(lt * 15)) : 0, plant: true }));
   });
 }
@@ -222,8 +245,9 @@ function onionOpts(lt) {
     const carryL = [d * sp[0] - 42, sp[1] + 6], carryR = [d * sp[0] + 42, sp[1] + 6];
     const hands = { l: clampReach('onion', yaw, 'l', lerpS(rest('l'), carryL, eo(h))), r: clampReach('onion', yaw, 'r', lerpS(lerpS(rest('r'), carryR, eo(h)), probe, pr)) };
     const sob = Math.max(0, 1 - Math.abs(lt - (Q.sniffle + .12)) / .5);
-    const hy = lt < 9.3 ? yaw - .1 : lt < 11.1 ? yaw + .1 : yaw;
-    const look = lt < 9.2 ? [-.6, .1] : lt < 11.2 ? [-.3, .6] : lt < 12.5 ? [.6, .1] : [.7, .1];
+    let hy = lt < 9.3 ? yaw - .1 : lt < 11.1 ? yaw + .1 : yaw;
+    let look = lt < 9.2 ? [-.6, .1] : lt < 11.2 ? [-.3, .6] : lt < 12.5 ? [.6, .1] : [.7, .1];
+    if (lt > 12.95) { const w = watch(o, lt, yaw); hy = w.hy; look = w.look; }
     return A15.onion(Object.assign(o, { pose: 'free', yaw, headYaw: hy, look, who: 'onion', arms: { l: 'hold', r: 'hold' }, grip: hands, hold: {}, expr: 'onion_cry', cry: .6 + .25 * sob, sob }));
   });
 }
@@ -231,14 +255,15 @@ const PEAR = { x: T.pear.x(0), s: SC.pear, dir: -1, lane: FY + 30 };
 function pearOpts(lt) {
   return memoed('pear@' + lt.toFixed(5), () => {
     const h = hasPlate('pear', lt), sp = spotOf('pear', lt);
-    const lean = ss(lt, 12.4, 12.9) * (1 - ss(lt, 14.1, 14.5)), peer = ss(lt, 13.0, 13.4) * (1 - ss(lt, 14.0, 14.3));
+    const lean = ss(lt, 12.3, 12.8) * (1 - ss(lt, 14.1, 14.6)), peer = ss(lt, 12.5, 12.9) * (1 - ss(lt, 14.0, 14.3));
     const o = { x: PEAR.x + 8 * PEAR.s, y: PEAR.lane - 76 * PEAR.s, s: PEAR.s * .96, t: lt, noLegs: true, plant: true, noReflect: true, noShadow: true };
     const hands = { l: clampReach('pear', -1, 'l', lerpS([-60, 80], [-94, 66], eo(h))), r: clampReach('pear', -1, 'r', lerpS([20, 84], [-30, 76], eo(h))) };
     const yaw = K([[0, -.9], [11.5, -.9], [12.2, -1.05], [14.3, -1.0], [14.6, -.85]], lt);
     const hy = yaw + (lt < 12.4 ? .15 : 0) + .12 * peer;
-    const look = lt < 12.4 ? [-.5, .05] : lt < 14.0 ? [-.5, .55 * peer + .1] : [-.2, .1];
+    let look = lt < 12.4 ? [-.5, .05] : lt < 14.0 ? [-.5, .55 * peer + .1] : [-.2, .1], hy2 = hy;
+    if (lt < 12.4) { const w = watch({ x: PEAR.x }, lt, yaw, .6); hy2 = w.hy; look = [w.look[0], .05]; }
     const expr = lt < 12.5 ? 'neutral' : lt < 14.0 ? 'hopeful' : 'sad';
-    return A7.pear(Object.assign(o, { yaw, headYaw: hy, look, expr, who: 'pear', arms: { l: 'hold', r: 'hold' }, grip: hands, hold: {}, rot: -.05 * lean, browUp: 6 * peer }));
+    return A7.pear(Object.assign(o, { yaw, headYaw: hy2, look, expr, who: 'pear', arms: { l: 'hold', r: 'hold' }, grip: hands, hold: {}, rot: -.1 * lean, browUp: 6 * peer }));
   });
 }
 const STRAW = { x: T.straw.x(0), s: SC.straw };
@@ -273,7 +298,7 @@ function plateAt(lt) {
   else if (p.k === 'rest') { x = RAIL.x; y = RAIL.y; const b = pulse(lt, Q.plateclink, 34, .09); sy = 1 - .07 * b; sx = 1 + .04 * b; y -= 2 * Math.abs(b); }
   else if (p.k === 'lift') {
     const u = ss(lt, p.t0, p.t1), a = { x: RAIL.x, y: RAIL.y }, hp = heldPlate2(p.to, lt), e = u * u * (3 - 2 * u);
-    x = mx(a.x, hp.x, e); y = mx(a.y, hp.y, e) - 46 * Math.sin(PI * e); rot = hp.rot * e;
+    x = mx(a.x, hp.x, e); y = mx(a.y, hp.y, e) + 96 * Math.sin(PI * e); rot = hp.rot * e;      /* a U: down and across below her face, then up beside it */
   } else if (p.k === 'held') {
     const hp = heldPlate2(p.who, lt); x = hp.x; y = hp.y; rot = hp.rot;
     const tc = catchT(lt);
@@ -292,7 +317,7 @@ function plateAt(lt) {
 /* the low items at the two ends, the tall ones in the middle: whichever way the holder faces, the face is clear of the tall food (dx, dy move each item from its slot) */
 const ITEMS = [{ kind: 'pieMold', dx: -26, dy: 22 }, { kind: 'roll', dx: 42, dy: -7 }, { kind: 'turkeyMold', shine: .8, dx: 32, dy: 5 }, { kind: 'coffee', thick: 1, fill: .92, k: .66, dx: -38, dy: -6 }];
 const ISC = 1.04;
-const STK_AT = { hold: [92, -34], fun: [-92, -20], label: [-8, 20] };       /* centres of the three stickers (kit units) */
+const STK_AT = { hold: [74, -38], fun: [-92, -20], label: [-8, 20] };       /* centres of the three stickers (kit units) */
 const TURKEY_TOP = [-14, -60];                                       /* where the probe goes in */
 const probeK = lt => ss(lt, 9.5, 10.0);                              /* 0 away .. 1 stuck in */
 const probeBase = TURKEY_TOP, probeTip = [6, -80];                /* the rod from the base to the handle */
@@ -323,7 +348,13 @@ function drawProbe(lt, k) {
   ctx.restore();
 }
 /* a flying sticker (before it is stuck): from `from` to `to` in plate-local kit units, over [t0, t1]; it lands at 1.3x the stuck size and the kit's own slap takes over at t0 */
-const FLY = { hold: [150, -120], fun: [-190, -130], label: [-130, -150] };      /* where the stickers come from, in kit units (Lemon's pad, Tomato's sheet, Onion's roll of labels) */
+/* where a sticker comes from, in plate-local kit units: the hand that peeled it (Lemon's pad hand, Tomato's free hand, Onion's right hand), so it leaves the hand and lands on the plate */
+const worldToPlate = (st, wx, wy) => { const c = Math.cos(-(st.rot || 0)), sn_ = Math.sin(-(st.rot || 0)), dx = wx - st.x, dy = wy - st.y; return [(c * dx - sn_ * dy) / (PS * st.sx), (sn_ * dx + c * dy) / (PS * st.sy)]; };
+function flyFrom(kind, lt, st) {
+  if (kind === 'hold') { const o = CAST.lemon(lt), h = handWorld(o, o.grip.r); return worldToPlate(st, h[0], h[1] - 30 * o.s); }
+  if (kind === 'fun') { const o = CAST.tom(lt), h = handWorld(o, o.grip[NEAR(dirOfYaw(o.yaw))]); return worldToPlate(st, h[0], h[1] - 24 * o.s); }
+  const o = CAST.onion(lt), h = handWorld(o, o.grip.r); return worldToPlate(st, h[0], h[1]);
+}
 function flySticker(lt, kind, text, t0, t1, from, to, s1, rot) {
   if (lt < t0 || lt >= t1) return;
   const u = (lt - t0) / (t1 - t0), e = u * u * (3 - 2 * u), f = F();
@@ -340,9 +371,9 @@ function drawPlate(lt, st) {
     const sk = steamK(lt); if (sk > .02) f.steam(ctx, { x: -44, y: -72, w: 60, h: 190, t: lt, seed: 7, power: sk, curl: .6 });
   } else plateStandIn();
   const pk = probeK(lt); if (pk > 0) drawProbe(lt, pk);
-  flySticker(lt, 'note', 'HOLD', Q.peel1, ST.hold, FLY.hold, STK_AT.hold, .62, .1);
-  flySticker(lt, 'sticker', 'FUN COMMITTEE', Q.peel2, ST.fun, FLY.fun, STK_AT.fun, .5, -.12);
-  flySticker(lt, 'label', 'CONTAINS: BREAD', ST.label - .22, ST.label, FLY.label, STK_AT.label, .6, .03);
+  if (lt >= Q.peel1 && lt < ST.hold) flySticker(lt, 'note', 'HOLD', Q.peel1, ST.hold, flyFrom('hold', lt, st), STK_AT.hold, .62, .1);
+  if (lt >= Q.peel2 && lt < ST.fun) flySticker(lt, 'sticker', 'FUN COMMITTEE', Q.peel2, ST.fun, flyFrom('fun', lt, st), STK_AT.fun, .5, -.12);
+  if (lt >= ST.label - .22 && lt < ST.label) flySticker(lt, 'label', 'CONTAINS: BREAD', ST.label - .22, ST.label, flyFrom('label', lt, st), STK_AT.label, .6, .03);
   ctx.restore();
 }
 const probeHandle = st => ({ x: st.x + (probeTip[0] + 4) * PS * st.sx, y: st.y + (probeTip[1] - 24) * PS * st.sy });
@@ -376,8 +407,9 @@ function drawBinder(lt, st) {
   if (lt < Q.binderpop) return;
   const a = lt - Q.binderpop, k = eb(c01(a / .3)), s = .4 * k;
   if (s < .02) return;                                                 /* never at scale 0 (the first frame of the pop) */
-  const [bx, by] = plateLocal(st, 118, -26), hop = Math.sin(PI * c01(a / .3)) * 26 * (1 - c01(a / .3)), talk = lt >= B.b1[0] && lt < B.b1[1];
+  const [bx, by] = plateLocal(st, 126, -16), hop = Math.sin(PI * c01(a / .3)) * 26 * (1 - c01(a / .3)), talk = lt >= B.b1[0] && lt < B.b1[1];
   const grin = ss(lt, B.b1[0], B.b1[0] + .2) * (1 - ss(lt, B.b1[1] + .1, B.b1[1] + .5)), pose = talk ? 'cheer' : 'ears';
+  if (a < .6) { V2.sparks(bx, by - 30, lt, Q.binderpop, { n: 16, speed: 360, life: .55, color: '255,236,150', size: 4, seed: 11, g: 500 }); V2.ring(bx, by - 30, a / .6, { r0: 10, r1: 110, color: '255,236,170', lw: 5, alpha: .7 * (1 - a / .6), bloom: 0 }); }
   const mp = ctx.getTransform().transformPoint(new DOMPoint(bx, by - 26 * s - hop)), rb = 130 * s * FR.cam.z, tr = mp.x - rb < 14 || mp.x + rb > 1066 || mp.y - rb < 14 || mp.y + rb > 1906;
   try { drawChar(A15.binderSmall({ x: bx, y: by - 26 * s - hop, s, transit: tr, center: true, noLegs: true, who: 'bind', t: lt, yaw: 0, pose, grin: .3 + .6 * grin, glint: grin * Math.max(0, Math.sin(lt * 14)), look: lt < 17.5 ? [.4, -.1] : [-.2, .4], hover: 4, rot: st.rot * .6 })); } catch (e) { console.error('binder: ' + e.message); }
   if (a > .12) { const sw = Math.exp(-a * 1.1) * .32 * Math.sin(a * 7.5), k2 = ss(a, .12, .3); hangTag(bx + 58, by + 30, .42 * k2, sw + .1, 'PENDING'); }
@@ -392,15 +424,16 @@ function hangTag(x, y, s, rot, text) {                                  /* the P
   UI.label(text, 6, 8, { size: 23, weight: 900, fill: '#2f2418', maxW: w - 34, hero: false, crop: true, tilt: .7 });
   ctx.restore();
 }
-function confetti(lt, x, y, t0, n = 46) {
+function confetti(lt, x, y, t0, n = 64) {
   const a = lt - t0; if (a < 0 || a > 1.6) return;
+  if (a < .14) V2.glow(x, y, 160 * (1 - a / .14) + 60, '255,240,190', .9 * (1 - a / .14), 'screen', .7);
   const cols = ['#ff4d6d', '#ffd23f', '#3ddc97', '#4cc9f0', '#b980f0', '#ff9f1c'];
   ctx.save();
   for (let i = 0; i < n; i++) {
     const ang = -PI / 2 + (sr(i, 1) - .5) * 1.7, v = 380 + sr(i, 2) * 520, dr = Math.exp(-a * 2.2), d = v * (1 - dr) / 2.2, px = x + Math.cos(ang) * d + 18 * Math.sin(a * 7 + i), py = y + Math.sin(ang) * d + 520 * a * a;
     const fade = 1 - ss(a, 1.0, 1.6); if (fade <= 0) continue;
     ctx.save(); ctx.globalAlpha *= fade; ctx.translate(px, py); ctx.rotate(a * (5 + sr(i, 3) * 9) + i); ctx.scale(Math.abs(Math.cos(a * 9 + i)) * .8 + .2, 1);
-    ctx.fillStyle = cols[i % cols.length]; ctx.fillRect(-4, -2.5, 8, 5); ctx.restore();
+    ctx.fillStyle = cols[i % cols.length]; ctx.fillRect(-6, -3.5, 12, 7); ctx.restore();
   }
   for (let i = 0; i < 3; i++) {                                         /* streamers: curling ribbons */
     const ang = -PI / 2 + (i - 1) * .55, len = 190 * (1 - Math.exp(-a * 5)), fade = 1 - ss(a, .9, 1.5);
@@ -463,6 +496,13 @@ function farKitchen(lt) {
       rct(x + 30, Y(300), 170, 130, lgr(0, Y(300), 0, Y(170), [[0, '#b9c3cc'], [1, '#8a95a1']]), OUTL, 2, 6);
     }
     ctx.fillStyle = 'rgba(255,170,70,.9)'; ctx.fillRect(a, Y(575), b - a, 8); V2.glow(340 * .72 + 0, Y(560), 380, '255,160,60', .35, 'screen', .5);
+    if (window.A19 && A19.chef) {                                         /* Chef Cabbage stands at the pass in the back of the kitchen, deadpan, and pushes the plate out (REG suppressed: he is dressing) */
+      REG.suppress++;
+      try {
+        const px = .72 * 150;
+        drawChar(A19.chef({ x: px, y: 1099, s: 1.0, t: lt, noLegs: true, yaw: .55, headYaw: .35, look: [.6, .2], expr: lt < Q.plateclink + .25 ? 'chef_dry' : 'chef_proud', pose: 'rest', transit: true }));
+      } catch (e) { console.error('chef: ' + e.message); } finally { REG.suppress--; }
+    }
   }));
   /* steam from the pots in the kitchen (a haze) */
   ctx.fillStyle = warm; ctx.fillRect(HOLE_K[0], HOLE_K[1], HOLE_K[2] - HOLE_K[0], HOLE_K[3] - HOLE_K[1]);
@@ -477,7 +517,7 @@ function farNight(lt) {
       ctx.fillStyle = '#ffd98a'; for (let j = 0; j < 4; j++) if (sr(i, 10 + j) > .55) ctx.fillRect(i * 120 + 10 + (j % 2) * 26, Y(250) - bh + 14 + Math.floor(j / 2) * 30, 10, 14); ctx.fillStyle = '#0b1128'; }
     /* the Moon, with a face, watching the plate go by (suppressed from the layout audit: it is a distant dressing) */
     const mxp = 3270 * .3 + 150;
-    if (window.A7 && A7.moon) { REG.suppress++; try { A7.moon(mxp, Y(560), .55, { t: lt, suppress: false, expr: 'neutral' }); } finally { REG.suppress--; } }
+    if (window.A7 && A7.moon) { REG.suppress++; try { A7.moon(mxp, Y(560), .55, { t: lt, suppress: false, expr: lt > 13.95 && lt < 14.8 ? 'sour' : 'neutral', look: lt > 12.4 && lt < 14.9 ? [.1, .7] : [0, .1] }); } finally { REG.suppress--; } }
     else { V2.glow(mxp, Y(560), 160, '230,235,255', .6, 'screen', .8); ctx.fillStyle = '#f4f0dc'; ctx.beginPath(); ctx.arc(mxp, Y(560), 52, 0, TAU); ctx.fill(); }
   });
   ctx.restore();
@@ -492,14 +532,14 @@ function farHall(lt) {
     ctx.fillStyle = '#2f6f8c'; ctx.fillRect(a, Y(240), b - a, 70);
     const base = 4370 * .55;
     for (let k = -4; k <= 4; k++) {
-      const x = base + k * 170 + 40, lampDoor = k === 1;
+      const x = base + k * 170 + 40, lampDoor = k === 0;
       rct(x, Y(420), 84, 252, '#b9906a', OUTL, 2, 3); rct(x + 8, Y(396), 68, 96, '#a67c56', null); rct(x + 8, Y(284), 68, 100, '#a67c56', null);
       rct(x + 28, Y(448), 28, 16, '#f2efe6', OUTL, 1.5, 2);                                                        /* the room plate */
       const lx = x + 42, ly = Y(470);
-      ctx.fillStyle = lampDoor ? (on ? '#ff4a3a' : '#6a2a2a') : '#5f6a72'; ctx.strokeStyle = OUTL; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(lx, ly, 9, PI, 0); ctx.lineTo(lx + 9, ly + 5); ctx.lineTo(lx - 9, ly + 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+      const lr = lampDoor ? 13 : 9; ctx.fillStyle = lampDoor ? (on ? '#ff4a3a' : '#6a2a2a') : '#5f6a72'; ctx.strokeStyle = OUTL; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(lx, ly, lr, PI, 0); ctx.lineTo(lx + lr, ly + 6); ctx.lineTo(lx - lr, ly + 6); ctx.closePath(); ctx.fill(); ctx.stroke();
       if (lampDoor && on) {
-        V2.glow(lx, ly, 120 + 50 * Math.sin(a0 * 9) * Math.exp(-a0 * 1.2), '255,70,50', .8, 'screen', .6);
-        ctx.strokeStyle = `rgba(255,90,70,${.7 * (1 - ring)})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(lx, ly, 14 + 60 * ring, 0, TAU); ctx.stroke();
+        V2.glow(lx, ly, 190 + 70 * Math.sin(a0 * 9) * Math.exp(-a0 * 1.2), '255,70,50', .95, 'screen', .7);
+        ctx.strokeStyle = `rgba(255,90,70,${.8 * (1 - ring)})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(lx, ly, 18 + 90 * ring, 0, TAU); ctx.stroke();
       }
     }
   }));
@@ -519,7 +559,7 @@ function drawFloor(lt, cam) {
     ctx.fillStyle = rgr(lx, FY + 90, 10, 280, [[0, 'rgba(255,244,214,.24)'], [1, 'rgba(255,244,214,0)']]); ctx.save(); ctx.translate(lx, FY + 90); ctx.scale(1, .22); ctx.translate(-lx, -(FY + 90)); ctx.fillRect(lx - 290, FY - 200, 580, 600); ctx.restore();
     ctx.fillStyle = lgr(0, FY, 0, FY + 520, [[0, 'rgba(255,248,226,.10)'], [1, 'rgba(255,248,226,0)']]); ctx.fillRect(lx - 36, FY, 72, 520);
   }
-  for (const bx of [900, 1900, 2880, 4020]) if (vis(bx - 40, bx + 40)) { ctx.fillStyle = 'rgba(214,220,228,.85)'; ctx.beginPath(); ctx.moveTo(bx - 9, FY); ctx.lineTo(bx + 9, FY); ctx.lineTo(bx + 9 + (bx + 9 - vp) * 720 / hz, FY + 720); ctx.lineTo(bx - 9 + (bx - 9 - vp) * 720 / hz, FY + 720); ctx.closePath(); ctx.fill(); }
+  for (const bx of [900, 1900, 2880, 4020]) if (vis(bx - 40, bx + 40)) { ctx.fillStyle = 'rgba(214,220,228,.32)'; ctx.beginPath(); ctx.moveTo(bx - 7, FY); ctx.lineTo(bx + 7, FY); ctx.lineTo(bx + 7 + (bx + 7 - vp) * 720 / hz, FY + 720); ctx.lineTo(bx - 7 + (bx - 7 - vp) * 720 / hz, FY + 720); ctx.closePath(); ctx.fill(); }
   ctx.restore();
   ctx.fillStyle = lgr(0, FY - 4, 0, FY + 30, [[0, 'rgba(10,8,16,.55)'], [1, 'rgba(10,8,16,0)']]); ctx.fillRect(x0, FY - 4, x1 - x0, 34);
 }
@@ -707,7 +747,8 @@ function wallClock(lt, cam) {
   const { x, y, w, h } = CLOCK;
   ctx.strokeStyle = '#6a7580'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x - 70, CEIL); ctx.lineTo(x - 70, y - h / 2 - 8); ctx.moveTo(x + 70, CEIL); ctx.lineTo(x + 70, y - h / 2 - 8); ctx.stroke();
   rct(x - w / 2 - 12, y - h / 2 - 12, w + 24, h + 24, '#1d1b22', OUTL, 3.4, 20);
-  V2.glow(x, y, 330, '255,60,40', .28 + .05 * Math.sin(lt * 4), 'screen', .35);
+  const hit = lt >= Q.sting ? Math.exp(-(lt - Q.sting) * 3.2) : 0;
+  V2.glow(x, y, 330 + 120 * hit, '255,60,40', .28 + .05 * Math.sin(lt * 4) + .5 * hit, 'screen', .35 + .3 * hit);
   const z = cam.z, sx0 = 540 + (x - w / 2 - cam.x) * z, sx1 = 540 + (x + w / 2 - cam.x) * z;
   const sy0b = 960 + (y - h / 2 - cam.y) * z, sy1b = sy0b + h * z;
   const mgx = Math.min(sx0 - 70, 1010 - sx1), mgy = Math.min(sy0b - 60, 1360 - sy1b), inPill = sx0 < 520 && sy0b < 262;
@@ -742,18 +783,30 @@ function kitchenHand(lt) {
   ctx.save(); ctx.beginPath(); ctx.rect(HOLE_K[0], HOLE_K[1], HOLE_K[2] - HOLE_K[0], HOLE_K[3] - HOLE_K[1]); ctx.clip();
   rct(HOLE_K[0] - 260, y - 44, ex - HOLE_K[0] + 260 - 50, 88, lgr(0, y - 44, 0, y + 44, [[0, '#ffffff'], [1, '#cfd6de']]), OUTL, 3.4, 12);
   rct(ex - 62, y - 40, 22, 80, '#3d8f6b', OUTL, 3, 8);                                                             /* a green cuff */
-  ctx.fillStyle = '#f4f6fa'; ctx.strokeStyle = OUTL; ctx.lineWidth = 3.4; rrp(ex - 40, y - 34, 58, 68, 20); ctx.fill(); ctx.stroke();                      /* the glove */
-  ctx.beginPath(); ctx.ellipse(ex + 4, y - 40, 22, 12, -.3, 0, TAU); ctx.fill(); ctx.stroke();                          /* the thumb on the rim */
+  ctx.fillStyle = '#bfe3f4'; ctx.strokeStyle = OUTL; ctx.lineWidth = 3.4; rrp(ex - 44, y - 34, 56, 68, 22); ctx.fill(); ctx.stroke();                          /* the nitrile glove: palm, four fingers on the rim, a thumb */
+  for (let i = 0; i < 4; i++) { rrp(ex + 4, y - 34 + i * 17, 26, 15, 7); ctx.fill(); ctx.stroke(); }
+  ctx.beginPath(); ctx.ellipse(ex - 14, y - 40, 24, 12, -.25, 0, TAU); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
-function nearLayer(lt, cam) {                                              /* p 1.3: a paper pennant garland high above the heads, strung from nail to nail; it ends before the med cart so it never crosses the clock */
+function paperTurkey(x, y, sc) {                                           /* a paper turkey hanging by a string (construction paper: a brown body, a fan of coloured feathers) */
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  ctx.strokeStyle = '#6a5a44'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(0, -70); ctx.lineTo(0, -22); ctx.stroke();
+  const cols = ['#c8372d', '#e8891e', '#e0b24a', '#3d8f6b', '#c8372d'];
+  for (let i = 0; i < 5; i++) { ctx.save(); ctx.rotate((i - 2) * .42); ctx.fillStyle = cols[i]; ctx.strokeStyle = OUTL; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.ellipse(0, -26, 9, 24, 0, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  ctx.fillStyle = '#8a5530'; ctx.strokeStyle = OUTL; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.ellipse(0, 4, 24, 26, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(8, -14, 11, 0, TAU); ctx.fillStyle = '#a06a3c'; ctx.fill(); ctx.stroke(); ctx.fillStyle = '#e8402f'; ctx.beginPath(); ctx.ellipse(14, -6, 4, 7, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(10, -17, 3.2, 0, TAU); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(11, -17, 1.6, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+function nearLayer(lt, cam) {                                              /* p 1.3: a paper pennant garland and hanging paper turkeys high above the heads, strung from nail to nail; it ends before the med cart so it never crosses the clock */
   layer(1.3, (a, b) => {
     const cols = ['#d9822b', '#c8372d', '#e0b24a', '#3d8f6b', '#a0522d'];
     for (let X = Math.floor(Math.max(a, -400) / 360) * 360; X < Math.min(b, 5600); X += 360) {
-      const x1 = X + 360, y = Y(790) - 20;
+      const x1 = X + 360, y = Y(790) - 20, seg = Math.round(X / 360);
       ctx.strokeStyle = '#6a5a44'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X, y); ctx.quadraticCurveTo(X + 180, y + 70, x1, y); ctx.stroke();
       ctx.fillStyle = '#6a5a44'; ctx.beginPath(); ctx.arc(X, y, 6, 0, TAU); ctx.fill();
-      for (let i = 1; i < 8; i++) { const u = i / 8, px = mx(X, x1, u), py = (1 - u) * (1 - u) * y + 2 * u * (1 - u) * (y + 70) + u * u * y, k = Math.round(X / 360) * 7 + i; ctx.fillStyle = cols[((k % 5) + 5) % 5]; ctx.strokeStyle = OUTL; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(px - 20, py - 2); ctx.lineTo(px + 20, py - 2); ctx.lineTo(px, py + 54 + 6 * Math.sin(k)); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      for (let i = 1; i < 8; i++) { const u = i / 8, px = mx(X, x1, u), py = (1 - u) * (1 - u) * y + 2 * u * (1 - u) * (y + 70) + u * u * y, k = seg * 7 + i; ctx.fillStyle = cols[((k % 5) + 5) % 5]; ctx.strokeStyle = OUTL; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(px - 20, py - 2); ctx.lineTo(px + 20, py - 2); ctx.lineTo(px, py + 54 + 6 * Math.sin(k)); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      if ((seg & 1) === 0) paperTurkey(X + 180, y + 62 + 34 * sr(seg, 1) + 5 * Math.sin(lt * 1.3 + seg), .82);
     }
   });
 }

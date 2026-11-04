@@ -24,6 +24,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -49,7 +50,7 @@ from build_audio14 import _res, _band, _unit, _key
 
 HERE = A6.HERE
 SCRIPT = "script_ep19.json"
-FXV = "19.2"             # bump to rebuild every treated voice line
+FXV = "19.3"             # bump to rebuild every treated voice line
 
 
 def _n(d):
@@ -257,18 +258,16 @@ def fx_res(x):
     return _match_active_rms(y, x)
 
 
-
-
-
-
 _PAN6 = (-.8, -.45, -.15, .15, .45, .8)
 _DLY6 = (0, 7, 3, 11, 5, 9)
 
 
-def fx_chor(kokoro, v, say, mono, tag, pans=None):
+def fx_chor(kokoro, v, say, mono, tag, pans=None, delays=None):
     """Six Strawberries, six real voices (the script's own list), each from the same line, a little detuned in speed (as the plain chorus is), spread from far left to far right, each a few
-    milliseconds apart as a crowd is, then trimmed exactly as the plain clip was. Returns a (2, len(mono)) clip. `pans`: the spread (the residents' four voices sit in a narrower arc)."""
+    milliseconds apart as a crowd is, then trimmed exactly as the plain clip was. Returns a (2, len(mono)) clip. `pans`: the spread (the residents' four voices sit in a narrower arc); `delays`:
+    the milliseconds each voice comes in after the first (the residents: slower to start, a group that has to catch up with itself)."""
     pans = pans or _PAN6
+    dl = delays or _DLY6
     names = v["chorus"]
     parts = []
     for i, name in enumerate(names):
@@ -281,15 +280,15 @@ def fx_chor(kokoro, v, say, mono, tag, pans=None):
         parts.append(_vox_cache(f"{tag}.p{i}", key, make))
     L = max(len(p) for p in parts)
     summ = np.zeros(L)
-    st = np.zeros((2, L + 600))
+    st = np.zeros((2, L + 600 + int(max(dl) * SR / 1000)))
     for i, p in enumerate(parts):
         q = p / np.max(np.abs(p))
         summ[:len(q)] += q
         th = (pans[i % len(pans)] + 1) * np.pi / 4
-        d = int(_DLY6[i % 6] * SR / 1000)
+        d = int(dl[i % len(dl)] * SR / 1000)
         st[0, d:d + len(q)] += q * np.cos(th)
         st[1, d:d + len(q)] += q * np.sin(th)
-    st = st[:, :L]
+    st = st[:, :L + int(max(dl) * SR / 1000)]
     a = np.abs(BA.semis_resample(summ, v.get("semis", 0)))
     idx = np.where(a > .01 * a.max())[0]
     lo, hi = max(0, idx[0] - 800), idx[-1] + 2400
@@ -358,8 +357,8 @@ def tts15(kokoro, v, say):
             return fx_brenda(mono, seed)
         if who == "moon":
             return fx_moon(mono, seed)
-        if who == "rall":                                           # the residents together: softer (-2 dB) than a single voice, the top eased
-            c = fx_chor(kokoro, v, say, mono, tag, pans=(-.55, -.18, .18, .55))
+        if who == "rall":                                           # the residents together: softer (-2 dB) than a single voice, the top eased, and slower to gather (the voices come in 0 to 40 ms apart, not 0 to 11)
+            c = fx_chor(kokoro, v, say, mono, tag, pans=(-.55, -.18, .18, .55), delays=(0, 40, 18, 32))
             return (c - .22 * _hp4(c, 4500)) * .8
         return fx_res(mono)                                         # pear, banana, cran, goji
     return _Vox(mono, _vox_cache(tag + ".fx", key, make), who, tag)
@@ -381,13 +380,13 @@ PAN_CLIP = .7
 
 
 class PlatePath:
-    """The camera of the one-take `plate` as the sound needs it: x(t), the room (a weight for each of ROOMS5, 250 ms smoothed) and the speaker's offset (speakerX - x) / PAN_SPAN.
+    """The camera of the one-take `plate` as the sound needs it: x(t), the room (a weight for each of ROOMS5, 250 ms smoothed) and the speaker's offset (speakerX - x) * zoom / PAN_SPAN.
     Read from build/ep19/plate_path.json (absolute seconds, 10 Hz: {t, x, room, speakerX}) when it exists, else the fixed schedule above (the build says which)."""
 
     def __init__(self):
         self.source = "none"
         self.t0 = self.t1 = None
-        self.ts = self.xs = self.sp = self.rm = None
+        self.ts = self.xs = self.sp = self.rm = self.zm = None
 
     def setup(self, path=None):
         sc = _scene_info("plate")
@@ -410,6 +409,7 @@ class PlatePath:
             self.ts = np.array([r["t"] for r in rows], dtype=float)
             self.xs = np.array([r.get("x", 0.0) for r in rows], dtype=float)
             self.sp = np.array([np.nan if r.get("speakerX") is None else r["speakerX"] for r in rows], dtype=float)
+            self.zm = np.array([float(r.get("zoom", 1.0) or 1.0) for r in rows], dtype=float)         # the camera's zoom: a world offset is zoom times bigger on the screen
             self.rm = np.array([ROOMS5.index(r["room"]) if r.get("room") in ROOMS5 else 0 for r in rows], dtype=int)
             self.source = f"{os.path.relpath(path, HERE)} ({len(rows)} samples, {self.ts[0]:.2f} to {self.ts[-1]:.2f} s)"
             return
@@ -423,6 +423,7 @@ class PlatePath:
         self.xs = np.array(xs)
         self.rm = np.array([ROOMS5.index(next(r for e, r in FIXED_ROOMS if lt < e)) for lt in T], dtype=int)
         self.sp = np.full(len(T), np.nan)
+        self.zm = np.ones(len(T))
         for lid, o0, o1 in FIXED_SPEAK:
             b = _beat_abs("plate", lid)
             if not b:
@@ -453,12 +454,13 @@ class PlatePath:
         return np.interp(t, self.ts, self.xs)
 
     def offset(self, t, a, b, fallback):
-        """(speakerX - x) / PAN_SPAN at the times t of a voice that speaks from a to b (absolute): the speaker's own samples inside the line (gaps filled from the nearest), smoothed 250 ms; `fallback`
-        (a static pan) when the file has no speaker for the line."""
+        """(speakerX - x) * zoom / PAN_SPAN at the times t of a voice that speaks from a to b (absolute): the speaker's offset from the camera as it is SEEN (the file's `zoom`, 1 when it has none:
+        the brief's formula is the zoom-1 case), from the speaker's own samples inside the line (gaps filled from the nearest), smoothed 250 ms; `fallback` (a static pan) when the file has no speaker
+        for the line."""
         m = (self.ts >= a - .05) & (self.ts <= b + .05) & ~np.isnan(self.sp)
         if m.sum() < 2:
             return np.full(len(t), fallback)
-        tt, off = self.ts[m], (self.sp[m] - self.xs[m]) / PAN_SPAN
+        tt, off = self.ts[m], (self.sp[m] - self.xs[m]) * self.zm[m] / PAN_SPAN
         off = uniform_filter1d(off, 3, mode="nearest")
         return np.interp(t, tt, off)
 
@@ -563,7 +565,7 @@ _STATIC_PAN = {}      # who -> the script's static pan (filled by main), the fal
 
 
 def _spatial_voice(mono, at, who):
-    """A voice of the one take as a (2, n) clip: panned by (speakerX - x) / 540 (clipped to +-0.7, 250 ms smoothed, so you hear the camera move past the speaker), a little quieter and
+    """A voice of the one take as a (2, n) clip: panned by (speakerX - x) * zoom / 540 (the brief's (speakerX - x) / 540 as the camera shows it; clipped to +-0.7, 250 ms smoothed, so you hear the camera move past the speaker), a little quieter and
     a little duller with distance (up to -4 dB net of 1.5 dB of make-up, and a softened top, when the speaker is a frame away). None outside the plate or when the path is not loaded."""
     if not PLATE.active or not (PLATE.t0 - .02 <= at < PLATE.t1):
         return None
@@ -629,12 +631,6 @@ def place2_19(buf, clip, at, gain=1.0, pan=0.0):
 # ================================================================ the sheet: clicks, the merge, dialogs, keys
 
 
-
-
-
-
-
-
 def sfx_dialog():
     """A warning chime (0.9 s): the faint thud of a modal dialog opening (a 150 Hz thock and a soft tick), then two bell notes falling a major third, E6 and C6 (0.15 s apart), soft
     enough to be plastic-friendly. The warning is polite; it is still a warning."""
@@ -643,14 +639,6 @@ def sfx_dialog():
     _place(x, _call_ding(1318.5, .2), .02, 1.0)
     _place(x, _call_ding(1046.5, .32), .17, .9)
     return norm6(_edge(_lp4(x, 7000, 2), .0004, .12), .75)
-
-
-
-
-
-
-
-
 
 
 def sfx_key():
@@ -664,16 +652,6 @@ def sfx_key():
     else:
         x = np.sin(2 * np.pi * 600 * t) * np.exp(-t / .007) * .5 + _band(1672, .06, 1000, 3400) * expdecay(.06, .005) * .8 + _band(1673, .06, 3000, 8000) * expdecay(.06, .0012) * .6
     return norm6(_edge(x, .0003, .02), .65)
-
-
-
-
-
-
-
-
-
-
 
 
 def sfx_textding():
@@ -708,12 +686,6 @@ def sfx_binderpop():
     return norm6(_edge(x, .0004, .08), .7)
 
 
-
-
-
-
-
-
 def sfx_sniffle():
     """Onion's sniffle (0.5 s): a wet inhale through the nose, twice (a band of noise that moves up through two nasal formants, 700 then 1500 Hz) and a snort of 'nnk' at the end (a 150 Hz
     nasal buzz for 40 ms), a few wet crackles. Each call is a little different."""
@@ -729,8 +701,6 @@ def sfx_sniffle():
     for i in range(9):
         _place(x, _band(1900 + 9 * k + i, .006, 1500, 4500) * expdecay(.006, .002), r.uniform(.02, .36), r.uniform(.1, .3))
     return norm6(_edge(x, .003, .08), .55)
-
-
 
 
 def sfx_poof():
@@ -757,14 +727,6 @@ def sfx_poof():
     return norm6(_edge(x, .001, .15), .65)
 
 
-
-
-
-
-
-
-
-
 # ================================================================ the crane and the tower
 def _hit_train(seed, d, n, lo, hi, tau, g0, g1, t0=0.0, t1=None, shape=1.0):
     """n small noise ticks scattered between t0 and t1 (denser early when shape > 1), each a band lo..hi that dies in tau: gravel, splinters, strands, debris. Returns (2, samples)."""
@@ -787,39 +749,7 @@ def _hit_train(seed, d, n, lo, hi, tau, g0, g1, t0=0.0, t1=None, shape=1.0):
     return out
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ================================================================ the Merge theme, the stinger, the stings
-
-
-
-
-
-
-
-
-
-
 
 
 # ================================================================ physics foley: one short impact per collision, by the pair of materials
@@ -892,7 +822,7 @@ def _m_paper(ps, ds, seed):
 
 
 def _m_tile(ps, ds, seed):
-    """Vinyl tile over concrete (Episode 18's corridor): a short dry 'tak' (a 1.3 kHz knock that dies in 8 ms, a click of 800 Hz to 3.5 kHz) over a dull slab thud (90 Hz) and a faint ring."""
+    """Vinyl tile over concrete (the corridor): a short dry 'tak' (a 1.3 kHz knock that dies in 8 ms, a click of 800 Hz to 3.5 kHz) over a dull slab thud (90 Hz) and a faint ring."""
     d = .2 * ds
     t = tarr(d)
     return np.sin(2 * np.pi * 1300 * ps * t) * np.exp(-t / .008) + _band(seed, d, 800, 3500) * np.exp(-t / .004) * .8 + _sin_of((50 + 50 * np.exp(-t / .03)) * ps) * np.exp(-t / .05) * .6
@@ -945,10 +875,7 @@ def sfx_phys():
     return norm6(_edge(x, .0003, .02), .7)
 
 
-
-
-
-# ================================================================ Episode 18: the frozen timeline, the cue times and the door table
+# ================================================================ the frozen timeline and the script's cue times
 _TL = {}
 _ABS = {}
 
@@ -983,91 +910,6 @@ def _beat_abs(sid, beat):
     if not s or beat not in s["beats"]:
         return None
     return s["start"] + s["beats"][beat]["s"], s["start"] + s["beats"][beat]["e"]
-
-
-
-
-
-
-
-
-# ================================================================ Episode 18: THE ALARM (the horn bed, its muffling, the stop, the page's chime)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ================================================================ Episode 18: the doors
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ================================================================ Episode 18: the marshal, the pull, the extinguisher
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ================================================================ Episode 18: the cart, the printer, the clipboard, the line, the television
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ================================================================ Episode 18: the quiet (room tone, the tube, the wheel): events the script does not list, placed from the frozen timeline
-
-
-
-
-
-
-
-
 
 
 # ================================================================ Episode 19: the sign-up, the slow cooker and the kitchen
@@ -1561,7 +1403,7 @@ def sfx_typing():
 
 
 # ================================================================ the Merge theme and the stings
-KEY = {0: -2, 1: 3}          # the Merge theme's transposition from C in semitones: the title in B-flat major (a slow-cooker lullaby), the end card in E-flat major (Episodes 15 to 18 were C, D, F, E and A)
+KEY = {0: -2, 1: 3}          # the Merge theme's transposition from C in semitones: the title in B-flat major (a slow-cooker lullaby), the end card in E-flat major (Episodes 15 to 18 were C, D, F, then E and A)
 STEP19 = {0: .375, 1: .4875}  # one eighth of the bar: the title's (80 bpm: 0.2 to 3.2 s) lands on the second lid rattle, the end card's (61.5 bpm: 0.1 to 4.0 s) on the stamp
 LAND19 = {0: ((82, 1.0, 1.0), (86, .8, .9), (89, .7, .8), (93, .6, .8)),                                   # B-flat major seventh, in C-based MIDI note, level and decay (B-flat5 D6 F6 A6)
           1: ((75, 1.0, 1.4), (79, .8, 1.3), (82, .75, 1.2), (86, .6, 1.2), (91, .45, 1.1))}                 # E-flat major seventh (E-flat5 G5 B-flat5 D6 G6)
@@ -2013,11 +1855,7 @@ def _scripted(tab):
     return out
 
 
-
-
-
-
-PHYS_BOOST = {"can": 3.5, "cart": 2.0, "easel": 2.0}      # Episode 18: the rampage's collisions are small in the simulation's own measure (the loudest is 0.4) but they are the joke: the can is heard first
+PHYS_BOOST = {}      # per-object boosts of a simulation's collisions (none in Episode 19: phys_events.json is not expected)
 
 
 def _tagkey(e):
@@ -2056,12 +1894,6 @@ def _select_phys(phys, scripted):
         out.append({"t": round(e["t"] + (.0 if i in first else .0), 3), "name": "phys", "mat": e.get("mat", "plastic+plastic"), "mag": round(mag, 3), "k": e.get("k", "hit"), "tag": e.get("tag", ""),
                     "vol": round(min(.9, (.05 + .30 * mag ** 1.3) * (.6 if e.get("k") == "slide" else 1.0) * PHYS_BOOST.get(_tagkey(e), 1.0)), 4), "pan": float(np.clip(e.get("pan", 0), -1, 1)), "room": "hall"})
     return out
-
-
-
-
-
-
 
 
 BIG_CUES = ("stamp", "moldpress", "doorbell", "timerding", "bagsweep", "bin", "plateclink", "chairsit", "carve", "chop")      # scripted hits that a collision from a simulation must not double (none is expected in this episode)
@@ -2116,7 +1948,6 @@ def _make_events(src, phys_src, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     json.dump(ev, open(dst, "w"), indent=0)
     return dst
-
 
 
 # ================================================================ checks: the timeline, the dialogue margin, the loudness and the silences
@@ -2248,8 +2079,6 @@ def measure(out_dir):
     return runs
 
 
-
-
 def write_cue_report(out_dir):
     """The cue list as built (scene-local time, absolute time, name, gain, pan) for the script's cues, then the designed events the script does not list (the room-tone beds with their levels), the
     microwave grid, the lid's hit table, the one-take's path (its source and the rooms it passes through) and the physics foley."""
@@ -2288,6 +2117,10 @@ def write_cue_report(out_dir):
     if g:
         lines.append(f"microwave grid (breakroom): beeps at 0.3, 0.65, 1.0 s; eighth {g['eighth']:.6f} s ({g['bpm']:.2f} bpm), origin {g['origin']:.3f} s of the scene, a bar of 8 eighths from there "
                      f"({g['bar']:.4f} s); the timer's ding (14.429 s) is the downbeat of bar {g['ding_bar']} ({g['origin'] + g['bar'] * g['ding_bar']:.3f} s)")
+    bi = M19.INFO.get("baton")
+    if bi:
+        bd = np.diff(bi["beats"])
+        lines.append("the baton (plate): " + ", ".join(f"{who} on '{ln}' at {t:.3f} s" for ln, who, t in bi["handoffs"]) + f"; {len(bi['beats']) - 1} beats in 3/4, {60 / bd.max():.0f} to {60 / bd.min():.0f} bpm")
     per = {}
     for e in PHYS_EVENTS:
         per[_scene_of(e["t"], tab)] = per.get(_scene_of(e["t"], tab), 0) + 1
@@ -2296,7 +2129,7 @@ def write_cue_report(out_dir):
 
 
 # ================================================================ the AAC guard (fixed in Episode 19)
-FF = "/usr/bin/ffmpeg"       # the encoder the publish step uses; Episode 18's guard encoded with the ffmpeg that imageio ships (7.0.2), whose AAC overshoots differently: -0.8 dBTP came out of a guard that passed
+FF = "/usr/bin/ffmpeg" if os.path.exists("/usr/bin/ffmpeg") else (shutil.which("ffmpeg") or "ffmpeg")       # the encoder the publish step uses; Episode 18's guard encoded with the ffmpeg that imageio ships (7.0.2), whose AAC overshoots differently: -0.8 dBTP came out of a guard that passed
 TP_LIMIT = -1.5              # dBTP of the DECODED m4a
 
 
@@ -2476,6 +2309,7 @@ def main():
         print("timeline: identical to build/ep19/timeline.json (scene starts, lengths, every line's start and end)")
     write_cue_report(out)
     json.dump(M19.mw_grid(_scene_info("breakroom"), script) or {}, open(os.path.join(out_dir, "mw_grid.json"), "w"), indent=1)
+    json.dump(M19.INFO, open(os.path.join(out_dir, "score_info.json"), "w"), indent=1)          # the baton: every beat time of the waltz and who holds it from when (for the picture to read, if it wants to)
     dialogue_margin(out)
     for nm in ("stem_voice.wav", "stem_sfx.wav", "stem_music.wav"):
         if keep_stems:

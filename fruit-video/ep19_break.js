@@ -70,7 +70,7 @@ function heroAt(x, y, w, h, px) {
 
 // ------------------------------------------------------------------ the room: constants
 const ZB = 2200, HW = 900, CH = 800;
-const PERSP = { f: 1400, cy: 700, hy: 880 };
+const PERSP = { f: 1400, cy: 760, hy: 880 };
 const FRIDGE = { x0: -892, x1: -716, z0: 1950, z1: 2104, h: 478 };
 const COUNTER = { x0: -640, x1: -330, z0: 2036, z1: 2192, h: 190 };
 const MW = { x: -510, w: 240, h: 128, z0: 2048, d: 128 };                 /* the microwave: centre X, width, height, front plane Z, depth */
@@ -412,7 +412,7 @@ EXT.acc.fp19b_hat = (o, k, t, layer) => {
 EXT.prop.fp19b_plate = (side, o, t) => {
   const S = o.plateScale || 1, items = o.plateItems || [], F = F19();
   ctx.save(); ctx.rotate(o.plateTilt || 0); ctx.scale(S, S);
-  if (F && F.kinds && F.kinds.plate) F.dish(ctx, 'plate', { x: 0, y: 8, s: 120 / 300, t, items, stickers: o.plateStickers || [], seed: o.plateSeed || 1, steam: 0, shadow: false });
+  if (F && F.kinds && F.kinds.plate) F.dish(ctx, 'plate', { x: 0, y: 8, s: 120 / 300, t, items, itemScale: o.plateItemScale || 1, stickers: o.plateStickers || [], seed: o.plateSeed || 1, steam: 0, shadow: false });
   else {
     ctx.lineJoin = 'round'; ctx.fillStyle = '#fbfbf8'; ctx.strokeStyle = OUT; ctx.lineWidth = 3; ell(0, 2, 60, 12); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#ecece4'; ell(0, 1, 42, 7); ctx.fill();
     items.slice(0, 3).forEach((it, i) => { ctx.fillStyle = it === 'roll' ? '#e2a95a' : '#d9c7a3'; ctx.strokeStyle = OUT; ctx.lineWidth = 2.4; ell(-26 + i * 26, -12 - (i % 2) * 5, 17, 11); ctx.fill(); ctx.stroke(); });
@@ -504,13 +504,13 @@ const qZf = u => QZ - 22 * (.5 - .5 * Math.cos(PI * u)) + 44 * Math.max(0, u - 1
 const qPos = (j, lt) => { const u = j - stepsAt(lt); return [qX(u), qZf(u)]; };
 const lerpPts = (pts, k) => { const n = pts.length - 1, f = c01(k) * n, i = Math.min(n - 1, Math.floor(f)), r = f - i; return [mixv(pts[i][0], pts[i + 1][0], r), mixv(pts[i][1], pts[i + 1][1], r)]; };
 /* the served: stand at the head of the line until their beep, then leave toward the camera and out of the frame at the left */
-const exitRoute = (j, lt) => { const b = CUE.beep[j]; if (lt < b) return qPos(j, lt); const k = (lt - b) / 1.7; return lerpPts([[qX(0), qZf(0)], [-420, 1820], [-560, 1450], [-760, 1050], [-1100, 800]], easeIO(c01(k)) * .4 + c01(k) * .6); };
+const exitRoute = (j, lt) => { const b = CUE.beep[j]; if (lt < b) return qPos(j, lt); const k = (lt - b) / 1.7; return lerpPts([[qX(0), qZf(0)], [-440, 1790], [-610, 1570], [-840, 1490], [-1060, 1470]], easeIO(c01(k)) * .4 + c01(k) * .6); };
 const EXTRAS = [   /* [kind, scrubs, seed, start slot, hat colours, plate items]; Mango stands at slot 3, Lemon at 5, Strawberry at 9: the audited cast is never shoulder to shoulder */
   { id: 'e1', kind: 'apple', scrubs: 'teal', seed: 301, slot: 0, leaver: 0, items: ['turkeySlices', 'roll'], hat: ['#ff4f9a', '#ffe135'] },
   { id: 'e2', kind: 'grape', scrubs: 'navy', seed: 302, slot: 1, leaver: 1, items: ['roll', 'pieMold'], hat: ['#4aa8ff', '#ffffff'] },
   { id: 'e3', kind: 'kiwi', scrubs: 'maroon', seed: 303, slot: 2, leaver: 2, items: ['turkeyMold'], hat: ['#58c85a', '#ffe135'] },
   { id: 'e4', kind: 'cherry', scrubs: 'plum', seed: 304, slot: 4, items: ['roll', 'turkeyMold'], hat: ['#ffe135', '#ff4f9a'] },
-  { id: 'e5', kind: 'blue', scrubs: 'orange', seed: 305, slot: 6, items: ['pieMold'], hat: ['#c25bd6', '#ffe135'] },
+  { id: 'e5', kind: 'blue', scrubs: 'orange', seed: 305, slot: 5, items: ['pieMold'], hat: ['#c25bd6', '#ffe135'] },
   { id: 'e6', kind: 'fig', scrubs: 'green', seed: 306, slot: 7, items: ['roll', 'roll', 'pieMold'], hat: ['#ff9a2a', '#ffffff'] },
   { id: 'e7', kind: 'gfruit', scrubs: 'pink', seed: 307, slot: 8, items: ['turkeyMold', 'roll'], hat: ['#4aa8ff', '#ffe135'] },
   { id: 'e8', kind: 'coco', scrubs: 'gray', seed: 308, slot: 10, items: ['roll'], hat: ['#ff4f9a', '#ffffff'] },
@@ -530,7 +530,7 @@ function mkExtra(d, i, lt, sh) {
   const hy = leaving ? -1.1 : crowdHead(lt, ph), yaw = leaving ? -1.2 : -1.05 + .12 * Math.sin(i * 2.3);
   const o = person(c => Object.assign({ kind: d.kind, id: d.id, who: null, s: .44, y: 1316, expr: 'dead', seed: d.seed, acc: ['fp19b_scrubs', 'fp19b_hat'], lashes: i % 3 === 0 }, c), route, lt, {
     t: lt + i * .37, stride: 28, yaw, headYaw: hy, look: [clamp(hy * .35, -.5, .5), .05], scrubs: d.scrubs, expr: pick(lt, [[T_HAT + .1, 'dead'], [T_LOOK, i % 2 ? 'sour' : 'dead'], [T_SNAP, 'sad'], [T_END_EMPTY, 'shock'], [99, 'dead']]), lid: lt < T_SNAP ? .42 : undefined,
-    arms: { l: 'hold', r: 'rest' }, grip: { l: [-104, 52] }, hold: { l: 'fp19b_plate' }, hand: { l: 'flat' }, plateItems: lt >= T_END_EMPTY ? [] : d.items, plateScale: 1, plateSeed: d.seed, plateSteam: leaving ? 1 : 0,
+    arms: { l: 'hold', r: 'rest' }, grip: { l: [-70, 62] }, hold: { l: 'fp19b_plate' }, hand: { l: 'flat' }, plateItems: lt >= T_END_EMPTY ? [] : d.items, plateScale: 1.25, plateSeed: d.seed, plateSteam: leaving ? 1 : 0,
     hat: { c1: d.hat[0], c2: d.hat[1], rot: .22 - .1 * (i % 3), dx: .12 + .1 * (i % 2), dy: .9 }, hatPop: hatK,
   });
   o.z = Z; o.crowd = true; o.hatK = hatK; o.goneAway = d.leaver != null && lt >= CUE.beep[d.leaver] + 1.7;
@@ -543,7 +543,7 @@ const keyRoute = keys => lt => {
   for (let i = 1; i < keys.length; i++) if (lt < keys[i][0]) { const a = keys[i - 1], b = keys[i], k = c01((lt - a[0]) / (b[0] - a[0])), e = b[3] === 'io' ? easeIO(k) : b[3] === 'out' ? easeOut(k) : k; return [lerp(a[1], b[1], e), lerp(a[2], b[2], e)]; }
   const l = keys[keys.length - 1]; return [l[1], l[2]];
 };
-const walkYaw = (route, lt, stand) => { const v = (route(lt + .06)[0] - route(lt - .06)[0]) / .12; return lerp(stand, Math.sign(v || 1) * 1.05, ss(Math.abs(v), 40, 120)); };
+const walkYaw = (route, lt, stand, m = 1.05) => { const v = (route(lt + .06)[0] - route(lt - .06)[0]) / .12; return lerp(stand, Math.sign(v || 1) * m, ss(Math.abs(v), 40, 120)); };
 /* aim an arm at a screen point: the hand goes exactly there when it can reach, else as far as it reaches (H6.pointAt's maths, with the hand shape given) */
 function reach(o, side, x, y, hand = 'flat', frac = .96) {
   const k = KINDS[o.kind], [sx, sy] = shoulder(k, side), [u, v] = localOf(o, x, y), L = ((k.arm1 || 56) + (k.arm2 || 52)) * (o.armScale || 1.12) * frac;
@@ -551,8 +551,9 @@ function reach(o, side, x, y, hand = 'flat', frac = .96) {
   o.grip = Object.assign(o.grip || {}, { [key2]: [sx + dx * f, sy + dy * f] }); o.hand = Object.assign(o.hand || {}, { [key2]: hand }); o.arms = Object.assign(o.arms || {}, { [key2]: 'hold' });
   return d <= L;
 }
-const STICKERS = [{ kind: 'note', text: 'EAT!', at: [.1, .22] }, { kind: 'sticker', text: 'FUN COMMITTEE', at: [.9, .24] }, { kind: 'label', text: 'CONTAINS: BREAD', at: [.52, .9] }, { kind: 'clip', at: [.5, .04] }];
-const PLATE_ITEMS = ['turkeyMold', 'roll', 'pieMold', 'coffee'];
+/* Strawberry's plate exactly as the PLATE scene left it (ep19_plate.js ITEMS and stickers) plus Binder's clip on the rim */
+const STICKERS = [{ kind: 'note', text: 'HOLD', at: [(74 + 150) / 300, (-38 + 56) / 76], s: .62, rot: .1 }, { kind: 'sticker', text: 'FUN COMMITTEE', at: [(-92 + 150) / 300, (-20 + 56) / 76], s: .5, rot: -.12 }, { kind: 'label', text: 'CONTAINS: BREAD', at: [(-8 + 150) / 300, (20 + 56) / 76], s: .6, rot: .03 }, { kind: 'clip', at: [.5, .02], s: .7 }];
+const PLATE_ITEMS = [{ kind: 'pieMold', dx: -26, dy: 22 }, { kind: 'roll', dx: 42, dy: -7 }, { kind: 'turkeyMold', shine: .8, dx: 32, dy: 5 }, { kind: 'coffee', thick: 1, fill: .92, k: .66, dx: -38, dy: -6 }];
 const SW_SEC = lt => 7200 - 10 + (lt - 7.62) * 10 / (CUE.ding - 7.62);                                     /* the stopwatch: 1:59:50 at o1, 2:00:00 on the ding */
 const swText = lt => { const t = lt >= CUE.ding ? 7200 : Math.max(0, Math.min(7199, Math.floor(SW_SEC(lt)))), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60; return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'); };
 
@@ -573,7 +574,7 @@ function actMango(lt) {
 }
 /* Lemon: second in line; turns to the queue and asks "Who is next for the microwave?" with the free hand out along the line */
 function actLemon(lt) {
-  const route = t => qPos(5, t), q1 = bS('q1'), ask = lt >= q1 - .1 && lt < bE('q1') + .4;
+  const route = t => qPos(6, t), q1 = bS('q1'), ask = lt >= q1 - .1 && lt < bE('q1') + .4;
   const yaw = key([[0, -1.05], [q1 - .35, -1.05], [q1, .55], [bE('q1') + .2, .55], [bS('q2') + .1, -.5], [bS('o1'), -.5], [T_SNAP, -.5], [T_SNAP + .2, -.95], [bS('l1') - .2, -.95], [bS('l1'), -.6]], lt);
   const hy = key([[0, -1.0], [q1 - .3, -1.0], [q1, .85], [bE('q1') + .1, .85], [bS('q2'), -.3], [wS('q3', 2) - .3, -.3], [wS('q3', 2) + .2, .25], [bE('q3') + .2, .25], [bS('o1') - .1, .3], [CUE.ding, .3], [T_SNAP, .3], [T_SNAP + .14, -1.0], [bS('m1') + .3, -.7], [bS('l1') + .05, .05], [bE('l1') - .2, .05], [bE('l1') + .2, -.7]], lt);
   const o = person(A7.lemon, route, lt, { t: lt, stride: 28, yaw, headYaw: hy, look: [clamp(hy * .4, -.5, .5), 0], who: 'lemon', hat: { c1: '#4aa8ff', c2: '#ffe135', rot: -.25, dx: -.3, dy: .94 }, hatPop: lt < T_HAT ? 0 : ss(lt, T_HAT + .04, T_HAT + .34), acc: ['readers', 'lanyard7', 'fp19b_hat'],
@@ -597,8 +598,8 @@ function actTomato(lt) {
 }
 /* Strawberry: in the queue with her plate, walks out of line to the can when Onion says two hours, is robbed of the plate, trudges to Brenda and eats */
 const T_S_LEAVE = snapT(9.9), T_GRAB = snapT(16.1), T_REL = snapT(CUE.bin[1] - .075), T_TAKE = snapT(27.97);
-const STRAW_AT = [525, 1110], EX_S = [250, 1600], EX_B = [-70, 1600], SEAT_S = [150, 1600], SEAT_B = [-30, 1600];
-const STRAW_R = (() => { const q0 = qPos(9, T_S_LEAVE), k = keyRoute([[T_S_LEAVE, q0[0], q0[1]], [snapT(11.2), 220, 1700, 'io'], [snapT(12.3), 470, 1330, 'io'], [snapT(12.95), STRAW_AT[0], STRAW_AT[1], 'io'], [snapT(19.4), STRAW_AT[0], STRAW_AT[1]], [snapT(22.5), 360, 1400, 'io'], [snapT(25.0), EX_S[0], EX_S[1], 'io']]); return lt => lt < T_S_LEAVE ? qPos(9, lt) : k(lt); })();
+const STRAW_AT = [525, 1110], EX_S = [250, 1600], EX_B = [-70, 1600], SEAT_S = [236, 1600], SEAT_B = [26, 1600];
+const STRAW_R = (() => { const q0 = qPos(9, T_S_LEAVE), k = keyRoute([[T_S_LEAVE, q0[0], q0[1]], [snapT(11.4), 250, 1760, 'io'], [snapT(12.15), 400, 1530, 'io'], [snapT(12.95), STRAW_AT[0], STRAW_AT[1], 'io'], [snapT(19.4), STRAW_AT[0], STRAW_AT[1]], [snapT(22.5), 360, 1400, 'io'], [snapT(25.0), EX_S[0], EX_S[1], 'io']]); return lt => lt < T_S_LEAVE ? qPos(9, lt) : k(lt); })();
 function actStraw(lt, sh) {
   const route = STRAW_R, walking = lt >= T_S_LEAVE && lt < snapT(12.95) + .1, back = lt >= snapT(19.4);
   const yaw0 = key([[0, -1.05], [T_S_LEAVE - .4, -1.05], [T_S_LEAVE, 1.0], [snapT(12.7), 1.0], [snapT(13.0), -.22], [snapT(19.3), -.22], [snapT(19.7), -1.0], [snapT(24.8), -1.0], [snapT(25.6), -.5], [99, -.5]], lt);
@@ -606,7 +607,7 @@ function actStraw(lt, sh) {
   const hy = key([[0, -.9], [bS('o1'), -.9], [bS('o1') + .6, -.2], [T_S_LEAVE, 0], [snapT(13.0), -.1], [bS('timer'), -.1], [CUE.ding, -.5], [bS('sweep'), -.5], [CUE.sweep + .3, -.35], [T_GRAB, -.3], [bS('s2') - .05, -.3], [bS('s2') + .5, -.55], [bS('s2') + .75, -.05], [T_SNAP, -.05], [T_SNAP + .15, -1.0], [bS('br2') - .1, -.9], [snapT(25.8), .5], [99, .5]], lt);
   const o = person(A11.straw, route, lt, { t: lt, stride: lt > snapT(19.4) ? 20 : 40, yaw, headYaw: hy, who: 'straw', expr: pick(lt, [[bS('o2') + 1.2, 'dead'], [bS('s1'), 'shock'], [CUE.sweep - .1, 'dead'], [bS('s2'), 'shock'], [bS('s2') + 1.0, 'dead'], [T_SNAP, 'dead'], [bS('s3'), 'sad'], [bS('br3'), 'hopeful'], [T_TAKE, 'neutral'], [T_END_EMPTY, 'happy'], [99, 'chill']]), lid: (lt < CUE.sweep - .1 || (lt >= bS('s2') && lt < bS('s2') + 1.0)) ? .5 : (lt >= T_SNAP && lt < bS('br3') ? .45 : undefined),
     look: key([[0, [-.5, .05]], [bS('s1'), [-.5, .3]], [CUE.sweep, [-.55, .1]], [T_GRAB, [-.7, .15]], [bS('s2'), [-.75, .55]], [bS('s2') + .55, [-.75, .6]], [bS('s2') + .8, [0, 0]], [T_SNAP, [0, 0]], [T_SNAP + .15, [-.7, 0]], [bS('s3'), [-.4, -.1]], [99, [-.4, -.15]]], lt),
-    arms: { l: 'hold', r: 'rest' }, grip: { l: [-104, 54] }, hold: { l: 'fp19b_plate' }, hand: { l: 'flat' }, plateItems: PLATE_ITEMS, plateStickers: STICKERS, plateSeed: 7, plateScale: 1.12, plateTilt: -.04 });
+    arms: { l: 'hold', r: 'rest' }, grip: { l: [-104, 54] }, hold: { l: 'fp19b_plate' }, hand: { l: 'flat' }, plateItems: PLATE_ITEMS, plateItemScale: 1.04, plateStickers: STICKERS, plateSeed: 7, plateScale: 1.12 + .2 * ss(lt, bS('s1') - .15, bS('s1') + .05) - .2 * ss(lt, bE('s1') - .1, bE('s1') + .3), plateTilt: -.04 });
   /* the plate: held out in the queue, clutched to the chest at "discarded" and while the sweep runs, up in her hand for the close-up */
   const clutch = Math.max(ss(lt, wS('o2', 4) - .1, wS('o2', 4) + .25), ss(lt, bS('s1') - .5, bS('s1') - .1)) * (1 - ss(lt, T_GRAB + .3, T_GRAB + .5));
   if (lt >= T_S_LEAVE && lt < T_GRAB) o.grip = { l: [lerp(-104, -34, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3))), lerp(54, 62, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3)))] };
@@ -621,11 +622,11 @@ function actStraw(lt, sh) {
   return o;
 }
 /* Onion: Compliance. At the table's left end with the stopwatch; sweeps the table into the bag in one motion; takes Strawberry's plate and drops it in */
-const ONION_HOME = [-470, 1235];
-const onionX = lt => lt < SW.t0 - SW.wind ? ONION_HOME[0] : lt < SW.t0 ? lerp(ONION_HOME[0], pfAt(SW.t0) - 170, ss(lt, SW.t0 - SW.wind, SW.t0)) : pfAt(lt) - 170 + 50 * ss(lt, SW.t0 + .62, T_GRAB);
-const ONION_R = lt => lt >= T_END_EMPTY ? [560, 1235] : [onionX(lt), ONION_HOME[1]];
+const ONION_HOME = [-470, 1205];
+const onionX = lt => lt < SW.t0 - SW.wind ? ONION_HOME[0] : lt < SW.t0 ? lerp(ONION_HOME[0], pfAt(SW.t0) - 170, ss(lt, SW.t0 - SW.wind, SW.t0)) : pfAt(lt) - 170 + 10 * ss(lt, SW.t0 + .62, T_GRAB);
+const ONION_R = lt => lt >= T_END_EMPTY ? [560, 1205] : [onionX(lt), ONION_HOME[1]];
 function actOnion(lt, sh, straw) {
-  const route = ONION_R, sob = Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .12) / .5);
+  const route = ONION_R, sob = Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .08) / .45);
   const sweeping = lt >= SW.t0 - SW.wind && lt < T_GRAB, took = lt >= T_GRAB;
   const yaw = key([[0, .3], [bS('o2') + .8, .3], [wS('o2', 4) - .1, .1], [CUE.ding, .1], [SW.t0 - .25, .55], [T_REL + .2, .55], [T_END_EMPTY - .01, .3], [T_END_EMPTY, -.3]], lt);
   const hy = key([[0, -.2], [bS('o1'), .1], [bS('o2'), 0], [CUE.ding + .3, -.1], [SW.t0 - .1, .35], [T_GRAB, .3], [T_REL, .1]], lt);
@@ -643,7 +644,7 @@ function actOnion(lt, sh, straw) {
   if (took) {                                              /* the plate: from Strawberry's hand over to the can */
     const sp = lscrPlate(straw), k = ease3((lt - T_GRAB) / (T_REL - T_GRAB)), hover = p2(CAN.x + 10, CAN.h + 150, CAN.z);
     const tx = lt < T_REL ? lerp(sp[0], hover[0], k) : hover[0], ty = lt < T_REL ? lerp(sp[1], hover[1], k) : hover[1];
-    if (lt < T_REL) { reach(o, 1, tx, ty, 'grip'); o.hold = { l: 'fp19b_stopwatch', r: 'fp19b_plate' }; o.plateItems = PLATE_ITEMS; o.plateStickers = STICKERS; o.plateSeed = 7; o.plateTilt = -.04; o.plateScale = lerp(1.12 * straw.s, kz(CAN.z), k) * 1.0 / o.s; }
+    if (lt < T_REL) { reach(o, 1, tx, ty, 'grip'); o.hold = { l: 'fp19b_stopwatch', r: 'fp19b_plate' }; o.plateItems = PLATE_ITEMS; o.plateItemScale = 1.04; o.plateStickers = STICKERS; o.plateSeed = 7; o.plateTilt = -.04; o.plateScale = lerp(1.12 * straw.s, kz(CAN.z), k) * 1.0 / o.s; }
     else { reach(o, 1, hover[0] - 14, hover[1] + 30, 'open'); o.hold = { l: 'fp19b_stopwatch' }; }
   }
   if (lt >= T_END_EMPTY) { o.arms = { l: 'hold', r: 'rest' }; o.grip = { l: [-84, 46] }; o.hold = { l: 'fp19b_stopwatch' }; o.swText = '2:00:00'; }
@@ -659,15 +660,15 @@ function plateFree(lt) {
   return { x: mixv(hover[0], rest[0], u), y: mixv(hover[1], rest[1], u * u) - hop * kz(CAN.z), k: kz(CAN.z), tilt: mixv(-.04, .1, u) };
 }
 /* Brenda: behind the refrigerator since 2019. Her hand with the lunchbox comes round the fridge first; the cobweb across her mouth snaps on "have" */
-const BR_R = keyRoute([[0, -806, 2150], [snapT(bS('br1') - .02), -806, 2150], [snapT(bS('br1') + .85), -704, 2056, 'io'], [snapT(bS('br1') + 1.95), -640, 1960, 'io'], [snapT(22.4), -640, 1960], [snapT(25.0), EX_B[0], EX_B[1], 'io'], [99, EX_B[0], EX_B[1]]]);
+const BR_R = keyRoute([[0, -806, 2150], [snapT(bS('br1') - .02), -806, 2150], [snapT(bS('br1') + .7), -745, 2112, 'io'], [snapT(bS('br1') + 1.3), -696, 2060, 'io'], [snapT(bS('br1') + 2.15), -640, 1960, 'io'], [snapT(22.4), -640, 1960], [snapT(25.0), EX_B[0], EX_B[1], 'io'], [99, EX_B[0], EX_B[1]]]);
 function actBrenda(lt, sh) {
-  const route = BR_R, b1 = bS('br1'), wsnap = b1 + .23, out = lt >= b1 + 1.9;
+  const route = BR_R, b1 = bS('br1'), wsnap = wS('br1', 3), out = lt >= b1 + 1.9;
   const hy = key([[0, .2], [b1, .2], [b1 + 1, .45], [bE('br1'), .45], [bS('m1'), -.1], [bS('br2'), .35], [bE('br2') + .2, .35], [bS('br3'), .5], [99, .5]], lt);
   const yaw = key([[0, .2], [b1 + 1.5, .35], [bS('br2'), .5], [99, .55]], lt);
-  const o = person(A13.brenda, route, lt, { t: lt, stride: 22, yaw: walkYaw(route, lt, yaw), headYaw: hy, who: 'brenda', expr: A13.expr(lt < bS('br3') + 1.0 ? (lt < b1 + 1.5 ? 'wake' : 'weak') : 'relief'), lid: lt < b1 + 1.2 ? .26 : .34, look: [clamp(hy * .6, -.55, .55), .05],
+  const o = person(A13.brenda, route, lt, { t: lt, stride: 22, yaw: walkYaw(route, lt, yaw, .72), headYaw: hy, who: 'brenda', expr: A13.expr(lt < bS('br3') + 1.0 ? (lt < b1 + 1.5 ? 'wake' : 'weak') : 'relief'), lid: lt < b1 + 1.2 ? .26 : .34, look: [clamp(hy * .6, -.55, .55), .05],
     web: lt < wsnap ? 1 : 0, webT: lt < wsnap ? -1 : lt - wsnap, dust: lt < bS('br2') ? .8 : lerp(.8, .5, ss(lt, bS('br2'), bS('br3'))), specsDrop: .75,
     arms: { l: 'rest', r: 'hold' }, grip: { r: [100, 40] }, hold: { r: 'fp19b_lunch' }, lunchScale: .85, hand: { r: 'grip' } });
-  if (lt < b1 + .9) {                                      /* the hand comes round the fridge's edge with the lunchbox, held out at arm's length */
+  if (lt < b1 + 1.0) {                                     /* the hand comes round the fridge's edge with the lunchbox, held out at arm's length */
     const [hx, hy2] = p2(-676, 236, 2060); reach(o, 1, hx, hy2, 'grip'); o.lunchTilt = .1;
   }
   const up = ss(lt, wS('br2', 5) - .2, wS('br2', 5) + .1) * (1 - ss(lt, bE('br2') + .1, bE('br2') + .5));        /* "twenty nineteen": the lunchbox up beside her face */
@@ -698,7 +699,7 @@ function boxOf(o, pad = 0) {
   return [o.x - half, top, o.x + half, o.y + 24 * s];
 }
 function inFrame(o) {
-  const b = boxOf(o, 24), m = ctx.getTransform(), p = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+  const b = boxOf(o, 96), m = ctx.getTransform(), p = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
   const pts = [p(b[0], b[1]), p(b[2], b[1]), p(b[0], b[3]), p(b[2], b[3])], xs = pts.map(a => a[0]), ys = pts.map(a => a[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   return { inter: x1 > 0 && x0 < W && y1 > 0 && y0 < H, whole: x0 >= 6 && x1 <= W - 6 && y0 >= 6, box: [x0, y0, x1, y1] };
@@ -727,7 +728,7 @@ function worldItems(lt, sh, C) {
 function drawPlateFree(ST) {
   const p = plateFree(ST.lt); if (!p) return;
   ctx.save(); ctx.translate(p.x, p.y); ctx.scale(p.k, p.k); ctx.rotate(p.tilt);
-  const F = F19(); if (F && F.kinds && F.kinds.plate) F.dish(ctx, 'plate', { x: 0, y: 8, s: 1.12 * 120 / 300, t: ST.lt, items: PLATE_ITEMS, stickers: STICKERS, seed: 7, shadow: false });
+  const F = F19(); if (F && F.kinds && F.kinds.plate) F.dish(ctx, 'plate', { x: 0, y: 8, s: 1.12 * 120 / 300, t: ST.lt, items: PLATE_ITEMS, itemScale: 1.04, stickers: STICKERS, seed: 7, shadow: false });
   else { ctx.fillStyle = '#fbfbf8'; ctx.strokeStyle = OUT; ctx.lineWidth = 3; ell(0, 2, 62, 12); ctx.fill(); ctx.stroke(); }
   ctx.restore();
 }
@@ -748,7 +749,7 @@ function drawWorld(lt, sh, C) {
   flush();
 }
 const SHOT_DEFS = [   /* id, start, framing: p = perspective camera [cx0, cz0, cx1, cz1]; foc = a face; pt = world points [from, to]; c = screen centre [x0, y0, x1, y1]; z = zoom [from, to]; dof + sharp = the close-up's focus */
-  ['open', 0, { p: [-250, 0, -250, 0], c: [540, 1350, 540, 1350], z: [1.0, 1.04], sharpAll: true, blur: 3 }],
+  ['open', 0, { p: [-250, 0, -330, 0], pt: [[-200, 230, 1750], [-330, 150, 1990]], z: [1.05, 1.3], sharpAll: true, blur: 3 }],
   ['q1', 1.50, { p: [-300, 0, -300, 0], foc: 'lemon', z: [2.1, 2.3], up: 175, dof: 9, sharp: ['lemon'] }],
   ['q2a', 3.55, { p: [-380, 0, -380, 0], foc: 'mango', z: [2.5, 2.6], up: 165, dof: 9, sharp: ['mango'] }],
   ['q2b', 3.98, { p: [-380, 0, -380, 0], foc: 'mango', z: [2.0, 2.05], up: 470, dof: 12, sharp: ['mango'], insert: 'microwave' }],
@@ -760,17 +761,17 @@ const SHOT_DEFS = [   /* id, start, framing: p = perspective camera [cx0, cz0, c
   ['o1c', 9.12, { p: [-300, 0, -300, 0], foc: 'onion', z: [2.35, 2.45], up: 150, dof: 10, sharp: ['onion', 'tbl'] }],
   ['t1', 9.645, { p: [60, 0, 60, 0], foc: 'tomato', z: [2.05, 2.2], up: 160, dof: 8, sharp: ['tomato'] }],
   ['o2a', 10.90, { p: [-300, 0, -300, 0], foc: 'onion', z: [2.3, 2.5], up: 150, dof: 10, sharp: ['onion', 'tbl'] }],
-  ['o2b', 12.10, { p: [-260, 0, -260, 0], c: [540, 1350, 540, 1350], z: [1.45, 1.5], sharpAll: true }],
+  ['o2b', 12.10, { p: [330, 0, 330, 0], c: [540, 1400, 540, 1400], z: [1.12, 1.16], sharpAll: true }],
   ['s1', 13.07, { p: [200, 0, 200, 0], foc: 'straw', z: [2.0, 2.15], up: 165, dof: 9, sharp: ['straw'] }],
   ['tm1', 14.13, { p: [-300, 0, -300, 0], foc: 'onion', z: [2.8, 2.8], up: 150, dof: 14, sharp: [], insert: 'stopwatch' }],
   ['tm2', 14.62, { p: [0, 0, 0, 0], pt: [[250, 612, ZB]], z: [3.2, 3.3], sharpAll: true }],
-  ['tm3', 14.93, { p: [-100, 0, -100, 0], c: [540, 1360, 540, 1360], z: [1.02, 1.06], sharpAll: true }],
-  ['sw', 15.18, { p: [-120, 0, 90, 0], ptf: lt => [Math.max(-215, Math.min(215, onionX(lt) + 165)), 300, 1200], z: [1.12, 1.12], sharpAll: true, blur: 6 }],
-  ['plate', 16.15, { p: [150, 0, 150, 0], pt: [[372, 250, 1150]], z: [1.8, 1.9], sharpAll: true }],
+  ['tm3', 14.93, { p: [-100, 0, -100, 0], c: [540, 1410, 540, 1410], z: [1.02, 1.06], sharpAll: true }],
+  ['sw', 15.18, { p: [-120, 0, 90, 0], ptf: lt => [Math.max(-250, Math.min(215, onionX(lt) + 165)), 300, 1200], z: [1.12, 1.12], sharpAll: true, blur: 6 }],
+  ['plate', 16.15, { p: [150, 0, 150, 0], pt: [[330, 250, 1150]], z: [1.5, 1.6], sharpAll: true }],
   ['bag', 16.50, { p: [200, 0, 200, 0], pt: [[CAN.x, CAN.h + 95, CAN.z]], z: [2.9, 3.1], dof: 12, sharp: ['tbl'] }],
   ['s2', 17.03, { p: [200, 0, 200, 0], foc: 'straw', z: [2.1, 2.35], up: 165, dof: 9, sharp: ['straw'] }],
   ['b1a', 18.25, { p: [-450, 0, -450, 0], pt: [[-700, 290, 2000]], z: [1.9, 2.0], sharpAll: true }],
-  ['b1b', 19.25, { p: [-420, 0, -420, 0], c: [540, 1250, 540, 1250], z: [1.3, 1.4], sharpAll: true }],
+  ['b1b', 19.25, { p: [-420, 0, -420, 0], c: [540, 1300, 540, 1300], z: [1.3, 1.4], sharpAll: true }],
   ['m1', 20.43, { p: [-380, 0, -380, 0], foc: 'mango', z: [3.0, 3.1], up: 175, dof: 10, sharp: ['mango'] }],
   ['l1', 21.10, { p: [-300, 0, -300, 0], foc: 'lemon', z: [2.2, 2.35], up: 170, dof: 10, sharp: ['lemon'] }],
   ['b2a', 22.45, { p: [-300, 0, -150, 0], foc: 'brenda', z: [2.0, 2.15], up: 165, dof: 10, sharp: ['brenda'] }],
@@ -779,7 +780,7 @@ const SHOT_DEFS = [   /* id, start, framing: p = perspective camera [cx0, cz0, c
   ['s3', 25.85, { p: [0, 0, 0, 0], foc: 'straw', z: [2.2, 2.3], up: 165, dof: 9, sharp: ['straw'] }],
   ['b3a', 26.61, { p: [-40, 0, -40, 0], foc: 'brenda', z: [2.2, 2.3], up: 165, dof: 9, sharp: ['brenda'] }],
   ['b3b', 27.85, { p: [60, 0, 60, 0], pt: [[90, 280, 1620]], z: [1.7, 1.8], dof: 7, sharp: ['brenda', 'straw'] }],
-  ['end', 28.88, { p: [20, 0, 40, 0], cy: 330, pt: [[60, 290, 1500]], z: [1.5, 1.62], up: 10, sharpAll: true }],
+  ['end', 28.88, { p: [20, 0, 40, 0], cy: 330, pt: [[130, 290, 1500]], z: [1.5, 1.62], up: 10, sharpAll: true }],
 ];
 const SHOTS = SHOT_DEFS.map(([id, s, d], i) => Object.assign({ id, s: i === 0 ? 0 : snapT(s), n: i }, d));
 SHOTS.forEach((sh, i) => { sh.e = i + 1 < SHOTS.length ? SHOTS[i + 1].s : SCN.dur; });

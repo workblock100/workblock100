@@ -526,21 +526,12 @@ const CT = { x0: 310, x1: 470, z0: 1540, z1: 1710, h: 118 };       /* the card t
 const PRT = { x0: 330, x1: 450, z0: 1625, z1: 1700, h: 44 };       /* the printer on it */
 const PRINT = { t0: ST.snapT(10.36), speed: 128, labW: 100, labH: 56 };   /* the strip creeps out toward the camera at `speed` units/s: three labels by 11.4 */
 const stripLen = lt => Math.max(0, Math.min(3 * PRINT.labH + 18, (lt - PRINT.t0) * PRINT.speed));
-/* a label face in its own frame (origin = its centre, w x h units): white, a red top band, a barcode; the text is drawn by the caller through the UI kit */
-function labelArt(w, h, a = 1, tear = 0) {
-  ctx.save(); ctx.globalAlpha *= a; ctx.shadowColor = 'rgba(20,10,4,.35)'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2;
-  rr(-w / 2, -h / 2, w, h, 5); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(60,60,70,.75)'; ctx.lineWidth = 1.6; ctx.stroke();
-  ctx.fillStyle = '#c0392b'; ctx.fillRect(-w / 2 + 2, -h / 2 + 2, w - 4, 7);
-  ctx.fillStyle = '#222'; for (let i = 0; i < 17; i++) ctx.fillRect(-w / 2 + 8 + i * 3.6, h / 2 - 16, (i % 3 ? 1.4 : 2.6), 11);
-  if (tear > 0) { ctx.fillStyle = `rgba(150,200,240,${.5 * tear})`; ctx.beginPath(); ctx.ellipse(w * .22, -2, 17, 12, .2, 0, TAU); ctx.fill(); ctx.strokeStyle = `rgba(90,150,210,${.7 * tear})`; ctx.lineWidth = 1.6; ctx.stroke(); }
-  ctx.restore();
-}
 /* the label text, drawn upright at the label's centre (cx, cy) in the current transform; hero only when it comes out large enough and is whole in the frame */
 function labelText(cx, cy, sc, id, hero) {
   UI.container(id, 'pill', [cx - 50 * sc, cy - 28 * sc, cx + 50 * sc, cy + 28 * sc], 1);
   const o = { weight: 900, fill: '#b3261e', cid: id, hero: !!hero, crop: !hero };
-  UI.label('CONTAINS:', cx, cy - 15 * sc, Object.assign({ size: 13 * sc, maxW: 88 * sc, spacing: .3 }, o));
-  UI.label('BREAD', cx, cy + 3 * sc, Object.assign({ size: 19 * sc, maxW: 88 * sc }, o));
+  UI.label('CONTAINS:', cx, cy - 13 * sc, Object.assign({ size: 12 * sc, maxW: 88 * sc, spacing: .3 }, o));
+  UI.label('BREAD', cx, cy + 4.5 * sc, Object.assign({ size: 18 * sc, maxW: 88 * sc }, o));
 }
 const labelHero = (cx, cy, sc) => { const m = ctx.getTransform(), s = Math.hypot(m.a, m.b), x = m.a * cx + m.c * cy + m.e, y = m.b * cx + m.d * cy + m.f, w = 50 * sc * s, h = 28 * sc * s; return 13 * sc * s >= 31 && x - w > 46 && x + w < W - 46 && y - h > 46 && y + h < 1370; };
 function drawCardTable(lt) {
@@ -580,7 +571,7 @@ function stripLabels(lt) {
     if (c[0] < -400 || c[0] > W + 400 || c[1] < -400 || c[1] > H + 400) continue;
     ctx.save(); ctx.translate(c[0], c[1]); ctx.scale(k, k * se);
     ctx.strokeStyle = 'rgba(60,60,70,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-PRINT.labW / 2, PRINT.labH / 2); ctx.lineTo(PRINT.labW / 2, PRINT.labH / 2); ctx.stroke();
-    ctx.fillStyle = '#c0392b'; ctx.fillRect(-PRINT.labW / 2 + 3, -PRINT.labH / 2 + 3, PRINT.labW - 6, 6); ctx.fillStyle = '#222'; for (let i = 0; i < 20; i++) ctx.fillRect(-PRINT.labW / 2 + 9 + i * 4, PRINT.labH / 2 - 16, (i % 3 ? 1.5 : 2.8), 11);
+    ctx.fillStyle = '#c0392b'; ctx.fillRect(-PRINT.labW / 2 + 3, -PRINT.labH / 2 + 2, PRINT.labW - 6, 4.5); ctx.fillStyle = '#222'; for (let i = 0; i < 20; i++) ctx.fillRect(-PRINT.labW / 2 + 9 + i * 4, PRINT.labH / 2 - 14.5, (i % 3 ? 1.5 : 2.8), 10);
     ctx.restore();
     const hh = labelHero(c[0], c[1], k);
     ctx.save(); ctx.translate(c[0], c[1]); ctx.scale(k, k); labelText(0, 0, 1, 'strip' + j, hh); ctx.restore();
@@ -672,7 +663,7 @@ function camS(lt) {
     case 'one': { const p = pj(0, TH, 1580); zoomTo(p[0], p[1] + 30, 1.9 + .25 * u); break; }
     case 'lone': { const p = BASKET_P(0); zoomTo(p[0] + 20, p[1] - 70, 2.5 + .25 * u); break; }
     case 'board': { const p = pj(0, (BOARD.y0 + BOARD.y1) / 2 + 40, ZB); zoomTo(p[0], p[1], 2.5); break; }
-    case 'end': { const p = BASKET_P(0); zoomTo(p[0], p[1] - 10, 1.5 + .25 * sg(lt, sh.s, 25.7)); break; }
+    case 'end': { const p = BASKET_P(0); zoomTo(p[0], p[1] - 10, 1.85 + .3 * sg(lt, sh.s, 25.7)); break; }
     default: zoomTo(540, 1010, 1.2);
   }
   CAM.x += sway.x; CAM.y += sway.y; CAM.r += sway.r;
@@ -711,6 +702,14 @@ function worldTable(lt, o = {}) {
     if (lt - t0 < .35) V2.ring(p[0], p[1] - 30 * p[2] * Math.cos(e), (lt - t0) / .35, { r0: 14 * p[2], r1: 120 * p[2], color: '255,236,190', lw: 5, alpha: .6, squash: Math.max(.4, Math.sin(e)), bloom: 0 });
     drawBasket(p[0], p[1], p[2], e, Object.assign({ name: NAMES[i], id: 'b' + i, seed: (i % 3) * 3 + 1, wob: (sr(i, 3) - .5) * .04, nameShow: o.names !== false }, st));
     if (st.label && st.labelAge >= 0 && st.labelAge < .45 && o.fx !== false) V2.ring(p[0], p[1] - 62 * p[2] * Math.cos(e), st.labelAge / .45, { r0: 10 * p[2], r1: 70 * p[2], color: '255,255,255', lw: 3, alpha: .5, squash: Math.max(.4, Math.sin(e)), bloom: 0 });
+  }
+  /* the allergen labels fly from the printer to the baskets: a quick sweep, nearest row first */
+  for (let i = 0; i < 11; i++) {
+    const tL = LAB_AT(i), a = (lt - (tL - .26)) / .26; if (a <= 0 || a >= 1) continue;
+    const st = SLOT(i), p1 = pj(st.X, TH + 62, st.Z), p0 = pj((PRT.x0 + PRT.x1) / 2, CT.h + PRT.h + 6, PRT.z0 - 6), u = easeIO(a), x = lerp(p0[0], p1[0], u), y = lerp(p0[1], p1[1], u) - 130 * Math.sin(PI * u) * p1[2], sc = lerp(1.55, 1, u) * p1[2];
+    ctx.save(); ctx.translate(x, y); ctx.rotate((1 - u) * (1.1 + .25 * i) * (i % 2 ? -1 : 1)); ctx.scale(sc, sc * Math.max(.35, Math.abs(Math.cos(u * 5 + i)))); ctx.shadowColor = 'rgba(20,10,4,.35)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+    rr(-40, -22, 80, 44, 4); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(60,60,70,.7)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.fillStyle = '#c0392b'; ctx.fillRect(-38, -20, 76, 5);
+    ctx.fillStyle = '#222'; for (let b = 0; b < 14; b++) ctx.fillRect(-34 + b * 4.6, 6, (b % 3 ? 1.4 : 2.6), 11); ctx.restore();
   }
   { const s4 = SLOT(4), p4 = pj(s4.X, TH + 40, s4.Z); tearFall(lt, SC.sniffle[1], p4[0] + 10 * p4[2], p4[1] + 4 * p4[2], p4[2], 3); }
   /* the poofs: a puff of flour and a floating roll for every basket the Remove Duplicates takes away */
@@ -910,7 +909,7 @@ const SIGN = {
   cam: camS,
   draw: drawS,
   fx: lt => ({ bloom: .45 + .5 * Math.max(0, 1 - Math.abs(lt - SC.sting - .05) / .25), vignette: .34, grain: .045, contrast: .1, sat: .1, tint: [['255,200,140', .05, 'screen']], fade: lt < .25 ? 1 - lt / .25 : 0, fadeColor: '20,14,10' }),
-  blur: lt => { const sh = shotAt(lt); return (lt - sh.s) < .04 ? 1 : sh.k === 'crane' ? 6 : 2; },
+  blur: lt => { const sh = shotAt(lt); return (lt - sh.s) < .04 ? 1 : sh.k === 'crane' ? 6 : 1; },
   over: lt => { const { sh } = FRS; if (sh.k === 'plan' || sh.k === 'one' || sh.k === 'end' || sh.k === 'split' || (sh.k === 'crane' && lt > CRANE.t1 - .45)) countChip(lt, sh); overS(lt, sh); },
   clock: () => ST.SCN.clock, label: () => ST.SCN.label,
 };
@@ -944,7 +943,7 @@ const RW = 780, RC = 960, RB = 2000, RN = -1800;
 const DOOR = { x0: 470, x1: 700, y1: 470 };                        /* the doorway in the back wall, at the right */
 const WIN = { x0: -580, x1: -180, y0: 430, y1: 900 };              /* the window, high on the back wall, left */
 const COR = { z1: RB + 1100, hw: 300, ch: 560 };                   /* the corridor behind the doorway: far end, half width, height */
-const TCAM = { cx: 0, cy: 820, cz: -1000, tx: 0, ty: 150, tz: 1500, f: 1300, hy: 880 };
+const TCAM = { cx: 0, cy: 820, cz: -1000, tx: 0, ty: 150, tz: 1500, f: 1300, hy: 800 };
 const DCAM = { cx: 340, cy: 470, cz: 860, tx: 560, ty: 250, tz: 1960, f: 1300, hy: 960 };        /* the view from inside the room toward the doorway: Strawberry, the chair, the corridor behind them */
 const SEAT_Y = 62;                                                  /* the height of a seat: the sitter's body bottom */
 const SEAT = {
@@ -953,7 +952,7 @@ const SEAT = {
   cran: { X: 0, Z: 1230, kind: 'arm', col: '#5f7f4f', who: 'cran' },
   goji: { X: 260, Z: 1100, kind: 'wheel', col: '#6a6a78', who: 'goji' },
 };
-const POS = { lemon: [500, 960], mango0: [-40, 1720] };
+const POS = { lemon: [500, 960] }, MANGO_HOME = [-560, 1986];
 const SSR = .95;                                                     /* a character's scale at k = 1 */
 
 // ------------------------------------------------------------------ the room
@@ -999,7 +998,12 @@ function drawCorridor(lt) {
   for (const [sd, zs] of [[-1, [z0 + 260, z0 + 700]], [1, [z0 + 440, z0 + 880]]]) for (const zc of zs) poly3([[cx + sd * hw * .995, 0, zc - 70], [cx + sd * hw * .995, 0, zc + 70], [cx + sd * hw * .995, 330, zc + 70], [cx + sd * hw * .995, 330, zc - 70]], '#6a4a36', 'rgba(20,10,4,.6)', 2.4);
   poly3([[cx - 90, 0, z1 - 2], [cx + 90, 0, z1 - 2], [cx + 90, 330, z1 - 2], [cx - 90, 330, z1 - 2]], '#6a4a36', 'rgba(20,10,4,.6)', 2.4);                   /* the far door */
   const on = lt >= TC.callchime ? 1 : 0, p = pj(cx, 395, z1 - 4), k = p[2];
-  ctx.save(); ctx.fillStyle = on ? '#ff3a30' : '#5a2420'; ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(1, 3 * k); rr(p[0] - 22 * k, p[1] - 12 * k, 44 * k, 24 * k, 6 * k); ctx.fill(); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.lineJoin = 'round';
+  ctx.fillStyle = '#d8d2c4'; ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(1, 3 * k); rr(p[0] - 34 * k, p[1] - 6 * k, 68 * k, 14 * k, 4 * k); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = on ? '#ff3a30' : '#5a2420'; ctx.beginPath(); ctx.arc(p[0], p[1] - 4 * k, 24 * k, PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (on) { ctx.fillStyle = 'rgba(255,220,210,.7)'; ctx.beginPath(); ctx.ellipse(p[0] - 8 * k, p[1] - 16 * k, 8 * k, 5 * k, -.5, 0, 2 * PI); ctx.fill(); }
+  ctx.restore();
+  { const q = pj(cx + 70, 250, z1 - 3), kk = q[2]; ctx.save(); ctx.fillStyle = '#f2ecdc'; ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(1, 2.4 * kk); rr(q[0] - 22 * kk, q[1] - 14 * kk, 44 * kk, 28 * kk, 3 * kk); ctx.fill(); ctx.stroke(); ctx.restore(); UI.label('12', q[0], q[1], { size: 20 * kk, weight: 900, fill: '#3a2a20', hero: false, crop: true }); }
   for (let z = z0 + 150; z < z1; z += 300) { const q = pj(cx, ch - 4, z); glow(q[0], q[1], 120 * q[2], '200,215,255', .12, .1); }
 }
 /* a window with the night in it: a deep blue sky, stars that twinkle, a pale glow low down */
@@ -1110,13 +1114,13 @@ function pieStand(x, y, sc, t, seed) {
   ctx.restore();
 }
 function dinner(x, y, s, t, seed, o = {}) {   /* (x, y) = the middle of the tray top, s = the sitter's scale */
-  const K = F(), sp = .3 * s;
-  if (o.plate !== false) { if (K) K.dish(ctx, 'plate', { x: x - 20 * s, y: y + 8 * s, s: sp, items: ['pieMold'], t, seed, steam: .15 }); else pieStand(x - 20 * s, y + 8 * s, sp * .5, t, seed); }
+  const K = F(), sp = .4 * s;
+  if (o.plate !== false) { if (K) K.dish(ctx, 'plate', { x: x - 26 * s, y: y + 10 * s, s: sp, items: ['pieMold'], t, seed, steam: .15 }); else pieStand(x - 20 * s, y + 8 * s, sp * .5, t, seed); }
   if (o.cup !== false) {
-    const cx = x + 78 * s, cy = y + 12 * s;
-    if (K) K.dish(ctx, 'coffee', { x: cx, y: cy, s: .3 * s, thick: .35, fill: .8, steam: .9, t, seed: seed + 5 });
+    const cx = x + 84 * s, cy = y + 14 * s;
+    if (K) K.dish(ctx, 'coffee', { x: cx, y: cy, s: .36 * s, thick: .35, fill: .8, steam: .9, t, seed: seed + 5 });
     else { ctx.save(); ctx.fillStyle = '#f3f0e6'; ctx.strokeStyle = INKC; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cx - 14 * s, cy - 40 * s); ctx.lineTo(cx + 14 * s, cy - 40 * s); ctx.lineTo(cx + 10 * s, cy); ctx.lineTo(cx - 10 * s, cy); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
-    if (K && K.steam) K.steam(ctx, { x: cx, y: cy - 38 * s, w: 24 * s, h: 110 * s, t, seed: seed + 11, power: .9, curl: .7 });
+    if (K && K.steam) { glow(cx, cy - 70 * s, 70 * s, '255,225,190', .1, .2); K.steam(ctx, { x: cx, y: cy - 36 * s, w: 36 * s, h: 190 * s, t, seed: seed + 11, power: 1, curl: .7 }); }
   }
 }
 // ------------------------------------------------------------------ props and accessories of the day room (the prefix fp19s_ keeps them apart from every other episode)
@@ -1180,9 +1184,9 @@ if (typeof V2C !== 'undefined' && V2C.ACC_CLS) { V2C.ACC_CLS.fp19s_pilgrim = 'he
 const T = { r1: TT.bS('r1'), r2: TT.bS('r2'), s0: TT.bS('s0'), beat: TT.bS('beat'), s1: TT.bS('s1'), sit: TT.bS('sit'), call: TT.bS('call'), s2: TT.bS('s2'), mo1: TT.bS('mo1'), end: TT.bS('end') };
 const AT = 13.25, ROLL1 = 14.17;                                      /* the chair rolls from AT to ROLL1 */
 const CHAIR0 = [-10, 1962], CHAIR1 = [580, 1948];
-const chairPos = lt => { const u = easeIO(sg(lt, AT, ROLL1)); return [lerp(CHAIR0[0], CHAIR1[0], u), lerp(CHAIR0[1], CHAIR1[1], u) + 30 * Math.sin(PI * u)]; };
+const chairPos = lt => { const u = easeIO(sg(lt, AT, ROLL1)), v = ss(lt, 19.5, 20.5); return [lerp(lerp(CHAIR0[0], CHAIR1[0], u), 120, v), lerp(CHAIR0[1], CHAIR1[1], u) + 30 * Math.sin(PI * u) + 14 * v]; };
 const SIT_T = TC.chairsit - .1, UP_T = T.s2 + .05;                    /* she lowers from SIT_T, lands on the cue; she rises on "Okay." */
-const STR_STAND = [585, 1840], STR_SIT = [chairPos(99)[0] + 2, chairPos(99)[1] - 20], CART = [735, 1920];
+const STR_STAND = [585, 1840], STR_SIT = [CHAIR1[0] + 2, CHAIR1[1] - 20], CART = [735, 1920];
 const sitK = lt => lt < SIT_T ? 0 : lt < TC.chairsit ? eo(sg(lt, SIT_T, TC.chairsit)) : lt < UP_T ? 1 : 1 - ss(lt, UP_T, UP_T + .45);
 const strPos = lt => {
   if (lt < UP_T) { const sk = sitK(lt); return [lerp(STR_STAND[0], STR_SIT[0], sk), lerp(STR_STAND[1], STR_SIT[1], sk)]; }
@@ -1202,7 +1206,7 @@ function resOpts(name, lt) {
   const S = SEAT[name], B0 = RES_BASE[name], p = pj(S.X, SEAT_Y, S.Z), k = p[2], s = k * SSR, f = pj(S.X, 0, S.Z);
   const spk = inBeat(lt, SPK[name]), chor = (lt >= T.r1 && lt < TT.bE('r1') + .05) || (lt >= T.r2 && lt < TT.bE('r2') + .05);
   const door = .78 + (name === 'goji' ? .1 : 0), turn = ss(lt, T.r1 + .02 + .05 * Object.keys(SEAT).indexOf(name), T.r1 + .45), hy = lerp(B0.head, door, turn);
-  const lk = turn > .5 ? [.8, .1] : name === 'goji' && lt > 9 ? [-.2, .6] : [.0, .05];
+  const lk = turn > .5 ? [.8, .1] : name === 'goji' && lt > 8.4 ? [.35, .65] : [.0, .05];
   const o = Object.assign((A7[name] || A7.pear)({}), { x: p[0], y: p[1], s, t: lt, noLegs: true, noShadow: true, noReflect: true, plant: true, yaw: B0.yaw, headYaw: hy, look: lk, expr: B0.expr, who: chor ? 'rall' : spk ? name : undefined,
     arms: { l: 'rest', r: 'rest' }, lid: name === 'goji' || name === 'banana' ? .35 : .22 });
   o.acc = (o.acc || []).filter(a => (B0.strip || []).indexOf(a) < 0 && !(name === 'pear' && a === 'newsboy'));
@@ -1213,7 +1217,7 @@ function resOpts(name, lt) {
 function gojiCup(lt, R) {   /* "water.": the empty cup comes up, turns over and the last drop falls */
   const t0 = TLN.go1 ? TT.wS('go1', 4) - .35 : 8;
   const up = ss(lt, t0, t0 + .5), tip = PI * ss(lt, t0 + .35, t0 + .95), dr = lt > t0 + 1.0 ? c01((lt - (t0 + 1.0)) / .5) : -1;
-  const o = R.o; o.arms = { l: 'rest', r: 'hold' }; o.hold = { r: 'fp19s_cup' }; o.cupScale = 1.6; o.cupTip = tip; o.cupDrop = dr; o.grip = { r: [lerp(110, 86, up), lerp(66, -34, up)] };
+  const o = R.o; o.arms = { l: 'rest', r: 'hold' }; o.hold = { r: 'fp19s_cup' }; o.cupScale = 1.6; o.cupTip = tip; o.cupDrop = dr; o.grip = { r: [lerp(110, 62, up), lerp(70, 6, up)] };
 }
 // ------------------------------------------------------------------ the med cart, the rolling chair, the lamps
 function medCart(X, Z, lt, extra = {}) {
@@ -1228,6 +1232,16 @@ function medCart(X, Z, lt, extra = {}) {
   ctx.strokeStyle = '#8d96a4'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(98, -226); ctx.lineTo(120, -226); ctx.lineTo(120, -150); ctx.stroke();
   ctx.fillStyle = '#c0392b'; rr(54, -296, 42, 42, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillRect(70, -286, 10, 24); ctx.fillRect(63, -279, 24, 10);
   ctx.restore();
+}
+function sideTable(X, Z, lt) {   /* a small round table by Strawberry's chair, with a plate of beige pie and a steaming cup of cider */
+  const f = pj(X, 0, Z), t = pj(X, 105, Z), k = f[2]; if (f[3] < NEAR) return;
+  ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.fillStyle = 'rgba(8,4,16,.4)'; ctx.beginPath(); ctx.ellipse(f[0], f[1], 64 * k, 15 * k, 0, 0, 2 * PI); ctx.fill();
+  ctx.strokeStyle = '#3a2418'; ctx.lineWidth = Math.max(3, 10 * k); ctx.beginPath(); ctx.moveTo(f[0], f[1]); ctx.lineTo(t[0], t[1]); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(f[0], f[1] - 4 * k, 40 * k, 9 * k, 0, 0, 2 * PI); ctx.fillStyle = '#4a3020'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(t[0], t[1], 66 * k, 21 * k, 0, 0, 2 * PI); ctx.fillStyle = lg(0, t[1] - 21 * k, 0, t[1] + 21 * k, [[0, '#b08a5a'], [1, '#86603a']]); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 3.4 * k); ctx.stroke();
+  ctx.restore();
+  dinner(t[0] + 4 * k, t[1] - 4 * k, k * .62, lt, 13);
 }
 function floorLamp(X, Z, lt, seed) {
   const p = pj(X, 0, Z), t = pj(X, 360, Z); if (p[3] < NEAR) return; const k = p[2];
@@ -1254,9 +1268,12 @@ function castT(lt) {
   const lp = pj(POS.lemon[0], 0, POS.lemon[1]), tick = ss(lt, TT.wS('l1', 3), TT.wS('l1', 3) + .35);
   C.lemon = A7.lemon({ x: lp[0], y: lp[1], s: lp[2] * SSR, t: lt, yaw: -.5, headYaw: inBeat(lt, 'l1', .1) ? -.2 : -.5, look: inBeat(lt, 'l1', .1) ? [-.15, .05] : [-.85, .1], expr: 'neutral', lid: .3, face: { curve: .02 }, who: 'lemon',
     arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp19s_clip' }, clipScale: 1.45, tick, grip: { l: [-100, 6] } });
-  const cp = chairPos(lt), away = ss(lt, ROLL1 - .25, ROLL1 + 1.0), mxz = [cp[0] - 185 - 305 * away, 1986 - 50 * away], mp = pj(mxz[0], 0, mxz[1]), walking = lt >= AT && lt < ROLL1 + 1.2, dist = Math.hypot(cp[0] - CHAIR0[0], cp[1] - CHAIR0[1]) + 330 * away;
-  C.mango = A7.mango({ x: mp[0], y: mp[1], s: mp[2] * SSR, t: lt, yaw: .55, headYaw: .5, look: [.6, .05], expr: 'neutral', lid: .3, who: 'mango', arms: { l: 'rest', r: (walking && lt < ROLL1 + .25) || lt < AT ? 'hold' : 'rest' }, grip: { r: [128, 36] },
-    gaitW: walking ? dist : undefined, axis: walking ? 'x' : undefined, dir: walking ? 1 : undefined, vx: walking ? 120 : undefined });
+  const cp = chairPos(lt), walkIn = ss(lt, AT - .8, AT - .05), away = ss(lt, ROLL1 - .25, ROLL1 + 1.0), ru = easeIO(sg(lt, AT, ROLL1));
+  const mxz = [lerp(lerp(MANGO_HOME[0], cp[0] - 185, walkIn), MANGO_HOME[0], away), 1986 - 20 * away], mp = pj(mxz[0], 0, mxz[1]);
+  const walking = (lt >= AT - .8 && lt < AT - .02) || (lt >= AT && lt < ROLL1 + 1.0), pushing = lt >= AT - .05 && lt < ROLL1 + .25;
+  const dist = Math.abs(CHAIR0[0] - 185 - MANGO_HOME[0]) * walkIn + Math.hypot(CHAIR1[0] - CHAIR0[0], CHAIR1[1] - CHAIR0[1]) * ru + 760 * away;
+  C.mango = A7.mango({ x: mp[0], y: mp[1], s: mp[2] * SSR, t: lt, yaw: away > .05 && away < .95 ? -.55 : .55, headYaw: .5, look: [.6, .05], expr: 'neutral', lid: .3, who: 'mango', arms: { l: 'rest', r: pushing ? 'hold' : 'rest' }, grip: { r: [128, 36] },
+    gaitW: walking ? dist : undefined, axis: walking ? 'x' : undefined, dir: walking ? (away > .05 ? -1 : 1) : undefined, vx: walking ? 120 * (away > .05 ? -1 : 1) : undefined });
   /* Strawberry: standing with the med cup, sits on the cue, rises on "Okay.", takes the cart and walks it away down the corridor */
   const sp = strPos(lt), sk = sitK(lt), W0 = lt >= T.s2 + .5, walk = sg(lt, 19.2, 22.6), walking2 = lt >= 19.2 && lt < 22.65;
   const f = pj(sp[0], 0, sp[1]), k = f[2], s = k * SSR, legs = sk < .001, seatY = pj(sp[0], SEAT_Y, sp[1])[1], bodyBottom = f[1] - 92 * s;
@@ -1303,13 +1320,13 @@ const TSH = [
   { id: 'go1', s: 6.47, e: 9.17, k: 'cu', foc: 'goji', z: 3.4, dz: .6, up: 110, dx: 0 },
   { id: 'l1', s: 9.17, e: 10.71, k: 'cu', foc: 'lemon', z: 3.3, dz: .3, up: 120, dx: -60 },
   { id: 'r1', s: 10.71, e: 12.03, k: 'wide', z: 1.25, dz: .1, ty: 1010 },
-  { id: 's0', dc: 1, s: 12.03, e: 13.25, k: 'cu', foc: 'straw', z: 1.45, dz: .15, up: 80 },
+  { id: 's0', dc: 1, s: 12.03, e: 13.25, k: 'cu', foc: 'straw', z: 2.0, dz: .15, up: 150 },
   { id: 'r2', s: 13.25, e: 14.17, k: 'wide', z: 1.15, dz: .1, ty: 1010 },
-  { id: 'lk', dc: 1, s: 14.17, e: 16.02, k: 'cu', foc: 'straw', z: 1.6, dz: .2, up: 80 },
-  { id: 'sit', dc: 1, s: 16.02, e: 17.67, k: 'cu', foc: 'straw', z: 1.8, dz: .5, up: 80 },
+  { id: 'lk', dc: 1, s: 14.17, e: 16.02, k: 'cu', foc: 'straw', z: 2.1, dz: .2, up: 150 },
+  { id: 'sit', dc: 1, s: 16.02, e: 17.67, k: 'cu', foc: 'straw', z: 2.3, dz: .6, up: 150 },
   { id: 'lamp', dc: 1, s: 17.67, e: 17.98, k: 'lamp' },
-  { id: 'eyes', dc: 1, s: 17.98, e: 18.62, k: 'cu', foc: 'straw', z: 2.3, dz: .15, up: 80 },
-  { id: 'ok', dc: 1, s: 18.62, e: 19.48, k: 'cu', foc: 'straw', z: 1.55, dz: -.2, up: 90 },
+  { id: 'eyes', dc: 1, s: 17.98, e: 18.62, k: 'cu', foc: 'straw', z: 3.0, dz: .15, up: 150 },
+  { id: 'ok', dc: 1, s: 18.62, e: 19.48, k: 'cu', foc: 'straw', z: 2.0, dz: -.2, up: 150 },
   { id: 'mo1a', s: 19.48, e: 20.74, k: 'moon' },
   { id: 'mo1b', s: 20.74, e: 22.21, k: 'wide', z: 1.15, dz: .05, ty: 1010 },
   { id: 'end', s: 22.21, e: 99, k: 'wide', z: 1.0, dz: .1, ty: 1000 },
@@ -1356,7 +1373,7 @@ function drawT(lt) {
   lightT(lt);
   if (kd === 'lamp') {
     roomT(lt); const cx = (DOOR.x0 + DOOR.x1) / 2, p = pj(cx, 395, COR.z1 - 4);
-    if (lt >= TC.callchime) { const a = c01((lt - TC.callchime) / .1), fl = .75 + .25 * Math.sin(lt * 14); glow(p[0], p[1], 220 * p[2] * 4, '255,60,50', .85 * a * fl, .6); glow(p[0], p[1], 60 * p[2] * 4, '255,200,190', .9 * a, .9); }
+    if (lt >= TC.callchime) { const a = c01((lt - TC.callchime) / .08), fl = .85 + .15 * Math.sin((lt - TC.callchime) * 9); glow(p[0], p[1] - 10, 150 * p[2] * 4.6, '255,60,50', .6 * a * fl, .5); glow(p[0], p[1] - 10, 44 * p[2] * 4.6, '255,210,200', .8 * a, .9); }
     return;
   }
   if (kd === 'moon') { roomT(lt); moonShaft(lt); return; }
@@ -1373,6 +1390,7 @@ function drawT(lt) {
   put(cp[1] - .5, () => drawStraw(lt, C, 'chairFront'), C.straw, focus === 'straw' ? 'straw' : 'x');
   const cartP = lt < 19.2 ? CART : [C.sp[0] + 20, C.sp[1] + 110];
   put(cartP[1], () => medCart(cartP[0], cartP[1], lt), null, 'cart');
+  put(1868, () => sideTable(445, 1868, lt), null, sh.dc ? focus : 'table');
   items.sort((a, b) => b.z - a.z); bg.sort((a, b) => b.z - a.z);
   if (cu) V2.dof(8, () => { roomT(lt); REG.suppress++; for (const it of bg) it.fn(); REG.suppress--; }); else roomT(lt);
   for (const it of items) it.fn();
@@ -1395,7 +1413,7 @@ const THANKS = {
   cam: camT,
   draw: drawT,
   fx: lt => ({ bloom: .55 + .5 * Math.max(0, 1 - Math.abs(lt - TC.sting - .05) / .25), vignette: .42, grain: .045, contrast: .08, sat: .08, tint: [['255,170,110', .05, 'screen']], fade: lt < .25 ? 1 - lt / .25 : lt > 23.6 ? ss(lt, 23.6, 24.1) : 0, fadeColor: '20,12,10' }),
-  blur: lt => { const sh = tShot(lt); return (lt - sh.s) < .04 ? 1 : (lt >= 18.6 && lt < 19.3) || (lt >= AT - .05 && lt < ROLL1 + 1.3) || (lt >= SIT_T - .05 && lt < TC.chairsit + .2) ? 5 : 1; },
+  blur: lt => 1,
   over() {},
   clock: () => TT.SCN.clock, label: () => TT.SCN.label,
 };

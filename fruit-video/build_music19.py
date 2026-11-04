@@ -38,6 +38,7 @@ from build_music15 import sob_clar, bounce, comp, binder_bed, BJ, BJ_MINOR, TP_M
 
 MUTES = []
 R19 = np.random.default_rng(2719)
+INFO = {}            # what the score decided, for build_audio19's cue report: the baton's beat times and hand-offs
 
 
 # ================================================================ the microwave's clock (shared with build_audio19)
@@ -216,8 +217,8 @@ def cue_end19(T, t0, d, beats, D):
     for k in range(6):                                          # six rows are typed in (1.1 to 3.4 s): the quietest woodblock taps
         D.put(woodblock(), t0 + 1.3 + k * .4, .012, .3 if k % 2 else -.3)
     chm = [39, 46, 50, 55, 58, 62]                               # E-flat major seventh: E-flat B-flat D G B-flat D
-    T.put(strings(chm + [67, 74], 3.4, .08, 1.7, 5.0, 2400), land, .14, 0)
-    T.put(horn(55, 2.8, .6, a=.08, r=1.0), land, .08, .1)
+    T.put(strings(chm + [63, 67, 74], 3.4, .08, 1.7, 5.0, 2400), land, .16, 0)                 # E-flat G B-flat D and the root again an octave up: the chord's identity is the E-flat
+    T.put(horn(51, 2.8, .6, a=.08, r=1.0), land, .09, .1)
     T.put(brass([51, 58, 62, 67], 1.6, .04, .8, 1500), land, .045, 0)
     T.put(pad([51, 55, 58, 62], 3.0, .4, 1.4, 1300), land + .1, .06)                     # E-flat G B-flat D: the body of the chord that is held
     D.put(timp(77.8, 1.4), land, .09, 0)
@@ -225,14 +226,20 @@ def cue_end19(T, t0, d, beats, D):
     for off, m, dd in ((0, 79, 1.5), (1.5, 77, .5), (2, 74, 2.4)):         # G5, F5 and then D5 (the major seventh, unresolved)
         at = land + off * BL_END
         last = off == 2
-        T.put(clarinet(m, dd * BL_END * .95 if not last else 1.5, a=.06, r=.2), at, .07 if not last else .045, .15)
-        T.put(felt(m - 12, 2.2 if dd > 1 else 1.0, .55), at, .075 if not last else .05, -.1)
+        T.put(clarinet(m, dd * BL_END * .95 if not last else 1.5, a=.06, r=.2), at, .07 if not last else .03, .15)
+        T.put(felt(m - 12, 2.2 if dd > 1 else 1.0, .55), at, .075 if not last else .04, -.1)
         T.put(celesta(m + 12, 1.4, .5), at, .035, .3)
     T.put(felt(63, 3.0, .5), land + .02, .08, -.1)
     T.put(ubass(39, 2.2, .6), land, .15, -.1)
     T.put(celesta(86, 2.0, .6), land + 1.6 * BL_END, .04, .3)
-    T.fade(t0 + 6.2, t0 + 7.3, 1, 0)
-    D.fade(t0 + 6.2, t0 + 7.3, 1, 0)
+    T.fade(t0 + 6.4, t0 + 7.35, 1, 0)
+    D.fade(t0 + 6.4, t0 + 7.35, 1, 0)
+
+
+def tomato19(T, at, g=.08, minor=False):
+    """Tomato's pizzicato: a rising chord on pizzicato strings, major (it is a party) or minor (it is not)."""
+    for q, m in enumerate(TP_MIN if minor else TP_MAJ):
+        T.put(pizz(midi(m + 12), .16), at + q * .05, g, .3)
 
 
 # ================================================================ signup: mandatory fun
@@ -347,6 +354,8 @@ def cue_signup19(T, t0, d, beats, D):
     T.put(bassoon(48, l2[1] - l2[0] - .1, .85, a=.1, r=.35, vd=.004), l2[0] + .05, .13, -.1)
     T.put(slide_brass(48, 45.5, .7, 600) * 1.2, l2[1] - .55, .09, -.1)
     # 'Efficiency.': the band comes back for one stab
+    tomato19(T, t5[0] - .08, .07)                                        # Tomato's pizzicato, major ... and then, a beat later, minor: the efficiency curdles
+    tomato19(T, t5[0] + .32, .07, minor=True)
     st = t5[0] + .05
     T.put(brass([48, 55, 60, 64, 67], .28, .012, .1, 2300), st, .08, 0)
     uke(T, st, [60, 64, 67, 72], .08, .3)
@@ -395,12 +404,13 @@ def lick(T, at, notes, step=.15, g=.08, pan=.25, long_last=0.5):
         T.put(clarinet(m, long_last if last else step * .9, a=.03, r=.08 if not last else .25), at + j * step, g, pan)
 
 
-OST = (0, 4, 7, 4, 7, 4)                                           # the conveyor's figure: a rising arpeggio that never gets anywhere (semitones above the station's root)
-STATIONS = ((0.0, 0, 65, "xylo"), (.8, 2, 65, "marimba"), (1.2, 4, 65, "vib"), (1.6, 5, 65, "epiano"), (3.0, 7, 65, "felt"))      # (start in the carve beat, semitones up, F4, instrument)
+OST = (0, 1, 2, 1, 2, 1)                                           # the conveyor's figure: a rising arpeggio that never gets anywhere (indices into the station's triad)
+STATION_TRIAD = ((0, 4, 7), (2, 5, 9), (4, 7, 11), (5, 9, 12), (7, 11, 14))     # F, G minor, A minor, B-flat, C: the diatonic triads of F major, a step higher at each station (semitones above F)
+STATIONS = ((0.0, 0, 65, "xylo"), (.8, 1, 65, "marimba"), (1.2, 2, 65, "vib"), (1.6, 3, 65, "epiano"), (3.0, 4, 65, "felt"))      # (start in the carve beat, which triad, F4, instrument)
 
 
 def conveyor(T, D, t0, a, b):
-    """THE TEXTURE LINE (10.076 to 13.476 s): the conveyor as a mechanical ostinato in triplet eighths of exactly 0.2 s, the same six-note figure at every station but a step higher and a softer
+    """THE TEXTURE LINE (10.076 to 13.476 s): the conveyor as a mechanical ostinato in triplet eighths of exactly 0.2 s, the same six-note figure at every station but on the next triad of F major (F, Gm, Am, B-flat, C) and a softer
     instrument each time (a xylophone at REGULAR, a marimba at MECH SOFT, vibes at MINCED, a Rhodes at PUREE, a felt piano at MOLD), so the turkey and the music both lose their edges. A woodblock clacks on every beat,
     a sub note under it is the motor, and the walking bass carries on."""
     n = int(round((b - a) / .2))
@@ -408,7 +418,7 @@ def conveyor(T, D, t0, a, b):
         at = a + i * .2
         loc = at - a
         st = max((s for s in STATIONS if s[0] <= loc + 1e-6), key=lambda s: s[0])
-        m = st[2] + st[1] + OST[i % 6] + 12
+        m = st[2] + STATION_TRIAD[st[1]][OST[i % 6]] + 12
         g = .075
         if st[3] == "xylo":
             T.put(xylo(m, .14, .9), at, g * 1.1, -.3 + .1 * (i % 6))
@@ -584,6 +594,7 @@ def cue_plate19(T, t0, d, beats, D):
     G A7 / D G D), which thins to a bass note and a pad for the cello. The beats bend a little toward each speaker (see baton_times). The sting (21.61) is the sfx's."""
     bt, anchors = baton_times(beats)
     last = len(bt) - 1
+    INFO["baton"] = {"beats": [round(float(x), 3) for x in bt], "handoffs": [(BATON_LINES[j], BATON_WHO[j], round(float(bt[BATON_HANDOFFS[j]]), 3)) for j in range(7)]}
     # the accompaniment: oom-pah-pah, one bar at a time
     for i in range(last):
         bar, beat = divmod(i, 3)
@@ -631,12 +642,6 @@ BR_PROG = (("Am7", 45, (57, 60, 64, 67)), ("Dm7", 50, (53, 57, 60, 64)), ("G7", 
            ("Am7", 45, (57, 60, 64, 67)))
 BRENDA = (72, 79, 77, 76, 74, 72)                                                  # Brenda's six notes from Episode 13: C G F E D C
 BR_BASS = ((0, 0, 3), (3, 7, 1), (4, 0, 2), (6, 7, 1.5))                         # (eighth in the bar, semitones above the root, length in eighths)
-
-
-def tomato19(T, at, g=.08, minor=False):
-    """Tomato's pizzicato: a rising chord on pizzicato strings, major (it is a party) or minor (it is not)."""
-    for q, m in enumerate(TP_MIN if minor else TP_MAJ):
-        T.put(pizz(midi(m + 12), .16), at + q * .05, g, .3)
 
 
 def groove19(T, D, G, a, b, lvl=1.0, rhodes=True, brushes=True, steps=True, prog_off=0):
@@ -763,11 +768,12 @@ def cue_thanks19(T, t0, d, beats, D):
     # bar 5: the sit beat: one chord and one music-box note
     land = a + 16 * bl
     ch_d = [38, 45, 50, 54, 57, 64]                                # D major with a ninth: D A D F# A E
-    T.put(strings(ch_d, call[0] + .3 - land + 1.4, .35, 1.0, 4.8, 1500), land, .075)
-    T.put(felt(38, 3.0, .45), land + .02, .08, -.1)
-    T.put(felt(50, 3.0, .4), land + .03, .035, 0)
-    T.put(music_box(midi(90), 1.8), sit[0] + .12, .075, .3)           # F-sharp 6
     chime = cue_abs("callchime", "thanks", 0) or (t0 + 17.772)
+    held = chime - land                                              # the chord is held until the chime and gives way to the next one over half a second: a crossfade, not a cut
+    T.put(strings(ch_d, held + .6, .35, .6, 4.8, 1500), land, .075)
+    T.put(felt(38, held + .35, .45), land + .02, .08, -.1)
+    T.put(felt(50, held + .35, .4), land + .03, .035, 0)
+    T.put(music_box(midi(90), 1.8), sit[0] + .12, .075, .3)           # F-sharp 6
     T.put(strings([45, 52, 61, 69, 73, 76], 4.3, .45, 1.8, 4.8, 1900), chime - .04, .09)          # A2 E3 C#4 A4 C#5 E5: the third is in it three times
     T.put(felt(45, 4.0, .45), chime, .08, -.1)
     T.put(felt(61, 3.5, .4), chime + .02, .04, 0)
@@ -780,9 +786,9 @@ def cue_thanks19(T, t0, d, beats, D):
     pad_len = t0 + d - mo
     T.put(strings([45, 52, 57, 61, 64, 69, 73], pad_len, 1.2, 1.4, 4.6, 1500), mo, .085)
     T.put(pad([45, 52, 57, 61, 64], pad_len, 1.4, 1.6, 1100), mo, .05)
-    T.put(sub_bass(midi(33), min(4.0, pad_len)) * .6, mo + .1, .06, 0)
+    T.put(sub_bass(midi(33), min(4.0, pad_len)) * .6, mo + .1, .04, 0)
     for k, m in enumerate((85, 81, 78, 73)):                           # C-sharp6 A5 F-sharp5 C-sharp5: the Moon's four falling bells, an A major sixth chord
-        T.put(bell(midi(m), 1.3) * .6, mo1[0] - .1 + k * .42, .045, .3 - .15 * k)
+        T.put(bell(midi(m), 1.5) * .6, mo1[0] - .3 + k * .3, .055, .3 - .15 * k)
     T.fade(t0 + d - 1.4, t0 + d, 1, 0)
     D.fade(t0 + d - 1.4, t0 + d, 1, 0)
 

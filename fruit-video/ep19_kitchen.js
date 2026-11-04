@@ -55,7 +55,7 @@ for (const k in CUE) CUE[k] = snapT(CUE[k]);
 const CT = 1040, FY = 1330;                       /* the counter's top edge and the floor */
 const BODY_Y = CT + 26;                           /* body bottoms of characters standing behind the counter (noLegs) */
 const BOARD = { x: 60, y: 380, w: 500, h: 470 }; /* the diet board */
-const HOME = { chef: 650, mango: 1120, tk: 890 };   /* the open: Chef, the turkey under its cloche, Mango (s .9) */
+const HOME = { chef: 668, mango: 1120, tk: 890 };   /* the open: Chef, the turkey under its cloche, Mango (s .9) */
 const LINE = { x0: 760, X1: 1700, X2: 2140, X3: 2470, X4: 2800, X5: 3360, x1: 4120, row: 3790 };   /* the belt, the five stations, the end belt and the row of samples */
 const PX = 5200;                                    /* the THICK-IT dispenser: three spouts at PX - 210, PX, PX + 210; the prep counter runs x 4500..5900 */
 const PREP = { x0: 4500, x1: 5900 };
@@ -110,6 +110,27 @@ function steam(o) {
   if (window.FX18 && typeof FX18.smoke === 'function') FX18.smoke(ctx, { x: o.x, y: o.y, w: (o.w || 40) * .6, h: o.h || 150, t: o.t, t0: -3, seed: o.seed || 1, density: .16 * (o.power ?? .7), rise: o.h || 150, color: '#f4efe6', life: 2.6, rate: 4 });
 }
 
+
+/* kitchen steam that reads on the pale tile: white curling ribbons with a faint cool edge; n ribbons rise, thin and fade (a pure function of t) */
+function wisps(x, y, o) {
+  const n = o.n || 3, H = o.h || 170, Wd = o.w || 30, t = o.t, s0 = o.seed || 1, al = o.alpha == null ? 1 : o.alpha, m = 16, rib = [];
+  for (let i = 0; i < n; i++) {
+    const per = 2.7 + .9 * sr(s0 + i, 1), ph = (((t / per + sr(s0 + i, 2)) % 1) + 1) % 1, a = Math.pow(Math.sin(PI * ph), .9) * al * .9;
+    if (a < .03) continue;
+    const bx = x + (sr(s0 + i, 3) - .5) * Wd * .6, hh = H * (.8 + .3 * sr(s0 + i, 4)), sw = Wd * (.45 + .5 * sr(s0 + i, 5)), dir = sr(s0 + i, 6) < .5 ? -1 : 1, seg = [];
+    let px = bx, py = y;
+    for (let j = 1; j <= m; j++) {
+      const u = ph * j / m, nx = bx + dir * Math.sin(u * 5.4 + s0 * 1.7 + i + t * .6) * sw * (.25 + u * .9), ny = y - u * hh, wd = (4 + 9 * Math.sin(PI * Math.min(1, u * 1.1))) * (1 - .3 * u);
+      seg.push([px, py, nx, ny, wd]); px = nx; py = ny;
+    }
+    rib.push([a, seg]);
+  }
+  if (!rib.length) return;
+  ctx.save(); ctx.lineCap = 'round';
+  for (const [a, seg] of rib) for (const q of seg) { ctx.strokeStyle = 'rgba(112,132,146,' + (a * .3).toFixed(3) + ')'; ctx.lineWidth = q[4] + 3.4; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[2], q[3]); ctx.stroke(); }
+  for (const [a, seg] of rib) for (const q of seg) { ctx.strokeStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')'; ctx.lineWidth = q[4]; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[2], q[3]); ctx.stroke(); }
+  ctx.restore();
+}
 
 // ------------------------------------------------------------------ the room: ceiling, tiled wall, stainless splash, counter, floor (drawn for the visible x range only)
 const brushed = (x0, x1, y0, y1, a, b) => { ctx.fillStyle = lg(x0, y0, x0, y1, [[0, a], [1, b]]); ctx.fillRect(x0, y0, x1 - x0, y1 - y0); };
@@ -317,7 +338,7 @@ EXT.prop.fp19_cup = (side, o, t) => {   /* a paper cup of coffee pudding in a ha
   ctx.save(); ctx.rotate(o.cupRot || 0); dish('coffee', { x: 0, y: 66, s: 1, thick: 1, fill: 1, t, seed: 3, steam: 0 }); ctx.restore();
 };
 PROP_BOX.fp19_cup = [-64, -66, 64, 66];
-const CHEFO = (lt, p, id) => mk(A19.chef, lt, Object.assign({ o: actChef(lt, id) }, p));
+const CHEFO = (lt, p, id) => mk(A19.chef, lt, Object.assign({ o: actChef(lt, id), lift: 70 }, p));   /* Chef stands on a duckboard: the apron and its name plate clear the counter */
 const MANGO = (lt, p, id) => mk(A7.mango, lt, Object.assign({ o: actMango(lt, id) }, p));
 const STRAW = (lt, p, id) => mk(o => A19.apron(A11.straw(o)), lt, Object.assign({ o: actStraw(lt, id) }, p));
 const PINE = (lt, p, id) => mk(o => A7.pine(Object.assign({ who: 'pine', acc: ['fp19_visitor'] }, o)), lt, Object.assign({ o: actPine(lt, id) }, p));
@@ -326,8 +347,8 @@ EXT.acc.fp19_visitor = (o, k, t, layer) => { if (layer !== 'front') return; ctx.
 if (typeof V2C !== 'undefined' && V2C.ACC_CLS) V2C.ACC_CLS.fp19_visitor = 'decal';
 /* the Chef's name plate: lettered live (the sprite has none); hero when it comes out readable */
 function chefTag(o) {
-  const pl = A19.plate(o, 'chef_tag'); if (!pl || Math.abs(o.yaw || 0) > .45) return;
-  const sz = Math.min(24, pl.w / 6.6), h = hh(sz, pl.x, pl.y, pl.w - 12, sz);
+  const pl = A19.plate(o, 'chef_tag'); if (!pl || Math.abs(o.yaw || 0) > .62) return;
+  const sz = Math.min(26, pl.w / 5.9), h = hh(sz, pl.x, pl.y, pl.w - 10, sz);
   ctx.save(); ctx.translate(pl.x, pl.y); ctx.rotate(pl.rot); UI.label('CHEF CABBAGE', 0, 2, Object.assign({ size: sz, weight: 900, fill: '#2a2a32', spacing: .6, maxW: pl.w - 14 }, h)); ctx.restore();
 }
 function inFrame(o) {   /* wholly inside the frame (with a margin)? a character that would be cut is left out of the shot instead: no slivers */
@@ -688,7 +709,7 @@ shot('c2a', 6.74, 8.30, u => [880 + 12 * u, 840, 1.4 + .04 * u], { z: 'T', cast:
 shot('c2b', 8.30, 10.08, (u, lt, C) => faceCam(C.chef, 1.7 + .1 * u, 100, 250), { z: 'T', cast: { chef: { x: HOME.chef, yaw: .55 } }, dof: 5, lamp: 1, cloche: 0, slide: 1 });
 shot('carve', 10.08, 13.53, (u, lt) => [camX(lt) + K([[10.08, 80], [13.0, 80], [13.53, 400]], lt), K([[10.08, 872], [13.0, 872], [13.53, 900]], lt), K([[10.08, 1.34], [13.0, 1.34], [13.53, .98]], lt)], { z: 'L', line: 1, chips: 1 });
 shot('s1', 13.53, 14.49, (u, lt, C) => { const c = faceCam(C.straw, 1.4 + .05 * u, 170); c[0] += 60; return c; }, { z: 'L', line: 1, cast: { straw: { x: SX.straw, yaw: .55 } }, dof: 5 });
-shot('c3', 14.49, 17.28, (u, lt, C) => { const c = faceCam(C.chef, 1.55 + .08 * u, 190); c[0] -= 215 / 1.55; return c; }, { z: 'L', line: 1, cast: { chef: { x: SX.chef, yaw: -.5 } }, dof: 5 });
+shot('c3', 14.49, 17.28, (u, lt, C) => { const c = faceCam(C.chef, 1.34 + .02 * u, 172); c[0] = 3650; return c; }, { z: 'L', line: 1, cast: { chef: { x: SX.chef, yaw: -.5 } }, dof: 5 });
 shot('pr1', 17.28, 18.23, u => [PX + 130, 700, 1.05], { z: 'P' });
 shot('pr2', 18.23, 20.00, u => [PX, 850 + 20 * u, 1.42 + .04 * u], { z: 'P' });
 shot('pr3', 20.00, 20.98, u => [PX, 800, 1.04], { z: 'P', cast: { chef: { x: PC.chef, yaw: .45 }, straw: { x: PC.straw, yaw: -.45 } } });
@@ -702,7 +723,7 @@ shot('sm1', 30.43, 32.00, u => [LINE.X4 + 10, 840, 1.45], { z: 'L', line: 2, chi
 shot('sm2', 32.00, 33.03, u => [LINE.X5, 860, 1.36], { z: 'L', line: 2, chips: 0 });
 shot('c6', 33.03, 34.71, (u, lt, C) => { const c = faceCam(C.chef, 1.4 + .04 * u, 150); c[0] -= 300 / 1.4; return c; }, { z: 'L', line: 2, cast: { chef: { x: SX.chef, yaw: -.4 } }, dof: 5, boxEnd: 1 });
 shot('p3', 34.71, 36.37, (u, lt, C) => faceCam(C.pine, 1.85 + .05 * u, 150), { z: 'W', cast: { pine: { x: WS.pine, lift: 40, yaw: .1 } }, dof: 5, plate: 1 });
-shot('c7', 36.37, 38.52, u => [6735, 850, 1.4 + .03 * u], { z: 'W', cast: { pine: { x: WS.pine, lift: 40, yaw: .4 }, chef: { x: 6940, yaw: -.55, lift: 36 } }, plate: 1 });
+shot('c7', 36.37, 38.52, u => [6735, 850, 1.4 + .03 * u], { z: 'W', cast: { pine: { x: WS.pine, lift: 40, yaw: .4 }, chef: { x: 6940, yaw: -.55 } }, plate: 1 });
 shot('p4', 38.52, 39.50, (u, lt, C) => faceCam(C.pine, 1.85, 150), { z: 'W', cast: { pine: { x: WS.pine, lift: 40, yaw: .15 } }, dof: 5, plate: 1 });
 shot('c8', 39.50, 41.34, u => [6650, 920, lerp(1.7, 1.9, u)], { z: 'W', cast: { pine: { x: WS.pine, lift: 40, yaw: .2 } }, plate: 1, sheen: 1 });
 shot('end', 41.34, 42.80, u => [6650 + 20 * u, 910, lerp(1.9, 1.6, u)], { z: 'W', cast: { pine: { x: WS.pine, lift: 40, yaw: .2 } }, plate: 1 });
@@ -760,13 +781,15 @@ function drawWorld(lt) {
   roomFront(x0, x1, lt);
   /* what stands on the counter */
   if (Z === 'T') {
-    stockpot(1300, lt); steam({ x: 1300, y: CT - 160, w: 100, h: 260, t: lt, seed: 6, power: .9 });
+    stockpot(1300, lt); steam({ x: 1300, y: CT - 160, w: 100, h: 260, t: lt, seed: 6, power: .9 }); wisps(1300, CT - 168, { n: 4, h: 250, w: 70, t: lt, seed: 11 });
     const lift = sh.cloche === 'lift' ? ss(lt, wS('c2', 1), wS('c2', 1) + .55) : sh.cloche === 1 ? 0 : 1, sl = sh.slide ? ss(lt, 9.9, 10.07) * 1000 : 0;
     if (lift > .02 || sh.cloche === 'lift' || sh.cloche === 0) dish('turkey', { x: HOME.tk + sl, y: CT + 8, s: .96, t: lt, steam: .6, seed: 3 });
     if (sh.cloche !== 0) cloche(HOME.tk, CT + 8, lift, lt);
     heatLamp(HOME.tk, lt, sh.lamp || 0);
     for (const c of [CUE.clatter1, CUE.clatter2]) if (lt >= c && lt < c + .5) { V2.ring(HOME.tk - 40, CT - 150, (lt - c) / .5, { r0: 20, r1: 170, color: '255,255,255', lw: 5, alpha: .6 }); }
     if (lift > .3) steam({ x: HOME.tk + sl, y: CT - 90, w: 120, h: 220, t: lt, seed: 2, power: .8 });
+    const leak = 1 - ss(lift, .02, .5);
+    if (sh.cloche !== 0 && leak > .02 && lt < 9.8) wisps(HOME.tk + 4, CT - 172, { n: 3, h: 170, w: 26, t: lt, seed: 7, alpha: leak });
   }
   if (Z === 'L') {
     beltDraw(Math.max(x0, LINE.x0), Math.min(x1, LINE.x1), lt);

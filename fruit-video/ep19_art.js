@@ -36,8 +36,8 @@ A.PLATES = PLATES;
 A.centre = o => { const k = KINDS[o.kind], s = o.s || 1, leg = (o.noLegs || o.center) ? 0 : (k.leg || 90), up = o.center ? 0 : (leg + k.ry * .9); return [o.x, o.y - (o.lift || 0) - s * up]; };
 A.plate = (o, name) => {
   const P = PLATES[name]; if (!P) return null;
-  const s = o.s || 1, [cx, cy] = A.centre(o), r = typeof P.r === 'function' ? P.r(o, KINDS[o.kind]) : P.r;
-  return { x: cx + s * (r[0] + r[2]) / 2, y: cy + s * (r[1] + r[3]) / 2, w: s * (r[2] - r[0]), h: s * (r[3] - r[1]), rot: (typeof P.rot === 'function' ? P.rot(o) : (P.rot || 0)) + (o.rot || 0), size: s * (r[3] - r[1]) * .62 };
+  const s = o.s || 1, [cx, cy] = A.centre(o), r = typeof P.r === 'function' ? P.r(o, KINDS[o.kind]) : P.r, T2 = P.tf ? P.tf(o, KINDS[o.kind]) : { sx: 1, dx: 0 };
+  return { x: cx + s * (T2.dx + T2.sx * (r[0] + r[2]) / 2), y: cy + s * (r[1] + r[3]) / 2, w: s * (r[2] - r[0]) * T2.sx, h: s * (r[3] - r[1]), rot: (typeof P.rot === 'function' ? P.rot(o) : (P.rot || 0)) + (o.rot || 0), size: s * (r[3] - r[1]) * .62 };
 };
 function bez(p0, p1, p2, p3, u) { const a = 1 - u; return [a * a * a * p0[0] + 3 * a * a * u * p1[0] + 3 * a * u * u * p2[0] + u * u * u * p3[0], a * a * a * p0[1] + 3 * a * a * u * p1[1] + 3 * a * u * u * p2[1] + u * u * u * p3[1]]; }
 function profileOf(segs, n = 14) {
@@ -215,7 +215,6 @@ EXT.acc.fp19_apron = (o, k, t, layer) => {
     ctx.save(); ctx.translate(X((tr[0] + tr[2]) / 2), (tr[1] + tr[3]) / 2); ctx.rotate(-.03);
     ctx.fillStyle = '#fbfaf2'; ctx.strokeStyle = 'rgba(25,10,20,.85)'; ctx.lineWidth = 3; rr(-tw / 2, -thh / 2, tw, thh, 5); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#c33a2e'; ctx.fillRect(-tw / 2 + 3, -thh / 2 + 3, tw - 6, 4);
-    ctx.fillStyle = '#b9bfcc'; ell(-tw / 2 + 7, 0, 2.6, 2.6); ctx.fill(); ell(tw / 2 - 7, 0, 2.6, 2.6); ctx.fill();
     ctx.restore();
   } else if (ca < -.05) {   /* from behind: the two ties and a bow */
     ctx.strokeStyle = 'rgba(214,218,228,.96)'; ctx.lineWidth = 7; const bx = cx * -1 * 0 + R * .96 * sa;
@@ -224,8 +223,9 @@ EXT.acc.fp19_apron = (o, k, t, layer) => {
   }
   ctx.restore();
 };
-const tagRect = (o, k) => { const g = apronGeo(o, k), h = 30, w = Math.min(g.w * 1.3, 98), y = Math.min(g.bot - 10, g.wy + 30 + (o.tagDy || 0)) + (o.kind === 'cabbage' ? 4 : 0); return [-w / 2, y, w / 2, y + h]; };
-PLATES.chef_tag = { r: (o, k) => tagRect(o, k), rot: () => -.03 };
+const tagRect = (o, k) => { const g = apronGeo(o, k), h = 34, w = Math.min(g.w * 1.8, 140), y = Math.min(g.bot - 10, g.wy + 30 + (o.tagDy || 0)) + (o.kind === 'cabbage' ? 4 : 0); return [-w / 2, y, w / 2, y + h]; };
+const apronTf = (o, k) => { const yaw = yawOf(o), g = apronGeo(o, k), R = cabR && o.kind === 'cabbage' ? cabR(g.wy) : k.rx * .8; return { sx: Math.max(.05, Math.cos(yaw)), dx: R * .96 * Math.sin(yaw) * .62 }; };
+PLATES.chef_tag = { r: (o, k) => tagRect(o, k), rot: () => -.03, tf: apronTf };
 PLATES.apron_tag = PLATES.chef_tag;
 
 // ================================================================== the mustache of leaf veins: two fat tapering curls that start under the nose and sweep out and up; a few fine side veins
