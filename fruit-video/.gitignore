@@ -95,3 +95,12 @@ build/ep18/*
 !build/ep18/phys_events.json
 !build/ep18/phys_sims.json
 !build/ep18/door_events.json
+!build/ep19/
+build/ep19/*
+!build/ep19/timeline.js
+!build/ep19/audio.m4a
+!build/ep19/events.json
+!build/ep19/phys_events.json
+!build/ep19/phys_sims.json
+!build/ep19/door_events.json
+!build/ep19/plate_path.json

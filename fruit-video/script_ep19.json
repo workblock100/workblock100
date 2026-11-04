@@ -1,0 +1,1346 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 19: The Potluck",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  },
+  "chef": {
+   "name": "CHEF CABBAGE, DIETARY",
+   "voice": "bm_fable",
+   "lang": "en-gb",
+   "speed": 0.92,
+   "semis": -3,
+   "color": "#9ccf6a",
+   "pan": -0.2
+  },
+  "pine": {
+   "name": "PINEAPPLE (FAMILY)",
+   "voice": "af_nova",
+   "lang": "en-us",
+   "speed": 1.18,
+   "semis": 0,
+   "color": "#f4a300",
+   "pan": 0.25
+  },
+  "brenda": {
+   "name": "BRENDA, RN (ON BREAK)",
+   "voice": "bf_alice",
+   "speed": 0.88,
+   "semis": -4,
+   "color": "#8e5a9b",
+   "pan": 0.1,
+   "lang": "en-us"
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a",
+   "pan": 0.35
+  },
+  "goji": {
+   "name": "MR. GOJI",
+   "voice": "am_echo",
+   "speed": 0.82,
+   "semis": -3,
+   "color": "#ff6a3d",
+   "pan": 0.25,
+   "lang": "en-us"
+  },
+  "rall": {
+   "name": "THE RESIDENTS",
+   "voice": "am_fenrir",
+   "chorus": [
+    "am_fenrir",
+    "am_echo",
+    "bf_emma",
+    "am_puck"
+   ],
+   "speed": 0.95,
+   "semis": 0,
+   "color": "#c9d22a",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 6.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "lidrattle",
+       1.0,
+       0.45,
+       0
+      ],
+      [
+       "steam",
+       1.6,
+       0.4,
+       0
+      ],
+      [
+       "lidrattle",
+       3.0,
+       0.45,
+       0
+      ],
+      [
+       "textding",
+       5.2,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "signup",
+   "clock": "3:15 PM",
+   "label": "THE SIGN-UP",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.9,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.3,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Potluck! Mandatory fun!",
+     "text": "Potluck! Mandatory fun!",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "What do I bring?",
+     "text": "What do I bring?",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Rolls.",
+     "text": "Rolls.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "basket",
+       0.55,
+       0.35,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "What do I bring?",
+     "text": "What do I bring?",
+     "gap": 0.1
+    },
+    {
+     "id": "t3",
+     "who": "tom",
+     "say": "Rolls.",
+     "text": "Rolls.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "basket",
+       0.55,
+       0.35,
+       0.1
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "What do I bring?",
+     "text": "What do I bring?",
+     "gap": 0.1
+    },
+    {
+     "id": "t4",
+     "who": "tom",
+     "say": "Rolls.",
+     "text": "Rolls.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "basket",
+       0.55,
+       0.35,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "table",
+     "pause": 1.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "basket",
+       0,
+       0.3,
+       -0.3
+      ],
+      [
+       "basket",
+       0.15,
+       0.3,
+       0.2
+      ],
+      [
+       "basket",
+       0.3,
+       0.3,
+       -0.1
+      ],
+      [
+       "basket",
+       0.45,
+       0.3,
+       0.3
+      ],
+      [
+       "basket",
+       0.6,
+       0.3,
+       0
+      ],
+      [
+       "basket",
+       0.75,
+       0.3,
+       -0.2
+      ],
+      [
+       "basket",
+       0.9,
+       0.3,
+       0.2
+      ],
+      [
+       "basket",
+       1.05,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Every dish needs an allergen label.",
+     "text": "Every dish needs an allergen label.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       1.9,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "It is rolls.",
+     "text": "It is rolls.",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Contains: bread.",
+     "text": "Contains: bread.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "sniffle",
+       0.9,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're planning a potluck. Would you like help?",
+     "text": "It looks like you're planning a potluck. Would you like help?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! I'll help.",
+     "text": "Great! I'll help.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "grin",
+       0.55,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "dedupe",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "dedupe",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "poof",
+       0.3,
+       0.35,
+       -0.3
+      ],
+      [
+       "poof",
+       0.5,
+       0.35,
+       0.2
+      ],
+      [
+       "poof",
+       0.7,
+       0.35,
+       -0.1
+      ],
+      [
+       "poof",
+       0.9,
+       0.35,
+       0.3
+      ],
+      [
+       "poof",
+       1.1,
+       0.35,
+       0
+      ],
+      [
+       "poof",
+       1.3,
+       0.35,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Rolls: one!",
+     "text": "Rolls: one!",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "That is not a potluck.",
+     "text": "That is not a potluck.",
+     "gap": 0.15
+    },
+    {
+     "id": "t5",
+     "who": "tom",
+     "say": "Efficiency.",
+     "text": "Efficiency.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "kitchen",
+   "clock": "5:00 PM",
+   "label": "THE KITCHEN",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.1,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "clatter",
+       0.2,
+       0.35,
+       -0.3
+      ],
+      [
+       "clatter",
+       0.7,
+       0.3,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "chef",
+     "say": "Thanksgiving. Forty residents. Six diets.",
+     "text": "Thanksgiving. Forty residents. Six diets.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "How many turkeys?",
+     "text": "How many turkeys?",
+     "gap": 0.1
+    },
+    {
+     "id": "c2",
+     "who": "chef",
+     "say": "One turkey. Six textures.",
+     "text": "One turkey. Six textures.",
+     "gap": 0.2
+    },
+    {
+     "id": "carve",
+     "pause": 3.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "carve",
+       0.2,
+       0.5,
+       -0.2
+      ],
+      [
+       "chop",
+       1.0,
+       0.4,
+       0
+      ],
+      [
+       "blender",
+       1.6,
+       0.6,
+       0.2
+      ],
+      [
+       "moldpress",
+       3.0,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Is that turkey?",
+     "text": "Is that turkey?",
+     "gap": 0.1
+    },
+    {
+     "id": "c3",
+     "who": "chef",
+     "say": "It is a beige turkey.",
+     "text": "It is a beige turkey.",
+     "gap": 0.2
+    },
+    {
+     "id": "pour",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "pourcoffee",
+       0,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "c4",
+     "who": "chef",
+     "say": "Nectar. Honey. Pudding.",
+     "text": "Nectar. Honey. Pudding.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "glop",
+       0.3,
+       0.5,
+       0.2
+      ],
+      [
+       "glop",
+       0.9,
+       0.5,
+       0.2
+      ],
+      [
+       "glop",
+       1.5,
+       0.5,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It was coffee.",
+     "text": "It was coffee.",
+     "gap": 0.1
+    },
+    {
+     "id": "c5",
+     "who": "chef",
+     "say": "It is texture modified.",
+     "text": "It is texture modified.",
+     "gap": 0.25
+    },
+    {
+     "id": "p1",
+     "who": "pine",
+     "say": "I brought my father a pie.",
+     "text": "I brought my father a pie.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "doorbell",
+       -0.4,
+       0.35,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "He is on a puree.",
+     "text": "He is on a puree.",
+     "gap": 0.1
+    },
+    {
+     "id": "p2",
+     "who": "pine",
+     "say": "It is Thanksgiving.",
+     "text": "It is Thanksgiving.",
+     "gap": 0.1
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Then the pie is on a puree.",
+     "text": "Then the pie is on a puree.",
+     "gap": 0.15
+    },
+    {
+     "id": "smoothie",
+     "pause": 2.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "blender",
+       0,
+       0.6,
+       0.2
+      ],
+      [
+       "moldpress",
+       1.9,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "c6",
+     "who": "chef",
+     "say": "Pie smoothie.",
+     "text": "Pie smoothie.",
+     "gap": 0.1
+    },
+    {
+     "id": "p3",
+     "who": "pine",
+     "say": "Can I speak to your manager?",
+     "text": "Can I speak to your manager?",
+     "gap": 0.1
+    },
+    {
+     "id": "c7",
+     "who": "chef",
+     "say": "I am the manager.",
+     "text": "I am the manager.",
+     "gap": 0.1
+    },
+    {
+     "id": "p4",
+     "who": "pine",
+     "say": "Is it good?",
+     "text": "Is it good?",
+     "gap": 0.1
+    },
+    {
+     "id": "c8",
+     "who": "chef",
+     "say": "It is beige.",
+     "text": "It is beige.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "plate",
+   "clock": "7:45 PM",
+   "label": "THE PLATE",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "plateclink",
+       0.3,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "I made you a plate.",
+     "text": "I made you a plate.",
+     "gap": 0.1
+    },
+    {
+     "id": "walk1",
+     "pause": 1.7,
+     "gap": 0.05
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "I will hold it.",
+     "text": "I will hold it.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "peel",
+       0.9,
+       0.3,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "walk2",
+     "pause": 1.4,
+     "gap": 0.05
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Fun Committee!",
+     "text": "Fun Committee!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "peel",
+       0.9,
+       0.3,
+       0.1
+      ]
+     ]
+    },
+    {
+     "id": "walk3",
+     "pause": 1.3,
+     "gap": 0.05
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "It is seventy-eight degrees.",
+     "text": "It is seventy-eight degrees.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "probebeep",
+       1.4,
+       0.4,
+       -0.2
+      ],
+      [
+       "sniffle",
+       2.0,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "walk4",
+     "pause": 1.3,
+     "gap": 0.05
+    },
+    {
+     "id": "pe1",
+     "who": "pear",
+     "say": "Is that turkey?",
+     "text": "Is that turkey?",
+     "gap": 0.1
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "It is beige.",
+     "text": "It is beige.",
+     "gap": 0.15
+    },
+    {
+     "id": "walk5",
+     "pause": 1.2,
+     "gap": 0.05
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "I'll help!",
+     "text": "I'll help!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "walk6",
+     "pause": 1.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "callchime",
+       0.3,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I am on med pass.",
+     "text": "I am on med pass.",
+     "gap": 0.1
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "It is your break.",
+     "text": "It is your break.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "What time is it?",
+     "text": "What time is it?",
+     "gap": 0.2
+    },
+    {
+     "id": "end",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "breakroom",
+   "clock": "8:00 PM",
+   "label": "THE BREAK ROOM",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "mwbeep",
+       0.1,
+       0.35,
+       -0.3
+      ],
+      [
+       "mwbeep",
+       0.45,
+       0.35,
+       -0.3
+      ],
+      [
+       "mwbeep",
+       0.8,
+       0.35,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "q1",
+     "who": "lemon",
+     "say": "Who is next for the microwave?",
+     "text": "Who is next for the microwave?",
+     "gap": 0.1
+    },
+    {
+     "id": "q2",
+     "who": "mango",
+     "say": "Ninety seconds each.",
+     "text": "Ninety seconds each.",
+     "gap": 0.1
+    },
+    {
+     "id": "q3",
+     "who": "lemon",
+     "say": "There are eleven of us.",
+     "text": "There are eleven of us.",
+     "gap": 0.15
+    },
+    {
+     "id": "q4",
+     "who": "tom",
+     "say": "It is bonding!",
+     "text": "It is bonding!",
+     "gap": 0.2
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "The food has been out two hours.",
+     "text": "The food has been out two hours.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       1.8,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "It is a party!",
+     "text": "It is a party!",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Per policy, it is discarded.",
+     "text": "Per policy, it is discarded.",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I have not eaten.",
+     "text": "I have not eaten.",
+     "gap": 0.15
+    },
+    {
+     "id": "timer",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "timerding",
+       0.3,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "sweep",
+     "pause": 1.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "bagsweep",
+       0.1,
+       0.6,
+       0
+      ],
+      [
+       "bin",
+       0.9,
+       0.5,
+       0.3
+      ],
+      [
+       "bin",
+       1.25,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That was my break.",
+     "text": "That was my break.",
+     "gap": 0.25
+    },
+    {
+     "id": "br1",
+     "who": "brenda",
+     "say": "I have a sandwich.",
+     "text": "I have a sandwich.",
+     "gap": 0.2
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Brenda?",
+     "text": "Brenda?",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Where did you come from?",
+     "text": "Where did you come from?",
+     "gap": 0.1
+    },
+    {
+     "id": "br2",
+     "who": "brenda",
+     "say": "I have been here since twenty nineteen.",
+     "text": "I have been here since twenty nineteen.",
+     "gap": 0.2
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Is it good?",
+     "text": "Is it good?",
+     "gap": 0.1
+    },
+    {
+     "id": "br3",
+     "who": "brenda",
+     "say": "It was a good year.",
+     "text": "It was a good year.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "thanks",
+   "clock": "10:40 PM",
+   "label": "THE LAST ROUND",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1
+    },
+    {
+     "id": "pe1",
+     "who": "pear",
+     "say": "I am thankful for my daughter.",
+     "text": "I am thankful for my daughter.",
+     "gap": 0.15
+    },
+    {
+     "id": "ba1",
+     "who": "banana",
+     "say": "I am thankful for not falling.",
+     "text": "I am thankful for not falling.",
+     "gap": 0.15
+    },
+    {
+     "id": "cr1",
+     "who": "cran",
+     "say": "I am thankful for nineteen sixty-two.",
+     "text": "I am thankful for nineteen sixty-two.",
+     "gap": 0.15
+    },
+    {
+     "id": "go1",
+     "who": "goji",
+     "say": "I am thankful for water.",
+     "text": "I am thankful for water.",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "It is a UTI.",
+     "text": "It is a UTI.",
+     "gap": 0.25
+    },
+    {
+     "id": "r1",
+     "who": "rall",
+     "say": "Strawberry?",
+     "text": "Strawberry?",
+     "gap": 0.15
+    },
+    {
+     "id": "s0",
+     "who": "straw",
+     "say": "I am on med pass.",
+     "text": "I am on med pass.",
+     "gap": 0.15
+    },
+    {
+     "id": "r2",
+     "who": "rall",
+     "say": "Sit.",
+     "text": "Sit.",
+     "gap": 0.2
+    },
+    {
+     "id": "beat",
+     "pause": 1.1,
+     "gap": 0.05
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "A chair.",
+     "text": "A chair.",
+     "gap": 0.15
+    },
+    {
+     "id": "sit",
+     "pause": 1.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "chairsit",
+       0.1,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "call",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "callchime",
+       0.1,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Okay.",
+     "text": "Okay.",
+     "gap": 0.3
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "Happy Thanksgiving, three to eleven.",
+     "text": "Happy Thanksgiving, three to eleven.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "signup",
+  "to_": "thanks",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}
