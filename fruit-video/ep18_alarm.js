@@ -448,7 +448,11 @@ function corrItems(lt, sh, list) {
     const qc = V2.at(STRAW_CART.X, STRAW_CART.Z), qs = V2.at(STRAW_P.X, STRAW_P.Z), sc = qs.s * CS;
     const o = actStraw(lt), up = o.cupUp, Lp = [-98, 80], Lu = [-104, 16];
     o.grip = { l: reachGrip('straw', -1, mix(Lp[0], Lu[0], up), mix(Lp[1], Lu[1], up)) };
-    list.push({ z: STRAW_P.Z, draw: () => drawChar(mkp(A11.straw, STRAW_P.X, STRAW_P.Z, 1, Object.assign(o, { lift: hop * sc }))) });
+    list.push({ z: STRAW_P.Z, draw: () => { drawChar(mkp(A11.straw, STRAW_P.X, STRAW_P.Z, 1, Object.assign(o, { lift: hop * sc })));
+      /* the med pass: while she reads off the orders three pills hop in the cup, one after another */
+      if (lt >= 5.45 && lt < 7.8) { const kd = KINDS.straw, bc = kd.leg + kd.ry * .9, cx = qs.x + o.grip.l[0] * sc, cy = qs.y - bc * sc + o.grip.l[1] * sc - 26 * sc;
+        for (let i = 0; i < 3; i++) { const ph = ((lt - 5.45) * 1.35 + i / 3) % 1, y = cy - 4 * 66 * sc * ph * (1 - ph) - 6 * sc, x = cx + (i - 1) * 9 * sc + Math.sin(ph * PI) * (i - 1) * 8 * sc;
+          ctx.save(); ctx.translate(x, y); ctx.rotate(ph * 6 + i); ctx.beginPath(); ctx.ellipse(0, 0, 7 * sc, 4.4 * sc, 0, 0, TAU); ctx.fillStyle = i === 1 ? '#ff8fa3' : '#ffffff'; ctx.fill(); ctx.strokeStyle = 'rgba(20,24,34,.85)'; ctx.lineWidth = 2 * sc; ctx.stroke(); ctx.restore(); } } } });
     list.push({ z: STRAW_CART.Z, draw: () => medCart(qc.x, qc.y, qc.s * CS, jolt) });
   }
   if (has('marshal')) {
