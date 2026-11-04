@@ -621,7 +621,7 @@ function lemonOut(lt, sh) {
 }
 function tomOut(lt, sh) {
   const q = sh.tomFlip ? ss(lt, bS('t2') + .1, bS('t2') + .3) : 0;
-  return A15.tomato({ x: OS.tom.x, y: OUT.fl + 36, s: 1.0, t: lt, yaw: -.5, headYaw: -.3, look: [-.4, .05], expr: 'neutral', lid: .25, tomPose: 'veg', hold: { l: 'fp15_tabletclip' }, tabLit: 1, tabScale: .9, arms: { l: 'hold', r: 'rest' }, grip: { l: [-92, 10] }, who: 'tom', browUp: 3 + 3 * q });
+  return A15.tomato({ x: OS.tom.x, y: OUT.fl + 36, s: 1.0, t: lt, yaw: -.5, headYaw: -.3, look: [-.4, .05], expr: 'neutral', lid: .25, tomPose: 'veg', hold: { r: 'fp15_tabletclip' }, tabLit: 1, tabScale: .9, arms: { l: 'rest', r: 'hold' }, grip: { r: [104, 4] }, who: 'tom', browUp: 3 + 3 * q });
 }
 /* the three stragglers pass Mango, one per word: each is at Mango's side on the word's start (profile, facing left, coming out of the door at the right) */
 function resWalkers(lt, sh) {

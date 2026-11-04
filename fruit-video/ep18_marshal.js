@@ -281,13 +281,13 @@ function fireDoor(lt, st) {
   ctx.strokeStyle = '#2c3234'; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x1 - 30, y0 - 6); ctx.lineTo(lx + 70, y0 + 22); ctx.lineTo(lx + 38, y0 + 8); ctx.stroke();   /* the closer arm */
   ctx.fillStyle = '#3d4648'; rr(x1 - 80, y0 - 16, 70, 26, 5); ctx.fill();
 }
-const KEEP = { x: 1786, y: 836, w: 168, h: 176 };
+const KEEP = { x: 1784, y: 842, w: 206, h: 196 };
 function keepSign(lt) {   /* the taped sign, eye level on the leaf; hero only when it is wholly in a safe frame */
   const { x, y, w, h } = KEEP, x0 = x - w / 2, y0 = y - h / 2;
   ctx.save(); ctx.translate(x, y); ctx.rotate(-.045); ctx.translate(-x, -y);
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x0 + 5, y0 + 7, w, h);
-  const hero = heroIf(x0, y0, x0 + w, y0 + h, 30);
-  UI.sign([x0, y0, w, h], [{ t: 'FIRE DOOR', size: 22, weight: 900 }, { t: 'KEEP', size: 46, weight: 900 }, { t: 'CLOSED', size: 46, weight: 900 }], { fill: '#fffdf2', stroke: '#c4281e', lw: 7, ink: '#c4281e', pad: 14, hero, crop: !hero, id: 'keep', r: 4 });
+  const hero = heroIf(x0, y0, x0 + w, y0 + h, 28);
+  UI.sign([x0, y0, w, h], [{ t: 'FIRE DOOR', size: 28, weight: 900 }, { t: 'KEEP', size: 44, weight: 900 }, { t: 'CLOSED', size: 44, weight: 900 }], { fill: '#fffdf2', stroke: '#c4281e', lw: 7, ink: '#c4281e', pad: 12, hero, crop: !hero, id: 'keep', r: 4 });
   ctx.restore();
   ctx.fillStyle = 'rgba(235,225,170,.8)'; for (const [tx, ty, ta] of [[x0 + 6, y0 + 4, -.6], [x0 + w - 8, y0 + 8, .5], [x0 + 6, y0 + h - 8, .5], [x0 + w - 6, y0 + h - 4, -.5]]) { ctx.save(); ctx.translate(tx, ty); ctx.rotate(ta); ctx.fillRect(-16, -6, 32, 12); ctx.restore(); }
 }
@@ -322,10 +322,10 @@ function easel(lt, S) {
   ctx.strokeStyle = 'rgba(90,60,30,.35)'; ctx.lineWidth = 1.5; for (let i = -9; i < 9; i++) { ctx.beginPath(); ctx.moveTo(i * 9, -100); ctx.lineTo(i * 9, 100); ctx.stroke(); }
   ctx.restore();
   ctx.restore();
-  if (fall < .03) {   /* the label (drawn outside the squash) */
+  if (fall < .03 && S && S.labelOn) {   /* the label (drawn outside the squash) */
     const lx = ex, ly = FLOOR - 120, hero = false;
     ctx.save(); ctx.fillStyle = '#fff'; ctx.fillRect(lx - 92, ly - 24, 184, 46); ctx.strokeStyle = OUTL; ctx.lineWidth = 2; ctx.strokeRect(lx - 92, ly - 24, 184, 46); ctx.restore();
-    UI.label('SIMULATED FIRE', lx, ly - 1, { size: 26, weight: 900, fill: '#c4281e', hero: heroIf(lx - 92, ly - 24, lx + 92, ly + 22, 26), crop: !heroIf(lx - 92, ly - 24, lx + 92, ly + 22, 26), maxW: 170 });
+    UI.label('SIMULATED FIRE', lx, ly - 1, { size: 26, weight: 900, fill: '#c4281e', hero: false, crop: true, maxW: 170 });
   }
 }
 
@@ -420,11 +420,12 @@ if (typeof EXT !== 'undefined' && EXT.prop) {
   PROP_BOX.fp18_torch = [-30, -60, 30, 40];
 }
 const FEET = (o, s) => { const k = KINDS[o.kind]; return FLOOR - ((k.leg || 90) + k.ry * .9) * s; };            /* world y of a character's body centre */
+let TRANSIT = false;
 function mk(ctor, lt, p, o) {
   const c = ctor(Object.assign({ t: lt }, o));
   c.x = p.x; c.y = p.y ?? FLOOR; c.s = p.s; c.lift = p.lift || 0;
   if (p.yaw != null) { c.yaw = p.yaw; c.headYaw = p.headYaw ?? p.yaw; }
-  if (p.transit) c.transit = true;
+  if (p.transit || TRANSIT) c.transit = true;
   return c;
 }
 const poms = (lt, p, o) => mk(A6.pom, lt, p, Object.assign({ hold: { r: 'fp18_torch' }, torchAng: 1.4, arms: { l: 'rest', r: 'hold' }, grip: { r: [112, 40] }, look: [.3, 0], expr: 'neutral' }, o));
@@ -512,8 +513,8 @@ const POS = {
 const faceW = (kind, p) => ({ x: p.x, y: FEET({ kind }, p.s) + KINDS[kind].eyeY * p.s });
 const mangoX = lt => lerp(X.mango, 1420, ss(lt, 9.0, 12.2));          /* Mango walks to her cart while the camera is elsewhere */
 /* the torch target: keys of [time, [x, y]]; the beam follows the talk */
-const TORCH = [[1.0, [760, 1100]], [1.35, [880, 960]], [3.2, [880, 930]], [3.4, [690, 905]], [4.3, [880, 905]], [5.3, [1070, 915]], [6.4, [1250, 700]], [7.7, [1250, 700]], [9.35, [1400, 930]], [12.5, [1400, 930]],
-  [12.74, [1070, 915]], [17.2, [1070, 915]], [17.6, [1250, 760]], [19.6, [1760, 820]], [20.2, [1440, 905]], [21.0, [1786, 836]], [23.0, [1786, 836]], [23.3, [1520, 860]], [24.6, [1520, 860]], [25.0, [1330, 960]], [28.3, [1330, 960]], [28.6, [900, 1100]]];
+const TORCH = [[1.0, [760, 1100]], [1.35, [880, 960]], [3.2, [880, 930]], [3.4, [690, 905]], [4.3, [880, 905]], [5.3, [1070, 915]], [6.4, [1250, 700]], [7.7, [1250, 700]], [9.35, [1400, 930]], [12.7, [1400, 930]],
+  [12.76, [1070, 915]], [17.2, [1070, 915]], [17.6, [1250, 760]], [19.6, [1760, 820]], [20.2, [1440, 905]], [21.0, [1786, 836]], [23.0, [1786, 836]], [23.3, [1520, 860]], [24.6, [1520, 860]], [25.0, [1330, 960]], [28.3, [1330, 960]], [28.6, [900, 1100]]];
 function torchTarget(lt) {
   if (lt < CUE.click1) return [700, 1100];
   const t = key(TORCH, lt, easeIO);
@@ -531,7 +532,7 @@ function aMarshal(lt, p, sh) {
   if (lt >= T0 && lt < CUE.splat + .3) { const a = simAt(lt); if (a) o.look = [Math.max(-.9, Math.min(.9, (a.can.x - p.x) / 420)), Math.max(-.5, Math.min(.5, (a.can.y - 920) / 500))]; }
   if (lt >= CUE.splat - .02 && lt < CUE.splat + .22) o.lid = 1; else if (lt >= CUE.splat + .22 && lt < CUE.splat + .6) o.lid = lerp(.9, .3, (lt - CUE.splat - .22) / .38);
   if (writing) {
-    o.hold = { l: 'clipboard6', r: 'pen' }; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-76, 54], r: [-20 + wob(lt, 9, 7), 38 + wob(lt, 14, 4)] }; o.look = [-.15, .75]; o.expr = 'neutral';
+    o.hold = { l: 'clipboard', r: 'pen' }; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-62, 54], r: [30 + wob(lt, 9, 6), 44 + wob(lt, 14, 4)] }; o.look = [-.15, .75]; o.expr = 'neutral';
   }
   return o;
 }
@@ -592,7 +593,7 @@ const SHOTS = [];
 const shot = (id, s, e, cam, o) => SHOTS.push(Object.assign({ id, s: snapT(s), e: snapT(e), cam }, o || {}));
 const fcM = () => faceW('pom', POS.marshal);
 const mcu = (name, kind, z0, z1, sy = 780, dx = 0, xf) => (u, lt) => { const p = Object.assign({}, POS[name]); if (xf) p.x = xf(lt); const f = faceW(kind, p); return camAt(f.x + dx, f.y, lerp(z0, z1, u), 540, sy); };
-shot('open', 0, 1.4, u => [lerp(300, 335, u), 905, lerp(.86, .9, u)], { cast: ['marshalDoor', 'straw', 'mango', 'onion'], dark: .86, dim: .12 });
+shot('open', 0, 1.4, u => [lerp(410, 430, u), 905, lerp(.78, .82, u)], { cast: ['marshalDoor', 'straw', 'mango', 'onion'], dark: .86, dim: .12, openStage: 1 });
 shot('p1', 1.4, 3.297, mcu('marshal', 'pom', 2.2, 2.34, 860, 28), { cast: ['marshal'] });
 shot('s1', 3.297, 4.235, mcu('straw', 'straw', 2.5, 2.62, 720, 8), { cast: ['straw'] });
 shot('m1', 4.235, 5.214, mcu('mango', 'mango', 2.55, 2.45, 760, 8), { cast: ['mango'] });
@@ -612,12 +613,12 @@ shot('p7', 24.867, 26.733, mcu('marshal', 'pom', 2.2, 2.3, 860, 28), { cast: ['m
 shot('l1', 26.733, T0, (u, lt) => { const f = faceW('lemon', POS.lemon); return camAt(f.x - 70, f.y + 60, lerp(2.1, 2.35, u), 540, 800); }, { cast: ['lemon'], chips: 1 });
 shot('r1', T0, 28.957, u => camAt(1370, 930, lerp(1.35, 1.25, u), 540, 800), { cast: ['lemon'], rampage: 1 });
 shot('r2', 28.957, 29.55, u => { const a = simAt(lerp(28.957, 29.55, u)); return camAt(lerp(1500, 1380, u), lerp(900, 800, u), 1.4, 540, 800); }, { cast: ['lemon'], rampage: 1 });
-shot('r3', 29.55, 30.4, u => camAt(lerp(1180, 1000, u), 880, lerp(.66, .7, u), 540, 800), { roll: -.07, cast: ['lemon', 'marshal', 'straw', 'onion'], rampage: 1 });
-shot('r4', 30.4, CUE.splat, u => camAt(lerp(700, 560, u), 970, lerp(1.2, 1.55, u), 540, 860), { cast: ['marshal', 'straw', 'onion'], rampage: 1 });
+shot('r3', 29.55, 30.4, u => camAt(lerp(1120, 980, u), 880, lerp(.66, .7, u), 540, 800), { roll: -.07, cast: ['lemon', 'marshal', 'onion'], rampage: 1 });
+shot('r4', 30.4, CUE.splat, u => camAt(lerp(700, 560, u), 970, lerp(1.2, 1.55, u), 540, 860), { cast: ['marshal', 'onion'], rampage: 1 });
 shot('r5', CUE.splat, 33.714, (u, lt) => { const f = fcM(); return camAt(f.x + 28, f.y, lerp(2.3, 2.5, u), 540, 860); }, { cast: ['marshal'], rampage: 1, hold: 1 });
 shot('l2', 33.714, 35.039, u => { const f = faceW('lemon', POS.lemon); return camAt(f.x - 30, f.y + 40, lerp(2.4, 2.5, u), 540, 760); }, { cast: ['lemon'], rampage: 1 });
-shot('p9', 35.039, 37.512, u => camAt(lerp(470, 480, u), 940, lerp(1.7, 1.82, u), 400, 800), { cast: ['strawGlide', 'marshalWrite'], rampage: 1 });
-shot('end', 37.512, 38.8, u => camAt(lerp(900, 925, u), 810, lerp(.95, .9, u), 540, 800), { cast: ['marshalEnd', 'lemonEnd', 'mangoEnd', 'onionEnd', 'strawEnd'], rampage: 1, hold: 1 });
+shot('p9', 35.039, 37.512, u => camAt(lerp(455, 465, u), 930, lerp(1.35, 1.45, u), 330, 740), { cast: ['strawGlide', 'marshalWrite'], rampage: 1 });
+shot('end', 37.512, 38.8, u => camAt(lerp(880, 895, u), 820, lerp(.95, .9, u), 540, 800), { cast: ['marshalEnd', 'lemonEnd', 'mangoEnd', 'onionEnd', 'strawEnd'], rampage: 1, hold: 1 });
 function shotAt(lt) { let r = SHOTS[0]; for (const sh of SHOTS) if (lt >= sh.s) r = sh; return r; }
 
 // ------------------------------------------------------------------ drawing the world for one frame
@@ -628,32 +629,36 @@ function mPlace(sh) {
   const has = n => sh.cast.indexOf(n) >= 0;
   if (has('marshalDoor')) return { x: X.door + 10, s: MS, yaw: .45, headYaw: .5 };
   if (has('marshalWrite')) return { x: POS.marshal.x, s: MS, yaw: .12, headYaw: .2 };
-  if (has('marshalEnd')) return { x: 560, s: MS, yaw: .14, headYaw: .14 };
+  if (has('marshalEnd')) return { x: END_X.marshal, s: MS, yaw: .14, headYaw: .14 };
   return POS.marshal;
 }
-const END_X = { straw: 760, mango: 950, onion: 1120, lemon: 1290 };
-const strawGlideX = lt => lerp(90, 1520, c01((lt - 35.0) / 3.7));
+const END_X = { marshal: 480, mango: 740, onion: 910, lemon: 1070 };
+const strawGlideX = lt => 640 + 190 * (lt - 35.04);
 function drawChars(lt, sh, layer) {
+  TRANSIT = !!sh.pan;
   const out = [], P = POS, has = n => sh.cast.indexOf(n) >= 0;
   const add = (z, f) => out.push([z, f]);
   const M = P.marshal;
   if (has('marshal') || has('marshalWrite') || has('marshalEnd') || has('marshalDoor')) {
     const p = mPlace(sh), o = aMarshal(lt, p, sh);
     if (has('marshalDoor')) { o.arms = { l: 'rest', r: 'hold' }; o.torchAng = lerp(1.9, 1.15, sg(lt, CUE.click1 - .1, 1.4)); }
-    if (has('marshalEnd')) { o.torchOn = 0; o.look = [.05, .1]; o.hold = { l: 'clipboard6', r: 'pen' }; o.arms = { l: 'hold', r: 'rest' }; o.grip = { l: [-76, 54] }; }
+    if (has('marshalEnd')) { o.torchOn = 0; o.look = [.05, .1]; o.hold = { l: 'clipboard', r: 'pen' }; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-62, 54], r: [30, 46] }; }
     add(5, () => drawChar(mk(A6.pom, lt, p, o)));
   }
-  if (has('straw')) { const rampage = lt >= T0 - 1; add(rampage ? 3 : 4, () => drawChar(strawO(lt, rampage ? { x: 238, s: CS * .9, yaw: .3 } : P.straw, rampage ? Object.assign(aStraw(lt, P.straw), { look: [.5, -.2], lid: .5 }) : aStraw(lt, P.straw)))); }
-  if (has('strawGlide') || has('strawEnd')) add(2, () => { const o = strawO(lt, { x: strawGlideX(lt), y: FLOOR - 22, s: CS * .66, yaw: .3 }, Object.assign(aStraw(lt, P.straw), { look: [.3, 0], arms: { l: 'rest', r: 'hold' }, grip: { r: [86, 44] }, plant: true })); o.noBob = true; drawChar(o); });
-  if (has('mango')) add(4, () => drawChar(mangoO(lt, { x: P.mango.x, s: CS, yaw: P.mango.yaw }, aMango(lt, P.mango))));
+  const OS = sh.openStage ? { straw: { x: 600, s: CS * .9 }, mango: { x: 770, s: CS * .9 }, onion: { x: 940, s: CS * .9 } } : null;
+  if (has('straw') && OS) add(4, () => drawChar(strawO(lt, Object.assign({}, P.straw, OS.straw), aStraw(lt, P.straw))));
+  else if (has('straw')) { const rampage = lt >= T0 - 1; add(rampage ? 3 : 4, () => drawChar(strawO(lt, rampage ? { x: 238, s: CS * .9, yaw: .3 } : P.straw, rampage ? Object.assign(aStraw(lt, P.straw), { look: [.5, -.2], lid: .5 }) : aStraw(lt, P.straw)))); }
+  if (has('strawGlide') || has('strawEnd')) add(2, () => { const o = strawO(lt, { x: strawGlideX(lt), y: FLOOR - 22, s: CS * .66, yaw: .3, transit: true }, Object.assign(aStraw(lt, P.straw), { look: [.3, 0], arms: { l: 'rest', r: 'hold' }, grip: { r: [86, 44] }, plant: true })); o.noBob = true; drawChar(o); });
+  if (has('mango')) add(4, () => drawChar(mangoO(lt, OS ? Object.assign({}, P.mango, OS.mango) : { x: P.mango.x, s: CS, yaw: P.mango.yaw }, aMango(lt, P.mango))));
   if (has('mangoCart')) add(4, () => drawChar(mangoO(lt, { x: lt >= 12.2 ? 1420 : mangoX(lt), s: CS, yaw: lt > 23 ? -.35 : -.25 }, Object.assign(aMango(lt, P.mango), mangoJump(lt)))));
   if (has('mangoEnd')) add(4, () => drawChar(mangoO(lt, { x: END_X.mango, s: CS, yaw: -.45 }, Object.assign(aMango(lt, P.mango), { arms: { l: 'rest', r: 'rest' }, expr: 'shock', look: [-.5, .1] }))));
-  if (has('onion')) add(4, () => drawChar(onionO(lt, P.onion, aOnion(lt, P.onion))));
+  if (has('onion')) add(4, () => drawChar(onionO(lt, OS ? Object.assign({}, P.onion, OS.onion) : P.onion, aOnion(lt, P.onion))));
   if (has('onionEnd')) add(4, () => drawChar(onionO(lt, { x: END_X.onion, s: CS, yaw: -.45 }, aOnion(lt, P.onion))));
   if (has('lemon')) { const o = aLemon(lt, P.lemon), pl = Object.assign({}, P.lemon); if (lt >= 28.46 && lt < 30.4) { o.squash = .14 * Math.exp(-(lt - 28.46) * 4); pl.x += 18 * Math.exp(-(lt - 28.46) * 5); } add(4.5, () => drawChar(lemonO(lt, pl, o))); }
   if (has('lemonEnd')) add(4, () => drawChar(lemonO(lt, { x: END_X.lemon, s: CS, yaw: -.5 }, aLemon(lt, P.lemon))));
   if (has('binder') && binderState(lt)) { const b = binderState(lt); add(6, () => drawBinder(lt, b, sh)); }
   out.sort((a, b) => a[0] - b[0]); for (const [, f] of out) f();
+  TRANSIT = false;
 }
 function mangoJump(lt) {   /* the cart rattles: Mango jumps back */
   if (lt < CUE.cart || lt > CUE.cart + 1.4) return {};
@@ -662,7 +667,7 @@ function mangoJump(lt) {   /* the cart rattles: Mango jumps back */
 function drawBinder(lt, b, sh) {
   const grin = Math.max(.3 + .1 * Math.sin(lt * 2.1), ss(lt, CUE.binderpop + .15, CUE.binderpop + .5));
   const talk = lt >= bS('b1') && lt < bE('b1') + .2;
-  const o = binderO(lt, { x: b.x, y: b.y, s: b.s }, { pose: talk ? 'cheer' : lt > 7.7 ? 'helpful' : 'rest', grin, glint: lt > 7.2 ? Math.max(0, Math.sin((lt - 7.2) * 5)) ** 5 : 0, look: [-.3, .2] });
+  const o = binderO(lt, { x: b.x, y: b.y, s: b.s }, { transit: !!sh.pan, pose: talk ? 'cheer' : lt > 7.7 ? 'helpful' : 'rest', grin, glint: lt > 7.2 ? Math.max(0, Math.sin((lt - 7.2) * 5)) ** 5 : 0, look: [-.3, .2] });
   ctx.save(); ctx.shadowColor = 'rgba(10,8,16,.4)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 8; drawChar(o); ctx.restore();
 }
 // ------------------------------------------------------------------ the can (in the cabinet, in Lemon's hands, then the sim's), the pin and ring, the cobweb and spider, the 2019 tag
@@ -728,6 +733,7 @@ function beamOf(lt, sh) {
 }
 function drawWorld(lt) {
   const sh = shotAt(lt), S = simAt(lt), dim = sh.dim ?? 1;
+  if (S) S.labelOn = ['open', 'p1', 'p2', 'r3', 'r4'].indexOf(sh.id) >= 0;
   setLight(lt, sh.dark); V2.opts.reflect = false;
   shell(lt, { dim });
   stairDoor(lt); bulletin(lt); roomDoor(1000, lt, 14); roomDoor(2150, lt, 15);
@@ -806,12 +812,12 @@ const PASS = [['P', 'PULL', 0], ['A', 'AIM', 1], ['S', 'SQUEEZE', 2], ['S', 'SWE
 function overlay(lt) {
   const sh = shotAt(lt);
   if (sh.chips && lt < T0 + .3) {
-    const w = 190, gap = 14, x0 = (W - (4 * w + 3 * gap)) / 2, fade = 1 - ss(lt, T0 - .2, T0 + .25), enter = ss(lt, 26.6, 26.9);
+    const w = 232, gap = 10, x0 = (W - (4 * w + 3 * gap)) / 2, fade = 1 - ss(lt, T0 - .2, T0 + .25), enter = ss(lt, 26.6, 26.9);
     PASS.forEach(([L, word, i]) => {
-      const t0 = wS('l1', i), lit = lt >= t0, age = lt - t0, pop = lit ? 1 + .22 * Math.exp(-age * 9) * Math.cos(age * 18) : 1, cx = x0 + i * (w + gap) + w / 2, cy = 372 - (1 - enter) * 60, h = 168;
+      const t0 = wS('l1', i), lit = lt >= t0, age = lt - t0, pop = lit ? 1 + .22 * Math.exp(-age * 9) * Math.cos(age * 18) : 1, cx = x0 + i * (w + gap) + w / 2, cy = 380 - (1 - enter) * 60, h = 176;
       ctx.save(); ctx.globalAlpha *= fade * enter; ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
       if (lit) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,214,70,${.28 * Math.exp(-age * 3)})`; ctx.beginPath(); ctx.ellipse(cx, cy, w * .75, h * .7, 0, 0, TAU); ctx.fill(); ctx.restore(); }
-      UI.sign([cx - w / 2, cy - h / 2, w, h], [{ t: L, size: 96, font: 'Bangers', weight: 400, spacing: 2 }, { t: word, size: 30, weight: 900, spacing: 1.5, gap: 4 }],
+      UI.sign([cx - w / 2, cy - h / 2, w, h], [{ t: L, size: 96, font: 'Bangers', weight: 400, spacing: 2 }, { t: word, size: 33, weight: 900, spacing: 1.2, gap: 4 }],
         { fill: lit ? '#ffd23a' : 'rgba(18,22,34,.72)', stroke: lit ? '#fff7d0' : 'rgba(255,255,255,.35)', lw: 5, ink: lit ? '#2a1a05' : 'rgba(255,255,255,.7)', r: 22, pad: 14, id: 'pass' + i, hero: true });
       ctx.restore();
     });

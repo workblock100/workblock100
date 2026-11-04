@@ -1,11 +1,20 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 18: The Fire Drill. Scene module: alarm (8:00 PM, CODE RED, 30.443 s). Builder ALARM. Registers window.__EP18_SCENES.alarm. The doors, the cart and the sounds come from ep18_alarm_sim.js (one table for the
- * picture and for build/ep18/door_events.json). The shared props are in ep18_props.js (window.P18); the light and matter are FX18 (guarded at draw time, with stand-ins).
+/* SHIFT HAPPENS, Episode 18: The Fire Drill. Scene module: alarm (8:00 PM, CODE RED, 30.443 s). Builder ALARM. Registers window.__EP18_SCENES.alarm. The doors, the linen cart and the sounds come from ep18_alarm_sim.js (ONE table for
+ * the picture and for build/ep18/door_events.json, written by tools_door_events.js). The shared props are in ep18_props.js (window.P18); light and matter are FX18 (guarded at draw time, with stand-ins).
  *
- * THE SET: the Unit B corridor in one-point perspective, drawn here (not S6): V2.setCam per shot, a floor with reflections of the ceiling lights, walls with room doors and a handrail, a ceiling with panels, troffers, the PA speaker,
- * wall strobes, and SIX double fire doors (the sim's ZH) that swing shut from the side walls, far to near. World units are sprite pixels at scale 1 (a person is about 400 tall); the walls are at X = +-HW.
- * THE LIGHT: the horn (temporal three, FX18.hornOn / strobe, horn3 .9 to hornstop 20.948) pulses a red emergency tint and a white strobe wash on the same pulses; after the snooze the corridor falls cold (blue-white, one flickering tube).
- * Shots (scene-local s): see SHOTS below.
+ * THE SET: the Unit B corridor in one-point perspective, drawn here (V2.setCam per shot, V2.p2 projects): a glossy floor with reflections and light pools under the troffers, walls with a handrail and room doors, a ceiling with panels, the PA
+ * speaker and wall strobes, the alarm panel / Binder tablet on the near left wall (seen edge-on; the readable versions are the wall insert and P18), and SIX double fire doors (the sim's ZH) that swing shut from the side walls, far to near.
+ * World units are sprite pixels at scale 1 (a person is about 400 tall); the walls are at X = +-440; everybody is drawn at CS = .92 of the corridor's scale.
+ * THE LIGHT: the horn (temporal three: horn3 .9 to hornstop 20.948) pulses a red emergency tint and a white strobe wash on the same pulses (FX18.hornOn / strobe numbers); after the snooze the corridor is cold blue-white and one tube flickers.
+ *
+ * SHOTS (scene-local s; kind corr = the corridor under a 3D camera plus a 2D framing, kind wall = the frontal wall insert):
+ *  open 0-1.55 wide, the panel LCD DRILL, pachime .2, horn3 .9 | pa 1.55-3.05 wide and higher, everyone looks up at the speaker, the holder LEDs turn red far to near, the far door lets go | pb 3.05-4.01 three-shot (Strawberry, Lemon, Onion) |
+ *  l1 4.01-5.19 Lemon low-angle CU in the strobe, the RACE chip (R) | s1a 5.19-6.75 and s1b 6.75-8.2 Strawberry med pass (A, C, E: EIGHT O'CLOCK MEDS) while Lemon sprints away | m1 8.2-9.46 Mango: the doors are closing |
+ *  c1 9.46-11.2 the cascade from behind Lemon on a long lens (doors 0, 1, 2 slam: dust, ring, shake, a flash on the leaf, the glass glints) | c2 11.2-12.9 near end wide, doors 3 and 4 slam, Mango pushes her cart at the last door |
+ *  bonk 12.9-13.86 the nearest door meets the cart's corners at doorbonk 13.006 (stars, sparks, the cart rocks, the linen is thrown) | o1 13.86-16.1 Onion; the door slams shut at 15.2 (Lemon on the wrong side, her face on the glass) |
+ *  b1 16.1-18.85 wall insert: Binder pops out of the tablet at binderpop 16.171, the bubble types with his words | s2 18.85-19.35 Strawberry CU "No." | b2 19.35-20.948 the pointer chases Dismiss, Snooze is pressed at click 20.898 (the LCD flips to
+ *  SNOOZED 10:00), CUT at hornstop 20.948 | q 20.948-22.41 the silence: cold light, a frozen tableau, one flickering tube, Binder's grin at grin 21.098 | p1a 22.41-23.7 the Marshal, flashlight | p1b 23.7-24.88 the beam on the LCD |
+ *  b3 24.88-26.0 DOORS: PENDING, the holder lamps stay red | l2 26.0-27.95 Lemon through the wire glass | m2 27.95-30.44 Mango, the wrong side, a slow push-in; the tube dies on the sting 29.093.
  */
 (() => {
 if (!window.TIMELINE_EP18 || !window.H6 || !window.V2 || !window.UI) return;
@@ -445,6 +454,9 @@ function corrItems(lt, sh, list) {
   if (has('marshal')) {
     const o = actMarshal(lt), qm = V2.at(MARSH_P.X, MARSH_P.Z), sm2 = qm.s * 1.16, kd = KINDS.pom, bc = kd.leg + kd.ry * .9;
     list.push({ z: MARSH_P.Z, draw: () => { drawChar(mkp(A6.pom, MARSH_P.X, MARSH_P.Z, 1.16, Object.assign(o, { lift: hop * 1.1 })));
+      const F0 = FX(); if (F0 && typeof F0.foamPile === 'function') {          /* what is left of the beard from the last scene: a patch under the mustache and a dab on the helmet */
+        F0.foamPile(ctx, { x: qm.x + 6 * sm2, y: qm.y - bc * sm2 + 134 * sm2, w: 112 * sm2, h: 44 * sm2, t: lt, t0: -3, grow: .1, seed: 11 });
+        F0.foamPile(ctx, { x: qm.x - 58 * sm2, y: qm.y - bc * sm2 - 100 * sm2, w: 58 * sm2, h: 30 * sm2, t: lt, t0: -3, grow: .1, seed: 12 }); }
       const F = FX(); if (F && typeof F.cone === 'function' && lt >= 20.95) { const hx = qm.x + o.grip.r[0] * sm2, hy = qm.y - bc * sm2 + o.grip.r[1] * sm2 - 84 * sm2, up = o.chin > .4; F.cone(ctx, { x: hx, y: hy, ang: up ? -PI / 2 - .32 : -PI / 2 + .6, spread: up ? .9 : .42, len: (up ? 360 : 700) * sm2, color: '#fff3cc', alpha: up ? .6 : .34 }); } } });
   }
   if (has('onion')) { const o = actOnion(lt), w = ss(lt, 16.5, 17.5), ox = mix(ONION_P.X, ONION_FIN.X, w), oz = mix(ONION_P.Z, ONION_FIN.Z, w); list.push({ z: oz, draw: () => drawChar(mkp(A15.onion, ox, oz, 1, Object.assign(o, { lift: hop }))) }); }

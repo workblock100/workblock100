@@ -9,7 +9,7 @@
  *
  * Timeline (scene-local seconds): the holder LEDs turn red one after another far to near from 1.70 s (the PA says "Code Red"); each door lets go 0.3 s after its LED and CREEPS (a few degrees, ease in and out);
  * the SWEEP is the last 0.85 s before the slam (accelerating, c ~ v^2.2); the slam (the doorslam sound) is at SLAM[i] = 9.80, 10.40, 11.00, 11.60, 12.20; each rebounds off its frame (damped hops) and latches 0.24 s later.
- * Door 5 sweeps from 12.15 and meets the linen cart's wheels at 13.006 (the script's doorbonk cue): it stops at c = CB, kicks back to 0.43 and rests against the cart (the closer leans on it) until Mango yanks the cart
+ * Door 5 sweeps from 12.15 and meets the linen cart's wheels at 13.006 (the script's doorbonk cue): it stops at c = CB (.64: the leaves meet the cart's far corners), kicks back to about .52 and rests against the cart (the closer leans on it) until Mango yanks the cart
  * clear at 14.75..15.10; then it sweeps shut and slams at 15.20 (on the end of Onion's "alarm."). hornstate: after each real slam, the number of doors shut: 1..5 at the cascade, 6 at 15.20.
  */
 (function () {
