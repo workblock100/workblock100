@@ -1,0 +1,136 @@
+[
+ {
+  "t": 87.279,
+  "name": "doorslam",
+  "door": 0,
+  "depth": 0.73,
+  "pan": -0.08,
+  "gain": 0.602
+ },
+ {
+  "t": 87.279,
+  "name": "hornstate",
+  "closed": 1
+ },
+ {
+  "t": 87.519,
+  "name": "doorlatch",
+  "door": 0,
+  "depth": 0.73,
+  "pan": -0.08,
+  "gain": 0.211
+ },
+ {
+  "t": 87.879,
+  "name": "doorslam",
+  "door": 1,
+  "depth": 0.618,
+  "pan": 0.08,
+  "gain": 0.687
+ },
+ {
+  "t": 87.879,
+  "name": "hornstate",
+  "closed": 2
+ },
+ {
+  "t": 88.119,
+  "name": "doorlatch",
+  "door": 1,
+  "depth": 0.618,
+  "pan": 0.08,
+  "gain": 0.24
+ },
+ {
+  "t": 88.479,
+  "name": "doorslam",
+  "door": 2,
+  "depth": 0.522,
+  "pan": -0.08,
+  "gain": 0.758
+ },
+ {
+  "t": 88.479,
+  "name": "hornstate",
+  "closed": 3
+ },
+ {
+  "t": 88.719,
+  "name": "doorlatch",
+  "door": 2,
+  "depth": 0.522,
+  "pan": -0.08,
+  "gain": 0.265
+ },
+ {
+  "t": 89.079,
+  "name": "doorslam",
+  "door": 3,
+  "depth": 0.444,
+  "pan": 0.08,
+  "gain": 0.817
+ },
+ {
+  "t": 89.079,
+  "name": "hornstate",
+  "closed": 4
+ },
+ {
+  "t": 89.319,
+  "name": "doorlatch",
+  "door": 3,
+  "depth": 0.444,
+  "pan": 0.08,
+  "gain": 0.286
+ },
+ {
+  "t": 89.679,
+  "name": "doorslam",
+  "door": 4,
+  "depth": 0.371,
+  "pan": -0.08,
+  "gain": 0.872
+ },
+ {
+  "t": 89.679,
+  "name": "hornstate",
+  "closed": 5
+ },
+ {
+  "t": 89.919,
+  "name": "doorlatch",
+  "door": 4,
+  "depth": 0.371,
+  "pan": -0.08,
+  "gain": 0.305
+ },
+ {
+  "t": 90.485,
+  "name": "doorbonk",
+  "door": 5,
+  "depth": 0.298,
+  "pan": 0.2,
+  "gain": 0.7
+ },
+ {
+  "t": 92.679,
+  "name": "doorslam",
+  "door": 5,
+  "depth": 0.298,
+  "pan": 0,
+  "gain": 0.927
+ },
+ {
+  "t": 92.679,
+  "name": "hornstate",
+  "closed": 6
+ },
+ {
+  "t": 92.919,
+  "name": "doorlatch",
+  "door": 5,
+  "depth": 0.298,
+  "pan": 0,
+  "gain": 0.324
+ }
+]
