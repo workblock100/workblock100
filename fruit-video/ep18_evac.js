@@ -625,7 +625,7 @@ function tomOut(lt, sh) {
 }
 /* the three stragglers pass Mango, one per word: each is at Mango's side on the word's start (profile, facing left, coming out of the door at the right) */
 function resWalkers(lt, sh) {
-  const out = [], spec = [{ kind: 'chair', ctor: A7.cran, v: 190, acc: undefined }, { kind: 'shuf', ctor: A7.pear, v: 150 }, { kind: 'walk', ctor: A7.banana, v: 128, acc: ['fp18e_specs'] }];
+  const out = [], spec = [{ kind: 'chair', ctor: A7.cran, v: 128, acc: undefined }, { kind: 'shuf', ctor: A7.pear, v: 150 }, { kind: 'walk', ctor: A7.banana, v: 128, acc: ['fp18e_specs'] }];
   spec.forEach((r, i) => {
     const tc = wS('m1', i), x = OUT.dx - 20 - r.v * (lt - tc), dist = r.v * (lt - tc), a = ss(lt, tc - .42, tc - .12);
     if (a <= .01 || x < -300) return;

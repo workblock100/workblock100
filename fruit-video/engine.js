@@ -2377,7 +2377,12 @@ function checkFrame() {
 function audit(start, end, step) {
   const out = [], gate = !!(EP.textGate || TXA.force);
   REG.on = true; TXA.rec = gate;
-  for (let t = start; t < end; t += step) {
+  /* a frame-grid audit (step of one 30 fps frame) uses the renderer's own frame times, i / 30, not a running sum of the step: a sum drifts by up to 4e-5 s over an episode, which at a shot boundary
+     audits the previous shot's last instant instead of the next shot's first frame. Any other step keeps the old behaviour. */
+  const grid = Math.abs(step * 30 - 1) < 1e-3, f0 = Math.round(start * 30);
+  for (let k = 0; ; k++) {
+    const t = grid ? (f0 + k) / 30 : start + k * step;
+    if (!(t < end)) break;
     if (gate) TXA.begin(t, step);
     renderAt(t);
     for (const m of checkFrame()) out.push([+t.toFixed(2), CUR.id, m]);

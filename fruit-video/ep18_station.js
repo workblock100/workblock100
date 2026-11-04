@@ -656,6 +656,7 @@ function lapGlowN(lt, hideChars) {
   if (lt >= NC.binderpop) {
     const kk = sg(lt, NC.binderpop, NC.binderpop + .16), f = ss(lt, NC.binderpop + .04, NC.binderpop + .5), bob = Math.sin(lt * 3.2) * 3;
     if (kk < 1) V2.ring(g.x, g.y - 6, kk, { r0: 8, r1: 90, color: '255,236,160', lw: 6, alpha: .9 });
+    if (.72 * g.w / 300 * eb(kk) < .02) return;
     const o = A15.binderSmall({ x: g.x, y: lerp(g.y + 10, g.y - g.h * .75, f) - Math.sin(PI * f) * 20 + bob * f, s: .72 * g.w / 300 * eb(kk), center: true, noLegs: true, who: 'bind', t: lt, pose: 'ears', grin: .25, look: [.3, .2], hover: 6 });
     drawChar(o);
   }
@@ -684,6 +685,7 @@ function binderAtPrinter(lt) {
   if (lt < PR_T0) return;
   const Pr = printerAt(), k = ss(lt, PR_T0, PR_T0 + .3), x = Pr.x + Pr.w * .68, y = Pr.y - Pr.h * 2.0 + 4 * Math.sin(lt * 3);
   const g = lt >= PR_T1 ? ss(lt, PR_T1, PR_T1 + .2) : .3;
+  if (.5 * Pr.w / 300 * eb(k) < .02) return;      /* the pop's first frame has a zero-size Binder: nothing to draw (and nothing for the gate to measure at the frame edge) */
   drawChar(A15.binderSmall({ x, y, s: .5 * Pr.w / 300 * eb(k), center: true, noLegs: true, who: 'bind', t: lt, yaw: -.3, pose: lt >= PR_T1 ? 'cheer' : 'helpful', grin: g, look: [-.5, .3], hover: 6 }));
 }
 
@@ -903,7 +905,7 @@ function lapPopC(lt, big) {
   const g = lapGeom(), kk = sg(lt, CC.binderpop, CC.binderpop + .16), f = ss(lt, CC.binderpop + .04, CC.binderpop + .5), ant = ss(lt, CC.binderpop - .3, CC.binderpop);
   V2.glow(g.x, g.y, 80 + 70 * ant, '190,255,220', Math.min(1, .25 + .6 * ant) * (1 - .5 * f), 'screen', .4);
   if (kk < 1) V2.ring(g.x, g.y - 6, kk, { r0: 8, r1: 90, color: '255,236,160', lw: 6, alpha: .9 });
-  drawChar(A15.binderSmall({ x: g.x, y: lerp(g.y + 10, g.y - g.h * .75, f) - Math.sin(PI * f) * 20 + 3 * Math.sin(lt * 3.2) * f, s: .72 * g.w / 300 * eb(kk), center: true, noLegs: true, who: 'bind', t: lt, pose: 'ears', grin: .25, look: [-.6, .2], hover: 6 }));
+  drawChar(A15.binderSmall({ x: g.x - 36 * (1 - f), y: lerp(g.y + 10, g.y - g.h * .75, f) - Math.sin(PI * f) * 20 + 3 * Math.sin(lt * 3.2) * f, s: .72 * g.w / 300 * eb(kk), center: true, noLegs: true, who: 'bind', t: lt, pose: 'ears', grin: .25, look: [-.6, .2], hover: 6 }));
 }
 function finExtras(lt) {
   const dp = V2.p2(DET.X, LAY.ch, DET.Z), k = kzP(DET.Z), led = ledAt(lt) + .85 * Math.max(0, 1 - Math.abs(lt - CC.sting - .05) / .18), sq = Math.max(.42, (LAY.ch - V2.P.cy) / (DET.Z - V2.P.cz));

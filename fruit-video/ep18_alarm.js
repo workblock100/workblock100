@@ -606,7 +606,7 @@ function wallInsert(lt, sh) {
       if (lt < RUN.t0 + .04) { const q = easeIO(sg(lt, 18.85, RUN.t0 - .02)); px = lerp(940, home.x + home.w * .7, q); py = lerp(1330, home.y + home.h * .8, q); press = Math.sin(PI * sg(lt, RUN.t0 - .02, RUN.t0 + .2)); }
       else { px = nrPrev.x + nrPrev.w * .7; py = nrPrev.y + nrPrev.h * .8; press = lt < RUN.t0 + .22 ? Math.sin(PI * sg(lt, RUN.t0 - .02, RUN.t0 + .2)) : 0; }
       if (lt >= RUN.t0 + .6 && lt < CUE.click - .3) { px = lerp(px, 760, ss(lt, RUN.t0 + .6, RUN.t0 + 1.1)); py = lerp(py, 1180, ss(lt, RUN.t0 + .6, RUN.t0 + 1.1)); }
-      if (lt >= CUE.click - .3) { const yb = SH15.binderRect(bo, 'yes'); px = lerp(px, yb.x + yb.w * .75, ss(lt, CUE.click - .3, CUE.click - .08)); py = lerp(py, yb.y + yb.h * .8, ss(lt, CUE.click - .3, CUE.click - .08)); press = Math.max(press, bo.press ? bo.press.k : 0); }
+      if (lt >= CUE.click - .3) { const yb = SH15.binderRect(bo, 'yes'); px = lerp(px, yb.x + yb.w * .75, ss(lt, CUE.click - .2, CUE.click - .08)); py = lerp(py, yb.y + yb.h * .8, ss(lt, CUE.click - .3, CUE.click - .17));   /* down first (right of the text), then left along the button row: the pointer never crosses Binder's line */ press = Math.max(press, bo.press ? bo.press.k : 0); }
       SH15.pointer(px, py, { kind: 'arrow', press, s: 1.7 });
     }
   }
