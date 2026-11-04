@@ -570,7 +570,11 @@ function aLemon(lt, p) {
   const loc = (x, y) => [c.x + x * ca - y * sa, c.y + x * sa + y * ca];
   const G1 = loc(6, -96), G2 = loc(34, 4), g = [lerp(G1[0], G2[0], ss(lt, wS('l1', 2) - .1, wS('l1', 2) + .2)), lerp(G1[1], G2[1], ss(lt, wS('l1', 2) - .1, wS('l1', 2) + .2))];
   o.grip = { l: [(g[0] - p.x) / p.s + jx, (g[1] - fy) / p.s + jy] };
-  if (lt >= T0) { const k = ss(lt, T0, T0 + .12); o.expr = 'shock'; o.grip = null; o.arms = { l: mixPose('hold', 'flail', k), r: mixPose('hold', 'flail', k) }; o.lid = 0; o.look = [.2, -.3]; if (lt > 29.7 && lt < 31.0) o.look = [.5, -.7]; }
+  if (lt >= T0) {
+    const k = ss(lt, T0 + .2, T0 + .34); o.expr = 'shock'; o.lid = 0; o.look = [.2, -.3]; if (lt > 29.7 && lt < 31.0) o.look = [.5, -.7];
+    if (lt < T0 + .22) { const a = simAt(lt).can, ca2 = Math.cos(a.a), sa2 = Math.sin(a.a), q = [a.x + 34 * ca2 - 4 * sa2, a.y + 34 * sa2 + 4 * ca2]; o.grip = { l: [(q[0] - p.x) / p.s, (q[1] - fy) / p.s] }; }
+    else { o.grip = null; o.arms = { l: mixPose('hold', 'flail', k), r: mixPose('hips', 'flail', k) }; }
+  }
   if (lt >= 33.2) { o.expr = 'neutral'; o.arms = { l: 'rest', r: 'rest' }; o.lid = .45 + .5 * Math.max(0, 1 - Math.abs(lt - 34.25) * 9); o.look = [-.1, 0]; }
   return o;
 }
@@ -642,7 +646,7 @@ function mPlace(sh, lt) {
 const END_X = { marshal: 480, mango: 740, onion: 910, lemon: 1070 };
 const strawGlideX = lt => 640 + 190 * (lt - 35.04);
 function drawChars(lt, sh, layer) {
-  TRANSIT = !!sh.pan;
+  TRANSIT = !!sh.pan || !!(sh.whip && lt >= sh.whip[0] - .15);
   const out = [], P = POS, has = n => sh.cast.indexOf(n) >= 0;
   const add = (z, f) => out.push([z, f]);
   const M = P.marshal;
@@ -715,13 +719,13 @@ function cobweb(lt) {   /* from the cabinet's top-left corner to the can's head,
 function tag2019(lt, sh) {   /* the paper tag tied to the lever: hero text only in the insert, at rest */
   const x = X.cabinet - 18, y0 = 936, sway = Math.sin(lt * 1.3) * .018;
   ctx.save(); ctx.translate(x - 18, y0); ctx.rotate(sway);
-  ctx.strokeStyle = '#a58a4a'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-6, 26, 4, 54); ctx.stroke();
-  const big = sh.id === 'ex2', cy = 112, w = 132, h = 112;
+  ctx.strokeStyle = '#a58a4a'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-4, 20, 2, 40); ctx.stroke();
+  const big = sh.id === 'ex2', w = 96, h = 78;
   if (big) {
-    UI.tag([{ t: 'INSPECTED', size: 17, weight: 900, fill: '#3a2a10', spacing: .6 }, { t: '2019', size: 44, font: 'Bangers', weight: 400, fill: '#b02a1a', spacing: 2 }], 8, 54 + h / 2, { w, h, fill: '#efdca4', stroke: '#8a6a30', lw: 3, holeFill: 'rgba(60,40,20,.85)', size: 17, id: 'tag2019', hero: true, shadow: 8 });
+    UI.tag([{ t: 'INSPECTED', size: 12.5, weight: 900, fill: '#3a2a10', spacing: .4 }, { t: '2019', size: 33, font: 'Bangers', weight: 400, fill: '#b02a1a', spacing: 1.5 }], 4, 40 + h / 2, { w, h, fill: '#efdca4', stroke: '#8a6a30', lw: 2.4, holeFill: 'rgba(60,40,20,.85)', size: 12.5, id: 'tag2019', hero: true, shadow: 6 });
   } else {
-    ctx.fillStyle = '#efdca4'; ctx.strokeStyle = '#8a6a30'; ctx.lineWidth = 2.5; rr(-58, 54, 132, 112, 7); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = 'rgba(60,40,20,.8)'; ell(-40, 110, 7, 7); ctx.fill(); ctx.fillStyle = '#b02a1a'; rr(-22, 96, 78, 20, 4); ctx.fill();
+    ctx.fillStyle = '#efdca4'; ctx.strokeStyle = '#8a6a30'; ctx.lineWidth = 2.2; rr(-44, 40, w, h, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(60,40,20,.8)'; ell(-30, 79, 5, 5); ctx.fill(); ctx.fillStyle = '#b02a1a'; rr(-16, 68, 54, 14, 3); ctx.fill();
   }
   ctx.restore();
 }
@@ -819,7 +823,7 @@ function drawWorld(lt) {
   const dk = sh.id === 'ex1' ? lerp(.88, .5, ss(lt, CUE.click2, CUE.click2 + .1)) : (sh.dark ?? .3);
   lightMask(dk, holes);
   if (bm) {
-    const hot = ss(lt, sh.id === 'ex1' ? CUE.click2 : CUE.click1, (sh.id === 'ex1' ? CUE.click2 : CUE.click1) + .08) * (1 - ss(lt, 28.5, 29.3));
+    const hot = ss(lt, (sh.id === "ex1" ? CUE.click2 : CUE.click1) - .001, (sh.id === "ex1" ? CUE.click2 : CUE.click1) + .034) * (1 - ss(lt, 28.5, 29.3));
     fxCone({ x: bm.x, y: bm.y, ang: bm.ang, spread: .2, len: bm.len, color: '#fff2c4', alpha: .5 * hot, soft: .6 });
     fxGlow({ x: bm.tx, y: bm.ty, r: 150, color: '#fff0c0', alpha: .5 * hot, core: .5 });
     fxGlow({ x: bm.x, y: bm.y, r: 60, color: '#fffbe0', alpha: .8 * hot, core: .9 });
@@ -862,10 +866,11 @@ const PASS = [['P', 'PULL', 0], ['A', 'AIM', 1], ['S', 'SQUEEZE', 2], ['S', 'SWE
 function overlay(lt) {
   const sh = shotAt(lt);
   if (sh.chips && lt < T0 + .3) {
-    const w = 238, gap = 8, x0 = (W - (4 * w + 3 * gap)) / 2, fade = 1 - ss(lt, T0 - .2, T0 + .25), enter = ss(lt, 26.6, 26.9);
+    const w = 238, gap = 8, x0 = (W - (4 * w + 3 * gap)) / 2, fade = 1, out = 1 - ss(lt, T0 - .06, T0 + .1), enter = ss(lt, 26.6, 26.9);
     PASS.forEach(([L, word, i]) => {
       const t0 = wS('l1', i), lit = lt >= t0, age = lt - t0, pop = lit ? 1 + .2 * Math.exp(-age * 8) * Math.abs(Math.cos(age * 14)) : 1, cx = x0 + i * (w + gap) + w / 2, cy = 380 - (1 - enter) * 60, h = 176;
-      ctx.save(); ctx.globalAlpha *= fade * enter; ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
+      if (out <= .01) return;
+      ctx.save(); ctx.globalAlpha *= fade * enter; ctx.translate(cx, cy); ctx.scale(pop * out, pop * out); ctx.translate(-cx, -cy);
       if (lit) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,214,70,${.28 * Math.exp(-age * 3)})`; ctx.beginPath(); ctx.ellipse(cx, cy, w * .75, h * .7, 0, 0, TAU); ctx.fill(); ctx.restore(); }
       UI.sign([cx - w / 2, cy - h / 2, w, h], [{ t: L, size: 96, font: 'Bangers', weight: 400, spacing: 2 }, { t: word, size: 35, weight: 900, spacing: 0, gap: 4 }],
         { fill: lit ? '#ffd23a' : 'rgba(18,22,34,.72)', stroke: lit ? '#fff7d0' : 'rgba(255,255,255,.35)', lw: 5, ink: lit ? '#2a1a05' : 'rgba(255,255,255,.7)', r: 22, pad: 14, id: 'pass' + i, hero: true });

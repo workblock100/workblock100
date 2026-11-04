@@ -446,7 +446,7 @@ function corrItems(lt, sh, list) {
   const jolt = shake(lt), hop = Math.max(0, jolt) * 5;
   if (has('straw')) {
     const qc = V2.at(STRAW_CART.X, STRAW_CART.Z), qs = V2.at(STRAW_P.X, STRAW_P.Z), sc = qs.s * CS;
-    const o = actStraw(lt), up = o.cupUp, Lp = [-98, 80], Lu = [-104, 16];
+    const o = actStraw(lt), up = o.cupUp, Lp = [-98, 58], Lu = [-104, 16];
     o.grip = { l: reachGrip('straw', -1, mix(Lp[0], Lu[0], up), mix(Lp[1], Lu[1], up)) };
     list.push({ z: STRAW_P.Z, draw: () => { drawChar(mkp(A11.straw, STRAW_P.X, STRAW_P.Z, 1, Object.assign(o, { lift: hop * sc })));
       /* the med pass: while she reads off the orders three pills hop in the cup, one after another */
