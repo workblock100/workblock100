@@ -60,6 +60,7 @@ function cart(t) {
     roll = .075 * fexp(-q / .34) * fsin(q * 2 * Math.PI / .42); up = hop(q, 16, .16, .34);
     if (t >= T_PULL0) { const v = c01((t - T_PULL0) / (T_PULL1 - T_PULL0)); z = CART_HIT.z - T_BACK * (1 - (1 - v) * (1 - v)); const q2 = t - T_PULL0; roll += .04 * fexp(-q2 / .3) * fsin(q2 * 2 * Math.PI / .38); }
   }
+  { const sq = t - 21.88; if (sq > 0) { z += 10 * (1 - fexp(-sq / .07)); if (sq < .6) roll += .014 * fexp(-sq / .16) * fsin(sq * 34); } }   /* the quiet: one wheel creaks (the cart-wheel squeak near 21.9) and the cart settles a hair */
   return { x, z, roll, up };
 }
 /* the bundle of linen: rides on top of the cart, then at the bonk it is thrown up and toward the camera and the left, tumbles, lands and bounces once */

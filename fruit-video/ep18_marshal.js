@@ -463,27 +463,33 @@ function lightMask(alpha, holes, tint) {
 
 // ------------------------------------------------------------------ the foam on the floor: lumps along the corridor that swell where the can has passed (the start times come from the sim's path)
 let LUMPS = null;
+function pathT0(x, S) {   /* the first time the can has passed within reach of x (the foam it throws lands there a moment later) */
+  let t0 = 1e9;
+  if (S) for (let t = T0; t < T0 + 2.95; t += 1 / 30) { const a = simAt(t); if (a && Math.abs(a.can.x - x) < 230) { t0 = t; break; } }
+  if (x > 760 && x < 1160) t0 = Math.min(t0, T0 + .16);                                      /* the first blast pours onto the floor in front of Lemon */
+  return t0 > 1e8 ? T0 + 2.9 : t0;
+}
 function lumps() {
   if (LUMPS) return LUMPS;
-  const S = simInit(), out = [];
-  for (let i = 0, x = 520; x < 1820; i++, x += 78 + 36 * sr(i, 21)) {
-    let t0 = 1e9;
-    if (S) for (let t = T0; t < T0 + 3.1; t += 1 / 30) { const a = simAt(t); if (a && Math.abs(a.can.x - x) < 210 && t < T0 + 2.95) { t0 = t; break; } }
-    if (x > 760 && x < 1160) t0 = Math.min(t0, T0 + .16 + .05 * sr(i, 4));     /* the first blast pours onto the floor in front of Lemon */
-    out.push({ x: x + (sr(i, 22) - .5) * 30, w: 120 + 80 * sr(i, 23), h: 40 + 40 * sr(i, 24), t0: (t0 > 1e8 ? T0 + 2.9 : t0) + .26 + .12 * sr(i, 25), seed: i + 3, i });
-  }
-  return (LUMPS = out);
+  const S = simInit(), rows = [[], [], [], []];
+  const mkRow = (r, x0, x1, step, jit, w0, w1, h0, h1, y0, dy, tAdd, skip) => {
+    for (let i = 0, x = x0; x < x1; i++, x += step + jit * (sr(i + r * 40, 21) - .5) * 2) {
+      if (sr(i + r * 40, 26) < skip) continue;
+      rows[r].push({ x, w: lerp(w0, w1, sr(i + r * 40, 23)), h: lerp(h0, h1, sr(i + r * 40, 24)), y: y0 + dy * (sr(i + r * 40, 27) - .5), t0: pathT0(x, S) + tAdd + .18 * sr(i + r * 40, 25), seed: i + r * 50 + 3, i });
+    }
+  };
+  mkRow(0, 520, 1840, 78, 36, 120, 200, 40, 80, FLOOR - 2, 0, .26, 0);
+  mkRow(1, 440, 1900, 150, 50, 110, 190, 40, 70, FLOOR + 50, 24, .38, .22);
+  mkRow(2, 400, 1950, 270, 90, 230, 350, 60, 100, FLOOR + 160, 50, .5, .12);
+  mkRow(3, 420, 2000, 420, 150, 340, 520, 90, 140, FLOOR + 300, 60, .62, .1);
+  return (LUMPS = rows);
 }
 function floorFoam(lt, front) {
   if (lt < T0) return;
-  for (const L of lumps()) {
+  const rows = lumps(), list = front ? [1, 2, 3] : [0];
+  for (const r of list) for (const L of rows[r]) {
     if (lt < L.t0 || L.x + L.w < VIEW.x0 - 120 || L.x - L.w > VIEW.x1 + 120) continue;
-    if (!front) fxPile({ x: L.x, y: FLOOR - 2, w: L.w, h: L.h, t: lt, t0: L.t0, grow: .8, seed: L.seed });
-    else {
-      fxPile({ x: L.x + 24, y: FLOOR + 40, w: L.w * .95, h: L.h * .8, t: lt, t0: L.t0 + .05, grow: .8, seed: L.seed + 40 });                  /* the floor in front of the feet: nearer, so bigger and lower */
-      if (L.i % 2 === 0) fxPile({ x: L.x - 30, y: FLOOR + 150, w: L.w * 1.45, h: L.h * 1.15, t: lt, t0: L.t0 + .12, grow: .9, seed: L.seed + 80 });
-      if (L.i % 3 === 0) fxPile({ x: L.x + 10, y: FLOOR + 300, w: L.w * 1.9, h: L.h * 1.4, t: lt, t0: L.t0 + .2, grow: 1, seed: L.seed + 120 });
-    }
+    fxPile({ x: L.x, y: L.y, w: L.w, h: L.h, t: lt, t0: L.t0, grow: .8 + .15 * r, seed: L.seed });
   }
 }
 /* the jet: the sim's nozzle drives FX18.foamJet (segments with a falling rate and speed: the gas runs out) */
@@ -532,7 +538,7 @@ function aMarshal(lt, p, sh) {
   if (lt >= T0 && lt < CUE.splat + .3) { const a = simAt(lt); if (a) o.look = [Math.max(-.9, Math.min(.9, (a.can.x - p.x) / 420)), Math.max(-.5, Math.min(.5, (a.can.y - 920) / 500))]; }
   if (lt >= CUE.splat - .02 && lt < CUE.splat + .22) o.lid = 1; else if (lt >= CUE.splat + .22 && lt < CUE.splat + .6) o.lid = lerp(.9, .3, (lt - CUE.splat - .22) / .38);
   if (writing) {
-    o.hold = { l: 'clipboard', r: 'pen' }; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-62, 54], r: [30 + wob(lt, 9, 6), 44 + wob(lt, 14, 4)] }; o.look = [-.15, .75]; o.expr = 'neutral';
+    o.hold = {}; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-50, 46], r: [54, 46] }; o.look = [.0, .85]; o.expr = 'neutral';
   }
   return o;
 }
@@ -558,7 +564,7 @@ function aOnion(lt, p) {
 }
 function aLemon(lt, p) {
   const strain = ss(lt, wS('l1', 2), T0), burst = lt >= T0;
-  const o = { expr: lt < 26.9 ? 'neutral' : 'sour', lid: .35, look: [-.6, .15], arms: { l: 'hold', r: 'hold' } };
+  const o = { expr: lt < 26.9 ? 'neutral' : 'sour', lid: .35, look: [-.6, .15], arms: { l: 'hold', r: 'hips' } };
   const sh = strain * (1 + 2 * ss(lt, T0 - .3, T0)), jx = Math.sin(lt * 62) * 2.6 * sh, jy = Math.cos(lt * 55) * 2.2 * sh;
   const c = canStart(), fy = FEET({ kind: 'lemon' }, p.s), ca = Math.cos(c.ang), sa = Math.sin(c.ang);
   const loc = (x, y) => [c.x + x * ca - y * sa, c.y + x * sa + y * ca];
@@ -611,10 +617,10 @@ shot('sg', 20.93, 23.145, u => camAt(1786, 880, lerp(2.9, 3.05, u), 540, 780), {
 shot('m3', 23.145, 24.867, u => camAt(1596, 925, lerp(1.7, 1.82, u), 540, 800), { cast: ['mangoCart'], beam: 1 });
 shot('p7', 24.867, 26.733, mcu('marshal', 'pom', 2.2, 2.3, 860, 28), { cast: ['marshal'] });
 shot('l1', 26.733, T0, (u, lt) => { const f = faceW('lemon', POS.lemon); return camAt(f.x - 70, f.y + 60, lerp(2.1, 2.35, u), 540, 800); }, { cast: ['lemon'], chips: 1 });
-shot('r1', T0, 28.957, u => camAt(1370, 930, lerp(1.35, 1.25, u), 540, 800), { cast: ['lemon'], rampage: 1 });
-shot('r2', 28.957, 29.55, u => { const a = simAt(lerp(28.957, 29.55, u)); return camAt(lerp(1500, 1380, u), lerp(900, 800, u), 1.4, 540, 800); }, { cast: ['lemon'], rampage: 1 });
-shot('r3', 29.55, 30.4, u => camAt(lerp(1120, 980, u), 880, lerp(.66, .7, u), 540, 800), { roll: -.07, cast: ['lemon', 'marshal', 'onion'], rampage: 1 });
-shot('r4', 30.4, CUE.splat, u => camAt(lerp(700, 560, u), 970, lerp(1.2, 1.55, u), 540, 860), { cast: ['marshal', 'onion'], rampage: 1 });
+shot('r1', T0, 28.957, (u, lt) => camAt(lerp(1330, 1420, easeIO(u)), 920, lerp(1.35, 1.22, u), 540, 800), { cast: ['lemon'], rampage: 1 });
+shot('r2', 28.957, 29.55, u => camAt(lerp(1480, 1380, easeIO(u)), lerp(900, 790, easeIO(u)), lerp(1.4, 1.1, u), 540, 800), { cast: ['lemon'], rampage: 1 });
+shot('r3', 29.55, 30.4, u => { const w = easeIO(sg(u, .76, 1)); return camAt(lerp(lerp(930, 880, u), 700, w), lerp(880, 970, w), lerp(lerp(.78, .8, u), 1.2, w), 540, lerp(800, 860, w)); }, { roll: -.05, whip: [30.19, 30.4], cast: ['lemon', 'marshal', 'onion'], rampage: 1 });
+shot('r4', 30.4, CUE.splat, u => camAt(lerp(700, 560, u), 970, lerp(1.2, 1.55, u), 540, 860), { cast: ['marshal'], rampage: 1 });
 shot('r5', CUE.splat, 33.714, (u, lt) => { const f = fcM(); return camAt(f.x + 28, f.y, lerp(2.3, 2.5, u), 540, 860); }, { cast: ['marshal'], rampage: 1, hold: 1 });
 shot('l2', 33.714, 35.039, u => { const f = faceW('lemon', POS.lemon); return camAt(f.x - 30, f.y + 40, lerp(2.4, 2.5, u), 540, 760); }, { cast: ['lemon'], rampage: 1 });
 shot('p9', 35.039, 37.512, u => camAt(lerp(455, 465, u), 930, lerp(1.35, 1.45, u), 330, 740), { cast: ['strawGlide', 'marshalWrite'], rampage: 1 });
@@ -625,11 +631,12 @@ function shotAt(lt) { let r = SHOTS[0]; for (const sh of SHOTS) if (lt >= sh.s) 
 function setLight(lt, dark) {
   V2.setLight({ key: [-.1, -.9], keyColor: '#fff0d4', keyA: .26 * (1 - (dark || 0) * .5), rim: '#8fb3ff', rimA: .38, shadow: '#161a30', shadowA: .36, bounce: '#bfd8c4', bounceA: .12, amb: '#c8d4f0', ambA: .05 });
 }
-function mPlace(sh) {
+const BOOTS = [.34, .62, .9];
+function mPlace(sh, lt) {
   const has = n => sh.cast.indexOf(n) >= 0;
-  if (has('marshalDoor')) return { x: X.door + 10, s: MS, yaw: .45, headYaw: .5 };
-  if (has('marshalWrite')) return { x: POS.marshal.x, s: MS, yaw: .12, headYaw: .2 };
-  if (has('marshalEnd')) return { x: END_X.marshal, s: MS, yaw: .14, headYaw: .14 };
+  if (has('marshalDoor')) { const k = ss(lt ?? 1, .2, 1.0), st = Math.max(0, Math.sin(PI * ((lt ?? 1) - .2) / .28)); return { x: lerp(X.door - 36, X.door + 14, k), s: MS * lerp(.94, 1, k), yaw: .45, headYaw: .5, lift: (lt > .2 && lt < 1.0) ? st * 7 : 0 }; }
+  if (has('marshalWrite')) return { x: POS.marshal.x, s: MS, yaw: .1, headYaw: .12 };
+  if (has('marshalEnd')) return { x: END_X.marshal, s: MS, yaw: .12, headYaw: .1 };
   return POS.marshal;
 }
 const END_X = { marshal: 480, mango: 740, onion: 910, lemon: 1070 };
@@ -640,9 +647,9 @@ function drawChars(lt, sh, layer) {
   const add = (z, f) => out.push([z, f]);
   const M = P.marshal;
   if (has('marshal') || has('marshalWrite') || has('marshalEnd') || has('marshalDoor')) {
-    const p = mPlace(sh), o = aMarshal(lt, p, sh);
+    const p = mPlace(sh, lt), o = aMarshal(lt, p, sh);
     if (has('marshalDoor')) { o.arms = { l: 'rest', r: 'hold' }; o.torchAng = lerp(1.9, 1.15, sg(lt, CUE.click1 - .1, 1.4)); }
-    if (has('marshalEnd')) { o.torchOn = 0; o.look = [.05, .1]; o.hold = { l: 'clipboard', r: 'pen' }; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-62, 54], r: [30, 46] }; }
+    if (has('marshalEnd')) { o.torchOn = 0; o.look = [.05, .15]; o.hold = {}; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-50, 46], r: [54, 46] }; }
     add(5, () => drawChar(mk(A6.pom, lt, p, o)));
   }
   const OS = sh.openStage ? { straw: { x: 600, s: CS * .9 }, mango: { x: 770, s: CS * .9 }, onion: { x: 940, s: CS * .9 } } : null;
@@ -719,7 +726,7 @@ function tag2019(lt, sh) {   /* the paper tag tied to the lever: hero text only 
   ctx.restore();
 }
 function marshalPlace(lt, sh) {
-  const door = sh.cast.indexOf('marshalDoor') >= 0, p = door ? { x: X.door + 10, s: MS, yaw: .45, headYaw: .5 } : POS.marshal, o = aMarshal(lt, p, sh);
+  const door = sh.cast.indexOf('marshalDoor') >= 0, p = door ? mPlace(sh, lt) : POS.marshal, o = aMarshal(lt, p, sh);
   if (door) o.torchAng = lerp(1.9, 1.2, sg(lt, CUE.click1 - .1, 1.4));
   return { p, o };
 }
@@ -730,6 +737,45 @@ function beamOf(lt, sh) {
   const ang = o.torchAng - PI / 2, dx = tg[0] - L.x, dy = tg[1] - L.y, len = Math.hypot(dx, dy);
   const reach = sh.id === 'open' ? 620 : Math.max(len, 260);
   return { x: L.x, y: L.y, ang, len: reach * 1.12, tx: sh.id === 'open' ? L.x + Math.cos(ang) * 560 : tg[0], ty: sh.id === 'open' ? L.y + Math.sin(ang) * 560 : tg[1] };
+}
+/* the Marshal's clipboard, held at his waist by both hands (his arms are short): a page with printed lines, a clip, and a scribble the pen writes; gloves and pen drawn over it */
+const CLIP = p => { const yc = FEET({ kind: 'pom' }, p.s); return { x: p.x + 2, y: yc + 128 * p.s, w: 124, h: 142, yc }; };
+function clipboardBoard(lt, p, writing) {
+  const c = CLIP(p), { x, y, w, h } = c, s = p.s, k = writing ? sg(lt, 35.2, 36.6) : 1;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-.03);
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; rr(-w / 2 + 5, -h / 2 + 8, w, h, 8); ctx.fill();
+  rr(-w / 2, -h / 2, w, h, 8); ctx.fillStyle = '#b8864a'; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.stroke();
+  ctx.fillStyle = '#fffdf4'; ctx.fillRect(-w / 2 + 9, -h / 2 + 16, w - 18, h - 26);
+  ctx.fillStyle = '#9aa0a6'; rr(-20, -h / 2 - 5, 40, 20, 5); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.fillStyle = 'rgba(40,60,110,.55)'; ctx.fillRect(-w / 2 + 16, -h / 2 + 26, w - 32, 7);
+  ctx.strokeStyle = 'rgba(80,100,150,.55)'; ctx.lineWidth = 2.2; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-w / 2 + 16, -h / 2 + 46 + i * 16); ctx.lineTo(w / 2 - 16 - (i % 3) * 12, -h / 2 + 46 + i * 16); ctx.stroke(); }
+  ctx.strokeStyle = '#c4281e'; ctx.lineWidth = 3.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+  const pts = []; for (let i = 0; i <= 18; i++) { const u = i / 18; pts.push([-w / 2 + 18 + u * (w - 40), h / 2 - 30 + Math.sin(u * 22) * 4 - (i % 2) * 3]); }
+  const n = Math.floor(k * pts.length); pts.slice(0, Math.max(1, n)).forEach((q, i) => i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke();
+  ctx.restore();
+  /* the gloves at the top corners and the pen in the right hand, scribbling along the line */
+  const glove = (gx, gy) => { ctx.fillStyle = '#fff'; ctx.strokeStyle = INK; ctx.lineWidth = 3.5; ell(gx, gy, 15 * s * .95, 15 * s * .95); ctx.fill(); ctx.stroke(); };
+  glove(x - w / 2 + 10, y - h / 2 + 12);
+  const px = lerp(x - w / 2 + 22, x + w / 2 - 20, k) , py = y + h / 2 - 30 + Math.sin(k * 22 * 1) * 4;
+  const hx = x + w / 2 - 12, hy = y - h / 2 + 12;
+  if (writing) { ctx.strokeStyle = '#2a2d36'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx - 4, hy + 4); ctx.lineTo(px, py); ctx.stroke(); ctx.fillStyle = '#c4281e'; ell(px, py, 3.4, 3.4); ctx.fill(); }
+  glove(hx, hy);
+}
+function binderBurst(lt) {
+  const a = lt - CUE.binderpop; if (a < 0 || a > .6) return;
+  const k = a / .6;
+  ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.strokeStyle = `rgba(160,245,255,${.85 * (1 - k)})`; ctx.lineWidth = 9 * (1 - k) + 1; ctx.beginPath(); ctx.arc(TAB.x, TAB.y - 14, 40 + 240 * eo(k), 0, TAU); ctx.stroke(); ctx.restore();
+  if (hasFX('sparks')) FX().sparks(ctx, { x: TAB.x, y: TAB.y - 14, t: lt, t0: CUE.binderpop, count: 16, speed: 520, life: .5, gravity: 600, seed: 5, color: '#9ff4ff' });
+}
+const TOW = [[-80, -560, -9, '#fbfbf6', 1540, 850, 1138], [40, -700, 7, '#e9f0f7', 1590, 836, 1132], [130, -500, -6, '#ffffff', 1634, 850, 1142], [-150, -420, 10, '#dfe9f2', 1500, 862, 1135]];
+function towels(lt) {   /* the cart's linen is thrown out by the hit and lies on the floor */
+  if (lt < CUE.cart) return;
+  const a = lt - CUE.cart;
+  for (const [vx, vy, w, c, x0, y0, yl] of TOW) {
+    let t = a, x = x0 + vx * t, y = y0 + vy * t + 1100 * t * t, land = y >= yl;
+    if (land) { const tl = (-vy + Math.sqrt(vy * vy + 4400 * (yl - y0))) / 2200; t = tl; x = x0 + vx * tl; y = yl; }
+    ctx.save(); ctx.translate(x, y); ctx.rotate(land ? w * t * .35 : w * t); rr(-27, -15, 54, 30, 12); ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = 'rgba(70,90,110,.6)'; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+  }
 }
 function drawWorld(lt) {
   const sh = shotAt(lt), S = simAt(lt), dim = sh.dim ?? 1;
@@ -742,20 +788,21 @@ function drawWorld(lt) {
   if (lt < 24.9) drawCan(lt, sh, S);
   if (lt < 24.9) { cobweb(lt); tag2019(lt, sh); }
   cabinetGlass(lt, { open: 1 });
-  tablet(lt, { pop: lt >= CUE.binderpop && lt < 25.4 ? 1 : 0 });
+  tablet(lt, { pop: lt >= CUE.binderpop && lt < 25.4 ? 1 : 0 }); binderBurst(lt);
   fireDoor(lt); keepSign(lt);
-  easel(lt, S); linenCart(lt, S);
+  easel(lt, S); linenCart(lt, S); towels(lt);
   floorFoam(lt, false);
   if (lt >= 24.9 && lt < T0) drawCan(lt, sh, S);
   drawChars(lt, sh);
   if (lt >= T0) drawCan(lt, sh, S);
+  if (sh.cast.indexOf('marshalWrite') >= 0 || sh.cast.indexOf('marshalEnd') >= 0) clipboardBoard(lt, mPlace(sh, lt), sh.cast.indexOf('marshalWrite') >= 0);
   flyingPin(lt);
   floorFoam(lt, true);
   foamJets(lt);
   /* foam on people: Lemon's hair, the Marshal's beard (a pile that swells at the splat, with a squash) */
   if (lt >= 29.7 && (sh.cast.indexOf('lemon') >= 0 || sh.cast.indexOf('lemonEnd') >= 0)) { const lp = sh.cast.indexOf('lemonEnd') >= 0 ? { x: END_X.lemon, s: CS } : POS.lemon, hy = FEET({ kind: 'lemon' }, lp.s) - 140 * lp.s; fxPile({ x: lp.x - 8, y: hy + 14, w: 150, h: 66, t: lt, t0: 29.72, grow: .45, seed: 31 }); fxPile({ x: lp.x + 38, y: hy + 36, w: 70, h: 40, t: lt, t0: 29.9, grow: .4, seed: 32 }); }
   if (lt >= CUE.splat - .06 && sh.cast.some(n => n.indexOf('marshal') === 0)) {
-    const mp = mPlace(sh), my = FEET({ kind: 'pom' }, MS) + 42 * MS, bx = mp.x + 18 + (mp.yaw || 0) * 24;
+    const mp = mPlace(sh, lt), my = FEET({ kind: 'pom' }, MS) + 42 * MS, bx = mp.x + 18 + (mp.yaw || 0) * 24;
     const k = ss(lt, CUE.splat - .04, CUE.splat + .2), over = 1 + .22 * Math.exp(-(lt - CUE.splat) * 9) * (lt >= CUE.splat ? 1 : 0);
     fxPile({ x: bx, y: my + 82, w: 262 * over, h: 112 * over, t: lt, t0: CUE.splat - .04, grow: .26, seed: 11 });
     fxPile({ x: bx - 84, y: my + 58, w: 96 * over, h: 62 * over, t: lt, t0: CUE.splat - .02, grow: .3, seed: 12 }); fxPile({ x: bx + 84, y: my + 58, w: 96 * over, h: 62 * over, t: lt, t0: CUE.splat, grow: .3, seed: 13 });
@@ -767,10 +814,12 @@ function drawWorld(lt) {
   for (let xj = 120 + Math.floor((VIEW.x0 - 120) / 520) * 520; xj < VIEW.x1 + 520; xj += 520) holes.push({ type: 'glow', x: xj, y: CD + 40, r: 560, a: .8 * dim });
   holes.push({ type: 'glow', x: TAB.x, y: TAB.y, r: 300, a: .5 });
   if (sh.id === 'open') holes.push({ type: 'glow', x: X.door, y: 900, r: 460, a: .85 });
-  if (bm) { holes.push({ type: 'cone', x: bm.x, y: bm.y, ang: bm.ang, spread: .3, len: bm.len, a: 1 }); holes.push({ type: 'glow', x: bm.tx, y: bm.ty, r: 230, a: .95 }); }
-  lightMask(sh.dark ?? .3, holes);
+  const bfade = 1 - ss(lt, 28.5, 29.3);
+  if (bm && bfade > .01) { holes.push({ type: 'cone', x: bm.x, y: bm.y, ang: bm.ang, spread: .3, len: bm.len, a: bfade }); holes.push({ type: 'glow', x: bm.tx, y: bm.ty, r: 230, a: .95 * bfade }); }
+  const dk = sh.id === 'ex1' ? lerp(.88, .5, ss(lt, CUE.click2, CUE.click2 + .1)) : (sh.dark ?? .3);
+  lightMask(dk, holes);
   if (bm) {
-    const hot = ss(lt, CUE.click1, CUE.click1 + .08) * (1 - ss(lt, 28.5, 29.3));
+    const hot = ss(lt, sh.id === 'ex1' ? CUE.click2 : CUE.click1, (sh.id === 'ex1' ? CUE.click2 : CUE.click1) + .08) * (1 - ss(lt, 28.5, 29.3));
     fxCone({ x: bm.x, y: bm.y, ang: bm.ang, spread: .2, len: bm.len, color: '#fff2c4', alpha: .5 * hot, soft: .6 });
     fxGlow({ x: bm.tx, y: bm.ty, r: 150, color: '#fff0c0', alpha: .5 * hot, core: .5 });
     fxGlow({ x: bm.x, y: bm.y, r: 60, color: '#fffbe0', alpha: .8 * hot, core: .9 });
@@ -783,7 +832,7 @@ const SC = {
   shot(lt) { return shotAt(lt).id; },
   cam(lt) {
     const sh = shotAt(lt), u = sg(lt, sh.s, sh.e), c = sh.cam(u, lt);
-    const shk = pulse(lt, CUE.cart, 33, .11) * 9 + pulse(lt, CUE.splat, 31, .12) * 13 + pulse(lt, CUE.stamp, 35, .1) * 8 + (lt >= T0 && lt < 31 ? 2.2 : 0);
+    const shk = (sh.id === 'open' ? BOOTS.reduce((a, t) => a + pulse(lt, t, 30, .08) * 3, 0) : 0) + pulse(lt, CUE.cart, 33, .11) * 9 + pulse(lt, CUE.splat, 31, .12) * 13 + pulse(lt, CUE.stamp, 35, .1) * 8 + (lt >= T0 && lt < 31 ? 2.2 : 0);
     zoomTo(c[0] + shk * .5, c[1] + shk * .4, c[2]);
     CAM.shake = lt >= T0 && lt < 31.1 ? 2.5 : 0; CAM.r = (sh.roll || 0) * Math.sin(Math.PI * Math.min(1, u * 1.0));
     const hw = 540 / c[2], hh = 960 / c[2];
@@ -800,6 +849,7 @@ const SC = {
     for (const sh of SHOTS) if (Math.abs(lt - sh.s) < .05) return 1;
     const sh = shotAt(lt);
     if (sh.pan) return 7;
+    if (sh.whip && lt >= sh.whip[0] && lt < sh.whip[1]) return 12;
     if (lt >= T0 && lt < 30.6) return 6;
     if (lt >= CUE.splat - .1 && lt < CUE.splat + .1) return 4;
     return 2;
@@ -812,18 +862,18 @@ const PASS = [['P', 'PULL', 0], ['A', 'AIM', 1], ['S', 'SQUEEZE', 2], ['S', 'SWE
 function overlay(lt) {
   const sh = shotAt(lt);
   if (sh.chips && lt < T0 + .3) {
-    const w = 232, gap = 10, x0 = (W - (4 * w + 3 * gap)) / 2, fade = 1 - ss(lt, T0 - .2, T0 + .25), enter = ss(lt, 26.6, 26.9);
+    const w = 238, gap = 8, x0 = (W - (4 * w + 3 * gap)) / 2, fade = 1 - ss(lt, T0 - .2, T0 + .25), enter = ss(lt, 26.6, 26.9);
     PASS.forEach(([L, word, i]) => {
-      const t0 = wS('l1', i), lit = lt >= t0, age = lt - t0, pop = lit ? 1 + .22 * Math.exp(-age * 9) * Math.cos(age * 18) : 1, cx = x0 + i * (w + gap) + w / 2, cy = 380 - (1 - enter) * 60, h = 176;
+      const t0 = wS('l1', i), lit = lt >= t0, age = lt - t0, pop = lit ? 1 + .2 * Math.exp(-age * 8) * Math.abs(Math.cos(age * 14)) : 1, cx = x0 + i * (w + gap) + w / 2, cy = 380 - (1 - enter) * 60, h = 176;
       ctx.save(); ctx.globalAlpha *= fade * enter; ctx.translate(cx, cy); ctx.scale(pop, pop); ctx.translate(-cx, -cy);
       if (lit) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,214,70,${.28 * Math.exp(-age * 3)})`; ctx.beginPath(); ctx.ellipse(cx, cy, w * .75, h * .7, 0, 0, TAU); ctx.fill(); ctx.restore(); }
-      UI.sign([cx - w / 2, cy - h / 2, w, h], [{ t: L, size: 96, font: 'Bangers', weight: 400, spacing: 2 }, { t: word, size: 33, weight: 900, spacing: 1.2, gap: 4 }],
+      UI.sign([cx - w / 2, cy - h / 2, w, h], [{ t: L, size: 96, font: 'Bangers', weight: 400, spacing: 2 }, { t: word, size: 35, weight: 900, spacing: 0, gap: 4 }],
         { fill: lit ? '#ffd23a' : 'rgba(18,22,34,.72)', stroke: lit ? '#fff7d0' : 'rgba(255,255,255,.35)', lw: 5, ink: lit ? '#2a1a05' : 'rgba(255,255,255,.7)', r: 22, pad: 14, id: 'pass' + i, hero: true });
       ctx.restore();
     });
   }
-  if (lt >= CUE.splat && lt < CUE.splat + .26) {   /* a white flash, at most .3 alpha for at most .25 s */
-    const k = 1 - (lt - CUE.splat) / .26; if (hasFX('wash')) FX().wash(ctx, { color: '#ffffff', alpha: .3 * k, mode: 'add' }); else { ctx.save(); ctx.fillStyle = `rgba(255,255,255,${.3 * k})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  if (lt >= CUE.splat && lt < CUE.splat + .24) {   /* a white flash, at most .3 alpha for at most .25 s */
+    const k = 1 - (lt - CUE.splat) / .24; if (hasFX('wash')) FX().wash(ctx, { color: '#ffffff', alpha: .3 * k, mode: 'add' }); else { ctx.save(); ctx.fillStyle = `rgba(255,255,255,${.3 * k})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
   }
   if (lt >= CUE.stamp - .24 && lt < 37.9) {   /* the citation: it slams down from a big scale and lands on the beat */
     const a = lt - CUE.stamp, k = a < 0 ? 1 - Math.pow(Math.max(0, -a / .24), 2) : 1, sc = a < 0 ? lerp(2.6, 1, k) : 1 + .1 * Math.exp(-a * 14);

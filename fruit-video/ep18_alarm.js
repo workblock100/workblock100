@@ -375,14 +375,14 @@ function camOf(sh, lt) {
   return { cam, view, u, v };
 }
 shot('open', 0, 1.55, { cast: ['marshal', 'straw', 'mango', 'lemon'], cam: v => camMix(W0, Object.assign({}, W0, { cz: -800 }), v), view: (c, v) => [540, 1010, mix(1.1, 1.14, v)], ease: x => x });
-shot('pa', 1.55, 3.05, { cast: ['marshal', 'straw', 'mango', 'lemon'], cam: v => camMix({ cx: 0, cy: 430, cz: -820, f: 1700, hy: 780 }, { cx: 20, cy: 480, cz: -900, f: 1700, hy: 740 }, v), ease: x => x });
+shot('pa', 1.55, 3.05, { cast: ['marshal', 'straw', 'mango', 'lemon'], view: (c, v) => [540, 980, mix(1.1, 1.14, v)], cam: v => camMix({ cx: 0, cy: 430, cz: -820, f: 1700, hy: 780 }, { cx: 20, cy: 480, cz: -900, f: 1700, hy: 740 }, v), ease: x => x });
 shot('pb', 3.05, 4.009, { view: (c, v) => [540, 1030, mix(1.2, 1.26, v)], cam: v => camMix({ cx: 60, cy: 300, cz: -300, f: 1700, hy: 840 }, { cx: 60, cy: 300, cz: -200, f: 1700, hy: 840 }, v), cast: ['straw', 'lemon', 'onion'], ease: x => x });
 shot('l1', 4.009, 5.191, { cam: v => camMix({ cx: -20, cy: 120, cz: 760, f: 1500, hy: 1060 }, { cx: -20, cy: 130, cz: 700, f: 1500, hy: 1070 }, v), cast: ['lemon'], ease: x => x });
 shot('s1a', 5.191, 6.75, { cam: v => camMix({ cx: -40, cy: 240, cz: 120, f: 1700, hy: 870 }, { cx: -40, cy: 240, cz: 60, f: 1700, hy: 870 }, v), cast: ['straw', 'lemon'], ease: x => x });
 shot('s1b', 6.75, 8.205, { cam: v => ({ cx: -40, cy: 240, cz: 60, f: 1700, hy: 870 }), view: (c, v) => frame(...scr(c, STRAW_P.X + 40, 250, STRAW_P.Z).slice(0, 2), mix(1.25, 1.45, v), 860), cast: ['straw', 'lemon'], ease: x => x });
 shot('m1', 8.205, 9.456, { cam: v => camMix({ cx: 150, cy: 250, cz: -220, f: 1700, hy: 860 }, { cx: 150, cy: 250, cz: -140, f: 1700, hy: 860 }, v), cast: ['mango'], ease: x => x });
 shot('c1', 9.456, 11.2, { cam: v => { const cz = mix(-1800, -2300, v); return { cx: 0, cy: mix(300, 340, v), cz, f: .93 * (1750 - cz), hy: mix(800, 790, v) }; }, cast: ['lemon'], ease: x => x });
-shot('c2', 11.2, 12.906, { cam: v => camMix({ cx: 90, cy: 330, cz: -820, f: 1700, hy: 800 }, { cx: 30, cy: 260, cz: -300, f: 1700, hy: 840 }, v), cast: ['straw', 'mango'] });
+shot('c2', 11.2, 12.906, { cam: v => camMix({ cx: 90, cy: 330, cz: -820, f: 1700, hy: 800 }, { cx: 30, cy: 260, cz: -300, f: 1700, hy: 840 }, v), view: (c, v) => [540, 1010, 1.06], cast: ['straw', 'mango'] });
 shot('bonk', 12.906, 13.856, { cam: v => camMix({ cx: 0, cy: 170, cz: 900, f: 1500, hy: 800 }, { cx: 0, cy: 180, cz: 960, f: 1500, hy: 800 }, v), view: (c, v) => [540, 640, mix(1.3, 1.36, v)], cast: ['linen'], ease: x => x });
 shot('o1', 13.856, 16.1, { cam: v => camMix({ cx: 120, cy: 280, cz: 150, f: 1700, hy: 840 }, { cx: 120, cy: 280, cz: 230, f: 1700, hy: 840 }, v), cast: ['onion', 'lemon'], ease: x => x });
 shot('b1', 16.1, 18.85, { kind: 'wall', view: (c, v) => [540, 960, mix(1, 1.05, v)] });
@@ -413,7 +413,7 @@ function floorReflect(L, lt) {
     ctx.fillStyle = V2.grad(0, y0, 0, y1, [[0, 'rgba(255,244,214,0)'], [.5, `rgba(${L.cold > .5 ? '200,225,255' : '255,240,205'},${.3 * lv * (1 - c01(Z / ZEND) * .6)})`], [1, 'rgba(255,244,214,0)']]);
     ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.closePath(); ctx.fill();
   }
-  if (L.fl > .02) for (const [s, Z] of STROBES) { if (Z - V2.P.cz < 500) continue; const p = P3(s * (HW - 40), -508, Z); V2.glow(p[0], p[1], 120 * kAt(Z) + 20, '255,236,220', .5 * L.fl, 'screen', .2); }
+  if (L.fl > .02) for (const [s, Z] of STROBES) { if (Z - V2.P.cz < 500) continue; const p = P3(s * (HW - 40), -508, Z); V2.glow(p[0], p[1], 80 * kAt(Z) + 14, '255,236,220', .26 * L.fl, 'screen', .1); }
   ctx.restore();
 }
 function dustPuff(i, lt) {
@@ -645,6 +645,7 @@ const SC = {
     for (let i = 0; i < 6; i++) { const t0 = sm.SLAM[i], d = lt - t0; if (d >= 0 && d < .16) { const a = (6 + 4 * i) * Math.exp(-d / .05); sx += a * Math.sin(d * 130); sy += a * .8 * Math.cos(d * 150); } }
     { const d = lt - sm.T_HIT; if (d >= 0 && d < .25) { const a = 20 * Math.exp(-d / .07); sx += a * Math.sin(d * 110); sy += a * Math.cos(d * 125); } }
     if (sh.kind === 'corr' && (sx || sy)) { CAM.x += sx / CAM.z; CAM.y += sy / CAM.z; }
+    if (sh.kind === 'corr') { let zp = 0; for (let i = 0; i < 6; i++) { const d = lt - sm.SLAM[i]; if (d >= 0 && d < .4) zp += (.012 + .004 * i) * Math.exp(-d / .06); } const d2 = lt - sm.T_HIT; if (d2 >= 0 && d2 < .4) zp += .03 * Math.exp(-d2 / .07); CAM.z *= 1 + zp; }
     if (lt >= CUE.sting && lt < CUE.sting + .6) CAM.z *= 1 + .02 * Math.exp(-(lt - CUE.sting) / .14);
   },
   draw(lt) {
