@@ -189,7 +189,7 @@ P18.evacMap = (ctx, o = {}) => {
   /* the text: a line appears when the print head has passed it (so nothing is ever cut) */
   const ok = (yy, size) => limit >= yy + size * .62;
   const L = (str, x, y, size, o2 = {}) => { if (ok(y, size)) UI.label(str, x, y, Object.assign({ size, weight: 900, hero: H(size) }, o2)); };
-  if (ok(y0 + 80, 0)) UI.container('evacmap', 'page', [x0, y0, x0 + EM.w, y0 + EM.h], 6);
+  if (limit > y0 + 6) UI.container('evacmap', 'page', [x0, y0, x0 + EM.w, y0 + EM.h], 6);
   L('EVACUATION MAP', 0, -318, 44, { fill: '#fff', spacing: 3, maxW: 440, cid: 'evacmap' });
   L('FRUIT SALAD REHAB & NURSING', 0, -289, 16, { fill: '#bfe6cf', spacing: 1.4, maxW: 420, hero: false, cid: 'evacmap' });
   L('EXECUTIVE SUITE', 62, -216, 17, { fill: '#7a5408', spacing: .6, maxW: 190, hero: false, cid: 'evacmap' });
@@ -284,7 +284,7 @@ const K = (a, lt) => key(a, lt, easeIO);
 const route = S13.route;
 
 // ------------------------------------------------------------------ the room: S13's station with the whiteboard turned into a fire alarm panel and the fire dressing around it
-const PANEL = { X: 95, Y: 332, s: .64 };          /* world position of the panel's centre on the back wall, and its scale in world units (440 x 580 natural) */
+const PANEL = { X: 95, Y: 300, s: .64 };          /* world position of the panel's centre on the back wall, and its scale in world units (440 x 580 natural) */
 const PULL = { X: -178, Y: 430, s: .4 }, EXITS = { X: -500, Y: 716, s: .6 }, HORN = { X: -40, Y: 838, s: .8 };
 const CALLB = { x0: 230, y0: 870, x1: 520, y1: 1030 };
 /* the screen position and scale of a wall-mounted prop (world X, Y on the back wall, natural size scaled by `s` world units) under the current camera */
@@ -298,7 +298,7 @@ function drawRoom(lt, o = {}) {
   ctx.fillStyle = lg(0, top, 0, bot, [[0, S6.lit(wc, 1.04)], [1, S6.lit(wc, .9)]]); ctx.fillRect(bx, by, bw, bh);
   /* the call-light board (top right) with a couple of domes lit, the horn and strobe, the EXIT sign, the pull station, the panel */
   const cb = S13.wallBox(ZB, CALLB.x0, CALLB.y0, CALLB.x1, CALLB.y1);
-  S13.callBoard(cb[0], cb[1], cb[2], cb[3], o.calls || (() => null), { t: lt, hero: false });
+  S13.callBoard(cb[0], cb[1], cb[2], cb[3], o.calls || (() => null), { t: lt, hero: false, title: o.callTitle ?? '' });
   const P = window.P18 || {};
   if (P.exitSign) { const e = wallAt(EXITS.X, EXITS.Y, EXITS.s); P.exitSign(ctx, { x: e.x, y: e.y, s: e.s, t: lt, glow: o.exitGlow ?? 1, halo: o.exitHalo ?? .7, hero: false }); }
   if (P.hornStrobe) { const h = wallAt(HORN.X, HORN.Y, HORN.s); P.hornStrobe(ctx, { x: h.x, y: h.y, s: h.s, level: o.strobe ?? 0, t: lt, hero: false }); }
@@ -452,7 +452,7 @@ const faceZoom0 = (o, z, up = 90) => { const [fx, fy] = faceC(o); zoomTo(fx, fy 
 
 function drawRoomBlock(lt, sh, extra = {}) {   /* extra.noCart: the cart is drawn sharp by the caller */
   const calls = i => (i === 9 || i === 22) ? [S13.CALLCOL.amber, .6 + .4 * Math.sin(lt * 2.2 + i)] : null;
-  const lampsN = lt < NC.click ? .45 : lt < NC.click + .06 ? 1 : lt < NC.click + .12 ? .3 : lt < NC.click + .2 ? 1 : lt < NC.click + .26 ? .6 : 1;
+  const lampsN = lt < NC.click ? .45 : lt < NC.click + .07 ? .25 : 1;
   const R = drawRoom(lt, { sky: 1, min: 40, hr: 7, calls, exitGlow: 1, lampsOn: lampsN, panel: { state: 'normal', lcd: ['SYSTEM NORMAL', 'DRILL  8:00 PM'] } });
   S13.counter({ t: lt, phoneRing: 0, plaque: false });
   if (!sh.cart) S13.medCart(NPOS.cart[0], NPOS.cart[1], { t: lt });
@@ -709,7 +709,7 @@ window.__EP18_SCENES.notice = NSC;
 const CT = tl('clear');
 const CC = { click: .45, hornstop: .5, clipboard: 6.081, sniffle: 9.541, stamp: 15.813, chirp: [19.448, 25.523, 29.384], binderpop: 27.542, grin: 28.492, sting: 29.884 };
 for (const k in CC) CC[k] = Array.isArray(CC[k]) ? CC[k].map(CT.snapT) : CT.snapT(CC[k]);
-const CPOS = { stateman: [-150, 1255], kum: [12, 1335], onion: [168, 1245], lemon: [345, 1312], straw: [520, 1196], tom: [690, 1278], marshal: [352, 1690], cart: [-560, 1500] };
+const CPOS = { stateman: [-250, 1232], kum: [-30, 1338], onion: [170, 1242], lemon: [380, 1314], straw: [580, 1202], tom: [842, 1282], marshal: [336, 1690], cart: [-560, 1500] };
 const ST_IN = route([[0, -430, 1480], [1.3, CPOS.stateman[0], CPOS.stateman[1], 'out']]);
 const KQ_IN = route([[0, -520, 1520], [1.4, CPOS.kum[0], CPOS.kum[1], 'out']]);
 const CSH = [
@@ -726,8 +726,8 @@ const CSH = [
   { id: 'o4', s: 13.95, e: 15.71, k: 'w', foc: 'onion', z: 2.2, up: 130, cz: -150 },
   { id: 'pass', s: 15.71, e: 16.49, k: 'pass' },
   { id: 's1', s: 16.49, e: 17.09, k: 'w', foc: 'straw', z: 2.7, up: 150, cz: -150 },
-  { id: 'st6', s: 17.09, e: 18.55, k: 'w', foc: 'stateman', z: 2.2, up: 150, cz: -150 },
-  { id: 'kw', s: 18.55, e: 19.0, k: 'w', foc: 'kum', z: 2.5, up: 110, cz: -150 },
+  { id: 'st6', s: 17.09, e: 18.4, k: 'w', foc: 'stateman', z: 2.2, up: 150, cz: -150 },
+  { id: 'kw', s: 18.4, e: 19.0, k: 'tag' },
   { id: 'frz', s: 19.0, e: 19.39, k: 'w', wide: 1 },
   { id: 'ceil1', s: 19.39, e: 20.45, k: 'ceil', n: 1 },
   { id: 'k1', s: 20.45, e: 21.82, k: 'w', foc: 'kum', z: 2.6, up: 110, cz: -150 },
@@ -742,11 +742,12 @@ const CSH = [
 ];
 for (const sh of CSH) sh.s = sh.s === 0 ? 0 : CT.snapT(sh.s);
 const cShot = lt => { let r = CSH[0]; for (const sh of CSH) if (lt >= sh.s - 1e-6) r = sh; return r; };
-const DET = { X: 520, Z: 1880 };                                    /* the smoke detector on the ceiling (world X, Z; Y = the ceiling) */
+const DET = { X: CPOS.straw[0], Z: 1880 };                                    /* the smoke detector on the ceiling (world X, Z; Y = the ceiling) */
 const HORN_ON = lt => lt < CC.hornstop ? 1 : 0;
 
 // ------------------------------------------------------------------ the cast of `clear`
 const panelBtnAt = () => { const p = wallAt(PANEL.X, PANEL.Y, PANEL.s); return [p.x + 153 * p.s, p.y - 11 * p.s]; };   /* the SILENCE button's centre on the screen (the panel's own layout: 106..200, -40..18) */
+const sweepYaw = (lt, t0, a, b) => lerp(a, b, easeIO(sg(lt, t0, t0 + .22)));   /* a head turns from a to b starting at t0 (the sweep of heads at "diem") */
 function castC(lt, sh) {
   const C = {}, b = CT.bS, e = CT.bE, inB = id => lt >= b(id) && lt < e(id), id = sh.id;
   const frozen = lt >= 19.0 && lt < 20.45, tt = frozen ? 19.0 : lt, hand = lt >= 6.081, fly = lt >= 5.72 && lt < 6.081;
@@ -754,21 +755,21 @@ function castC(lt, sh) {
   const [bx, by] = panelBtnAt(), qm = wpos(CPOS.marshal[0], CPOS.marshal[1]);
   const mo = Object.assign({}, qm, { t: tt, yaw: -.75, headYaw: -.7, who: 'marshal', look: [-.8, .1], expr: 'neutral' });
   const mc = A15.centre(Object.assign({ kind: 'pom' }, qm)), reach = ss(lt, .08, .4) * (1 - ss(lt, .62, .95)), poke = pulse(lt, CC.click, 26, .09) * 8;
-  const tx = (bx - mc[0]) / qm.s, ty = (by - mc[1]) / qm.s;
+  let tx = (bx - mc[0]) / qm.s, ty = (by - mc[1]) / qm.s; const tm = Math.hypot(tx, ty), RMAX = 150; if (tm > RMAX) { tx *= RMAX / tm; ty *= RMAX / tm; }
   C.marshal = A6.pom(Object.assign(mo, { arms: { l: 'hold', r: 'rest' }, hand: { l: 'point' }, grip: { l: [lerp(-70, tx - 6 + poke, reach), lerp(40, ty, reach)] } }));
   /* the State: in through the doorway, then standing */
-    const sIdle = { t: tt, who: 'star', yaw: K([[0, .2], [1.5, .55], [4.8, .6], [8, .5]], lt), headYaw: K([[0, .3], [1.5, .6]], lt), expr: (inB('st3') || inB('st5') || (lt >= 10.1 && lt < 11.4)) ? 'stateman_brow' : 'neutral', noted: ss(lt, 18.0, 18.8) < 1 && lt > 18.0 ? sg(lt, 18.0, 18.8) : 0, brow: undefined };
+    const sIdle = { t: tt, who: 'star', yaw: K([[0, .2], [1.5, .55], [4.8, .6], [8, .5]], lt), headYaw: lt > 26 ? sweepYaw(lt, 26.85, .6, .95) : K([[0, .3], [1.5, .6]], lt), expr: (inB('st3') || inB('st5') || (lt >= 10.1 && lt < 11.4)) ? 'stateman_brow' : 'neutral', noted: ss(lt, 18.0, 18.8) < 1 && lt > 18.0 ? sg(lt, 18.0, 18.8) : 0, brow: undefined };
   C.stateman = person(A14.stateman, ST_IN, lt, Object.assign(sIdle, hand ? { pose: 'read', hold: { l: 'fp18_drillclip', r: 'fp14_pen' }, clipScale: .25, clipAt: [.02, .55] } : fly ? { pose: 'read', hold: { r: 'fp14_pen' } } : { pose: 'carry' }));
   const wr = lt >= 22.9 && lt < 24.1;
   C.kum = person(A14.kumquat, KQ_IN, lt, { t: tt, who: 'kum', pose: wr || (lt >= 18.55 && lt < 19.0) ? 'write' : 'carry', writing: wr || (lt >= 18.55 && lt < 19.0) ? 1 : 0, tongue: wr ? 1 : 0,
-    yaw: K([[0, .3], [1.65, -.45]], lt), headYaw: lt < 20.4 ? -.4 : K([[20.4, -.4], [21.0, -.1]], lt), expr: lt >= 20.45 && lt < 21.8 ? 'kum_puzzled' : lt >= 22.8 && lt < 24.1 ? 'kum_eager' : 'kum_eager', look: lt >= 19.45 && lt < 21.0 ? [0, -.9] : [.3, .1] });
+    yaw: K([[0, .3], [1.65, -.45]], lt), headYaw: lt > 26 ? sweepYaw(lt, 26.93, -.4, .8) : lt < 20.4 ? -.4 : K([[20.4, -.4], [21.0, -.1]], lt), expr: lt >= 20.45 && lt < 21.8 ? 'kum_puzzled' : lt >= 22.8 && lt < 24.1 ? 'kum_eager' : 'kum_eager', look: lt >= 19.45 && lt < 21.0 ? [0, -.9] : [.3, .1] });
   /* Onion: holds the log until it changes hands (6.08), then talks with her hands; crying throughout */
   const sob = Math.max(0, 1 - Math.abs(lt - CC.sniffle - .12) / .5);
   C.onion = A15.onion(Object.assign(wpos(CPOS.onion[0], CPOS.onion[1]), { t: tt, pose: 'free', arms: { l: hand ? 'rest' : (lt > 5.2 ? 'offer' : 'hold'), r: inB('o4') ? 'offer' : 'rest' }, grip: { l: [-70, 66] }, hold: hand || fly ? {} : { l: 'fp18_drillclip' }, clipScale: .26, clipAt: [.04, .88], clipRot: -.05,
-    yaw: -.5, headYaw: K([[0, -.4], [24, -.4], [26.5, .5]], lt), expr: 'onion_cry', cry: .62, sob, look: [-.6, .1], who: 'onion' }));
-  C.lemon = person(A7.lemon, () => CPOS.lemon, lt, { t: tt, yaw: -.35, headYaw: -.3, look: inB('l1') || inB('l2') ? [-.2, 0] : [-.7, 0], expr: 'neutral', lid: .32, acc: ['readers', 'lanyard7'], face: { curve: .02 }, who: 'lemon', arms: { l: 'rest', r: 'rest' } });
+    yaw: -.5, headYaw: sweepYaw(lt, 26.95, -.4, .55), expr: 'onion_cry', cry: .62, sob, look: [-.6, .1], who: 'onion' }));
+  C.lemon = person(A7.lemon, () => CPOS.lemon, lt, { t: tt, yaw: -.35, headYaw: lt > 26 ? sweepYaw(lt, 27.09, -.3, .5) : -.3, look: inB('l1') || inB('l2') ? [-.2, 0] : [-.7, 0], expr: 'neutral', lid: .32, acc: ['readers', 'lanyard7'], face: { curve: .02 }, who: 'lemon', arms: { l: 'rest', r: 'rest' } });
   const sA = lt >= 16.49 && lt < 17.09;
-  C.straw = person(A11.straw, () => CPOS.straw, lt, { t: tt, yaw: -.25, headYaw: K([[0, -.4], [26.6, -.3], [27.2, -.1]], lt), look: lt < 16.4 ? [-.7, .1] : sA ? [-.9, .15] : lt >= 19.45 && lt < 21.0 ? [0, -.8] : [-.5, .1], expr: 'dead', lid: sA ? .3 : .5, who: 'straw', arms: { l: 'rest', r: 'rest' }, browUp: sA ? 8 : 0 });
+  C.straw = person(A11.straw, () => CPOS.straw, lt, { t: tt, yaw: -.25, headYaw: K([[0, -.4], [26.6, -.3], [27.2, -.1]], lt), look: lt < 16.4 ? [-.7, .1] : sA ? [-.9, .15] : (lt >= 19.45 && lt < 21.0) || (lt >= 25.5 && lt < 25.95) ? [0, -.8] : lt >= 28.0 ? [.05, .05] : [-.5, .1], expr: 'dead', lid: sA ? .3 : lt > 29.5 ? K([[29.5, .5], [29.9, .46], [30.12, .04], [30.45, .04], [30.75, .46]], lt) : .5, squash: .05 * ss(lt, 29.95, 30.3) * (1 - ss(lt, 30.5, 31.0)), plant: true, who: 'straw', arms: { l: 'rest', r: 'rest' }, browUp: sA ? 8 : 0 });
   C.tom = person(A15.tomato, () => CPOS.tom, lt, { t: tt, tomPose: 'fruit', yaw: -.4, headYaw: lt < 26.8 ? -.4 : -.55, look: [-.6, .05], who: 'tom', arms: { l: 'hold', r: lt >= 26.5 && lt < 27.6 ? 'offer' : 'rest' } });
   return C;
 }
@@ -779,19 +780,19 @@ function camC(lt) {
   const sh = cShot(lt), u = sg(lt, sh.s, Math.min(sh.e, sh.s + 3));
   const wide = sh.wide || sh.sweep;
   if (sh.pan) S13.cam('station', { cz: -300, cx: lerp(250, 270, u), cy: 380 });
-  else if (sh.fin) S13.cam('station', { cz: -390, cx: 520, cy: 380 });
-  else if (wide) S13.cam('station', { cz: -450, cx: 265, cy: 380 });
-  else if (sh.two) S13.cam('station', { cz: -300, cx: sh.lap ? 330 : 0 + (sh.two[1] === 'onion' ? 60 : 0), cy: 380 });
+  else if (sh.fin) S13.cam('station', { cz: -390, cx: CPOS.straw[0], cy: 380 });
+  else if (wide) S13.cam('station', { cz: -700, cx: 275, cy: 380 });
+  else if (sh.two) S13.cam('station', { cz: -300, cx: sh.lap ? 500 : 0 + (sh.two[1] === 'onion' ? 60 : -40), cy: 380 });
   else S13.cam('station', { cz: sh.cz ?? -150 });
   const C = castC(lt, sh);
   CFR = { C, sh };
   const sway = { x: 2.2 * hnoise(lt, 1.3, 1), y: 1.6 * hnoise(lt, 1.1, 2), r: .0015 * hnoise(lt, .9, 3) };
-  if (sh.k === 'pass' || sh.k === 'ceil' || sh.k === 'binder') zoomTo(540, 960, 1);
+  if (sh.k === 'pass' || sh.k === 'ceil' || sh.k === 'binder' || sh.k === 'tag') zoomTo(540, 960, 1);
   else if (sh.pan) { const bb = panelBtnAt(); zoomTo(bb[0] + 20, bb[1] + 170, 1.6 + .06 * u); }
-  else if (sh.wide) zoomTo(540, 1120, 1);
+  else if (sh.wide) zoomTo(540, 1020, 1);
   else if (sh.fin) { zoomTo(540, 700, 1.4 + .05 * u);
   } else if (sh.two && sh.lap) { const g = lapGeom(); const [fx, fy] = faceC(C.straw); zoomTo((g.x + fx) / 2, (g.y + fy) / 2 + 40, sh.z + .12 * u); }
-  else if (sh.two) frameGroup(sh.two.map(n => [C[n], 50]), { mx: 90, ty: sh.ty, zMax: 2.1, k: 1 + .05 * u });
+  else if (sh.two) frameGroup(sh.two.map(n => [C[n], 30]), { mx: 40, ty: sh.ty, zMax: 2.1, k: 1 + .05 * u });
   else { faceZoom0(C[sh.foc], sh.z + .2 * u, sh.up); CAM.x -= (sh.dx || 0) / CAM.z; }
   CAM.x += sway.x; CAM.y += sway.y; CAM.r += sway.r;
 }
@@ -823,7 +824,7 @@ function drawC(lt) {
   const show = n => {
     if (sh.pan) return n === 'marshal' || n === 'stateman' || n === 'kum';
     if (n === 'marshal') return false;
-    if (sh.fin) return n === 'straw';
+    if (sh.fin || sh.lap) return n === 'straw';
     return true;
   };
   const list = ord.filter(show).map(n => [n, C[n]]).sort((a, b) => a[1].y - b[1].y);
@@ -844,7 +845,7 @@ function drawC(lt) {
 /* ---- the drill log with the PASS stamp: a rubber stamp comes down, lands on 15.81, lifts and leaves PASS */
 const PASSX = { x: 540, y: 806, s: 1.5 };
 function stampTool(c, x, y, lift) {   /* a rubber stamp in a glove: (x, y) = the contact point; lift 0..1 raises it */
-  const yy = y - lift * 760;
+  const yy = y - lift * 1400;
   c.save(); c.translate(x, yy); c.lineJoin = 'round'; c.shadowColor = 'rgba(0,0,0,.4)'; c.shadowBlur = 18 + 26 * lift; c.shadowOffsetY = 10 + 18 * lift;
   c.fillStyle = '#8a1a22'; c.strokeStyle = '#15111a'; c.lineWidth = 4; rr(-132, -30, 264, 30, 8); c.fill(); c.stroke();
   c.fillStyle = lg(-110, 0, 110, 0, [[0, '#d6a265'], [.5, '#f0c68a'], [1, '#b98348']]); rr(-110, -92, 220, 64, 12); c.fill(); c.stroke();
@@ -860,8 +861,8 @@ function insPass(lt, sh) {
   ctx.save(); ctx.translate(PASSX.x, PASSX.y); ctx.scale(drift, drift); ctx.translate(-PASSX.x, -PASSX.y);
   window.P18.drillLog(ctx, { x: PASSX.x, y: PASSX.y, s: PASSX.s, rot: -.02, stamp: u, stampAge: lt - T0, t: lt });
   const sx = PASSX.x + 10 * PASSX.s, sy = PASSX.y + 266 * PASSX.s;
-  const down = eo(sg(lt, sh.s, T0)), lift = ss(lt, T0 + .06, T0 + .3);
-  if (lt < T0 + .36) stampTool(ctx, sx, sy, (1 - down) * .9 + lift);
+  const down = eo(sg(lt, sh.s, T0)), lift = ss(lt, T0 + .05, T0 + .22);
+  if (lt < T0 + .26) stampTool(ctx, sx, sy, (1 - down) * .9 + lift);
   ctx.restore();
   if (lt >= T0 && lt < T0 + .5) { const q = c01((lt - T0) / .5); V2.glow(sx, sy, 300 * q + 80, '255,60,60', .22 * (1 - q), 'screen', .2); }
 }
@@ -910,12 +911,12 @@ function finExtras(lt) {
   /* Binder floats in from the left of the frame along an arc and clips himself onto the detector on the third chirp (29.38); the LED answers, then the sting */
   const t1 = CC.chirp[2] - .02, u = sg(lt, 28.9, t1), e = u * u * (3 - 2 * u), land = lt >= t1;
   const sx = dp[0] - 560, sy = dp[1] + 420, sb = .62 * k * 1.7;
-  const bx = lerp(sx, dp[0], e), by = lerp(sy, dp[1] - 62 * k, e) - 150 * Math.sin(PI * u) - 36 * Math.abs(Math.sin(u * PI * 3)) * (1 - u);
+  const bx = lerp(sx, dp[0] - 46 * k * 1.9 * (land ? 1 : e), e), by = lerp(sy, dp[1] - 62 * k, e) - 150 * Math.sin(PI * u) - 36 * Math.abs(Math.sin(u * PI * 3)) * (1 - u);
   if (lt >= CC.chirp[2] && lt < CC.chirp[2] + .5) V2.ring(dp[0], dp[1], (lt - CC.chirp[2]) / .5, { r0: 20, r1: 280, color: '255,200,170', lw: 5, alpha: .6, bloom: 0 });
   const bump = land ? Math.max(0, Math.sin(PI * c01((lt - t1) / .22))) : 0;
   const grin = land ? ss(lt, t1, t1 + .2) : .35, glint = lt >= CC.sting ? Math.max(0, 1 - (lt - CC.sting) / .5) : 0;
   ctx.save(); ctx.translate(bx, by); ctx.scale(1 + .1 * bump, 1 - .16 * bump); ctx.translate(-bx, -by);
-  drawChar(A15.binderSmall({ x: bx, y: by, s: sb * (land ? 1 : eb(c01(u * 3))), center: true, noLegs: true, who: 'bind', t: lt, yaw: 0, pose: land ? 'cheer' : 'ears', grin, glint, look: [.1, .5], hover: 4 }));
+  drawChar(A15.binderSmall({ x: bx, y: by, s: sb * (land ? 1 : eb(c01(u * 3))), center: true, noLegs: true, who: 'bind', t: lt, yaw: 0, pose: land ? 'cheer' : 'ears', grin, glint, look: [.1, .5], hover: 4, transit: !land }));
   ctx.restore();
 }
 const handOf = (o, g) => { const [cx, cy] = A15.centre(o); return [cx + g[0] * o.s, cy + g[1] * o.s]; };
@@ -924,6 +925,29 @@ function drawClipFlight(lt, C) {   /* the log in the air between Onion's hand an
   const S = lerp(.26 * C.onion.s, .25 * C.stateman.s, e), at = [lerp(.04, .02, e), lerp(.88, .55, e)];
   const hx = lerp(ho[0], hs[0], e), hy = lerp(ho[1], hs[1], e) - 30 * Math.sin(PI * e);
   window.P18.drillLog(ctx, { x: hx + (.5 - at[0]) * 520 * S, y: hy + (.5 - at[1]) * 724 * S, s: S, rot: -.05 + .12 * Math.sin(PI * e), hero: false });
+}
+
+/* ---- Kumquat's field notes: he writes TAG? (pencil on the State's form) */
+const TAGT = { t0: 18.46, t1: 18.86 };
+function insTag(lt, sh) {
+  veil(.7);
+  const k = sg(lt, TAGT.t0, TAGT.t1);
+  const content = (c, H, cap) => {
+    UI.label('SURVEY NOTES', 0, -246, Object.assign({ size: 50, font: 'Bangers', weight: 400, fill: '#33527a', spacing: 2, maxW: 380, hero: H(50) }, cap));
+    c.strokeStyle = '#33527a'; c.lineWidth = 3; c.beginPath(); c.moveTo(-204, -214); c.lineTo(204, -214); c.stroke();
+    c.strokeStyle = 'rgba(70,80,110,.3)'; c.lineWidth = 2; for (let i = 0; i < 7; i++) { c.beginPath(); c.moveTo(-204, -140 + i * 76); c.lineTo(204, -140 + i * 76); c.stroke(); }
+    UI.label('TAG?', -10, -106, Object.assign({ size: 124, weight: 900, italic: true, fill: '#3a3a46', maxW: 360, reveal: k, hero: H(124) }, cap));
+    if (k >= 1) { c.strokeStyle = '#3a3a46'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.ellipse(-8, -108, 178, 64, -.03, 0, TAU * c01((lt - TAGT.t1) / .14)); c.stroke(); }
+  };
+  P18x().drillLog(ctx, { x: 540, y: 806, s: 1.5, rot: .03, content, t: lt });
+  /* the pencil, writing */
+  const tx = 540 + (-200 + 390 * k) * 1.5 * .93, ty = 806 + (-96) * 1.5;
+  ctx.save(); ctx.translate(k < 1 ? tx : 540 + 190, k < 1 ? ty : 806 - 100); ctx.rotate(1.85 + .05 * Math.sin(lt * 32));
+  ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 8;
+  ctx.fillStyle = '#e9c590'; ctx.strokeStyle = '#15111a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -28); ctx.lineTo(10, -28); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#3a3340'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-4, -11); ctx.lineTo(4, -11); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#f2c230'; rr(-11, -230, 22, 204, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#b9bfc8'; ctx.fillRect(-11, -236, 22, 12); ctx.fillStyle = '#e8a0a0'; rr(-11, -262, 22, 28, 6); ctx.fill(); ctx.stroke();
+  ctx.restore();
 }
 
 //@@CLEARINS2@@
@@ -935,10 +959,10 @@ const CSC = {
     const warm = ss(lt, CC.hornstop, CC.hornstop + 1.0);
     return { bloom: .5 + .8 * Math.max(0, 1 - Math.abs(lt - CC.sting - .05) / .25), vignette: .42, grain: .045, contrast: .13, sat: .1, tint: [['#ffb878', .1 * warm, 'soft-light']], fade: lt < .25 ? 1 - lt / .25 : 0, fadeColor: '16,12,24' };
   },
-  blur: lt => 1,
+  blur: lt => (lt > 5.78 && lt < 6.08) || (lt > 28.99 && lt < 29.37) || (lt > .1 && lt < .5 && cShot(lt).pan) ? 4 : 1,
   over: lt => {
     const sh = CFR.sh;
-    if (sh.k === 'pass') insPass(lt, sh); else if (sh.k === 'ceil') insCeil(lt, sh); else if (sh.k === 'binder') insBinder(lt, sh, CC.grin);
+    if (sh.k === 'pass') insPass(lt, sh); else if (sh.k === 'tag') insTag(lt, sh); else if (sh.k === 'ceil') insCeil(lt, sh); else if (sh.k === 'binder') insBinder(lt, sh, CC.grin);
     if (sh.inset) insetDet(lt);
     if (window.FX18 && lt < CC.hornstop + .3) {   /* the last red pulse of the horn, then the strobes are dead */
       const env = lt < CC.hornstop ? 1 : 1 - (lt - CC.hornstop) / .3, k = FX18.strobe(lt);

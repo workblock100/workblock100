@@ -73,7 +73,7 @@ const clipQuad = (a, b, c, d) => { const A = P3(...a), B = P3(...b), C = P3(...c
 /* the state of the light at lt: k (horn clock), on (the horn is sounding), fl (strobe envelope 0..1), cold (0 hot/red .. 1 cold fluorescent) */
 function lightAt(lt) {
   const k = hornK(lt), on = hornOn(k), fl = strobeOf(k);
-  const cold = ss(lt, CUE.hornstop, CUE.hornstop + .04);
+  const cold = lt >= CUE.hornstop ? 1 : 0;
   return { k, on, fl, cold, alarm: lt >= CUE.horn3 && lt < CUE.hornstop };
 }
 
@@ -185,6 +185,7 @@ function fireDoor(i, c, lt, L, o = {}) {
     gg.addColorStop(0, col(base.map(v => v * .86), Zh)); gg.addColorStop(.5, col(base, Zh)); gg.addColorStop(1, col(base.map(v => v * 1.06), Zh));
     ctx.fillStyle = gg; ctx.fill('evenodd'); ctx.restore();
     poly(leaf); ctx.strokeStyle = 'rgba(14,18,28,.85)'; ctx.lineWidth = Math.max(2, 4 * kAt(Zh)); ctx.lineJoin = 'round'; ctx.stroke();
+    if (o.glint > .02) { poly(leaf); ctx.fillStyle = 'rgba(255,246,230,' + (.3 * o.glint) + ')'; ctx.fill(); }
     ctx.save(); poly(leaf); ctx.clip();
     poly([M(.06, .1), M(.06, .965), M(.94, .965), M(.94, .1)]); ctx.strokeStyle = 'rgba(60,72,88,.4)'; ctx.lineWidth = 2.4; ctx.stroke();
     poly([M(0, 0), M(0, .1), M(1, .1), M(1, 0)]); ctx.fillStyle = col([208, 214, 222].map(v => v * shade), Zh); ctx.fill();                  /* kick plate */
@@ -204,6 +205,9 @@ function fireDoor(i, c, lt, L, o = {}) {
     }
     if (c > .9 && s < 0) {                                                                                                              /* the sign: only on the shut leaf (facing us), set dressing */
       poly([M(.16, .84), M(.16, .94), M(.84, .94), M(.84, .84)]); ctx.fillStyle = col([208, 40, 48], Zh); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2; ctx.stroke();
+      if (c > .985) { const a = M(.16, .84), b = M(.84, .94), pw = Math.abs(b[0] - a[0]), ph = Math.abs(a[1] - b[1]), mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+        UI.label('FIRE DOOR', mx, my - ph * .2, { size: ph * .3, weight: 900, fill: '#fff4ee', spacing: ph * .04, maxW: pw * .86, hero: false, crop: true });
+        UI.label('KEEP CLOSED', mx, my + ph * .22, { size: ph * .36, weight: 900, fill: '#fff4ee', spacing: ph * .02, maxW: pw * .9, hero: false, crop: true }); }
     }
   }
   if (c > .985) { const a = P3(0, 0, Zh - 2), b = P3(0, DH, Zh - 2); ctx.strokeStyle = 'rgba(10,14,24,.9)'; ctx.lineWidth = Math.max(3, 8 * kAt(Zh)); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); }   /* the seam */
@@ -236,7 +240,7 @@ if (typeof EXT !== 'undefined' && EXT.prop && typeof PROP_BOX !== 'undefined') {
   PROP_BOX.fp18_tissue = [-26, -40, 26, 6];
 }
 /* the nurse's medication cart, seen from the front: a pale steel body with three drawers, a white top with a row of paper cups and a tablet, a push bar, casters */
-const CART_K = .82;
+const CART_K = .64;
 function medCart(x, y, s, lit) {
   ctx.save(); ctx.translate(x, y); ctx.scale(s * CART_K, s * CART_K); ctx.lineJoin = 'round';
   ctx.fillStyle = 'rgba(6,8,16,.4)'; ell(0, 4, 150, 17); ctx.fill();
@@ -281,49 +285,55 @@ function shake(lt, amp = 1) {            /* the sum of decaying jolts from each 
   let v = 0; for (const t0 of slamTimes()) if (lt >= t0) v += Math.exp(-(lt - t0) / .16) * (lt - t0 < .5 ? 1 : 0);
   return v * amp;
 }
-const LEMON_FIN = { X: -222, Z: 1842 }, MANGO_FIN = { X: 95, Z: 1420 };
-const STRAW_P = { X: -62, Z: 1440 }, STRAW_CART = { X: -198, Z: 1320 }, ONION_P = { X: 338, Z: 1690 }, MARSH_P = { X: -335, Z: 1195 }, BIND_P = { X: -250, Z: 1030 };
+const LEMON_FIN = { X: -190, Z: 1842 }, MANGO_FIN = { X: 70, Z: 1420 };
+const STRAW_P = { X: -150, Z: 1450 }, STRAW_CART = { X: -143, Z: 1330 }, ONION_P = { X: 338, Z: 1690 }, ONION_FIN = { X: 300, Z: 1300 }, MARSH_P = { X: -345, Z: 1195 }, BIND_P = { X: -150, Z: 1030 };
+const CS = .92;       /* everybody's size relative to the corridor (the walls and doors are drawn for people about 400 tall at scale 1) */
+/* a hand target that is surely within reach of the shoulder (the layout audit reports a grip that is out of reach at the front) */
+function reachGrip(kind, side, gx, gy, f = .95) {
+  const k = KINDS[kind], [sx, sy] = shoulder(k, side), r = ((k.arm1 || 56) + (k.arm2 || 52)) * 1.12 * f, dx = gx - sx, dy = gy - sy, d = Math.hypot(dx, dy);
+  return d > r ? [sx + dx / d * r, sy + dy / d * r] : [gx, gy];
+}
 function lemonAt(lt) {
   const sm = sim();
-  if (lt < 5.3) return { X: 70, Z: 1650, mode: 'idle', yaw: -.3 };
-  if (lt < 7.6) { const u = ss(lt, 5.3, 7.6); return { X: mix(70, 15, u), Z: mix(1650, 2150, u), mode: 'run', yaw: PI, u }; }
+  if (lt < 5.3) return { X: 55, Z: 1650, mode: 'idle', yaw: -.3 };
+  if (lt < 7.6) { const u = ss(lt, 5.3, 7.6); return { X: mix(55, 15, u), Z: mix(1650, 2150, u), mode: 'run', yaw: PI, u }; }
   if (lt < 12.25) return { X: 15, Z: 2150, mode: 'watch', yaw: PI };
   if (lt < 13.35) { const u = ss(lt, 12.25, 13.35); return { X: mix(15, 0, u), Z: mix(2150, 2070, u), mode: 'runback', yaw: mix(PI, 0, ss(lt, 12.3, 12.7)) + 0, u }; }
-  if (lt < sm.T_REL + .02) return { X: 0, Z: 2070, mode: 'stuck', yaw: .1 };
-  if (lt < sm.SLAM[5]) { const u = ss(lt, sm.T_REL, sm.SLAM[5]); return { X: 0, Z: mix(2070, 1800, u), mode: 'lunge', yaw: .1 }; }
-  const q = lt - sm.SLAM[5], w = ss(lt, 16.2, 17.3); return { X: mix(0, LEMON_FIN.X, w), Z: mix(1800 + 34 * (1 - Math.exp(-q / .25)), LEMON_FIN.Z, w), mode: 'wall', yaw: mix(.1, .25, w) };
+  if (lt < sm.T_REL + .02) return { X: -40, Z: 2070, mode: 'stuck', yaw: .1 };
+  if (lt < sm.SLAM[5] + .02) { const u = ss(lt, sm.T_REL, sm.SLAM[5] + .02); return { X: mix(-40, LEMON_FIN.X, u), Z: mix(2070, LEMON_FIN.Z - 6, u), mode: 'lunge', yaw: .1 }; }
+  const q = lt - sm.SLAM[5]; return { X: LEMON_FIN.X, Z: LEMON_FIN.Z - 6 + 22 * (1 - Math.exp(-q / .3)), mode: 'wall', yaw: .1, q };
 }
 function mangoAt(lt) {
   const sm = sim(), c = sm.cart(lt);
-  if (lt < sm.T_PUSH - .15) return { X: 268, Z: 1120, mode: 'stand', yaw: -.65 };
+  if (lt < sm.T_PUSH - .15) return { X: 312, Z: 1100, mode: 'stand', yaw: -.65 };
   const u = ss(lt, sm.T_PUSH - .15, sm.T_PUSH + .35);
   const back = lt >= sm.T_HIT ? 28 * Math.exp(-(lt - sm.T_HIT) / .3) * Math.abs(Math.sin((lt - sm.T_HIT) * 9)) : 0;
-  const pos = { X: mix(268, c.x + 84, u), Z: mix(1120, c.z - 238 - back, u) }, w = ss(lt, 16.0, 17.6);
+  const pos = { X: mix(312, c.x + 84, u), Z: mix(1100, c.z - 238 - back, u) }, w = ss(lt, 16.0, 17.6);
   if (lt >= sm.T_PULL1) { pos.X = mix(c.x + 84, MANGO_FIN.X, w); pos.Z = mix(c.z - 238, MANGO_FIN.Z, w); }
   return { X: pos.X, Z: pos.Z, mode: lt < sm.T_HIT ? 'push' : lt < sm.T_PULL1 ? 'jam' : 'after', yaw: lt >= sm.T_PULL1 ? V2C.turnLerp(-PI, -.9, w, 1) : V2C.turnLerp(-.65, -PI, u, -1), u };
 }
 const handsUp = (lt, t0) => ss(lt, t0, t0 + .12) * (1 - ss(lt, t0 + .7, t0 + 1.1));
+const lookUp = lt => ss(lt, 1.6, 1.95) * (1 - ss(lt, 3.55, 3.95));     /* everybody looks at the ceiling speaker while the page speaks */
 function actStraw(lt) {
-  const pour = ss(lt, 5.5, 5.9) * (1 - ss(lt, 7.35, 7.7)), pour0 = ss(lt, .9, 1.25) * (1 - ss(lt, 1.8, 2.1)) * .8, p = Math.max(pour, pour0), tilt = p * 1.0, put = lt >= 8.1;
-  const cupUp = ss(lt, 8.2, 8.7);                         /* after the tap she lifts the cup, offering it: and holds it (the cup is still in her hand in the quiet) */
-  return { expr: 'dead', lid: .5, yaw: 0, headYaw: 0, look: [.1, .55 - .6 * ss(lt, 7.9, 8.4)], arms: { l: 'hold', r: put ? 'rest' : 'hold' }, hold: { l: 'medcup', r: put ? undefined : 'fp18_bottle' },
-    botTilt: tilt, botT: lt, botDrop: tilt > .45 ? 36 : 0, cupUp };
+  const put = lt >= 8.1, cupUp = ss(lt, 8.2, 8.7);       /* the cup in the left hand, her MAR in the right; after the line she lifts the cup, offering it, and holds it (the cup is still in her hand in the quiet) */
+  const read = ss(lt, 5.4, 5.8) * (1 - ss(lt, 7.5, 7.9));
+  return { expr: 'dead', lid: .5, yaw: 0, headYaw: 0, look: [.1 + .3 * read - .2 * lookUp(lt), mix(.55 - .6 * ss(lt, 7.9, 8.4) + .1 * read, -.9, lookUp(lt))], arms: { l: 'hold', r: 'hips' }, hold: { l: 'medcup' }, cupUp };
 }
 function actLemon(lt, st) {
   const sm = sim(), run = st.mode === 'run' || st.mode === 'runback';
-  const o = { yaw: st.yaw, expr: 'neutral', look: [.4, 0], hold: { l: 'clipboard' }, clipText: '', arms: { l: 'hold', r: 'rest' } };
+  const o = { yaw: st.yaw, expr: 'neutral', look: [.4 - .4 * lookUp(lt), -.9 * lookUp(lt)], hold: { l: 'clipboard' }, clipText: '', arms: { l: 'hold', r: 'rest' } };
   if (lt >= bS('l1') - .1 && lt < 5.3) { o.expr = 'angry'; o.arms = { l: 'hold', r: 'up' }; }
   if (run) { o.arms = { l: 'run', r: 'run' }; o.hold = {}; o.expr = 'panic'; o.gaitW = lt * 300; o.axis = 'z'; o.dir = st.mode === 'run' ? -1 : 1; }
   if (st.mode === 'watch') { o.expr = lt > 12.0 ? 'shock' : 'angry'; o.arms = { l: 'rest', r: 'rest' }; o.hold = {}; if (lt > 12.2) o.arms = { l: 'up', r: 'up' }; }
   if (st.mode === 'stuck' || st.mode === 'lunge') { o.expr = 'panic'; o.hold = {}; o.arms = { l: 'reach', r: 'reach' }; o.yaw = .15 * Math.sin(lt * 7); }
-  if (st.mode === 'wall') { o.expr = 'shock'; o.hold = {}; o.arms = { l: 'flail', r: 'flail' }; if (lt > sm.SLAM[5] + .7) { o.expr = 'sour'; o.arms = { l: 'rest', r: 'rest' }; } }
+  if (st.mode === 'wall') { o.expr = 'shock'; o.hold = {}; o.arms = { l: 'flail', r: 'flail' }; o.plant = true; o.squash = .16 * Math.exp(-st.q / .22); if (lt > sm.SLAM[5] + .9) { o.expr = 'sour'; o.arms = { l: 'rest', r: 'rest' }; o.squash = 0; } if (lt > 26) { o.expr = lt > 27.3 ? 'sour' : 'panic'; o.arms = { l: lt > 25.5 ? 'up' : 'rest', r: 'rest' }; } }
   return o;
 }
 function actMango(lt, st) {
-  const o = { yaw: st.yaw, expr: 'neutral', look: [-.4, -.05], arms: { l: 'rest', r: 'hold' }, grip: { r: [-70, 70] } };
-  if (st.mode === 'stand') { const w = ss(lt, 8.1, 8.45); o.expr = lt > 8.1 ? 'shock' : 'neutral'; o.look = [mix(.3, -.8, w), mix(0, -.1, w)]; o.headYaw = mix(-.1, -1.0, w); o.arms = { l: lt > 8.2 && lt < 9.4 ? 'up' : 'rest', r: 'hold' }; }
-  if (st.mode === 'push') { o.expr = 'panic'; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-52, 60], r: [52, 60] }; o.look = [0, -.1]; o.gaitW = lt * 260; o.axis = 'z'; o.dir = -1; }
-  if (st.mode === 'jam') { o.expr = 'shock'; o.arms = { l: 'up', r: 'up' }; o.look = [0, -.1]; if (lt > 14.5) { o.expr = 'panic'; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-52, 60], r: [52, 60] }; } }
+  const o = { yaw: st.yaw, expr: 'neutral', look: [-.4, -.05], arms: { l: 'rest', r: 'rest' } };
+  if (st.mode === 'stand') { const w = ss(lt, 8.1, 8.45); o.expr = lt > 8.1 ? 'shock' : 'neutral'; o.look = [mix(.3, -.8, w) * (1 - lookUp(lt)), mix(0, -.1, w) - .9 * lookUp(lt)]; o.headYaw = mix(-.1, -1.0, w); o.arms = { l: 'hold', r: lt > 8.2 && lt < 9.4 ? 'up' : 'rest' }; o.hand = true; }
+  if (st.mode === 'push') { o.expr = 'panic'; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: reachGrip('mango', -1, -70, 66), r: reachGrip('mango', 1, 70, 66) }; o.look = [0, -.1]; o.gaitW = lt * 260; o.axis = 'z'; o.dir = -1; }
+  if (st.mode === 'jam') { o.expr = 'shock'; o.arms = { l: 'up', r: 'up' }; o.look = [0, -.1]; if (lt > 14.5) { o.expr = 'panic'; o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: reachGrip('mango', -1, -70, 66), r: reachGrip('mango', 1, 70, 66) }; } }
   if (st.mode === 'after') { o.expr = 'sour'; o.arms = { l: 'rest', r: 'hips' }; o.look = [.4, -.1]; }
   return o;
 }
@@ -332,11 +342,11 @@ function actOnion(lt) {
   const sob = .35 + .5 * (lt > 13.8 ? 1 : 0) + Math.max(0, sniff);
   const dab = ss(lt, 14.4, 14.7) * (1 - ss(lt, 16.0, 16.3));
   return { yaw: -.55, headYaw: -.5 + .35 * shake(lt) , cry: .8, sob: Math.min(1, sob), look: [-.3, .1], expr: 'onion_cry',
-    hold: { l: 'fp15_tabletclip', r: 'fp18_tissue' }, arms: { l: 'hold', r: 'hold' }, grip: { l: [-62, 84], r: [mix(52, 28, dab), mix(66, -30, dab)] } };
+    hold: { l: 'fp15_tabletclip', r: 'fp18_tissue' }, arms: { l: 'hold', r: 'hold' }, grip: { l: [-62, 84], r: [mix(84, 98, dab), mix(70, 22, dab)] } };
 }
 function actMarshal(lt) {
   const hold = ss(lt, 22.3, 22.6), chin = ss(lt, 22.1, 22.45) * (1 - ss(lt, 23.55, 23.75));
-  return { yaw: mix(-.9, -.15, hold) + .0, headYaw: mix(-.8, 0, hold), expr: 'neutral', look: [mix(-.3, 0, hold), 0], hold: { r: 'flashlight' }, grip: { r: [mix(112, 52, chin), mix(40, 78, chin)] }, arms: { l: lt >= 22.3 ? 'rest' : 'hips', r: 'hold' }, chin };
+  return { yaw: mix(-.9, -.15, hold) + .0, headYaw: mix(-.8, 0, hold), expr: 'neutral', look: [mix(-.3, 0, hold) * (1 - lookUp(lt)), -1 * lookUp(lt)], hold: { r: 'flashlight' }, grip: { r: [112, mix(40, 104, chin)] }, arms: { l: lt >= 22.3 ? 'rest' : 'hips', r: 'hold' }, chin };
 }
 /* @@STAGE@@ */
 // ------------------------------------------------------------------ the shots: a 3D camera for the corridor (V2.setCam), then a 2D framing on top (zoomTo); inserts are flat compositions with their own framing
@@ -355,33 +365,33 @@ function camOf(sh, lt) {
   const view = sh.view ? sh.view(cam, v, lt) : [540, 960, 1];
   return { cam, view, u, v };
 }
-shot('open', 0, 1.55, { cam: v => camMix(W0, Object.assign({}, W0, { cz: -800 }), v), ease: x => x });
-shot('pa', 1.55, 3.05, { cam: v => camMix({ cx: 0, cy: 430, cz: -820, f: 1700, hy: 780 }, { cx: 20, cy: 480, cz: -900, f: 1700, hy: 740 }, v), ease: x => x });
-shot('pb', 3.05, 4.009, { cam: v => camMix({ cx: 60, cy: 300, cz: -300, f: 1700, hy: 840 }, { cx: 60, cy: 300, cz: -200, f: 1700, hy: 840 }, v), cast: ['straw', 'lemon', 'onion'], ease: x => x });
+shot('open', 0, 1.55, { cast: ['marshal', 'straw', 'mango', 'lemon'], cam: v => camMix(W0, Object.assign({}, W0, { cz: -800 }), v), view: (c, v) => [540, 1010, mix(1.1, 1.14, v)], ease: x => x });
+shot('pa', 1.55, 3.05, { cast: ['marshal', 'straw', 'mango', 'lemon'], cam: v => camMix({ cx: 0, cy: 430, cz: -820, f: 1700, hy: 780 }, { cx: 20, cy: 480, cz: -900, f: 1700, hy: 740 }, v), ease: x => x });
+shot('pb', 3.05, 4.009, { view: (c, v) => [540, 1030, mix(1.2, 1.26, v)], cam: v => camMix({ cx: 60, cy: 300, cz: -300, f: 1700, hy: 840 }, { cx: 60, cy: 300, cz: -200, f: 1700, hy: 840 }, v), cast: ['straw', 'lemon', 'onion'], ease: x => x });
 shot('l1', 4.009, 5.191, { cam: v => camMix({ cx: -20, cy: 120, cz: 760, f: 1500, hy: 1060 }, { cx: -20, cy: 130, cz: 700, f: 1500, hy: 1070 }, v), cast: ['lemon'], ease: x => x });
 shot('s1a', 5.191, 6.75, { cam: v => camMix({ cx: -40, cy: 240, cz: 120, f: 1700, hy: 870 }, { cx: -40, cy: 240, cz: 60, f: 1700, hy: 870 }, v), cast: ['straw', 'lemon'], ease: x => x });
-shot('s1b', 6.75, 8.205, { cam: v => ({ cx: -40, cy: 240, cz: 60, f: 1700, hy: 870 }), view: (c, v) => frame(...scr(c, -80, 260, STRAW_P.Z).slice(0, 2), mix(1.3, 1.5, v), 880), cast: ['straw', 'lemon'], ease: x => x });
+shot('s1b', 6.75, 8.205, { cam: v => ({ cx: -40, cy: 240, cz: 60, f: 1700, hy: 870 }), view: (c, v) => frame(...scr(c, STRAW_P.X + 40, 250, STRAW_P.Z).slice(0, 2), mix(1.25, 1.45, v), 860), cast: ['straw', 'lemon'], ease: x => x });
 shot('m1', 8.205, 9.456, { cam: v => camMix({ cx: 150, cy: 250, cz: -220, f: 1700, hy: 860 }, { cx: 150, cy: 250, cz: -140, f: 1700, hy: 860 }, v), cast: ['mango'], ease: x => x });
-shot('c1', 9.456, 11.2, { cam: v => camMix({ cx: 0, cy: 290, cz: 960, f: 1500, hy: 800 }, { cx: 10, cy: 330, cz: 620, f: 1500, hy: 790 }, v), cast: ['lemon'], ease: x => x });
-shot('c2', 11.2, 12.906, { cam: v => camMix({ cx: 90, cy: 330, cz: -820, f: 1700, hy: 800 }, { cx: 30, cy: 260, cz: -300, f: 1700, hy: 840 }, v), cast: ['straw', 'marshal', 'mango', 'onion'] });
-shot('bonk', 12.906, 13.856, { cam: v => camMix({ cx: 0, cy: 170, cz: 900, f: 1500, hy: 800 }, { cx: 0, cy: 180, cz: 960, f: 1500, hy: 800 }, v), cast: ['linen'], ease: x => x });
+shot('c1', 9.456, 11.2, { cam: v => { const cz = mix(-1800, -2300, v); return { cx: 0, cy: mix(300, 340, v), cz, f: .93 * (1750 - cz), hy: mix(800, 790, v) }; }, cast: ['lemon'], ease: x => x });
+shot('c2', 11.2, 12.906, { cam: v => camMix({ cx: 90, cy: 330, cz: -820, f: 1700, hy: 800 }, { cx: 30, cy: 260, cz: -300, f: 1700, hy: 840 }, v), cast: ['straw', 'mango'] });
+shot('bonk', 12.906, 13.856, { cam: v => camMix({ cx: 0, cy: 170, cz: 900, f: 1500, hy: 800 }, { cx: 0, cy: 180, cz: 960, f: 1500, hy: 800 }, v), view: (c, v) => [540, 640, mix(1.3, 1.36, v)], cast: ['linen'], ease: x => x });
 shot('o1', 13.856, 16.1, { cam: v => camMix({ cx: 120, cy: 280, cz: 150, f: 1700, hy: 840 }, { cx: 120, cy: 280, cz: 230, f: 1700, hy: 840 }, v), cast: ['onion', 'lemon'], ease: x => x });
 shot('b1', 16.1, 18.85, { kind: 'wall', view: (c, v) => [540, 960, mix(1, 1.05, v)] });
-shot('s2', 18.85, 19.35, { cam: v => ({ cx: -60, cy: 240, cz: 250, f: 1700, hy: 860 }), view: (c, v) => frame(...scr(c, -80, 270, STRAW_P.Z).slice(0, 2), mix(1.7, 1.8, v), 780), cast: ['straw'], ease: x => x });
+shot('s2', 18.85, 19.35, { cam: v => ({ cx: -60, cy: 240, cz: 250, f: 1700, hy: 860 }), view: (c, v) => frame(...scr(c, STRAW_P.X + 20, 260, STRAW_P.Z).slice(0, 2), mix(1.6, 1.7, v), 800), cast: ['straw'], ease: x => x });
 shot('b2', 19.35, CUE.hornstop, { kind: 'wall', view: (c, v) => [540, 960, mix(1.05, 1.09, v)] });
-shot('q', CUE.hornstop, 22.412, { cam: v => camMix({ cx: 0, cy: 340, cz: -980, f: 1700, hy: 750 }, { cx: 0, cy: 340, cz: -930, f: 1700, hy: 750 }, v), cast: ['straw', 'marshal', 'mango', 'onion', 'binder'], ease: x => x });
+shot('q', CUE.hornstop, 22.412, { cam: v => camMix({ cx: 20, cy: 340, cz: -760, f: 1700, hy: 790 }, { cx: 20, cy: 340, cz: -690, f: 1700, hy: 790 }, v), view: (c, v) => [540, 1030, mix(1.1, 1.15, v)], cast: ['straw', 'marshal', 'mango', 'onion', 'binder'], ease: x => x });
 shot('p1a', 22.412, 23.7, { cam: v => ({ cx: -230, cy: 270, cz: 220, f: 1700, hy: 860 }), view: (c, v) => frame(...scr(c, MARSH_P.X, 300, MARSH_P.Z).slice(0, 2), mix(1.0, 1.08, v), 800), cast: ['marshal'], ease: x => x });
-shot('p1b', 23.7, 24.882, { kind: 'wall', lcd: true, view: (c, v) => frame(270, 575, mix(2.0, 2.2, v), 780) });
-shot('b3', 24.882, 26.006, { kind: 'wall', pending: true, view: (c, v) => [520, 900, mix(1.0, 1.06, v)] });
+shot('p1b', 23.7, 24.882, { kind: 'wall', lcd: true, view: (c, v) => frame(270, 575, mix(1.6, 1.75, v), 640) });
+shot('b3', 24.882, 26.006, { kind: 'wall', pending: true, view: (c, v) => frame(520, 770, mix(1.1, 1.16, v), 770) });
 shot('l2', 26.006, 27.949, { cam: v => camMix({ cx: -210, cy: 250, cz: 820, f: 1700, hy: 900 }, { cx: -214, cy: 250, cz: 880, f: 1700, hy: 900 }, v), cast: ['lemon'], ease: x => x });
-shot('m2', 27.949, 31, { cam: v => camMix({ cx: -150, cy: 270, cz: 300, f: 1700, hy: 880 }, { cx: -120, cy: 280, cz: 420, f: 1700, hy: 880 }, v), view: (c, v) => frame(...scr(c, MANGO_FIN.X, 255 * 1.0, MANGO_FIN.Z).slice(0, 2), mix(1.0, 1.22, v), mix(900, 820, v)), cast: ['lemon', 'mango'], ease: x => x });
+shot('m2', 27.949, 31, { cam: v => camMix({ cx: -150, cy: 270, cz: 300, f: 1700, hy: 880 }, { cx: -120, cy: 280, cz: 420, f: 1700, hy: 880 }, v), view: (c, v) => frame(mix(660, 740, v), scr(c, MANGO_FIN.X, 215, MANGO_FIN.Z)[1], mix(1.0, 1.14, v), mix(940, 890, v)), cast: ['lemon', 'mango'], ease: x => x });
 SHOTS[SHOTS.length - 1].e = SCN.dur;
 /* @@DRAW@@ */
 // ------------------------------------------------------------------ the corridor world for a shot: light rig, the corridor, the cast and carts sorted by depth, the light passes
 const TROFFERS = [900, 1700, 2500, 3300, 4100, 4900, 5700, 6500, 7300];
 const ROOMS = { '-1': [4400, 5330, 6450, 7200], '1': [4350, 5300, 6700, 7500] };
 const STROBES = [[-1, 1250], [1, 2300], [-1, 3000], [1, 3900], [-1, 4800], [1, 5700], [-1, 6700]];
-function troffLevel(Z, lt, L) { if (L.cold > .5) return Z === 1700 ? (sr(Math.floor(lt * 15), 3) > .42 ? .62 : .12) : .55; return .86; }
+function troffLevel(Z, lt, L) { if (L.cold > .5) { const st = lt >= CUE.sting ? Math.exp(-(lt - CUE.sting) / .18) : 0; return (Z === 1700 ? (sr(Math.floor(lt * 15), 3) > .42 ? .62 : .12) : .55) * (1 - .8 * st); } return .86; }
 function floorReflect(L, lt) {
   const zn = V2.P.cz + 230;
   ctx.save(); clipQuad([-HW, 0, zn], [-HW, 0, ZEND], [HW, 0, ZEND], [HW, 0, zn]);
@@ -400,8 +410,21 @@ function floorReflect(L, lt) {
 function dustPuff(i, lt) {
   const t0 = sim().SLAM[i]; if (lt < t0 || lt > t0 + 1.1) return;
   const p = P3(0, 0, ZH[i]), k = kAt(ZH[i]), F = FX();
+  { const q = (lt - t0) / .55; if (q < 1) V2.ring(p[0], p[1], q, { r0: 60 * k, r1: 560 * k, squash: .2, color: '255,246,230', lw: 10 * k + 2, alpha: .55, bloom: .3 }); }
   if (F && typeof F.puff === 'function') { F.puff(ctx, { x: p[0], y: p[1] - 10 * k, r: 330 * k, t: lt, t0, life: .9, color: '#d5dbe4', n: 8 }); F.puff(ctx, { x: p[0] - 170 * k, y: p[1], r: 170 * k, t: lt, t0: t0 + .02, life: .7, color: '#cfd5de', n: 5, seed: 3 }); F.puff(ctx, { x: p[0] + 170 * k, y: p[1], r: 170 * k, t: lt, t0: t0 + .02, life: .7, color: '#cfd5de', n: 5, seed: 7 }); return; }
   const q = (lt - t0) / .9; ctx.save(); ctx.globalAlpha = .45 * (1 - q); ctx.fillStyle = '#d5dbe4'; for (let j = 0; j < 7; j++) { ctx.beginPath(); ctx.arc(p[0] + (j - 3) * 60 * k * (.4 + q), p[1] - 30 * k * q * (1 + j % 2), (60 + 90 * q) * k * (.8 + .1 * j % 3), 0, TAU); ctx.fill(); } ctx.restore();
+}
+/* the bonk: where each leaf meets the cart's far corner, a comic impact star and a spray of sparks for a few frames */
+function impact(lt) {
+  const sm = sim(), d = lt - sm.T_HIT; if (d < 0 || d > .4) return;
+  const F = FX(), a = 1 - d / .4, zc = sm.CART_HIT.z + sm.CART_HD, k = kAt(zc);
+  for (const sx of [-1, 1]) {
+    const p = P3(sx * sm.CART_HW, 120, zc), r = (34 + 52 * Math.sqrt(d / .4)) * k;
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(sx * .3 + d * 3); ctx.globalAlpha = Math.min(1, a * 1.4);
+    ctx.beginPath(); for (let i = 0; i < 16; i++) { const ang = i / 16 * TAU, rr2 = i % 2 ? r * .45 : r; ctx.lineTo(Math.cos(ang) * rr2, Math.sin(ang) * rr2); } ctx.closePath();
+    ctx.fillStyle = '#fff6b0'; ctx.fill(); ctx.strokeStyle = 'rgba(255,120,40,.9)'; ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.stroke(); ctx.restore();
+    if (F && typeof F.sparks === 'function') F.sparks(ctx, { x: p[0], y: p[1], t: lt, t0: sm.T_HIT, count: 14, speed: 620 * k, life: .45, gravity: 900, seed: 5 + sx, color: '#ffe9a0' });
+  }
 }
 function lightRig(lt, L) {
   const alarm = L.alarm, on = L.on, fl = L.fl, cold = L.cold;
@@ -410,34 +433,34 @@ function lightRig(lt, L) {
 }
 /* the people and things of a corridor shot, sorted into the corridor by depth */
 function corrItems(lt, sh, list) {
-  const sm = sim(), has = id => sh.cast.indexOf(id) >= 0, mkp = (ctor, X, Z, kf, o) => { const q = V2.at(X, Z); return ctor(Object.assign({ x: q.x, y: q.y, s: q.s * kf, t: lt }, o)); };
+  const sm = sim(), has = id => sh.cast.indexOf(id) >= 0, mkp = (ctor, X, Z, kf, o) => { const q = V2.at(X, Z); return ctor(Object.assign({ x: q.x, y: q.y, s: q.s * kf * CS, t: lt }, o)); };
   const jolt = shake(lt), hop = Math.max(0, jolt) * 5;
   if (has('straw')) {
-    const qc = V2.at(STRAW_CART.X, STRAW_CART.Z), qs = V2.at(STRAW_P.X, STRAW_P.Z), sc = qs.s, kd = KINDS.straw, bc = kd.leg + kd.ry * .9;
-    const o = actStraw(lt), gt = (hx, hy) => [(hx - qs.x) / sc, (hy - qs.y) / sc + bc];
-    const up = o.cupUp, Lp = gt(qc.x + 60 * qc.s, qc.y - 176 * CART_K * qc.s), Lu = gt(qs.x - 82 * sc, qs.y - 196 * sc);
-    const L = [mix(Lp[0], Lu[0], up), mix(Lp[1], Lu[1], up)], R = [L[0] + 52, L[1] - 30];
-    o.grip = { l: L, r: R };
-    list.push({ z: STRAW_P.Z, draw: () => { drawChar(mkp(A11.straw, STRAW_P.X, STRAW_P.Z, 1, Object.assign(o, { lift: hop * sc })));
-      if (window.__ALDBG) { for (const [g, col] of [[L, '#0f0'], [R, '#00f']]) { const px = qs.x + g[0] * sc, py = qs.y - bc * sc + g[1] * sc; ctx.strokeStyle = col; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(px, py, 14, 0, TAU); ctx.moveTo(px - 24, py); ctx.lineTo(px + 24, py); ctx.stroke(); } } } });
-    list.push({ z: STRAW_CART.Z, draw: () => medCart(qc.x, qc.y, qc.s, jolt) });
+    const qc = V2.at(STRAW_CART.X, STRAW_CART.Z), qs = V2.at(STRAW_P.X, STRAW_P.Z), sc = qs.s * CS;
+    const o = actStraw(lt), up = o.cupUp, Lp = [-98, 80], Lu = [-104, 16];
+    o.grip = { l: reachGrip('straw', -1, mix(Lp[0], Lu[0], up), mix(Lp[1], Lu[1], up)) };
+    list.push({ z: STRAW_P.Z, draw: () => drawChar(mkp(A11.straw, STRAW_P.X, STRAW_P.Z, 1, Object.assign(o, { lift: hop * sc }))) });
+    list.push({ z: STRAW_CART.Z, draw: () => medCart(qc.x, qc.y, qc.s * CS, jolt) });
   }
   if (has('marshal')) {
     const o = actMarshal(lt), qm = V2.at(MARSH_P.X, MARSH_P.Z), sm2 = qm.s * 1.16, kd = KINDS.pom, bc = kd.leg + kd.ry * .9;
     list.push({ z: MARSH_P.Z, draw: () => { drawChar(mkp(A6.pom, MARSH_P.X, MARSH_P.Z, 1.16, Object.assign(o, { lift: hop * 1.1 })));
-      const F = FX(); if (F && typeof F.cone === 'function' && lt >= 20.95) { const hx = qm.x + o.grip.r[0] * sm2, hy = qm.y - bc * sm2 + o.grip.r[1] * sm2 - 84 * sm2, up = o.chin > .5; F.cone(ctx, { x: hx, y: hy, ang: up ? -PI / 2 + .08 : -PI / 2 + .6, spread: up ? .85 : .42, len: (up ? 380 : 700) * sm2, color: '#fff3cc', alpha: up ? .55 : .34 }); } } });
+      const F = FX(); if (F && typeof F.cone === 'function' && lt >= 20.95) { const hx = qm.x + o.grip.r[0] * sm2, hy = qm.y - bc * sm2 + o.grip.r[1] * sm2 - 84 * sm2, up = o.chin > .4; F.cone(ctx, { x: hx, y: hy, ang: up ? -PI / 2 - .32 : -PI / 2 + .6, spread: up ? .9 : .42, len: (up ? 360 : 700) * sm2, color: '#fff3cc', alpha: up ? .6 : .34 }); } } });
   }
-  if (has('onion')) { const o = actOnion(lt); list.push({ z: ONION_P.Z, draw: () => drawChar(mkp(A15.onion, ONION_P.X, ONION_P.Z, 1, Object.assign(o, { lift: hop }))) }); }
-  if (has('lemon')) { const st = lemonAt(lt), o = actLemon(lt, st); if (st.Z > 0) list.push({ z: st.Z, draw: () => drawChar(mkp(A7.lemon, st.X, st.Z, 1, o)) }); }
-  if (has('mango')) { const st = mangoAt(lt), o = actMango(lt, st); list.push({ z: st.Z, draw: () => drawChar(mkp(A7.mango, st.X, st.Z, 1, Object.assign(o, { lift: hop }))) }); }
+  if (has('onion')) { const o = actOnion(lt), w = ss(lt, 16.5, 17.5), ox = mix(ONION_P.X, ONION_FIN.X, w), oz = mix(ONION_P.Z, ONION_FIN.Z, w); list.push({ z: oz, draw: () => drawChar(mkp(A15.onion, ox, oz, 1, Object.assign(o, { lift: hop }))) }); }
+  if (has('lemon')) { const st = lemonAt(lt), o = actLemon(lt, st); if (st.Z > 0) list.push({ z: st.Z, draw: () => drawChar(mkp(A7.lemon, st.X, st.Z, 1, Object.assign(o, { lift: st.mode === 'watch' || st.mode === 'wall' && lt < 15.8 ? hop * V2.at(st.X, st.Z).s : 0 }))) }); }
+  if (has('mango')) { const st = mangoAt(lt), o = actMango(lt, st);
+    if (st.mode === 'stand') { const qm = V2.at(st.X, st.Z), sm3 = qm.s * CS, kd = KINDS.mango, bc = kd.leg + kd.ry * .9, qh = V2.at(sm.CART0.x, sm.CART0.z - 110), hx = qh.x, hy = qh.y - 224 * qh.s * CS; o.grip = { l: reachGrip('mango', -1, (hx - qm.x) / sm3, (hy - qm.y) / sm3 + bc) }; }
+    list.push({ z: st.Z, draw: () => drawChar(mkp(A7.mango, st.X, st.Z, 1, Object.assign(o, { lift: hop }))) }); }
   if (has('mango') || has('linen')) {
     const c = sm.cart(lt), q = V2.at(c.x, c.z), ln = sm.linen(lt);
     list.push({ z: c.z, draw: () => linenCart(q.x, q.y, q.s, c.roll, c.up, lt) });
+    list.push({ z: c.z - 8, draw: () => impact(lt) });
     if (ln.onCart) list.push({ z: c.z - 1, draw: () => { const p = V2.at(c.x, c.z); linenBundle(p.x, p.y - (262 + c.up) * p.s, p.s, c.roll); } });
     else list.push({ z: ln.z - 1, draw: () => { const p = V2.at(ln.x, ln.z); linenBundle(p.x, p.y - ln.y * p.s - 40 * p.s, p.s, ln.rot); } });
   }
   if (has('binder') && lt >= CUE.binderpop) {
-    const q = V2.at(BIND_P.X, BIND_P.Z), grin = ss(lt, CUE.grin - .05, CUE.grin + .12), o = A15.binder({ x: q.x, y: q.y - 520 * q.s, s: .95 * q.s, center: true, noLegs: true, who: 'bind', t: lt, yaw: .3, pose: lt >= CUE.grin ? 'helpful' : 'thumb', grin, glint: lt >= CUE.grin ? Math.max(0, Math.sin((lt - CUE.grin) * 6)) ** 4 : 0, look: [.5, .1], hover: 0 });
+    const q = V2.at(BIND_P.X, BIND_P.Z), grin = ss(lt, CUE.grin - .05, CUE.grin + .12), o = A15.binder({ x: q.x, y: q.y - 500 * q.s, s: .95 * q.s, center: true, noLegs: true, who: 'bind', t: lt, yaw: .3, pose: lt >= CUE.grin ? 'helpful' : 'thumb', grin, glint: lt >= CUE.grin ? Math.max(0, Math.sin((lt - CUE.grin) * 6)) ** 4 : 0, look: [.5, .1], hover: 0 });
     list.push({ z: BIND_P.Z - 60, draw: () => drawChar(o) });
   }
   for (let i = 0; i < 6; i++) { const t0 = sm.SLAM[i]; if (lt >= t0 && lt < t0 + 1.1) list.push({ z: ZH[i] - 20, draw: () => dustPuff(i, lt) }); }
@@ -610,6 +633,7 @@ const SC = {
     for (let i = 0; i < 6; i++) { const t0 = sm.SLAM[i], d = lt - t0; if (d >= 0 && d < .16) { const a = (6 + 4 * i) * Math.exp(-d / .05); sx += a * Math.sin(d * 130); sy += a * .8 * Math.cos(d * 150); } }
     { const d = lt - sm.T_HIT; if (d >= 0 && d < .25) { const a = 20 * Math.exp(-d / .07); sx += a * Math.sin(d * 110); sy += a * Math.cos(d * 125); } }
     if (sh.kind === 'corr' && (sx || sy)) { CAM.x += sx / CAM.z; CAM.y += sy / CAM.z; }
+    if (lt >= CUE.sting && lt < CUE.sting + .6) CAM.z *= 1 + .02 * Math.exp(-(lt - CUE.sting) / .14);
   },
   draw(lt) {
     const sh = FRAME.sh, L = lightAt(lt);
@@ -621,14 +645,19 @@ const SC = {
   fx(lt) {
     const L = lightAt(lt), on = L.on, hot = L.alarm ? 1 : 0;
     const fx = { bloom: .42 + .25 * L.fl, vignette: .42 + .1 * L.cold, grain: .045, contrast: .14, sat: .1, tint: [] };
-    if (hot) fx.tint.push(['#ff2418', .16 + .26 * on, 'multiply'], ['#ff1a0a', .1 + .22 * on, 'soft-light']);
+    if (hot) { fx.tint.push(['#ff3a20', .2 + .3 * on, 'multiply'], ['#ff1a0a', .12 + .22 * on, 'soft-light']); fx.contrast = .2; fx.sat = .16; }
     if (L.cold > .5) fx.tint.push(['#9fbcff', .16, 'soft-light'], ['#cfe0ff', .08, 'multiply']);
     return fx;
   },
-  blur(lt) { return 1; },
+  blur(lt) {
+    const sh = shotAt(lt); if (lt - sh.s < .06 || sh.e - lt < .06) return 1;
+    if (sh.id === 'c1' || sh.id === 'c2') { const sm = sim(); for (let i = 0; i < 6; i++) { const t0 = i < 5 ? sm.SLAM[i] : sm.T_HIT; if (lt > t0 - .3 && lt < t0 + .12) return 4; } }
+    if (sh.id === 'o1' && lt > sim().SLAM[5] - .25 && lt < sim().SLAM[5] + .1) return 4;
+    return 1;
+  },
   over(lt) {
     const L = lightAt(lt), F = FX();
-    if (F && typeof F.wash === 'function' && L.fl > .01) F.wash(ctx, { color: '#ffeedd', alpha: .3 * L.fl, mode: 'add' });
+    if (F && typeof F.wash === 'function' && L.fl > .01) F.wash(ctx, { color: '#f2f6ff', alpha: .26 * L.fl, mode: 'add' });
     raceChip(lt);
   },
   clock: () => SCN.clock, label: () => SCN.label,

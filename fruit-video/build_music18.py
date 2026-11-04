@@ -158,16 +158,16 @@ def tomato(T, at, g=.08, minor=False, both=False):
 
 def circle(T, D, a, b, lvl=1.0):
     """The circular dependency: a small rising figure (A B C D on a marimba, a glockenspiel over it, a pizzicato A under it) that restarts every 1.2 s and never gets anywhere; a little louder
-    each time round. From a to b."""
+    each time round. From a to b. It is played dry (no hall), so that its stop at b is clean."""
     at = a
     n = 0
     while at < b - .05:
         g = (.06 + .012 * n) * lvl
         for j, m in enumerate((57, 59, 60, 62)):
             if at + j * .3 < b:
-                T.put(marimba(midi(m + 12), .22), at + j * .3, g, -.15)
-                T.put(bell(midi(m + 24), .5) * .4, at + j * .3, g * .5, .3)
-        T.put(pizz(midi(45), .3), at, g * 1.4, -.1)
+                D.put(marimba(midi(m + 12), .22), at + j * .3, g, -.15)
+                D.put(bell(midi(m + 24), .5) * .4, at + j * .3, g * .5, .3)
+        D.put(pizz(midi(45), .3), at, g * 1.4, -.1)
         D.put(woodblock(), at + .6, .03, .3)
         at += 1.2
         n += 1
@@ -298,7 +298,7 @@ def cue_marshal18(T, t0, d, beats, D):
     T.put(sob_clar(72, 67, .5, .5), t0 + 5.95, .05, -.3)
     T.gate(t0 + 6.36, p2[0] - .1, 0.0, .004)
     D.gate(t0 + 6.36, p2[0] - .1, 0.0, .004)
-    MUTES.append((t0 + 6.38, p2[0] - .12, .004))
+    MUTES.append((t0 + 6.36, p2[0] - .12, .004))
     march(T, D, p2[0] - .1, ext[0] + .1, 112, 1.1, tune_g=.8)
     D.put(bdrum(.8, .8), ext[0] + .05, .1, 0)
     T.gate(ext[0] + .3, p3[0] - .05, 0.0, .03)
@@ -455,7 +455,7 @@ def flood(T, at, d, N):
         out[1] += v * env * np.sin(th)
     out /= np.abs(out).max() + 1e-9
     V = Track(N)
-    V.put(out * .9, at, .11, 0)
+    V.put(out * .9, at, .17, 0)
     T.buf += V.buf
 
 
@@ -499,9 +499,9 @@ def cue_evac18(T, t0, d, beats, D):
             T.put(ubass(36, .5, .8), at + .02, .16, -.1)
     T.put(pizz(midi(55), .2), W("l4", "good"), .1, .2)
     T.put(ubass(36, .6, .8), W("l4", "good"), .16, -.1)
-    flood(D, ch1[0] - .1, l5[0] - ch1[0] + .1, T.N)
-    fe = l5[0] - .01
-    D.put(tape_stop(.55) * .6, fe, .07, 0)
+    fe = l5[0] - .1
+    flood(D, ch1[0] - .1, fe - ch1[0] + .1, T.N)
+    D.put(tape_stop(.6) * .6, fe, .12, 0)
     wu = W("t2", "unassigned")
     T.put(pizz(midi(55), .3), wu + .38, .13, .1)
     T.put(pizz(midi(48), .5), wu + .68, .14, .1)
@@ -546,10 +546,10 @@ def cue_clear18(T, t0, d, beats, D):
     st1, st5, st6, k1, o5, s2, t1, s3, b1 = (beats[k] for k in ("st1", "st5", "st6", "k1", "o5", "s2", "t1", "s3", "b1"))
     stamp = cue_abs("stamp", "clear") or (t0 + 15.813)
     inspection(T, D, st1[0], stamp, 1.0)
-    T.put(brass([50, 57, 62, 66, 69], 1.0, .02, .6, 2200), stamp, .09, 0)
-    T.put(strings([50, 57, 62, 66, 69, 74], 1.4, .05, .9, 5.0, 2400), stamp, .1)
-    D.put(timp(73.4, 1.2), stamp, .15, 0)
-    D.put(crash(1.2) * .6, stamp, .05, .1)
+    T.put(brass([50, 57, 62, 66, 69], 1.0, .02, .6, 2200), stamp, .06, 0)
+    T.put(strings([50, 57, 62, 66, 69, 74], 1.4, .05, .9, 5.0, 2400), stamp, .07, 0)
+    D.put(timp(73.4, 1.2), stamp, .11, 0)
+    D.put(crash(1.2) * .6, stamp, .035, .1)
     pf = W("st6", "perfect") - .1
     for j, m in enumerate((74, 78, 81, 86)):
         T.put(oboe(m, .22, a=.03, r=.08), pf + j * .13, .08, .2)
@@ -577,7 +577,7 @@ LEVEL18 = {"title": 1.5, "notice": 2.4, "marshal": 1.9, "alarm": 1.5, "evac": 2.
 TAIL18 = {"title": .5, "notice": .4, "marshal": .4, "alarm": .4, "evac": .4, "clear": .4, "end": .3}
 DIP18 = {"title": 1.0, "notice": .6, "marshal": .6, "alarm": .6, "evac": .6, "clear": .6, "end": 1.0}
 REVERB18 = {"title": (.4, 1.2), "notice": (.3, .9), "marshal": (.3, 1.1), "alarm": (.3, 1.0), "evac": (.2, .6), "clear": (.3, .9), "end": (.4, 1.2)}
-DIPS18 = {"click": (3, .1, .1), "textding": (3, .2, .2), "stamp": (6, .25, .3), "chirp": (10, .15, .3), "binderpop": (3, .1, .15), "pinpull": (4, .3, .2),
+DIPS18 = {"click": (3, .1, .1), "textding": (3, .2, .2), "chirp": (10, .15, .3), "binderpop": (3, .1, .15), "pinpull": (4, .3, .2),
           "foamsplat": (6, .3, .3), "tvoff": (6, .3, .3), "printer": (3, .5, .3), "clipboard": (4, .2, .2), "doorbonk": (6, .5, .3)}
 
 

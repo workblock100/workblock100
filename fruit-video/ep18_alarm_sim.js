@@ -19,7 +19,7 @@ const T_HIT = 13.006, CB = .64, T_PULL0 = 14.75, T_PULL1 = 15.10, T_REL = 14.95;
 const C0 = [.18, .19, .20, .21, .22, .12], AMP = [.16, .15, .14, .13, .12, .10], SWEEP = .85;
 const T_LED = [0, 1, 2, 3, 4, 5].map(i => 1.70 + .2 * i), T_START = T_LED.map(t => t + .3);
 /* the cart: Mango pushes it down the corridor into the doorway from 11.75; the leaves catch its far corners; the bundle of linen is flung off */
-const CART0 = { x: 190, z: 1330 }, CART_HIT = { x: 0, z: ZH[5] + 90 }, CART_HW = 120, CART_HD = 115, T_PUSH = 11.75, T_BACK = 330;
+const CART0 = { x: 240, z: 1330 }, CART_HIT = { x: 0, z: ZH[5] + 90 }, CART_HW = 120, CART_HD = 115, T_PUSH = 11.75, T_BACK = 330;
 const G = 1500;
 
 const c01 = x => x < 0 ? 0 : x > 1 ? 1 : x;

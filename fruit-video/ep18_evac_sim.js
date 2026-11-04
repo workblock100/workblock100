@@ -1,20 +1,24 @@
 'use strict';
-/* SHIFT HAPPENS, Episode 18, scene `evac`: the DOM-free crowd sim of the evacuation (EVAC). window.__EP18_SIMS.evac = { build, PLAN, ANCH } and module.exports = same.
+/* SHIFT HAPPENS, Episode 18, scene `evac`: the DOM-free crowd sim of the evacuation (EVAC). window.__EP18_SIMS.evac = { build, PLAN, TL } and module.exports = same. Run `node ep18_evac_sim.js` for the report.
  *
- * 80 agents in two waves on Unit B's floor plan (metres; x east, y north; the top-down view draws the plan with y up the screen):
- *   wave 0, 40 residents, seated in four arcs facing the TV on the day room's west wall: wheelchairs (v0 .8 to 1.0 m/s), walkers (.5 to .65), shufflers (.34 to .48). They rise after a reaction delay (0 to 3 s,
- *     hashed), leave by the day room's double door (1.6 m), walk the hallway (2.4 m wide) to the FIRE DOOR (a 1.0 m gap in the building's north wall) and go on to their slot on the assembly point outside.
- *     The last three to leave are Mr. Pear, Mrs. Cranberry and Mr. Banana (ids 37, 38, 39), slow on purpose: they are the 38th, 39th and 40th heads Mango counts.
- *   wave 1, 40 Strawberries (r .19, v0 1.35 to 1.5 m/s, each carries a med cup), standing packed in the hallway's south stretch since Episode 15, released at T_REL (the `ch1` line): they rush north, jam the fire door
- *     (one door: two of them abreast at most) and form the arch-shaped crowd in front of it, then go out to the assembly point.
- * The model: velocity relaxation toward a desired velocity (waypoints), car-following braking (a head in my way ahead sets my speed cap), then a position-based contact pass (agent-agent discs with push and
- * friction-free sliding, agent-wall capsules), so a one-person door clogs by itself and the queue forms an arch. Fixed step DT = 1/40 s (recorded at 20 Hz), no Math.random, no trigonometry, no exp (only + - * / sqrt:
- * the same numbers in every worker and in node), a seeded integer hash for every "random" number. The count is the number of heads that have crossed the HEADCOUNT line (a painted stripe across the hallway,
- * 5.1 m before the fire door); the scene's chip reads it.
- * TIME-LAPSE. The scene shows the sim at a variable speed: tauAt(lt) maps scene-local seconds to sim seconds through anchors (ANCH) that the sim solves from its own pass times, so the chip reads 38 / 39 / 40 on the
- * three words of the `m1` line and 80 on "Eighty." (`l5`). rate(lt) = d tau / d lt is the factor on the badge.
- * API: const S = build(); S.at(lt, out) fills out.x/.y/.hx/.hy/.st (Float32Arrays of N); S.count(lt); S.tauAt(lt); S.rate(lt); S.meta (agents); S.pass (count line crossing times, sim s); S.T_REL; S.T_END.
- * Node: `node ep18_evac_sim.js` prints the pass times, the anchors, the speed factors and the counts at the key words. */
+ * 80 agents in two waves on Unit B's floor plan (metres; x east, y north; the top-down view draws y up the screen):
+ *   wave 0, 40 residents, seated in four arcs (6, 8, 11, 15 chairs) facing the TV on the day room's west wall: wheelchairs (v0 1.0 to 1.2 m/s), walkers (.65 to .8), shufflers (.48 to .6): 1.2 times the brief's speeds, and the scene's
+ *     badge divides by that (NOMINAL 1.2). They rise after a reaction delay (.25 to 3.15 s, hashed), leave by the day room's double door (2.0 m), walk the hallway (2.4 m wide) to the FIRE DOOR (a 1.2 m gap in the building's north
+ *     wall) and go on to their slot on the assembly point outside. The last three to cross the count line are Mrs. Cranberry (wheelchair), Mr. Pear (shuffler) and Mr. Banana (walker), ids 37, 38, 39, seated at the front of the
+ *     room (behind everyone else's way out) with delays solved so that they are the 38th, 39th and 40th heads, about 1.6 sim s apart (Mango's three words).
+ *   wave 1, 40 Strawberries (r .19, v0 1.35 to 1.5 m/s, a med cup each), standing packed four across in the hallway's south stretch (y 1.3 to 5.8) since Episode 15, released at T_REL (the `ch1` line, 3.4 sim s after the 40th resident
+ *     crossed): they rush north behind the last residents, jam the fire door (two abreast at most, about 2.2 heads a second) and form the arch-shaped crowd in front of it, then go out to the assembly point.
+ * The model: velocity relaxation toward a desired velocity (each head steers to the nearest point of the next GATE of its route: the day room door, two hallway lines, the fire door, so a door takes heads side by side), car-following
+ * braking (a head ahead in my way sets my speed cap; only for heads further along the route, so no two wait for each other), then a position-based contact pass (agent-agent discs with mass-weighted push, agent-wall segments),
+ * so a one-person door clogs by itself and the queue forms an arch. Fixed step DT = 1/40 s (recorded at 20 Hz and interpolated), no Math.random, no trigonometry and no exp in the integrator (only + - * / sqrt: the same
+ * numbers in every worker and in node), a seeded integer hash for every "random" number. ~0.8 s to build in node. The count is the number of heads that have crossed the HEADCOUNT stripe (y 9.7, across the hallway just
+ * north of the day room's door): residents about 1 a second, then the fire door (one resident at a time, 0.68 a second; the Strawberries 2.2 a second) is the bottleneck, so the queue backs up the hallway.
+ * TIME-LAPSE. The scene shows the sim at a variable speed: tauAt(lt) maps scene-local seconds to sim seconds through anchors (ANCH, piecewise linear) that the sim solves from its own pass times, so the chip reads 38 / 39 / 40 on the
+ * three words of the `m1` line and 80 on "Eighty." (`l5`); x1.2 while the ground shot tracks the line, a ramp, about x21 for the time-lapse (13.5 to 15.06), about x1.5 for the three words, x6 for the flood, a slow x1.9 while the ground shots
+ * of Lemon and Tomato are on, x5 over the packed hallway (`l6`), and a fast drain in the dark of Tomato's close-up before the final shot. rate(lt) = d tau / d lt is the factor behind the badge.
+ * API: const S = build(); S.at(lt, out) fills out.x/.y/.hx/.hy/.st (Float32Arrays of N; st 0 seated or waiting, 1 moving, 3 settled); S.count(lt); S.tauAt(lt); S.rate(lt); S.A / S.meta (agents: id, wave, kind, name, r, v0, x0, y0, col);
+ * S.pass (count-line crossing times, sim s); S.dpass (fire-door crossing times); S.T_REL; S.tSettle; S.seats; S.WALLS; S.slots.
+ * Node: `node ep18_evac_sim.js` prints the pass times, the anchors, the speed factors and the counts at the key words. The timeline numbers (TL) are the frozen ones of build/ep18/timeline.json, scene evac. */
 (function () {
 /* ---------------------------------------------------------------- the plan (metres) */
 const PLAN = {

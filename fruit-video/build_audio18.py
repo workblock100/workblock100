@@ -16,8 +16,11 @@ WHAT IS NEW IN EPISODE 18 (scene ids: title, notice, marshal, alarm, evac, clear
   THE QUIET    the alarm's `quiet` beat: the horn cut with a 60 ms tail, then room tone, one flickering fluorescent tube and a single cart-wheel squeak near 21.9 s (nothing else).
 
 Usage: python3 build_audio18.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--out build/ep18_sound] [--events build/ep18/events.json] [--phys build/ep18/phys_events.json]
-                                [--doors build/ep18/door_events.json] [--publish]
-  --publish   after the timeline matches build/ep18/timeline.json: copy audio.wav into build/ep18/ and encode audio.m4a
+                                [--doors build/ep18/door_events.json] [--keep-stems] [--publish]
+  --publish     after the timeline matches build/ep18/timeline.json: copy audio.wav into build/ep18/ and encode audio.m4a
+  --keep-stems  keep stem_voice.wav, stem_sfx.wav and stem_music.wav in the output folder (they are removed otherwise)
+The three event files are read when they exist (events.json: the animation's footsteps; phys_events.json: the extinguisher's collisions; door_events.json: the alarm's doors); a missing
+door table falls back to a fixed schedule (the six doors at 9.9 to 12.9 s of the alarm scene) and the build says so.
 """
 import hashlib
 import json
@@ -166,67 +169,6 @@ def _match_active_rms(y, ref):
     return y * (b / a) if a > 0 else y
 
 
-def fx_arti(x, seed, glitch_t=None, drops=1):
-    """Mr. Artichoke on a laggy video call. The voice stays deep and smooth (that is the joke) but the call shows through: band-limited to 85 Hz .. 5.2 kHz, a faint codec comb (1.3 ms),
-    a soft saturation, a jitter buffer that wanders (0.25 ms at 0.7 Hz and 0.1 ms at 5 Hz), a faint hiss, and the damage: a held vowel (a 20 ms grain of a voiced stretch looped for 60 to 90
-    ms: the robot hold of packet-loss concealment) and, in a pause between words, a dropout with a click. Where the script has a glitch cue the line stutters there (the 60 ms before it,
-    twice, bit-crushed) so the picture's freeze is heard. Nothing is removed from the middle of a word."""
-    n = len(x)
-    r = rng6(seed)
-    y = _bp4(x, 85, 5200, 2)
-    y = y + _delay(y, 1.3, .09)
-    pk = np.max(np.abs(y)) + 1e-9
-    y = np.tanh(1.5 * y / pk) * pk / 1.2
-    y = _wobble(_wobble(y, .00025, .7), .0001, 5.0, 1.3)
-    y = y + _hp4(rng6(seed + 7).uniform(-1, 1, n), 3000) * .0025 * pk
-    env = _env10(y)
-    nf = len(env)
-    strong = np.where(env > .55 * env.max())[0]
-    strong = strong[(strong > 15) & (strong < nf - 25)]
-    quiet = np.where(env < .09 * env.max())[0]
-    quiet = quiet[(quiet > 12) & (quiet < nf - 12)]
-    spans = []
-    if glitch_t is not None:
-        g0 = int(glitch_t * SR)
-        grain = y[max(0, g0 - int(.06 * SR)):g0].copy()
-        if len(grain) > 100:
-            crushed = np.round(grain / pk * 28) / 28 * pk
-            hold = np.repeat(crushed[::5], 5)[:len(grain)]
-            k = len(grain)
-            for j, src in enumerate((crushed, hold)):
-                a0 = g0 + j * k
-                m = min(k, n - a0)
-                if m > 0:
-                    fade = np.minimum(1, np.minimum(np.arange(m) / 90, (m - np.arange(m)) / 90))
-                    y[a0:a0 + m] = src[:m] * fade + y[a0:a0 + m] * (1 - fade) * 0
-            spans.append((glitch_t, glitch_t + .15))
-    hops = 480
-    for _ in range(1 if n / SR > .7 else 0):                      # a held vowel
-        cand = [f for f in strong if all(abs(f * hops / SR - a) > .3 and abs(f * hops / SR - b) > .3 for a, b in spans)]
-        if cand:
-            f = int(r.choice(cand))
-            i0 = f * hops
-            gr = y[i0:i0 + int(.02 * SR)].copy()
-            L = int(r.uniform(.06, .09) * SR)
-            rep = np.tile(gr, L // len(gr) + 1)[:L]
-            w = np.minimum(1, np.minimum(np.arange(L) / 120, (L - np.arange(L)) / 120))
-            m = min(L, n - i0)
-            y[i0:i0 + m] = rep[:m] * w[:m] + y[i0:i0 + m] * (1 - w[:m])
-            spans.append((i0 / SR, i0 / SR + L / SR))
-    for _ in range(drops if n / SR > 1.2 else 0):                 # a dropout in a pause
-        cand = [f for f in quiet if all(abs(f * hops / SR - a) > .25 and abs(f * hops / SR - b) > .25 for a, b in spans)]
-        if cand:
-            f = int(r.choice(cand))
-            i0 = f * hops
-            L = int(.05 * SR)
-            m = min(L, n - i0)
-            w = np.minimum(1, np.minimum(np.arange(m) / 100, (m - np.arange(m)) / 100))
-            y[i0:i0 + m] *= 1 - w
-            y[i0:i0 + 40] += r.uniform(-1, 1, len(y[i0:i0 + 40])) * .02 * pk
-            spans.append((i0 / SR, i0 / SR + L / SR))
-    return _match_active_rms(y, x)
-
-
 def fx_bind(x, menace=False):
     """Binder: a bright, cheerful assistant, slightly synthetic: a lift at 2.2 to 7.5 kHz, a faint detuned double (a 6 ms delay that flutters at 5.5 Hz: a plastic sheen) and a 10-bit grain.
     On 'Great! I'll help.' the same voice gets a low menace: the highs rounded off, a dark shelf under 300 Hz, a slow wobble and a dark slap-back 70 ms behind it."""
@@ -247,14 +189,6 @@ def fx_onion(x, seed):
     y = y - .3 * _hp4(y, 4000)
     env = np.interp(np.arange(n), np.arange(len(_env10(x))) * 480 + 240, _env10(x))
     y = y + _bp4(rng6(seed).uniform(-1, 1, n), 1500, 6000) * env * .05
-    return _match_active_rms(y, x)
-
-
-def fx_broc(x):
-    """Broccoli: booming and jolly. A low shelf (+4 dB under 180 Hz), a little warmth (soft saturation) and a touch of chest at 400 Hz."""
-    y = x + .55 * _lp4(x, 180, 2) + .25 * _bp4(x, 300, 520, 1)
-    pk = np.max(np.abs(y)) + 1e-9
-    y = np.tanh(1.3 * y / pk) * pk / 1.1
     return _match_active_rms(y, x)
 
 
@@ -411,7 +345,7 @@ def tts15(kokoro, v, say):
 DUCK_DB = {   # how far a cue is dipped (dB) while a voice speaks, by effect name; anything missing here is not dipped. The hits the picture lands on are never dipped.
     "peel": 11, "heartbeat": 9, "typing": 8, "keyboard": 8, "sniffle": 8, "sob": 6, "spinner": 7, "counter": 7, "flip": 7, "cranemotor": 9, "cablecreak": 7, "groan": 8,
     "rumble": 8, "sink": 6, "banner": 6, "crowd": 6, "fillpop": 7, "poof": 6, "phys": 12, "step": 7, "grin": 8, "dialog": 7, "glitch": 5, "stars": 7, "cablewhip": 5, "error": 5,
-    "yulecrackle": 9, "wheelchair": 4, "printer": 3, "boots": 3,                      # Episode 18: the fire's crackle is a bed (the TV is behind the talk), the rest only a little
+    "yulecrackle": 9, "wheelchair": 4, "printer": 3, "boots": 3, "bootstep": 7,                      # Episode 18: the fire's crackle is a bed (the TV is behind the talk), the rest only a little
 }
 NOREV = ("chirp", "roomtone", "horn3")      # Episode 18: cues that never go through the scene's reverb (the smoke detector's chirp stays perfectly dry; a room tone is already a room; the horn bed has its own room baked in)
 _DRY = [None, None]                # [the mixer's dry buffer (the first buffer place2 is given), a buffer of the same size that holds only the NOREV cues]
@@ -728,12 +662,14 @@ def sfx_grin():
         t = tarr(d)
         fr = f * (.97 + .03 * np.minimum(1, t / .05))
         _place(x, _sin_of(fr) * np.exp(-t / .2) * np.minimum(1, t / .002) + .25 * _sin_of(fr * 2.76) * np.exp(-t / .06), .07 * j, 1.5 - .3 * j)
-    d = 1.15
+    k, scene, i = _ctx("grin")
+    d = .72 if scene == "clear" else 1.15                      # Episode 18: in the clear the sustain is over (0.8 s) before the last chirp: nothing under it
     t = tarr(d)
     low = _lp4(osc("saw", 110.0, d) + osc("saw", 116.5, d) + .6 * osc("saw", 55.0, d), 450, 2) + .7 * _lp4(osc("saw", 220.0, d) + osc("saw", 233.0, d), 900, 2)
     _place(x, low * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.6 * (1 + .12 * np.sin(2 * np.pi * 5 * t)), .05, .35)
-    k, scene, i = _ctx("grin")
-    return norm6(_edge(x, .0005, .25), .65) * (.3 if scene == "alarm" else 1.0)           # Episode 18: in the alarm's silence it is only a glint
+    if scene == "clear":
+        x = x[:_n(.8)]
+    return norm6(_edge(x, .0005, .12 if scene == "clear" else .25), .65) * (.3 if scene == "alarm" else 1.0)           # in the alarm's silence it is only a glint
 
 
 def sfx_peel():
@@ -1464,7 +1400,7 @@ HORN_CUT = (8000.0, 4500.0, 3000.0, 2000.0, 1300.0, 850.0, 520.0)   # the low-pa
 HORN_STEP_DB = 1.5                                                   # and the level (dB) that goes with every door
 HORN_LEVEL = 1.2                                                     # the bed's peak at full brightness (before the mixer's cue gain and .6)
 HORN_DUCK = {"title": 6, "alarm": 15, "evac": 12}                    # dB the bed dips under any voice, by scene
-HORN_DUCK_PA = 24                                                    # ... under the overhead page
+HORN_DUCK_PA = 19                                                    # ... under the overhead page
 
 
 def _horn_tone(n, seed=0):
@@ -1542,7 +1478,7 @@ def sfx_horn3():
     5 ms edges, a hair of strobe tick on every pulse (the xenon tube) and a reflection off each wall (7 and 12 ms behind, darker). THE DOORS: the alarm scene's bed is run through seven low-passes
     (8 k, 4.5 k, 3 k, 2 k, 1.3 k, 850 Hz, 520 Hz) that are blended by the number of doors shut (see _load_doors): each slam steps it down, 1.5 dB a door, over 150 ms; as more doors shut the horn
     also loses its edges (a short smear) and gains the thump of air that walls pass on. The evacuation's bed stays at the six-door setting and opens to 1.2 kHz while the line leaves. The bed is dipped
-    under the voices (6, 15 or 12 dB by scene; 24 under the overhead page). A bed that is cut in the middle of a pulse (the snooze) gets a 60 ms ring-down: the diaphragm settling."""
+    under the voices (6, 15 or 12 dB by scene; 19 under the overhead page). A bed that is cut in the middle of a pulse (the snooze) gets a 60 ms ring-down: the diaphragm settling."""
     k, scene, i = _ctx("horn3")
     starts, stops = _cue_times("horn3"), _cue_times("hornstop")
     known = k < len(starts)
@@ -1692,15 +1628,14 @@ def _latch(seed, depth=0.0):
 
 def sfx_doorslam():
     """A heavy fire door shutting (about 1.2 s with its corridor). One call per `doorslam` event of the door table (see _load_doors): the leaf on its frame, the body, the bounce and the
-    rattle (see _slam_core), the latch's click folded in when the table has no separate `doorlatch` events, and then the corridor (see _corridor): a far door is quieter (the event's own gain),
+    rattle (see _slam_core), the latch bolt's click folded in (louder when the table has no separate `doorlatch` events), and then the corridor (see _corridor): a far door is quieter (the event's own gain),
     duller and wetter, a near one is a crack. Each door is a little different (its own modes, its own rattle)."""
     k = _nth("doorslam")
     ev = DOOR_EVENTS[k] if k < len(DOOR_EVENTS) else {"depth": .5, "door": k}
     depth = float(np.clip(ev.get("depth", .5), 0, 1))
     seed = 6000 + 17 * k
     x = _slam_core(seed, 1.0, int(ev.get("door", k)))
-    if not LATCH_EVENTS:
-        _place(x, _latch(seed + 40, depth), .03, .45)
+    _place(x, _latch(seed + 40, depth), .03, .22 if LATCH_EVENTS else .45)           # the bolt meets its keeper as the leaf meets the frame (the table's own latch events are the closer settling, 0.24 s later)
     y = _corridor(x, depth, seed + 7)
     return norm6(_edge(y, .0002, .15), .9)
 
@@ -1779,6 +1714,12 @@ def sfx_boots():
     for j, (at, w) in enumerate(((0.0, .9), (.36, 1.0), (.72, 1.05), (.98, .55))):
         _place(x, _boot(5300 + 9 * j, 1.0), at, w)
     return norm6(_edge(_lp4(x, 7500, 2), .001, .2), .95)
+
+
+def sfx_bootstep():
+    """One of the Marshal's footsteps once he is in the scene (0.3 s): the heavy boot of the entrance (see _boot), a little different each time."""
+    k = _nth("bootstep")
+    return norm6(_edge(_lp4(_boot(5800 + 7 * k, 1.0), 7500, 2), .001, .08), .7)
 
 
 def sfx_flashclick():
@@ -2190,12 +2131,22 @@ def _scripted(tab):
     return out
 
 
+BOOT_KEYS = ("pom", "marshal")      # Episode 18: the Fire Marshal walks in heavy boots: his footsteps (the animation's keys 'pom:...' or 'marshal:...') are `bootstep`s, and the ones that fall inside his entrance (the `boots` cue) are dropped
+
+
 def _tune_steps(events, tab):
     out = []
+    boots = _cue_times("boots")
     for ev in events:
         ev = dict(ev)
         if ev.get("name") == "step":
             ev["vol"] = round(ev.get("vol", .5) * STEP_SCALE.get(_scene_of(ev["t"], tab), 1.0), 4)
+            if any(k in str(ev.get("key", "")).lower() for k in BOOT_KEYS):
+                if any(tb - .1 <= ev["t"] <= tb + 1.3 for tb in boots):
+                    continue
+                ev["name"] = "bootstep"
+                ev.pop("foot", None)
+                ev["vol"] = round(ev["vol"] * 1.6, 4)
         out.append(ev)
     steps = sorted((e for e in out if e.get("name") == "step"), key=lambda e: e["t"])
     for e in steps:
@@ -2206,6 +2157,15 @@ def _tune_steps(events, tab):
                 x["t"] = round(x["t"] + RUSH_AT[min(j, len(RUSH_AT) - 1)], 3)
                 x["vol"] = round(x["vol"] * .8, 4)
     return out
+
+
+PHYS_BOOST = {"can": 3.5, "cart": 2.0, "easel": 2.0}      # Episode 18: the rampage's collisions are small in the simulation's own measure (the loudest is 0.4) but they are the joke: the can is heard first
+
+
+def _tagkey(e):
+    """The first of the boosted names that the event's tag ('can+floor', 'easel+can' ...) contains, else ''."""
+    parts = str(e.get("tag", "")).split("+")
+    return next((k for k in PHYS_BOOST if k in parts), "")
 
 
 def _select_phys(phys, scripted):
@@ -2236,7 +2196,7 @@ def _select_phys(phys, scripted):
         e = ev[i]
         mag = float(e.get("mag", .3))
         out.append({"t": round(e["t"] + (.0 if i in first else .0), 3), "name": "phys", "mat": e.get("mat", "plastic+plastic"), "mag": round(mag, 3), "k": e.get("k", "hit"), "tag": e.get("tag", ""),
-                    "vol": round((.05 + .30 * mag ** 1.3) * (.6 if e.get("k") == "slide" else 1.0), 4), "pan": float(np.clip(e.get("pan", 0), -1, 1)), "room": "hall"})
+                    "vol": round(min(.9, (.05 + .30 * mag ** 1.3) * (.6 if e.get("k") == "slide" else 1.0) * PHYS_BOOST.get(_tagkey(e), 1.0)), 4), "pan": float(np.clip(e.get("pan", 0), -1, 1)), "room": "hall"})
     return out
 
 
@@ -2528,6 +2488,7 @@ def main():
         phys_src = p if os.path.exists(p) else ""
     tuned = _make_events(src, phys_src, out_dir)
     print(f"events: footsteps from {src or 'none'}, collisions from {phys_src or 'none'} ({len(PHYS_EVENTS)} placed)")
+    print(f"doors: {_load_doors()['source']}: {len(DOOR['slams'])} slams, {len(DOOR['latches'])} latches; the horn's door states " + ", ".join(f"{t:.2f}:{n}" for t, n in DOOR["states"]))
     if tuned:
         argv += ["--events", tuned]
     sys.argv = [sys.argv[0]] + argv
