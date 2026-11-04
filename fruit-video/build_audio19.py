@@ -614,8 +614,6 @@ def place2_19(buf, clip, at, gain=1.0, pan=0.0):
             _PLACE2(_DRY[1], v, at, gain, pan)
         return
     name = getattr(clip, "sfx", None) or "step"
-    if name in NOREV and buf is _DRY[0]:
-        _PLACE2(_DRY[1], np.asarray(clip), at, gain, pan)
     db = DUCK_DB.get(name)
     if db and _WIN:
         i = int(round(at * SR))
@@ -623,6 +621,8 @@ def place2_19(buf, clip, at, gain=1.0, pan=0.0):
         if n > 0:
             sm = _speech_gate(buf.shape[1])[i:i + n]
             clip = np.asarray(clip)[..., :n] * (1 - (1 - 10 ** (-db / 20)) * sm)
+    if name in NOREV and buf is _DRY[0]:                  # the dry buffer holds the same (dipped) clip that the mix does, so that the reverb's input is exactly what is not dry
+        _PLACE2(_DRY[1], np.asarray(clip), at, gain, pan)
     _PLACE2(buf, np.asarray(clip), at, gain, pan)
 
 
