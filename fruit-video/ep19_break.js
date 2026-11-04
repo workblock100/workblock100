@@ -574,12 +574,12 @@ function actMango(lt) {
 }
 /* Lemon: second in line; turns to the queue and asks "Who is next for the microwave?" with the free hand out along the line */
 function actLemon(lt) {
-  const route = t => qPos(6, t), q1 = bS('q1'), ask = lt >= q1 - .1 && lt < bE('q1') + .4;
+  const route = t => { const q = qPos(6, t); return [q[0] - (t >= T_END_EMPTY ? 70 : 0), q[1]]; }, q1 = bS('q1'), ask = lt >= q1 - .1 && lt < bE('q1') + .4;   /* at the cut to the last tableau she has made room for the two who sit down, so Brenda's body and half sandwich do not cover her face */
   const yaw = key([[0, -1.05], [q1 - .35, -1.05], [q1, .55], [bE('q1') + .2, .55], [bS('q2') + .1, -.5], [bS('o1'), -.5], [T_SNAP, -.5], [T_SNAP + .2, -.95], [bS('l1') - .2, -.95], [bS('l1'), -.6]], lt);
   const hy = key([[0, -1.0], [q1 - .3, -1.0], [q1, .85], [bE('q1') + .1, .85], [bS('q2'), -.3], [wS('q3', 2) - .3, -.3], [wS('q3', 2) + .2, .25], [bE('q3') + .2, .25], [bS('o1') - .1, .3], [CUE.ding, .3], [T_SNAP, .3], [T_SNAP + .14, -1.0], [bS('m1') + .3, -.7], [bS('l1') + .05, .05], [bE('l1') - .2, .05], [bE('l1') + .2, -.7]], lt);
   const o = person(A7.lemon, route, lt, { t: lt, stride: 28, yaw, headYaw: hy, look: [clamp(hy * .4, -.5, .5), 0], who: 'lemon', hat: { c1: '#4aa8ff', c2: '#ffe135', rot: -.25, dx: -.3, dy: .94 }, hatPop: lt < T_HAT ? 0 : ss(lt, T_HAT + .04, T_HAT + .34), acc: ['readers', 'lanyard7', 'fp19b_hat'],
     expr: pick(lt, [[q1, 'neutral'], [bE('q1'), 'neutral'], [bS('q3'), 'neutral'], [T_HAT + .25, 'sour'], [CUE.ding, 'neutral'], [T_SNAP, 'shock'], [bS('l1') - .1, 'shock'], [bE('l1') + .3, 'sour'], [T_END_EMPTY, 'sad'], [99, 'dead']]), lid: lt < T_HAT ? .3 : undefined,
-    arms: { l: 'rest', r: 'hold' }, grip: { r: [100, 54] }, hold: { r: 'fp19b_plate' }, hand: { r: 'flat' }, plateItems: lt >= T_END_EMPTY ? [] : ['roll', 'pieMold'], plateSeed: 12, plateScale: 1 });
+    arms: { l: 'rest', r: 'hold' }, grip: { r: [88, 54] }, hold: { r: 'fp19b_plate' }, hand: { r: 'flat' }, plateItems: lt >= T_END_EMPTY ? [] : ['roll', 'pieMold'], plateSeed: 12, plateScale: .94 });
   if (ask) { const g = ss(lt, q1 + .15, q1 + .45) * (1 - ss(lt, bE('q1') - .1, bE('q1') + .3)); if (g > .02) { o.arms.l = 'hold'; o.grip = Object.assign(o.grip || {}, { l: [lerp(-70, -150, g), lerp(60, -6, g)] }); o.hand = Object.assign(o.hand || {}, { l: 'open' }); } }
   o.z = route(lt)[1];
   return o;
@@ -602,7 +602,7 @@ const STRAW_AT = [525, 1110], EX_S = [250, 1600], EX_B = [-70, 1600], SEAT_S = [
 const STRAW_R = (() => { const q0 = qPos(9, T_S_LEAVE), k = keyRoute([[T_S_LEAVE, q0[0], q0[1]], [snapT(11.4), 250, 1760, 'io'], [snapT(12.15), 400, 1530, 'io'], [snapT(12.95), STRAW_AT[0], STRAW_AT[1], 'io'], [snapT(19.4), STRAW_AT[0], STRAW_AT[1]], [snapT(22.5), 360, 1400, 'io'], [snapT(25.0), EX_S[0], EX_S[1], 'io']]); return lt => lt < T_S_LEAVE ? qPos(9, lt) : k(lt); })();
 function actStraw(lt, sh) {
   const route = STRAW_R, walking = lt >= T_S_LEAVE && lt < snapT(12.95) + .1, back = lt >= snapT(19.4);
-  const yaw0 = key([[0, -1.05], [T_S_LEAVE - .4, -1.05], [T_S_LEAVE, 1.0], [snapT(12.7), 1.0], [snapT(13.0), -.22], [snapT(19.3), -.22], [snapT(19.7), -1.0], [snapT(24.8), -1.0], [snapT(25.6), -.5], [99, -.5]], lt);
+  const yaw0 = key([[0, -1.05], [T_S_LEAVE - .4, -1.05], [T_S_LEAVE, 1.0], [snapT(12.7), 1.0], [snapT(13.0), -.22], [snapT(19.3), -.22], [snapT(19.7), -1.0], [snapT(24.8), -1.0], [snapT(25.6), -.5], [T_TAKE - .05, -.5], [T_TAKE + .4, -.08], [99, -.08]], lt);   /* once she has the half she squares up to us: her sandwich hand is then the near arm (a far arm hangs behind the body) */
   const yaw = (walking || (back && lt < snapT(25.1))) ? walkYaw(route, lt, yaw0) : yaw0;
   const hy = key([[0, -.9], [bS('o1'), -.9], [bS('o1') + .6, -.2], [T_S_LEAVE, 0], [snapT(13.0), -.1], [bS('timer'), -.1], [CUE.ding, -.5], [bS('sweep'), -.5], [CUE.sweep + .3, -.35], [T_GRAB, -.3], [bS('s2') - .05, -.3], [bS('s2') + .5, -.55], [bS('s2') + .75, -.05], [T_SNAP, -.05], [T_SNAP + .15, -1.0], [bS('br2') - .1, -.9], [snapT(25.8), .5], [99, .5]], lt);
   const o = person(A11.straw, route, lt, { t: lt, stride: lt > snapT(19.4) ? 20 : 40, yaw, headYaw: hy, who: 'straw', expr: pick(lt, [[bS('o2') + 1.2, 'dead'], [bS('s1'), 'shock'], [CUE.sweep - .1, 'dead'], [bS('s2'), 'shock'], [bS('s2') + 1.0, 'dead'], [T_SNAP, 'dead'], [bS('s3'), 'sad'], [bS('br3'), 'hopeful'], [T_TAKE, 'neutral'], [T_END_EMPTY, 'happy'], [99, 'chill']]), lid: (lt < CUE.sweep - .1 || (lt >= bS('s2') && lt < bS('s2') + 1.0)) ? .5 : (lt >= T_SNAP && lt < bS('br3') ? .45 : undefined),
@@ -610,14 +610,14 @@ function actStraw(lt, sh) {
     arms: { l: 'hold', r: 'rest' }, grip: { l: [-104, 54] }, hold: { l: 'fp19b_plate' }, hand: { l: 'flat' }, plateItems: PLATE_ITEMS, plateItemScale: 1.04, plateStickers: STICKERS, plateSeed: 7, plateScale: 1.12 + .2 * ss(lt, bS('s1') - .15, bS('s1') + .05) - .2 * ss(lt, bE('s1') - .1, bE('s1') + .3), plateTilt: -.04 });
   /* the plate: held out in the queue, clutched to the chest at "discarded" and while the sweep runs, up in her hand for the close-up */
   const clutch = Math.max(ss(lt, wS('o2', 4) - .1, wS('o2', 4) + .25), ss(lt, bS('s1') - .5, bS('s1') - .1)) * (1 - ss(lt, T_GRAB + .3, T_GRAB + .5));
-  if (lt >= T_S_LEAVE && lt < T_GRAB) o.grip = { l: [lerp(-104, -34, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3))), lerp(54, 62, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3)))] };
+  if (lt >= T_S_LEAVE && lt < T_GRAB) o.grip = { l: [lerp(-104, -58, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3))), lerp(54, 64, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3)))] };
   if (lt >= T_GRAB) { o.hold = {}; o.grip = { l: [-70, 20] }; o.arms.l = lt < T_GRAB + .4 ? 'hold' : 'rest'; if (lt >= T_GRAB + .4) o.grip = {}; }
   if (lt >= T_TAKE) {                                     /* takes Brenda's half with her near hand, then eats it, eyes shut */
     o.hold = { l: 'fp19b_sandwich' }; o.sandMode = 'R'; o.sandScale = 1.25; o.arms.l = 'hold'; o.hand.l = 'grip'; o.grip = { l: [-96, 50] };
     if (lt >= T_TAKE + .6) { o.mouthOpen = Math.max(0, .18 * Math.sin((lt - T_TAKE) * 9)); }
   }
   o.acc = (o.acc || []).concat(['fp13_shut']);
-  if (lt >= T_END_EMPTY) { const q = V2.at(SEAT_S[0], SEAT_S[1]); Object.assign(o, { x: q.x, y: q.y - 98 * q.s, s: q.s, noLegs: true, noShadow: true, noReflect: true, yaw: -.3, headYaw: -.25, gaitW: undefined, axis: undefined, stride: undefined, mouthOpen: Math.max(0, .18 * Math.sin((lt - T_END_EMPTY) * 9)), shut: 1, shutStyle: 'happy', lid: 1 }); o.hold = { l: 'fp19b_sandwich' }; o.sandMode = 'R'; o.sandScale = 1.25; o.arms = { l: 'hold', r: 'rest' }; o.hand = { l: 'grip' }; o.grip = { l: [-34, 16] }; o.z = SEAT_S[1]; o.seated = true; }
+  if (lt >= T_END_EMPTY) { const q = V2.at(SEAT_S[0], SEAT_S[1]); Object.assign(o, { x: q.x, y: q.y - 98 * q.s, s: q.s, noLegs: true, noShadow: true, noReflect: true, yaw: -.08, headYaw: -.25, gaitW: undefined, axis: undefined, stride: undefined, mouthOpen: Math.max(0, .18 * Math.sin((lt - T_END_EMPTY) * 9)), shut: 1, shutStyle: 'happy', lid: 1 }); o.hold = { l: 'fp19b_sandwich' }; o.sandMode = 'R'; o.sandScale = 1.25; o.arms = { l: 'hold', r: 'rest' }; o.hand = { l: 'grip' }; o.grip = { l: [-34, 16] }; o.z = SEAT_S[1] - 1; o.seated = true; }   /* painted after Brenda, so her half sandwich is not under Brenda's dome */
   else o.z = route(lt)[1];
   return o;
 }

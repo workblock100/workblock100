@@ -1283,6 +1283,9 @@ function castT(lt) {
   C.straw = A11.straw({ x: f[0], y: yy, s, t: lt, yaw: yawS, headYaw: lt < 19.1 ? (sk > .5 ? -.3 : (lt < T.s0 ? -.2 : 0)) : yawS, look: lookStr(lt), expr: 'dead', lid, plant: true, who: 'straw', noLegs: !legs, noShadow: !legs, noReflect: true,
     arms: { l: lt < 18.7 ? 'hold' : 'rest', r: 'rest' }, hold: lt < 18.7 ? { l: 'fp19s_medcup' } : {}, cupScale: 1.5, grip: { l: [-104, -14] },
     gaitW: walking2 ? walk * 1500 : undefined, axis: walking2 ? 'z' : undefined, dir: walking2 ? -1 : undefined, vx: 0, squash: lt > TC.chairsit && lt < TC.chairsit + .3 ? .05 * Math.sin((lt - TC.chairsit) / .3 * PI) : 0 });
+  /* the closed eyes of the sit beat: the engine's lid at 1 only fills the eye with skin (a blank disc); the Episode 13 kit's fp13_shut wipes it and draws a relaxed U with lashes */
+  const shutK = lt < 17.95 ? ss(lid, .82, .98) : 1 - ss(lt, 18.0, 18.3);
+  if (shutK > .01) { C.straw.shut = shutK; C.straw.shutStyle = 'sleep'; C.straw.acc = (C.straw.acc || []).concat(['fp13_shut']); }
   C.sp = sp; C.sk = sk;
   return C;
 }
