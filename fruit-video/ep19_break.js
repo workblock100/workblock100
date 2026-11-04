@@ -885,5 +885,4 @@ function blur(lt) {
 const SC = { shot: lt => shotAt(lt).id, cam, draw, fx, blur, over, clock: () => SCN.clock, label: () => SCN.label };
 window.__EP19_SCENES = window.__EP19_SCENES || {};
 window.__EP19_SCENES.breakroom = SC;
-window.__EP19_BREAK_DEBUG = { fr: () => FR, shotAt, CUE, SHOTS, START };
 })();
