@@ -1,14 +1,16 @@
 'use strict';
 /* SHIFT HAPPENS, Episode 18: "The Fire Drill". Scene module: marshal (7:55 PM, THE MARSHAL, 38.8 s). Builder MARSHAL. Registers window.__EP18_SCENES.marshal and adds P18.extinguisher / P18.extinguisherNozzle.
  *
- * The Unit B lobby corridor in the evening: ONE world seen in flat elevation (1080 x 1920 world units at zoom 1; the floor is y 1150, the ceiling y 130), many cameras. From left to right: the stairwell door (x -130..70),
+ * The Unit B lobby corridor in the evening: ONE world seen in flat elevation (1080 x 1920 world units at zoom 1; the floor is y 1150, the drawn ceiling line y 380), many cameras. From left to right: the stairwell door (x -130..70),
  * the Marshal's spot (420), the drill easel with the cardboard flame SIMULATED FIRE (774), the line-up (690 880 1070), the wall tablet where Binder lives (1250), the extinguisher cabinet (1400), the linen cart (1582)
- * wedged in the fire door (the doorway 1640..1880; the leaf stands open at an angle with the taped sign KEEP CLOSED), the right end wall (2420). Lemon demonstrates at x 1250 facing left; the can is the sim's (ep18_marshal_sim.js).
- * Shots (scene-local s): open 0-1.4 wide, dark: the stairwell door, the Marshal's silhouette, the beam (click 1.0) | p1 1.4-3.3 Marshal MCU | s1 3.3-4.24 Strawberry | m1 4.24-5.21 Mango | o1 5.21-6.3 Onion |
- * b1 6.3-7.58 the wall tablet, Binder pops out (pop 6.361) | p2 7.58-9.66 the beam follows the wall to the cabinet (a pan) | ex1 9.66-10.9 INSERT the extinguisher (click 9.66) | ex2 10.9-12.74 INSERT the tag |
- * o2 12.74-13.76 Onion | p4 13.76-15.63 Marshal | o3 15.63-17.37 Onion, harder | p5 17.37-20.05 the beam swings to the fire door (a pan) | m2 20.05-20.93 Mango at the cart | sg 20.93-23.14 the sign |
- * m3 23.14-24.87 the cart and the sign, Mango pats it (a hold) | p7 24.87-26.73 Marshal | l1 26.73-28.457 Lemon, P.A.S.S. chips, the pin (27.233) | the rampage 28.457-31.9 (launch, the cart, the arc, the wide, the punch-in on the Marshal) |
- * p8 31.9-33.71 foam beard | l2 33.71-35.04 Lemon | p9 35.04-37.51 the Marshal writes, the SLIP HAZARD stamp (36.739), Strawberry glides across the foam | end 37.51-38.76 hold (sting 37.61).
+ * wedged in the fire door (the doorway 1640..1880; the leaf stands open at an angle with the taped sign KEEP CLOSED), the right end wall (2420). Lemon demonstrates at x 1330 facing left; the can is the sim's (ep18_marshal_sim.js).
+ * Shots (scene-local s, every cut snapped to a video frame): open 0-1.4 wide and dark: the stairwell door, the Marshal steps in (boots .2 .48 .76), the beam clicks on at 1.0 and finds the line-up | p1 1.4-3.3 Marshal MCU |
+ * s1 3.3-4.24 Strawberry | m1 4.24-5.21 Mango | o1 5.21-6.3 Onion (sniffle 6.0) | b1 6.3-7.58 the wall tablet: Binder bursts out at 6.361 | p2 7.58-9.66 the beam sweeps the wall to the cabinet (a pan past the easel,
+ * Binder, the line-up) | ex1 9.66-10.9 INSERT the extinguisher (the light clicks on at 9.66; dust, a cobweb and spider, the needle in the red) | ex2 10.9-12.75 INSERT the tag INSPECTED 2019 | o2 Onion | p4 Marshal | o3 Onion, harder
+ * (sniffle 16.83) | p5 17.37-20.05 the beam swings to the fire door (a pan) | m2 Mango at the cart | sg 20.93-23.14 the taped sign | m3 23.14-24.87 the cart and the sign, Mango pats it (a hold) | p7 Marshal |
+ * l1 26.73-28.457 Lemon, the P.A.S.S. chips light on the words, the pin and ring fly at 27.233, she strains | r1 28.457-28.957 launch | r2 -29.55 up the cart (the cart rattles at 28.957) | r3 -30.4 the wide (the arc over the
+ * corridor, the easel goes over), a whip into | r4 -31.05 the punch-in | r5 31.05-33.71 the foam beard lands at 31.057 (a hold) | l2 Lemon, foam in her hair | p9 35.04-37.51 the Marshal writes on his clipboard, Strawberry glides behind,
+ * the SLIP HAZARD stamp lands at 36.739 | end 37.51-38.76 the tableau (sting 37.61). The can is the sim's from 28.457: ep18_marshal_sim.js (world time = scene time; build() for the foley tool).
  * Foam and light come from FX18 when it is there (checked at draw time); this file carries small stand-ins so the scene always draws. Everything is a pure function of the scene time. */
 (() => {
 if (!window.TIMELINE_EP18 || !window.H6 || !window.V2 || !window.A15 || !window.UI) return;
@@ -496,7 +498,7 @@ function floorFoam(lt, front) {
 const nozAt = te => { const n = simAt(te); return n ? { x: n.nz.x, y: n.nz.y, ang: n.nz.ang } : { x: 0, y: 0, ang: 0 }; };
 function foamJets(lt) {
   if (lt < T0) return;
-  const segs = [[T0, 28.9, 190, 1500, 56, .32], [28.9, 29.7, 150, 1250, 52, .34], [29.7, 30.4, 120, 1050, 50, .36], [30.4, 30.95, 96, 950, 46, .3], [30.95, CUE.splat + .02, 90, 1100, 52, .22]];
+  const segs = [[T0, 28.9, 190, 1500, 56, .32], [28.9, 29.7, 150, 1250, 52, .34], [29.7, 30.4, 120, 1050, 50, .36], [30.4, 30.62, 90, 950, 46, .3], [30.62, 30.86, 46, 900, 34, .2], [30.86, CUE.splat - .03, 64, 1000, 36, .1]];
   ctx.save(); ctx.beginPath(); ctx.rect(VIEW.x0 - 300, VIEW.y0 - 600, VIEW.x1 - VIEW.x0 + 600, FLOOR + 34 - (VIEW.y0 - 600)); ctx.clip();   /* foam meets the floor: nothing falls through it */
   segs.forEach(([a, b, rate, speed, size, spread], i) => { if (lt >= a) fxJet({ nozzle: nozAt, t0: a, t1: b, t: lt, rate, speed, spread, size, gravity: 1500, seed: 7 + i, color: '#ffffff' }); });
   ctx.restore();
@@ -519,8 +521,8 @@ const POS = {
 const faceW = (kind, p) => ({ x: p.x, y: FEET({ kind }, p.s) + KINDS[kind].eyeY * p.s });
 const mangoX = lt => lerp(X.mango, 1420, ss(lt, 9.0, 12.2));          /* Mango walks to her cart while the camera is elsewhere */
 /* the torch target: keys of [time, [x, y]]; the beam follows the talk */
-const TORCH = [[1.0, [760, 1100]], [1.35, [880, 960]], [3.2, [880, 930]], [3.4, [690, 905]], [4.3, [880, 905]], [5.3, [1070, 915]], [6.4, [1250, 700]], [7.7, [1250, 700]], [9.35, [1400, 930]], [12.7, [1400, 930]],
-  [12.76, [1070, 915]], [17.2, [1070, 915]], [17.6, [1250, 760]], [19.6, [1760, 820]], [20.2, [1440, 905]], [21.0, [1786, 836]], [23.0, [1786, 836]], [23.3, [1520, 860]], [24.6, [1520, 860]], [25.0, [1330, 960]], [28.3, [1330, 960]], [28.6, [900, 1100]]];
+const TORCH = [[1.0, [760, 1100]], [1.35, [880, 960]], [3.2, [880, 930]], [3.4, [690, 905]], [4.3, [880, 905]], [5.3, [1070, 915]], [6.4, [1250, 700]], [7.7, [1250, 700]], [9.35, [1400, 930]], [12.74, [1400, 930]],
+  [12.7401, [1070, 915]], [17.2, [1070, 915]], [17.6, [1250, 760]], [19.6, [1760, 820]], [20.2, [1440, 905]], [21.0, [1786, 836]], [23.0, [1786, 836]], [23.3, [1520, 860]], [24.6, [1520, 860]], [25.0, [1330, 960]], [28.3, [1330, 960]], [28.6, [900, 1100]]];
 function torchTarget(lt) {
   if (lt < CUE.click1) return [700, 1100];
   const t = key(TORCH, lt, easeIO);
@@ -572,7 +574,8 @@ function aLemon(lt, p) {
   o.grip = { l: [(g[0] - p.x) / p.s + jx, (g[1] - fy) / p.s + jy] };
   if (lt >= T0) {
     const k = ss(lt, T0 + .2, T0 + .34); o.expr = 'shock'; o.lid = 0; o.look = [.2, -.3]; if (lt > 29.7 && lt < 31.0) o.look = [.5, -.7];
-    if (lt < T0 + .22) { const a = simAt(lt).can, ca2 = Math.cos(a.a), sa2 = Math.sin(a.a), q = [a.x + 34 * ca2 - 4 * sa2, a.y + 34 * sa2 + 4 * ca2]; o.grip = { l: [(q[0] - p.x) / p.s, (q[1] - fy) / p.s] }; }
+    const sa0 = simAt(lt);
+    if (sa0 && lt < T0 + .22) { const a = sa0.can, ca2 = Math.cos(a.a), sa2 = Math.sin(a.a), q = [a.x + 34 * ca2 - 4 * sa2, a.y + 34 * sa2 + 4 * ca2]; o.grip = { l: [(q[0] - p.x) / p.s, (q[1] - fy) / p.s] }; }
     else { o.grip = null; o.arms = { l: mixPose('hold', 'flail', k), r: mixPose('hips', 'flail', k) }; }
   }
   if (lt >= 33.2) { o.expr = 'neutral'; o.arms = { l: 'rest', r: 'rest' }; o.lid = .45 + .5 * Math.max(0, 1 - Math.abs(lt - 34.25) * 9); o.look = [-.1, 0]; }
@@ -609,7 +612,7 @@ shot('s1', 3.297, 4.235, mcu('straw', 'straw', 2.5, 2.62, 720, 8), { cast: ['str
 shot('m1', 4.235, 5.214, mcu('mango', 'mango', 2.55, 2.45, 760, 8), { cast: ['mango'] });
 shot('o1', 5.214, 6.3, mcu('onion', 'onion', 2.45, 2.55, 740, 10), { cast: ['onion'] });
 shot('b1', 6.3, 7.578, u => camAt(1226, 740, lerp(2.0, 2.12, u), 540, 800), { cast: ['binder'] });
-shot('p2', 7.578, 9.66, (u, lt) => { const k = easeIO(sg(u, .12, .96)), f = fcM(); return camAt(lerp(f.x + 20, 1390, k), lerp(f.y, 900, k), lerp(2.0, 1.45, k), 540, lerp(860, 780, k)); }, { cast: ['marshal', 'binder'], pan: 1 });
+shot('p2', 7.578, 9.66, (u, lt) => { const k = easeIO(sg(u, .12, .96)), f = fcM(); return camAt(lerp(f.x + 20, 1390, k), lerp(f.y, 900, k), lerp(2.0, 1.45, k), 540, lerp(860, 780, k)); }, { cast: ['marshal', 'straw', 'mango', 'onion', 'binder'], pan: 1 });
 shot('ex1', 9.66, 10.9, u => camAt(1400, 970, lerp(2.9, 3.1, u), 540, 840), { cast: [], dark: .5, insert: 1 });
 shot('ex2', 10.9, 12.744, u => camAt(1376, 1000, lerp(4.5, 4.7, u), 540, 800), { cast: [], dark: .5, insert: 1 });
 shot('o2', 12.744, 13.757, mcu('onion', 'onion', 2.5, 2.6, 740, 10), { cast: ['onion'], beam: 1 });
@@ -635,7 +638,7 @@ function shotAt(lt) { let r = SHOTS[0]; for (const sh of SHOTS) if (lt >= sh.s) 
 function setLight(lt, dark) {
   V2.setLight({ key: [-.1, -.9], keyColor: '#fff0d4', keyA: .26 * (1 - (dark || 0) * .5), rim: '#8fb3ff', rimA: .38, shadow: '#161a30', shadowA: .36, bounce: '#bfd8c4', bounceA: .12, amb: '#c8d4f0', ambA: .05 });
 }
-const BOOTS = [.34, .62, .9];
+const BOOTS = [.2, .48, .76];
 function mPlace(sh, lt) {
   const has = n => sh.cast.indexOf(n) >= 0;
   if (has('marshalDoor')) { const k = ss(lt ?? 1, .2, 1.0), st = Math.max(0, Math.sin(PI * ((lt ?? 1) - .2) / .28)); return { x: lerp(X.door - 36, X.door + 14, k), s: MS * lerp(.94, 1, k), yaw: .45, headYaw: .5, lift: (lt > .2 && lt < 1.0) ? st * 7 : 0 }; }
@@ -658,7 +661,7 @@ function drawChars(lt, sh, layer) {
   }
   const OS = sh.openStage ? { straw: { x: 600, s: CS * .9 }, mango: { x: 770, s: CS * .9 }, onion: { x: 940, s: CS * .9 } } : null;
   if (has('straw') && OS) add(4, () => drawChar(strawO(lt, Object.assign({}, P.straw, OS.straw), aStraw(lt, P.straw))));
-  else if (has('straw')) { const rampage = lt >= T0 - 1; add(rampage ? 3 : 4, () => drawChar(strawO(lt, rampage ? { x: 238, s: CS * .9, yaw: .3 } : P.straw, rampage ? Object.assign(aStraw(lt, P.straw), { look: [.5, -.2], lid: .5 }) : aStraw(lt, P.straw)))); }
+  else if (has('straw')) { const rampage = lt >= T0 - 1; add(rampage ? 3 : 4, () => drawChar(strawO(lt, rampage ? { x: 238, s: CS * .9, yaw: .3 } : P.straw, rampage ? Object.assign(aStraw(lt, P.straw), { look: [.5, -.2], lid: .5 }) : Object.assign(aStraw(lt, P.straw), sh.id === 'p2' ? { acc: ['steth', 'bandage7'] } : {})))); }
   if (has('strawGlide') || has('strawEnd')) add(2, () => { const o = strawO(lt, { x: strawGlideX(lt), y: FLOOR - 22, s: CS * .66, yaw: .3, transit: true }, Object.assign(aStraw(lt, P.straw), { look: [.3, 0], arms: { l: 'rest', r: 'hold' }, grip: { r: [86, 44] }, plant: true })); o.noBob = true; drawChar(o); });
   if (has('mango')) add(4, () => drawChar(mangoO(lt, OS ? Object.assign({}, P.mango, OS.mango) : { x: P.mango.x, s: CS, yaw: P.mango.yaw }, aMango(lt, P.mango))));
   if (has('mangoCart')) add(4, () => drawChar(mangoO(lt, { x: lt >= 12.2 ? 1420 : mangoX(lt), s: CS, yaw: lt > 23 ? -.35 : -.25 }, Object.assign(aMango(lt, P.mango), mangoJump(lt)))));
@@ -691,8 +694,9 @@ function drawCan(lt, sh, S) {
     extDraw({ x: c.x + jx, y: c.y + jy, s: 1, ang: c.ang, center: true, tip: [c.hornX + jx, c.hornY + jy, c.jet], bow: 20, dust: .5, gauge: .04, pin: lt >= CUE.pinpull ? 1 : 0, lever: sq });
     return;
   }
-  const a = S, lev = ss(lt, T0, T0 + .08);
-  extDraw({ x: a.can.x, y: a.can.y, s: 1, ang: a.can.a, center: true, tip: [a.nz.x, a.nz.y, a.nz.ang], bow: 34 * Math.sin(lt * 21) + 26, dust: .3 * (1 - ss(lt, T0, T0 + 1.4)), gauge: lerp(.04, 0, 1), pin: 1, lever: lev });
+  if (!S) return;
+  const a = S, lev = ss(lt, T0, T0 + .08), shud = lt < T0 + .12 ? 1 : 0, jx = Math.sin(lt * 95) * 3.2 * shud, jy = Math.cos(lt * 83) * 2.4 * shud;
+  extDraw({ x: a.can.x + jx, y: a.can.y + jy, s: 1, ang: a.can.a, center: true, tip: [a.nz.x, a.nz.y, a.nz.ang], bow: 34 * Math.sin(lt * 21) + 26, dust: .3 * (1 - ss(lt, T0, T0 + 1.4)), gauge: lerp(.04, 0, 1), pin: 1, lever: lev });
 }
 function flyingPin(lt) {
   if (lt < CUE.pinpull || lt > CUE.pinpull + 1.2) return;
@@ -807,9 +811,9 @@ function drawWorld(lt) {
   if (lt >= 29.7 && (sh.cast.indexOf('lemon') >= 0 || sh.cast.indexOf('lemonEnd') >= 0)) { const lp = sh.cast.indexOf('lemonEnd') >= 0 ? { x: END_X.lemon, s: CS } : POS.lemon, hy = FEET({ kind: 'lemon' }, lp.s) - 140 * lp.s; fxPile({ x: lp.x - 8, y: hy + 14, w: 150, h: 66, t: lt, t0: 29.72, grow: .45, seed: 31 }); fxPile({ x: lp.x + 38, y: hy + 36, w: 70, h: 40, t: lt, t0: 29.9, grow: .4, seed: 32 }); }
   if (lt >= CUE.splat - .06 && sh.cast.some(n => n.indexOf('marshal') === 0)) {
     const mp = mPlace(sh, lt), my = FEET({ kind: 'pom' }, MS) + 42 * MS, bx = mp.x + 18 + (mp.yaw || 0) * 24;
-    const k = ss(lt, CUE.splat - .04, CUE.splat + .2), over = 1 + .22 * Math.exp(-(lt - CUE.splat) * 9) * (lt >= CUE.splat ? 1 : 0);
-    fxPile({ x: bx, y: my + 82, w: 262 * over, h: 112 * over, t: lt, t0: CUE.splat - .04, grow: .26, seed: 11 });
-    fxPile({ x: bx - 84, y: my + 58, w: 96 * over, h: 62 * over, t: lt, t0: CUE.splat - .02, grow: .3, seed: 12 }); fxPile({ x: bx + 84, y: my + 58, w: 96 * over, h: 62 * over, t: lt, t0: CUE.splat, grow: .3, seed: 13 });
+    const over = 1 + .16 * Math.exp(-(lt - CUE.splat) * 9) * (lt >= CUE.splat ? 1 : 0);
+    fxPile({ x: bx, y: my + 92, w: 256 * over, h: 88 * over, t: lt, t0: CUE.splat - .03, grow: .24, seed: 11 });
+    fxPile({ x: bx - 86, y: my + 70, w: 96 * over, h: 50 * over, t: lt, t0: CUE.splat - .01, grow: .28, seed: 12 }); fxPile({ x: bx + 86, y: my + 70, w: 96 * over, h: 50 * over, t: lt, t0: CUE.splat, grow: .28, seed: 13 });
   }
   /* the dust of the cart hit and the easel landing */
   fxPuff({ x: 1600, y: 900, r: 90, t: lt, t0: CUE.cart, life: .8 }); fxPuff({ x: X.easel - 60, y: FLOOR - 6, r: 80, t: lt, t0: 30.7, life: .8 });
@@ -819,13 +823,13 @@ function drawWorld(lt) {
   holes.push({ type: 'glow', x: TAB.x, y: TAB.y, r: 300, a: .5 });
   if (sh.id === 'open') holes.push({ type: 'glow', x: X.door, y: 900, r: 460, a: .85 });
   const bfade = 1 - ss(lt, 28.5, 29.3);
-  if (bm && bfade > .01) { holes.push({ type: 'cone', x: bm.x, y: bm.y, ang: bm.ang, spread: .3, len: bm.len, a: bfade }); holes.push({ type: 'glow', x: bm.tx, y: bm.ty, r: 230, a: .95 * bfade }); }
+  if (bm && bfade > .01) { holes.push({ type: 'cone', x: bm.x, y: bm.y, ang: bm.ang, spread: .3, len: bm.len, a: bfade }); holes.push({ type: 'glow', x: bm.tx, y: bm.ty, r: 230, a: .85 * bfade }); }
   const dk = sh.id === 'ex1' ? lerp(.88, .5, ss(lt, CUE.click2, CUE.click2 + .1)) : (sh.dark ?? .3);
   lightMask(dk, holes);
   if (bm) {
     const hot = ss(lt, (sh.id === "ex1" ? CUE.click2 : CUE.click1) - .001, (sh.id === "ex1" ? CUE.click2 : CUE.click1) + .034) * (1 - ss(lt, 28.5, 29.3));
     fxCone({ x: bm.x, y: bm.y, ang: bm.ang, spread: .2, len: bm.len, color: '#fff2c4', alpha: .5 * hot, soft: .6 });
-    fxGlow({ x: bm.tx, y: bm.ty, r: 150, color: '#fff0c0', alpha: .5 * hot, core: .5 });
+    fxGlow({ x: bm.tx, y: bm.ty, r: 150, color: '#fff0c0', alpha: .36 * hot, core: .28 });
     fxGlow({ x: bm.x, y: bm.y, r: 60, color: '#fffbe0', alpha: .8 * hot, core: .9 });
     V2.dust(bm.tx - 260, bm.ty - 240, bm.tx + 260, bm.ty + 220, lt, { n: 26, seed: 5, size: 2.4, alpha: .55 * hot, speed: 7 });
   }
@@ -873,7 +877,7 @@ function overlay(lt) {
       ctx.save(); ctx.globalAlpha *= fade * enter; ctx.translate(cx, cy); ctx.scale(pop * out, pop * out); ctx.translate(-cx, -cy);
       if (lit) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = `rgba(255,214,70,${.28 * Math.exp(-age * 3)})`; ctx.beginPath(); ctx.ellipse(cx, cy, w * .75, h * .7, 0, 0, TAU); ctx.fill(); ctx.restore(); }
       UI.sign([cx - w / 2, cy - h / 2, w, h], [{ t: L, size: 96, font: 'Bangers', weight: 400, spacing: 2 }, { t: word, size: 35, weight: 900, spacing: 0, gap: 4 }],
-        { fill: lit ? '#ffd23a' : 'rgba(18,22,34,.72)', stroke: lit ? '#fff7d0' : 'rgba(255,255,255,.35)', lw: 5, ink: lit ? '#2a1a05' : 'rgba(255,255,255,.7)', r: 22, pad: 14, id: 'pass' + i, hero: true });
+        { fill: lit ? '#ffd23a' : 'rgba(18,22,34,.72)', stroke: lit ? '#fff7d0' : 'rgba(255,255,255,.35)', lw: 5, ink: lit ? '#2a1a05' : 'rgba(255,255,255,.7)', r: 22, pad: 14, id: 'pass' + i, hero: out > .999 && pop < 1.3 });
       ctx.restore();
     });
   }

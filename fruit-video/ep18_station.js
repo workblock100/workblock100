@@ -442,7 +442,7 @@ function camN(lt) {
   const C = castN(lt, sh);
   NFR = { C, sh };
   const sway = { x: 2.2 * hnoise(lt, 1.3, 1), y: 1.6 * hnoise(lt, 1.1, 2), r: .0015 * hnoise(lt, .9, 3) };
-  if (wide) zoomTo(540, 1120, 1);
+  if (wide) zoomTo(540, sh.id === 'open' ? 960 : 1120, 1);
   else if (sh.foc === 'lap') { const g = lapGeom(); zoomTo(g.x, g.y - 30, sh.z + .25 * u); }
   else if (sh.foc === 'prn') { const P = printerAt(); zoomTo(P.x + 20 * P.k, P.y - 150 * P.k, sh.z + .3 * u); }
   else { faceZoom0(C[sh.foc], sh.z + .22 * u, sh.up); CAM.x -= (sh.dx || 0) / CAM.z; }
@@ -789,7 +789,7 @@ function camC(lt) {
   const sway = { x: 2.2 * hnoise(lt, 1.3, 1), y: 1.6 * hnoise(lt, 1.1, 2), r: .0015 * hnoise(lt, .9, 3) };
   if (sh.k === 'pass' || sh.k === 'ceil' || sh.k === 'binder' || sh.k === 'tag') zoomTo(540, 960, 1);
   else if (sh.pan) { const bb = panelBtnAt(); zoomTo(bb[0] + 20, bb[1] + 170, 1.6 + .06 * u); }
-  else if (sh.wide) zoomTo(540, 1020, 1);
+  else if (sh.wide) zoomTo(540, 860, 1);
   else if (sh.fin) { zoomTo(540, 700, 1.4 + .05 * u);
   } else if (sh.two && sh.lap) { const g = lapGeom(); const [fx, fy] = faceC(C.straw); zoomTo((g.x + fx) / 2, (g.y + fy) / 2 + 40, sh.z + .12 * u); }
   else if (sh.two) frameGroup(sh.two.map(n => [C[n], 30]), { mx: 40, ty: sh.ty, zMax: 2.1, k: 1 + .05 * u });
