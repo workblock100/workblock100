@@ -20,9 +20,11 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 13: The Float Pool | [`shift-happens-ep13.mp4`](shift-happens-ep13.mp4) | 2:52 |
 | 14: The Survey | [`shift-happens-ep14.mp4`](shift-happens-ep14.mp4) | 3:12 |
 | 15: The Merger | [`shift-happens-ep15.mp4`](shift-happens-ep15.mp4) | 2:57 |
+| 16: The Vote | [`shift-happens-ep16.mp4`](shift-happens-ep16.mp4) | 1:14 |
+| 17: The Module | [`shift-happens-ep17.mp4`](shift-happens-ep17.mp4) | 1:13 |
 
 To play an episode live in the browser, start a local server in this directory and open
-`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 15 for other episodes):
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 17 for other episodes):
 
 ```bash
 python3 -m http.server 8000
@@ -234,6 +236,16 @@ Episode 15 is the first built on a set of engine upgrades, all passing the same 
 a six-floor tower with a crane, a sinking foundation and a ground cutaway (`ep15_house.js`, `window.S15`, `GUIDE_S15.md`); and five new characters (`ep15_art.js`, `window.A15`,
 `GUIDE_ART15.md`). The audio adds an objective measurement: the level of every spoken line over everything else in the mix (`build/ep15_sound/dialogue_margin.csv`).
 
+## Episode 16: The Vote
+
+A short sequel built on the Episode 15 kits in one afternoon (74 seconds). At 6:30 PM the new management holds an Employee of the Month election. Compliance prints the ballots, HR says one choice per person, and the only candidate is Binder. The ballots go into a clear box (a small rigid-body simulation: `ep16_ballot_sim.js`); the forty unassigned Strawberries from Fill Down are eligible voters ("Per policy"), so the box floods. The count: Binder 48, Pending 1, Strawberry's own, the only real ballot. One real ballot makes the election void, and a void election goes to the incumbent, who is Binder. The plaque is engraved letter by letter and the prize is a day off: pending. The title is a poll form whose other options are ineligible; the end card is the results sheet and teases Episode 17.
+
+## Episode 17: The Module
+
+A second short sequel (73 seconds). At 9:15 PM HR assigns mandatory training, Module 7, "How to Take a Break Safely": four hours of unskippable video, due before clock-out, proctored by Binder (looking away pauses the video; a call light is on; the progress bar has said 99 percent for an hour). The narrator is Mr. Artichoke on a laggy call: the break begins when the shift ends. The quiz has one answer, Pending, and it is correct; the certificate expires at eleven; clocking out requires a taken break and the break is pending until you clock out, so the clock stays on 10:59. The title is a learning-platform page stuck at 99 percent; the end card is the module roster and teases Episode 18, The Fire Drill.
+
+Episodes 16 and 17 use the Episode 15 kits (`ep15_sheet.js`, `ep15_house.js`, `ep15_art.js`, `phys2d.js`, the `yaw` turnarounds) unchanged and the same text gate; they are shorter and lighter than Episode 15 (fewer shots per scene, no new engine work).
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -280,7 +292,7 @@ a six-floor tower with a crane, a sinking foundation and a ground cutaway (`ep15
 ## Layout audit
 
 `node render.js audit` checks every on-screen box (faces, hands, props, captions, HUD, cards) for anything covered, cut off
-or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 15 are checked at 30 frames per second and the command
+or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 17 are checked at 30 frames per second and the command
 exits non-zero on any issue, so it works as a release gate (`EP=13 node render.js audit 0.0333333333`).
 
 ### The text gate (Episode 13 onward; Episode 12 after its repair)
@@ -298,14 +310,14 @@ test episode (`ep99.js`) that contains deliberate violations.
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep15.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep17.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
-  Episodes 6 to 15 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music15.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
+  Episodes 6 to 17 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music17.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 5; `ep1.js` to `ep15.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
+  Episodes 2 to 5; `ep1.js` to `ep17.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
-  Episodes 6 to 15 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
+  Episodes 6 to 17 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
   with two-bone arms and real hands) that Episodes 1 to 5 never touch. An episode may raise the motion-blur sample cap (`EP.blurMax`, default 10; Episodes 14 and 15 set 24 so fast whips are smooth, not stepped). Episode 7's art, sets and inserts are `ep7_art.js`, `ep7_sets.js` and `ep7_ins.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - Episode 12 is `ep12_title.js` (title and end card), `ep12_room.js` (the conference room), `ep12_signin.js`, `ep12_slides.js`, `ep12_drill.js` and `ep12_award.js`. Episode 13 is
@@ -316,6 +328,8 @@ Everything is generated from code, with no stock assets:
   Episode 15 is `ep15_title.js` (the title: a spreadsheet merges its own title; and the end card: the staff as a sheet), `ep15_announce.js`, `ep15_dock.js`, `ep15_model1.js`, `ep15_model2.js`,
   `ep15_replace.js` and `ep15_close.js` on the kits `ep15_sheet.js` (`window.SH15`), `ep15_house.js` (`window.S15`) and `ep15_art.js` (`window.A15`), the physics library `phys2d.js` (`window.PHYS2D`) and
   the `yaw` turnaround in `v2_char.js`; `gen_script15.py` writes `script_ep15.json`.
+  Episode 16 is `ep16_title.js` (title and end card), `ep16_ballot.js`, `ep16_ballot_sim.js`, `ep16_count.js` and `ep16_prize.js`; Episode 17 is `ep17_title.js` (title and end card), `ep17_assign.js`, `ep17_video.js` and
+  `ep17_quiz.js`; both on the Episode 15 kits; `gen_script16.py` and `gen_script17.py` write their scripts.
   `txaudit.js` is the text gate and `ui.js` the text layout kit (above).
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
@@ -485,3 +499,7 @@ EP=15 FMT=image/png CRF=22.5 node render.js video shift-happens-ep15.mp4     # 6
 ```
 
 `build_audio15.py` and `build_music15.py` reuse the earlier mixers, effects and instruments (they import the Episode 6 to 14 builders); the scene modules, the kits and the physics library are listed above.
+
+## Episodes 16 and 17 build and release gate
+
+Same steps as Episode 15 with `16` or `17` in place of `15` (`gen_script16.py`, `build_audio16.py`, `build_music16.py`, `EP=16 node render.js audit 0.0333333333`, and so on). Episode 16 also has `node tools_phys_events.js 16` (the ballot simulation's collisions, `build/ep16/phys_sims.json`); no footsteps pass was run for either. The committed files are `shift-happens-ep16.mp4` (20.2 MiB) and `shift-happens-ep17.mp4` (21.1 MiB), both rendered at CRF 22.5.
