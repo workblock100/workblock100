@@ -613,7 +613,7 @@ function actStraw(lt, sh) {
   if (lt >= T_S_LEAVE && lt < T_GRAB) o.grip = { l: [lerp(-104, -34, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3))), lerp(54, 62, c01(clutch + ss(lt, T_S_LEAVE, T_S_LEAVE + .3)))] };
   if (lt >= T_GRAB) { o.hold = {}; o.grip = { l: [-70, 20] }; o.arms.l = lt < T_GRAB + .4 ? 'hold' : 'rest'; if (lt >= T_GRAB + .4) o.grip = {}; }
   if (lt >= T_TAKE) {                                     /* takes Brenda's half with her near hand, then eats it, eyes shut */
-    const eat = ss(lt, T_TAKE + .25, T_TAKE + .6); o.hold = { l: 'fp19b_sandwich' }; o.sandMode = 'R'; o.sandScale = 1.25; o.arms.l = 'hold'; o.hand.l = 'grip'; o.grip = { l: [lerp(-108, -36, eat), lerp(40, 18, eat)] };
+    o.hold = { l: 'fp19b_sandwich' }; o.sandMode = 'R'; o.sandScale = 1.25; o.arms.l = 'hold'; o.hand.l = 'grip'; o.grip = { l: [-96, 50] };
     if (lt >= T_TAKE + .6) { o.mouthOpen = Math.max(0, .18 * Math.sin((lt - T_TAKE) * 9)); }
   }
   o.acc = (o.acc || []).concat(['fp13_shut']);
@@ -692,6 +692,12 @@ function castAt(lt, sh) {
   C.straw = actStraw(lt, sh); C.onion = actOnion(lt, sh, C.straw);
   C.brenda = lt >= bS('br1') - .3 ? actBrenda(lt, sh) : null;
   C.extras = EXTRAS.map((d, i) => mkExtra(d, i, lt, sh)).filter(o => !o.goneAway);
+  /* the hand-over: Strawberry's near hand goes to the half Brenda holds out (her hand at local [150, 64]), takes it at T_TAKE (same place: no jump) and brings it to her mouth */
+  if (C.brenda && !C.straw.seated && lt >= T_TAKE - .4 && lt < T_END_EMPTY) {
+    const bh = window.H6.localToScreen(C.brenda, 150, 64), sp = window.H6.localToScreen(C.straw, -96, 60), k = ss(lt, T_TAKE - .4, T_TAKE - .02);
+    if (lt < T_TAKE) reach(C.straw, -1, lerp(sp[0], bh[0], k), lerp(sp[1], bh[1], k), 'open', .995);
+    else { const g0 = localOf(C.straw, bh[0], bh[1]), eat = ss(lt, T_TAKE + .2, T_TAKE + .65); C.straw.grip = { l: [lerp(g0[0], -36, eat), lerp(g0[1], 18, eat)] }; C.straw.arms.l = 'hold'; }
+  }
   return C;
 }
 /* every character is wholly inside the frame, or left out of the shot (no half faces at the edge); the subject of a close-up is always drawn */
@@ -780,7 +786,7 @@ const SHOT_DEFS = [   /* id, start, framing: p = perspective camera [cx0, cz0, c
   ['b2c', 25.15, { p: [60, 0, 60, 0], pt: [[90, 270, 1620]], z: [1.5, 1.6], dof: 7, sharp: ['brenda', 'straw'] }],
   ['s3', 25.85, { p: [0, 0, 0, 0], foc: 'straw', z: [2.2, 2.3], up: 165, dof: 9, sharp: ['straw'] }],
   ['b3a', 26.61, { p: [-40, 0, -40, 0], foc: 'brenda', z: [2.2, 2.3], up: 165, dof: 9, sharp: ['brenda'] }],
-  ['b3b', 27.85, { p: [60, 0, 60, 0], pt: [[90, 280, 1620]], z: [1.7, 1.8], dof: 7, sharp: ['brenda', 'straw'] }],
+  ['b3b', 27.85, { p: [60, 0, 60, 0], pt: [[90, 215, 1600]], z: [2.05, 2.15], dof: 7, sharp: ['brenda', 'straw'] }],
   ['end', 28.88, { p: [20, 0, 40, 0], cy: 330, pt: [[130, 290, 1500]], z: [1.5, 1.62], up: 10, sharpAll: true }],
 ];
 const SHOTS = SHOT_DEFS.map(([id, s, d], i) => Object.assign({ id, s: i === 0 ? 0 : snapT(s), n: i }, d));
