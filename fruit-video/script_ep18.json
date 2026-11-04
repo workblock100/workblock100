@@ -1,0 +1,1355 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 18: The Fire Drill",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  },
+  "marshal": {
+   "name": "FIRE MARSHAL POMEGRANATE",
+   "voice": "bm_daniel",
+   "speed": 0.93,
+   "semis": -2,
+   "color": "#ff6b3d",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "pa": {
+   "name": "OVERHEAD PAGE",
+   "voice": "af_sarah",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#e8a86a",
+   "fx": "pa",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "star": {
+   "name": "MR. STATEMAN, STATE SURVEYOR",
+   "voice": "af_nicole",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#c9d22a",
+   "pan": 0.12
+  },
+  "kum": {
+   "name": "TRAINEE KUMQUAT",
+   "voice": "bf_lily",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#ff9a1f",
+   "pan": -0.24
+  },
+  "rall": {
+   "name": "THE RESIDENTS",
+   "voice": "am_fenrir",
+   "chorus": [
+    "am_fenrir",
+    "am_echo",
+    "bf_emma",
+    "am_puck"
+   ],
+   "speed": 0.95,
+   "semis": 0,
+   "color": "#c9d22a",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "chor": {
+   "name": "ALL THE STRAWBERRIES",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "af_bella",
+    "af_kore",
+    "af_nicole",
+    "af_sky",
+    "af_nova"
+   ],
+   "lang": "en-us",
+   "speed": 1.02,
+   "semis": 0,
+   "color": "#ff4d6d",
+   "pan": 0
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 6.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "pullclick",
+       2.2,
+       0.55,
+       0
+      ],
+      [
+       "horn3",
+       2.3,
+       0.5,
+       0
+      ],
+      [
+       "hornstop",
+       5.25,
+       0.4,
+       0
+      ],
+      [
+       "textding",
+       5.4,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "notice",
+   "clock": "7:40 PM",
+   "label": "THE NOTICE",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.3,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Fire drill at eight o'clock.",
+     "text": "Fire drill at eight o'clock.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       1.2,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "I thought drills were a surprise.",
+     "text": "I thought drills were a surprise.",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "They are. We announce them first.",
+     "text": "They are. We announce them first.",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I am on med pass.",
+     "text": "I am on med pass.",
+     "gap": 0.15
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "Drills do not interrupt med pass.",
+     "text": "Drills do not interrupt med pass.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Good.",
+     "text": "Good.",
+     "gap": 0.1
+    },
+    {
+     "id": "o4",
+     "who": "onion",
+     "say": "Med pass does not interrupt drills.",
+     "text": "Med pass does not interrupt drills.",
+     "gap": 0.15
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Which one wins?",
+     "text": "Which one wins?",
+     "gap": 0.15
+    },
+    {
+     "id": "o5",
+     "who": "onion",
+     "say": "Per policy.",
+     "text": "Per policy.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "sniffle",
+       0.9,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "The drill is paid time!",
+     "text": "The drill is paid time!",
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "And the evacuating?",
+     "text": "And the evacuating?",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Efficiency.",
+     "text": "Efficiency.",
+     "gap": 0.25
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're preparing for a fire. Would you like help?",
+     "text": "It looks like you're preparing for a fire. Would you like help?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! I'll help.",
+     "text": "Great! I'll help.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "grin",
+       0.55,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "print",
+     "pause": 1.7,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "printer",
+       0,
+       0.45,
+       0.2
+      ],
+      [
+       "click",
+       1.55,
+       0.3,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Your nearest exit is the Executive Suite!",
+     "text": "Your nearest exit is the Executive Suite!",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "That is on the roof.",
+     "text": "That is on the roof.",
+     "gap": 0.1
+    },
+    {
+     "id": "b4",
+     "who": "bind",
+     "say": "Fire rises!",
+     "text": "Fire rises!",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "marshal",
+   "clock": "7:55 PM",
+   "label": "THE MARSHAL",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.1,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "boots",
+       0,
+       0.4,
+       -0.3
+      ],
+      [
+       "flashclick",
+       0.8,
+       0.3,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "p1",
+     "who": "marshal",
+     "say": "Who is in charge?",
+     "text": "Who is in charge?",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I'm per diem.",
+     "text": "I'm per diem.",
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "I'm a CNA.",
+     "text": "I'm a CNA.",
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "I'm Compliance.",
+     "text": "I'm Compliance.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sniffle",
+       0.8,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "I'm in charge!",
+     "text": "I'm in charge!",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "p2",
+     "who": "marshal",
+     "say": "Show me the extinguisher.",
+     "text": "Show me the extinguisher.",
+     "gap": 0.2
+    },
+    {
+     "id": "ext",
+     "pause": 0.7,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "flashclick",
+       0,
+       0.3,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "p3",
+     "who": "marshal",
+     "say": "The tag says twenty nineteen.",
+     "text": "The tag says twenty nineteen.",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "It passed.",
+     "text": "It passed.",
+     "gap": 0.1
+    },
+    {
+     "id": "p4",
+     "who": "marshal",
+     "say": "In twenty nineteen.",
+     "text": "In twenty nineteen.",
+     "gap": 0.1
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "It is still passing.",
+     "text": "It is still passing.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "sniffle",
+       1.2,
+       0.35,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "p5",
+     "who": "marshal",
+     "say": "Why is the fire door propped open?",
+     "text": "Why is the fire door propped open?",
+     "gap": 0.15
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "For the cart.",
+     "text": "For the cart.",
+     "gap": 0.1
+    },
+    {
+     "id": "p6",
+     "who": "marshal",
+     "say": "The sign says keep closed.",
+     "text": "The sign says keep closed.",
+     "gap": 0.1
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "The cart has seniority.",
+     "text": "The cart has seniority.",
+     "gap": 0.3
+    },
+    {
+     "id": "p7",
+     "who": "marshal",
+     "say": "Demonstrate pass.",
+     "text": "Demonstrate P.A.S.S.",
+     "gap": 0.15
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Pull. Aim. Squeeze. Sweep.",
+     "text": "Pull. Aim. Squeeze. Sweep.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "pinpull",
+       0.5,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "rampage",
+     "pause": 3.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "foamhiss",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "cartrattle",
+       0.5,
+       0.3,
+       0.2
+      ],
+      [
+       "foamsplat",
+       2.6,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "p8",
+     "who": "marshal",
+     "say": "The fire is out.",
+     "text": "The fire is out.",
+     "gap": 0.2
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "There was no fire.",
+     "text": "There was no fire.",
+     "gap": 0.15
+    },
+    {
+     "id": "p9",
+     "who": "marshal",
+     "say": "Now there is a slip hazard.",
+     "text": "Now there is a slip hazard.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "stamp",
+       1.7,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "alarm",
+   "clock": "8:00 PM",
+   "label": "CODE RED",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "pachime",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "horn3",
+       0.7,
+       0.65,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Code Red. Code Red. Unit B.",
+     "text": "Code Red. Code Red. Unit B.",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Race! Rescue!",
+     "text": "Race! Rescue!",
+     "gap": 0.05
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Rescue. Alarm. Contain. Eight o'clock meds.",
+     "text": "Rescue. Alarm. Contain. Eight o'clock meds.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "The doors are closing!",
+     "text": "The doors are closing!",
+     "gap": 0.05
+    },
+    {
+     "id": "cascade",
+     "pause": 3.4,
+     "gap": 0.05
+    },
+    {
+     "id": "bonk",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "doorbonk",
+       0.1,
+       0.7,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Doors close on alarm. Per policy.",
+     "text": "Doors close on alarm. Per policy.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       1.5,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like there's an alarm. Would you like to snooze it?",
+     "text": "It looks like there's an alarm. Would you like to snooze it?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! Snoozed for ten minutes!",
+     "text": "Great! Snoozed for ten minutes!",
+     "gap": 0.05,
+     "sfx": [
+      [
+       "click",
+       1.5,
+       0.4,
+       0
+      ],
+      [
+       "hornstop",
+       1.55,
+       0.5,
+       0
+      ],
+      [
+       "grin",
+       1.7,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "quiet",
+     "pause": 1.5,
+     "gap": 0.05
+    },
+    {
+     "id": "p1",
+     "who": "marshal",
+     "say": "That is not how an alarm works.",
+     "text": "That is not how an alarm works.",
+     "gap": 0.2
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Doors are pending!",
+     "text": "Doors are pending!",
+     "gap": 0.25
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Which side of the door am I on?",
+     "text": "Which side of the door am I on?",
+     "gap": 0.1
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "The wrong one.",
+     "text": "The wrong one.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "evac",
+   "clock": "8:10 PM",
+   "label": "THE EVACUATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.3,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "pachime",
+       0,
+       0.4,
+       0
+      ],
+      [
+       "horn3",
+       0.3,
+       0.5,
+       0
+      ],
+      [
+       "yulecrackle",
+       0.1,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Everyone up! We are evacuating!",
+     "text": "Everyone up! We are evacuating!",
+     "gap": 0.1
+    },
+    {
+     "id": "r1",
+     "who": "rall",
+     "say": "We are watching the fire.",
+     "text": "We are watching the fire.",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "That is a video of a fire.",
+     "text": "That is a video of a fire.",
+     "gap": 0.1
+    },
+    {
+     "id": "c1",
+     "who": "banana",
+     "say": "It is the best part of the day.",
+     "text": "It is the best part of the day.",
+     "gap": 0.25
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Then we extinguish it.",
+     "text": "Then we extinguish it.",
+     "gap": 0.15
+    },
+    {
+     "id": "remote",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "click",
+       0.2,
+       0.4,
+       0.2
+      ],
+      [
+       "tvoff",
+       0.35,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "r2",
+     "who": "rall",
+     "say": "Boo.",
+     "text": "Boo.",
+     "gap": 0.15
+    },
+    {
+     "id": "line",
+     "pause": 3.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "wheelchair",
+       0,
+       0.35,
+       0.2
+      ],
+      [
+       "cartrattle",
+       0.6,
+       0.3,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "Headcount.",
+     "text": "Headcount.",
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Thirty-eight. Thirty-nine. Forty.",
+     "text": "Thirty-eight. Thirty-nine. Forty.",
+     "gap": 0.1
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "Forty. Good.",
+     "text": "Forty. Good.",
+     "gap": 0.2
+    },
+    {
+     "id": "ch1",
+     "who": "chor",
+     "say": "I'm one person.",
+     "text": "I'm one person.",
+     "gap": 0.15
+    },
+    {
+     "id": "l5",
+     "who": "lemon",
+     "say": "Eighty.",
+     "text": "Eighty.",
+     "gap": 0.15
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Forty are unassigned.",
+     "text": "Forty are unassigned.",
+     "gap": 0.1
+    },
+    {
+     "id": "l6",
+     "who": "lemon",
+     "say": "They are in my hallway.",
+     "text": "They are in my hallway.",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Unassigned.",
+     "text": "Unassigned.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "clear",
+   "clock": "8:25 PM",
+   "label": "ALL CLEAR",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.25,
+       0.35,
+       0
+      ],
+      [
+       "hornstop",
+       0.3,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "Don't mind me. I'm just going to observe.",
+     "text": "Don't mind me. I'm just going to observe.",
+     "gap": 0.15
+    },
+    {
+     "id": "st2",
+     "who": "star",
+     "say": "I will need the drill log.",
+     "text": "I will need the drill log.",
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Signed Monday.",
+     "text": "Signed Monday.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "clipboard",
+       -0.3,
+       0.4,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "st3",
+     "who": "star",
+     "say": "Monday.",
+     "text": "Monday.",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "We are very efficient.",
+     "text": "We are very efficient.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "sniffle",
+       1.2,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "st4",
+     "who": "star",
+     "say": "Evacuation time?",
+     "text": "Evacuation time?",
+     "gap": 0.1
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "Zero minutes.",
+     "text": "Zero minutes.",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "It took twenty.",
+     "text": "It took twenty.",
+     "gap": 0.1
+    },
+    {
+     "id": "o4",
+     "who": "onion",
+     "say": "Zero is the target.",
+     "text": "Zero is the target.",
+     "gap": 0.25
+    },
+    {
+     "id": "st5",
+     "who": "star",
+     "say": "Pass.",
+     "text": "Pass.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "stamp",
+       0.1,
+       0.55,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Pass?",
+     "text": "Pass?",
+     "gap": 0.1
+    },
+    {
+     "id": "st6",
+     "who": "star",
+     "say": "The paperwork is perfect.",
+     "text": "The paperwork is perfect.",
+     "gap": 0.3
+    },
+    {
+     "id": "chirp",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "chirp",
+       0.25,
+       0.55,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "k1",
+     "who": "kum",
+     "say": "What is that sound?",
+     "text": "What is that sound?",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Low battery.",
+     "text": "Low battery.",
+     "gap": 0.1
+    },
+    {
+     "id": "k2",
+     "who": "kum",
+     "say": "Who changes it?",
+     "text": "Who changes it?",
+     "gap": 0.1
+    },
+    {
+     "id": "o5",
+     "who": "onion",
+     "say": "Maintenance.",
+     "text": "Maintenance.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "chirp",
+       1.4,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Who is maintenance?",
+     "text": "Who is maintenance?",
+     "gap": 0.15
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Per diem.",
+     "text": "Per diem.",
+     "gap": 0.15
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Great! I'll help.",
+     "text": "Great! I'll help.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.4,
+       0.4,
+       0
+      ],
+      [
+       "grin",
+       0.55,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 1.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "chirp",
+       0.5,
+       0.55,
+       0.3
+      ],
+      [
+       "sting",
+       1.0,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "chirp",
+       2.1,
+       0.5,
+       0.3
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "chirp",
+       4.6,
+       0.5,
+       0.3
+      ],
+      [
+       "textding",
+       5.0,
+       0.4,
+       0
+      ],
+      [
+       "chirp",
+       7.0,
+       0.5,
+       0.3
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "notice",
+  "to_": "clear",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}
