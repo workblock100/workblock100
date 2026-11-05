@@ -23,9 +23,10 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 16: The Vote | [`shift-happens-ep16.mp4`](shift-happens-ep16.mp4) | 1:14 |
 | 17: The Module | [`shift-happens-ep17.mp4`](shift-happens-ep17.mp4) | 1:13 |
 | 18: The Fire Drill | [`shift-happens-ep18.mp4`](shift-happens-ep18.mp4) | 2:54 |
+| 19: The Potluck | [`shift-happens-ep19.mp4`](shift-happens-ep19.mp4) | 2:40 |
 
 To play an episode live in the browser, start a local server in this directory and open
-`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 18 for other episodes):
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 19 for other episodes):
 
 ```bash
 python3 -m http.server 8000
@@ -253,6 +254,12 @@ A full-length episode (2:54). At 7:40 PM Compliance announces a surprise fire dr
 
 New in Episode 18: the effects kit `ep18_fx.js` (`window.FX18`: flames, foam, smoke, sparks, water, strobes, light cones and washes, all deterministic functions of time; `GUIDE_FX18.md`), the props kit `ep18_props.js` (`window.P18`: fire door, alarm panel, pull station, horn strobe, exit sign, and the extinguisher, evacuation map, drill log and smoke detector added by the scene files), the fire-door corridor with a sound that follows the doors (`ep18_alarm_sim.js` and `tools_door_events.js` write `build/ep18/door_events.json`), and the alarm pattern shared between picture and sound (`FX18.hornOn`, `FX18.strobe`).
 
+## Episode 19: The Potluck
+
+A full-length episode (2:40) for the week of Thanksgiving. At 3:15 PM the Fun Committee (HR) announces mandatory fun and everyone is bringing rolls (eleven baskets, seen from above); Compliance wants an allergen label on every dish ("Contains: bread."); Binder runs Remove Duplicates on the table and eleven baskets become one ("Rolls: one!"). At 5:00 PM in the Dietary kitchen Chef Cabbage turns one turkey into six textures on a conveyor and presses it into a beige turkey-shaped mold ("It is a beige turkey."), coffee is thickened to nectar, honey and pudding ("It is texture modified."), and a pecan pie, brought for a resident on a puree, goes into the blender ("Pie smoothie." "It is beige."). At 7:45 PM Mango makes Strawberry a plate and it travels through the building hand to hand in ONE continuous shot, each person adding a note, a sticker, a thermometer or a label. At 8:00 PM the food has been out two hours and Compliance discards all of it in one sweep, the plate included; Brenda, who went on break in 2019, has a sandwich ("It was a good year."). At 10:40 PM the residents say what they are thankful for ("Water." "It is a UTI."), ask Strawberry to sit, and she sits for a few seconds with her eyes closed until a call light rings; the Moon at the window says "Happy Thanksgiving, three to eleven." The title is a slow cooker whose steam writes the title; the end card is the sign-up sheet with the results and teases Episode 20, The Snow Day.
+
+New in Episode 19: the food kit `ep19_food.js` (`window.F19`: twenty dishes drawn procedurally, the beige molds, steam, a thickened-liquid pour that goes from water to honey to pudding, stickers and labels; `GUIDE_FOOD19.md`), the new character Chef Cabbage (`ep19_art.js`, `window.A19`), a one-take shot (`ep19_plate.js` with its DOM-free camera path `ep19_plate_sim.js`; `tools_plate_path.js` writes `build/ep19/plate_path.json`, which the sound uses to move room tone and panning with the camera), a score that passes one tune from instrument to instrument at each hand-off, and a break-room groove locked to the microwave's beeps.
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -299,7 +306,7 @@ New in Episode 18: the effects kit `ep18_fx.js` (`window.FX18`: flames, foam, sm
 ## Layout audit
 
 `node render.js audit` checks every on-screen box (faces, hands, props, captions, HUD, cards) for anything covered, cut off
-or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 18 are checked at 30 frames per second and the command
+or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 19 are checked at 30 frames per second and the command
 exits non-zero on any issue, so it works as a release gate (`EP=13 node render.js audit 0.0333333333`).
 
 ### The text gate (Episode 13 onward; Episode 12 after its repair)
@@ -317,14 +324,14 @@ test episode (`ep99.js`) that contains deliberate violations.
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep18.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep19.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
-  Episodes 6 to 18 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music18.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
+  Episodes 6 to 19 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music19.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 5; `ep1.js` to `ep18.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
+  Episodes 2 to 5; `ep1.js` to `ep19.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
-  Episodes 6 to 18 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
+  Episodes 6 to 19 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
   with two-bone arms and real hands) that Episodes 1 to 5 never touch. An episode may raise the motion-blur sample cap (`EP.blurMax`, default 10; Episodes 14 and 15 set 24 so fast whips are smooth, not stepped). Episode 7's art, sets and inserts are `ep7_art.js`, `ep7_sets.js` and `ep7_ins.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - Episode 12 is `ep12_title.js` (title and end card), `ep12_room.js` (the conference room), `ep12_signin.js`, `ep12_slides.js`, `ep12_drill.js` and `ep12_award.js`. Episode 13 is
@@ -338,6 +345,7 @@ Everything is generated from code, with no stock assets:
   Episode 16 is `ep16_title.js` (title and end card), `ep16_ballot.js`, `ep16_ballot_sim.js`, `ep16_count.js` and `ep16_prize.js`; Episode 17 is `ep17_title.js` (title and end card), `ep17_assign.js`, `ep17_video.js` and
   `ep17_quiz.js`; both on the Episode 15 kits; `gen_script16.py` and `gen_script17.py` write their scripts.
   Episode 18 is `ep18_title.js` (title and end card), `ep18_station.js` (the notice and the all clear), `ep18_marshal.js` and `ep18_marshal_sim.js`, `ep18_alarm.js` and `ep18_alarm_sim.js`, `ep18_evac.js` and `ep18_evac_sim.js`, on the kits `ep18_fx.js` and `ep18_props.js`; `gen_script18.py` writes its script.
+  Episode 19 is `ep19_title.js` (title and end card), `ep19_signup.js` (the sign-up and the last round), `ep19_kitchen.js` and `ep19_art.js`, `ep19_plate.js` and `ep19_plate_sim.js`, `ep19_break.js`, on the kit `ep19_food.js`; `gen_script19.py` writes its script.
   `txaudit.js` is the text gate and `ui.js` the text layout kit (above).
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
@@ -515,3 +523,7 @@ Same steps as Episode 15 with `16` or `17` in place of `15` (`gen_script16.py`, 
 ## Episode 18 build and release gate
 
 Same steps as Episode 15 with `18` in place of `15` (`gen_script18.py`, `build_audio18.py`, `build_music18.py`, `EP=18 node render.js audit 0.0333333333`, and so on). Two extra inputs feed the sound: `node tools_door_events.js` (the fire doors' slam times, `build/ep18/door_events.json`, which drive the alarm's muffling) and `node tools_phys_events.js 18` (the extinguisher's collisions, `build/ep18/phys_sims.json`). The committed file is `shift-happens-ep18.mp4` (46.6 MiB), rendered at CRF 22.5 in 300-frame segments from an isolated snapshot of the sources.
+
+## Episode 19 build and release gate
+
+Same steps as Episode 15 with `19` in place of `15` (`gen_script19.py`, `build_audio19.py`, `build_music19.py`, `EP=19 node render.js audit 0.0333333333`, and so on). The audit steps on the renderer's own frame times (i / 30). Extra input for the sound: `node tools_plate_path.js` (the one-take camera path, `build/ep19/plate_path.json`); footsteps come from `EP=19 node render.js events`. The committed file is `shift-happens-ep19.mp4` (50.3 MiB), rendered at CRF 22.5 in 300-frame segments from an isolated snapshot of the sources.
