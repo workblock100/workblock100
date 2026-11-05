@@ -162,7 +162,7 @@ function skyIn(x, y, w, h, env, o = {}) {
     ctx.save(); ctx.fillStyle = rgbs(mixa(sk.hor, [60, 74, 108], .55)); const gy = y + h * .87;
     for (const [cx, cw, ch] of [[.12, .17, .075], [.34, .13, .06], [.58, .2, .085], [.8, .12, .055], [.93, .1, .05]]) { ctx.beginPath(); ctx.ellipse(x + cx * w, gy, cw * w / 2, ch * h, 0, PI, 0); ctx.fill(); }
     ctx.fillRect(x, gy - 2, w, 4);
-    ctx.fillStyle = rgbs(mixa(sk.hor, [40, 52, 84], .6)); ctx.fillRect(x + w * .68 - 2, gy - h * .26, 4, h * .26); ctx.fillRect(x + w * .68 - 14, gy - h * .26, 18, 4);
+    ctx.fillStyle = rgbs(mixa(sk.hor, [40, 52, 84], .6)); ctx.fillRect(x + w * .07 - 2, gy - h * .26, 4, h * .26); ctx.fillRect(x + w * .07 - 2, gy - h * .26, 18, 4);
     ctx.restore();
   }
 }

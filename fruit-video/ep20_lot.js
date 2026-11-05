@@ -160,6 +160,19 @@ function drawGround(v, lt) {
   for (const [y, h, a] of [[1030, 30, .16], [1120, 22, .18], [1190, 16, .16], [1296 + 30, 40, .16], [1420, 46, .12], [1520, 26, .1]]) {   /* the long soft lanes the plow has left */
     ctx.fillStyle = V2.grad(0, y - h, 0, y + h, [[0, 'rgba(96,116,176,0)'], [.5, `rgba(96,116,176,${a})`], [1, 'rgba(96,116,176,0)']]); ctx.fillRect(x0, y - h, w, h * 2);
   }
+  /* the plow's tire ruts and a few clumps in the foreground: long pairs of blue streaks with a pale lip, world-anchored (the foreground gets texture, the staff get a floor) */
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const [y, amp, ph] of [[1392, 10, .6], [1514, 13, 2.1], [1646, 16, 3.3], [1782, 19, 4.4]]) for (const dy of [-20, 20]) {
+    const xs = Math.floor(x0 / 40) * 40, path = new Path2D(); for (let x = xs; x <= x0 + w + 40; x += 40) { const yy = y + dy + amp * Math.sin(x / 540 + ph) + 3 * Math.sin(x / 130 + dy); x === xs ? path.moveTo(x, yy) : path.lineTo(x, yy); }
+    ctx.strokeStyle = 'rgba(70,92,164,.2)'; ctx.lineWidth = 8 + (y - 1392) / 90; ctx.stroke(path);
+    ctx.save(); ctx.translate(0, 6 + (y - 1392) / 160); ctx.strokeStyle = 'rgba(255,255,255,.42)'; ctx.lineWidth = 3.4 + (y - 1392) / 260; ctx.stroke(path); ctx.restore();
+  }
+  for (let i = Math.floor(x0 / 260) - 1; i <= (x0 + w) / 260 + 1; i++) {
+    const r = rndf(97, i), cx = i * 260 + 130 * rndf(98, i), cy = 1410 + 330 * r, k = .5 + .9 * rndf(99, i);
+    ctx.fillStyle = 'rgba(70,92,164,.16)'; ctx.beginPath(); ctx.ellipse(cx + 4, cy + 7 * k, 40 * k, 10 * k, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = V2.grad(0, cy - 16 * k, 0, cy + 8 * k, [[0, 'rgba(255,255,255,.95)'], [1, 'rgba(196,212,240,.9)']]); ctx.beginPath(); ctx.ellipse(cx, cy, 36 * k, 13 * k, 0, PI, TAU); ctx.fill();
+  }
+  ctx.restore();
   /* the pool of warm light in front of the doors, and under each lamp */
   const pool = (x, y, rx, ry, a, col = '255,214,140') => { ctx.save(); ctx.translate(x, y); ctx.scale(rx, ry); ctx.fillStyle = V2.radial(0, 0, .05, 1, [[0, `rgba(${col},${a})`], [1, `rgba(${col},0)`]]); ctx.beginPath(); ctx.arc(0, 0, 1, 0, TAU); ctx.fill(); ctx.restore(); };
   pool(BLD.doorX, 1010, 640, 150, .5);
@@ -181,27 +194,29 @@ function drawCars(lt, v) {
 }
 function truckState(lt) {
   const x = truckX(lt);
-  return { x, blade: .14 + .14 * ss(lt, 1.2, 1.5) * (1 - ss(lt, 2.75, 3.1)), load: ss(lt, 1.4, 2.0) * (1 - ss(lt, CUE.dump + .02, CUE.dump + .4)), wheelRot: x / (58 * TRUCK_S) };
+  const rev = lt >= CUE.engine2 ? Math.exp(-(lt - CUE.engine2) / .22) : 0;   /* the engine catches: the whole truck shudders for a moment on the cue frame */
+  return { x: x + 2.4 * Math.sin(lt * 110) * rev, blade: .14 + .14 * ss(lt, 1.2, 1.5) * (1 - ss(lt, 2.75, 3.1)), load: ss(lt, 1.4, 2.0) * (1 - ss(lt, CUE.dump + .02, CUE.dump + .4)), wheelRot: x / (58 * TRUCK_S), on: ss(lt, CUE.engine1, CUE.engine1 + .2) };
 }
 function truckInfo(lt) { const st = truckState(lt); return Object.assign({ st }, A20.truckInfo({ x: st.x, y: TY, s: TRUCK_S, facing: 1, blade: st.blade })); }
 function drawTruck(lt, v, o = {}) {
   const st = truckState(lt);
   if (!inView(st.x + 100, 800, v)) return;
-  A20.plowTruck(ctx, { x: st.x, y: TY, s: TRUCK_S, facing: 1, t: lt, blade: st.blade, load: st.load, wheelRot: st.wheelRot, beacon: true, headlights: true, cab: true, snow: .35, lamp: o.lamp });
+  A20.plowTruck(ctx, { x: st.x, y: TY, s: TRUCK_S, facing: 1, t: lt, blade: st.blade, load: st.load, wheelRot: st.wheelRot, beacon: true, beaconOn: st.on, headlights: lt >= CUE.engine1, cab: true, snow: .35, lamp: o.lamp });
 }
 /* the beacon's slow amber sweep over the lot (a soft wedge turning with the beacon, one pass every 2.2 s: never a strobe), the plow's spray, the exhaust, and the last car's flurry */
 function truckFx(lt, v) {
   const info = truckInfo(lt), st = info.st, bx = info.beacon[0], by = info.beacon[1];
   if (window.FX18 && FX18.cone && inView(bx, 1100, v)) {
     const ph = ((lt / 2.2) % 1 + 1) % 1, ang = -PI / 2 + 1.15 * Math.sin(ph * TAU);
-    FX18.cone(ctx, { x: bx, y: by, ang: ang + .6, spread: .55, len: 1000 * TRUCK_S, color: '#ffb228', alpha: .2, soft: .9 });
-    FX18.cone(ctx, { x: bx, y: by, ang: PI - ang + .35, spread: .45, len: 900 * TRUCK_S, color: '#ffb228', alpha: .14, soft: .9 });
+    const pop = 1 + (lt >= CUE.engine1 ? .9 * Math.exp(-(lt - CUE.engine1) / .12) : 0), on = st.on * pop;   /* the amber wash comes up on the engine cue frame (one soft pop, then it settles) */
+    FX18.cone(ctx, { x: bx, y: by, ang: ang + .6, spread: .55, len: 1000 * TRUCK_S, color: '#ffb228', alpha: .2 * on, soft: .9 });
+    FX18.cone(ctx, { x: bx, y: by, ang: PI - ang + .35, spread: .45, len: 900 * TRUCK_S, color: '#ffb228', alpha: .14 * on, soft: .9 });
   }
-  if (window.SN20 && SN20.spray && lt > 1.3 && lt < 4.4) SN20.spray(ctx, { x: info.blade[0], y: info.blade[1], ang: -.95, t: lt, t0: 1.38, t1: 2.8, seed: 5, power: 1.35, width: .95, gravity: 1100 });
+  if (window.SN20 && SN20.spray && lt >= CUE.scrape - 1e-6 && lt < 4.4) SN20.spray(ctx, { x: info.blade[0], y: info.blade[1], ang: -.95, t: lt, t0: CUE.scrape, t1: 2.8, seed: 5, power: 1.35, width: .95, gravity: 1100 });
   if (window.SN20 && SN20.flurry && lt > CUE.dump - .05 && lt < CUE.dump + 1.4) SN20.flurry(ctx, { x: carX(5) - 20, y: CY - 90, r: 130, t: lt, t0: CUE.dump, life: 1.2, seed: 9, n: 70 });
   if (window.FX18 && FX18.smoke && inView(info.exhaust[0], 500, v)) {
     const sp = truckX(lt + .05) - truckX(lt - .05);
-    FX18.smoke(ctx, { x: info.exhaust[0], y: info.exhaust[1], w: 36, h: 240, t: lt, t0: .2, seed: 3, density: .55, rise: 1, color: '#bcc4de', drift: 60 + 260 * windAt(lt) - sp * 2.2, life: 2.4, rate: 11 });
+    FX18.smoke(ctx, { x: info.exhaust[0], y: info.exhaust[1], w: 36, h: 240, t: lt, t0: CUE.engine1, seed: 3, density: .55 + (lt >= CUE.engine2 ? 1.0 * Math.exp(-(lt - CUE.engine2) / .35) : 0), rise: 1, color: '#bcc4de', drift: 60 + 260 * windAt(lt) - sp * 2.2, life: 2.4, rate: 11 });
   }
 }
 // ------------------------------------------------------------------ the cast: positions, gear, expressions
@@ -272,6 +287,11 @@ function drawCabShot(lt, v, o = {}) {
 SD.open = (lt, sh, v) => {
   drawTruck(lt, v); truckFx(lt, v);
   drawStaff(lt, ['mango', 'lemon', 'straw', 'tom'], {}, { o: { look: LOOK_L } });
+  if (lt >= CUE.engine1) {   /* the engine catches off screen: the plow's headlights wash the left edge of the lot, one soft pop on the cue frame, then they settle (plowengine .3) */
+    const k = .5 + .5 * ss(lt, CUE.engine1, CUE.engine1 + .3), a = .2 * k * (1 + 1.4 * Math.exp(-(lt - CUE.engine1) / .14));
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = V2.radial(-30, 1080, 20, 560, [[0, `rgba(255,196,110,${Math.min(.6, a * 2.1)})`], [.5, `rgba(255,190,100,${Math.min(.3, a * .9)})`], [1, 'rgba(255,190,100,0)']]); ctx.fillRect(0, 500, 600, 1160); ctx.restore();
+  }
 };
 SD.plow = (lt, sh, v) => {
   drawTruck(lt, v); truckFx(lt, v);
@@ -315,7 +335,7 @@ SD.s2 = (lt, sh, v) => {
 // dig: three dig, throw, refill cycles at the red car's door, then the door opens and the snow comes out
 const shovelTip = t => A20.shovelThrow({ kind: 'straw', x: SXP, y: GY, s: ST, seed: SEEDS.straw }, t, CUE.shovel[0]);
 SD.dig = (lt, sh, v) => {
-  const tD = CUE.snowdump, after = lt >= tD, dk = ss(lt, tD, tD + .22), land = tD + .3;
+  const land = CUE.snowdump, tD = land - .32, after = lt >= land, dk = ss(lt, tD, tD + .22);
   drawPit(shovelTip(CUE.shovel[0]).x, lt);
   /* the door pops open (a dark gap and the red panel swinging out) and a block of snow comes out and slides down behind her onto her legs */
   const door = A20.carInfo({ x: carX(HERS), y: CY, s: CARS_S, facing: 1 }).door;
@@ -327,7 +347,7 @@ SD.dig = (lt, sh, v) => {
     const sk = sg(lt, tD + .04, land), bx = lerp(door[0] - 10, SXP + 30, ei(sk)), by = lerp(door[1] + 30, GY - 30, sk * sk), ang = -.4 * sk;
     if (lt < land + .06) { ctx.save(); ctx.translate(bx, by); ctx.rotate(ang); ctx.fillStyle = V2.grad(0, -40, 0, 40, [[0, '#f9fcff'], [1, '#b8c8e6']]); ctx.strokeStyle = 'rgba(70,92,150,.8)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(-58, -38, 116, 76, 20); ctx.fill(); ctx.stroke(); ctx.restore(); }
   }
-  const o = person('straw', lt, { o: { yaw: after ? .25 : .75, expr: after ? 'shock' : (lt < CUE.shovel[0] ? 'weak' : 'sour'), look: [.9, .35], squash: after && lt > land ? .16 * Math.exp(-(lt - land) * 7) : 0, plant: true }, post: p => { if (!after) A20.shovelThrow(p, lt, CUE.shovel[0]); else { p.arms = { l: 'up', r: 'up' }; p.hold = {}; } if (!after) p.rot = .05 * Math.sin((lt - CUE.shovel[0]) * TAU / .6); } });
+  const o = person('straw', lt, { o: { yaw: after ? .25 : .75, expr: after ? 'shock' : (lt < CUE.shovel[0] ? 'weak' : 'sour'), look: [.9, .35], squash: after && lt > land ? .16 * Math.exp(-(lt - land) * 7) : 0, plant: true }, post: p => { A20.shovelThrow(p, lt, after ? 1e9 : CUE.shovel[0]); if (after) p.arms.l = 'up'; else p.rot = .05 * Math.sin((lt - CUE.shovel[0]) * TAU / .6); } });   /* at the impact the shovel drops to her side and one arm flies up */
   if (window.SN20 && SN20.flurry && lt >= land && lt < land + 1.3) SN20.flurry(ctx, { x: SXP + 6, y: GY - 30, r: 96, t: lt, t0: land, life: 1.15, seed: 31, n: 56 });
   drawP(o);
   if (window.SN20 && SN20.spray) CUE.shovel.forEach((tp, k) => { const tr = tp + A20.SHOVEL.release * A20.SHOVEL.period, tt = shovelTip(tr); if (lt >= tr && lt < tr + 1.8) SN20.spray(ctx, { x: tt.x, y: tt.y, ang: -.8, t: lt, t0: tr, t1: tr + .1, seed: 20 + k, power: .95, width: .85, gravity: 1200 }); });
@@ -418,7 +438,7 @@ const SW = { x: 2380, s: .62 };                       /* the snowman */
 const ICE = { x: 2600, rx: 96 };                      /* the patch of ice Onion steps on */
 const HEAD_T0 = snapT(17.42);                         /* the head comes off */
 const SXP = 1950;                                     /* Strawberry's spot: beside her car, where she digs and where the pile lands */
-const pileK = lt => ss(lt, CUE.snowdump + .1, CUE.snowdump + .45);
+const pileK = lt => ss(lt, CUE.snowdump, CUE.snowdump + .35);
 const snowmanBuild = lt => lt < bS('t1') ? 0 : .2 + .8 * sg(lt, bS('t1') + .05, 17.1);
 function drawPile(lt, x = SXP) { const k = pileK(lt); if (k < .03 || !(window.SN20 && SN20.bank)) return; SN20.bank(ctx, { x, y: GY + 8, w: 215 * k, h: 46 * k, seed: 4, shade: .5 }); }
 function drawIce(v) {
