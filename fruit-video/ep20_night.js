@@ -530,16 +530,18 @@ function drawRoom(lt, env, o = {}) {
   exitSignN(lt, G);
   emLampN(lt, -560, 960, G, 'em1'); emLampN(lt, 740, 720, G, 'em2');
   /* the cots, heads to the left, against the back wall; the poses jump in the lapse, the sleepers stir at the dawn */
-  const sl = SIM.sleepers(lt), stir = ss(lt, 25.5, 27.5) * (1 - ss(lt, 29.2, 29.6));
   G.cots = {};
-  for (const who of COTW) {
-    const sit = who === 'tom' ? sl.tom.sit : 0, onionUp = who === 'onion' ? ss(lt, 29.05, 29.6) : 0, amt = Math.max(sit, onionUp);
-    const pose = poseOf(who, lt);
-    if (o.noCots) continue;
-    if (amt > .03) G.cots[who] = cotSitter(lt, env, who, amt, who === 'onion' ? { pose, cry: .62, sob: Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .12) / .5), expr: 'onion_cry', lid: .3, who: o.onionWho } : { pose, expr: 'shock', lid: .1 });
-    else G.cots[who] = cotBase(lt, env, who, { pose, stir });
-  }
+  for (const who of COTW) if (!o.noCots && who !== o.skipCot) drawCot(lt, env, who, G, o);
   return G;
+}
+/* one cot with its sleeper (or sitter); a shot that must keep one of them sharp (o5: Onion speaks) skips it in the room, which is drawn through the depth of field, and draws it afterwards with this */
+function drawCot(lt, env, who, G, o = {}) {
+  const sl = SIM.sleepers(lt), stir = ss(lt, 25.5, 27.5) * (1 - ss(lt, 29.2, 29.6));
+  const sit = who === 'tom' ? sl.tom.sit : 0, onionUp = who === 'onion' ? ss(lt, 29.05, 29.6) : 0, amt = Math.max(sit, onionUp);
+  const pose = poseOf(who, lt);
+  if (!G.cots) G.cots = {};
+  if (amt > .03) G.cots[who] = cotSitter(lt, env, who, amt, who === 'onion' ? { pose, cry: .62, sob: Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .12) / .5), expr: 'onion_cry', lid: .3, who: o.onionWho, extra: { grip: { l: [-62, 98] }, tabAt: [.3, .02] } } : { pose, expr: 'shock', lid: .1 });
+  else G.cots[who] = cotBase(lt, env, who, { pose, stir });
 }
 
 // ------------------------------------------------------------------ the twin: ONE Strawberry drawn twice, facing each other across the med cart
@@ -688,7 +690,7 @@ function drawScene(lt) {
   V2.setLight({ key: [lerp(.5, -.5, warm), -.6], keyColor: hex(mixa([170, 196, 255], [255, 214, 160], warm)), keyA: .22, rim: '#ffb070', rimA: .4, shadow: '#101838', shadowA: .36, bounce: '#ffd9a0', bounceA: .1, amb: '#aab4e8', ambA: .08 });
   V2.opts.reflect = true;
   let G = {};
-  const ro = { winKids: () => drawPlow(lt, env, 'win', sh.k === 'plow'), doorKids: () => drawPlow(lt, env, 'doors', false), sharp: sharpClock, suppressMoon: !talkMoon, moonChar: talkMoon ? { expr: 'chill', lid: .22 } : {}, onionWho: sh.id === 'o5' ? 'onion' : undefined, noCots: sh.k === 'plow' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'doors' };
+  const ro = { winKids: () => drawPlow(lt, env, 'win', sh.k === 'plow'), doorKids: () => drawPlow(lt, env, 'doors', false), sharp: sharpClock, suppressMoon: !talkMoon, moonChar: talkMoon ? { expr: 'chill', lid: .22 } : {}, onionWho: sh.id === 'o5' ? 'onion' : undefined, skipCot: sh.id === 'o5' ? 'onion' : undefined, noCots: sh.k === 'plow' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'doors' };
   const furn = lt2 => [
     { z: 1450, fn: () => { if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' || sh.k === 'doors') plainCounter(); else { counterShifted(() => S13.counter({ t: lt, phoneRing: 0, plaque: false })); deskLamp(lt, env, G); coffeeMaker(lt, env, G); } } },
   ].concat(sh.id === 'o5' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' || sh.k === 'doors' ? [] : [{ z: LAY.cart.Z, fn: () => medCart(lt, env, G) }]);
@@ -701,6 +703,7 @@ function drawScene(lt) {
   if (sh.k === 'lapse') ghosts(lt);
   if (blurPx) {
     REG.suppress++; V2.dof(blurPx, () => { room(); for (const it of furn(lt)) it.fn(); }); REG.suppress--;
+    if (ro.skipCot) drawCot(lt, env, ro.skipCot, G, ro);                      /* o5: Onion speaks, so she, her blanket and her cot are drawn OUTSIDE the depth of field (the room and the other cots stay soft) */
     for (const it of chars.sort((a, b) => b.z - a.z)) it.fn();
   } else {
     if (sh.id !== 'o5') REG.suppress++; room(); if (sh.id !== 'o5') REG.suppress--;
