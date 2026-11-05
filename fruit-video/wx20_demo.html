@@ -1,0 +1,112 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>WX20 demo (not loaded by index.html)</title>
+<style>body{margin:0;background:#111;color:#ddd;font:14px sans-serif}canvas{display:block}</style></head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="ep18_fx.js"></script>
+<script src="ep20_fx.js"></script>
+<script>
+'use strict';
+/* WX20 demo and harness (standalone: loads only ep18_fx.js and ep20_fx.js). The driver is wx20_test.js (Playwright); open this page by hand with ?case=snow&t=1.2 to see one case.
+ * A case is { view: [w, h], draw(c, t) }: it draws into an offscreen canvas of its own native size, and sheet() tiles cases x times into one picture. Every function is shown on a dark and on a pale background. */
+const S = window.SN20, L = window.L20, F = window.FX18, PI = Math.PI, TAU = PI * 2;
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const BG = {
+  night(c, w, h) { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#0d1838'); g.addColorStop(.7, '#1a2c52'); g.addColorStop(1, '#223a60'); c.fillStyle = g; c.fillRect(0, 0, w, h); },
+  pale(c, w, h) { c.fillStyle = '#dfe7ea'; c.fillRect(0, 0, w, h); c.fillStyle = '#c3cdd0'; c.fillRect(0, h * .74, w, h * .26); c.fillStyle = 'rgba(0,0,0,.06)'; c.fillRect(0, h * .74, w, 3); },
+  room(c, w, h) { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#b9a98c'); g.addColorStop(.7, '#a89677'); g.addColorStop(.7, '#6e5b44'); g.addColorStop(1, '#4e402f'); c.fillStyle = g; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(0,0,0,.12)'; c.lineWidth = 2; for (let x = 0; x < w; x += 90) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h * .7); c.stroke(); } },
+  grid(c, w, h) { c.fillStyle = '#5a6068'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 1; for (let x = 0; x < w; x += 60) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } for (let y = 0; y < h; y += 60) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } },
+};
+/* a stand-in character: a round red body, two eyes (the engine-mode test in wx20_test.js draws the real Strawberry) */
+function dummy(c, x, y, s = 1, col = '#d6303a') {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = col; c.beginPath(); c.ellipse(0, -150, 95, 120, 0, 0, TAU); c.fill();
+  c.fillStyle = '#3d9a45'; c.beginPath(); c.ellipse(0, -265, 60, 22, 0, 0, TAU); c.fill();
+  c.fillStyle = '#fff'; for (const dx of [-34, 34]) { c.beginPath(); c.ellipse(dx, -170, 20, 26, 0, 0, TAU); c.fill(); }
+  c.fillStyle = '#222'; for (const dx of [-34, 34]) { c.beginPath(); c.arc(dx + 3, -166, 9, 0, TAU); c.fill(); }
+  c.strokeStyle = '#4a1010'; c.lineWidth = 6; c.lineCap = 'round'; c.beginPath(); c.arc(0, -120, 30, .25, PI - .25); c.stroke();
+  c.restore();
+}
+const label = (c, s, x, y, col = '#fff') => { c.save(); c.font = '600 20px sans-serif'; c.fillStyle = col; c.shadowColor = '#000'; c.shadowBlur = 4; c.fillText(s, x, y); c.restore(); };
+const CASES = {};
+
+/* ---- batch 1: the clock, wind, snow, the light pass */
+CASES.clock = { view: [900, 520], draw(c, t) {
+  BG.grid(c, 900, 520); const X = m => 40 + (m - 840) / (1860 - 840) * 820;
+  c.lineWidth = 3; c.strokeStyle = '#8fd0ff'; c.beginPath(); for (let m = 840; m <= 1860; m += 5) { const y = 440 - S.depthAt(m) * 380; m === 840 ? c.moveTo(X(m), y) : c.lineTo(X(m), y); } c.stroke();
+  c.strokeStyle = '#ffcf6a'; c.beginPath(); for (let i = 0; i <= 600; i++) { const tt = i / 600 * 20, y = 250 - S.wind(tt, [[6, 2, .7], [13, 1.2, -.6]]) * 120; i ? c.lineTo(40 + i / 600 * 820, y) : c.moveTo(40, y); } c.stroke();
+  for (const [k, m] of Object.entries(S.SCENE_CLOCK)) { c.fillStyle = '#fff'; c.fillRect(X(m), 440, 2, 14); label(c, k, X(m) - 18, 472); }
+  label(c, 'depthAt(840..1860)  .25@990 .45@1212 .6@1360 .9@1860', 40, 30, '#8fd0ff'); label(c, 'wind(t, gusts at 6 and 13 s), 20 s', 40, 70, '#ffcf6a');
+  label(c, [840, 990, 1212, 1360, 1860].map(m => S.depthAt(m).toFixed(3)).join('  '), 40, 100);
+} };
+const snowCase = (bg, tone, opts, w = 1080, h = 1920) => ({ view: [w, h], draw(c, t) {
+  BG[bg](c, w, h); const o = Object.assign({ x0: 0, y0: 0, x1: w, y1: h, t, seed: 3, tone }, opts || {});
+  S.snow(c, o); label(c, bg + ' ' + tone + ' t=' + t.toFixed(1), 14, 28, bg === 'pale' ? '#223' : '#fff');
+} });
+CASES.snowDark = snowCase('night', 'dark', { density: 2 });
+CASES.snowPale = snowCase('pale', 'light', { density: 2 });
+CASES.snowPaleDarkTone = snowCase('pale', 'dark', { density: 2 });
+CASES.snowWind = snowCase('night', 'dark', { density: 2, wind: 90, gusts: [[1.5, 1.6, .9]] });
+CASES.snowSlices = { view: [1080, 1920], draw(c, t) {
+  BG.night(c, 1080, 1920); S.snow(c, { x0: 0, y0: 0, x1: 1080, y1: 1920, t, seed: 5, tone: 'dark', density: 2, slice: 'back' }); dummy(c, 540, 1800, 3); S.snow(c, { x0: 0, y0: 0, x1: 1080, y1: 1920, t, seed: 5, tone: 'dark', density: 2, slice: 'front' });
+  label(c, 'back, character, front', 14, 28);
+} };
+CASES.snowPane = { view: [560, 760], draw(c, t) {
+  BG.room(c, 560, 760); c.fillStyle = '#0d1838'; c.fillRect(70, 90, 420, 560); S.snow(c, { x0: 70, y0: 90, x1: 490, y1: 650, t, seed: 9, tone: 'dark', density: 5, layers: 3, wind: 40 });
+  c.strokeStyle = '#5b4a36'; c.lineWidth = 16; c.strokeRect(70, 90, 420, 560); label(c, 'window pane, density 5', 14, 28);
+} };
+CASES.pass = { view: [540, 960], draw(c, t) {
+  BG.room(c, 540, 960); dummy(c, 150, 880, 1.2, '#d6303a'); dummy(c, 410, 880, 1.2, '#e8a838'); dummy(c, 270, 700, .8, '#7d9fd8');
+  const n = L.pass(c, { ambient: .2, t, lights: [
+    { kind: 'cone', x: 40, y: 560, ang: .55 + .06 * Math.sin(t), spread: .62, len: 760, color: '#f4f8ff', flicker: { seed: 3, amt: .05, rate: 1.4 } },
+    { kind: 'point', x: 390, y: 520, r: 170, color: '#ffb25a', soft: .8, flicker: { seed: 9, amt: .12, rate: 2 } },
+    { kind: 'rect', x: 270, y: 190, w: 260, h: 140, color: '#9fd8ff', soft: .6, facing: PI / 2, power: .9 },
+    { kind: 'strip', x: 60, y: 940, x2: 480, y2: 940, width: 40, color: '#cfe8ff', power: .5 },
+  ] });
+  label(c, 'cone + point + rect (spill) + strip: ' + n, 14, 28);
+} };
+CASES.passKinds = { view: [1000, 420], draw(c, t) {
+  BG.room(c, 1000, 420);
+  [['point', 125], ['cone', 375], ['rect', 625], ['strip', 875]].forEach(([k, cx]) => dummy(c, cx, 400, .7));
+  L.pass(c, { ambient: .12, vignette: 0, t, lights: [
+    { kind: 'point', x: 125, y: 220, r: 140, color: '#ffc070' },
+    { kind: 'cone', x: 280, y: 60, ang: 1.1, spread: .7, len: 380, color: '#e6f0ff' },
+    { kind: 'rect', x: 625, y: 190, w: 130, h: 90, color: '#a8dcff', facing: PI / 2 },
+    { kind: 'strip', x: 790, y: 70, x2: 960, y2: 70, width: 50, color: '#fff0c8' },
+  ] });
+  label(c, 'point | cone | rect+spill | strip   (ambient .12)', 14, 28);
+} };
+CASES.passAmbient = { view: [1000, 340], draw(c, t) {
+  BG.room(c, 1000, 340);
+  [0, .06, .12, .22, .35].forEach((a, i) => { const x = 100 + i * 200; c.save(); c.beginPath(); c.rect(i * 200, 0, 200, 340); c.clip(); dummy(c, x, 320, .75); L.pass(c, { ambient: a, t, vignette: 0, lights: [{ kind: 'point', x, y: 120, r: 110, color: '#ffc070', power: .8 }] }); c.restore(); label(c, 'amb ' + a, i * 200 + 10, 24); });
+} };
+
+/* @@CASES@@ */
+
+/* ---- rendering */
+function renderCase(name, t) { const cs = CASES[name], cv = mk(cs.view[0], cs.view[1]), c = cv.getContext('2d'); cs.draw(c, t); return cv; }
+/* names: cases; times: seconds; cellW: width of one tile. Rows = names, columns = times. */
+function sheet(names, times, cellW = 340) {
+  const gap = 6, rows = names.map(n => { const v = CASES[n].view; return Math.round(cellW * v[1] / v[0]); });
+  const cv = document.getElementById('c'), Wd = times.length * (cellW + gap) + gap, Hd = rows.reduce((a, b) => a + b + gap, gap);
+  cv.width = Wd; cv.height = Hd; const c = cv.getContext('2d'); c.fillStyle = '#000'; c.fillRect(0, 0, Wd, Hd);
+  let y = gap;
+  names.forEach((n, ri) => { times.forEach((t, ci) => { c.drawImage(renderCase(n, t), gap + ci * (cellW + gap), y, cellW, rows[ri]); }); y += rows[ri] + gap; });
+  return cv.toDataURL('image/png');
+}
+function one(name, t) { const cv = document.getElementById('c'), r = renderCase(name, t); cv.width = r.width; cv.height = r.height; cv.getContext('2d').drawImage(r, 0, 0); return cv.toDataURL('image/png'); }
+/* pixel hash of a case at t: for the determinism test */
+function hashCase(name, t) { const cv = renderCase(name, t), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let h = 2166136261; for (let i = 0; i < d.length; i++) { h ^= d[i]; h = Math.imul(h, 16777619); } return (h >>> 0).toString(16) + ':' + d.length; }
+/* wall-clock cost (ms per draw, averaged) of the SN20 and L20 calls inside one case: every kit function is wrapped with a timer; the backgrounds, dummies and labels are not counted */
+const NOT_FX = new Set(['SCENE_CLOCK', 'depthAt', 'wind', 'windInt', 'GUST', 'maskPoints']);
+function cost(name, t, n = 40) {
+  const cs = CASES[name], cv = mk(cs.view[0], cs.view[1]), c = cv.getContext('2d'), acc = { ms: 0 }, orig = [];
+  for (const K of [S, L]) for (const k of Object.keys(K)) if (typeof K[k] === 'function' && !NOT_FX.has(k)) { const f = K[k]; orig.push([K, k, f]); K[k] = (...a) => { const t0 = performance.now(); const r = f(...a); acc.ms += performance.now() - t0; return r; }; }
+  try { cs.draw(c, t); acc.ms = 0; for (let i = 0; i < n; i++) cs.draw(c, t + i * .01); } finally { for (const [K, k, f] of orig) K[k] = f; }
+  return acc.ms / n;
+}
+Object.assign(window, { CASES, BG, dummy, renderCase, sheet, one, hashCase, cost, mk, label });
+const q = new URLSearchParams(location.search);
+if (q.get('case') && CASES[q.get('case')]) one(q.get('case'), parseFloat(q.get('t') || '1'));
+</script>
+</body></html>
