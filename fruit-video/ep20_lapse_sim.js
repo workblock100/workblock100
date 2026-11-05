@@ -89,7 +89,7 @@ function sunLevel(lt) { const m = worldMin(lt); return clamp(ss(m, 1780, 1860) *
 /* the Moon in the window pane (u 0..1 across, v 0..1 up from the bottom of the glass, r the radius as a share of the pane height, cloud 0..1 behind the weather, alpha) */
 function moon(lt) {
   const m = worldMin(lt), p = clamp((m - 1380) / 480);
-  const u = lerp(.14, .84, p) + (lt > L.t1 ? (lt - L.t1) * .004 : 0);
+  const u = lerp(.14, .72, p) + (lt > L.t1 ? (lt - L.t1) * .003 : 0);
   const v = lerp(.80, .47, Math.pow(p, 1.25)) - (lt > L.t1 ? (lt - L.t1) * .006 : 0);
   const r = lerp(.17, .31, Math.pow(p, 1.6));
   const cloud = clamp(1 - ss(m, 1490, 1650)) * .96 + .04 * ss(m, 1800, 1860);
@@ -115,25 +115,29 @@ const GUSTS = [[CUE.windgust, 1.2, 1], [CUE.windswell, 3.6, .85], [27.9, 1.4, .5
 
 /* ------------------------------------------------------------------ the layout of the room (the perspective room of S6 / S13, world units) */
 const LAY = {
-  zb: 1900, hw: 820, ch: 1100,
-  win: { x0: -340, x1: 340, y0: 170, y1: 700 },                           /* the big window in the back wall */
-  doors: { x0: 420, x1: 780, y1: 540 },                                    /* the glass doors of the entrance, to the right of the window */
-  clock: { X: 0, Y: 900, r: 96 },                                          /* the wall clock above the window */
+  zb: 1900, hw: 1000, ch: 1150,
+  win: { x0: -330, x1: 330, y0: 200, y1: 790 },                           /* the big window in the back wall */
+  doors: { x0: 380, x1: 610, y1: 560 },                                    /* the glass doors of the entrance, to the right of the window */
+  clock: { X: 0, Y: 940, r: 100 },                                         /* the wall clock above the window */
   counter: { x0: -120, x1: 720, z0: 1380, z1: 1520, top: 190 },            /* S13's counter */
-  cart: { X: -250, Z: 1250 },                                              /* the med cart */
-  home: { X: -70, Z: 1215 },                                               /* where Strawberry stands beside the cart */
-  cots: { mango: { X: -735, Z: 1835 }, lemon: { X: -535, Z: 1835 }, tom: { X: -705, Z: 1625 }, onion: { X: -490, Z: 1625 } },
+  cart: { X: 40, Z: 1235 },                                               /* the med cart */
+  home: { X: 235, Z: 1210 },                                               /* where Strawberry stands beside the cart */
+  cots: { mango: { X: -575, Z: 1850 }, lemon: { X: -429, Z: 1850 }, tom: { X: -283, Z: 1850 }, onion: { X: -137, Z: 1850 } },   /* four cots in an overlapping row along the back wall, heads to the left */
 };
 
 /* ------------------------------------------------------------------ Strawberry's rounds (the ghost trail of the lapse): a loop of stops, walked again and again */
+const PI_ = Math.PI;
 const R = { t0: 10.72, loop: 1.93, n: 4, rate: 300 };
 const STOPS = [   /* the walk to the stop (s), the dwell there (s), the yaw she holds at it (0 front, PI the back, +PI/2 profile facing right) */
-  { X: -215, Z: 1770, face: Math.PI, walk: .34, dwell: .14 },              /* the window: her back to us, looking at the snow */
-  { X: -335, Z: 1545, face: -1.5, walk: .24, dwell: .12 },                 /* the cots: a profile looking left, at the sleepers */
-  { X: -235, Z: 1145, face: .25, walk: .26, dwell: .02 },                  /* the floor in front of the cart */
-  { X: 340, Z: 1175, face: 2.55, walk: .32, dwell: .16 },                  /* the doors: a three-quarter back view toward the glass doors */
-  { X: LAY.home.X, Z: LAY.home.Z, face: .4, walk: .35, dwell: 0 },         /* home */
+  { X: -215, Z: 1330, face: PI_, walk: .2, dwell: 0 },                    /* round the left end of the counter */
+  { X: -215, Z: 1580, face: PI_, walk: .2, dwell: 0 },
+  { X: -10, Z: 1760, face: PI_, walk: .24, dwell: .16 },                   /* the window: her back to us, looking at the snow */
+  { X: -300, Z: 1640, face: -1.9, walk: .26, dwell: .14 },                 /* the cots: a profile looking left, at the sleepers */
+  { X: -250, Z: 1200, face: .25, walk: .26, dwell: 0 },                    /* the floor in front of the cart */
+  { X: 360, Z: 1150, face: 2.45, walk: .3, dwell: .14 },                   /* the doors: a three-quarter back view toward the glass doors */
+  { X: LAY.home.X, Z: LAY.home.Z, face: .4, walk: .2, dwell: 0 },          /* home */
 ];
+{ const sum = STOPS.reduce((a, s) => a + s.walk + s.dwell, 0), f = R.loop / sum; for (const s of STOPS) { s.walk *= f; s.dwell *= f; } }   /* the loop fits its period exactly */
 const angLerp = (a, b, k) => { let d = ((b - a + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; return a + d * k; };
 function rounds(lt) {
   const home = { X: LAY.home.X, Z: LAY.home.Z, yaw: .4, walking: false, dx: 0, dz: 0, v: 0, loop: -1 };

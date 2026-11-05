@@ -30,7 +30,7 @@ const nums = s => String(s).split(',').map(parseFloat);
 async function demoPage(browser, port) {
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
   page.on('pageerror', e => console.error('PAGE ERROR', e.message));
-  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('console:', m.text()); });
+  page.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !/willReadFrequently/.test(m.text())) console.error('console:', m.text()); });
   await page.goto(`http://127.0.0.1:${port}/wx20_demo.html`);
   return page;
 }
