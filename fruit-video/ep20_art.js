@@ -283,11 +283,11 @@ function puffStandIn(x, y, t, dir, seed, size, alpha, period, phase) {
 }
 EXT.acc.fp20_breath = (o, k, t, layer) => {
   const g = o.w20; if (layer !== 'front' || !g || !g.breath) return;
-  const Y = yawsOf(o), fa = V2C.faceAng ? V2C.faceAng(Y.h) : Y.h, side = Math.abs(dsin(fa)) > .45 ? (dsin(fa) < 0 ? -1 : 1) : (g.breathDir || ((o.look && o.look[0] < -.2) ? -1 : (o.look && o.look[0] > .2) ? 1 : ((o.seed || 0) % 2 ? -1 : 1)));
-  const mx = (Math.abs(dsin(fa)) > .45 ? 0 : side * ((k.mw || 26) * .8 + 6)), my = k.mouthY + 6;
-  const size = (g.breathSize || 17), phase = g.breathPhase || 0;
-  if (window.SN20 && typeof SN20.breath === 'function') SN20.breath(ctx, { x: mx, y: my, t, seed: (o.seed || 0) + 7, dir: side, size, alpha: g.breathAlpha ?? .9, period: 1.9, phase });
-  else puffStandIn(mx, my, t, side, (o.seed || 0) + 7, size, g.breathAlpha ?? .9, 1.9, phase);
+  const Y = yawsOf(o), fa = V2C.faceAng ? V2C.faceAng(Y.h) : Y.h, prof = Math.abs(dsin(fa)) > .45;
+  const side = prof ? (dsin(fa) < 0 ? -1 : 1) : (g.breathDir || ((o.look && o.look[0] < -.2) ? -1 : (o.look && o.look[0] > .2) ? 1 : ((o.seed || 0) % 2 ? -1 : 1)));
+  const mx = prof ? 0 : side * ((k.mw || 26) * .8 + 6), my = k.mouthY + 6, size = g.breathSize || 1, phase = g.breathPhase || 0, dirW = side * (o.flip ? -1 : 1);
+  if (window.SN20 && typeof SN20.breath === 'function') SN20.breath(ctx, { x: mx, y: my, t, seed: (o.seed || 0) + 7, dir: dirW, size, alpha: g.breathAlpha ?? .95, period: 1.9, phase });
+  else puffStandIn(mx, my, t, side, (o.seed || 0) + 7, size * 17, g.breathAlpha ?? .9, 1.9, phase);
 };
 
 // ================================================================== A20.winter(o, g)
@@ -314,7 +314,6 @@ A.winter = function (o, g) {
   o.shiverDx = D.shiver ? D.shiver * 2.6 * vnoise(t * 47 + sd) : 0;
   o.shiverDy = D.shiver ? D.shiver * 1.5 * vnoise(t * 53 + sd + 4) : 0;
   if (D.shiver) o.shake = (o.shake || 0) + D.shiver * 1.4;
-  if (D.breath && !('breathSize' in D)) D.breathSize = 17;
   return o;
 };
 
@@ -569,6 +568,11 @@ A.plowTruck = (c, o = {}) => {
   return info;
 };
 A.truck = A.plowTruck;
+/* clip to the cab window's real outline (rounded top-left corner, slanted windshield edge) in world units: A20.cabClip(ctx, { x, y, s, facing }) then ctx.save() before / ctx.restore() after the driver */
+A.cabClip = (c, o = {}) => {
+  const s = o.s ?? 1, f = o.facing || 1, X = (lx, ly) => [o.x + f * s * lx, o.y + s * ly], [x0, y0, x1, y1] = TRUCK_CAB, P = [X(x0, y1), X(x0 + 8, y0 + 8), X(x0 + 26, y0), X(x1 - 12, y0), X(x1 + 10, y1)];
+  c.beginPath(); c.moveTo(...P[0]); c.lineTo(...P[1]); c.quadraticCurveTo(...X(x0 + 12, y0), ...P[2]); c.lineTo(...P[3]); c.lineTo(...P[4]); c.closePath(); c.clip();
+};
 /* the glass of the cab window drawn AFTER the driver: a sheen, a few streaks, a sliver of snow on the sill */
 A.cabGlass = (c, o = {}) => {
   const s = o.s ?? 1, f = o.facing || 1, t = o.t || 0;
@@ -939,7 +943,7 @@ A.ditchPicture = (c, o = {}) => {
   const settle = clamp(o.settle ?? 0), pr = clamp(o.phoneRing ?? 0), pt = clamp(o.point ?? 0), eat = clamp(o.eat ?? 0);
   const phoneOn = pr > .02, sliceOn = eat > 0 && !phoneOn && pt < .5 && eat < 1.01;
   const egg = A.eggplant({ t, expr: o.expr || (eat > .02 ? 'egg_cosy' : settle > .5 ? 'egg_calm' : 'egg_stuck'), pose: 'rest', noLegs: true, noShadow: true, noReflect: true, hivis: false, x: 336, y: 412 + 22 * settle, s: .64, id: 'egg', seed: 251,
-    gear: { scarfH: 24, boots: false, mittens: true, wind: 0, breath: o.breath !== false, breathDir: 1, breathSize: 15 } });
+    gear: { scarfH: 24, boots: false, mittens: true, wind: 0, breath: o.breath !== false, breathDir: 1, breathSize: .8, breathAlpha: .6 } });
   egg.arms = { l: 'rest', r: 'hold' }; egg.grip = { r: [58, 112] };   /* the right hand on the wheel (the viewer's right) */
   const bk = .5 + .5 * dsin(t * 1.4);
   if (phoneOn) { egg.arms.l = 'hold'; egg.grip.l = [lerp(-70, -60, pr), lerp(100, -50, pr)]; egg.hold = { l: 'fp20_phone' }; egg.phoneLit = 1; }
@@ -961,7 +965,7 @@ A.ditchPicture = (c, o = {}) => {
     c.fillStyle = V2.radial(x, y, Math.min(w, h) * .3, Math.max(w, h) * .75, [[0, 'rgba(0,0,0,0)'], [1, 'rgba(4,8,24,.45)']]); c.fillRect(x - w / 2, y - h / 2, w, h);
     c.restore();
     c.save(); c.strokeStyle = 'rgba(230,240,255,.9)'; c.lineWidth = Math.max(3, w * .012); c.beginPath(); c.roundRect(x - w / 2, y - h / 2, w, h, Math.min(w, h) * .05); c.stroke(); c.restore();
-    if (o.label !== false && window.UI) { const sz = Math.max(16, w * .052); UI.pill('LIVE', x - w / 2 + w * .13, y - h / 2 + h * .06, { size: sz, fill: '#d93a3a', ink: '#ffffff', hero: false, id: 'ditchlive' }); }
+    if (o.label !== false && window.UI) { const sz = Math.max(16, w * .052); UI.pill('LIVE', x + w / 2 - w * .13, y - h / 2 + h * .06, { size: sz, fill: '#d93a3a', ink: '#ffffff', hero: false, id: 'ditchlive' }); }
   }
   return { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2, cx: x, cy: y, w, h };
 };
@@ -1072,6 +1076,19 @@ A.shovelThrow = (o, t, t0) => {
   const rel = t >= t0 && Math.abs(u - P.release) < .5 / (P.period * 30) ? 1 : 0;
   return { x: o.x + fl * s * tip[0], y: cy + s * tip[1], ang: dir * phi, load, u, release: rel };
 };
+
+// ================================================================== fp20_ice: tears frozen into tiny ice beads on the cheeks (face class, front layer); o.iceBeads 0..1
+EXT.acc.fp20_ice = (o, k, t, layer) => {
+  const kk = clamp(o.iceBeads ?? 0); if (layer !== 'front' || kk < .04) return;
+  const n = Math.max(1, Math.round(kk * 9));
+  ctx.save();
+  for (let i = 0; i < n; i++) {
+    const sd = i % 2 ? 1 : -1, j = Math.floor(i / 2), x = sd * (k.eyeX + k.er * (.45 + .16 * rnd(81, i))), y = k.eyeY + k.er * (1.55 + j * .62 + .25 * rnd(82, i)), r = 3.4 + 2.6 * rnd(83, i);
+    ctx.fillStyle = 'rgba(206,238,255,.9)'; ctx.strokeStyle = 'rgba(70,120,190,.9)'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.beginPath(); ctx.arc(x - r * .3, y - r * .35, r * .32, 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+};
 /* @@A20-PART4E */
 /* @@A20-PART3 */
 
@@ -1080,7 +1097,7 @@ A.shovelThrow = (o, t, t0) => {
   if (!V2C.YAW_ACC || !V2C.YAW_TEX || !V2C.YAW_TOP || !V2C.ACC_CLS) return;
   const own = (name, cls) => { const f = (o, k, t, layer) => EXT.acc[name](o, k, t, layer); f.cls = cls; V2C.YAW_ACC[name] = f; };
   own('fp20_hat', 'head'); own('fp20_scarf', 'wrap'); own('fp20_coat', 'wrap'); own('fp20_boots', 'chest'); own('fp20_breath', 'face');
-  own('fp20_cap', 'head'); own('fp20_hivis', 'wrap'); own('fp20_scrubs', 'wrap');
+  own('fp20_cap', 'head'); own('fp20_hivis', 'wrap'); own('fp20_scrubs', 'wrap'); V2C.ACC_CLS.fp20_ice = 'face';
   /* @@A20-TURN */
 })();
 })();

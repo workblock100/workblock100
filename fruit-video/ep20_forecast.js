@@ -67,6 +67,7 @@ const TF = tl('forecast'), TD = tl('dayroom');
 
 // ------------------------------------------------------------------ text: hero only where it is safe (the viewer can read it, it is clear of the frame edge, the caption zone and the clock pill)
 let SOFT = 0;                                              /* > 0 while the blurred background is drawn: its text is never hero */
+let HEROMODE = false;                                      /* true only while an object shot draws its subject sharp (the TV, the slide, the board): every other piece of set text is dressing */
 const scrOf = c => { const m = c.getTransform(); return Math.hypot(m.a, m.b); };
 function scrBox(cx, cy, hw, hh) {
   const m = ctx.getTransform(); let a = 1e9, b = 1e9, c = -1e9, d = -1e9;
@@ -74,15 +75,16 @@ function scrBox(cx, cy, hw, hh) {
   return { x0: a, y0: b, x1: c, y1: d };
 }
 function heroOK(size, cx, cy, w, h = size) {
-  if (SOFT || size * scrOf(ctx) < 31) return false;
+  if (SOFT || !HEROMODE || size * scrOf(ctx) < 31) return false;
   const b = scrBox(cx, cy, w / 2 + 10, h * .5 + 10);
   return b.x0 >= 50 && b.x1 <= W - 50 && b.y0 >= 50 && b.y1 <= 1372 && !(b.x0 < 506 && b.y0 < 250 && b.x1 > 40 && b.y1 > 108);
 }
 /* a label: hero when heroOK says so (or o.hero), else set dressing (crop allowed). o.align 'left' | 'right' anchors the ink edge at cx. */
 function TXT(str, cx, cy, o = {}) {
-  const size = o.size || 30, wd = UI.sizeOf(str, o).w || size * str.length * .6, mid = o.align === 'left' ? cx + wd / 2 : o.align === 'right' ? cx - wd / 2 : cx;
+  const size0 = o.size || 30, fit = o.maxW ? UI.fit(str, o.maxW, { size: size0, font: o.font, weight: o.weight, italic: o.italic, spacing: o.spacing, lw: o.lw }) : null, size = fit ? fit.size : size0;
+  const wd = (fit ? fit.w : UI.sizeOf(str, o).w) || size * str.length * .6, mid = o.align === 'left' ? cx + wd / 2 : o.align === 'right' ? cx - wd / 2 : cx;
   const hero = o.hero !== undefined ? !!o.hero : heroOK(size, mid, cy, wd);
-  return UI.label(str, cx, cy, Object.assign({}, o, { hero, crop: o.crop !== undefined ? o.crop : !hero }));
+  return (o.k !== undefined ? UI.strike : UI.label)(str, cx, cy, Object.assign({}, o, { hero, crop: o.crop !== undefined ? o.crop : !hero }));
 }
 const heroBox = (size, x, y, w, h) => o => o;   /* (kept for symmetry with the other scene files) */
 
@@ -169,7 +171,7 @@ EXT.prop.fp20f_popper = (side, o, t) => {
   if (ag >= 0 && ag < .14) { const k = ag / .14; ctx.fillStyle = 'rgba(255,252,236,' + (.95 * (1 - k)) + ')'; ctx.beginPath(); ctx.arc(0, -90, 22 + 44 * k, 0, TAU); ctx.fill(); }
   ctx.restore();
 };
-PROP_BOX.fp20f_popper = Object.assign([-36, -112, 66, 18], { nearFace: true });
+PROP_BOX.fp20f_popper = Object.assign([-36, -112, 66, 18], { nearFace: true, mirror: true });
 /* Onion's policy binder: a navy vinyl ring binder; o.binOpen 0..1 swings the cover open to show a page (red header, ruled lines). Held by the bottom edge, shown out to the side. */
 EXT.prop.fp20f_binder = (side, o, t) => {
   const op = c01(o.binOpen ?? 0), S = o.binScale || 1, w = 104, h = 136;
@@ -281,7 +283,7 @@ const FPOSTER = { x: 792, y: 352, w: 196, h: 150 };
 const FDESK = { x0: 410, x1: 880, top: 1085 };
 const FPHONE = { x: 508, y: 1076 }, FMON = { x: 705, y: 1074, w: 214, h: 140 };    /* the monitor: x = centre, y = the desk top under its foot; the screen is w x h */
 const FDOOR = { x0: 1110, x1: 1400, y0: 640, y1: 1250, mx: 1255 };               /* the doorway: two sliding leaves meeting at mx */
-const FSTAND = { mango: [590, 1250], tom: [385, 1252], straw: [175, 1250], lemon: [795, 1250], onion: [1000, 1252] };   /* where everybody stands (Strawberry at her cart, far left) */
+const FSTAND = { mango: [610, 1250], tom: [400, 1252], straw: [140, 1250], lemon: [810, 1250], onion: [1000, 1252] };   /* where everybody stands (Strawberry at her cart, far left) */
 const FSC = { mango: .88, tom: .96, straw: .82, lemon: .88, onion: .8 };           /* a character's scale: about 320 px tall */
 const GUSTS_F = [[22.817, 1.5, .8]];
 function fstate(lt) {
@@ -298,8 +300,15 @@ function fWall(lt, st) {
   ctx.strokeStyle = 'rgba(60,44,40,.10)'; ctx.lineWidth = 2; for (let x = -1400; x < 2800; x += 220) { ctx.beginPath(); ctx.moveTo(x, 330); ctx.lineTo(x, 1000); ctx.stroke(); }   /* faint panel seams */
   ctx.fillStyle = mixc('#cfc8ba', '#a9b6cb', b); ctx.fillRect(-1600, -600, 4400, 930);                                             /* the ceiling band */
   ctx.fillStyle = 'rgba(40,30,40,.18)'; ctx.fillRect(-1600, 326, 4400, 6);
-  ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 3; for (let x = -1500; x < 2800; x += 240) { ctx.beginPath(); ctx.moveTo(x, -600); ctx.lineTo(x, 326); ctx.stroke(); }
-  for (const lx of [150, 620, 1090, 1560]) { ctx.fillStyle = 'rgba(255,255,248,.9)'; rr(lx - 120, 290, 240, 20, 6); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; ctx.stroke(); glow(lx, 330, 260, '255,248,225', .18, .1); }   /* the ceiling lights */
+  /* the ceiling in perspective: tile lines fan out from the wall top toward the camera, light panels between them */
+  const VX = 660, VY = 980, sc = y => (VY - y) / (VY - 326), px = (x, y) => VX + (x - VX) * sc(y);
+  ctx.strokeStyle = 'rgba(255,255,255,.34)'; ctx.lineWidth = 3;
+  for (let x = -2000; x <= 3400; x += 200) { ctx.beginPath(); ctx.moveTo(x, 326); ctx.lineTo(px(x, -700), -700); ctx.stroke(); }
+  for (let j = 1; j <= 9; j++) { const y = 326 - 38 * j * (1 + j * .2); ctx.beginPath(); ctx.moveTo(-2400, y); ctx.lineTo(3600, y); ctx.stroke(); }
+  for (const lx of [-40, 460, 960, 1460]) for (const [ya, yb] of [[250, 288], [96, 168]]) {
+    poly([[px(lx - 90, yb), yb], [px(lx + 90, yb), yb], [px(lx + 90, ya), ya], [px(lx - 90, ya), ya]], 'rgba(255,255,246,.92)', INKC, 2.4);
+    glow(lx, yb + 24, 280, '255,248,225', ya > 200 ? .2 : .1, .1);
+  }
 }
 function fFloor(lt, st) {
   const b = st.blue, a = mixc('#cdc6b8', '#aab6c8', b), c = mixc('#b8b0a0', '#97a4b8', b);
@@ -365,8 +374,8 @@ function tvScreen(lt) {
   TXT('LIVE  2:00 PM', w - 10, 18, { size: 13, fill: '#e8f0ff', align: 'right', weight: 800, spacing: .6, hero: false });
   TXT('LONG ISLAND', 28, h - 64, { size: 12, fill: '#bfe4d3', align: 'left', weight: 900, spacing: 1, hero: false });
   ctx.fillStyle = '#f4f7ff'; rr(8, h - 36, w - 16, 28, 6); ctx.fill(); ctx.fillStyle = '#d92a3a'; rr(8, h - 36, 54, 28, 6); ctx.fill();
-  UI.container('tvtick', 'sign', [8, h - 36, w - 8, h - 8], 6);
-  TXT('ALERT', 35, h - 22, { size: 13, fill: '#fff', weight: 900, spacing: .8, cid: 'tvtick', hero: false, maxW: 46 });
+  UI.container('tvtick', 'sign', [8, h - 36, w - 8, h - 8], 3);
+  TXT('ALERT', 35, h - 22, { size: 12, fill: '#fff', weight: 900, spacing: .6, cid: 'tvtick', hero: false, maxW: 44 });
   const msgs = lt < 1.6 ? ['WINTER STORM WARNING IN EFFECT', 1] : lt < 2.9 ? ['THIRTY INCHES BY MORNING', sg(lt, 1.6, 2.6)] : ['TRAVEL IS NOT ADVISED', sg(lt, 2.9, 3.7)];
   if (msgs[1] > .02) TXT(msgs[0], 72, h - 22, { size: 14, fill: '#10224f', align: 'left', weight: 900, cid: 'tvtick', reveal: msgs[1], maxW: w - 90, spacing: .2 });
   ctx.restore();
@@ -384,7 +393,7 @@ function fPoster(lt, st) {
   ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(-.05 * fl * Math.sin(lt * 14)); ctx.translate(-p.x, -p.y);
   ctx.fillStyle = 'rgba(30,20,30,.18)'; rr(p.x + 6, p.y + 8, p.w, p.h, 6); ctx.fill();
   ctx.fillStyle = lg(0, p.y, 0, p.y + p.h, [[0, '#cfe7ff'], [1, '#f3f9ff']]); rr(p.x, p.y, p.w, p.h, 6); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.stroke();
-  UI.container('poster', 'sign', [p.x, p.y, p.x + p.w, p.y + p.h], 6);
+  UI.container('poster', 'sign', [p.x, p.y, p.x + p.w, p.y + p.h], 3);
   TXT('FUN COMMITTEE', p.x + p.w / 2, p.y + 18, { size: 14, fill: '#6a3fb0', weight: 900, spacing: 1.4, cid: 'poster', maxW: p.w - 24 });
   TXT('SNOW DAY', p.x + p.w / 2 + 28, p.y + 50, { size: 36, font: 'Bangers', weight: 400, fill: '#d92a3a', stroke: '#ffffff', lw: 6, spacing: 1, cid: 'poster', maxW: 124 });
   TXT('SOCIAL!', p.x + p.w / 2 + 28, p.y + 84, { size: 36, font: 'Bangers', weight: 400, fill: '#d92a3a', stroke: '#ffffff', lw: 6, spacing: 1, cid: 'poster', maxW: 124 });
@@ -417,26 +426,25 @@ function boardFace(lt, side, st, xs) {
   const B = FBOARD, w = B.w, h = B.h;
   ctx.fillStyle = lg(0, 0, w, h, [[0, '#fbfdff'], [1, '#e9eff7']]); rr(8, 8, w - 16, h - 34, 4); ctx.fill();
   if (side === 0) {
-    UI.container('board', 'sign', [8, 8, w - 8, h - 26], 6);
+    UI.container('board', 'sign', [8, 8, w - 8, h - 26], 3);
     TXT('STAFFING', w / 2, 34, { size: 32, font: 'Bangers', weight: 400, fill: '#1c3b7a', spacing: 2, cid: 'board', maxW: w - 40 });
-    TXT('TODAY  2:00 PM', w / 2, 60, { size: 13, fill: '#6a7898', weight: 900, spacing: 1.2, cid: 'board', hero: false });
-    UI.panel([18, 76, w - 36, 28], { fill: '#2f6fc4', r: 8, id: 'bdA', pad: 4 }); TXT('DAY SHIFT: 6', w / 2, 90, { size: 19, fill: '#fff', cid: 'bdA', center: true, maxW: w - 56 });
-    DAYN.forEach((n, i) => TXT(n, 26 + (i % 2) * 96, 124 + Math.floor(i / 2) * 22, { size: 14, fill: '#243b73', italic: true, weight: 800, align: 'left', cid: 'board', maxW: 88 }));
-    UI.panel([18, 206, w - 36, 28], { fill: '#7a3fb8', r: 8, id: 'bdB', pad: 4 }); TXT('NIGHT SHIFT: 4', w / 2, 220, { size: 19, fill: '#fff', cid: 'bdB', center: true, maxW: w - 56 });
+    TXT('TODAY  2:00 PM', w / 2, 58, { size: 13, fill: '#6a7898', weight: 900, spacing: 1.2, cid: 'board', hero: false });
+    UI.panel([18, 72, w - 36, 28], { fill: '#2f6fc4', r: 8, id: 'bdA', pad: 4 }); TXT('DAY SHIFT: 6', w / 2, 86, { size: 19, fill: '#fff', cid: 'bdA', center: true, maxW: w - 56 });
+    DAYN.forEach((n, i) => TXT(n, 24 + (i % 2) * 84, 118 + Math.floor(i / 2) * 20, { size: 13, fill: '#243b73', italic: true, weight: 800, align: 'left', cid: 'board', maxW: 82 }));
+    UI.panel([18, 190, w - 36, 28], { fill: '#7a3fb8', r: 8, id: 'bdB', pad: 4 }); TXT('NIGHT SHIFT: 4', w / 2, 204, { size: 19, fill: '#fff', cid: 'bdB', center: true, maxW: w - 56 });
     NIGHTN.forEach((n, i) => {
-      const cy = 256 + i * 28, k = c01((lt - XT[i]) / .26);
-      UI.strike(n, 28, cy, { size: 19, fill: '#243b73', italic: true, weight: 800, align: 'left', cid: 'board', maxW: 124, k: 0 });
+      const cy = 240 + i * 27, k = c01((lt - XT[i]) / .26);
+      TXT(n, 26, cy, { size: 18, fill: '#243b73', italic: true, weight: 800, align: 'left', cid: 'board', maxW: 118, k, line: '#d4202c', thickness: 3.6, lineAlpha: .95 });
       if (k > 0) {
-        const kk = k, a = c01(kk * 2), b = c01(kk * 2 - 1), x0 = w - 70, x1 = w - 36, y0 = cy - 13, y1 = cy + 13;
-        ctx.save(); ctx.strokeStyle = '#d4202c'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+        const a = c01(k * 2), b = c01(k * 2 - 1), x0 = w - 60, x1 = w - 32, y0 = cy - 11, y1 = cy + 11;
+        ctx.save(); ctx.strokeStyle = '#d4202c'; ctx.lineWidth = 5.5; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(lerp(x0, x1, a), lerp(y0, y1, a)); ctx.stroke();
         if (b > 0) { ctx.beginPath(); ctx.moveTo(x1, y0 + 1); ctx.lineTo(lerp(x1, x0, b), lerp(y0 + 1, y1 - 1, b)); ctx.stroke(); }
-        ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(22, cy + 1); ctx.lineTo(lerp(22, 28 + 112, k), cy + 1); ctx.stroke();      /* the strike through the name */
         ctx.restore();
       }
     });
   } else {
-    UI.container('boardb', 'sign', [8, 8, w - 8, h - 26], 6);
+    UI.container('boardb', 'sign', [8, 8, w - 8, h - 26], 3);
     TXT('NURSES ON DUTY', w / 2, 34, { size: 22, fill: '#1c3b7a', weight: 900, spacing: 1, cid: 'boardb', maxW: w - 40 });
     TXT('1', w / 2 - 14, 112, { size: 118, font: 'Bangers', weight: 400, fill: '#d4202c', stroke: '#ffffff', lw: 6, cid: 'boardb' });
     strawIcon(w / 2 + 52, 118, 24);
@@ -519,19 +527,19 @@ function slideDraw(lt) {
   ctx.fillStyle = '#f9fbfd'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#1f9d8a'; ctx.fillRect(0, 0, 12, h); ctx.fillStyle = '#e8f1f5'; ctx.fillRect(12, 0, w - 12, 30);
   ctx.fillStyle = '#2f9a4a'; ctx.beginPath(); ctx.ellipse(32, 15, 10, 5.5, -.6, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.ellipse(40, 15, 10, 5.5, .6, 0, TAU); ctx.fill();
   TXT('GREENLEAF  Q4 UPDATE', 54, 15, { size: 9, fill: '#3a5a6a', align: 'left', weight: 900, spacing: .8, hero: false });
-  flakeArt(180, 66, 22);
-  UI.container('slide1', 'sign', [16, 34, w - 4, h - 14], 4);
-  const ws = [['WEATHER-RELATED', T_W1, 17, 60], ['PRODUCTIVITY', T_W2, 23, 88], ['OPPORTUNITY', T_W3, 23, 116]];
-  for (const [s, t0, sz, yy] of ws) { const k = ss(lt, t0 - .02, t0 + .16); if (k > .02) TXT(s, 24, yy, { size: sz, fill: '#16336b', align: 'left', weight: 900, cid: 'slide1', maxW: w - 34, alpha: k, spacing: .3 }); }
+  flakeArt(190, 100, 15);
+  UI.container('slide1', 'sign', [14, 32, w - 4, h - 8], 3);
+  const ws = [['WEATHER-RELATED', T_W1, 17, 54], ['PRODUCTIVITY', T_W2, 23, 80], ['OPPORTUNITY', T_W3, 23, 106]];
+  if (ch < 1) for (const [s, t0, sz, yy] of ws) { const k = ss(lt, t0 - .02, t0 + .16); if (k > .02) TXT(s, 24, yy, { size: sz, fill: '#16336b', align: 'left', weight: 900, cid: 'slide1', maxW: w - 34, alpha: k, spacing: .3, hero: ch > 0 ? false : undefined }); }
   TXT('(SYNERGY ALIGNED)', w - 12, h - 8, { size: 7.5, fill: '#7a8aa0', align: 'right', weight: 800, hero: false });
   if (ch > 0) {   /* slide two: HAZARD PAY, a pizza and a gold star */
     ctx.save(); ctx.translate((1 - eo(ch)) * w, 0);
     ctx.fillStyle = lg(0, 0, 0, h, [[0, '#fff3c4'], [1, '#ffe08a']]); ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#d4202c'; ctx.fillRect(0, 0, 12, h);
     pizzaArt(62, 80, 44); starArt(92, 42, 22, .2);
-    UI.container('slide2', 'sign', [112, 30, w - 6, h - 10], 4);
-    TXT('HAZARD', 162, 70, { size: 25, fill: '#7a1a14', weight: 900, cid: 'slide2', maxW: 90, spacing: .4 });
-    TXT('PAY', 162, 100, { size: 34, fill: '#d4202c', weight: 900, cid: 'slide2', maxW: 90, spacing: 1 });
-    TXT('1 SLICE PER EMPLOYEE*', 160, h - 10, { size: 8, fill: '#7a4a1a', weight: 900, spacing: .3, cid: 'slide2', hero: false, maxW: 100 });
+    UI.container('slide2', 'sign', [108, 24, w - 4, h - 4], 3);
+    TXT('HAZARD', 158, 70, { size: 25, fill: '#7a1a14', weight: 900, cid: 'slide2', maxW: 84, spacing: .4, hero: ch < 1 ? false : undefined });
+    TXT('PAY', 158, 100, { size: 34, fill: '#d4202c', weight: 900, cid: 'slide2', maxW: 84, spacing: 1, hero: ch < 1 ? false : undefined });
+    TXT('1 SLICE PER EMPLOYEE*', 158, h - 14, { size: 8, fill: '#7a4a1a', weight: 900, spacing: .3, cid: 'slide2', hero: false, maxW: 92 });
     ctx.restore();
   }
   ctx.restore();
@@ -562,7 +570,7 @@ function crestFinal(x) {
   return CREST[CREST.length - 1][1];
 }
 const pileG = (x, lt) => { const d = x <= 1300 ? (1300 - x) / 700 * .6 : 0; return ss(lt, T_DUMP + d, T_DUMP + d + .62); };
-const crestAt = (x, lt) => lerp(1348, crestFinal(x), pileG(x, lt));
+const crestAt = (x, lt) => lerp(1424, crestFinal(x), pileG(x, lt));
 function fOutside(lt, st, x0, y0, x1, y1, dk) {
   ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
   ctx.fillStyle = lg(0, y0, 0, y1, [[0, mixc('#a7b3c8', '#7f8da8', st.blue)], [.7, mixc('#d6dce8', '#a9b4c8', st.blue)], [1, '#eef2f8']]); ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
@@ -625,14 +633,17 @@ function fPile(lt) {
   ctx.fillStyle = '#fff'; for (let i = 0; i < 10; i++) { const x = 900 + sr(i, 9) * 700, tw = .5 + .5 * Math.sin(lt * 3 + i * 2); if (tw < .6) continue; ctx.globalAlpha = tw * .8; ctx.beginPath(); ctx.arc(x, crestAt(x, lt) + 6, 2.4, 0, TAU); ctx.fill(); }
   ctx.restore();
 }
-/* chunks of the wall tumbling out of the doorway while it slumps */
+/* chunks of the wall tumbling out of the doorway while it slumps: lumpy clusters, white on top and blue underneath (not bubbles) */
 function fChunks(lt) {
   const age = lt - T_DUMP; if (age < 0 || age > 1.8) return;
   ctx.save();
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 14; i++) {
     const a = age - sr(i, 11) * .35; if (a < 0) continue;
-    const x0 = 1130 + sr(i, 12) * 260, y0 = 700 + sr(i, 13) * 160, vx = -(120 + 380 * sr(i, 14)), r = 14 + 28 * sr(i, 15), x = x0 + vx * a, y = y0 + 60 * a + 700 * a * a, land = crestAt(x, lt) - r * .3;
-    if (y > land) continue; ctx.fillStyle = rg(x - r * .3, y - r * .3, r * .1, r, [[0, '#ffffff'], [1, '#bccbe6']]); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    const x0 = 1130 + sr(i, 12) * 260, y0 = 690 + sr(i, 13) * 170, vx = -(120 + 380 * sr(i, 14)), r = 10 + 20 * sr(i, 15), x = x0 + vx * a, y = y0 + 60 * a + 700 * a * a, land = crestAt(x, lt) - r * .2;
+    if (y > land) continue;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a * (2 + 3 * sr(i, 16)));
+    for (const [dx, dy, k, shade] of [[.35, .3, .85, 1], [-.4, .15, .8, 1], [0, .5, .7, 1], [.05, -.25, .95, 0], [-.25, -.2, .7, 0]]) { ctx.fillStyle = shade ? '#aebfe0' : lg(0, -r, 0, r, [[0, '#ffffff'], [1, '#dbe5f6']]); ctx.beginPath(); ctx.arc(dx * r, dy * r, r * k, 0, TAU); ctx.fill(); }
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -644,13 +655,13 @@ function fMat(lt) {
   TXT('WELCOME', (x0 + x1) / 2, (y0 + y1) / 2 + 1, { size: 30, fill: '#f3e6cf', weight: 900, spacing: 4, hero: false, maxW: 200 });
 }
 function fSign(lt) {
-  const cx = 1058, by = 1266, fall = eb(sg(lt, T_OPEN + .1, T_OPEN + .62)), ang = -1.5 * fall + (fall >= 1 ? .06 * Math.sin((lt - T_OPEN - .62) * 14) * Math.exp(-(lt - T_OPEN - .62) * 4) : 0);
-  ctx.save(); ctx.translate(cx - 40, by); ctx.rotate(ang); ctx.translate(-(cx - 40), -by);
+  const cx = 1092, by = 1266, fall = eb(sg(lt, T_OPEN + .1, T_OPEN + .62)), ang = -1.5 * fall + (fall >= 1 ? .06 * Math.sin((lt - T_OPEN - .62) * 14) * Math.exp(-(lt - T_OPEN - .62) * 4) : 0);
+  ctx.save(); ctx.translate(cx - 38, by); ctx.rotate(ang); ctx.translate(-(cx - 38), -by);
   ctx.fillStyle = 'rgba(20,14,24,.25)'; ctx.beginPath(); ctx.ellipse(cx, by + 4, 46, 8, 0, 0, TAU); ctx.fill();
   poly([[cx - 38, by], [cx + 38, by], [cx + 26, by - 146], [cx - 26, by - 146]], '#ffd21f', INKC, 3.4);
   poly([[cx - 26, by - 146], [cx + 26, by - 146], [cx + 31, by - 158], [cx - 21, by - 158]], '#e8b800', INKC, 3);
-  ctx.fillStyle = '#17141c'; ctx.fillRect(cx - 28, by - 132, 56, 20); TXT('CAUTION', cx, by - 122, { size: 13, fill: '#ffd21f', weight: 900, spacing: 1, hero: false, maxW: 50 });
-  TXT('WET FLOOR', cx, by - 56, { size: 15, fill: '#17141c', weight: 900, hero: false, maxW: 54 });
+  ctx.fillStyle = '#17141c'; ctx.fillRect(cx - 28, by - 132, 56, 20); if (Math.abs(ang) < .1) TXT('CAUTION', cx, by - 122, { size: 13, fill: '#ffd21f', weight: 900, spacing: 1, hero: false, maxW: 50 });
+  if (Math.abs(ang) < .1) TXT('WET FLOOR', cx, by - 56, { size: 13, fill: '#17141c', weight: 900, hero: false, maxW: 60 });
   ctx.strokeStyle = '#17141c'; ctx.lineWidth = 3.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx - 3, by - 102); ctx.lineTo(cx + 2, by - 86); ctx.lineTo(cx - 8, by - 70); ctx.moveTo(cx + 2, by - 86); ctx.lineTo(cx + 14, by - 78); ctx.moveTo(cx - 3, by - 100); ctx.lineTo(cx - 14, by - 92); ctx.stroke();
   ctx.fillStyle = '#17141c'; ctx.beginPath(); ctx.arc(cx - 6, by - 108, 4.5, 0, TAU); ctx.fill();
   ctx.restore();
@@ -684,9 +695,9 @@ function fPapers(lt) {
 // ------------------------------------------------------------------ the shots (scene-local seconds; every start is snapped to a frame; the boundary frame is the NEW shot)
 const ALLF = ['mango', 'tom', 'straw', 'lemon', 'onion'];
 const FSH = [
-  { id: 'open', s: 0, k: 'wide', x: 668, y: 1010, z: [.8, .85], show: ALLF },
-  { id: 'w1a', s: 1.60, k: 'pt', x: 545, y: 515, z: [1.45, 2.55], obj: 'tv', dof: 12, show: [] },
-  { id: 'w1b', s: 3.00, k: 'wide', x: 385, y: 1110, z: [1.4, 1.5], dof: 5, show: ['mango', 'tom', 'straw'] },
+  { id: 'open', s: 0, k: 'wide', x: 655, y: 950, z: [.8, .86], show: ALLF },
+  { id: 'w1a', s: 1.60, k: 'pt', x: 545, y: 515, z: [1.8, 2.6], obj: 'tv', dof: 12, show: [] },
+  { id: 'w1b', s: 3.00, k: 'wide', x: 378, y: 1110, z: [1.4, 1.5], dof: 5, show: ['mango', 'tom', 'straw'] },
   { id: 't1', s: 4.20, k: 'face', foc: 'tom', z: [2.0, 2.2], up: 120, dof: 9, show: ['tom'], bg: ['mango', 'straw'] },
   { id: 'o1', s: 5.17, k: 'face', foc: 'onion', z: [2.0, 2.25], up: 120, dx: -50, dof: 9, show: ['onion'], bg: ['lemon'] },
   { id: 'l1', s: 7.46, k: 'face', foc: 'lemon', z: [2.2, 2.3], up: 120, dof: 9, show: ['lemon'], bg: ['onion', 'mango'] },
@@ -699,15 +710,15 @@ const FSH = [
   { id: 'me1b', s: 15.35, k: 'pt', x: 705, y: 985, z: [3.55, 3.6], obj: 'monitor', dof: 12, show: [] },
   { id: 's2', s: 16.07, k: 'face', foc: 'straw', z: [2.6, 2.72], up: 110, dof: 9, show: ['straw'], bg: ['tom'] },
   { id: 'm1a', s: 16.94, k: 'face', foc: 'mango', z: [2.2, 2.32], up: 110, dof: 9, show: ['mango'], bg: ['tom', 'lemon'] },
-  { id: 'm1b', s: 17.70, k: 'pt', x: 1255, y: 1030, z: [1.4, 1.5], obj: 'door', show: [], day: true },
+  { id: 'm1b', s: 17.70, k: 'pt', x: 1255, y: 1080, z: [1.75, 1.85], obj: 'door', show: [], day: true },
   { id: 'l2a', s: 18.66, k: 'face', foc: 'lemon', z: [2.3, 2.36], up: 110, dof: 9, show: ['lemon'], bg: ['mango', 'onion'] },
   { id: 'l2b', s: 19.20, k: 'pt', x: 890, y: 735, z: [2.0, 2.25], obj: 'board', dof: 12, show: [] },
   { id: 's3', s: 20.55, k: 'face', foc: 'straw', z: [2.4, 2.5], up: 110, dof: 9, show: ['straw'], bg: ['tom'] },
-  { id: 'o2', s: 21.46, k: 'wide', x: 580, y: 1075, z: [1.0, 1.03], show: ALLF },
-  { id: 'door', s: 22.52, k: 'wide', x: 1160, y: 1010, z: [1.3, 1.22], show: ['onion'] },
+  { id: 'o2', s: 21.46, k: 'wide', x: 570, y: 1060, z: [.96, .98], show: ALLF },
+  { id: 'door', s: 22.52, k: 'wide', x: 1165, y: 1020, z: [1.5, 1.4], show: ['onion'] },
   { id: 'o3', s: 24.57, k: 'face', foc: 'onion', z: [2.25, 2.4], up: 120, dx: 40, dof: 9, show: ['onion'] },
-  { id: 't2', s: 26.20, k: 'wide', x: 282, y: 1110, z: [1.7, 1.78], show: ['tom', 'straw'], bg: ['mango'] },
-  { id: 'end', s: 27.37, k: 'wide', x: 1175, y: 1040, z: [1.16, 1.24], show: ['onion'] },
+  { id: 't2', s: 26.20, k: 'wide', x: 272, y: 1110, z: [1.7, 1.78], show: ['tom', 'straw'], bg: ['mango'] },
+  { id: 'end', s: 27.37, k: 'wide', x: 1112, y: 1060, z: [1.8, 1.95], show: ['onion'] },
 ];
 for (const sh of FSH) sh.s = sh.s === 0 ? 0 : TF.snapT(sh.s);
 FSH.forEach((sh, i) => { sh.e = i + 1 < FSH.length ? FSH[i + 1].s : 99; });
@@ -735,26 +746,26 @@ function castF(lt) {
     C.mango = A7.mango({ x: FSTAND.mango[0], y: FSTAND.mango[1], s: FSC.mango, t: lt, yaw: g.yaw, headYaw: g.head, look: g.look, expr: tm ? 'dead' : 'neutral', lid: tm ? .5 : undefined, who: 'mango', plant: true, arms: { l: 'rest', r: sh ? 'shrug' : 'rest' } }); }
   /* Tomato: the party popper (pop at 4.60 and again at 26.55), she bounces */
   { const g = gazeOf('tom', lt), a1 = lt - FC.popper, a2 = lt - FC.popper2, ag = lt >= 20 ? a2 : a1, hop = hopAt(a1) + hopAt(a2), sq = (a1 >= 0 && a1 < 1 ? .07 * Math.sin(a1 * 16) * Math.exp(-a1 * 3.4) : 0) + (a2 >= 0 && a2 < 1 ? .07 * Math.sin(a2 * 16) * Math.exp(-a2 * 3.4) : 0);
-    const grip = K([[0, [112, 44]], [4.15, [112, 44]], [4.5, [134, -98]], [4.62, [140, -92]], [5.3, [124, -30]], [5.9, [114, 40]], [26.0, [114, 40]], [26.38, [134, -98]], [26.58, [140, -92]], [27.4, [124, -30]]], lt);
+    const grip = K([[0, [-98, 44]], [4.15, [-98, 44]], [4.5, [-112, -98]], [4.62, [-114, -92]], [5.3, [-104, -30]], [5.9, [-98, 40]], [26.0, [-98, 40]], [26.38, [-110, -98]], [26.58, [-112, -92]], [27.4, [-104, -30]]], lt);
     C.tom = A15.tomato({ x: FSTAND.tom[0], y: FSTAND.tom[1] - hop, s: FSC.tom, t: lt, tomPose: 'fruit', yaw: g.yaw, headYaw: g.head, look: g.look, who: 'tom', plant: true, squash: sq,
-      arms: { l: 'rest', r: 'hold' }, hold: { r: 'fp20f_popper' }, grip: { r: grip }, popAge: ag, popRot: .24 }); C.tom.formsN = 0; }
+      arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp20f_popper' }, grip: { l: grip }, popAge: ag, popRot: .24 }); C.tom.formsN = 0; }
   /* Strawberry, per diem, at her cart: flat, tired; a slow blink on "Of course." */
   { const g = gazeOf('straw', lt), sp = lt >= TF.ls('s3') - .1 && lt < TF.le('s3') + .2, bl = K([[0, 0], [16.2, 0], [16.5, 1], [16.85, 0]], lt), fall = ss(lt, TF.ls('o2') + .55, TF.ls('o2') + 1.0);
     C.straw = A11.straw({ x: FSTAND.straw[0], y: FSTAND.straw[1], s: FSC.straw, t: lt, yaw: g.yaw, headYaw: g.head, look: g.look, expr: sp && !fall ? 'neutral' : 'dead', lid: lerp(sp ? .32 : .5, .9, bl), who: 'straw', plant: true,
-      arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp18_medcup' }, cupScale: 1.25, cupTip: .3 * Math.sin(lt * 1.3), grip: { l: [-146, -4] } }); }
+      arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp18_medcup' }, cupScale: 1.25, cupTip: .3 * Math.sin(lt * 1.3), grip: { l: [-112, 38] } }); }
   /* Lemon: the flat look; the clipboard stays down */
   { const g = gazeOf('lemon', lt), sp = (lt >= TF.ls('l1') - .1 && lt < TF.le('l1') + .3) || (lt >= TF.ls('l2') - .1 && lt < TF.le('l2') + .2);
     C.lemon = A7.lemon({ x: FSTAND.lemon[0], y: FSTAND.lemon[1], s: FSC.lemon, t: lt, yaw: g.yaw, headYaw: g.head, look: g.look, expr: sp ? 'dead' : 'neutral', lid: sp ? .52 : .3, face: { curve: .02 }, acc: ['readers', 'lanyard7'], who: 'lemon', plant: true, arms: { l: 'rest', r: 'rest' } }); }
   /* Onion: the policy binder at "Per policy"; the walk to the doors; the gust; the snow; her head and the raised clipboard */
-  { const g = gazeOf('onion', lt), walk = ss(lt, 22.1, T_OPEN), push = ss(lt, T_DUMP + .05, T_DUMP + .95), x = lerp(FSTAND.onion[0], 1125, walk) - 63 * push, dist = (x - FSTAND.onion[0]) + 63 * push * 0;
+  { const g = gazeOf('onion', lt), walk = ss(lt, 22.3, T_OPEN), push = ss(lt, T_DUMP + .05, T_DUMP + .95), x = lerp(FSTAND.onion[0], 1120, walk) - 63 * push;
     const bin = K([[0, [100, 40]], [5.55, [100, 40]], [5.95, [172, -4]], [7.45, [172, -4]], [7.9, [100, 40]]], lt), op = ss(lt, 6.05, 6.5) * (1 - ss(lt, 7.45, 7.8));
-    const tabG = K([[0, [-62, 84]], [T_OPEN + .05, [-62, 84]], [T_OPEN + .2, [-150, 66]], [T_DUMP + .5, [-150, 66]], [T_DUMP + .9, [-136, -52]]], lt);
-    const handle = K([[0, [100, 40]], [22.5, [100, 40]], [T_OPEN - .12, [142, -74]], [T_OPEN + .1, [112, -70]], [T_OPEN + .22, [130, 0]], [T_OPEN + .5, [100, 40]]], lt);
+    const tabG = K([[0, [-74, 104]], [T_OPEN + .05, [-74, 104]], [T_OPEN + .2, [-150, 66]], [T_DUMP + .5, [-150, 66]], [T_DUMP + .9, [-136, -52]]], lt);
+    const handle = K([[0, [100, 40]], [22.5, [100, 40]], [T_OPEN - .12, [150, -74]], [T_OPEN + .1, [122, -70]], [T_OPEN + .22, [130, 0]], [T_OPEN + .5, [100, 40]]], lt);
     const buried = lt >= T_DUMP, sob = Math.max(0, 1 - Math.abs(lt - FC.sniffle - .1) / .4);
     const yaw = K([[0, g.yaw], [22.0, g.yaw], [22.25, 1.15], [T_OPEN, .95], [T_DUMP + .3, .5], [T_DUMP + 1.2, 0]], lt), head = lt < 22.0 ? g.head : K([[22.0, g.head], [22.25, 1.0], [T_DUMP, .8], [T_DUMP + 1.1, 0]], lt);
     const rArm = lt < 5.4 ? ['rest', null] : lt < 7.9 ? ['hold', 'fp20f_binder'] : lt < T_OPEN - .3 ? ['rest', null] : lt < T_OPEN + .6 ? ['hold', null] : ['rest', null];
     const o = A15.onion({ x, y: FSTAND.onion[1] - (lt >= T_DUMP ? 0 : 0), s: FSC.onion, t: lt, pose: 'clip', yaw, headYaw: head, look: lt < T_DUMP ? g.look : [.1, .05], who: 'onion', sob: sob * (lt < 8 ? 1 : 0) + (lt > 24.5 ? .35 : 0),
-      cry: lt >= T_DUMP + .9 ? .9 : .62, expr: lt >= T_DUMP + .08 && lt < T_DUMP + 1.0 ? 'shock' : 'onion_cry', arms: { l: 'hold', r: rArm[0] }, hold: { l: 'fp15_tabletclip' }, grip: { l: lt < T_DUMP + .9 ? tabG : tabG } });
+      cry: lt >= T_DUMP + .9 ? .9 : .62, expr: lt >= T_DUMP + .08 && lt < T_DUMP + 1.0 ? 'shock' : 'onion_cry', arms: { l: 'hold', r: rArm[0] }, hold: { l: 'fp15_tabletclip' }, grip: { l: tabG } });
     if (rArm[1] === 'fp20f_binder') { o.hold.r = 'fp20f_binder'; o.grip.r = bin; o.binOpen = op; }
     else if (lt >= T_OPEN - .3 && lt < T_OPEN + .6) { o.grip.r = handle; }
     if (walk > 0 && walk < 1) { o.gait = Math.abs(x - FSTAND.onion[0]) + 0; o.dir = 1; o.stride = 40; o.vx = 200 * FSC.onion; }
@@ -786,8 +797,8 @@ function inFrame(o, pad = 0) {
 }
 /* where the popper's mouth is, in world units (from the character's options: the hand is the grip, the cone leans by popRot) */
 function popMouth(o) {
-  const k = KINDS[o.kind], s = o.s, g = o.grip.r, hx = o.x + g[0] * s, hy = o.y - s * ((k.leg || 90) + k.ry * .9) + g[1] * s, S = 1.15, a = o.popRot ?? .24;
-  return [hx + Math.sin(a) * 92 * S * s, hy - Math.cos(a) * 92 * S * s];
+  const k = KINDS[o.kind], s = o.s, g = o.grip.l, hx = o.x + g[0] * s, hy = o.y - s * ((k.leg || 90) + k.ry * .9) + g[1] * s, S = 1.15, a = o.popRot ?? .24;
+  return [hx - Math.sin(a) * 92 * S * s, hy - Math.cos(a) * 92 * S * s];
 }
 
 // ------------------------------------------------------------------ the room, the camera, the draw
@@ -796,8 +807,11 @@ function roomF(lt, st, skip) {
   if (!skip.tv) fTV(lt, st);
   if (!skip.board) fBoard(lt, st);
   fDoors(lt, st);
-  if (!skip.desk) { fDesk(lt, st); fKeyboard(); fMonitor(lt, st); fPhone(lt, st); }
-  fFloor(lt, st); fCart(lt, 20, 1246, .8); fMat(lt); fSign(lt);
+  if (!skip.desk) fDesk(lt, st);
+  if (!skip.desk) fKeyboard();
+  if (!skip.monitor) fMonitor(lt, st);
+  if (!skip.phone) fPhone(lt, st);
+  fFloor(lt, st); fCart(lt, 40, 1246, .8); fMat(lt); fSign(lt);
 }
 let FR = null;
 function camF(lt) {
@@ -813,27 +827,32 @@ function camF(lt) {
 function drawF(lt) {
   const { C, sh, st } = FR;
   V2.setLight({ key: [-.45, -.6], keyColor: '#fff4e2', keyA: .2, rim: '#bcd4ff', rimA: .34, shadow: '#1a2038', shadowA: .3, bounce: '#ffe6bc', bounceA: .1, amb: '#dde8ff', ambA: .06, frontDark: .02 }); V2.opts.reflect = false;
-  const skip = {}; if (sh.obj === 'tv') skip.tv = 1; if (sh.obj === 'phone' || sh.obj === 'monitor') skip.desk = 1; if (sh.obj === 'board') skip.board = 1;
+  const skip = {}; if (sh.obj === 'tv') skip.tv = 1; if (sh.obj === 'phone') { skip.desk = 1; skip.phone = 1; } if (sh.obj === 'monitor') { skip.desk = 1; skip.monitor = 1; } if (sh.obj === 'board') skip.board = 1;
   const bgCast = () => { if (!sh.bg) return; REG.suppress++; for (const n of sh.bg) if (inFrame(C[n], 20).inter) drawChar(C[n]); REG.suppress--; };
   if (sh.dof) { SOFT++; V2.dof(sh.dof, () => { roomF(lt, st, skip); bgCast(); }); SOFT--; } else roomF(lt, st, skip);
+  HEROMODE = !!sh.obj && sh.obj !== 'door';
   if (sh.obj === 'tv') fTV(lt, st);
-  if (sh.obj === 'phone' || sh.obj === 'monitor') { fDesk(lt, st); fKeyboard(); fMonitor(lt, st); fPhone(lt, st); }
+  if (sh.obj === 'phone') { fDesk(lt, st); fKeyboard(); fPhone(lt, st); }
+  if (sh.obj === 'monitor') { fDesk(lt, st); fKeyboard(); fMonitor(lt, st); }
   if (sh.obj === 'board') fBoard(lt, st);
+  HEROMODE = false;
   /* behind the cast: the blown-in snow, the papers, the back of the confetti */
   const gust = ss(lt, T_OPEN, T_OPEN + .3) * (1 - ss(lt, 26.2, 28)) * .9 + .25 * ss(lt, 27.3, 27.6);
   if (gust > .02 && (sh.id === 'door' || sh.id === 'o3' || sh.id === 'end')) snow({ x0: 800, y0: 400, x1: 1700, y1: 1320, t: lt, seed: 77, layers: 2, density: 5, wind: -380, gusts: GUSTS_F, tone: 'light', fore: false, alpha: gust });
   fPapers(lt);
-  for (const [t0, o] of [[FC.popper, C.tom], [FC.popper2, C.tom]]) { const [mx, my] = popMouth(o); const oo = Object.assign({}, o, { y: FSTAND.tom[1] }); const [bx, by] = popMouth(oo); confetti(lt, t0, bx, by, { s: FSC.tom, seed: t0 > 10 ? 8 : 3, part: 'back' }); }
+  if (lt >= T_DUMP && lt < T_DUMP + 1.4 && (sh.id === 'door' || sh.id === 'o3')) {      /* the powder of the dump, behind everybody */
+    flurry({ x: 1215, y: 820, r: 80, t: lt, t0: T_DUMP, life: 1.2, seed: 5, n: 70 });
+  }
+  if (lt >= FC.sting && lt < FC.sting + 1.1 && sh.id === 'end') flurry({ x: 1290, y: 900, r: 70, t: lt, t0: FC.sting, life: 1.0, seed: 9, n: 50 });
+  for (const [t0, o] of [[FC.popper, C.tom], [FC.popper2, C.tom]]) { const [mx, my] = popMouth(o); const oo = Object.assign({}, o, { y: FSTAND.tom[1] }); const [bx, by] = popMouth(oo); confetti(lt, t0, bx, by, { s: FSC.tom, seed: t0 > 10 ? 8 : 3, part: 'back', dir: -2.04 }); }
   if (sh.day) {
     const ds = dayShift(lt).sort((a, b) => a.y - b.y); for (const o of ds) drawChar(o);
   }
   const order = sh.show.map(n => [n, C[n]]).sort((a, b) => a[1].y - b[1].y);
   for (const [n, o] of order) drawChar(o);
   fChunks(lt); fPile(lt);
-  if (lt >= T_DUMP && lt < T_DUMP + 1.2) flurry({ x: 1110, y: 1010, r: 150, t: lt, t0: T_DUMP, life: 1.1, seed: 5, n: 60 });
-  if (lt >= FC.sting && lt < FC.sting + 1.0) flurry({ x: 1250, y: 880, r: 110, t: lt, t0: FC.sting, life: .9, seed: 9, n: 40 });
-  for (const t0 of [FC.popper, FC.popper2]) { const oo = Object.assign({}, C.tom, { y: FSTAND.tom[1] }); const [bx, by] = popMouth(oo); confetti(lt, t0, bx, by, { s: FSC.tom, seed: t0 > 10 ? 8 : 3, part: 'front' }); }
-  if (lt > 24.4 && sh.show.includes('onion') && (sh.id === 'o3' || sh.id === 'end')) { const o = C.onion, [fx, fy] = faceC(o); breath({ x: fx + 30 * o.s, y: fy + 26 * o.s, t: lt, seed: 3, dir: 1, size: 1.25 * o.s / .8, alpha: .95, period: 1.7 }); }
+  for (const t0 of [FC.popper, FC.popper2]) { const oo = Object.assign({}, C.tom, { y: FSTAND.tom[1] }); const [bx, by] = popMouth(oo); confetti(lt, t0, bx, by, { s: FSC.tom, seed: t0 > 10 ? 8 : 3, part: 'front', dir: -2.04 }); }
+  if (lt > 24.4 && sh.show.includes('onion') && (sh.id === 'o3' || sh.id === 'end')) { const o = C.onion, [fx, fy] = faceC(o); breath({ x: fx + 52 * o.s, y: fy + 30 * o.s, t: lt, seed: 3, dir: 1, size: 1.5 * o.s / .8, alpha: 1, period: 1.7 }); }
 }
 const FORECAST = {
   shot: lt => fShot(lt).id,
@@ -845,6 +864,325 @@ const FORECAST = {
   clock: () => TF.SCN.clock, label: () => TF.SCN.label,
 };
 window.__EP20_SCENES = window.__EP20_SCENES || {}; window.__EP20_SCENES.forecast = FORECAST;
+
+// ====================================================================================================================================================================================
+// DAYROOM (8:40 PM, THE DAY ROOM). One flat stage, floor line y 1300: a bay of three windows on the back wall (frost, snow, the Moon behind the weather in the middle one, a raised sash and a heap on the
+// sill at the left end), a long shelf of LED candles above the residents' heads, four residents in a row (Goji, Pear, Banana, Cranberry; chairs, blankets, a tray with a candle and a cup each), Mango at the
+// sill on the left, Lemon with the clipboard on the right. Lit by L20.pass: warm candle points, cool window rects, dim downlights.
+// ====================================================================================================================================================================================
+const DFL = 1300, DSHELF = 950, DSILL = 1060;
+const DBAY = [[20, 340], [390, 710], [760, 1080]];                        /* the three windows: outer frame x0, x1 */
+const DWY = { y0: 300, y1: 1060 };                                         /* the frame runs from y0 to the sill */
+const DSEAT = { goji: { x: 470, s: 1.12, kind: 'wheel', col: '#6a6a78' }, pear: { x: 650, s: .96, kind: 'arm', col: '#8a3b3b' }, banana: { x: 830, s: .95, kind: 'wheel', col: '#3b6aa8' }, cran: { x: 1000, s: 1.08, kind: 'arm', col: '#5f7f4f' } };
+const DSTAND = { mango: [255, DFL], lemon: [1165, DFL] };
+const DRES = ['goji', 'pear', 'banana', 'cran'];
+const DC = { cupset1: 9.938, slurp1: 10.095, cupset2: 11.859, slurp2: 12.159, cupset3: 12.559, slurp3: 12.859, cupset4: 13.159, pentick: 15.009, plowdist: 15.754, sting: 19.196 };
+for (const k in DC) DC[k] = TD.snapT(DC[k]);
+const D_MO = TD.ls('mo1'), D_MOE = TD.le('mo1');
+const dstate = lt => ({ sillD: 30 + 26 * ss(lt, 0, 20.5) + 60 * (SNk() && hasK(SNk(), 'depthAt') ? SNk().depthAt(1240 + lt / 60) - .45 : 0), cloud: lt < 16.6 ? 1 : lt < 17.6 ? lerp(1, .58, ss(lt, 16.6, 17.6)) : lt < 18.3 ? .58 : lerp(.58, .98, ss(lt, 18.25, 18.75)) });
+const DGUSTS = [[15.6, 1.4, .5]];
+function dSky(x, y, w, h, lt, seed, o = {}) {
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.fillStyle = lg(0, y, 0, y + h, [[0, '#19244e'], [.55, '#334a7e'], [1, '#7a8fbe']]); ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = rg(x + w * .5, y + h * 1.02, 10, h * .9, [[0, 'rgba(190,210,255,.5)'], [1, 'rgba(190,210,255,0)']]); ctx.fillRect(x, y, w, h);
+  snow({ x0: x, y0: y, x1: x + w, y1: y + h, t: lt, seed, layers: 3, density: 16, wind: -55, gusts: DGUSTS, tone: 'dark', fore: false });
+  ctx.restore();
+}
+function dWindow(lt, i, st) {
+  const [x0, x1] = DBAY[i], w = x1 - x0, y0 = DWY.y0, y1 = DWY.y1, open = i === 0 ? 86 : 0;
+  ctx.fillStyle = '#d9d0bd'; ctx.strokeStyle = INKC; ctx.lineWidth = 3.4; rr(x0, y0, w, y1 - y0, 6); ctx.fill(); ctx.stroke();
+  const up = [x0 + 14, y0 + 14, w - 28, 336], lo = [x0 + 14, y0 + 14 + 336 + 26 - open, w - 28, y1 - y0 - 14 - 336 - 26 - 14];
+  /* the sky is behind everything (the opening under a raised sash shows it too) */
+  dSky(x0 + 14, y0 + 14, w - 28, y1 - y0 - 28, lt, 61 + i * 5);
+  if (i === 1 && window.P20 && typeof P20.moon === 'function') {                                         /* the Moon, behind the weather, in the middle window's upper pane */
+    P20.moon(ctx, { x: up[0] + up[2] / 2, y: up[1] + up[3] / 2, w: up[2], h: up[3], r: 62, t: lt, cloud: st.cloud, rise: .12, rad: 3, expr: lt > 18.2 ? 'sad' : 'neutral' });
+    snow({ x0: up[0], y0: up[1], x1: up[0] + up[2], y1: up[1] + up[3], t: lt, seed: 66, layers: 3, density: 16, wind: -55, gusts: DGUSTS, tone: 'dark', fore: false });
+  }
+  for (const [px, py, pw, ph, sd] of [[up[0], up[1], up[2], up[3], 1], [lo[0], lo[1], lo[2], lo[3], 2]]) {
+    ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
+    ctx.fillStyle = 'rgba(190,210,255,.07)'; ctx.fillRect(px, py, pw, ph);
+    ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.beginPath(); ctx.moveTo(px + pw * .12, py); ctx.lineTo(px + pw * .42, py); ctx.lineTo(px, py + ph * .45); ctx.lineTo(px, py + ph * .25); ctx.closePath(); ctx.fill();
+    frost({ x: px, y: py, w: pw, h: ph, amount: .5, seed: 11 + i * 3 + sd, t: lt, tone: 'dark' });
+    ctx.restore();
+    ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; ctx.strokeRect(px, py, pw, ph);
+  }
+  ctx.fillStyle = '#cfc6b2'; ctx.fillRect(x0 + 8, y0 + 14 + 336 + 2, w - 16, 22 - 2 - (open ? 0 : 0)); ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; ctx.strokeRect(x0 + 8, y0 + 14 + 336 + 2, w - 16, 20);   /* the meeting rail */
+  if (open) {
+    ctx.fillStyle = '#cfc6b2'; ctx.fillRect(lo[0] - 6, lo[1] + lo[3] - 2, lo[2] + 12, 12); ctx.strokeRect(lo[0] - 6, lo[1] + lo[3] - 2, lo[2] + 12, 12);          /* the bottom rail of the raised sash */
+    snow({ x0: x0 + 14, y0: lo[1] + lo[3] + 10, x1: x1 - 14, y1: y1 - 14, t: lt, seed: 77, layers: 2, density: 26, wind: 160, gusts: DGUSTS, tone: 'dark', fore: false });
+  }
+  /* paper snowflakes taped to the glass */
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  for (const [fx, fy, r] of [[.22, .16, 22], [.74, .3, 17], [.4, .12, 14]]) { if (i === 1 && fx > .3 && fx < .6) continue; ctx.save(); ctx.translate(up[0] + up[2] * fx, up[1] + up[3] * fy + (i === 1 ? 70 : 0)); for (let k = 0; k < 6; k++) { ctx.rotate(PI / 3); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r); ctx.moveTo(0, -r * .55); ctx.lineTo(r * .3, -r * .8); ctx.moveTo(0, -r * .55); ctx.lineTo(-r * .3, -r * .8); ctx.stroke(); } ctx.restore(); }
+  ctx.restore();
+}
+function dSill(lt, st) {
+  ctx.fillStyle = 'rgba(10,6,16,.3)'; ctx.fillRect(-300, DSILL + 24, 1900, 14);
+  ctx.fillStyle = lg(0, DSILL - 4, 0, DSILL + 24, [[0, '#a07c52'], [1, '#6a4c30']]); rr(-300, DSILL - 4, 1900, 28, 4); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.stroke();
+  sill({ x0: 30, x1: 330, y: DSILL - 3, depth: st.sillD, seed: 7, tone: 'dark' });                         /* the heap under the raised sash, deeper through the scene */
+}
+const DCANDLE = [[44, 'tea'], [96, 'pil'], [150, 'tea'], [205, 'pil'], [262, 'tea'], [410, 'pil'], [466, 'tea'], [520, 'pil'], [578, 'tea'], [790, 'pil'], [846, 'tea'], [962, 'pil'], [1020, 'tea'], [1072, 'pil'], [1128, 'tea'], [1190, 'pil'], [1244, 'tea']];
+let DCL = [];                                                                     /* the candle flames of the frame (for the light pass) */
+function dShelf(lt, st) {
+  ctx.fillStyle = 'rgba(10,6,16,.3)'; ctx.fillRect(-300, DSHELF + 14, 1900, 10);
+  ctx.fillStyle = lg(0, DSHELF, 0, DSHELF + 16, [[0, '#b58a56'], [1, '#7a5634']]); rr(-300, DSHELF, 1900, 16, 3); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; ctx.stroke();
+  ctx.fillStyle = '#6a4c30'; for (let x = 20; x < 1260; x += 240) { poly([[x, DSHELF + 16], [x + 22, DSHELF + 16], [x + 3, DSHELF + 54]], '#6a4c30', INKC, 2); }
+  DCL = [];
+  for (let i = 0; i < DCANDLE.length; i++) {
+    const [cx, kind] = DCANDLE[i], hasP = window.P20 && typeof P20.ledCandle === 'function';
+    if (hasP) { const r = P20.ledCandle(ctx, { x: cx, y: DSHELF + 2, s: kind === 'pil' ? .68 : .9, on: 1, t: lt, seed: i * 3 + 1, kind: kind === 'pil' ? 'pillar' : 'tea' }); if (r) DCL.push({ x: r.fx, y: r.fy, r: r.r, seed: i }); }
+    else { ctx.fillStyle = '#f2ead6'; rr(cx - 12, DSHELF - 50, 24, 52, 4); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2; ctx.stroke(); glow(cx, DSHELF - 56, 60, '255,190,100', .6, .5); DCL.push({ x: cx, y: DSHELF - 56, r: 100, seed: i }); }
+  }
+}
+function dWall(lt, st) {
+  ctx.fillStyle = lg(0, -200, 0, DFL, [[0, '#b79a82'], [.3, '#cdb08e'], [1, '#b49470']]); ctx.fillRect(-1600, -600, 4600, DFL + 600);
+  ctx.fillStyle = lg(0, 1070, 0, DFL, [[0, '#4d7872'], [1, '#3a5f5a']]); ctx.fillRect(-1600, 1070, 4600, DFL - 1070); ctx.fillStyle = '#8a6a46'; ctx.fillRect(-1600, 1064, 4600, 8); ctx.fillStyle = 'rgba(20,12,16,.3)'; ctx.fillRect(-1600, 1072, 4600, 4);
+  ctx.fillStyle = '#8a6a46'; ctx.fillRect(-1600, DFL - 22, 4600, 22); ctx.fillStyle = 'rgba(20,12,16,.3)'; ctx.fillRect(-1600, DFL - 22, 4600, 3);
+  ctx.fillStyle = '#4a3f52'; ctx.fillRect(-1600, -600, 4600, 920);                                            /* the ceiling, dim */
+  ctx.fillStyle = '#5a4c64'; ctx.fillRect(-1600, 300, 4600, 10); ctx.fillStyle = 'rgba(20,12,16,.25)'; ctx.fillRect(-1600, 310, 4600, 14);
+  for (const lx of [330, 700, 1070]) { ctx.fillStyle = '#e9dfc8'; ctx.beginPath(); ctx.ellipse(lx, 330, 34, 8, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; ctx.stroke(); }   /* three dim downlights */
+}
+function dFloor(lt) {
+  ctx.fillStyle = lg(0, DFL, 0, 2500, [[0, '#8a6244'], [1, '#50382a']]); ctx.fillRect(-1600, DFL, 4600, 1400);
+  ctx.strokeStyle = 'rgba(20,10,4,.28)'; ctx.lineWidth = 2; for (let i = 0; i < 9; i++) { const y = DFL + 8 + Math.pow(i / 8, 1.7) * 900; ctx.beginPath(); ctx.moveTo(-1600, y); ctx.lineTo(3000, y); ctx.stroke(); }
+  for (let x = -2200; x <= 3600; x += 170) { ctx.beginPath(); ctx.moveTo(x * .45 + 330, DFL); ctx.lineTo(x * 1.55 - 100, 2400); ctx.stroke(); }
+  ctx.save(); ctx.translate(740, DFL + 70); ctx.scale(1, .26);                                                   /* the rug under the row */
+  ctx.fillStyle = '#8a3a2a'; ctx.beginPath(); ctx.arc(0, 0, 640, 0, TAU); ctx.fill(); ctx.fillStyle = '#d8c49a'; ctx.beginPath(); ctx.arc(0, 0, 590, 0, TAU); ctx.fill(); ctx.fillStyle = '#9a4a34'; ctx.beginPath(); ctx.arc(0, 0, 548, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+function dArt(lt) {
+  const x = 1118, y = 400, w = 150, h = 112;                                                                   /* a framed photograph: NINETEEN SIXTY-TWO */
+  ctx.fillStyle = 'rgba(10,6,16,.3)'; rr(x + 6, y + 8, w, h, 4); ctx.fill();
+  ctx.fillStyle = '#6a4a30'; rr(x, y, w, h, 4); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.rect(x + 9, y + 9, w - 18, h - 18); ctx.clip();
+  ctx.fillStyle = lg(0, y, 0, y + h, [[0, '#d8c4a0'], [1, '#b89a70']]); ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = '#7a5a3a'; ctx.fillRect(x + 20, y + 52, 52, 40); ctx.beginPath(); ctx.moveTo(x + 14, y + 54); ctx.lineTo(x + 46, y + 30); ctx.lineTo(x + 78, y + 54); ctx.closePath(); ctx.fill();   /* the house */
+  ctx.fillStyle = '#f4ecd8'; ctx.beginPath(); ctx.moveTo(x + 4, y + h); ctx.bezierCurveTo(x + 20, y + 40, x + 60, y + 22, x + 100, y + 56); ctx.bezierCurveTo(x + 126, y + 74, x + 140, y + 90, x + w, y + h); ctx.closePath(); ctx.fill();   /* the drift over the roof */
+  ctx.fillStyle = '#3a2a20'; ctx.fillRect(x + 118, y + 76, 4, 14); ctx.beginPath(); ctx.arc(x + 120, y + 72, 4, 0, TAU); ctx.fill();   /* a tiny person */
+  ctx.restore();
+  TXT('1962', x + w / 2, y + h + 14, { size: 14, fill: '#e8d8b8', weight: 900, spacing: 2, hero: false });
+}
+function dLamp(x, lt, seed) {
+  const f = .95 + .05 * Math.sin(lt * 1.3 + seed);
+  ctx.fillStyle = 'rgba(10,6,16,.32)'; ctx.beginPath(); ctx.ellipse(x, DFL + 6, 56, 12, 0, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, DFL); ctx.lineTo(x, 760); ctx.stroke();
+  ctx.fillStyle = '#3a2c20'; ctx.beginPath(); ctx.ellipse(x, DFL - 4, 38, 9, 0, 0, TAU); ctx.fill();
+  poly([[x - 44, 760], [x + 44, 760], [x + 70, 668], [x - 70, 668]], lg(0, 668, 0, 760, [[0, '#ffe8b4'], [1, '#f0c27a']]), INKC, 3);
+  glow(x, 740, 220 * f, '255,196,120', .5 * f, .5);
+}
+
+// ------------------------------------------------------------------ chairs, blankets, trays (copied in spirit from ep19_signup.js, which drew the same four residents): (x, y) = the sitter's body bottom, s = scale, fl = the floor
+function chairBack(kind, x, y, s, col, ryS, rxS, fl) {
+  ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.fillStyle = 'rgba(8,4,16,.4)'; ctx.beginPath(); ctx.ellipse(x, fl, (rxS + 64) * s, 26 * s, 0, 0, TAU); ctx.fill();
+  const top = y - (ryS * 2 + 80) * s, bw = (rxS + 36) * s;
+  if (kind === 'arm') {
+    ctx.beginPath(); ctx.moveTo(x - bw, y + 24 * s); ctx.lineTo(x - bw, top + 60 * s); ctx.quadraticCurveTo(x - bw, top, x - bw + 60 * s, top); ctx.lineTo(x + bw - 60 * s, top); ctx.quadraticCurveTo(x + bw, top, x + bw, top + 60 * s); ctx.lineTo(x + bw, y + 24 * s); ctx.closePath();
+    ctx.fillStyle = lg(0, top, 0, y, [[0, shade(col, 1.25)], [1, shade(col, .8)]]); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 4 * s); ctx.stroke();
+    ctx.fillStyle = shade(col, .6); for (const fx of [-.5, 0, .5]) for (const fy of [.3, .55]) { ctx.beginPath(); ctx.arc(x + fx * bw, lerp(top, y, fy), Math.max(2, 4.5 * s), 0, TAU); ctx.fill(); }
+  } else {
+    const bh = (ryS * 1.6 + 40) * s, tx = y - bh;
+    ctx.strokeStyle = '#1a1a22'; ctx.lineWidth = Math.max(5, 10 * s); for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x + sd * (rxS * .86) * s, y - 30 * s); ctx.lineTo(x + sd * (rxS * .86) * s, tx - 36 * s); ctx.lineTo(x + sd * (rxS * .86 + 30) * s, tx - 40 * s); ctx.stroke(); }
+    ctx.strokeStyle = '#8d96a4'; ctx.lineWidth = Math.max(3, 6 * s); for (const sd of [-1, 1]) { ctx.beginPath(); ctx.moveTo(x + sd * (rxS * .86) * s, y - 30 * s); ctx.lineTo(x + sd * (rxS * .86) * s, tx - 36 * s); ctx.lineTo(x + sd * (rxS * .86 + 30) * s, tx - 40 * s); ctx.stroke(); }
+    rr(x - rxS * .86 * s, tx, rxS * 1.72 * s, bh + 20 * s, 14 * s); ctx.fillStyle = lg(0, tx, 0, y, [[0, shade(col, 1.15)], [1, shade(col, .7)]]); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 4 * s); ctx.stroke();
+    for (const sd of [-1, 1]) { const wx = x + sd * (rxS + 40) * s, wy = (y + fl) / 2 - 8 * s, wr = (fl - y) * .5 + 56 * s;
+      ctx.fillStyle = '#16181e'; ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 3 * s); ctx.beginPath(); ctx.ellipse(wx, wy, 13 * s, wr, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#c4cad6'; ctx.lineWidth = Math.max(2, 4 * s); ctx.beginPath(); ctx.ellipse(wx + sd * 9 * s, wy, 4 * s, wr * .86, 0, 0, TAU); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+function chairFront(kind, x, y, s, col, ryS, rxS, fl) {
+  ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; const aw = 40 * s;
+  if (kind === 'arm') {
+    for (const sd of [-1, 1]) { const ax = x + sd * (rxS + 34) * s; rr(ax - aw / 2, y - 120 * s, aw, 150 * s, 18 * s); ctx.fillStyle = lg(ax - aw / 2, 0, ax + aw / 2, 0, [[0, shade(col, 1.2)], [1, shade(col, .78)]]); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 4 * s); ctx.stroke(); }
+    rr(x - (rxS + 14) * s, y + 4 * s, (rxS + 14) * 2 * s, 40 * s, 14 * s); ctx.fillStyle = lg(0, y, 0, y + 44 * s, [[0, shade(col, 1.1)], [1, shade(col, .7)]]); ctx.fill(); ctx.strokeStyle = INKC; ctx.stroke();
+    ctx.fillStyle = '#3a2418'; for (const sd of [-1, 1]) { rr(x + sd * (rxS - 6) * s - 9 * s, y + 42 * s, 18 * s, Math.max(6, fl - y - 40 * s), 4 * s); ctx.fill(); }
+  } else {
+    for (const sd of [-1, 1]) { const ax = x + sd * (rxS + 2) * s; rr(ax - 17 * s, y - 100 * s, 34 * s, 22 * s, 8 * s); ctx.fillStyle = '#2a2a33'; ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 3 * s); ctx.stroke();
+      ctx.strokeStyle = '#8d96a4'; ctx.lineWidth = Math.max(3, 6 * s); ctx.beginPath(); ctx.moveTo(ax, y - 80 * s); ctx.lineTo(ax, y + 40 * s); ctx.lineTo(ax + sd * 8 * s, fl - 20 * s); ctx.stroke();
+      ctx.fillStyle = '#16181e'; ctx.beginPath(); ctx.ellipse(ax + sd * 10 * s, fl - 6 * s, 15 * s, 12 * s, 0, 0, TAU); ctx.fill(); ctx.stroke();
+      rr(ax - 22 * s + sd * 6 * s, fl - 32 * s, 44 * s, 10 * s, 4 * s); ctx.fillStyle = '#3a3f4a'; ctx.fill(); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+/* a knitted lap blanket; up 0..1 pulls it from the lap toward the chin (top edge) */
+function lapBlanket(x, y, s, rxS, col, pat, topY) {
+  ctx.save(); ctx.lineJoin = 'round'; const w = (rxS + 6) * s, ty = topY ?? (y - 38 * s);
+  ctx.beginPath(); ctx.moveTo(x - w, ty); ctx.quadraticCurveTo(x, ty - 16 * s, x + w, ty); ctx.lineTo(x + w * 1.06, y + 52 * s); for (let i = 6; i >= 0; i--) ctx.lineTo(x - w * 1.06 + (i / 6) * w * 2.12, y + 52 * s + (i % 2 ? 9 : 0) * s); ctx.closePath();
+  ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 3.6 * s); ctx.stroke(); ctx.clip();
+  ctx.strokeStyle = pat; ctx.lineWidth = Math.max(2, 7 * s); for (let i = -4; i <= 4; i++) { ctx.beginPath(); ctx.moveTo(x + i * w / 4, ty - 40 * s); ctx.lineTo(x + i * w / 4, y + 70 * s); ctx.stroke(); } for (let j = 0; j < 8; j++) { ctx.beginPath(); ctx.moveTo(x - w * 1.1, ty + j * 22 * s); ctx.lineTo(x + w * 1.1, ty + j * 22 * s); ctx.stroke(); }
+  ctx.restore();
+}
+function lapTray(x, y, s, rxS) {
+  const w = (rxS + 24) * s, h = 30 * s;
+  ctx.save(); ctx.lineJoin = 'round'; ctx.fillStyle = 'rgba(10,6,18,.35)'; ctx.beginPath(); ctx.ellipse(x + 4 * s, y + 18 * s, w * 1.02, 16 * s, 0, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x, y, w, h * .5, 0, 0, TAU); ctx.fillStyle = lg(0, y - h / 2, 0, y + h / 2, [[0, '#7fc8c0'], [1, '#4a948c']]); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 3.6 * s); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(x, y + 4 * s, w * .9, h * .36, 0, 0, TAU); ctx.fillStyle = '#9fded6'; ctx.fill(); ctx.strokeStyle = 'rgba(28,20,14,.35)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+}
+const BLANKET = { pear: ['#4a6fa8', 'rgba(255,255,255,.5)'], banana: ['#d8a83a', 'rgba(120,70,10,.45)'], cran: ['#e88aa0', 'rgba(255,240,240,.55)'], goji: ['#8a8f9c', 'rgba(40,44,60,.4)'] };
+
+// ------------------------------------------------------------------ the cast of the day room
+const DSPK = { goji: [['go1', 0], ['go2', 0]], pear: [['pe1', 0]], banana: [['ba1', 0]], cran: [['cr1', 0]], lemon: [['l1', 0], ['l2', 0]], mango: [['m1', 0]] };
+const dSpeaks = (n, lt, a = .1, b = .25) => (DSPK[n] || []).some(([id]) => lt >= TD.ls(id) - a && lt < TD.le(id) + b);
+/* drinking: Pear, Banana, Cranberry take a cup at their cupset and lift it at the slurp (Cranberry sips on her own, a beat after the cup lands); Goji lifts at 10.10 */
+const DRINK = { goji: [DC.cupset1, DC.slurp1 - .1, 10.42, 10.6], pear: [DC.cupset2, DC.slurp2 - .12, 12.45, 12.62], banana: [DC.cupset3, DC.slurp3 - .12, 13.1, 13.3], cran: [DC.cupset4, DC.cupset4 + .38, 13.78, 14.0] };   /* [set down, cup lifted, lowered, put back] */
+const drinkK = (n, lt) => { const d = DRINK[n]; return ss(lt, d[1], d[1] + .16) * (1 - ss(lt, d[2], d[3])); };
+const cupOnTray = (n, lt) => { const d = DRINK[n]; return lt >= d[0] && (lt < d[1] || lt >= d[3]); };
+function castD(lt) {
+  const C = { res: {} }, plow = ss(lt, 15.85, 16.7), wake = 1 - ss(lt, 16.8, 17.0);
+  for (const n of DRES) {
+    const S = DSEAT[n], s = S.s, seatY = DFL - 62 * s, sp = dSpeaks(n, lt), dk = drinkK(n, lt), watch = 1 - ss(lt, 2.0, 2.5) * 0;
+    const turn = sp ? 1 : 0, hy0 = lerp(-.95, -.3, sp ? ss(lt, TD.ls(DSPK[n][0][0]) - .15, TD.ls(DSPK[n][0][0]) + .05) : 0);
+    let head = sp ? -.3 : -.92, yaw = -.4, look = sp ? [-.15, 0] : [-.75, -.2], expr = { pear: 'happy', banana: 'sour', cran: 'happy', goji: 'hopeful' }[n], lid = n === 'banana' ? .32 : n === 'goji' ? .28 : .2;
+    if (n === 'goji') { const had = ss(lt, DC.slurp1 - .1, DC.slurp1 + .3); expr = lt < 9.9 ? 'hopeful' : dk > .3 ? 'chill' : lt >= DRINK.goji[2] ? 'chill' : 'hopeful'; if (lt > 10.4) expr = 'chill'; }
+    if (n === 'pear') expr = lt >= DRINK.pear[1] && lt < DRINK.pear[2] ? 'chill' : 'happy';
+    if (n === 'banana') { expr = lt >= DRINK.banana[1] && lt < DRINK.banana[2] ? 'shock' : lt >= DRINK.banana[2] && lt < 13.7 ? 'sour' : lt >= 3.7 && lt < 4.6 ? 'weak' : 'sour'; }
+    if (n === 'cran') expr = lt >= DRINK.cran[1] ? 'smug' : 'happy';
+    if (lt >= 15.6 && lt < 17.0) { head = lerp(-.92, .55, plow); look = [lerp(-.8, .8, plow), -.25]; yaw = lerp(-.4, .2, plow); }
+    if (lt >= 12.0 && lt < 12.5 && n === 'pear') look = [-.3, .4];
+    const o = Object.assign(A7[n]({}), { x: S.x, y: seatY, s, t: lt, noLegs: true, noShadow: true, noReflect: true, plant: true, yaw, headYaw: head, look, expr, lid, who: n, arms: { l: 'rest', r: 'rest' } });
+    const R = { o, y: seatY, s, n, up: 0 };
+    if (n === 'pear') { o.acc = (o.acc || []).filter(a => a !== 'unionpin7' || true); }
+    if (n === 'banana') {                                                           /* "It is cold.": he pulls the blanket up under his chin */
+      R.up = ss(lt, TD.ls('ba1') + .1, TD.ls('ba1') + .42) * (1 - ss(lt, 6.6, 7.0)); const k2 = KINDS.banana, g = (px, py) => [px, py];
+      if (R.up > .02) { o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-74, lerp(40, 30, R.up) - 14 * R.up], r: [88, lerp(40, 30, R.up) - 14 * R.up] }; }
+    }
+    if (n === 'cran') {                                                            /* "a hundred inches": her hand measures the air */
+      const m = ss(lt, TD.wS('cr1', 6) - .2, TD.wS('cr1', 6) + .25) * (1 - ss(lt, TD.wE('cr1', 7) + .3, TD.wE('cr1', 7) + .7));
+      if (m > .02) { o.arms = { l: 'rest', r: 'hold' }; o.grip = { r: [lerp(80, 150, m), lerp(60, -120, m)] }; o.hand = { r: 'flat' }; }
+    }
+    if (n === 'goji') {                                                            /* the empty cup upside down; then the cup of snow */
+      const cup = lt < DRINK.goji[0] ? [1, PI, 0] : [1, 0, 1], lift = lt < DRINK.goji[0] ? ss(lt, 7.0, 7.5) * (1 - ss(lt, 9.3, 9.8)) : dk;
+      o.arms = { l: 'rest', r: 'hold' }; o.hold = { r: 'fp20f_cup' }; o.cupScale = 1.5; o.cupTip = cup[1]; o.cupSnow = cup[2]; o.grip = { r: [lerp(92, 112, lift) - 30 * dk, lerp(18, 4, lift) + 30 * dk - 40 * dk * dk] };
+      if (lt < DRINK.goji[0]) o.grip = { r: [lerp(92, 100, lift), lerp(30, -34, lift)] };
+      else o.grip = { r: [lerp(96, 30, dk), lerp(40, 22, dk)] };
+    }
+    if (dk > .02 && n !== 'goji') {                                                   /* the cup comes up to the mouth */
+      const k = KINDS[o.kind]; o.arms = { l: o.arms.l, r: 'hold' }; o.hold = { r: 'fp20f_cup' }; o.cupScale = 1.35; o.cupSnow = .8; o.cupTip = 0;
+      o.grip = { r: [lerp(k.rx * .75, k.rx * .3, dk), lerp(k.mouthY + 50, k.mouthY + 18, dk)] };
+    }
+    C.res[n] = R;
+  }
+  /* Lemon: the clipboard, a flat look; the tick on the pen cue */
+  { const sp = dSpeaks('lemon', lt), tick = ss(lt, DC.pentick - .05, DC.pentick + .28), plowH = lt >= 15.6 && lt < 17.0 ? lerp(-.9, .5, plow) : -.7;
+    C.lemon = A7.lemon({ x: DSTAND.lemon[0], y: DSTAND.lemon[1], s: .88, t: lt, yaw: -.35, headYaw: sp ? -.25 : plowH, look: sp ? [-.1, .05] : [plowH, -.1], expr: sp ? 'dead' : 'neutral', lid: sp ? .5 : .3, face: { curve: .02 }, acc: ['readers', 'lanyard7'], who: 'lemon', plant: true,
+      arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp20f_clip' }, clipScale: 1.45, tick, grip: { l: [-102, 8] } }); }
+  /* Mango: the tray of cups on her right; she scoops snow from the heap on the sill (left window) with her left hand at 9.59 to 9.94 */
+  { const sc = ss(lt, 9.3, 9.6), dip = ss(lt, 9.62, 9.76), up = ss(lt, 9.76, 9.92), sp = dSpeaks('mango', lt), reach = sc * (1 - ss(lt, 10.0, 10.4)), lift = 14 * reach;
+    const hx = 150, hy = 1034, k = KINDS.mango, s = .88, cy = DSTAND.mango[1] - lift - s * ((k.leg || 90) + k.ry * .9);
+    const gx = lerp(-70, (hx - DSTAND.mango[0]) / s, sc), gy = lerp(40, (hy - cy) / s + 8 * (1 - dip) - 6 * up, sc);
+    C.mango = A7.mango({ x: DSTAND.mango[0], y: DSTAND.mango[1], s, t: lt, lift, yaw: lerp(-.3, -.75, sc), headYaw: sp ? -.3 : lerp(-.4, -.55, sc), look: sp ? [-.3, .2] : [-.6, .15], expr: sp ? 'dead' : 'neutral', lid: sp ? .5 : undefined, who: 'mango', plant: true, armScale: lerp(1.12, 1.38, sc),
+      arms: { l: sc > .02 ? 'hold' : 'rest', r: 'hold' }, hold: { l: sc > .02 ? 'fp20f_cup' : undefined, r: 'fp20f_tray' }, grip: { l: [gx, gy], r: [92, 50] }, cupScale: 1.6, cupSnow: dip * (1 - ss(lt, 9.95, 10.0)) * 1 + 0, cupTip: -.15, trayN: lt < DRINK.pear[0] ? 3 : lt < DRINK.banana[0] ? 2 : lt < DRINK.cran[0] ? 1 : 0, trayScale: 1.2, traySnow: 1 });
+    if (sc <= .02) { C.mango.hold = { r: 'fp20f_tray' }; C.mango.arms = { l: 'rest', r: 'hold' }; C.mango.grip = { r: [92, 50] }; } }
+  return C;
+}
+/* Mango's arm coming in from the left with a cup of snow (the shots on the residents): the hand lands at (tx, ty) on the cue and withdraws */
+function dArm(lt, tSet, tx, ty, s) {
+  const a = (lt - (tSet - .32)) / .32, b = (lt - tSet) / .34, k = a < 0 ? 0 : a < 1 ? eo(a) : 1 - ss(b, 0, 1) * 1;
+  if (k <= .005) return;
+  const hx = lerp(tx - 380 * s, tx, k), hy = lerp(ty - 70 * s, ty, k) - 22 * s * Math.sin(PI * c01(a)) * (a < 1 ? 1 : 0), sx = hx - 360 * s, sy = hy - 50 * s, ex = hx - 170 * s, ey = hy + 34 * s;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(10,6,16,.5)'; ctx.lineWidth = 22 * s; ctx.beginPath(); ctx.moveTo(sx, sy + 6); ctx.quadraticCurveTo(ex, ey + 6, hx, hy + 6); ctx.stroke();
+  ctx.strokeStyle = '#2a2530'; ctx.lineWidth = 18 * s; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(ex, ey, hx, hy); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 5 * s; ctx.beginPath(); ctx.moveTo(sx, sy - 5 * s); ctx.quadraticCurveTo(ex, ey - 5 * s, hx, hy - 5 * s); ctx.stroke();
+  ctx.fillStyle = '#4a4258'; rr(hx - 34 * s, hy - 11 * s, 14 * s, 22 * s, 4 * s); ctx.fill();
+  ctx.save(); ctx.translate(hx, hy + 8 * s); paperCup(1.3 * s, lt < tSet + .12 ? 1 : .0, 0); ctx.restore();                                  /* the cup of snow */
+  ctx.fillStyle = '#fbfaf6'; ctx.strokeStyle = INKC; ctx.lineWidth = 2.6 * s; ctx.beginPath(); ctx.ellipse(hx - 4 * s, hy, 19 * s, 16 * s, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(hx + 2 * s, hy - 10 * s, 10 * s, 6 * s, -.3, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+// ------------------------------------------------------------------ the shots of the day room
+const DALL = ['mango', 'goji', 'pear', 'banana', 'cran', 'lemon'];
+const DSH = [
+  { id: 'open', s: 0, k: 'wide', x: 640, y: 1010, z: [.82, .98], show: DALL },
+  { id: 'pe1', s: 2.50, k: 'face', foc: 'pear', z: [2.0, 2.12], up: 130, dx: -50, dof: 9, show: ['pear'], bg: ['goji', 'banana'] },
+  { id: 'ba1', s: 3.72, k: 'face', foc: 'banana', z: [2.0, 2.12], up: 130, dx: -50, dof: 9, show: ['banana'], bg: ['pear', 'cran'] },
+  { id: 'cr1', s: 4.54, k: 'face', foc: 'cran', z: [2.0, 2.15], up: 130, dx: -40, dof: 9, show: ['cran'], bg: ['banana', 'lemon'] },
+  { id: 'go1', s: 6.92, k: 'face', foc: 'goji', z: [2.05, 2.2], up: 130, dx: 0, dof: 9, show: ['goji'], bg: ['mango', 'pear'] },
+  { id: 'l1', s: 8.56, k: 'face', foc: 'lemon', z: [2.1, 2.2], up: 120, dof: 9, show: ['lemon'], bg: ['cran'] },
+  { id: 'm1a', s: 9.59, k: 'pt', x: 215, y: 1060, z: [1.75, 1.85], dof: 9, show: ['mango'], bg: ['goji'] },
+  { id: 'go2', s: 9.94, k: 'face', foc: 'goji', z: [2.1, 2.22], up: 130, dx: 20, dof: 9, show: ['goji'], bg: ['pear'], arm: ['goji', DC.cupset1] },
+  { id: 'cp1', s: 11.66, k: 'face', foc: 'pear', z: [2.0, 2.1], up: 130, dx: 0, dof: 9, show: ['pear'], bg: ['goji', 'banana'], arm: ['pear', DC.cupset2] },
+  { id: 'cp2', s: 12.42, k: 'face', foc: 'banana', z: [2.0, 2.1], up: 130, dx: 0, dof: 9, show: ['banana'], bg: ['pear', 'cran'], arm: ['banana', DC.cupset3] },
+  { id: 'cp3', s: 13.02, k: 'face', foc: 'cran', z: [2.0, 2.1], up: 130, dx: 0, dof: 9, show: ['cran'], bg: ['banana', 'lemon'], arm: ['cran', DC.cupset4] },
+  { id: 'l2', s: 13.71, k: 'face', foc: 'lemon', z: [2.2, 2.3], up: 120, dof: 9, show: ['lemon'], bg: ['cran'] },
+  { id: 'plow', s: 15.55, k: 'wide', x: 640, y: 1030, z: [.86, .9], show: DALL },
+  { id: 'mo1', s: 17.00, k: 'pt', x: 550, y: 486, z: [2.3, 2.5], obj: 'moon', show: [] },
+  { id: 'end', s: 19.10, k: 'wide', x: 640, y: 1000, z: [.92, .86], show: DALL },
+];
+for (const sh of DSH) sh.s = sh.s === 0 ? 0 : TD.snapT(sh.s);
+DSH.forEach((sh, i) => { sh.e = i + 1 < DSH.length ? DSH[i + 1].s : 99; });
+const dShot = lt => { let r = DSH[0]; for (const sh of DSH) if (lt >= sh.s - 1e-6) r = sh; return r; };
+const charD = (C, n) => C.res[n] ? C.res[n].o : C[n];
+let DR = null, DLT = [];
+function camD(lt) {
+  const sh = dShot(lt), C = castD(lt), st = dstate(lt), dur = sh.e > 90 ? TD.SCN.dur - sh.s : sh.e - sh.s, u = c01((lt - sh.s) / dur), z = lerp(sh.z[0], sh.z[1], easeIO(u));
+  let cx = sh.x, cy = sh.y;
+  if (sh.k === 'face') { const [fx, fy] = faceC(charD(C, sh.foc)); cx = fx - (sh.dx || 0) / z; cy = fy + sh.up / z; }
+  zoomTo(cx, cy, z);
+  const sway = { x: 2.2 * hnoise(lt, 1.3, 4), y: 1.6 * hnoise(lt, 1.1, 5), r: .0012 * hnoise(lt, .9, 6) };
+  CAM.x += sway.x; CAM.y += sway.y; CAM.r += sway.r;
+  DR = { C, sh, st };
+}
+/* one resident with the chair, the blanket, the tray, the candle and the cup: back, the sitter, the front */
+function drawResD(n, lt, R) {
+  const S = DSEAT[n], k = KINDS[R.o.kind], rx = k.rx, ry = k.ry, s = S.s, x = S.x, y = R.y, up = R.up || 0, mouth = k.mouthY;
+  chairBack(S.kind, x, y, s, S.col, ry, rx, DFL);
+  drawChar(R.o);
+  lapBlanket(x, y, s, rx, BLANKET[n][0], BLANKET[n][1], up > .01 ? lerp(y - 38 * s, y - (.9 * ry - mouth - 36) * s, up) : undefined);
+  lapTray(x, y + 6 * s, s, rx);
+  const ty = y + 8 * s;
+  if (window.P20 && typeof P20.ledCandle === 'function') { const r = P20.ledCandle(ctx, { x: x - rx * .52 * s, y: ty, s: .78 * s, on: 1, t: lt, seed: 40 + DRES.indexOf(n), kind: 'tea' }); if (r) DLT.push({ kind: 'point', x: r.fx, y: r.fy, r: 250 * s, color: '#ffb468', power: .95, flicker: { seed: 40 + DRES.indexOf(n), amt: .1, rate: 1 } }); }
+  if (cupOnTray(n, lt)) { ctx.save(); ctx.translate(x + rx * .5 * s, ty + 4 * s); paperCup(1.15 * s, lt < DRINK[n][1] ? 1 : .15, 0); ctx.restore(); }
+  chairFront(S.kind, x, y, s, S.col, ry, rx, DFL);
+}
+function roomD(lt, st) {
+  dWall(lt, st); dFloor(lt);
+  for (let i = 0; i < 3; i++) dWindow(lt, i, st);
+  dSill(lt, st); dShelf(lt, st); dArt(lt);
+  dLamp(-30, lt, 1); dLamp(1275, lt, 2);
+}
+function drawD(lt) {
+  const { C, sh, st } = DR;
+  V2.setLight({ key: [-.4, -.55], keyColor: '#ffd9a0', keyA: .26, rim: '#9fc4ff', rimA: .36, shadow: '#14102a', shadowA: .38, bounce: '#ffb870', bounceA: .2, amb: '#6a5a90', ambA: .1, frontDark: .04 }); V2.opts.reflect = false;
+  DLT = [];
+  const bgCast = () => { if (!sh.bg) return; REG.suppress++; for (const n of sh.bg) { const o = charD(C, n); if (!o) continue; const f = inFrame(Object.assign({}, o, { y: o.y }), 20); if (f.inter) { if (C.res[n]) drawResD(n, lt, C.res[n]); else drawChar(o); } } REG.suppress--; };
+  const stand = n => { const o = C[n]; if (o) drawChar(o); };
+  if (sh.dof) { SOFT++; V2.dof(sh.dof, () => { roomD(lt, st); bgCast(); }); SOFT--; } else roomD(lt, st);
+  /* the row, left to right, then the two standing nurses */
+  const order = sh.show.filter(n => C.res[n]).sort((a, b) => DSEAT[a].x - DSEAT[b].x);
+  const showM = sh.show.includes('mango'), showL = sh.show.includes('lemon');
+  if (showM) stand('mango');
+  for (const n of order) drawResD(n, lt, C.res[n]);
+  if (showL) stand('lemon');
+  /* Mango's arm and the cup of snow, in the close-ups on the residents */
+  if (sh.arm) { const n = sh.arm[0], S = DSEAT[n], k = KINDS[C.res[n].o.kind]; dArm(lt, sh.arm[1], S.x + k.rx * .5 * S.s, C.res[n].y + 8 * S.s - 6, S.s); }
+  /* the lights: warm candles and lamps, the cool windows, three dim downlights */
+  const lights = DLT.slice();
+  for (const c of DCL) lights.push({ kind: 'point', x: c.x, y: c.y, r: 190, color: '#ffbe70', power: .55, flicker: { seed: c.seed + 3, amt: .1, rate: 1 } });
+  for (const lx of [-30, 1275]) lights.push({ kind: 'point', x: lx, y: 740, r: 520, color: '#ffc884', power: .9 });
+  for (const [x0, x1] of DBAY) lights.push({ kind: 'rect', x: (x0 + x1) / 2, y: 690, w: x1 - x0 - 30, h: 640, color: '#8fb0ff', power: .5 });
+  for (const lx of [330, 700, 1070]) lights.push({ kind: 'cone', x: lx, y: 336, ang: PI / 2, spread: 1.2, len: 900, color: '#ffe6c0', power: .42 });
+  lightPass({ ambient: .56, tint: '#10163a', lights, bloom: .5, vignette: .3, lift: .1, t: lt, glow: .3 });
+  /* the amber beacon of the plow crossing the room: one slow pass, never a strobe */
+  const pw = ss(lt, 15.55, 15.95) * (1 - ss(lt, 16.5, 16.95));
+  if (pw > .01) {
+    const bx = lerp(-380, 1560, ss(lt, 15.55, 16.95)); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.translate(bx, 1000); ctx.rotate(.28);
+    ctx.fillStyle = lg(-300, 0, 300, 0, [[0, 'rgba(255,170,60,0)'], [.5, 'rgba(255,170,60,' + .25 * pw + ')'], [1, 'rgba(255,170,60,0)']]); ctx.fillRect(-300, -1500, 600, 3000); ctx.restore();
+  }
+}
+const DAYROOM = {
+  shot: lt => dShot(lt).id,
+  cam: camD,
+  draw: drawD,
+  fx: lt => ({ bloom: .55 + .45 * Math.max(0, 1 - Math.abs(lt - DC.sting - .05) / .25), vignette: .4, grain: .045, contrast: .08, sat: .08, tint: [['#ffb87a', .05, 'soft-light']] }),
+  blur: lt => 1,
+  over() {},
+  clock: () => TD.SCN.clock, label: () => TD.SCN.label,
+};
+window.__EP20_SCENES = window.__EP20_SCENES || {}; window.__EP20_SCENES.dayroom = DAYROOM;
 
 /*@@END@@*/
 })();

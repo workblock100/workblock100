@@ -6,11 +6,17 @@
  * functions (L20.emergency) reset it. All of them are PURE functions of their arguments and `t` (scene-local seconds): no Math.random, no Date, no state, so every worker renders the same frame, in any order.
  * Randomness only from FX18.rnd. Each call saves and restores the context state. Soft shapes come from cached sprites.
  *
- * AS BUILT (additions to the contract are marked [added])
+ * AS BUILT (additions to the contract are marked [added]); every function below has landed
  *   clock         SN20.SCENE_CLOCK, depthAt(clockMinutes), wind(t, gusts), windInt(t, gusts) [px], GUST(t, gusts) [added]
  *   snow          SN20.snow {x0, y0, x1, y1, t, seed, layers, density, fall, wind, gusts, sway, size, alpha, tone, fore, slice, clip [added]}
- *   light         L20.pass {ambient, tint, lights, bloom, grade, vignette, lift, t [added], glow [added]}; light kinds point / cone / rect / strip
- *   (batches 2 and 3 are listed here as they land: frost sill bank cap beam breath | spray flurry emergency lamps settle maskPoints)
+ *   on things     SN20.sill {x0, x1, y, depth, seed, tone, t [added]}, bank {x, y, w, h, seed, shade, flip, tone, t [added]}, cap {x0, x1, y, depth, seed, round, tone, t [added]}
+ *   frost, cold   SN20.frost {x, y, w, h, amount, seed, t, tone, fade [added]}, beam {x, y, ang, spread, len, color, alpha, t, seed, flakes, soft, wind [added], gusts [added], density [added]},
+ *                 breath {x, y, t, seed, period, dir, size, alpha, phase}
+ *   thrown        SN20.spray {x, y, ang, t, t0, t1, seed, power, width, gravity}, flurry {x, y, r, t, t0, life, seed, n}
+ *   the title     SN20.maskPoints(drawFn, w, h, step, seed), settle {pts, from, t, t0, t1, seed, size, alpha, tone [added], max [added]}
+ *   light         L20.pass {ambient, tint, lights, bloom, grade, vignette, lift, t [added], glow [added]}; light kinds point / cone / rect (facing, spill [added]) / strip; skipped in the text gate's mask pass
+ *                 L20.emergency {level, t, pulse}, L20.lamps(list, {t}) with list items {x, y, r, color, alpha [added], core [added], flicker}
+ * Tests: wx20_demo.html and wx20_test.js (determinism, cost, contact sheets, the real renderer with a real Strawberry, the real title and end scenes). Guide: GUIDE_WX20.md.
  */
 (() => {
 const FX = window.FX18;
@@ -304,9 +310,12 @@ function drawLight(g, l, pw) {
   return null;
 }
 /* SCREEN-sized operation in WORLD coordinates (see GUIDE_WX20.md): darken, light, tint, bloom, grade. Returns the number of lights drawn. */
+/* the text gate's mask pass (window.TXA.mask) re-renders the world with the text in a flat key colour to see what covers it: a lighting veil is not a cover (like the engine's bloom and grade, which are not part of that pass either), so the
+ * pass and the emergency wash skip themselves there. Text drawn BEFORE the pass is darkened in the picture but not reported: light your signs, or draw hero text after the pass. */
+const inMask = () => typeof TXA !== 'undefined' && !!TXA && !!TXA.mask;
 L20.pass = function pass(c, o = {}) {
   const cv = c.canvas, w = cv.width, h = cv.height;
-  if (!(w > 8) || !(h > 8)) return 0;
+  if (!(w > 8) || !(h > 8) || inMask()) return 0;
   const lights = o.lights || [], t = +o.t || 0;
   const ambient = clamp01(o.ambient == null ? .22 : o.ambient), lift = clamp01(o.lift == null ? .08 : o.lift), D = 1 - Math.max(ambient, lift);
   const tint = o.tint || '#0b1230', vig = clamp01(o.vignette == null ? .25 : o.vignette), bloomA = clamp01(o.bloom == null ? .5 : o.bloom), glowAmt = o.glow == null ? .32 : o.glow;
@@ -362,7 +371,7 @@ L20.pass = function pass(c, o = {}) {
   if (bloomA > .01) {                                                                             /* bloom on the cores of points and cone lenses */
     for (const [l, pw] of live) {
       const kind = l.kind || 'point', X = M.a * (+l.x || 0) + M.c * (+l.y || 0) + M.e, Y = M.b * (+l.x || 0) + M.d * (+l.y || 0) + M.f, col = l.color || '#fff1d6';
-      if (kind === 'point') FX.glow(c, { x: X, y: Y, r: Math.max(16, Math.min(150, (+l.r || 200) * zoom * .3)), color: col, alpha: bloomA * .8 * Math.min(1.2, pw), core: .6 });
+      if (kind === 'point') FX.glow(c, { x: X, y: Y, r: Math.max(14, Math.min(110, (+l.r || 200) * zoom * .2)), color: col, alpha: bloomA * .7 * Math.min(1.2, pw), core: .6 });
       else if (kind === 'cone') FX.glow(c, { x: X, y: Y, r: Math.max(14, Math.min(70, (+l.len || 700) * zoom * .07)), color: col, alpha: bloomA * .75 * Math.min(1.2, pw), core: .85 });
     }
   }
@@ -661,7 +670,7 @@ SN20.flurry = function flurry(c, o = {}) {
  * o = { level (0..1), t, pulse (0..1, default .15) }. About 4 ms at full level; level 0 draws nothing. */
 L20.emergency = function emergency(c, o = {}) {
   const lv = clamp01(+o.level || 0), pulse = clamp01(o.pulse == null ? .15 : o.pulse), t = +o.t || 0;
-  if (!(lv > .005)) return;
+  if (!(lv > .005) || inMask()) return;
   const w = c.canvas.width, h = c.canvas.height, br = 1 - pulse * (.5 - .5 * Math.cos(TAU * t / 2.6));
   c.save(); c.setTransform(1, 0, 0, 1, 0, 0); clean(c);
   c.globalCompositeOperation = 'multiply'; c.fillStyle = rgba('#ff4a30', clamp01(.46 * lv * br)); c.fillRect(0, 0, w, h);
@@ -707,11 +716,11 @@ SN20.settle = function settle(c, o = {}) {
       const th = th0 + om * tt * 2.2, rr = rho * (1 + .08 * Math.sin(tt * 3.1 + i) + (extra || 0));
       return [fx + Math.cos(th) * rr, fy + Math.sin(th) * rr * .78 + 10 * Math.sin(tt * 2 + th0)];
     };
-    const flight = .5 + .35 * r3, dep = t0 + (t1 - t0 - flight) * Math.pow(r4, .8), u = (t - dep) / flight;
+    const flight = .46 + .32 * r3, dep = t0 + (t1 - t0 - flight) * Math.pow(r4, .8), u = (t - dep) / flight;
     let x, y, al = alpha * (.62 + .38 * r2), sz = size * (.62 + .7 * r3);
     if (t < dep) { const p = sp(t, 0); x = p[0]; y = p[1]; al *= .78; }
     else if (u < 1) {
-      const p = sp(dep, 0), e = 1 - Math.pow(1 - u, 3), dx = tp[0] - p[0], dy = tp[1] - p[1], L = Math.hypot(dx, dy) || 1, bow = Math.sin(PI * u) * Math.min(160, L * .22) * (r1 < .5 ? 1 : -1);
+      const p = sp(dep, 0), e = 1 - Math.pow(1 - u, 4), dx = tp[0] - p[0], dy = tp[1] - p[1], L = Math.hypot(dx, dy) || 1, bow = 4 * e * (1 - e) * Math.min(160, L * .22) * (r1 < .5 ? 1 : -1);      /* the bow dies as fast as the approach: a flake arrives on its point, not beside it */
       x = p[0] + dx * e - dy / L * bow; y = p[1] + dy * e + dx / L * bow; al *= .78 + .22 * u;
     } else { x = tp[0]; y = tp[1]; }
     const bi = bucketOf(sz);

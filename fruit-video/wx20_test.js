@@ -7,6 +7,8 @@
  *   node wx20_test.js cost [case,...]                                     milliseconds per draw of the kit calls inside each case
  *   node wx20_test.js engine <case,...> <t,t,...> [out.png] [cellW]       cases drawn through the real renderer (grade, bloom) over a real Strawberry
  *   node wx20_test.js enginedet                                           the engine cases again: two fresh pages and reverse order must hash the same
+ *   node wx20_test.js scenedet <scene,...> [t,t,...]                      the REAL scenes (title, end, any): the same frames in two fresh pages and in reverse order must hash the same
+ *   node wx20_test.js scenecost <scene,...>                               ms per frame (no motion blur) of the real scenes through the real renderer
  * Output: build/ep20_wx/*.png */
 const fs = require('fs'), path = require('path'), http = require('http');
 const { execSync } = require('child_process');
@@ -139,6 +141,28 @@ async function main() {
         console.log((ok ? 'OK   ' : 'FAIL ') + n.padEnd(10) + ' distinct ' + new Set(h1).size + '/' + times.length);
       }
       console.log(bad ? `ENGINE DETERMINISM: ${bad} differ` : 'ENGINE DETERMINISM: identical across two pages and reverse order'); process.exitCode = bad ? 1 : 0; return;
+    }
+    if (mode === 'scenedet' || mode === 'scenecost') {
+      const scenes = (args[0] || 'title,end').split(','), times = args[1] ? nums(args[1]) : [.3, 1.2, 1.9, 2.9, 3.9, 4.5, 5.6, 6.5];
+      const open = async () => { const pg = await browser.newPage({ viewport: { width: 1080, height: 1920 } }); pg.on('pageerror', e => console.error('PAGE ERROR', e.message)); await pg.goto(`http://127.0.0.1:${port}/index.html?capture&ep=20`); await pg.evaluate(() => window.READY); return pg; };
+      const hashAt = () => { const c = document.getElementById('c'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let hh = 2166136261; for (let i = 0; i < d.length; i += 4) { hh ^= d[i] ^ (d[i + 1] << 8) ^ (d[i + 2] << 16); hh = Math.imul(hh, 16777619); } return (hh >>> 0).toString(16); };
+      const a = await open();
+      if (mode === 'scenecost') {
+        for (const sc of scenes) {
+          const ms = await a.evaluate(([id, ts]) => { const s = window.TIMELINE_EP20.scenes.find(x => x.id === id), use = ts.filter(t => t < s.dur - .05); for (const t of use) renderAt(s.start + t); const t0 = performance.now(); for (const t of use) renderAt(s.start + t + .013); return (performance.now() - t0) / use.length; }, [sc, times]);
+          console.log(sc.padEnd(10), ms.toFixed(1), 'ms/frame (MB per the scene, rendered through the real pipeline)');
+        }
+        return;
+      }
+      const b = await open(); let bad = 0;
+      for (const sc of scenes) {
+        const info = await a.evaluate(id => { const s = window.TIMELINE_EP20.scenes.find(x => x.id === id); return { start: s.start, dur: s.dur }; }, sc), use = times.filter(t => t < info.dur - .05);
+        const h1 = await a.evaluate(([st, ts, f]) => { const hf = eval(f); return ts.map(t => { renderAt(st + t); return hf(); }); }, [info.start, use, hashAt.toString()]);
+        const h2 = await b.evaluate(([st, ts, f]) => { const hf = eval(f); return ts.slice().reverse().map(t => { renderAt(st + t); return hf(); }).reverse(); }, [info.start, use, hashAt.toString()]);
+        const ok = h1.every((h, i) => h === h2[i]); if (!ok) bad++;
+        console.log((ok ? 'OK   ' : 'FAIL ') + sc.padEnd(10) + ' distinct ' + new Set(h1).size + '/' + use.length + (ok ? '' : '  ' + JSON.stringify([h1, h2])));
+      }
+      console.log(bad ? `SCENE DETERMINISM: ${bad} differ` : 'SCENE DETERMINISM: identical across two pages and reverse order'); process.exitCode = bad ? 1 : 0; return;
     }
     console.error('unknown mode', mode);
   } finally { await browser.close(); srv.close(); }

@@ -52,7 +52,7 @@ from build_audio14 import _res, _band, _unit, _key
 HERE = A6.HERE
 SCRIPT = "script_ep20.json"
 EPD = "build/ep20"       # the lead's folder (the frozen timeline and the event files)
-FXV = "20.1"             # bump to rebuild every treated voice line
+FXV = "20.2"             # bump to rebuild every treated voice line
 
 
 def _n(d):
@@ -407,15 +407,15 @@ def fx_phone(x, seed):
     lo_, hi_ = int(.18 * len(env)), int(.88 * len(env))
     gap = 0
     for i in range(lo_, hi_):
-        if env[i] < .09 * pk:
+        if env[i] < .25 * pk:
             gap += 1
             continue
-        if gap >= 8 and env[i] > .22 * pk:              # a word begins after at least 40 ms of near silence
+        if gap >= 6 and env[i] > .5 * pk:               # a word begins after at least 30 ms of near silence
             a = i * hop - int(.004 * SR)
             L = int(.028 * SR)
             if 0 < a and a + L < n:
                 fade = np.minimum(1, np.minimum(np.arange(L), L - np.arange(L)) / (.003 * SR))
-                hole = _bp4(rng6(seed + 31).uniform(-1, 1, L), 1200, 3400, 1) * .012 * pk * 10
+                hole = _bp4(rng6(seed + 31).uniform(-1, 1, L), 1200, 3400, 1) * .12 * pk
                 y[a:a + L] = y[a:a + L] * (1 - fade) + hole * fade
             break
         gap = 0
@@ -632,8 +632,9 @@ def scene_reverb(sid, seg, a):
 
 # ---------------------------------------------------------------- place2, patched: voices place their treated version; cues dip under speech
 DUCK_DB = {   # how far a cue is dipped (dB) while a voice speaks, by effect name; anything missing here is not dipped. The hits the picture lands on are never dipped.
-    "sniffle": 4, "typing": 6, "step": 7, "snowstep": 7, "plowengine": 8, "plowdist": 6, "windswell": 5, "windgust": 3, "stopwatchticks": 3, "swtick": 3, "slurp": 3, "cupset": 2,
-    "clockspin": 4, "breath": 2, "shovel": 4, "flashlight": 3, "lapsewhoosh": 3, "whoosh_s": 3, "rustle": 3, "plowrumble": 6,
+    "sniffle": 4, "typing": 6, "step": 7, "snowstep": 7, "plowengine": 5, "plowdist": 6, "windswell": 5, "windgust": 3, "stopwatchticks": 3, "swtick": 3, "slurp": 3, "cupset": 2,
+    "clockspin": 4, "breath": 2, "shovel": 4, "flashlight": 3, "lapsewhoosh": 3, "whoosh_s": 3, "rustle": 3, "plowrumble": 6, "genstart": 9, "relay": 6, "powerdown": 6, "snowdump": 6, "doorgust": 4,
+    "plowdump": 5, "plowscrape": 3, "thud": 3, "hum_on": 3,
     "bed_title": 3, "bed_forecast": 4, "bed_lot": 6, "bed_blackout": 3, "bed_dayroom": 4, "bed_night": 4, "bed_end": 2,
 }
 NOREV = ("bed_title", "bed_forecast", "bed_lot", "bed_blackout", "bed_dayroom", "bed_night", "bed_end", "genstart", "lapsewhoosh", "clockspin", "windswell", "whoosh_s", "rustle", "glint", "plowrumble")
@@ -1230,7 +1231,7 @@ def sfx_plowengine():
         t = tarr(d)
         fire = np.interp(t, [0, 1.0, 1.6, 2.6, 3.3, 4.5, d], [26, 44, 40, 36, 27, 28.5, 27]) * (1 + .02 * _smooth_rand(d, 2171, .8))
         eng = _diesel(d, fire, 2170, knock=1.0, rumble=1.0, lp=650)
-        lvl = np.interp(t, [0, 1.2, 2.4, 3.3, 3.6, 5.0, d - .4, d], [.15, 1.0, 1.0, .55, .5, .5, .45, 0])
+        lvl = np.interp(t, [0, 1.2, 2.4, 3.3, 3.6, 5.0, d - .4, d], [.15, 1.0, 1.0, .7, .62, .62, .55, 0])
         x = eng * lvl
         r = rng6(2172)
         for i in range(16):                                          # the chains
@@ -1439,27 +1440,40 @@ def _whine(f0, f1, dur, amp, harm=((1, 1.0), (2, .4), (3, .2)), curve=1.0):
     return x * np.interp(tt, [0, .06, dur * .45, dur], [0, 1, .75, 0]) * amp
 
 
-def sfx_powerdown():
-    """The whole building losing power (stereo, 2.9 s from the cue at 0.2 s). SIX ROOMS, left to right, a room every quarter second as the cutaway shows: each room's fluorescent ballast buzz (120 Hz and its
-    harmonics to 960 Hz, a faint arc hiss at 2.5 to 6.5 kHz and the flicker of the tubes) flickers twice (20 ms dips) and sags in pitch as it dies over 0.15 s with a small tick, each in its own place from -0.85
-    to +0.85. Under them the machines run down: a fan's whine from 900 to 70 Hz over 1.5 s, a compressor from 118 to 24 Hz over 1.6 s, a bearing from 2.6 kHz to 320 Hz, the HVAC's sigh (air that closes
-    from 3.2 kHz to 180 Hz over 1.4 s, wide) and the main breaker's thunk at the start. Then a thick hush: only a 38 Hz hum that fades by 2.5 s."""
-    d = 2.9
+def _ballasts(d, alive=False):
+    """The fluorescent ballast buzz of the six rooms (stereo (2, n), each room in its own place from -0.85 to +0.85): 120 Hz and its harmonics to 960 Hz, a faint arc hiss at 2.5 to 6.5 kHz and the flicker of the
+    tubes. With `alive` they simply run; otherwise room i is dimmed over 0.15 s from 0.25 i s (the cutaway's cascade: a room every quarter second): two quick 20 ms flickers as it starts to go, a sag in
+    pitch as it dies and a small tick at the end."""
     n = _n(d)
     t = tarr(d)
     out = np.zeros((2, n))
     for i in range(6):
-        td = .25 * i + .08
+        td = .25 * i + .15
         f0 = 120.0 + .35 * (i - 2.5)
-        ph = 2 * np.pi * np.cumsum(f0 * np.interp(t, [td - .12, td + .06], [1.0, .86])) / SR
+        pitch = np.ones(n) if alive else np.interp(t, [td - .12, td + .03], [1.0, .86])
+        ph = 2 * np.pi * np.cumsum(f0 * pitch) / SR
         buzz = sum(a * np.sin(h * ph + h * i) for h, a in ((1, 1.0), (2, .6), (3, .5), (4, .32), (5, .22), (6, .18), (7, .1), (8, .08)))
         buzz = buzz * (1 + .12 * np.sin(2 * np.pi * 7.1 * t + i)) + _band(2501 + i, d, 2500, 6500) * .12
-        env = np.interp(t, [0, td - .15, td, d], [1, 1, 0, 0])
-        for fl in (td - .24, td - .13):
-            env = env * (1 - .75 * np.exp(-.5 * ((t - fl) / .012) ** 2))
+        env = np.ones(n) if alive else np.interp(t, [0, td - .15, td, d], [1, 1, 0, 0])
+        if not alive:
+            for fl in (td - .13, td - .06):
+                env = env * (1 - .7 * np.exp(-.5 * ((t - fl) / .01) ** 2))
         y = buzz * env * .22
-        _place(y, _band(2510 + i, .02, 1500, 6000) * expdecay(.02, .003) * .8, td, 1.0)
+        if not alive:
+            _place(y, _band(2510 + i, .02, 1500, 6000) * expdecay(.02, .003) * .8, td, 1.0)
         out += _ctr(y, -.85 + .34 * i)
+    return out
+
+
+def sfx_powerdown():
+    """The whole building losing power (stereo, 2.9 s from the cue at 0.2 s). SIX ROOMS, left to right, a room every quarter second as the cutaway shows (see _ballasts): each room's ballast buzz flickers
+    twice and sags as it dies over 0.15 s, with a small tick, in its own place from -0.85 to +0.85; the buzz comes in out of the lead-in hum (`hum_on`, 0.0 to 0.2 s) at a third of its level and surges to
+    full in 0.12 s, as a failing ballast does. Under them the machines run down: a fan's whine from 900 to 70 Hz over 1.5 s, a compressor from 118 to 24 Hz over 1.6 s, a bearing from 2.6 kHz to 320 Hz,
+    the HVAC's sigh (air that closes from 3.2 kHz to 180 Hz over 1.4 s, wide) and the main breaker's thunk at the start. Then a thick hush: only a 38 Hz hum that fades by 2.5 s."""
+    d = 2.9
+    n = _n(d)
+    t = tarr(d)
+    out = _ballasts(d) * np.interp(t, [0, .12], [.33, 1.0])
     fan = np.zeros(n)
     _place(fan, _whine(900, 70, 1.5, .34, ((1, 1.0), (2, .5), (3, .25)), 1.3), .3, 1.0)
     comp = np.zeros(n)
@@ -1477,7 +1491,20 @@ def sfx_powerdown():
     out += _ctr(br, 0.0) * .9
     hum = np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, 2.5], [38, 30])) / SR) * np.interp(t, [0, .4, 1.4, 2.5], [0, 1, .5, 0]) * .1
     out += _ctr(hum, 0.0)
-    return norm6(_edge(out, .015, .3), .8)
+    pk = np.max(np.abs(out))
+    sfx_powerdown.k = .8 / pk                                                      # the lead-in hum is scaled by the same factor
+    return norm6(_edge(out, .006, .3), .8)
+
+
+def sfx_hum_on():
+    """The building's lights humming before the failure (designed event, 0.25 s, at the start of the scene): the six ballasts alive at a third of the level they have when `powerdown` begins (0.2 s), crossfaded
+    into it over 15 ms, so the loss of power comes out of the room tone and not out of nothing."""
+    if not hasattr(sfx_powerdown, "k"):
+        sfx_powerdown()
+    d = .25
+    x = _ballasts(d, alive=True) * .33 * sfx_powerdown.k
+    t = tarr(d)
+    return x * np.interp(t, [0, .004, .19, .215], [0, 1, 1, 0])
 
 
 def sfx_relay():
@@ -1587,7 +1614,7 @@ def sfx_genstart():
         _place(x, _thump(130, 55, .18, .035) * 1.1 + _tv_filter(noise6(.25, int(at * 100) + 2610), _glide(1500, 150, .25), 1.0, "bp") * expdecay(.25, .05) * .9, at, g)
     fire = np.interp(t, [0, .58, 1.5, d], [14, 14, 60, 60])
     eng = _diesel(d, fire, 2620, knock=.6, rumble=1.2, lp=420)
-    envc = np.interp(t, [.56, .75, 1.3, d - .4, d], [0, .5, 1.0, 1.0, 0])
+    envc = np.interp(t, [.56, .75, 1.3, 1.8, 2.3, d], [0, .5, 1.0, .8, .25, 0])
     eng = _lp4(eng, 380, 3) * envc
     x += _rms(eng) * envc * 1.1
     return norm6(_edge(x, .0006, .4), .8)
@@ -2300,7 +2327,7 @@ def _select_phys(phys, scripted):
 # ================================================================ Episode 20: the room tone of every space (beds)
 # A bed is a designed event the script does not list (see _designed_events): a stereo texture that fills one scene. It is returned at unit RMS; the event's gain sets its level (BED_DB: dB under a
 # spoken line). Beds skip the scene's reverb (NOREV): each already has its room baked in (the lot has no room at all).
-BED_DB = {"title": -34, "forecast": -31, "lot": -15, "blackout": -25, "dayroom": -30, "night": -29, "end": -40}
+BED_DB = {"title": -34, "forecast": -25, "lot": -11, "blackout": -19, "dayroom": -24, "night": -24, "end": -40}
 BED_SCENE = {"title": "title", "forecast": "forecast", "lot": "lot", "blackout": "blackout", "dayroom": "dayroom", "night": "night", "end": "end"}
 
 
@@ -2352,16 +2379,30 @@ def room_title(d, seed=2000):
                  (_ctr(_rms(_ticks(d, seed + 9, 1.0, .41), .1), .4), 1.0)], d)
 
 
+def _door_env(d, t_open, rise=.04, fall=.9, rest=.35):
+    """0 before the door is flung open at `t_open`, then 1 and settling to `rest` (the doorway stays open onto the white)."""
+    t = tarr(d)
+    return np.where(t < t_open, 0.0, np.minimum(1.0, (t - t_open) / rise) * (rest + (1 - rest) * np.exp(-(t - t_open) / fall)))
+
+
 def room_forecast(d, seed=2100):
     """The nurses' station at two in the afternoon: air handling, the murmur of a few staff, a telephone, a keyboard, the call light's chime far away, the wall TV's weather murmur, the hum of the monitors, and the
-    wind leaking round the glass doors and the window (low-passed by the wall at 520 Hz, a quiet howl that grows as the storm closes in)."""
+    wind leaking round the glass doors and the window (low-passed by the wall at 520 Hz, a quiet howl that grows as the storm closes in). THE DOOR (`doorgust`): the wall opens for a moment, as Episode 18's
+    muffling did with its doors: the leak is replaced by the open wind (a full-band blizzard, brighter and louder) that settles to a lasting 35 percent of that, because the doorway stays open onto the white."""
     air = _diffuse(lambda s: _rms(_hvac(d, s, 150.0, 340.0), 1.0), seed)
     bab = _diffuse(lambda s: _rms(_babble(d, s, 3), 1.0), seed + 11)
-    leak = wind(d, seed + 20, wall=520, howl=.9, base=.45, var=.22)
+    leak = wind(d, seed + 20, wall=520, howl=1.0, base=.45, var=.22)
     leak = leak * np.interp(tarr(d), [0, d], [.6, 1.0])
-    return _mix([(air, .8), (bab, .3), (_ctr(_rms(_phone(d, seed + 21, (9.0, 14.0)), .3), .5), 1.0), (_ctr(_rms(_typing_far(d, seed + 31, (3.0, 7.0)), .22), -.5), 1.0),
-                 (_ctr(_rms(_chimes_far(d, seed + 41, (9.0, 14.0)), .12), .25), 1.0), (_ctr(_rms(_tv_far(d, seed + 5, 1.0), .16), .6), 1.0), (leak, .42),
-                 (_ctr(_rms(_hum(d, 120.0, ((1, 1.0), (2, .3))), .05)), 1.0)], d)
+    tdoor = _cue_local("forecast", "doorgust", 0)
+    parts = [(air, .8), (bab, .3), (_ctr(_rms(_phone(d, seed + 21, (9.0, 14.0)), .3), .5), 1.0), (_ctr(_rms(_typing_far(d, seed + 31, (3.0, 7.0)), .22), -.5), 1.0),
+             (_ctr(_rms(_chimes_far(d, seed + 41, (9.0, 14.0)), .12), .25), 1.0), (_ctr(_rms(_tv_far(d, seed + 5, 1.0), .16), .6), 1.0), (_ctr(_rms(_hum(d, 120.0, ((1, 1.0), (2, .3))), .05)), 1.0)]
+    if tdoor is not None:
+        env = uniform_filter1d(_door_env(d, tdoor), 480)
+        opened = _lp4(wind(d, seed + 25, howl=1.0, base=.6, var=.2), 4500, 2)
+        parts += [(leak * (1 - .7 * env), .8), (opened * env, 1.1)]
+    else:
+        parts += [(leak, .8)]
+    return _mix(parts, d)
 
 
 def room_lot(d, seed=2200):
@@ -2373,7 +2414,7 @@ def room_lot(d, seed=2200):
         if a is not None:
             g.append((a - .15, dur, amp))
     w = wind(d, seed, gusts=g, base=.5, var=.26)
-    return _mix([(w, 1.0), (_breaths_bed(d, seed + 50), .1), (_ctr(_rms(_hum(d, 60.0, ((1, 1.0), (2, .3))), .04), .6), 1.0), (_ctr(_rms(_lp4(noise6(d, seed + 60), 160, 2), .05), -.5), 1.0)], d)
+    return _mix([(w, 1.0), (_breaths_bed(d, seed + 50), .16), (_ctr(_rms(_hum(d, 60.0, ((1, 1.0), (2, .3))), .04), .6), 1.0), (_ctr(_rms(_lp4(noise6(d, seed + 60), 160, 2), .05), -.5), 1.0)], d)
 
 
 def room_blackout(d, seed=2300):
@@ -2397,7 +2438,7 @@ def room_dayroom(d, seed=2400):
     air = _diffuse(lambda s: _rms(_hvac(d, s, 110.0, 240.0), 1.0), seed)
     gen = _diffuse(lambda s: _gen_drone(d, s, 330), seed + 10)
     leak = wind(d, seed + 20, wall=460, howl=1.0, base=.45, var=.22)
-    return _mix([(air, .3), (gen, .35), (_ctr(_emerg_buzz(d, seed + 30), -.3), .08), (leak, .6)], d)
+    return _mix([(air, .3), (gen, .35), (_ctr(_emerg_buzz(d, seed + 30), -.3), .08), (leak, .9)], d)
 
 
 def room_night(d, seed=2500):
@@ -2417,7 +2458,7 @@ def room_night(d, seed=2500):
     a = (LAPSE.a - sc["start"]) if LAPSE.active else 10.65
     uu = LAPSE.u_at(sc["start"] + t) if LAPSE.active else np.zeros(len(t))
     lvl = np.interp(t, [0, a, b, b + 1.8, d], [1.0, 1.0, 1.0, .1, .1]) * (1 + .9 * uu)
-    return _mix([(r_tone, 1.0), (leak * lvl, .8)], d)
+    return _mix([(r_tone, 1.0), (leak * lvl, 1.0)], d)
 
 
 def room_end(d, seed=2600):
@@ -2456,7 +2497,9 @@ A6.AMB["wind"] = amb_wind
 
 # ================================================================ registration (keep this at the end of the sfx section)
 BOOST = {   # sustained textures that sat 15 to 20 dB under the voice at the script's gains: lifted so they register (the dialogue dip still takes them down under speech)
-    "sniffle": 1.6, "typing": 1.2,
+    "sniffle": 1.6, "typing": 1.2, "partywhistle": .6, "powerdown": 1.25,
+    "cupset": 1.9, "slurp": 1.7, "pentick": 1.8, "candleclick": 1.8, "clickdead": 1.8, "flashlight": 1.5, "clocktick": 1.6, "phoneclick": 1.7, "boardflip": 1.4, "plowdist": 2.2, "shovel": 1.2,
+    "badgepeel": 1.2, "windgust": 1.3,
 }
 
 
@@ -2590,8 +2633,9 @@ def _designed_events(tab, steps_in_lot):
         ev.append({"t": round(by[sid][0], 3), "name": "bed_" + nm, "vol": BED_VOL[nm], "pan": 0.0, "room": "hall"})
     if "blackout" in by:
         a0 = by["blackout"][0]
+        ev.append({"t": round(a0, 3), "name": "hum_on", "vol": .7, "pan": 0.0, "room": "hall"})                # the lights' hum before the failure (crossfades into `powerdown` at 0.2 s)
         for j in range(6):                                                           # the stopwatch shows 1.0 at 3.4 s, 2.0 at 4.4 ... 6.0 at 8.4 s (it started at 2.4 s)
-            ev.append({"t": round(a0 + 3.4 + j, 3), "name": "swtick", "vol": .55, "pan": -.2, "room": "hall"})
+            ev.append({"t": round(a0 + 3.4 + j, 3), "name": "swtick", "vol": .8, "pan": -.2, "room": "hall"})
         for t, p in ((9.55, -.25), (10.2, .3), (10.9, -.1)):
             ev.append({"t": round(a0 + t, 3), "name": "breath", "vol": .3, "pan": p, "room": "hall"})
     ev += _lapse_events(tab)
@@ -2599,7 +2643,7 @@ def _designed_events(tab, steps_in_lot):
         a0 = by["night"][0]
         tu3 = _beat_abs("night", "tu3")
         if tu3:
-            ev.append({"t": round(tu3[0] + .3, 3), "name": "plowrumble", "vol": .5, "pan": 0.0, "room": "hall"})
+            ev.append({"t": round(tu3[0] + .5, 3), "name": "plowrumble", "vol": .8, "pan": 0.0, "room": "hall"})
         dawn = _beat_abs("night", "dawn")
         if dawn:
             for dt, p in ((.5, -.6), (1.3, .5)):

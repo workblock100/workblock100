@@ -462,10 +462,9 @@ def cue_blackout20(T, t0, d, beats, D):
     lo, o1, b1, s1, b2, cnt, l1, gen, o1b, t1, o3, t2, o4, m1, s2, o2, s3, br1, br2, br3, en = (beats[k] for k in ("lightsout", "o1", "b1", "s1", "b2", "count", "l1", "gen", "o1b", "t1", "o3", "t2", "o4", "m1", "s2", "o2", "s3", "br1", "br2", "br3", "end"))
     clar = lambda m, dd: bassclar(m, dd, .8, a=.05, r=.12)
     crank = gen[0] - .03
-    T.put(sub_bass(midi(36), crank - lo[0] - .4), lo[0] + .3, .06, 0)
-    T.put(sub_bass(midi(31), crank - lo[0] - .4) * .7, lo[0] + .3, .05, 0)
-    T.fade(lo[0] + 8.0, crank, 1.0, 1.7)
-    T.gate(crank, crank + 1.0, 0.0, .06)
+    dl = crank - lo[0] - .4
+    ramp = np.minimum(np.minimum(1.0, tarr(dl) / 1.5), np.minimum(1.0, (dl - tarr(dl)) / .12)) * np.interp(tarr(dl), [0, dl], [.7, 1.3])
+    T.put((sub_bass(midi(36), dl) + .7 * sub_bass(midi(31), dl)) * ramp, lo[0] + .3, .022, 0)
     # the first bar
     rl = cue_abs("relay", "blackout", 3) or gen[0] + .8
     bl = .6
@@ -499,16 +498,20 @@ def cue_blackout20(T, t0, d, beats, D):
     wb = .6
     w0 = o2[0]
     w_end = s3[1] + .02
+    WT, WD = Track(T.N), Track(T.N)
     for k in range(int((w_end - w0) / wb)):
         at = w0 + k * wb
         bar, beat = divmod(k, 3)
         if beat == 0:
-            T.put(ubass((36, 41)[bar % 2] + 12, wb * 1.4, .6), at, .13, -.1)
+            WT.put(ubass((36, 41)[bar % 2] + 12, wb * 1.4, .6), at, .13, -.1)
         else:
             for q, m in enumerate(CHORDS["Cm" if bar % 2 == 0 else "Fm"]):
-                T.put(felt(m, wb * .8, .45), at + .012 * q, .04, .05 + .06 * q)
-            D.put(brush(.2), at, .03, .2)
-    T.gate(w_end, br1[0], 0.0, .02)
+                WT.put(felt(m, wb * .8, .45), at + .012 * q, .04, .05 + .06 * q)
+            WD.put(brush(.2), at, .03, .2)
+    WT.gate(w_end, w_end + 6.0, 0.0, .03)
+    WD.gate(w_end, w_end + 6.0, 0.0, .03)
+    T.buf += WT.buf
+    D.buf += WD.buf
     # Brenda's flashlight: the lullaby
     ck = [cue_abs("clickdead", "blackout", k) for k in range(2)]
     fl = cue_abs("flashlight", "blackout", 1) or br1[0] - .25
@@ -525,7 +528,7 @@ def cue_blackout20(T, t0, d, beats, D):
     T.put(strings([41, 48, 53, 57, 60], stop - fl + .3, .8, .9, 4.8, 1400), fl, .035)
     T.gate(stop, br3[0] - .25, 0.0, .1)
     pre = br3[0] - .12
-    T.put(strings([41, 48, 53, 57, 60, 64], d - pre - .9, .9, 1.4, 4.8, 1500), pre, .05)
+    T.put(strings([41, 48, 53, 57, 60, 64], t0 + d - pre - .9, .9, 1.4, 4.8, 1500), pre, .05)
     for k, (m, off) in enumerate(((84, 0.0), (81, 1.0), (79, 1.5), (77, 2.0))):
         T.put(music_box(midi(m), 1.6), br3[0] + off, .06, .3)
     held = br3[1] + .25
@@ -545,24 +548,25 @@ def cue_dayroom20(T, t0, d, beats, D):
     go2, pl, mo1, en = (beats[k] for k in ("go2", "plowlight", "mo1", "end"))
     bl = 1.05
     a = t0 + .2
+    L = Track(T.N)
     for j, (b, m, du) in enumerate(SDT):
         at = a + b * bl
         if at > mo1[0] - .1:
             continue
-        T.put(celesta(m + 5 - 12, du * bl * 1.3 + .4, .55), at, .06, .15)
-        T.put(music_box(midi(m + 5), min(du * bl * 1.5 + .3, 1.5)) * .5, at + .004, .03, .3)
+        L.put(celesta(m + 5 - 12, du * bl * 1.3 + .4, .55), at, .06, .15)
+        L.put(music_box(midi(m + 5), min(du * bl * 1.5 + .3, 1.5)) * .5, at + .004, .03, .3)
     for bar, (ch, rt) in enumerate((("F", 29), ("F", 29), ("B", 34), ("C", 36))):
         at = a + bar * 4 * bl
         if at > mo1[0] - .6:
             break
         vs = {"F": (41, 48, 53, 57, 60), "B": (46, 53, 58, 62, 65), "C": (48, 55, 60, 64, 67)}[ch]
-        T.put(strings(list(vs), 4 * bl + .5, .9, 1.2, 4.8, 1400), at, .045, 0)
-        T.put(felt(rt + 12, 4 * bl * .9, .5), at, .07, -.1)
-        T.put(sleigh(.5, 10, 3400, 8000), at, .02, .3)
-    T.put(celesta(101, 1.6, .6), W("go2", "water") + .12, .045, .3)
-    T.put(strings([41, 48, 53, 57, 60, 64, 67, 72], pl[1] - pl[0] + .4, 1.0, .6, 5.0, 1700), pl[0] - .1, .05, 0)
-    T.gate(mo1[0] - .05, mo1[0] + .02, 0.0, .03)
-    T.fade(mo1[0] - .6, mo1[0] - .05, 1.0, .2)
+        L.put(strings(list(vs), 4 * bl + .5, .9, 1.2, 4.8, 1400), at, .045, 0)
+        L.put(felt(rt + 12, 4 * bl * .9, .5), at, .07, -.1)
+        L.put(sleigh(.5, 10, 3400, 8000), at, .02, .3)
+    L.put(celesta(101, 1.6, .6), W("go2", "water") + .12, .045, .3)
+    L.put(strings([41, 48, 53, 57, 60, 64, 67, 72], pl[1] - pl[0] + .4, 1.0, .6, 5.0, 1700), pl[0] - .1, .05, 0)
+    L.gate(mo1[0] - .12, mo1[0] + 8.0, 0.0, .25)
+    T.buf += L.buf
     T.put(glass(89, 2.4, .8, 1.2), mo1[0] + .1, .03, .2)
     T.fade(t0 + d - .8, t0 + d, 1, 0)
     D.fade(t0 + d - .8, t0 + d, 1, 0)
@@ -587,7 +591,7 @@ def lapse_ostinato(T, D, a, b):
             prog = (t - a) / (b - a)
             idx = (n % 5) + 5 * int(min(2, prog * 2.4 + (n // 5 % 2) * .3))
             m = 62 + pent[idx % 5] + 12 * (idx // 5) + (0 if prog < .8 else 0)
-            g = .03 + .045 * u
+            g = (.03 + .045 * u) * .55
             if m < 86:
                 T.put(vib(m, .5, .55 + .3 * u), t, g, -.25 + .5 * ((n % 7) / 6.0))
             else:
@@ -596,7 +600,7 @@ def lapse_ostinato(T, D, a, b):
                 T.put(bell(midi(m + 12), .6) * .4, t + .01, g * .5, .3)
             n += 1
         t += dt
-    T.put(bell(midi(91), 1.6) * .6, b, .07, .2)
+    T.put(bell(midi(91), 1.6) * .6, b, .06, .2)
     return n
 
 
@@ -621,10 +625,10 @@ def cue_night20(T, t0, d, beats, D):
     # the lapse
     a, b = lap
     n = lapse_ostinato(T, D, a, b)
-    T.put(rising(50, 62, b - a + .2), a, .05, -.2)
-    T.put(rising(57, 69, b - a + .2) * .8, a, .04, .25)
-    T.put(glass(98, b - a + 1.0, 2.5, 1.2), a, .022, .1)
-    T.put(sub_bass(midi(26), b - a) * .5, a, .04, 0)
+    T.put(rising(50, 62, b - a + .2), a, .03, -.2)
+    T.put(rising(57, 69, b - a + .2) * .8, a, .024, .25)
+    T.put(glass(98, b - a + 1.0, 2.5, 1.2), a, .016, .1)
+    T.put(sub_bass(midi(26), b - a) * .5, a, .025, 0)
     # the Moon
     mo = mo1[0] - .25
     pad_len = s9[1] + .8 - mo

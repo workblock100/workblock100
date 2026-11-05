@@ -178,8 +178,9 @@ function cloudBanks(x, y, w, h, mx, my, r, cloud, t) {
 function weatherIn(x, y, w, h, env, o = {}) {
   const lt = env.lt, pale = env.sun > .35;
   if (o.kids) o.kids(x, y, w, h);
+  if (o.glints) o.glints(x, y, w, h);
   if (env.snow > .02) snowN(ctx, { x0: x, y0: y, x1: x + w, y1: y + h, t: lt, seed: o.seed ?? 7, layers: 3, density: (o.dens ?? 1.5) * env.snow, fall: 1, wind: 70, gusts: SIM.GUSTS, sway: 1, tone: pale ? 'light' : 'dark', fore: false, alpha: .95 });
-  const hh = o.heap ?? (h * (.07 + .22 * env.dep));
+  const hh = o.heap ?? (h * (.05 + .42 * env.dep * env.dep));
   sillN(ctx, { x0: x - 4, x1: x + w + 4, y: y + h + 2, depth: hh, seed: o.seed ?? 7, tone: pale ? 'light' : 'dark' });
   if (o.frost !== false) frostN(ctx, { x, y, w, h, amount: env.frost, seed: (o.seed ?? 7) + 2, t: lt, tone: pale ? 'light' : 'dark' });
 }
@@ -191,8 +192,9 @@ function bigWindow(lt, env, G, o = {}) {
   ctx.save();
   ctx.fillStyle = '#ece7da'; ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; rr(x - fr, y - fr, w + 2 * fr, h + 2 * fr, 6); ctx.fill(); ctx.stroke();
   ctx.save(); clipRR(x, y, w, h, 3);
+  { const rat = 2.2 * pulse(lt, CUE.windgust, 30, .22) + 1.2 * pulse(lt, CUE.windgust + .5, 26, .2); ctx.translate(rat, 0); }
   skyIn(x, y, w, h, env, { suppressMoon: o.suppressMoon, moonChar: o.moonChar });
-  weatherIn(x, y, w, h, env, { seed: 7, dens: 1.6, kids: o.winKids });
+  weatherIn(x, y, w, h, env, { seed: 7, dens: 7.5, kids: o.winKids, glints: (gx, gy, gw, gh) => paneGlints(lt, gx, gy, gw, gh) });
   ctx.globalCompositeOperation = 'screen';                                 /* a glint of the room on the glass */
   ctx.fillStyle = lg(x, y, x + w * .5, y + h, [[0, 'rgba(255,255,255,.07)'], [.5, 'rgba(255,255,255,.02)'], [1, 'rgba(255,255,255,0)']]);
   ctx.beginPath(); ctx.moveTo(x + w * .08, y); ctx.lineTo(x + w * .3, y); ctx.lineTo(x + w * .12, y + h); ctx.lineTo(x - w * .1, y + h); ctx.closePath(); ctx.fill();
@@ -212,10 +214,9 @@ function glassDoors(lt, env, G, o = {}) {
   skyIn(x, y, w, h, env, { suppressMoon: true, cars: false, noMoon: true });
   const pane = (px, pw) => {                                              /* outside, seen through one leaf */
     ctx.save(); clipRR(px, y + fr, pw, h - fr * 2.4, 3);
-    snowN(ctx, { x0: px, y0: y, x1: px + pw, y1: y + h, t: lt, seed: 11, layers: 3, density: 2.2 * env.snow, fall: 1, wind: 80, gusts: SIM.GUSTS, tone: env.sun > .35 ? 'light' : 'dark', fore: false, alpha: .95 });
-    const hh = bury * h;
-    sillN(ctx, { x0: px - 2, x1: px + pw + 2, y: y + h - fr * .8, depth: hh, seed: 12, tone: env.sun > .35 ? 'light' : 'dark' });
+    snowN(ctx, { x0: px, y0: y, x1: px + pw, y1: y + h, t: lt, seed: 11, layers: 3, density: 9 * env.snow, fall: 1, wind: 80, gusts: SIM.GUSTS, tone: env.sun > .35 ? 'light' : 'dark', fore: false, alpha: .95 });
     if (o.kids) o.kids(px, y, pw, h);
+    snowMass(px, pw, y + h - fr * .8, bury * h, lt, env);
     frostN(ctx, { x: px, y: y + fr, w: pw, h: h - fr * 2.4, amount: env.frost * .8, seed: 13, t: lt, tone: 'dark' });
     ctx.restore();
   };
@@ -229,19 +230,34 @@ function glassDoors(lt, env, G, o = {}) {
   ctx.restore();
   G.doors = { x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
 }
+/* a smooth mass of snow standing against the glass: level hh (px) with a gently waving top, a leading crest while the wave rises (28.35 .. 29.35), blue shade below, sparkles */
+function snowMass(px, pw, yb, hh, lt, env) {
+  const wave = sg(lt, 28.35, 29.35) * (1 - sg(lt, 29.35, 29.6)), n = 14, tone = env.sun;
+  if (hh < 3) return;
+  ctx.save();
+  const top = yb - hh;
+  ctx.beginPath(); ctx.moveTo(px - 4, yb + 6);
+  for (let i = 0; i <= n; i++) { const u = i / n, x = px + u * pw, y = top - 6 * Math.sin(u * 5 + lt * .9 + px * .01) - 14 * wave * Math.sin(u * PI * 1.5 + lt * 3); ctx.lineTo(x, y); }
+  ctx.lineTo(px + pw + 4, yb + 6); ctx.closePath();
+  ctx.fillStyle = lg(0, top, 0, yb, [[0, rgbs(mixa([246, 250, 255], [255, 240, 214], tone * .5))], [.55, rgbs(mixa([210, 222, 246], [240, 214, 190], tone * .5))], [1, rgbs(mixa([150, 170, 214], [196, 168, 170], tone * .5))]]); ctx.fill();
+  ctx.strokeStyle = 'rgba(60,80,130,.35)'; ctx.lineWidth = 2; ctx.stroke();
+  if (wave > .02) { for (let i = 0; i < 5; i++) { const u = (i + .5) / 5, r = (10 + 8 * sr(i, 31)) * wave; ctx.fillStyle = 'rgba(255,255,255,' + (.85 * wave) + ')'; ctx.beginPath(); ctx.arc(px + u * pw, top - 10 * wave * Math.sin(u * PI * 1.5 + lt * 3) - 4, r, 0, TAU); ctx.fill(); } }
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; for (let i = 0; i < 7; i++) { const a = .5 + .5 * Math.sin(lt * 2.4 + i * 1.9); ctx.globalAlpha = a * .7; ell(px + sr(i, 41) * pw, top + 10 + sr(i, 43) * Math.max(4, hh - 14), 1.6, 1.6); ctx.fill(); }
+  ctx.restore();
+}
 /* the wall clock: a round dial with hands that whirl in the lapse and a green LCD strip under it with the time (UI kit; hero only when it comes out big) */
 function wallClock(lt, env, G, o = {}) {
   const C = LAY.clock, [cx, cy] = wpt(C.X, C.Y), R = C.r * kzP(ZB), tk = CUE.clocktick, tk2 = CUE.clocktick2;
   let m = env.m;
   if (lt >= tk2 && lt < tk2 + .2) m = lerp(1379 + tk2 / 60, 1380, eb(sg(lt, tk2, tk2 + .2)));                 /* the minute hand drops onto 11:00 on the tick */
-  const P = SIM.clockParts(m), jolt = (pulse(lt, tk, 40, .06) + pulse(lt, tk2, 40, .06)) * .03;
+  const Ph = SIM.clockParts(m), P = SIM.clockParts(env.m), jolt = (pulse(lt, tk, 40, .06) + pulse(lt, tk2, 40, .06)) * .05;
   ctx.save(); ctx.translate(cx, cy);
   ctx.fillStyle = 'rgba(0,0,0,.25)'; ell(3, 5, R * 1.07, R * 1.07); ctx.fill();
   ctx.fillStyle = '#2b2f3a'; ell(0, 0, R * 1.06, R * 1.06); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; ctx.stroke();
   ctx.fillStyle = lg(0, -R, 0, R, [[0, '#fbf8ee'], [1, '#e4dfcf']]); ell(0, 0, R * .94, R * .94); ctx.fill();
   for (let i = 0; i < 60; i++) { const a = i / 60 * TAU, big = i % 5 === 0; ctx.strokeStyle = '#2a2530'; ctx.lineWidth = big ? Math.max(2, R * .06) : Math.max(1, R * .02); ctx.beginPath(); ctx.moveTo(Math.sin(a) * R * (big ? .74 : .82), -Math.cos(a) * R * (big ? .74 : .82)); ctx.lineTo(Math.sin(a) * R * .88, -Math.cos(a) * R * .88); ctx.stroke(); }
   const hand = (ang, len, wd, col) => { ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-Math.sin(ang) * len * .14, Math.cos(ang) * len * .14); ctx.lineTo(Math.sin(ang) * len, -Math.cos(ang) * len); ctx.stroke(); };
-  hand(P.hourAng, R * .5, Math.max(3, R * .09), '#23202a'); hand(P.minAng + jolt, R * .78, Math.max(2.4, R * .06), '#23202a');
+  hand(Ph.hourAng, R * .5, Math.max(3, R * .09), '#23202a'); hand(Ph.minAng + jolt, R * .78, Math.max(2.4, R * .06), '#23202a');
   ctx.fillStyle = '#c1121f'; ell(0, 0, R * .07, R * .07); ctx.fill();
   const bx = -R * .95, bw = R * 1.9, by = R * 1.2, bh = R * .56;                                                    /* the LCD strip */
   ctx.fillStyle = '#0d1f24'; ctx.strokeStyle = INKC; ctx.lineWidth = 2; rr(bx, by, bw, bh, bh * .24); ctx.fill(); ctx.stroke();
@@ -287,14 +303,16 @@ function emLampN(lt, X, Y, G, name) {
     for (const sx of [-1, 1]) { ctx.fillStyle = '#fff6d8'; ell(sx * 40, -4, 13, 11); ctx.fill(); ctx.stroke(); }
     ctx.fillStyle = '#ff3b30'; ell(0, 3, 4, 4); ctx.fill();
     ctx.restore();
-    glowN(cx + 40 * k, cy - 4 * k, 80 * k, '255,200,120', .45, .4); glowN(cx - 40 * k, cy - 4 * k, 80 * k, '255,200,120', .45, .4);
+    glowN(cx + 40 * k, cy - 4 * k, 60 * k, '255,200,120', .22, .3); glowN(cx - 40 * k, cy - 4 * k, 60 * k, '255,200,120', .22, .3);
   }
   G[name] = { x: cx, y: cy };
 }
 
+const CSH = 170;                                                           /* the counter is shifted to the right by this much (S13.counter's X range is -120..720 and would hide the fourth cot) */
+function counterShifted(fn) { const keep = V2.P.cx; V2.P.cx = keep - CSH; try { fn(); } finally { V2.P.cx = keep; } }
 // ------------------------------------------------------------------ the counter's dressing: the desk lamp (it flickers once in the lapse) and the dead coffee maker
 function deskLamp(lt, env, G) {
-  const X = 20, Z = 1450, [bx, by] = wpt(X, LAY.counter.top, Z), k = kzP(Z), on = c01(env.lamp);
+  const X = 20 + CSH, Z = 1450, [bx, by] = wpt(X, LAY.counter.top, Z), k = kzP(Z), on = c01(env.lamp);
   ctx.save(); ctx.translate(bx, by); ctx.scale(k, k); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = 'rgba(0,0,0,.28)'; ell(0, 2, 50, 10); ctx.fill();
   ctx.fillStyle = '#3a3f4b'; ctx.strokeStyle = INKC; ctx.lineWidth = 3; rr(-34, -14, 68, 16, 7); ctx.fill(); ctx.stroke();
@@ -310,7 +328,7 @@ function deskLamp(lt, env, G) {
   G.lamp = { x: lx, y: ly, k, on };
 }
 function coffeeMaker(lt, env, G) {
-  const X = 560, Z = 1450, [bx, by] = wpt(X, LAY.counter.top, Z), k = kzP(Z);
+  const X = 560 + CSH - 90, Z = 1450, [bx, by] = wpt(X, LAY.counter.top, Z), k = kzP(Z);
   if (has('P20', 'coffeeMaker')) P20.coffeeMaker(ctx, { x: bx, y: by, s: k * .58, power: 0, display: '--:--', pot: .55, sad: 1, t: lt });
   else {
     ctx.save(); ctx.translate(bx, by); ctx.scale(k, k); ctx.lineJoin = 'round';
@@ -336,8 +354,8 @@ function medCart(lt, env, G, o = {}) {
 /* the counter without its dressing (the Moon shots: nothing in front of his face) */
 function plainCounter() {
   const C = LAY.counter;
-  S6.box3({ x0: C.x0, x1: C.x1, y0: 0, y1: C.top, z0: C.z0, z1: C.z1, color: '#b88c58', front: '#b88c58', top: '#ecdcb4', side: '#8a6438', lw: 2.4 });
-  S6.box3({ x0: C.x0 - 10, x1: C.x1 + 10, y0: C.top, y1: C.top + 26, z0: C.z0 - 14, z1: C.z0 + 64, color: '#d6b27a', front: '#caa066', top: '#f6e8c4', side: '#9a7444', lw: 2 });
+  S6.box3({ x0: C.x0 + CSH, x1: C.x1 + CSH, y0: 0, y1: C.top, z0: C.z0, z1: C.z1, color: '#b88c58', front: '#b88c58', top: '#ecdcb4', side: '#8a6438', lw: 2.4 });
+  S6.box3({ x0: C.x0 - 10 + CSH, x1: C.x1 + 10 + CSH, y0: C.top, y1: C.top + 26, z0: C.z0 - 14, z1: C.z0 + 64, color: '#d6b27a', front: '#caa066', top: '#f6e8c4', side: '#9a7444', lw: 2 });
 }
 // ------------------------------------------------------------------ the cots (P20.cot) with the sleepers; a pose is a jump: 0 on the back, 1 on the other side (the cot mirrored), 2 and 3 a little curled
 const COTW = ['mango', 'lemon', 'tom', 'onion'], COTK = .9;
@@ -372,31 +390,31 @@ function cotSitter(lt, env, who, amt, o = {}) {
 EXT.prop.fp20n_tablet = (side, o, t) => {
   const S = o.tabScale || 1, on = o.tabOn ?? 1;
   ctx.save(); ctx.rotate(o.tabRot ?? -.1); ctx.scale(S, S); ctx.lineJoin = 'round';
-  ctx.fillStyle = '#1f232c'; ctx.strokeStyle = 'rgba(15,10,22,.95)'; ctx.lineWidth = 3; rr(-40, -114, 80, 112, 9); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = lg(0, -106, 0, -10, [[0, '#e6f3ff'], [1, '#a9cdf2']]); rr(-34, -106, 68, 96, 4); ctx.fill();
-  ctx.fillStyle = '#2c4f7c'; ctx.fillRect(-34, -106, 68, 12);
-  for (let i = 0; i < 5; i++) { const y = -84 + i * 15; ctx.strokeStyle = '#2f6fd0'; ctx.lineWidth = 2.4; ctx.strokeRect(-28, y - 5, 8, 8); if (i < 3 || (o.tabChecks ?? 0) > i - 2) { ctx.strokeStyle = '#1f9a58'; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(-27, y - 1); ctx.lineTo(-24, y + 2); ctx.lineTo(-20, y - 6); ctx.stroke(); } ctx.fillStyle = 'rgba(40,70,120,.55)'; ctx.fillRect(-14, y - 3, 38 - (i % 3) * 7, 4); }
+  ctx.fillStyle = '#1f232c'; ctx.strokeStyle = 'rgba(15,10,22,.95)'; ctx.lineWidth = 3; rr(-40, 4, 80, 112, 9); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = lg(0, 12, 0, 108, [[0, '#e6f3ff'], [1, '#a9cdf2']]); rr(-34, 10, 68, 96, 4); ctx.fill();
+  ctx.fillStyle = '#2c4f7c'; ctx.fillRect(-34, 10, 68, 12);
+  for (let i = 0; i < 5; i++) { const y = 34 + i * 15; ctx.strokeStyle = '#2f6fd0'; ctx.lineWidth = 2.4; ctx.strokeRect(-28, y - 5, 8, 8); if (i < 3 || (o.tabChecks ?? 0) > i - 2) { ctx.strokeStyle = '#1f9a58'; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(-27, y - 1); ctx.lineTo(-24, y + 2); ctx.lineTo(-20, y - 6); ctx.stroke(); } ctx.fillStyle = 'rgba(40,70,120,.55)'; ctx.fillRect(-14, y - 3, 38 - (i % 3) * 7, 4); }
   ctx.restore();
-  if (on > .02) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = .5 * on; ctx.fillStyle = V2.radial(0, -58, 6, 120, [[0, 'rgba(170,215,255,.55)'], [1, 'rgba(170,215,255,0)']]); ctx.fillRect(-120, -180, 240, 240); ctx.restore(); }
+  if (on > .02) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = .5 * on; ctx.fillStyle = V2.radial(0, 60, 6, 120, [[0, 'rgba(170,215,255,.55)'], [1, 'rgba(170,215,255,0)']]); ctx.fillRect(-120, -60, 240, 240); ctx.restore(); }
 };
-EXT.prop.fp20n_pen = (side, o, t) => {
+EXT.prop.fp20n_pen = (side, o, t) => {                                          /* the hand holds the back end; the tip points down and in */
   ctx.save(); ctx.rotate(o.penRot ?? .5); ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(15,10,22,.95)'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(0, 14); ctx.lineTo(0, -46); ctx.stroke();
-  ctx.strokeStyle = '#2a5ac8'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(0, -44); ctx.stroke();
-  ctx.strokeStyle = '#e8eef6'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 14); ctx.lineTo(0, 24); ctx.stroke();
+  ctx.strokeStyle = 'rgba(15,10,22,.95)'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 52); ctx.stroke();
+  ctx.strokeStyle = '#2a5ac8'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -2); ctx.lineTo(0, 46); ctx.stroke();
+  ctx.strokeStyle = '#e8eef6'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 46); ctx.lineTo(0, 54); ctx.stroke();
   ctx.restore();
 };
 EXT.prop.fp20n_sheet = (side, o, t) => {
   ctx.save(); ctx.rotate(o.sheetRot ?? -.06); ctx.lineJoin = 'round';
-  ctx.fillStyle = '#fbf9f1'; ctx.strokeStyle = 'rgba(15,10,22,.9)'; ctx.lineWidth = 2.6; ctx.fillRect(-34, -104, 68, 92); ctx.strokeRect(-34, -104, 68, 92);
-  ctx.fillStyle = '#b3261e'; ctx.fillRect(-34, -104, 68, 8);
-  ctx.fillStyle = 'rgba(40,40,60,.5)'; for (let i = 0; i < 6; i++) ctx.fillRect(-26, -86 + i * 12, 52 - (i % 3) * 10, 3);
+  ctx.fillStyle = '#fbf9f1'; ctx.strokeStyle = 'rgba(15,10,22,.9)'; ctx.lineWidth = 2.6; ctx.fillRect(-34, 4, 68, 92); ctx.strokeRect(-34, 4, 68, 92);
+  ctx.fillStyle = '#b3261e'; ctx.fillRect(-34, 4, 68, 8);
+  ctx.fillStyle = 'rgba(40,40,60,.5)'; for (let i = 0; i < 6; i++) ctx.fillRect(-26, 22 + i * 12, 52 - (i % 3) * 10, 3);
   ctx.restore();
 };
 /* the shift sticker: a round yellow label (3-11, turned over it reads 11-7), peeled from the badge (curl 0..1 lifts one edge), turned over (flip 0..1) and pressed back on */
 EXT.prop.fp20n_sticker = (side, o, t) => {
   const R = 33 * (o.stkScale || 1), flip = c01(o.stkFlip ?? 0), curl = c01(o.stkCurl ?? 0), cs = Math.cos(flip * PI), back = flip > .5;
-  ctx.save(); ctx.rotate(o.stkRot ?? -.15); ctx.translate(0, -R * 1.05);
+  ctx.save(); ctx.rotate(o.stkRot ?? -.15); ctx.translate(0, -R * 1.25);
   ctx.save(); ctx.scale(Math.max(.06, Math.abs(cs)), 1); ctx.lineJoin = 'round';
   ctx.fillStyle = back ? '#ffe36a' : '#ffd60a'; ctx.strokeStyle = 'rgba(40,28,6,.9)'; ctx.lineWidth = 3.2; ell(0, 0, R, R); ctx.fill(); ctx.stroke();
   if (curl > .02) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.moveTo(R * .9, -R * .4); ctx.quadraticCurveTo(R * (.9 + .5 * curl), -R * .1, R * .6, R * .55 * curl + R * .1); ctx.lineTo(R * .55, R * .1); ctx.closePath(); ctx.fill(); ctx.stroke(); }
@@ -405,7 +423,7 @@ EXT.prop.fp20n_sticker = (side, o, t) => {
   if (wd > .22) { ctx.save(); ctx.scale(wd, 1); UI.label(txt, 0, 1, { size: R * (back ? .8 : .86), font: 'Bangers', weight: 400, fill: '#2a2530', maxW: R * 1.5, spacing: 1, hero, crop: !hero }); ctx.restore(); }
   ctx.restore();
 };
-Object.assign(PROP_BOX, { fp20n_tablet: [-46, -120, 46, 6], fp20n_pen: [-8, -52, 8, 30], fp20n_sheet: [-38, -110, 38, -6], fp20n_sticker: [-40, -80, 40, 4] });
+Object.assign(PROP_BOX, { fp20n_tablet: Object.assign([-46, -2, 46, 120], { nearFace: true }), fp20n_pen: Object.assign([-12, -6, 12, 56], { nearFace: true }), fp20n_sheet: Object.assign([-38, 0, 38, 100], { nearFace: true }), fp20n_sticker: Object.assign([-34, -70, 34, 4], { nearFace: true }) });
 /* the clip-on PER DIEM badge of the earlier episodes (perdiem9), with a slot for the shift sticker: o.stk = 'xx' draws it, o.stkPop 0..1 stamps it down */
 EXT.acc.fp20n_idc = (o, k, t, layer) => {
   if (layer !== 'front') return;
@@ -414,7 +432,7 @@ EXT.acc.fp20n_idc = (o, k, t, layer) => {
   ctx.fillStyle = '#c0c6cf'; ctx.strokeStyle = INK; ctx.lineWidth = 2.6; rr(-9, -7, 18, 12, 4); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.lineWidth = 3; rr(-26, 12, 52, 58, 6); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#e8193a'; rr(-26, 12, 52, 18, 6); ctx.fill(); ctx.stroke();
-  text('PER DIEM', 0, 22, { size: 9, fill: '#fff', weight: 900, spacing: .4, maxW: 50 });
+  if (!o.stkHeld) text('PER DIEM', 0, 22, { size: 9, fill: '#fff', weight: 900, spacing: .4, maxW: 50 });
   if (o.stk) {
     const pop = o.stkPop ?? 1, sc = pop < 1 ? 1 + .28 * Math.sin(pop * PI) : 1;
     ctx.save(); ctx.translate(0, 47); ctx.scale(sc, sc); ctx.fillStyle = '#ffd60a'; ctx.strokeStyle = 'rgba(40,28,6,.9)'; ctx.lineWidth = 2.2; ell(0, 0, 15, 15); ctx.fill(); ctx.stroke();
@@ -428,28 +446,28 @@ if (window.V2C && V2C.ACC_CLS) { V2C.ACC_CLS.fp20n_idc = 'decal'; if (V2C.ACC_W)
 
 // ------------------------------------------------------------------ the shots (scene-local seconds, snapped to the video frame; a boundary frame belongs to the NEW shot: look up with an epsilon)
 const SH = [
-  { id: 'open', s: 0, e: 1.90, k: 'wide', z0: 1.04, z1: 1.14 },
+  { id: 'open', s: 0, e: 1.90, k: 'wide', z0: 1.12, z1: 1.24, cx: 530, cy: 850 },
   { id: 's1', s: 1.90, e: 3.316, k: 'cu', foc: 'straw', z: 2.15, dz: .2, up: 150 },
-  { id: 'w1', s: 3.316, e: 4.20, k: 'clock', z: 2.2, dz: .25 },
-  { id: 'w2', s: 4.20, e: 4.866, k: 'cu', foc: 'straw', z: 2.0, dz: .15, up: 150 },
+  { id: 'w1', s: 3.316, e: 3.90, k: 'clock', z: 2.2, dz: .2 },
+  { id: 'w1b', s: 3.90, e: 4.30, k: 'doors', z: 2.0, dz: .08 },
+  { id: 'w2', s: 4.30, e: 4.866, k: 'cu', foc: 'straw', z: 2.0, dz: .15, up: 150 },
   { id: 's2', s: 4.866, e: 6.249, k: 'cu', foc: 'straw', z: 2.1, dz: .3, up: 150 },
-  { id: 't1', s: 6.249, e: 7.941, k: 'two', z: 1.28, dz: .1 },
+  { id: 't1', s: 6.249, e: 7.941, k: 'two', z: 1.2, dz: .12 },
   { id: 't2', s: 7.941, e: 8.967, k: 'cu', foc: 'on', z: 2.15, dz: .2, up: 150 },
   { id: 't3', s: 8.967, e: 9.845, k: 'cu', foc: 'out', z: 2.25, dz: .2, up: 150 },
-  { id: 't4', s: 9.845, e: 10.653, k: 'two', z: 1.36, dz: .08 },
-  { id: 'lapse', s: 10.653, e: 18.653, k: 'lapse', z: 1.12 },
-  { id: 'mo1', s: 18.653, e: 20.20, k: 'moon', z: 1.75, dz: .12 },
-  { id: 's7r', s: 20.20, e: 20.836, k: 'cu', foc: 'straw', z: 2.0, dz: .12, up: 150 },
-  { id: 's7', s: 20.836, e: 21.55, k: 'cu', foc: 'straw', z: 2.15, dz: .12, up: 150 },
+  { id: 't4', s: 9.845, e: 10.653, k: 'two', z: 1.3, dz: .06 },
+  { id: 'lapse', s: 10.653, e: 18.653, k: 'lapse', z: 1.3, cx: 530, cy: 850 },
+  { id: 'mo1', s: 18.653, e: 20.70, k: 'moon', z: 1.75, dz: .12 },
+  { id: 's7', s: 20.70, e: 21.55, k: 'cu', foc: 'straw', z: 2.15, dz: .12, up: 150 },
   { id: 'mo2', s: 21.55, e: 22.90, k: 'moon2', z: 1.5, dz: .08 },
   { id: 's8', s: 22.90, e: 23.718, k: 'cu', foc: 'straw', z: 2.2, dz: .1, up: 150 },
   { id: 'mo3', s: 23.718, e: 24.78, k: 'moon', z: 1.85, dz: .1 },
   { id: 's9', s: 24.78, e: 25.689, k: 'cu', foc: 'straw', z: 2.05, dz: .2, up: 150 },
-  { id: 'dawn', s: 25.689, e: 27.739, k: 'wide', z0: 1.12, z1: 1.3 },
+  { id: 'dawn', s: 25.689, e: 27.739, k: 'wide', z0: 1.2, z1: 1.36, cx: 535, cy: 850, dx: 40 },
   { id: 'tu3', s: 27.739, e: 29.605, k: 'plow', z: 2.0 },
-  { id: 'o5', s: 29.605, e: 31.338, k: 'cu', foc: 'onion', z: 2.3, dz: .2, up: 150 },
+  { id: 'o5', s: 29.605, e: 31.338, k: 'cu', foc: 'onion', z: 3.0, dz: .2, up: 120 },
   { id: 's10', s: 31.338, e: 32.412, k: 'cu', foc: 'straw', z: 2.15, dz: .15, up: 150 },
-  { id: 'end', s: 32.412, e: 99, k: 'wide', z0: 1.2, z1: 1.1 },
+  { id: 'end', s: 32.412, e: 99, k: 'wide', z0: 1.3, z1: 1.2, cx: 530, cy: 850 },
 ];
 for (const sh of SH) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
 const shotAt = lt => { let r = SH[0]; for (const sh of SH) if (lt >= sh.s - 1e-6) r = sh; return r; };
@@ -497,7 +515,7 @@ function drawRoom(lt, env, o = {}) {
   const sl = SIM.sleepers(lt), stir = ss(lt, 25.5, 27.5) * (1 - ss(lt, 29.2, 29.6));
   G.cots = {};
   for (const who of COTW) {
-    const sit = who === 'tom' ? sl.tom.sit : 0, onionUp = who === 'onion' ? ss(lt, 28.9, 29.55) : 0, amt = Math.max(sit, onionUp);
+    const sit = who === 'tom' ? sl.tom.sit : 0, onionUp = who === 'onion' ? ss(lt, 29.05, 29.6) : 0, amt = Math.max(sit, onionUp);
     const pose = lt >= L.t1 ? (who === 'mango' ? 2 : who === 'lemon' ? 0 : who === 'tom' ? 2 : 1) : sl[who].pose;
     if (o.noCots) continue;
     if (amt > .02) G.cots[who] = cotSitter(lt, env, who, amt, who === 'onion' ? { pose, cry: .62, sob: Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .12) / .5), expr: 'onion_cry', lid: .3, who: o.onionWho } : { pose, expr: 'shock', lid: .1 });
@@ -507,29 +525,29 @@ function drawRoom(lt, env, o = {}) {
 }
 
 // ------------------------------------------------------------------ the twin: ONE Strawberry drawn twice, facing each other across the med cart
-const TW = { out: [-65, 1185], on: [305, 1185] };
+const TW = { out: [-85, 1185], on: [285, 1185] };
 function twinSpeaker(lt) { return lt < 7.89 ? 'out' : lt < 8.917 ? 'on' : lt < 9.795 ? 'out' : 'on'; }
 function twinOut(lt, sh) {
   const sp = twinSpeaker(lt) === 'out' && lt < 10.5;
-  const yaw = K([[6.1, .55], [6.5, .75], [8.9, .72], [9.3, .62]], lt), hy = K([[6.1, .55], [6.6, .8], [8.0, .5], [8.9, .75]], lt);
+  const yaw = 0, hy = K([[6.1, .4], [6.6, .55], [8.0, .4], [8.9, .55]], lt);
   return strawAt(lt, TW.out[0], TW.out[1], { id: 'strawout', seed: 3, yaw, headYaw: hy, look: [.55, .2 + .3 * Math.sin(lt * .8)], expr: 'dead', lid: sp ? .5 : .62, squash: .06, rot: -.025, who: sp ? 'straw' : null, stk: '3-11',
-    arms: { l: 'rest', r: 'hold' }, grip: { r: [88, 6 + 5 * Math.sin(lt * 1.6)] }, hold: { r: 'fp20n_sheet' }, sheetRot: .05, browUp: -3 });
+    arms: { l: 'rest', r: 'hold' }, grip: { r: [78, 72 + 4 * Math.sin(lt * 1.6)] }, hold: { r: 'fp20n_sheet' }, sheetRot: .06, browUp: -3 });
 }
 function twinOn(lt, sh) {
   const sp = twinSpeaker(lt) === 'on', t0 = CUE.badgepeel;
-  const yaw = K([[6.1, -.5], [6.6, -.72], [9.6, -.7]], lt), hy = K([[6.1, -.5], [6.6, -.75], [7.9, -.7]], lt);
+  const yaw = 0, hy = K([[6.1, -.35], [6.6, -.55], [9.6, -.5]], lt);
   /* the badge: peel (6.77), lift and turn over (7.05 .. 7.45), press back (7.45 .. 7.72), then it reads 11-7 */
   const peel = ss(lt, t0, t0 + .28), held = lt >= t0 && lt < t0 + .98, flip = ss(lt, t0 + .36, t0 + .68), press = lt >= t0 + .98 ? 1 : 0;
   const stk = lt < t0 ? '3-11' : press ? '11-7' : null;
-  const o = strawAt(lt, TW.on[0], TW.on[1], { id: 'strawon', seed: 11, yaw, headYaw: hy, look: [-.5, .1], expr: 'neutral', lid: .18, who: sp ? 'straw' : null, stk, stkPop: press ? c01((lt - t0 - .98) / .22) : 1, plant: true, acc: ['steth', 'bandage7', 'fp20n_idc'] });
-  const writing = lt >= 9.845 && lt < 10.6;
+  const o = strawAt(lt, TW.on[0], TW.on[1], { id: 'strawon', seed: 11, yaw, headYaw: hy, look: [-.5, .1], expr: 'neutral', lid: .18, who: sp ? 'straw' : null, stk, stkHeld: held, stkPop: press ? c01((lt - t0 - .98) / .22) : 1, plant: true, acc: ['steth', 'bandage7', 'fp20n_idc'] });
+  const writing = lt >= 9.7;
   if (held) {
     const up = easeIO(sg(lt, t0 + .1, t0 + .4)), back = easeIO(sg(lt, t0 + .72, t0 + .98));
-    Object.assign(o, { arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp20n_tablet', r: 'fp20n_sticker' }, grip: { l: [-70, 14], r: [lerp(-24, -84, up) * (1 - back) + 26 * back, lerp(40, -26, up) * (1 - back) + 44 * back] },
-      stkFlip: flip, stkCurl: 1 - ss(lt, t0 + .5, t0 + .7), stkRot: -.1, stkScale: 1.0, tabRot: .1, tabScale: .92 });
+    const gx = lerp(lerp(66, 112, up), 66, back), gy = lerp(lerp(98, 92, up), 98, back);
+    Object.assign(o, { arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp20n_tablet', r: 'fp20n_sticker' }, grip: { l: [-62, 76], r: [gx, gy] }, stkFlip: flip, stkCurl: 1 - ss(lt, t0 + .5, t0 + .7), stkRot: -.1, stkScale: .9, tabRot: .08, tabScale: .9 });
   } else {
-    Object.assign(o, { arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp20n_tablet', r: writing ? 'fp20n_pen' : null }, grip: { l: [-76, 12], r: writing ? [-34, 30 + 5 * Math.sin(lt * 14)] : [60, 40] }, tabRot: .1, tabScale: .92, penRot: .7, tabChecks: writing ? 1.5 : 0 });
-    if (!writing) o.hold = { l: 'fp20n_tablet' };
+    Object.assign(o, writing ? { arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp20n_tablet', r: 'fp20n_pen' }, grip: { l: [-62, 78], r: [40 + 5 * Math.sin(lt * 13), 88 + 3 * Math.sin(lt * 17)] }, tabRot: .08, tabScale: .9, penRot: .9, tabChecks: 1.5 }
+      : { arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp20n_tablet' }, grip: { l: [-78, 70] }, tabRot: .08, tabScale: .9, tabChecks: 0 });
   }
   return o;
 }
@@ -542,7 +560,7 @@ function strawPost(lt) {
   const blink = ss(lt, 25.0, 25.22) * (1 - ss(lt, 25.3, 25.55)), blink2 = ss(lt, 31.7, 31.85) * (1 - ss(lt, 31.95, 32.15));
   const happy = ss(lt, 25.4, 25.8) * (1 - ss(lt, 26.8, 27.4));
   return strawAt(lt, x, HOME.Z + 10, { yaw, headYaw: hyaw, look, lid: Math.max(lerp(.5, .4, ss(lt, 20.8, 21.2)), blink * .95, blink2 * .95), expr: happy > .05 ? 'chill' : 'dead', browUp: (lt >= 22.9 && lt < 23.7) ? 9 * ss(lt, 22.9, 23.1) : 0,
-    arms: { l: 'rest', r: 'rest' }, squash: .02 * Math.sin(lt * 1.3) });
+    arms: { l: lt >= 32.75 ? 'hold' : 'rest', r: 'rest' }, hold: lt >= 32.75 ? { l: 'fp18_medcup' } : {}, cupScale: 1.4, cupTip: .08 * Math.sin(lt * 2.1), grip: { l: [-98, 64 + 5 * ss(lt, 32.75, 33.4)] }, squash: .02 * Math.sin(lt * 1.3) });
 }
 // ------------------------------------------------------------------ the lapse: Strawberry's rounds with a ghost trail (earlier positions at fading alpha: motion trails instead of blur), drawn before her
 function roundsOpts(tt, o = {}) {
@@ -555,7 +573,7 @@ function roundsOpts(tt, o = {}) {
 // ------------------------------------------------------------------ who is in the picture at lt: [{ name, o, z }] (the focus of a close-up is looked up by name)
 function castFor(lt, sh) {
   const C = [];
-  if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'clock' || sh.k === 'plow') return C;
+  if (EMPTY(sh)) return C;
   const add = (name, o, z) => C.push({ name, o, z });
   if (lt < 6.249) add('straw', strawIdle(lt), HOME.Z);
   else if (lt < L.t0) { add('out', twinOut(lt, sh), TW.out[1]); add('on', twinOn(lt, sh), TW.on[1]); }
@@ -563,7 +581,7 @@ function castFor(lt, sh) {
   else add('straw', strawPost(lt), HOME.Z + 10);
   return C;
 }
-const nameOf = foc => foc;
+const EMPTY = sh => sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'clock' || sh.k === 'plow' || sh.k === 'doors';     /* shots with no one in them */
 /* is this character entirely inside the frame? (one cut by the frame edge is left out of the shot instead: no half faces, no slivers) */
 function boxOf(o, pad = 0) {
   const k = KINDS[o.kind], s = o.s || 1, legLen = o.noLegs ? 0 : (k.leg || 90), top = o.y - (o.lift || 0) - (legLen + k.ry * .9 + (TOPS[o.kind] ?? k.ry * 1.05)) * s, half = (k.rx * 1.12 + pad) * s;
@@ -584,29 +602,31 @@ function camFor(lt, sh, C, env) {
   const u = sg(lt, sh.s, Math.min(sh.e, sh.s + 3)), e = easeIO(sg(lt, sh.s, Math.min(sh.e, sh.s + 4)));
   const zz = sh.z0 !== undefined ? lerp(sh.z0, sh.z1, easeIO(sg(lt, sh.s, Math.min(sh.e, sh.s + 3.5)))) : (sh.z || 1) + (sh.dz || 0) * u;
   switch (sh.k) {
-    case 'wide': zoomTo(WIDE.x + (sh.id === 'dawn' ? lerp(0, 40, e) : 0), WIDE.y + (sh.id === 'end' ? 20 : 0), zz); break;
-    case 'lapse': zoomTo(WIDE.x, WIDE.y, zz); break;
+    case 'wide': zoomTo(sh.cx + (sh.dx || 0) * e, sh.cy, zz); break;
+    case 'lapse': zoomTo(sh.cx, sh.cy, zz); break;
     case 'cu': {
       const f = sh.foc === 'onion' ? onionFace() : (C.find(c => c.name === sh.foc) || C[0]).o;
       if (sh.foc === 'onion') zoomTo(f[0], f[1] + sh.up / zz, zz);
       else { const [fx, fy] = faceC(f); zoomTo(fx, fy + sh.up / zz, zz); }
       break;
     }
-    case 'two': {
-      const a = faceC(C.find(c => c.name === 'out').o), b = faceC(C.find(c => c.name === 'on').o);
-      zoomTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 150 / zz, zz); break;
+    case 'two': {                                                           /* both Strawberries whole in the frame: the zoom is capped so that the pair fits with a margin */
+      const A = C.find(c => c.name === 'out').o, B = C.find(c => c.name === 'on').o, a = faceC(A), b = faceC(B), ba = boxOf(A, 22), bb = boxOf(B, 22);
+      const x0 = Math.min(ba[0], bb[0]), x1 = Math.max(ba[2], bb[2]), zf = Math.min(zz, (W - 110) / (x1 - x0));
+      zoomTo((x0 + x1) / 2, (a[1] + b[1]) / 2 + 150 / zf, zf); break;
     }
+    case 'doors': { const d = wbox(LAY.doors.x0, 0, LAY.doors.x1, LAY.doors.y1); zoomTo(d[0] + d[2] / 2 - 20, d[1] + d[3] * .42, zz); break; }
     case 'clock': { const g = wallClockPos(), w = winRect(); zoomTo(g.cx + 8, lerp(g.cy, w.y + w.h * .4, .62), zz); break; }
     case 'moon': { const w = winRect(), mo = env.mo; zoomTo(w.x + w.w * lerp(.5, mo.u, .55), w.y + w.h * lerp(.5, 1 - mo.v, .55) + 20, zz); break; }
     case 'moon2': { const g = wallClockPos(), w = winRect(); zoomTo(w.x + w.w * .55, lerp(g.cy, w.y + w.h * .55, .5) + 10, zz); break; }
-    case 'plow': { const p = plowAt(lt); zoomTo(p.cabX + 70, p.gy - 254 * p.s + 140 / zz, zz); break; }
+    case 'plow': { const p = plowAt(lt); zoomTo(p.cabX + 70, p.gy - 254 * p.s + 40 / zz, zz); break; }
   }
 }
 const winRect = () => { const [x, y, w, h] = wbox(LAY.win.x0, LAY.win.y0, LAY.win.x1, LAY.win.y1); return { x, y, w, h }; };
 const wallClockPos = () => { const [cx, cy] = wpt(LAY.clock.X, LAY.clock.Y); return { cx, cy, R: LAY.clock.r * kzP(ZB) }; };
 /* Onion's face when she sits up on her cot (the cot is placed in the room, so this reads the same numbers as cotSitter) */
 function onionFace() {
-  const C = LAY.cots.onion, [cx, cy, k] = V2.proj(C.X, 0, C.Z), s = k * COTK, u = easeIO(c01(ss(FR ? FR.lt : 30, 28.9, 29.55)));
+  const C = LAY.cots.onion, [cx, cy, k] = V2.proj(C.X, 0, C.Z), s = k * COTK, u = easeIO(c01(ss(FR ? FR.lt : 30, 29.05, 29.6)));
   return [cx + s * lerp(-112, -96, u), cy - s * lerp(138, 196, u) + 10 * s];
 }
 
@@ -620,7 +640,7 @@ function lightsFor(lt, env, G, sh, C) {
   if (G.clock) L_.push({ kind: 'point', x: G.clock.cx, y: G.clock.cy + G.clock.R * .6, r: G.clock.R * 2.6, soft: .9, color: '#dbe8ff', power: .4 });
   if (G.lamp) L_.push({ kind: 'point', x: G.lamp.x, y: G.lamp.y, r: 430 * G.lamp.k, soft: .75, color: '#ffbc66', power: 1.0 * G.lamp.on, flicker: { seed: 5, amt: .05, rate: .8 } });
   if (G.exit) L_.push({ kind: 'point', x: G.exit.x, y: G.exit.y + 30, r: 190, soft: .8, color: '#46ff90', power: .55 });
-  for (const k of ['em1', 'em2']) if (G[k]) L_.push({ kind: 'point', x: G[k].x, y: G[k].y + 40, r: 300, soft: .8, color: '#ff9a50', power: .8 });
+  for (const k of ['em1', 'em2']) if (G[k]) L_.push({ kind: 'point', x: G[k].x, y: G[k].y + 40, r: 260, soft: .85, color: '#ff9a50', power: .5 });
   if (G.board) { L_.push({ kind: 'point', x: G.board.d1[0], y: G.board.d1[1], r: 70, soft: .6, color: '#ff5a64', power: .5 + .5 * SIM.calls(lt, 0) }); L_.push({ kind: 'point', x: G.board.d2[0], y: G.board.d2[1], r: 70, soft: .6, color: '#ff5a64', power: .5 + .5 * SIM.calls(lt, 1) }); }
   for (const p of G.ceil || []) L_.push({ kind: 'point', x: p[0], y: p[1] + 80, r: 280, soft: .8, color: '#cfe0ff', power: .6 });
   const cp = wpt(LAY.cart.X, 330, LAY.cart.Z), ck = kzP(LAY.cart.Z);
@@ -630,7 +650,7 @@ function lightsFor(lt, env, G, sh, C) {
   for (const c of C) {
     if (!(sh.k === 'cu' || sh.k === 'two' || sh.k === 'lapse' || sh.k === 'wide')) continue;
     const f = faceC(c.o), s = c.o.s || 1, own = sh.k === 'cu' ? (sh.foc === c.name ? 1 : .3) : sh.k === 'two' ? .75 : .4;
-    L_.push({ kind: 'point', x: f[0], y: f[1] - 20 * s, r: 330 * s * (sh.k === 'cu' ? 1.25 : 1), soft: .85, color: hex(mixa([196, 214, 255], [255, 206, 150], .5 + .4 * sun)), power: own * .62 });
+    L_.push({ kind: 'rect', x: f[0], y: f[1] + 30 * s, w: 250 * s * (sh.k === 'cu' ? 1.1 : 1), h: 330 * s, soft: 1, color: hex(mixa([196, 214, 255], [255, 206, 150], .5 + .4 * sun)), power: own * .7 });
   }
   return L_;
 }
@@ -651,13 +671,12 @@ function drawScene(lt) {
   let G = {};
   const ro = { winKids: () => drawPlow(lt, env, 'win', sh.k === 'plow'), doorKids: () => drawPlow(lt, env, 'doors', false), sharp: sharpClock, suppressMoon: !talkMoon, moonChar: talkMoon ? { expr: 'chill', lid: .22 } : {}, onionWho: sh.id === 'o5' ? 'onion' : undefined, noCots: false };
   const furn = lt2 => [
-    { z: 1450, fn: () => { if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow') plainCounter(); else { S13.counter({ t: lt, phoneRing: 0, plaque: false }); deskLamp(lt, env, G); coffeeMaker(lt, env, G); } } },
-  ].concat(sh.id === 'o5' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' ? [] : [{ z: LAY.cart.Z, fn: () => medCart(lt, env, G) }]);
+    { z: 1450, fn: () => { if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' || sh.k === 'doors') plainCounter(); else { counterShifted(() => S13.counter({ t: lt, phoneRing: 0, plaque: false })); deskLamp(lt, env, G); coffeeMaker(lt, env, G); } } },
+  ].concat(sh.id === 'o5' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' || sh.k === 'doors' ? [] : [{ z: LAY.cart.Z, fn: () => medCart(lt, env, G) }]);
   const room = () => { G = Object.assign(G, drawRoom(lt, env, ro)); };
   const chars = C.map(c => ({ z: c.z, fn: () => {
     const f = inFrame(c.o), foc = sh.foc === c.name || sh.k === 'lapse' || sh.k === 'wide';
     if (!foc && sh.k !== 'two' && (!f.inter || !f.whole)) return;
-    if (sh.k === 'two' && (!f.inter || !f.whole)) return;
     drawChar(c.o);
   } }));
   if (sh.k === 'lapse') ghosts(lt);
@@ -672,7 +691,7 @@ function drawScene(lt) {
   for (const c of C) if (c.name !== 'on' || lt < 10) {
     if (sh.k === 'wide') continue;
     const o = c.o, dir = (o.headYaw ?? o.yaw ?? 0) >= 0 ? 1 : -1;
-    if (lt < 18 && sh.k !== 'lapse') { const m = mouthOf(o); breathN(ctx, { x: m[0] + dir * 46 * (o.s || 1), y: m[1] - 4 * (o.s || 1), t: lt, seed: c.name === 'on' ? 9 : 4, period: 1.9, dir, size: (o.s || 1) * .9, alpha: .6, phase: c.name === 'on' ? .7 : 0 }); }
+    if (lt < 18 && sh.k !== 'lapse') { const m = mouthOf(o); breathN(ctx, { x: m[0] + dir * 78 * (o.s || 1), y: m[1] - 12 * (o.s || 1), t: lt, seed: c.name === 'on' ? 9 : 4, period: 1.9, dir, size: (o.s || 1) * .85, alpha: .55, phase: c.name === 'on' ? .7 : 0 }); }
   }
   lightPass(lt, env, G, sh, C);
   FR.G = G;
@@ -691,6 +710,17 @@ function ghosts(lt) {
 }
 
 
+/* light events in the pane: the amber of the plow's beacon sweeping the snow from the left before the truck is in view (plowdist 25.989), a sparkle of the sun on the drifts at the sting (32.512) */
+function paneGlints(lt, x, y, w, h) {
+  const a0 = ss(lt, CUE.plowdist, CUE.plowdist + .9) * (1 - ss(lt, 27.2, 27.8)), ph = .5 + .5 * Math.sin((lt - CUE.plowdist) * PI * 2 / 2.2 - 1.4);
+  if (a0 > .02) { ctx.save(); ctx.globalCompositeOperation = 'screen'; V2.glow(x + w * .04, y + h * .62, w * .5, '255,170,60', .55 * a0 * (.35 + .65 * ph), 'screen', .2); ctx.restore(); }
+  const st = lt - CUE.sting, g = st > 0 && st < .9 ? Math.sin(PI * st / .9) : 0;
+  if (g > .02) {
+    ctx.save(); ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < 9; i++) { const sx = x + (.1 + .8 * sr(i, 71)) * w, sy = y + h * (.62 + .24 * sr(i, 73)), r = (7 + 10 * sr(i, 75)) * g, a = g * (.5 + .5 * sr(i, 77)); ctx.fillStyle = 'rgba(255,244,214,' + a * .8 + ')'; ctx.fillRect(sx - r, sy - 1, r * 2, 2); ctx.fillRect(sx - 1, sy - r, 2, r * 2); ell(sx, sy, 2.4, 2.4); ctx.fill(); }
+    ctx.restore();
+  }
+}
 // ------------------------------------------------------------------ the plow outside (A20.plowTruck + Turnip in the cab): enters from the left at the end of the dawn, passes the window while he speaks (tu3), the wave buries the doors
 const PLOW = { s: 1.35, v: 192, cab0: 400, t0: 27.739 };
 function plowAt(lt) {
@@ -704,7 +734,7 @@ function drawPlow(lt, env, where, reg) {
     const [x0, y0, x1, y1] = T.cab, cx = (x0 + x1) / 2, up = ss(lt, 27.93, 28.25) * (1 - ss(lt, 29.05, 29.4));
     if (!reg) REG.suppress++;
     ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
-    const o = A20.turnip({ x: cx, y: y1 + 70 * p.s, s: .41 * p.s * 1.0, noLegs: false, t: lt, mugUp: up, who: 'turnip', yaw: 0, look: [.3, 0] });
+    const o = A20.turnip({ x: cx + 4 * p.s, y: y1 - 4 * p.s, s: .5 * p.s, noLegs: true, t: lt, mugUp: up, who: 'turnip', yaw: 0, look: [.3, 0] });
     drawChar(o);
     ctx.restore();
     if (!reg) REG.suppress--;
@@ -721,6 +751,7 @@ const NSC = {
     const sh = shotAt(lt), env = envAt(lt), C = castFor(lt, sh);
     FR = { sh, env, C, lt, G: {} };
     camFor(lt, sh, C, env);
+    if (window.__NTDBG) console.error('NTDBG', lt.toFixed(3), sh.id, sh.k, C.map(c => c.name).join(','), JSON.stringify({ x: CAM.x | 0, y: CAM.y | 0, z: +CAM.z.toFixed(2) }));
     CAM.x += 1.8 * hnoise(lt, 1.1, 1); CAM.y += 1.3 * hnoise(lt, .9, 2); CAM.r += .0012 * hnoise(lt, .7, 3);
   },
   draw(lt) { drawScene(lt); },

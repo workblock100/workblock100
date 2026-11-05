@@ -114,18 +114,22 @@ EXT.prop.fp20_flashlight = (side, o, t) => {
     ctx.fillStyle = 'rgba(215,205,185,.34)'; for (let i = 0; i < 22; i++) { ell(-62 + hsh(i + 3) * 120, -16 + hsh(i + 9) * 32, 1.8 + hsh(i) * 2.4, 1.4); ctx.fill(); }
     ctx.restore();
   }
-  if (o.flTag) {
+  if (o.flTag) {   /* a strip of masking tape with the year scrawled in marker (strokes, not text: a turned prop must not carry lettering) */
     ctx.save(); ctx.translate(-16, 1); ctx.rotate(-.1);
     ctx.fillStyle = '#e8dcb4'; rr(-17, -9.5, 34, 19, 2); ctx.fill(); ctx.strokeStyle = 'rgba(80,60,20,.5)'; ctx.lineWidth = 1.4; ctx.stroke();
-    lab(o.flTag, 0, 0.5, { size: 13, weight: 900, fill: '#5a3a1a', maxW: 30 });
-    ctx.restore();
+    ctx.strokeStyle = '#4a2c14'; ctx.lineWidth = 1.9; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(-13, -4); ctx.quadraticCurveTo(-9, -8, -6, -4); ctx.lineTo(-13, 5); ctx.lineTo(-5, 5);                                   /* 2 */
+    ctx.moveTo(-1, -4); ctx.quadraticCurveTo(-4, 0, -1, 5); ctx.quadraticCurveTo(2, 0, -1, -4);                                                        /* 0 */
+    ctx.moveTo(5, -3); ctx.lineTo(7, -5); ctx.lineTo(7, 5);                                                                                           /* 1 */
+    ctx.moveTo(14, -1); ctx.quadraticCurveTo(14, -5, 11, -4); ctx.quadraticCurveTo(9, -1, 12, 0); ctx.lineTo(14, -1); ctx.lineTo(13, 5);              /* 9 */
+    ctx.stroke(); ctx.restore();
   }
   if (on > .02) { ctx.globalCompositeOperation = 'lighter'; glow(ctx, 70, 0, 64, '#fff2c0', .85 * on, .8); }
   ctx.restore();
 };
 
 // ------------------------------------------------------------------ fp20_phonelight: a phone held up like a torch
-PROP_BOX.fp20_phonelight = o => { const a = o.plAng ?? -.7, ca = Math.cos(a), sa = Math.sin(a), xs = [], ys = []; for (const [x, y] of [[-48, -30], [64, -30], [64, 30], [-48, 30]]) { xs.push(x * ca - y * sa); ys.push(x * sa + y * ca); } return Object.assign([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], { nearFace: true }); };
+PROP_BOX.fp20_phonelight = o => { const a = o.plAng ?? -.7, ca = Math.cos(a), sa = Math.sin(a), xs = [], ys = []; for (const [x, y] of [[-48, -28], [38, -28], [38, 28], [-48, 28]]) { xs.push(x * ca - y * sa); ys.push(x * sa + y * ca); } return Object.assign([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], { nearFace: true }); };
 EXT.prop.fp20_phonelight = (side, o, t) => {
   const on = c01(o.plOn ?? 0), ang = o.plAng ?? (side > 0 ? -.7 : PI + .7);
   ctx.save(); ctx.rotate(ang); if (Math.cos(ang) < 0) ctx.scale(1, -1); ctx.lineJoin = 'round';
@@ -169,7 +173,7 @@ P20.ledCandle = (c, o = {}) => {
     out.fx = x + sway * s; out.fy = y + (fyb - fh * .45) * s; out.r = 120 * s;
     if (o.sticker > 0 && kind !== 'tea') {   /* an APPROVED label pressed onto the body */
       const k = c01(o.sticker), sc = .6 + .4 * Math.min(1, k * 1.4);
-      g.save(); g.globalAlpha *= c01(k * 4); g.translate(0, -h * .42); g.rotate(-.05); g.scale(sc, sc);
+      g.save(); g.globalAlpha *= c01(k * 4); g.translate(0, -h * .68); g.rotate(-.05); g.scale(sc, sc);
       g.fillStyle = '#f4f7ee'; rr(-52, -18, 104, 36, 5); g.fill(); g.strokeStyle = '#2f8f4a'; g.lineWidth = 3; g.stroke();
       lab('APPROVED', 0, 0.5, { size: 17, weight: 900, fill: '#1f7a3a', maxW: 94, spacing: .5 });
       g.restore();
@@ -190,10 +194,10 @@ const P20 = window.P20, { PI, TAU, OUT, c01, sg, ss, hsh, rgbOf, mixc, lgr, scrO
 // ------------------------------------------------------------------ fp20_stopwatch: a chunky round sports stopwatch with a seven-segment LCD (shapes, not text)
 const SW = { R: 58, cy: -50, lcdW: 96, lcdH: 44 };
 const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
-function segPoly(g, name, x, y, w, h, th) {   /* one segment of a digit whose top-left is (x, y): a flat hexagon bar */
-  const hw = th / 2, m = h / 2, p = [];
-  const hor = yy => [[x + hw + 1, yy], [x + hw + 2 + hw, yy - hw], [x + w - hw - 2 - hw, yy - hw], [x + w - hw - 1, yy], [x + w - hw - 2 - hw, yy + hw], [x + hw + 2 + hw, yy + hw]];
-  const ver = (xx, y0, y1) => [[xx, y0 + hw + 1], [xx + hw, y0 + hw + 2 + hw], [xx + hw, y1 - hw - 2 - hw], [xx, y1 - hw - 1], [xx - hw, y1 - hw - 2 - hw], [xx - hw, y0 + hw + 2 + hw]];
+function segPoly(g, name, x, y, w, h, th) {   /* one segment of a digit whose top-left is (x, y), w x h: a bar with 45-degree tips (a real seven-segment shape) */
+  const t = th / 2, gp = .9, m = h / 2, p = [];
+  const hor = yy => [[x + gp, yy], [x + gp + t, yy - t], [x + w - gp - t, yy - t], [x + w - gp, yy], [x + w - gp - t, yy + t], [x + gp + t, yy + t]];
+  const ver = (xx, y0, y1) => [[xx, y0 + gp], [xx + t, y0 + gp + t], [xx + t, y1 - gp - t], [xx, y1 - gp], [xx - t, y1 - gp - t], [xx - t, y0 + gp + t]];
   switch (name) {
     case 'a': p.push(...hor(y)); break; case 'g': p.push(...hor(y + m)); break; case 'd': p.push(...hor(y + h)); break;
     case 'f': p.push(...ver(x, y, y + m)); break; case 'e': p.push(...ver(x, y + m, y + h)); break;
@@ -205,7 +209,7 @@ function segPoly(g, name, x, y, w, h, th) {   /* one segment of a digit whose to
 const swString = sec => { const v = Math.min(599.9, Math.max(0, sec || 0)), tt = Math.floor(v * 10 + 1e-6), m = Math.floor(tt / 600), s = Math.floor((tt % 600) / 10), d = tt % 10; return m + ':' + (s < 10 ? '0' : '') + s + '.' + d; };
 P20.swString = swString;
 function lcd(g, str, cx, cy, dw, dh, th, lit, ghost, on) {
-  const gap = 4.4, parts = [...str].map(ch => ch === ':' ? 6 : ch === '.' ? 5 : dw);
+  const gap = 4.6, parts = [...str].map(ch => ch === ':' ? 6 : ch === '.' ? 5 : dw);
   const total = parts.reduce((a, b) => a + b, 0) + gap * (parts.length - 1);
   let x = cx - total / 2; const y = cy - dh / 2;
   [...str].forEach((ch, i) => {
@@ -244,12 +248,12 @@ EXT.prop.fp20_stopwatch = (side, o, t) => {
   const lw = SW.lcdW, lh = SW.lcdH, lc = cy - 4;
   ctx.fillStyle = lgr(0, lc - lh / 2, 0, lc + lh / 2, [[0, mixc('#0b1c20', '#0f4a50', on)], [1, mixc('#08161a', '#0a3a3e', on)]]); rr(-lw / 2, lc - lh / 2, lw, lh, 7); ctx.fill(); outline(2.8, 'rgba(8,12,16,.9)');
   ctx.save(); rr(-lw / 2, lc - lh / 2, lw, lh, 7); ctx.clip();
-  lcd(ctx, str, 0, lc, 13, 26, 3.5, '#9dfff0', 'rgba(120,255,235,' + (.07 + .05 * on) + ')', on);
+  lcd(ctx, str, 0, lc, 13, 28, 4.2, '#a8fff2', 'rgba(120,255,235,' + (.07 + .05 * on) + ')', on);
   ctx.fillStyle = 'rgba(255,255,255,' + (.07 * (0.4 + on)) + ')'; ctx.fillRect(-lw / 2, lc - lh / 2, lw, lh * .38);                         /* glass sheen */
   ctx.restore();
   /* two little buttons' legends (dots) under the window */
   ctx.fillStyle = 'rgba(210,220,235,.45)'; ell(-18, cy + 31, 3, 3); ctx.fill(); ell(0, cy + 31, 3, 3); ctx.fill(); ell(18, cy + 31, 3, 3); ctx.fill();
-  if (on > .02) { ctx.globalCompositeOperation = 'lighter'; glow(ctx, 0, lc, 150, '#4ff5d6', .5 * on, .6); glow(ctx, 0, lc, 64, '#b8fff4', .35 * on, .5); }
+  if (on > .02) { ctx.globalCompositeOperation = 'lighter'; glow(ctx, 0, lc, 130, '#4ff5d6', .2 * on, .1); glow(ctx, 0, lc, 56, '#b8fff4', .07 * on, 0); }
   ctx.restore();
 };
 

@@ -120,8 +120,8 @@ const LAY = {
   doors: { x0: 380, x1: 610, y1: 560 },                                    /* the glass doors of the entrance, to the right of the window */
   clock: { X: 0, Y: 940, r: 100 },                                         /* the wall clock above the window */
   counter: { x0: -120, x1: 720, z0: 1380, z1: 1520, top: 190 },            /* S13's counter */
-  cart: { X: 120, Z: 1235 },                                               /* the med cart */
-  home: { X: 300, Z: 1210 },                                               /* where Strawberry stands beside the cart */
+  cart: { X: 95, Z: 1235 },                                               /* the med cart */
+  home: { X: 185, Z: 1210 },                                               /* where Strawberry stands beside the cart */
   cots: { mango: { X: -505, Z: 1850 }, lemon: { X: -365, Z: 1850 }, tom: { X: -225, Z: 1850 }, onion: { X: -85, Z: 1850 } },   /* four cots in an overlapping row along the back wall, heads to the left */
 };
 
@@ -134,7 +134,7 @@ const STOPS = [   /* the walk to the stop (s), the dwell there (s), the yaw she 
   { X: -10, Z: 1760, face: PI_, walk: .24, dwell: .16 },                   /* the window: her back to us, looking at the snow */
   { X: -300, Z: 1640, face: -1.9, walk: .26, dwell: .14 },                 /* the cots: a profile looking left, at the sleepers */
   { X: -250, Z: 1200, face: .25, walk: .26, dwell: 0 },                    /* the floor in front of the cart */
-  { X: 360, Z: 1150, face: 2.45, walk: .3, dwell: .14 },                   /* the doors: a three-quarter back view toward the glass doors */
+  { X: 135, Z: 1150, face: 2.45, walk: .3, dwell: .14 },                   /* the doors: a three-quarter back view toward the glass doors */
   { X: LAY.home.X, Z: LAY.home.Z, face: .4, walk: .2, dwell: 0 },          /* home */
 ];
 { const sum = STOPS.reduce((a, s) => a + s.walk + s.dwell, 0), f = R.loop / sum; for (const s of STOPS) { s.walk *= f; s.dwell *= f; } }   /* the loop fits its period exactly */

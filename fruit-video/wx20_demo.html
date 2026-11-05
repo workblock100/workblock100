@@ -165,6 +165,19 @@ CASES.settle = { view: [1000, 560], draw(c, t) {
   label(c, 'settle t=' + t.toFixed(2) + ' pts ' + TITLE_PTS.length, 14, 28);
 } };
 
+/* ---- the pass under a camera: zoom, pan and roll must carry the lights with the picture (a marker sits exactly where each light is) */
+CASES.passCam = { view: [900, 520], draw(c, t) {
+  BG.room(c, 900, 520);
+  [[0, 1, 0], [300, 1.6, 0], [600, 1, .25]].forEach(([ox, z, roll], i) => {
+    c.save(); c.beginPath(); c.rect(ox, 0, 300, 520); c.clip(); c.translate(ox + 150, 260); c.rotate(roll); c.scale(z, z); c.translate(-150, -260);
+    c.fillStyle = 'rgba(255,255,255,.12)'; for (let k = 0; k < 6; k++) c.fillRect(30 + k * 40, 60, 20, 400);
+    dummy(c, 150, 480, .8); const lx = 150, ly = 300;
+    c.fillStyle = '#ff2'; c.beginPath(); c.arc(lx, ly, 4, 0, TAU); c.fill();
+    L.pass(c, { ambient: .1, vignette: 0, bloom: 0, t, lights: [{ kind: 'point', x: lx, y: ly, r: 90, color: '#ffc070' }, { kind: 'cone', x: 40, y: 120, ang: .7, spread: .5, len: 300, color: '#e6f0ff', power: .8 }] });
+    c.restore(); label(c, 'zoom ' + z + ' roll ' + roll, ox + 8, 24);
+  });
+} };
+
 /* @@CASES@@ */
 
 /* ---- rendering */

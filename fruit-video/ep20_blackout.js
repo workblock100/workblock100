@@ -244,6 +244,11 @@ function drawCut(lt) {
   ctx.fillStyle = 'rgba(80,100,160,.28)'; ctx.beginPath(); ctx.ellipse(540, 1300, 560, 22, 0, 0, TAU); ctx.fill();
   ctx.restore();
   V2.glow(540, 1330, 560, '255,206,140', .22 * sum / 6, 'screen', .2);
+  /* two cars the plow has buried (the lot of the last scene), side view, nothing but a mirror and an antenna */
+  if (window.A20 && A20.car) {
+    A20.car(ctx, { x: 160, y: 1452, s: 1.05, color: '#c43a3a', snow: .95, facing: 1, lights: false, seed: 3, t: lt });
+    A20.car(ctx, { x: 930, y: 1440, s: .85, color: '#3a74c0', snow: .7, facing: -1, lights: false, seed: 5, t: lt });
+  }
   if (window.SN20 && SN20.snow) SN20.snow(ctx, { x0: -60, y0: 0, x1: W + 60, y1: H, t: lt, seed: 9, layers: 3, density: .8, tone: 'dark', slice: 'front', wind: -34 });
 }
 /* the camera of the cutaway: a slow settle, then a push into the STATION (the middle room of the top row) from 0.9 s; the cut to the interior is at 2.30 */
@@ -272,16 +277,16 @@ const COUNTER = { x0: -120, x1: 720, z0: 1380, z1: 1520, top: 190 };
 /* k: 'cut' the cutaway | 'w' a wide (z, y = the frame centre) | 'cu' a face (foc, z, z2 = the push, up = px the face sits above the centre, dx = px shift) | 'two' two faces (foc = [a, b]) | 'wall' the outlets insert */
 const SH = [
   { id: 'cut', s: 0, e: 2.30, k: 'cut' },
-  { id: 'w1', s: 2.30, e: 2.70, k: 'w', z: 1.08, y: 940, cx: 85 },
+  { id: 'w1', s: 2.30, e: 2.70, k: 'w', z: 1.0, y: 930, cx: -40 },
   { id: 'o1', s: 2.70, e: 4.35, k: 'cu', foc: 'onion', z: 2.55, z2: 2.8, up: 70, dx: 70, dof: 10 },
   { id: 'r1', s: 4.35, e: 5.43, k: 'cu', foc: 'straw', z: 2.3, z2: 2.4, up: 80, dx: -30, dof: 10, bsmall: 1 },
-  { id: 'b1', s: 5.43, e: 7.49, k: 'cu', foc: 'straw', z: 2.0, z2: 2.08, up: -120, dx: 250, dof: 12, bub: 1 },
-  { id: 's1', s: 7.49, e: 8.20, k: 'cu', foc: 'straw', z: 2.15, z2: 2.2, up: -120, dx: 250, dof: 12, bub: 1 },
-  { id: 'b2', s: 8.20, e: 9.50, k: 'cu', foc: 'straw', z: 2.0, z2: 2.0, up: -120, dx: 250, dof: 12, bub: 2 },
-  { id: 'c1', s: 9.50, e: 10.65, k: 'sw', foc: 'onion', z: 2.9, z2: 3.7, fx: 60, fy: -40, dof: 10, sw: 1 },
-  { id: 'c2', s: 10.65, e: 11.67, k: 'w', z: 1.5, x: 700, y: 900, cx: 85, dof: 6, whole: 1 },
+  { id: 'b1', s: 5.43, e: 7.49, k: 'cu', foc: 'straw', z: 2.0, z2: 2.08, up: -120, dx: 205, dof: 12, bub: 1 },
+  { id: 's1', s: 7.49, e: 8.20, k: 'cu', foc: 'straw', z: 2.15, z2: 2.2, up: -120, dx: 205, dof: 12, bub: 1 },
+  { id: 'b2', s: 8.20, e: 9.50, k: 'cu', foc: 'straw', z: 2.0, z2: 2.0, up: -120, dx: 205, dof: 12, bub: 2 },
+  { id: 'c1', s: 9.50, e: 10.65, k: 'sw', foc: 'onion', z: 2.9, z2: 3.5, fx: 215, fy: -100, dof: 10, sw: 1 },
+  { id: 'c2', s: 10.65, e: 11.67, k: 'w', z: 1.45, x: 640, y: 900, cx: -40, dof: 6, whole: 1 },
   { id: 'l1', s: 11.67, e: 12.33, k: 'two', foc: ['lemon', 'onion'], z: 1.95, z2: 2.0, up: 70, dof: 8 },
-  { id: 'gen', s: 12.33, e: 13.98, k: 'w', z: 1.08, y: 940, cx: 85, gen: 1 },
+  { id: 'gen', s: 12.33, e: 13.98, k: 'w', z: 1.0, y: 930, cx: -40, gen: 1 },
   { id: 'o1b', s: 13.98, e: 15.33, k: 'cu', foc: 'onion', z: 2.55, z2: 2.7, up: 70, dx: 70, dof: 10 },
   { id: 't1', s: 15.33, e: 16.51, k: 'cu', foc: 'tom', z: 2.4, z2: 2.5, up: 70, dx: 0, dof: 10, candles: 1 },
   { id: 'o3', s: 16.51, e: 18.42, k: 'cu', foc: 'onion', z: 2.5, z2: 2.65, up: 70, dx: 100, dof: 10, candles: 1 },
@@ -292,14 +297,14 @@ const SH = [
   { id: 's2', s: 23.63, e: 24.26, k: 'cu', foc: 'straw', z: 2.5, z2: 2.55, up: 70, dx: 40, dof: 10, candles: 1 },
   { id: 'o2', s: 24.26, e: 26.25, k: 'cu', foc: 'onion', z: 2.45, z2: 2.6, up: 70, dx: 80, dof: 10, candles: 1 },
   { id: 's3', s: 26.25, e: 27.04, k: 'cu', foc: 'straw', z: 2.7, z2: 2.85, up: 70, dx: 20, dof: 10, candles: 1, coffee: 1 },
-  { id: 'sw', s: 27.04, e: 27.29, k: 'w', z: 1.2, y: 940, cx: 450, dof: 0, sweep: 1, whole: 1 },
-  { id: 'br1', s: 27.29, e: 29.59, k: 'cu', foc: 'brenda', z: 2.35, z2: 2.5, up: 20, dx: -20, dof: 10 },
-  { id: 'br2a', s: 29.59, e: 30.55, k: 'cu', foc: 'brenda', z: 2.6, z2: 2.7, up: 20, dx: -20, dof: 10 },
+  { id: 'sw', s: 27.04, e: 27.29, k: 'w', z: 1.15, y: 930, cx: 400, dof: 0, sweep: 1, whole: 1 },
+  { id: 'br1', s: 27.29, e: 29.59, k: 'cu', foc: 'brenda', z: 3.0, z2: 3.15, up: 20, dx: -20, dof: 10 },
+  { id: 'br2a', s: 29.59, e: 30.55, k: 'cu', foc: 'brenda', z: 3.15, z2: 3.25, up: 20, dx: -20, dof: 10 },
   { id: 'rg', s: 30.55, e: 31.15, k: 'two', foc: ['lemon', 'onion'], z: 1.9, up: 70, dof: 8, lookB: 1 },
-  { id: 'br2b', s: 31.15, e: 32.51, k: 'cu', foc: 'brenda', z: 3.05, z2: 3.15, up: -60, dx: -30, dof: 10, flash: 1 },
-  { id: 'br3', s: 32.51, e: 34.75, k: 'cu', foc: 'brenda', z: 2.5, z2: 2.75, up: 20, dx: -20, dof: 10 },
-  { id: 'rg2', s: 34.75, e: 35.28, k: 'two', foc: ['onion', 'mango'], z: 1.9, up: 70, dof: 8, lookB: 1 },
-  { id: 'end', s: 35.28, e: 99, k: 'w', z: 1.0, y: 920, cx: 190, dof: 0, fin: 1, lookB: 1, whole: 1 },
+  { id: 'br2b', s: 31.15, e: 32.51, k: 'cu', foc: 'brenda', z: 3.5, z2: 3.6, up: -60, dx: -30, dof: 10, flash: 1 },
+  { id: 'br3', s: 32.51, e: 34.75, k: 'cu', foc: 'brenda', z: 3.1, z2: 3.4, up: 20, dx: -20, dof: 10 },
+  { id: 'rg2', s: 34.75, e: 35.28, k: 'two', foc: ['onion', 'mango'], z: 1.5, up: 70, dx: 55, dof: 8, lookB: 1 },
+  { id: 'end', s: 35.28, e: 99, k: 'w', z: .92, y: 910, cx: 100, dof: 0, fin: 1, lookB: 1, whole: 1 },
 ];
 for (const sh of SH) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
 const shotAt = lt => { let r = SH[0]; for (const sh of SH) if (lt >= sh.s - 1e-6) r = sh; return r; };
@@ -348,7 +353,7 @@ const { person, zoomTo, faceC } = window.H6;
 const { c01, sg, ss, eo, eb, hnoise, pulse, key, lg, CUE, T_SW, T_SWSTOP, snapT, bS, bE, wS, wE, LN, START, POS, toScr, toScene } = B;
 const PI = Math.PI;
 const kz = Z => V2.P.f / (Z - V2.P.cz);
-Object.assign(POS, { tom: [-330, 1250], straw: [-120, 1290], lemon: [90, 1250], onion: [300, 1200], mango: [510, 1190], brenda: [760, 1650] });
+Object.assign(POS, { tom: [-520, 1250], straw: [-325, 1290], lemon: [-120, 1250], onion: [160, 1200], mango: [440, 1190], brenda: [755, 1650] });
 /* who speaks at lt (the line table), and which way the others look */
 const spkAt = lt => { for (const id in LN) { const l = LN[id], s = l.s - START, e = l.e - START; if (lt >= s - .05 && lt < e + .12) return l.who; } return null; };
 const xOf = who => who === 'bind' ? POS.straw[0] : (POS[who] || [0])[0];
@@ -356,51 +361,54 @@ const sgn = x => x < 0 ? -1 : 1;
 /* turn toward a speaker: yaw/headYaw (radians, + faces screen right), look (pupils) */
 function toward(me, who, amt = .3) {
   const d = xOf(who) - xOf(me); if (!who || who === me || Math.abs(d) < 1) return { yaw: 0, headYaw: 0, look: [0, 0] };
+  if (who === 'brenda') amt *= 1.9;
   const k = Math.min(1, Math.abs(d) / 500);
   return { yaw: sgn(d) * amt * .55 * (.4 + .6 * k), headYaw: sgn(d) * amt * (.5 + .5 * k), look: [sgn(d) * (.45 + .4 * k), 0] };
 }
 B.toward = toward; B.spkAt = spkAt;
-const SWG = [-150, 122], PHG = [-122, 52];
+const SWG = [-105, 118], PHG = [-100, 44];
+/* in the last wide the cast has closed up toward Brenda (the cut hides the move): the whole company and the corner chair fit one frame */
+const ENDPOS = { tom: [-420, 1250], straw: [-205, 1290], lemon: [10, 1250], onion: [225, 1200], mango: [440, 1190] };
 
 function castI(lt, sh) {
-  const C = {}, spk = spkAt(lt), inB = id => lt >= bS(id) && lt < bE(id);
+  const C = {}, spk = spkAt(lt), inB = id => lt >= bS(id) && lt < bE(id), PX = sh.id === 'end' ? ENDPOS : POS;
   const attn = lt >= CUE.flash[1] ? 'brenda' : spk;                                   /* after the beam, everybody looks at Brenda unless somebody else speaks */
   const sw = Math.min(10, Math.max(0, lt - T_SW)), swOn = ss(lt, T_SW, T_SW + .1);
   const sob = Math.max(0, 1 - Math.abs(lt - CUE.sniffle[0] - .12) / .5, 1 - Math.abs(lt - CUE.sniffle[1] - .12) / .5);
   /* ONION: the stopwatch in her left hand (the screen-left one), starts at 2.4 and stops at 10.0; she cries throughout; relief at "Within code." */
   { const tw = toward('onion', spk === 'onion' || !attn ? 'lemon' : attn, .34);
-    const cand = sh.id === 'o4', ck = ss(lt, 19.68, 19.98);
-    C.onion = person(A15.onion, () => POS.onion, lt, { t: lt, pose: 'free', arms: { l: 'hold', r: cand ? 'hold' : 'rest' }, grip: cand ? { l: SWG, r: [lerp(70, 112, ck), lerp(150, 52, ck)] } : { l: SWG }, hold: cand ? { l: 'fp20_stopwatch', r: 'fp20_candle' } : { l: 'fp20_stopwatch' }, candOn: 1, candSticker: ss(lt, 20.2, 20.5), candSeed: 2, swTime: sw, swOn, swRun: lt >= T_SW && lt < T_SWSTOP ? 1 : 0,
-      yaw: tw.yaw - .1, headYaw: tw.headYaw - .08, look: lt < 2.7 || (spk !== 'onion' && !attn) ? [-.55, .7] : spk === 'onion' ? [-.3, .1] : tw.look, expr: 'onion_cry', cry: lt >= 13.98 && lt < 15.4 ? .85 : .62, sob, who: 'onion' }); }
+    const cand = sh.id === 'o4', ck = ss(lt, 19.68, 19.98), away = sh.id === 'end';
+    C.onion = person(A15.onion, () => PX.onion, lt, { t: lt, pose: 'free', arms: { l: away ? 'rest' : 'hold', r: cand ? 'hold' : 'rest' }, grip: cand ? { l: SWG, r: [lerp(74, 112, ck), lerp(104, 52, ck)] } : { l: SWG }, hold: away ? {} : cand ? { l: 'fp20_stopwatch', r: 'fp20_candle' } : { l: 'fp20_stopwatch' }, candOn: 1, candSticker: ss(lt, 20.2, 20.5), candSeed: 2, swTime: sw, swOn, swRun: lt >= T_SW && lt < T_SWSTOP ? 1 : 0,
+      yaw: 0, headYaw: tw.headYaw * .8 - .08, swScale: 1, look: lt < 2.7 || (spk !== 'onion' && !attn) ? [-.55, .7] : spk === 'onion' ? [-.3, .1] : tw.look, expr: 'onion_cry', cry: lt >= 13.98 && lt < 15.4 ? .85 : .62, sob, who: 'onion' }); }
   /* STRAWBERRY: flat and tired; she watches the stopwatch, Binder, the camera for one beat at "Yes."; one tear at the coffee */
   { const tw = toward('straw', spk === 'straw' ? 'lemon' : attn, .3), cam = ss(lt, 7.45, 7.55) * (1 - ss(lt, 8.0, 8.15)), bd = lt >= CUE.binderpop && lt < 9.4;
     let lk = bd ? [.1, .75] : tw.look; lk = [lerp(lk[0], 0, cam), lerp(lk[1], 0, cam)];
     if (lt >= 26.25 && lt < 27.04) lk = [.7, .35];
     let o = { t: lt, yaw: lerp(tw.yaw, .1, cam), headYaw: lerp(tw.headYaw, .05, cam), look: lk, expr: 'dead', lid: lt >= 26.25 && lt < 27.1 ? .42 : .5, who: 'straw', plant: true, acc: ['steth', 'bandage7', 'perdiem9'] };
-    o = person(A11.straw, () => POS.straw, lt, o);
+    o = person(A11.straw, () => PX.straw, lt, o);
     const tear = ss(lt, 26.6, 27.0); if (tear > .02) o = A15.cryOn(o, .12 + .1 * tear);
     C.straw = o; }
   /* LEMON: the flat look; counts in the stopwatch light */
   { const tw = toward('lemon', spk === 'lemon' ? 'onion' : attn, .3);
-    C.lemon = person(A7.lemon, () => POS.lemon, lt, { t: lt, yaw: tw.yaw, headYaw: tw.headYaw, look: lt >= 9.5 && lt < 12.4 ? [.5, .55] : tw.look, expr: 'neutral', lid: .3, acc: ['readers', 'lanyard7'], face: { curve: .02 }, who: 'lemon' }); }
+    C.lemon = person(A7.lemon, () => PX.lemon, lt, { t: lt, yaw: tw.yaw, headYaw: tw.headYaw, look: lt >= 9.5 && lt < 12.4 ? [.5, .55] : tw.look, expr: 'neutral', lid: .3, acc: ['readers', 'lanyard7'], face: { curve: .02 }, who: 'lemon' }); }
   /* TOMATO: perky; the candle party */
   { const tw = toward('tom', spk === 'tom' ? 'onion' : attn, .3), party = lt >= 15.3 && lt < 16.5;
-    C.tom = person(A15.tomato, () => POS.tom, lt, { t: lt, tomPose: 'fruit', yaw: tw.yaw, headYaw: tw.headYaw, look: tw.look, who: 'tom', arms: { l: party ? 'cheer' : 'rest', r: party ? 'cheer' : 'rest' } }); }
+    C.tom = person(A15.tomato, () => PX.tom, lt, { t: lt, tomPose: 'fruit', yaw: tw.yaw, headYaw: tw.headYaw, look: tw.look, who: 'tom', hold: {}, arms: { l: party ? 'cheer' : 'rest', r: party ? 'cheer' : 'rest' } }); }
   /* BRENDA: in the corner chair, dusty, the dead flashlight from 2019 in her right hand; it comes up at "flashlight" (28.19), clicks twice (31.29, 31.74), goes down */
   { const raise = ss(lt, 27.95, 28.4) * (1 - ss(lt, 33.6, 34.4)), clk = [CUE.clickdead[0], CUE.clickdead[1]].reduce((a, t0) => a + Math.max(0, 1 - Math.abs(lt - t0 - .04) / .09), 0);
     const look = lt >= 31.1 && lt < 32.5 ? [-.3, .8] : [-.6, .1];
     let o = A13.brenda({ t: lt, id: 'brenda', who: 'brenda', expr: A13.expr(lt >= 32.5 ? 'weak' : 'wake'), lid: .3, dust: .7, specsDrop: .6, look, yaw: -.35, headYaw: -.3 + .06 * Math.sin(lt * .8),
-      arms: { l: 'rest', r: 'hold' }, grip: { r: [lerp(96, 124, raise), lerp(96, 6, raise)] }, hold: { r: 'fp20_flashlight' }, flOn: 0, flOld: 1, flTag: '2019', flAng: -2.1 + .35 * clk, noLegs: true });
+      arms: { l: 'rest', r: 'hold' }, grip: { r: [lerp(46, 124, raise), lerp(100, 6, raise)] }, hold: { r: 'fp20_flashlight' }, flOn: 0, flOld: 1, flTag: '2019', flAng: -2.1 + .35 * clk, noLegs: true });
     const q = V2.at(POS.brenda[0], POS.brenda[1]), seat = V2.p2(POS.brenda[0], 96, POS.brenda[1]);
     Object.assign(o, { x: q.x, y: seat[1] + 12 * q.s, s: q.s * 1.04 });
     C.brenda = o; }
   /* MANGO: the phone light in her left hand, wobbling across the wall; off during the generator; on again at 27.04, passed to the right hand for the sweep that finds Brenda */
   { const tw = toward('mango', spk === 'mango' ? 'straw' : attn, .3), sweep = lt >= CUE.flash[1], u = sg(lt, CUE.flash[1], CUE.flash[1] + .25);
-    const on = lt < 12.7 ? (lt >= CUE.flash[0] - 1e-6 ? .6 + .4 * ss(lt, CUE.flash[0], CUE.flash[0] + .08) : 0) : sweep ? 1 : 0;
+    const on = lt < 13.7 ? (lt >= CUE.flash[0] - 1e-6 ? (.6 + .4 * ss(lt, CUE.flash[0], CUE.flash[0] + .08)) * (1 - ss(lt, 13.3, 13.7)) : 0) : sweep ? 1 : 0;
     const wob = .13 * Math.sin(lt * 1.5 + 1) + .06 * Math.sin(lt * 3.9), pt = lt >= 20.88 && lt < 21.95;
-    let o = person(A7.mango, () => POS.mango, lt, { t: lt, yaw: tw.yaw, headYaw: tw.headYaw, look: lt >= 20.88 && lt < 23.6 ? [-.7, .1] : tw.look, expr: pt ? 'shock' : 'neutral', who: 'mango', plOn: on, plAng: PI + .62 + wob,
-      arms: sweep ? { l: 'rest', r: 'hold' } : { l: 'hold', r: pt ? 'point' : 'rest' }, grip: sweep ? { r: [128, 46] } : { l: PHG }, hold: sweep ? { r: 'fp20_phonelight' } : { l: 'fp20_phonelight' } });
-    if (sweep) { const hp = P20.phonePose(o, lt), bf = faceC(C.brenda), tgt = Math.atan2(bf[1] - hp.hy, bf[0] - hp.hx); o.plAng = lerp(-2.4, tgt, eo(u)); }
+    let o = person(A7.mango, () => PX.mango, lt, { t: lt, yaw: tw.yaw, headYaw: tw.headYaw, look: lt >= 20.88 && lt < 23.6 ? [-.7, .1] : tw.look, expr: pt ? 'shock' : 'neutral', who: 'mango', plOn: on, plAng: PI + .62 + wob,
+      arms: sweep ? { l: 'rest', r: 'hold' } : { l: 'hold', r: pt ? 'point' : 'rest' }, grip: sweep ? { r: [98, 96] } : { l: PHG }, hold: sweep ? { r: 'fp20_phonelight' } : { l: 'fp20_phonelight' } });
+    if (sweep) { const hp = P20.phonePose(o, lt), bf = faceC(C.brenda), tgt = Math.atan2(bf[1] + 46 * C.brenda.s - hp.hy, bf[0] - hp.hx); o.plAng = lerp(-2.4, tgt, eo(u)); }
     C.mango = o; }
   return C;
 }
@@ -421,7 +429,12 @@ function chairFront(o) {
   ctx.fillStyle = '#3a2c24'; ctx.fillRect(x - 92 * s, y + 18 * s, 14 * s, 80 * s); ctx.fillRect(x + 78 * s, y + 18 * s, 14 * s, 80 * s);
   ctx.restore();
 }
-B.chairBack = chairBack; B.chairFront = chairFront;
+function chairArms(o) {   /* two wooden armrests at her sides, over the body */
+  const s = o.s, x = o.x, y = o.y; ctx.save(); ctx.lineJoin = 'round'; ctx.fillStyle = '#5a463a'; ctx.strokeStyle = 'rgba(15,10,20,.85)'; ctx.lineWidth = 3;
+  for (const sd of [-1, 1]) { rr(x + sd * 104 * s - 14 * s, y - 70 * s, 28 * s, 16 * s, 6 * s); ctx.fill(); ctx.stroke(); ctx.fillRect(x + sd * 104 * s - 5 * s, y - 56 * s, 10 * s, 70 * s); }
+  ctx.restore();
+}
+B.chairBack = chairBack; B.chairFront = chairFront; B.chairArms = chairArms;
 /* draw something at a SCREEN position and size under the current camera (a foreground object: it is lit by the pass like everything else) */
 function atScreen(sx, sy, S, fn) {
   const m = ctx.getTransform(), z = Math.hypot(m.a, m.b) || 1, p = toScene(sx, sy);
@@ -455,9 +468,9 @@ const FR = B.FR = { sh: SH[0], C: null, bind: null, lights: [] };
 
 /* the wall candles of the wide shots: three LED candles on the whiteboard's ledge (the foreground ones of the close-ups are the same three, nearer) */
 const WALLC = [[-120, 410], [10, 410], [140, 410]];
-const boxOf = o => { const k = KINDS[o.kind], s = o.s || 1, leg = o.noLegs ? 0 : (k.leg || 90), top = o.y - (o.lift || 0) - (leg + k.ry * .9 + (TOPS[o.kind] ?? k.ry * 1.05)) * s, half = k.rx * 1.12 * s + 30 * s; return [o.x - half, top, o.x + half, o.y + 24 * s]; };
-function inFrame(o) {
-  const b = boxOf(o), m = ctx.getTransform(), p = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+const boxOf = (o, pad = 30) => { const k = KINDS[o.kind], s = o.s || 1, leg = o.noLegs ? 0 : (k.leg || 90), top = o.y - (o.lift || 0) - (leg + k.ry * .9 + (TOPS[o.kind] ?? k.ry * 1.05)) * s, half = k.rx * 1.12 * s + pad * s; return [o.x - half, top, o.x + half, o.y + 24 * s]; };
+function inFrame(o, pad) {
+  const b = boxOf(o, pad), m = ctx.getTransform(), p = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
   const pts = [p(b[0], b[1]), p(b[2], b[1]), p(b[0], b[3]), p(b[2], b[3])], xs = pts.map(a => a[0]), ys = pts.map(a => a[1]);
   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   return { inter: x1 > 0 && x0 < W && y1 > 0 && y0 < H, whole: x0 >= 6 && x1 <= W - 6 && y0 >= 6, box: [x0, y0, x1, y1] };
@@ -465,9 +478,10 @@ function inFrame(o) {
 B.inFrame = inFrame;
 
 // ------------------------------------------------------------------ Binder in the world: a clip on Strawberry's lanyard, then up and out (his screen pose is fixed in the bubble shots)
-const BIG = { x: 300, y: 1040, S: 1.55 };
+const BIG = { x: 300, y: 1040, S: 1.75 };
 B.BIG = BIG;
 function bindPose(lt, sh, C) {
+  if (!sh.bub && !sh.bsmall) return null;
   if (lt < CUE.binderpop - .02 || lt >= 9.6) { if (!(sh.bsmall && lt < CUE.binderpop)) return null; }
   const st = C.straw, [fx, fy] = faceC(st), s = st.s, pop = sg(lt, CUE.binderpop, CUE.binderpop + .3);
   if (sh.id === 'r1') {                                                  /* the clip on the lanyard at her chest, asleep until the pop */
@@ -497,37 +511,38 @@ function drawBinder(lt, sh, C) {
 // ------------------------------------------------------------------ the lights of the room (the L20 format; positions in scene units)
 function lightsFor(lt, sh, C, R) {
   const L = [], k = kz(S13.LAY.zb), kk = k / .7;
-  const emR = ss(lt, 12.9, 13.35), hall = ss(lt, CUE.relay2, 13.7), gen = ss(lt, 12.9, 13.7);
+  const emR = ss(lt, 12.9, 13.2) * (1 - .18 * Math.sin(PI * sg(lt, 13.0, 13.1))), hall = ss(lt, CUE.relay2, 13.7), gen = ss(lt, 12.9, 13.7);
   const sob = Math.max(0, 1 - Math.abs(lt - CUE.sniffle[0] - .12) / .5, 1 - Math.abs(lt - CUE.sniffle[1] - .12) / .5);
   /* the window: snow light, a pale blue rect (small: it is a glow, not a lamp) */
   if (R.window) { const w = R.window; L.push({ kind: 'rect', x: w[0] + w[2] / 2, y: w[1] + w[3] / 2, w: w[2], h: w[3], color: '#9ab8f4', power: .34, facing: PI / 2, soft: .6 }); }
   /* the exit sign over the doorway (it hums brighter at the generator) and the twin battery lamp */
   if (R.exitAt) L.push({ kind: 'point', x: R.exitAt[0], y: R.exitAt[1] + 40, r: 330 * kk, color: '#38ff7a', power: .5 + .3 * ss(lt, CUE.genstart, CUE.genstart + .5), soft: .8 });
-  const lampPow = .5 + .5 * emR;
-  for (const h of (R.lampHeads || [])) L.push({ kind: 'cone', x: h.x, y: h.y + 12, ang: h.ang, spread: 1.0, len: 900 * kk, color: '#ff8a44', power: lampPow, soft: .7 });
+  const lampPow = .3 + .7 * emR;
+  for (const h of (R.lampHeads || [])) L.push({ kind: 'cone', x: h.x, y: h.y + 12, ang: h.ang, spread: .8, len: 820 * kk, color: '#ff8a44', power: lampPow * .8, soft: .8 });
   /* the ceiling lights, dim and warm, from the relay at 13.13 */
   if (hall > .01) for (const [X, Z] of [[-330, 900], [330, 900], [-330, 1500], [330, 1500]]) { const q = V2.p2(X, 700, Z); L.push({ kind: 'cone', x: q[0], y: q[1] - 60, ang: PI / 2, spread: 1.7, len: 760 * kz(Z) / .7, color: '#ffc896', power: .26 * hall, soft: .9 }); }
   /* the stopwatch (aqua), held by Onion; it shivers when she sobs */
-  if (C && C.onion) { const p = P20.stopwatchPose(C.onion, lt), on = ss(lt, T_SW, T_SW + .12) * (lt < T_SWSTOP + .9 ? 1 : .6); if (on > .01) L.push({ kind: 'point', x: p.x + 4 * sob * Math.sin(lt * 70), y: p.y, r: 400 * kk * (sh.sw ? 1.15 : 1), color: '#59f0d6', power: .95 * on * (1 - .28 * sob), soft: .7 }); }
+  if (C && C.onion && C.onion.hold && C.onion.hold.l === 'fp20_stopwatch') { const p = P20.stopwatchPose(C.onion, lt), on = ss(lt, T_SW, T_SW + .12) * (lt < T_SWSTOP + .9 ? 1 : .6); if (on > .01) L.push({ kind: 'point', x: p.x + 4 * sob * Math.sin(lt * 70), y: p.y + 62 * (C.onion.s || 1) * (C.onion.swScale || 1), r: 400 * kk * (sh.sw ? 1.1 : 1), color: '#59f0d6', power: (sh.sw ? .7 : .85) * on * (1 - .28 * sob), soft: .75 }); }
   /* Mango's phone: a white cone, wobbling across the wall */
   if (C && C.mango && C.mango.plOn > .01) { const p = P20.phonePose(C.mango, lt); L.push({ kind: 'cone', x: p.x, y: p.y, ang: p.ang, spread: .62, len: 1100 * kk, color: '#eef4ff', power: .9 * C.mango.plOn, soft: .55 }); }
   /* Binder's bubble: the cool white-blue light of the only screen in the room (it dips once at the low battery and dies) */
   if (FR.bind) { const on = ss(lt, CUE.binderpop, CUE.binderpop + .22) * (1 - ss(lt, CUE.lowbattery + .1, CUE.lowbattery + .32)), dip = lt >= CUE.lowbattery && lt < CUE.lowbattery + .08 ? .45 : 1, p = FR.bind.p;
-    if (on > .01) L.push({ kind: 'point', x: p[0] + 160, y: p[1] - 130, r: 700, color: '#c4dcff', power: 1.05 * on * dip, soft: .75 }); }
+    if (on > .01) L.push({ kind: 'point', x: p[0] + 190, y: p[1] - 110, r: 470, color: '#c4dcff', power: .95 * on * dip, soft: .8 }); }
+  if (sh.k === 'w' && lt >= CUE.flash[1] + .1 && C && C.brenda) { const bf = faceC(C.brenda); L.push({ kind: 'point', x: bf[0], y: bf[1] + 40, r: 230, color: '#ffe2c8', power: .8, soft: .8 }); }
   /* the candles: warm points at the flames (foreground ones in a close-up, the ledge ones in a wide) */
   const sting = 1 + .18 * Math.max(0, 1 - Math.abs(lt - CUE.sting - .1) / .25);
-  for (const c of (FR.candleLights || [])) if (c.on > .01) L.push({ kind: 'point', x: c.fx, y: c.fy, r: 460 * (sh.k === 'w' ? kk : 1.0), color: '#ffb25a', power: .95 * c.on * sting, soft: .7, flicker: { seed: c.i + 3, amt: .06, rate: .9 } });
+  for (const c of (FR.candleLights || [])) if (c.on > .01) L.push({ kind: 'point', x: c.fx, y: c.fy, r: (sh.k === 'w' ? 210 : 300), color: '#ffb25a', power: (sh.k === 'w' ? .55 : .7) * c.on * sting, soft: .8, flicker: { seed: c.i + 3, amt: .06, rate: .9 } });
   /* a motivated fill on the face that matters in a close-up, so a speaking face is always lit by something in the frame */
   if (sh.k === 'cu' || sh.k === 'two') { const ids = Array.isArray(sh.foc) ? sh.foc : [sh.foc];
     for (const id of ids) { const o = C[id]; if (!o) continue; const f = faceC(o), s = o.s, warm = lt >= CUE.candle[0] + .1;
       const col = id === 'brenda' ? '#ffd8bc' : warm ? '#ffb86a' : lt < 12.9 ? '#59f0d6' : '#ff9a60', pw = (id === 'brenda' ? .55 : .3) * (warm ? 1 : lt < 5.28 ? 1 : .4) * (sh.bub ? 0 : 1);
-      if (pw > .02) L.push({ kind: 'point', x: f[0] - 40 * s, y: f[1] + 130 * s, r: 300 * s / .85, color: col, power: pw, soft: .8 }); } }
+      if (pw > .02) L.push({ kind: 'point', x: f[0] - 30 * s, y: f[1] + 110 * s, r: 215 * s / .85, color: col, power: pw * .8, soft: .85 }); } }
   return L;
 }
 B.lightsFor = lightsFor;
 function passParams(lt, sh) {
-  const gen = ss(lt, 12.9, 13.7);
-  return { ambient: lerp(.15, .29, gen), tint: mixh('#050b26', '#2a0a0c', gen), bloom: .55, vignette: .32, lift: .08, glow: .34 };
+  const gen = ss(lt, 12.9, 13.4);
+  return { ambient: lerp(sh.bub ? .12 : .14, .3, gen), tint: mixh('#050b26', '#2a0a0c', gen), bloom: .55, vignette: .32, lift: .08, glow: .34 };
 }
 B.passParams = passParams;
 
@@ -541,7 +556,7 @@ function camI(lt) {
   const u = ss(lt, sh.s, Math.min(sh.e, sh.s + 3)), z = lerp(sh.z, sh.z2 ?? sh.z, u);
   if (sh.k === 'w') zoomTo(sh.x ?? 540, sh.y ?? 1040, z);
   else if (sh.k === 'sw') { const p = P20.stopwatchPose(C.onion, lt); zoomTo(p.x + (sh.fx || 0) / z, p.y + (sh.fy || 0) / z, z); }
-  else if (sh.k === 'two') { const a = faceC(C[sh.foc[0]]), b = faceC(C[sh.foc[1]]); zoomTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + (sh.up ?? 70) / z, z); }
+  else if (sh.k === 'two') { const a = faceC(C[sh.foc[0]]), b = faceC(C[sh.foc[1]]); zoomTo((a[0] + b[0]) / 2 - (sh.dx || 0) / z, (a[1] + b[1]) / 2 + (sh.up ?? 70) / z, z); }
   else { const [fx, fy] = faceC(C[sh.foc]); zoomTo(fx, fy + (sh.up ?? 70) / z, z); CAM.x -= (sh.dx || 0) / z; }
   const sway = { x: 2.2 * hnoise(lt, 1.3, 1), y: 1.6 * hnoise(lt, 1.1, 2), r: .0015 * hnoise(lt, .9, 3) };
   const shud = pulse(lt, CUE.genstart + .115, 30, .06) * 2.4 / CAM.z;                       /* the generator coughs: the whole picture shudders 2 px once at 12.45 */
@@ -563,10 +578,10 @@ function drawI(lt) {
   }
   /* Brenda and her chair, behind the cast */
   const order = ['tom', 'straw', 'lemon', 'onion', 'mango'].map(n => [n, C[n]]).sort((a, b) => a[1].y - b[1].y);
-  const br = C.brenda, bf = inFrame(br), showB = lt >= CUE.flash[1] - .04 && bf.inter && (bf.whole || sh.foc === 'brenda');
-  if (showB) { B.chairBack(br); drawChar(br); B.chairFront(br); }
+  const br = C.brenda, bf = inFrame(br, 8), showB = lt >= CUE.flash[1] - .04 && bf.inter && (bf.whole || sh.foc === 'brenda');
+  if (showB) { B.chairBack(br); drawChar(br); B.chairArms(br); }
   for (const [n, c] of order) {
-    const f = inFrame(c), foc = n === sh.foc || (Array.isArray(sh.foc) && sh.foc.includes(n));
+    const f = inFrame(c, sh.k === 'w' ? 8 : 30), foc = n === sh.foc || (Array.isArray(sh.foc) && sh.foc.includes(n));
     if (sh.bub && !foc) continue;
     if (!foc && (!f.inter || ((sh.k !== 'w' || sh.whole) && !f.whole))) continue;
     drawChar(c);
@@ -676,7 +691,7 @@ function overBubble(lt, sh) {
   /* the pointer: it comes up from below and hovers over YES (this time the NO button stays where it is) */
   if (lt >= 6.35 && lt < 8.0) {
     const yes = SH15.binderRect(bo, 'yes');
-    if (yes) { const u = ss(lt, 6.35, 7.2), px = lerp(yes.x + yes.w * .9 + 220, yes.x + yes.w * .86, u), py = lerp(yes.y + yes.h + 240, yes.y + yes.h * .84, u), press = lt >= 7.52 && lt < 7.8 ? Math.sin(PI * c01((lt - 7.52) / .26)) : 0;
+    if (yes) { const u = ss(lt, 6.35, 7.2), px = lerp(yes.x - 90, yes.x + yes.w * .86, u), py = lerp(yes.y + yes.h + 190, yes.y + yes.h * .84, u), press = lt >= 7.52 && lt < 7.8 ? Math.sin(PI * c01((lt - 7.52) / .26)) : 0;
       SH15.pointer(px, py + (press ? 3 : 0), { kind: 'arrow', press, s: 1.7 }); }
   }
   ctx.restore();
@@ -700,7 +715,7 @@ const SC = {
   draw: lt => { const sh = FR.sh; if (sh.k === 'cut') B.drawCut(lt); else if (sh.k === 'wall') B.drawWall(lt); else B.drawI(lt); },
   fx: lt => ({ bloom: .62, vignette: .36, grain: .05, contrast: .12, sat: .06 }),
   blur: lt => 1,
-  over: lt => { const sh = FR.sh; if (sh.bub) overBubble(lt, sh); if (sh.k !== 'cut' && window.L20 && L20.emergency) { const lv = ss(lt, 12.9, 13.35) * .8; if (lv > .01) L20.emergency(ctx, { level: lv, t: lt, pulse: .12 }); } },
+  over: lt => { const sh = FR.sh; if (sh.bub) overBubble(lt, sh); if (sh.k !== 'cut' && window.L20 && L20.emergency) { const lv = ss(lt, 13.2, 13.8) * .5; if (lv > .01) L20.emergency(ctx, { level: lv, t: lt, pulse: .12 }); } },
 };
 window.__EP20_SCENES = window.__EP20_SCENES || {};
 window.__EP20_SCENES.blackout = SC;
