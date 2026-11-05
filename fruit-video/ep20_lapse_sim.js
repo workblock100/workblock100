@@ -90,8 +90,8 @@ function sunLevel(lt) { const m = worldMin(lt); return clamp(ss(m, 1780, 1860) *
 function moon(lt) {
   const m = worldMin(lt), p = clamp((m - 1380) / 480);
   const u = lerp(.14, .72, p) + (lt > L.t1 ? (lt - L.t1) * .003 : 0);
-  const v = lerp(.80, .47, Math.pow(p, 1.25)) - (lt > L.t1 ? (lt - L.t1) * .006 : 0);
-  const r = lerp(.17, .31, Math.pow(p, 1.6));
+  const v = lerp(.88, .66, Math.pow(p, 1.25)) - (lt > L.t1 ? (lt - L.t1) * .004 : 0) - (lt > 24.7 ? (lt - 24.7) * .075 : 0);   /* he sinks toward the snow line once his lines are done */
+  const r = lerp(.17, .27, Math.pow(p, 1.6));
   const cloud = clamp(1 - ss(m, 1490, 1650)) * .96 + .04 * ss(m, 1800, 1860);
   const alpha = 1 - (lt > L.t1 ? ss(lt, 24.6, 26.8) : 0);
   return { u, v, r, cloud, alpha, x: u * 2 - 1 };

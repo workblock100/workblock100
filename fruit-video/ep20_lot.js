@@ -231,10 +231,10 @@ const CAB_T = 6.5;   /* the truck's parked place (the cab camera holds there; at
 const cabCenter = (lt = CAB_T) => [truckX(lt) + TRUCK_S * (TRUCK_CABC[0]), TY + TRUCK_S * (TRUCK_CABC[1])];
 const TRUCK_CABC = [-28, -254];
 const CAM_FN = {
-  open: lt => [1560 + 40 * sg(lt, 0, 1.31), 1130, lerp(.7, .74, sg(lt, 0, 1.31))],
-  plow: lt => {
-    const e = ss(lt, 2.8, 3.34), c = cabCenter(CAB_T), xPan = 1500 + 900 * Math.min(Math.max(lt - 1.31, 0), 1.49);   /* 900 world px/s = 630 screen px/s at z .7 */
-    return [lerp(xPan, c[0] - 90, e), lerp(1130, c[1] + 30, e), lerp(.7, 1.05, e)];
+  open: lt => [1560 + 40 * sg(lt, 0, 1.31), 1095, lerp(.58, .62, sg(lt, 0, 1.31))],   /* the high establishing wide; the cut to the tracking shot is a re-frame of 1.25x */
+  plow: lt => {   /* 900 world px/s at z .7 = 630 screen px/s, then a smooth stop (the speed falls linearly to 0 at the cut) while it pushes in a little */
+    const t1 = 2.55, T = 3.344 - t1, d = Math.max(0, lt - t1), x = 1500 + 900 * (Math.min(lt, t1) - 1.31) + 900 * (d - d * d / (2 * T)), e = ss(lt, 2.3, 3.344);
+    return [x, lerp(1130, 1122, e), lerp(.7, .86, e)];
   },
   tu1: lt => { const c = cabCenter(CAB_T); return [c[0] + 1.5 * Math.sin(lt * 1.7), c[1] + 2 + 1.5 * Math.cos(lt * 1.3), lerp(3.9, 4.15, sg(lt, bS('tu1'), bE('tu1')))]; },
   tu2: lt => { const c = cabCenter(CAB_T); return [c[0] + followX(lt) + 1.5 * Math.sin(lt * 1.7), c[1] + 2 + 1.5 * Math.cos(lt * 1.3), lerp(3.9, 4.15, sg(lt, bS('tu2'), bE('tu2')))]; },

@@ -185,9 +185,14 @@ function weatherIn(x, y, w, h, env, o = {}) {
   if (o.kids) o.kids(x, y, w, h);
   if (o.glints) o.glints(x, y, w, h);
   if (env.snow > .02) snowN(ctx, { x0: x, y0: y, x1: x + w, y1: y + h, t: lt, seed: o.seed ?? 7, layers: 3, density: (o.dens ?? 1.5) * env.snow, fall: 1, wind: 70, gusts: SIM.GUSTS, sway: 1, tone: pale ? 'light' : 'dark', fore: false, alpha: .95 });
-  const hh = o.heap ?? (h * (.05 + .42 * env.dep * env.dep));
+  const hh = o.heap ?? (h * (.05 + .34 * env.dep * env.dep));
   sillN(ctx, { x0: x - 4, x1: x + w + 4, y: y + h + 2, depth: hh, seed: o.seed ?? 7, tone: pale ? 'light' : 'dark' });
-  if (o.frost !== false) frostN(ctx, { x, y, w, h, amount: env.frost, seed: (o.seed ?? 7) + 2, t: lt, tone: pale ? 'light' : 'dark' });
+  if (o.frost !== false) {
+    ctx.save();
+    if (o.moonHole && env.mo.alpha > .1 && env.mo.cloud < .5) { const [mx, my, mr] = o.moonHole; ctx.beginPath(); ctx.rect(x - 4, y - 4, w + 8, h + 8); ctx.moveTo(mx + mr * 1.22, my); ctx.arc(mx, my, mr * 1.22, 0, TAU, true); ctx.clip('evenodd'); }   /* the Moon looks through a clear patch of the glass */
+    frostN(ctx, { x, y, w, h, amount: env.frost, seed: (o.seed ?? 7) + 2, t: lt, tone: pale ? 'light' : 'dark' });
+    ctx.restore();
+  }
 }
 
 // ------------------------------------------------------------------ the wall: frame of the big window, the glass doors, the clock, the TV, the call board, the exit sign, the emergency lamps
@@ -198,8 +203,9 @@ function bigWindow(lt, env, G, o = {}) {
   ctx.fillStyle = '#ece7da'; ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; rr(x - fr, y - fr, w + 2 * fr, h + 2 * fr, 6); ctx.fill(); ctx.stroke();
   ctx.save(); clipRR(x, y, w, h, 3);
   { const rat = 2.2 * pulse(lt, CUE.windgust, 30, .22) + 1.2 * pulse(lt, CUE.windgust + .5, 26, .2); ctx.translate(rat, 0); }
-  skyIn(x, y, w, h, env, { suppressMoon: o.suppressMoon, moonChar: o.moonChar });
-  weatherIn(x, y, w, h, env, { seed: 7, dens: 7.5, kids: o.winKids, glints: (gx, gy, gw, gh) => paneGlints(lt, gx, gy, gw, gh) });
+  const so = { suppressMoon: o.suppressMoon, moonChar: o.moonChar };
+  skyIn(x, y, w, h, env, so);
+  weatherIn(x, y, w, h, env, { seed: 7, dens: 7.5, moonHole: so.moonAt, kids: o.winKids, glints: (gx, gy, gw, gh) => paneGlints(lt, gx, gy, gw, gh) });
   ctx.globalCompositeOperation = 'screen';                                 /* a glint of the room on the glass */
   ctx.fillStyle = lg(x, y, x + w * .5, y + h, [[0, 'rgba(255,255,255,.07)'], [.5, 'rgba(255,255,255,.02)'], [1, 'rgba(255,255,255,0)']]);
   ctx.beginPath(); ctx.moveTo(x + w * .08, y); ctx.lineTo(x + w * .3, y); ctx.lineTo(x + w * .12, y + h); ctx.lineTo(x - w * .1, y + h); ctx.closePath(); ctx.fill();

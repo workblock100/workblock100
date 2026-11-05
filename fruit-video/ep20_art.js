@@ -166,9 +166,11 @@ function hatDraw(o, k, t, layer) {
 EXT.acc.fp20_hat = (o, k, t, layer) => hatDraw(o, k, t, layer);
 // ================================================================== the scarf: a thick knit band under the mouth with a tail that flaps in the wind (mid layer, under the face)
 function scarfGeo(o, k, g) {
-  const sc = (k.mw || 26) / 26, ys = k.mouthY + 55 * sc + 3 + (g.scarfLift || 0);
-  const th = Math.min(g.scarfH || 34, Math.max(20, k.ry + 8 - ys));
-  return { ys, th, wt: Math.max(30, halfW(o.kind, ys + 2) + 7), wb: Math.max(30, halfW(o.kind, ys + th - 2) + 9) };
+  const flat = o.kind === 'bind';   /* the Binder has no neck: a tiny band round the foot of the cover, right under its smile */
+  const sc = (k.mw || 26) / 26, ys = flat ? k.mouthY + 33 + (g.scarfLift || 0) : k.mouthY + 55 * sc + 3 + (g.scarfLift || 0);
+  const th = flat ? Math.max(12, Math.min(g.scarfH || 17, k.ry - ys + 3)) : Math.min(g.scarfH || 34, Math.max(20, k.ry + 8 - ys));
+  const cw = flat ? Math.max(.24, Math.abs(Math.cos(o.yaw15 != null ? o.yaw15 : yawsOf(o).y))) : 1;   /* the flat Binder narrows to its spine in profile (its own yaw15) */
+  return { ys, th, wt: Math.max(30 * cw, (halfW(o.kind, ys + 2) + 7) * cw), wb: Math.max(30 * cw, (halfW(o.kind, ys + th - 2) + 9) * cw) };
 }
 function scarfDraw(o, k, t, layer) {
   const g = o.w20; if (layer !== 'mid' || !g || g.scarf === false) return;
@@ -199,7 +201,7 @@ function scarfDraw(o, k, t, layer) {
   /* the tail: a ribbon from the knot, hanging down and streaming with the wind */
   const lonK = .72, ck = dcos(lonK + yw);
   if (ck > -.1 && g.tail !== false) {
-    const xk = Math.min(S.wt * .66, 70) * dsin(lonK + yw), yk = S.ys + S.th * .5, len = g.tailLen || 70, w0 = 25, segs = 7;
+    const tiny = o.kind === 'bind', xk = Math.min(S.wt * .66, 70) * dsin(lonK + yw), yk = S.ys + S.th * .5, len = g.tailLen || (tiny ? 34 : 70), w0 = tiny ? 15 : 25, segs = 7;
     const base = .07 + wind * 1.0, fl = (.16 + Math.abs(wind) * .3);
     const P = [[xk, yk]], Wd = [w0];
     let ang = base, px = xk, py = yk;

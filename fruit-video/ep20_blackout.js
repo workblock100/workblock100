@@ -6,20 +6,23 @@
  * because a light is not an object that covers text. PHOTOSENSITIVITY: ONE dip: the six rooms of the cutaway die in a cascade of about 1.1 s (one small flicker per room), then it stays dark; the generator brings
  * the light back as a RAMP (12.9 to 13.7), no flash; Binder's low battery is a local flicker of the bubble, not a full-frame change; the candles ramp on over .15 s each and breathe at under 1.2 Hz.
  *
- * THE SET (the cutaway is drawn here; the interior is S13, the nurses' station, in one-point perspective seen at night, as in Episode 18). The cast stands in front of the counter, left to right:
- * Strawberry (-330), Lemon (-120), Onion (90, the stopwatch), Tomato (300), Mango (510, the phone light); Brenda sits in the corner chair at the far right (700, outside the wide until the beam finds her).
+ * THE SET (the cutaway is drawn here; the interior is S13, the nurses' station, in one-point perspective seen at night, as in Episode 18). The cast stands in front of the counter, left to right: Tomato (-520), Strawberry (-325),
+ * Lemon (-120), Onion (160, the stopwatch), Mango (440, the phone light); Brenda sits in the corner chair at the far right (755, outside every wide until the beam finds her). In the last wide the company has closed up (ENDPOS).
  *
- * SHOTS (scene-local s; every cut is snapped to a frame; see SH below)
- *  cut 0-2.30 THE CUTAWAY: a night exterior wide, the building as a two-row dollhouse (KITCHEN | STATION | DAY ROOM over MED ROOM | BREAK ROOM | OXYGEN). powerdown .20: the kitchen's light dies, then every room in a
- *      cascade to the right (.31 med, .53 station, .64 break, .86 day room, .97 oxygen), each dimming over .15 s; relays .70 / 1.10 / 1.50 bring the green exit signs and red lamps up; the camera pushes into the STATION from 0.9 s.
+ * SHOTS (scene-local s; every cut is snapped to a frame; the table is SH in block 3)
+ *  cut 0-2.30 THE CUTAWAY: a night exterior, the building as a two-row dollhouse (KITCHEN | STATION | DAY ROOM over MED ROOM | BREAK ROOM | OXYGEN), two buried cars, snow in front and behind. powerdown .20: the kitchen light dies
+ *      (one small flicker first), then the others in a cascade to the right (.31 med, .53 station, .64 break, .86 day room, .97 oxygen), each dimming over .15 s; the relays .70 / 1.10 / 1.50 bring the green exit signs and the
+ *      red lamps up (pairs of rooms); the camera pushes into the STATION from 0.85 s (slow: under 650 px/s).
  *  w1 2.30-2.70 the dark station, the phone light clicks on (flashlight 2.30), the stopwatch wakes (2.40) | o1 2.70-4.35 Onion CU | r1 4.35-5.43 Strawberry CU, Binder pops out of her lanyard (binderpop 5.284) |
- *  b1 5.43-6.75 Binder's bubble | b1b 6.75-7.49 the YES / NO insert, the pointer hovers YES | s1 7.49-8.20 Strawberry "Yes." | b2 8.20-9.50 "Great! I'll..." the bubble dies (lowbattery 9.10) |
- *  c1 9.50-10.65 the stopwatch, pushing in (stopwatchticks from 9.02) | c2 10.65-11.67 the faces in the stopwatch light, Mango's beam wobbling, snow in the window | l1 11.67-12.33 Lemon "Ten." (two-shot with Onion's stopwatch) |
- *  gen 12.33-13.98 the generator (genstart 12.334, shudder 12.45, the stopwatch stops at 10.0, the RAMP 12.9-13.7, relay 13.134) | o1b 13.98-15.33 Onion "Within code." (sniffle 14.784) |
- *  t1 15.33-16.51 Tomato, three candles click on (15.677, 15.927, 16.177) | o3 16.51-18.42 Onion | t2 18.42-19.65 Tomato | o4 19.65-20.88 Onion, the APPROVED sticker | m1a 20.88-21.95 Mango |
- *  m1b 21.95-23.63 the wall: two outlets, the dead coffee maker | s2 23.63-24.26 Strawberry "What." | o2 24.26-26.25 Onion | s3 26.25-27.04 Strawberry, the long flat look |
- *  sw 27.04-27.29 the beam (flashlight 27.041) sweeps to the corner | br1 27.29-29.59 Brenda | br2a 29.59-30.55 Brenda | rg 30.55-31.15 the group | br2b 31.15-32.51 the flashlight: click, click (clickdead 31.286, 31.736) |
- *  br3 32.51-34.75 Brenda, held | rg2 34.75-35.28 the group looks at her | end 35.28-36.93 the red-lit room, the candles, everyone looking at Brenda (sting 35.383).
+ *  b1 5.43-7.49 Binder's bubble, the pointer comes up to hover over YES | s1 7.49-8.20 Strawberry "Yes." | b2 8.20-9.40 "Great! I'll..." the bubble flickers once, LOW BATTERY, dies (lowbattery 9.10) |
+ *  c1 9.40-10.65 the stopwatch, pushing in (stopwatchticks from 9.02) | c2 10.65-11.67 the faces in the stopwatch light, Mango's beam wobbling, snow in the window | l1 11.67-12.33 Lemon "Ten." (two-shot with Onion's stopwatch) |
+ *  gen 12.33-13.98 the generator (genstart 12.334, shudder 12.45, the stopwatch stops at 10.0 at 12.4, red-amber lamps up 12.9-13.2, the ceiling lights from relay 13.134 to 13.7) | o1b 13.98-15.33 Onion "Within code." (sniffle 14.784) |
+ *  t1 15.33-16.51 Tomato, three candles click on (15.677, 15.927, 16.177) | o3 16.51-18.42 Onion | t2 18.42-19.65 Tomato | o4 19.65-20.88 Onion, the APPROVED sticker on the candle in her hand | m1a 20.88-21.95 Mango |
+ *  m1b 21.95-23.63 the wall: two outlets, the dead coffee maker, the beam goes to the RED one at "red" | s2 23.63-24.26 Strawberry "What." | o2 24.26-26.25 Onion | s3 26.25-27.04 Strawberry, the long flat look at the dead coffee maker, a tear |
+ *  sw 27.04-27.29 the beam (flashlight 27.041) sweeps to the corner | br1 27.29-29.59 Brenda | br2a 29.59-30.55 Brenda | rg 30.55-31.15 Lemon and Onion look | br2b 31.15-32.51 the dead flashlight: click, click (clickdead 31.286, 31.736, with the words) |
+ *  br3 32.51-34.75 Brenda, held | rg2 34.75-35.28 Onion and Mango look at her | end 35.28-36.93 the red-lit room, the candles on the ledge, everyone looking at Brenda (sting 35.383: the candles swell).
+ * LIGHT: every beat is lit by L20.pass lists built in block 5 (window, exit sign, twin lamp, stopwatch, phone cone, bubble, candles, a motivated fill on the face of the shot); per-shot exposure trims (GAIN / LIFT) keep consecutive shots
+ * within about .1 of each other in mean luminance, so no cut is a flash.
  */
 (() => {
 if (!window.TIMELINE_EP20 || !window.H6 || !window.V2 || !window.UI) return;
@@ -486,8 +489,8 @@ function bindPose(lt, sh, C) {
   const st = C.straw, [fx, fy] = faceC(st), s = st.s, pop = sg(lt, CUE.binderpop, CUE.binderpop + .3);
   if (sh.id === 'r1') {                                                  /* the clip on the lanyard at her chest, asleep until the pop */
     if (lt < CUE.binderpop) { const p = toScr(fx + 4 * s, fy + 122 * s); return { sx: p[0], sy: p[1], S: .24 * 2.4 * s / .85, asleep: 1, pop: 0, small: 1 }; }
-    const p0 = toScr(fx + 4 * s, fy + 122 * s), p1 = toScr(fx - 150 * s, fy + 40 * s);
-    return { sx: lerp(p0[0], p1[0], eo(pop)), sy: lerp(p0[1], p1[1], eo(pop)) - 40 * Math.sin(PI * pop), S: lerp(.5, 1.0, eb(pop)), pop, small: 0 };
+    const p0 = toScr(fx + 4 * s, fy + 122 * s), p1 = toScr(fx - 215 * s, fy + 96 * s);
+    return { sx: lerp(p0[0], p1[0], eo(pop)), sy: lerp(p0[1], p1[1], eo(pop)) - 12 * Math.sin(PI * pop), S: lerp(.5, .9, eb(pop)), pop, small: 0 };
   }
   const dr = ss(lt, CUE.lowbattery, CUE.lowbattery + .6), bob = Math.sin(lt * 3.1) * 7;
   return { sx: BIG.x, sy: BIG.y + bob + 18 * dr, S: BIG.S * (lt < 5.43 + .25 ? eb(c01((lt - 5.43) / .25 + .0)) * .5 + .5 : 1), pop: 1, small: 0, droop: dr };
@@ -598,7 +601,6 @@ function drawI(lt) {
   /* the light itself */
   const R = { window: o.window, exitAt: o.exitAt, lampHeads: o.lampHeads };
   if (!inMask() && window.L20 && L20.pass) L20.pass(ctx, Object.assign({ t: lt, lights: lightsFor(lt, sh, C, R) }, passParams(lt, sh)));
-  if (!inMask() && sh.fin) V2.glow(0, 0, 0, '0,0,0', 0);
 }
 B.camI = camI; B.drawI = drawI;
 })();

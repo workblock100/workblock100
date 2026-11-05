@@ -14,13 +14,23 @@
  *                      Needs o.hold + o.grip for the holding hand (the pose is computed from them, as ep18_station's handOf does). Add the L20 cone and SN20.beam there.
  *  fp20_phonelight     a phone held up like a torch, its flash at the top end: o.plOn 0..1, o.plAng (as flAng), o.plColor (case, default '#2b3140'). P20.phonePose(o, t) -> { x, y, ang, hx, hy } as above.
  *  fp20_stopwatch      a chunky round sports stopwatch with a seven-segment LCD "M:SS.s" (drawn as shapes, so it never touches the text gate): o.swTime (seconds, clamped 0..599.9),
- *                      o.swOn 0..1 (the backlight and the digits; default 1), o.swRun (1 while running: the colon blinks slowly), o.swScale (default 1). Green-blue LCD glow (FX18.glow).
+ *                      o.swOn 0..1 (the backlight and the digits; default 1), o.swScale (default 1). Green-blue LCD glow (FX18.glow). PROP_BOX is registered (nearFace); the digits are shapes, not text.
  *  P20.stopwatchPose(o, t) -> { x, y, hx, hy } the LCD centre (world units), for the L20 point light.
  *
  * ------------------------------------------------------------------ SET PIECES
- *  P20.ledCandle(ctx, o)        o = { x, y (bottom centre), s, on 0..1, t, seed, kind 'pillar' (default, 42 x 96) | 'tea' (a battery tea light, 56 x 24), sticker 0..1 (an APPROVED label on the body, 104 x 36, wider than the candle: it wraps round it), glow (default 1) }.
- *                               Returns { fx, fy, r } the flame centre and a glow radius (current coordinates) for the scene's point light. The flicker is slow and soft (under 1.2 Hz, +-5 percent).
- *  (the rest of the contract lands in the following blocks of this file: cot, moon, outlet, coffeeMaker, exitSign, emergencyLamp)
+ *  P20.ledCandle(ctx, o)        o = { x, y (bottom centre), s, on 0..1, t, seed, kind 'pillar' (default, 42 x 96) | 'tea' (a battery tea light, 56 x 24), sticker 0..1 (an APPROVED label, 104 x 36, wider than the candle),
+ *                               glow (default 1; 0 = no halo, the scene's light does it) }. Returns { fx, fy, r }: the flame centre and a glow radius in the current coordinates, for the scene's point light. The flicker is
+ *                               slow and soft (0.65 and 1.2 Hz, +-5 percent): never a strobe.
+ *  fp20_candle (held)           an LED candle in the hand, flame up: o.candOn 0..1, o.candSticker 0..1, o.candScale (1), o.candSeed. P20.candlePose(o, t) -> { x, y, hx, hy } the flame (world units), or null.
+ *  P20.cot(ctx, o)              o = { x, y (floor, centre), s, sleeper null | 'mango' | 'lemon' | 'tom' | 'onion' (lies on the cot, head on the pillow, eyes shut, under the blanket), zzz 0/1, t }. Returns { x0, y0, x1, y1, head }.
+ *  P20.moon(ctx, o)             o = { x, y (the pane's centre), w, h (default 5.2 r x 6.6 r), r (the Moon's radius), t, cloud 0..1 (1 = only a glow behind the weather), rise -1..1 (the arc), expr, warm, rad, frame (a plain white
+ *                               window frame and cross bar), sky (false: no sky, only the Moon and the cloud) }. The Moon is A7.moon (who 'moon': his mouth follows his lines). Returns { x0, y0, x1, y1, mx, my }.
+ *  P20.outlet(ctx, o)           o = { x, y (centre of the plate), s, color 'white' | 'red', plug null | 'coffee' | 'oxygen' | 'phone', label (string | false; default 'RED = EMERGENCY' for red), cordTo [x, y] (the cord sags to
+ *                               there), t, hero }. 112 x 176 natural. Returns { x0, y0, x1, y1, plugAt, cordEnd }. The label is a UI plate (hero from 31 px on the screen).
+ *  P20.coffeeMaker(ctx, o)      o = { x, y (bottom centre), s, power 0/1, display '12:00' | '--:--' | '', pot 0..1, sad 0..1 (the status LED dies), t, hero }. 210 x 276 natural. Returns { x0, y0, x1, y1, cordAt, led, display }.
+ *  P20.exitSign(ctx, o)         o = { x, y (centre), s, glow 0..1, t, w, h (168 x 72), halo }. A green running-man pictogram (no lettering). Returns { x0, y0, x1, y1 }.
+ *  P20.emergencyLamp(ctx, o)    o = { x, y (centre), s, on 0..1, color, t }. A twin-head battery lamp, 176 x 78 natural. Returns { x0, y0, x1, y1, heads: [{ x, y, ang }, { x, y, ang }] } (head centres and their aim, FX18.cone convention).
+ *  P20.swString(sec)            the "M:SS.s" string the stopwatch shows for a time in seconds.
  */
 (() => {
 window.P20 = window.P20 || {};
