@@ -335,6 +335,125 @@ if (!window.__A20_DC && typeof window.drawChar === 'function') {
     try { return dc0.apply(this, arguments); } finally { if (k) { k.shoe = s1; k.shoe2 = s2; } V2.grad = vg; }
   };
 }
+// ================================================================== A20.car: a small hatchback, side view, that the plow buries (snow 0 clean .. .35 a cap .. .7 a mound .. 1 a smooth hill)
+const vn = (seed, x) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(rnd(seed, i), rnd(seed, i + 1), u) * 2 - 1; };   /* smooth value noise -1..1 */
+const CAR_PTS = [[-246, -24], [-251, -70], [-250, -104], [-240, -122], [-218, -130], [-198, -178], [-182, -198], [-150, -206], [-60, -210], [20, -208], [60, -190], [100, -142], [118, -122], [150, -114], [210, -106], [244, -96], [256, -80], [258, -52], [254, -28]];
+function catmull(pts, n = 8) { const out = []; for (let i = 0; i < pts.length - 1; i++) { const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)]; for (let j = 0; j < n; j++) { const u = j / n, u2 = u * u, u3 = u2 * u; out.push([.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * u + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3), .5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * u + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3)]); } } out.push(pts[pts.length - 1]); return out; }
+const CAR_OUT = catmull(CAR_PTS);
+const X0 = -258, X1 = 262, XN = Math.round((X1 - X0) / 4);
+const carTopTab = (() => {   /* the roofline as a table every 4 px (y of the top surface, negative up) */
+  const tab = new Float32Array(XN + 1).fill(0);
+  for (let i = 0; i <= XN; i++) { const x = X0 + i * 4; let best = 0; for (let j = 0; j < CAR_OUT.length - 1; j++) { const a = CAR_OUT[j], b = CAR_OUT[j + 1]; if ((a[0] - x) * (b[0] - x) <= 0 && a[0] !== b[0] && a[1] < -60 && b[1] < -60 || (a[0] === b[0] && a[0] === x)) { const u = (x - a[0]) / ((b[0] - a[0]) || 1); const y = lerp(a[1], b[1], clamp(u)); if (y < best) best = y; } } tab[i] = best; }
+  /* the two ends are the vertical faces: give them their corner heights so the snow cap has something to lie on */
+  for (let i = 0; i <= XN; i++) if (tab[i] === 0) tab[i] = i < XN / 2 ? -100 : -88;
+  return tab;
+})();
+const carTop = x => { const f = (x - X0) / 4, i = Math.floor(f); if (i < 0) return carTopTab[0]; if (i >= XN) return carTopTab[XN]; return lerp(carTopTab[i], carTopTab[i + 1], f - i); };
+const hillTab = (() => {   /* the mound of snow that buries the car: the roofline dilated at the angle of repose (a sloped skirt reaching the ground), then rounded */
+  const L = 430, n = Math.round(2 * L / 4) + 1, raw = new Float32Array(n), m = 1.05;
+  const carH = x => -carTop(x) + 24;
+  for (let i = 0; i < n; i++) { const x = -L + i * 4; let best = 0; for (let xp = -252; xp <= 258; xp += 6) { const v = carH(xp) - m * Math.abs(x - xp); if (v > best) best = v; } raw[i] = best; }
+  let h = Float32Array.from(raw);
+  for (let it = 0; it < 3; it++) { const g = new Float32Array(n), r = 10; for (let i = 0; i < n; i++) { let a = 0; for (let j = -r; j <= r; j++) { const q = i + j; a += (q >= 0 && q < n) ? h[q] : 0; } g[i] = a / (2 * r + 1); } for (let i = 0; i < n; i++) h[i] = Math.max(raw[i] * .985, g[i]); }
+  return { L, h };
+})();
+const hillY = x => { const f = (x + hillTab.L) / 4, i = Math.floor(f); if (i < 0 || i >= hillTab.h.length - 1) return 0; return -lerp(hillTab.h[i], hillTab.h[i + 1], f - i); };
+const CAR_COLORS = { red: '#d9304f', teal: '#2c8f9a', yellow: '#e8b830', grey: '#8a919c', white: '#eceff3', plum: '#7a3a68' };
+A.CAR_COLORS = CAR_COLORS;
+function carInfoOf(o) {
+  const s = o.s ?? 1, f = o.facing || 1, X = (lx, ly) => [o.x + f * s * lx, o.y + s * ly];
+  const p0 = X(-300, -276), p1 = X(300, 0);
+  return { box: [Math.min(p0[0], p1[0]), p0[1], Math.max(p0[0], p1[0]), p1[1]], mirror: X(100, -134), antenna: X(-172, -250), roof: X(-60, -210), door: X(50, -112), handle: X(44, -108), front: X(258, -90), rear: X(-250, -90), hood: X(190, -108), wheelF: X(150, -40), wheelR: X(-148, -40), ground: X(0, 0) };
+}
+A.carInfo = carInfoOf;
+function carWindow(x0, x1, belt, topPad) { const pts = []; for (let x = x0; x <= x1; x += 8) pts.push([x, carTop(x) + topPad]); pts.push([x1, carTop(x1) + topPad]); const top = pts, w = new Path2D(); w.moveTo(x0, belt); top.forEach(([x, y]) => w.lineTo(x, Math.min(y, belt - 18))); w.lineTo(x1, belt); w.closePath(); return w; }
+function carDraw(c, o) {
+  const s = o.s ?? 1, f = o.facing || 1, snow = clamp(o.snow ?? 0), col = o.color || CAR_COLORS.red, t = o.t || 0, seed = o.seed || 7;
+  const body = new Path2D(); CAR_OUT.forEach(([x, y], i) => i ? body.lineTo(x, y) : body.moveTo(x, y)); body.closePath();
+  const kx = keyX() * f * -1;   /* the key light's side in the car's own frame (the car may be mirrored) */
+  c.save(); c.translate(o.x, o.y); c.scale(f * s, s); c.lineJoin = 'round'; c.lineCap = 'round';
+  /* contact shadow */
+  c.fillStyle = 'rgba(8,14,40,.30)'; c.beginPath(); c.ellipse(0, 3, 276, 17, 0, 0, TAU); c.fill();
+  /* the body */
+  c.fillStyle = V2.grad(0, -210, 0, -22, [[0, mixc(col, '#ffffff', .3)], [.45, col], [1, mixc(col, '#10142a', .4)]]); c.fill(body);
+  c.save(); c.clip(body);
+  c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 5; c.beginPath(); c.moveTo(-232, -118); c.quadraticCurveTo(0, -128, 236, -112); c.stroke();
+  c.fillStyle = 'rgba(10,14,40,.2)'; c.beginPath(); c.moveTo(-260, -60); c.lineTo(260, -60); c.lineTo(260, 0); c.lineTo(-260, 0); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(30,26,40,.82)'; c.fillRect(-260, -38, 520, 16);   /* the plastic sill */
+  c.fillStyle = V2.grad(-260, 0, 260, 0, [[0, `rgba(255,255,255,${kx < 0 ? .22 : 0})`], [.5, 'rgba(255,255,255,0)'], [1, `rgba(255,255,255,${kx < 0 ? 0 : .22})`]]); c.fillRect(-260, -214, 520, 200);
+  c.restore();
+  /* the glass: two side windows and the hatch */
+  const wA = carWindow(-186, -34, -126, 14), wB = carWindow(-10, 100, -126, 14);
+  for (const w of [wA, wB]) {
+    c.fillStyle = V2.grad(0, -200, 0, -126, [[0, '#8fb3d3'], [.6, '#4d6d90'], [1, '#2d4666']]); c.fill(w);
+    c.save(); c.clip(w); c.fillStyle = 'rgba(255,255,255,.34)'; c.beginPath(); c.moveTo(-90, -210); c.lineTo(-62, -210); c.lineTo(-100, -120); c.lineTo(-128, -120); c.closePath(); c.fill(); c.beginPath(); c.moveTo(20, -210); c.lineTo(34, -210); c.lineTo(6, -120); c.lineTo(-8, -120); c.closePath(); c.fill(); c.restore();
+    c.strokeStyle = OUT; c.lineWidth = 4; c.stroke(w);
+  }
+  /* seams, handles, the character line */
+  c.strokeStyle = 'rgba(25,10,20,.55)'; c.lineWidth = 2.6; for (const x of [-204, -22, 112]) { c.beginPath(); c.moveTo(x, -124); c.lineTo(x + (x === 112 ? 4 : 0), -40); c.stroke(); }
+  for (const x of [-62, 40]) { c.fillStyle = mixc(col, '#ffffff', .35); c.strokeStyle = OUT; c.lineWidth = 2.6; c.beginPath(); c.roundRect(x - 13, -112, 26, 7, 3.5); c.fill(); c.stroke(); }
+  /* lamps */
+  c.fillStyle = '#fff4c8'; c.strokeStyle = OUT; c.lineWidth = 3; c.beginPath(); c.roundRect(226, -112, 30, 18, 7); c.fill(); c.stroke();
+  c.fillStyle = '#d6242c'; c.beginPath(); c.roundRect(-256, -120, 12, 30, 5); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(30,26,40,.9)'; c.beginPath(); c.roundRect(236, -62, 24, 18, 4); c.fill(); c.beginPath(); c.roundRect(-258, -62, 20, 18, 4); c.fill();
+  c.strokeStyle = OUT; c.lineWidth = 5; c.stroke(body);
+  /* wheels */
+  for (const wx of [-148, 150]) {
+    c.fillStyle = '#15111a'; c.beginPath(); c.ellipse(wx, -40, 50, 50, 0, PI, TAU); c.lineTo(wx + 50, -20); c.lineTo(wx - 50, -20); c.closePath(); c.fill();
+    c.fillStyle = '#1d1a22'; c.strokeStyle = OUT; c.lineWidth = 3.4; c.beginPath(); c.arc(wx, -38, 39, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = V2.radial(wx - 6, -44, 2, 26, [[0, '#f1f4f8'], [1, '#8d96a4']]); c.beginPath(); c.arc(wx, -38, 24, 0, TAU); c.fill(); c.stroke();
+    c.strokeStyle = 'rgba(40,46,60,.7)'; c.lineWidth = 3.4; for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + .3; c.beginPath(); c.moveTo(wx + dcos(a) * 6, -38 + dsin(a) * 6); c.lineTo(wx + dcos(a) * 22, -38 + dsin(a) * 22); c.stroke(); }
+    c.fillStyle = '#55606f'; c.beginPath(); c.arc(wx, -38, 6, 0, TAU); c.fill();
+  }
+  /* the snow */
+  const k1 = sm(.3, .95, snow), kb = sm(.34, .86, snow), cap = 13 * sm(0, .35, snow) * (1 + .25 * sm(.35, .7, snow)), ext = 120 * sm(.5, 1, snow);
+  if (snow > .02) {
+    const xa = -252 - ext, xb = 258 + ext, N = Math.round((xb - xa) / 6), top = [], bot = [];
+    for (let i = 0; i <= N; i++) {
+      const x = xa + i * 6, edge = Math.min(1, Math.min(x - xa, xb - x) / 22), lump = vn(seed, x / 34) * (4.5 * (1 - k1) + 1.2) * sm(0, .15, snow);
+      const cTop = (x >= -252 && x <= 258 ? carTop(x) : 0) - cap * edge, hTop = hillY(x);
+      const inCar = x >= -252 && x <= 258, edgeE = Math.min(1, Math.min(x - xa, xb - x) / 40);
+      let yT = inCar ? lerp(cTop, Math.min(hTop, cTop), k1) : lerp(0, hTop, k1) * sm(0, 1, edgeE);
+      yT = Math.min(0, yT + lump);
+      const cBot = (x >= -252 && x <= 258 ? carTop(x) + 9 : -4), yBotG = -26 + 26 * sm(.86, 1, snow), yBot = lerp(cBot, yBotG, kb);
+      top.push([x, yT]); bot.push([x, Math.max(yT + 3, yBot + vn(seed + 3, x / 22) * 3 * kb)]);
+    }
+    c.beginPath(); top.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); for (let i = N; i >= 0; i--) c.lineTo(bot[i][0], bot[i][1]); c.closePath();
+    const topY = Math.min(...top.map(p => p[1]));
+    c.fillStyle = V2.grad(0, topY, 0, 0, [[0, '#f8fbff'], [.5, '#e4edf9'], [1, '#b8c8e4']]); c.fill();
+    c.save(); c.clip();
+    c.fillStyle = V2.grad(-280, 0, 280, 0, [[0, `rgba(120,146,196,${kx < 0 ? 0 : .38})`], [.5, 'rgba(120,146,196,0)'], [1, `rgba(120,146,196,${kx < 0 ? .38 : 0})`]]); c.fillRect(-300, topY - 10, 600, -topY + 12);
+    c.strokeStyle = 'rgba(120,146,196,.55)'; c.lineWidth = 9; c.beginPath(); bot.forEach(([x, y], i) => i ? c.lineTo(x, y - 4) : c.moveTo(x, y - 4)); c.stroke();   /* the blue shadow under the lip of the cap */
+    c.restore();
+    c.strokeStyle = 'rgba(70,92,150,.55)'; c.lineWidth = 3; c.beginPath(); top.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 3; c.beginPath(); top.forEach(([x, y], i) => i ? c.lineTo(x, y + 2.5) : c.moveTo(x, y + 2.5)); c.stroke();
+    c.strokeStyle = 'rgba(80,100,160,.35)'; c.lineWidth = 2.4; c.beginPath(); bot.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke();
+    c.fillStyle = '#ffffff'; for (let i = 0; i < 9; i++) { const x = xa + 20 + rnd(seed + 9, i) * (xb - xa - 40), y = (carTop(clamp(x, -250, 256)) + hillY(x)) / 2 * (.3 + .7 * k1) - 4 * (1 - k1) - 6; if (snow < .3) continue; const tw = .5 + .5 * dsin(t * 2.2 + i * 1.9); c.globalAlpha = .55 * tw; c.beginPath(); c.arc(x, Math.min(-10, y), 2 + rnd(seed, i) * 1.4, 0, TAU); c.fill(); } c.globalAlpha = 1;
+  }
+  /* the mirror and the antenna stay on top of the snow: at the hill stage they are all that shows of the car */
+  const bury = sm(.5, 1, snow);
+  { const mx = 100, my = -132 + 6 * bury, w = 30, h = 19;
+    c.fillStyle = V2.grad(0, my - h / 2, 0, my + h / 2, [[0, mixc(col, '#ffffff', .25)], [1, mixc(col, '#10142a', .3)]]); c.strokeStyle = OUT; c.lineWidth = 3.6; c.beginPath(); c.roundRect(mx - w / 2, my - h / 2, w, h, 7); c.fill(); c.stroke();
+    c.fillStyle = 'rgba(180,210,236,.8)'; c.beginPath(); c.roundRect(mx - w / 2 + 14, my - h / 2 + 3, 12, h - 6, 4); c.fill();
+    c.strokeStyle = OUT; c.lineWidth = 3.4; c.beginPath(); c.moveTo(mx - 6, my + h / 2 - 1); c.lineTo(mx - 14, my + h / 2 + 7); c.stroke();
+    if (snow > .3) { c.fillStyle = '#f7fbff'; c.beginPath(); c.ellipse(mx - 2, my - h / 2 + 1, 15, 5, 0, PI, TAU); c.fill(); c.strokeStyle = 'rgba(120,146,196,.8)'; c.lineWidth = 2; c.stroke(); } }
+  { const ax = -172, ay = (snow > .6 ? Math.min(carTop(ax) , hillY(ax)) : carTop(ax)) + 4, ah = 52 + 18 * bury, sw = dsin(t * 1.7 + seed) * 1.6 * (.4 + bury);
+    c.strokeStyle = OUT; c.lineWidth = 5; c.beginPath(); c.moveTo(ax, ay); c.quadraticCurveTo(ax - 2 + sw * .4, ay - ah * .5, ax - 5 + sw, ay - ah); c.stroke();
+    c.strokeStyle = '#c9d0dc'; c.lineWidth = 2.4; c.stroke(); c.fillStyle = '#d6242c'; c.strokeStyle = OUT; c.lineWidth = 2.6; c.beginPath(); c.arc(ax - 5 + sw, ay - ah, 5, 0, TAU); c.fill(); c.stroke(); }
+  c.restore();
+}
+A.car = (c, o = {}) => {
+  o = Object.assign({ x: 0, y: 0, s: 1, facing: 1, snow: 0, t: tOf(o) }, o);
+  const info = carInfoOf(o), f = o.facing, s = o.s;
+  if (o.lights && (o.snow ?? 0) < .6) {   /* headlights: a warm lamp and a beam in the falling snow (the weather kit's beam when it exists) */
+    const L = [o.x + f * s * 250, o.y - s * 100];
+    if (window.SN20 && typeof SN20.beam === 'function') SN20.beam(c, { x: L[0], y: L[1], ang: f > 0 ? .03 : PI - .03, spread: .5, len: 560 * s, color: '#fff2c4', alpha: .5, t: o.t, seed: (o.seed || 7) + 1 });
+    else if (window.FX18 && FX18.cone) FX18.cone(c, { x: L[0], y: L[1], ang: f > 0 ? .03 : PI - .03, spread: .5, len: 560 * s, color: '#fff2c4', alpha: .45, soft: .8 });
+  }
+  carDraw(c, o);
+  if (o.lights && (o.snow ?? 0) < .6 && window.FX18 && FX18.glow) FX18.glow(c, { x: o.x + f * s * 244, y: o.y - s * 103, r: 46 * s, color: '#fff3c8', alpha: .8, core: .7 });
+  return info.box;
+};
 /* @@A20-PART3 */
 
 // ================================================================== E15-TURN integration: the gear turns with the head / body (it reads o.yaw / o.headYaw itself through yawInfo)

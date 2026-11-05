@@ -170,7 +170,7 @@ SN20.snow = function snow(c, o = {}) {
       if (x < x0 - half || x > x1 + half || y < y0 - half || y > y1 + half) continue;
       const shape = (bucketD(bi) >= 5.4 && P[b + 10] < .22) ? 1 : 0;
       c.globalAlpha = lerp(L.a0, L.a1, P[b + 9]) * alphaK;
-      c.drawImage(flakeSprite(tone, shape, soft, bi), x - half, y - half);
+      c.drawImage(flakeSprite(tone, shape, soft, bi), Math.round(x - half), Math.round(y - half));      /* whole pixels: a blit without filtering costs half */
     }
   }
   c.restore();
@@ -186,8 +186,8 @@ let PASS = null;
 function passBuf(w, h) {
   const cw = Math.ceil(w / DS), ch = Math.ceil(h / DS);
   if (PASS && PASS.cw === cw && PASS.ch === ch) return PASS;
-  const dk = mk(cw, ch), lc = mk(cw, ch);
-  return PASS = { cw, ch, dk, dkc: dk.getContext('2d'), lc, lcc: lc.getContext('2d') };
+  const dk = mk(cw, ch), lc = mk(cw, ch), mid = mk(cw * 2, ch * 2);
+  return PASS = { cw, ch, dk, dkc: dk.getContext('2d'), lc, lcc: lc.getContext('2d'), mid, midc: mid.getContext('2d') };
 }
 /* bakes a coloured sprite whose alpha is fn(px, py, w, h) in 0..1 */
 function bake(key, w, h, col, fn) {
@@ -330,6 +330,11 @@ L20.pass = function pass(c, o = {}) {
   }
   lcc.setTransform(1, 0, 0, 1, 0, 0); lcc.globalAlpha = 1; lcc.globalCompositeOperation = 'source-over';
   c.save(); c.setTransform(1, 0, 0, 1, 0, 0); clean(c);
+  /* the lit box: the lights' bounding box in screen pixels, snapped to the low-res grid. Outside it the mask is uniform (and the vignette is smooth), so a plain nearest-neighbour copy is exact and cheap; inside it the
+   * darkness is upscaled smoothly in two stages (bilinear to half size, then nearest): a full-frame bilinear upscale costs 8 ms in the software renderer, this 1.5 to 3 ms. */
+  const FW = P.cw * DS, FH = P.ch * DS;
+  let X0 = Math.max(0, Math.floor(sx0 / DS)) * DS, Y0 = Math.max(0, Math.floor(sy0 / DS)) * DS, X1 = Math.min(P.cw, Math.ceil(sx1 / DS)) * DS, Y1 = Math.min(P.ch, Math.ceil(sy1 / DS)) * DS;
+  const box = n > 0 && X1 > X0 && Y1 > Y0;
   if (D > .004 || vig > .004) {                                                                   /* the darkness */
     dkc.setTransform(1, 0, 0, 1, 0, 0); dkc.globalCompositeOperation = 'source-over'; dkc.globalAlpha = 1; dkc.clearRect(0, 0, P.cw, P.ch);
     if (D > .004) {
@@ -337,11 +342,22 @@ L20.pass = function pass(c, o = {}) {
       if (n) { dkc.globalCompositeOperation = 'destination-out'; dkc.drawImage(P.lc, 0, 0); dkc.globalCompositeOperation = 'source-over'; }
     }
     if (vig > .004) { dkc.globalAlpha = vig; dkc.drawImage(vigSprite(tint, P.cw, P.ch), 0, 0); dkc.globalAlpha = 1; }
-    c.drawImage(P.dk, 0, 0, P.cw, P.ch, 0, 0, P.cw * DS, P.ch * DS);
+    c.imageSmoothingEnabled = false;
+    const strip = (x, y, ww, hh) => { if (ww > 0 && hh > 0) c.drawImage(P.dk, x / DS, y / DS, ww / DS, hh / DS, x, y, ww, hh); };
+    if (!box) strip(0, 0, FW, FH);
+    else {
+      strip(0, 0, FW, Y0); strip(0, Y1, FW, FH - Y1); strip(0, Y0, X0, Y1 - Y0); strip(X1, Y0, FW - X1, Y1 - Y0);
+      const mc = P.midc, bx = X0 / 2, by = Y0 / 2, bw = (X1 - X0) / 2, bh = (Y1 - Y0) / 2;
+      mc.setTransform(1, 0, 0, 1, 0, 0); mc.globalCompositeOperation = 'source-over'; mc.globalAlpha = 1; mc.clearRect(bx, by, bw, bh);
+      mc.imageSmoothingEnabled = true; mc.drawImage(P.dk, X0 / DS, Y0 / DS, (X1 - X0) / DS, (Y1 - Y0) / DS, bx, by, bw, bh);
+      c.drawImage(P.mid, bx, by, bw, bh, X0, Y0, X1 - X0, Y1 - Y0);
+    }
+    c.imageSmoothingEnabled = true;
   }
-  if (n && glowAmt > .004) {                                                                      /* the lights' own colour, over their bounding box only */
-    const X0 = Math.max(0, Math.floor(sx0 / DS)) * DS, Y0 = Math.max(0, Math.floor(sy0 / DS)) * DS, X1 = Math.min(P.cw, Math.ceil(sx1 / DS)) * DS, Y1 = Math.min(P.ch, Math.ceil(sy1 / DS)) * DS;
-    if (X1 > X0 && Y1 > Y0) { c.globalCompositeOperation = 'lighter'; c.globalAlpha = glowAmt; c.drawImage(P.lc, X0 / DS, Y0 / DS, (X1 - X0) / DS, (Y1 - Y0) / DS, X0, Y0, X1 - X0, Y1 - Y0); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over'; }
+  if (box && glowAmt > .004) {                                                                    /* the lights' own colour, over their bounding box only (nearest: it is a soft, faint add) */
+    c.imageSmoothingEnabled = false; c.globalCompositeOperation = 'lighter'; c.globalAlpha = glowAmt;
+    c.drawImage(P.lc, X0 / DS, Y0 / DS, (X1 - X0) / DS, (Y1 - Y0) / DS, X0, Y0, X1 - X0, Y1 - Y0);
+    c.globalAlpha = 1; c.globalCompositeOperation = 'source-over'; c.imageSmoothingEnabled = true;
   }
   if (bloomA > .01) {                                                                             /* bloom on the cores of points and cone lenses */
     for (const [l, pw] of live) {
