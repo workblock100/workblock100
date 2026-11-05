@@ -192,7 +192,7 @@ function bigWindow(lt, env, G, o = {}) {
   ctx.fillStyle = '#ece7da'; ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; rr(x - fr, y - fr, w + 2 * fr, h + 2 * fr, 6); ctx.fill(); ctx.stroke();
   ctx.save(); clipRR(x, y, w, h, 3);
   skyIn(x, y, w, h, env, { suppressMoon: o.suppressMoon, moonChar: o.moonChar });
-  weatherIn(x, y, w, h, env, { seed: 7, dens: 1.6 });
+  weatherIn(x, y, w, h, env, { seed: 7, dens: 1.6, kids: o.winKids });
   ctx.globalCompositeOperation = 'screen';                                 /* a glint of the room on the glass */
   ctx.fillStyle = lg(x, y, x + w * .5, y + h, [[0, 'rgba(255,255,255,.07)'], [.5, 'rgba(255,255,255,.02)'], [1, 'rgba(255,255,255,0)']]);
   ctx.beginPath(); ctx.moveTo(x + w * .08, y); ctx.lineTo(x + w * .3, y); ctx.lineTo(x + w * .12, y + h); ctx.lineTo(x - w * .1, y + h); ctx.closePath(); ctx.fill();
@@ -253,7 +253,7 @@ function wallClock(lt, env, G, o = {}) {
   G.clock = { cx, cy, R, text: P.text };
 }
 function darkTV(lt, env, G) {
-  const [x, y, w, h] = wbox(-850, 600, -560, 790), t = lt;
+  const [x, y, w, h] = wbox(-760, 640, -480, 820), t = lt;
   ctx.save(); ctx.fillStyle = '#16181f'; ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; rr(x - 6, y - 6, w + 12, h + 12, 8); ctx.fill(); ctx.stroke();
   ctx.fillStyle = lg(x, y, x + w, y + h, [[0, '#2a2f3d'], [.5, '#181b25'], [1, '#232837']]); ctx.fillRect(x, y, w, h);
   ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.beginPath(); ctx.moveTo(x + w * .1, y); ctx.lineTo(x + w * .34, y); ctx.lineTo(x + w * .16, y + h); ctx.lineTo(x - w * .08, y + h); ctx.closePath(); ctx.fill();
@@ -446,7 +446,7 @@ const SH = [
   { id: 'mo3', s: 23.718, e: 24.78, k: 'moon', z: 1.85, dz: .1 },
   { id: 's9', s: 24.78, e: 25.689, k: 'cu', foc: 'straw', z: 2.05, dz: .2, up: 150 },
   { id: 'dawn', s: 25.689, e: 27.739, k: 'wide', z0: 1.12, z1: 1.3 },
-  { id: 'tu3', s: 27.739, e: 29.605, k: 'plow', z: 1.5 },
+  { id: 'tu3', s: 27.739, e: 29.605, k: 'plow', z: 2.0 },
   { id: 'o5', s: 29.605, e: 31.338, k: 'cu', foc: 'onion', z: 2.3, dz: .2, up: 150 },
   { id: 's10', s: 31.338, e: 32.412, k: 'cu', foc: 'straw', z: 2.15, dz: .15, up: 150 },
   { id: 'end', s: 32.412, e: 99, k: 'wide', z0: 1.2, z1: 1.1 },
@@ -507,7 +507,7 @@ function drawRoom(lt, env, o = {}) {
 }
 
 // ------------------------------------------------------------------ the twin: ONE Strawberry drawn twice, facing each other across the med cart
-const TW = { out: [-145, 1185], on: [225, 1185] };
+const TW = { out: [-65, 1185], on: [305, 1185] };
 function twinSpeaker(lt) { return lt < 7.89 ? 'out' : lt < 8.917 ? 'on' : lt < 9.795 ? 'out' : 'on'; }
 function twinOut(lt, sh) {
   const sp = twinSpeaker(lt) === 'out' && lt < 10.5;
@@ -555,7 +555,7 @@ function roundsOpts(tt, o = {}) {
 // ------------------------------------------------------------------ who is in the picture at lt: [{ name, o, z }] (the focus of a close-up is looked up by name)
 function castFor(lt, sh) {
   const C = [];
-  if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'clock') return C;
+  if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'clock' || sh.k === 'plow') return C;
   const add = (name, o, z) => C.push({ name, o, z });
   if (lt < 6.249) add('straw', strawIdle(lt), HOME.Z);
   else if (lt < L.t0) { add('out', twinOut(lt, sh), TW.out[1]); add('on', twinOn(lt, sh), TW.on[1]); }
@@ -599,7 +599,7 @@ function camFor(lt, sh, C, env) {
     case 'clock': { const g = wallClockPos(), w = winRect(); zoomTo(g.cx + 8, lerp(g.cy, w.y + w.h * .4, .62), zz); break; }
     case 'moon': { const w = winRect(), mo = env.mo; zoomTo(w.x + w.w * lerp(.5, mo.u, .55), w.y + w.h * lerp(.5, 1 - mo.v, .55) + 20, zz); break; }
     case 'moon2': { const g = wallClockPos(), w = winRect(); zoomTo(w.x + w.w * .55, lerp(g.cy, w.y + w.h * .55, .5) + 10, zz); break; }
-    case 'plow': { const tx = plowAt(lt).cabX; zoomTo(tx - 30, winRect().y + winRect().h * .46, zz); break; }
+    case 'plow': { const p = plowAt(lt); zoomTo(p.cabX + 70, p.gy - 254 * p.s + 140 / zz, zz); break; }
   }
 }
 const winRect = () => { const [x, y, w, h] = wbox(LAY.win.x0, LAY.win.y0, LAY.win.x1, LAY.win.y1); return { x, y, w, h }; };
@@ -608,12 +608,6 @@ const wallClockPos = () => { const [cx, cy] = wpt(LAY.clock.X, LAY.clock.Y); ret
 function onionFace() {
   const C = LAY.cots.onion, [cx, cy, k] = V2.proj(C.X, 0, C.Z), s = k * COTK, u = easeIO(c01(ss(FR ? FR.lt : 30, 28.9, 29.55)));
   return [cx + s * lerp(-112, -96, u), cy - s * lerp(138, 196, u) + 10 * s];
-}
-/* the plow outside the window / doors (tu3): where its cab is on the canvas at lt */
-function plowAt(lt) {
-  const w = winRect(), d = wbox(LAY.doors.x0, 0, LAY.doors.x1, LAY.doors.y1), u = sg(lt, 26.2, 29.9), x0 = w.x - w.w * .75, x1 = d[0] + d[2] * .65;
-  const cabX = lerp(x0, x1, easeIO(u) * .35 + u * .65);
-  return { cabX, u, s: 1.0 };
 }
 
 // ------------------------------------------------------------------ the light: ONE pass over the finished picture (L20.pass). Night is deep blue, never black; every speaking face has a light that is in the frame.
@@ -655,10 +649,10 @@ function drawScene(lt) {
   V2.setLight({ key: [lerp(.5, -.5, warm), -.6], keyColor: hex(mixa([170, 196, 255], [255, 214, 160], warm)), keyA: .22, rim: '#ffb070', rimA: .4, shadow: '#101838', shadowA: .36, bounce: '#ffd9a0', bounceA: .1, amb: '#aab4e8', ambA: .08 });
   V2.opts.reflect = true;
   let G = {};
-  const ro = { sharp: sharpClock, suppressMoon: !talkMoon, moonChar: talkMoon ? { expr: 'chill', lid: .22 } : {}, onionWho: sh.id === 'o5' ? 'onion' : undefined, noCots: false };
+  const ro = { winKids: () => drawPlow(lt, env, 'win', sh.k === 'plow'), doorKids: () => drawPlow(lt, env, 'doors', false), sharp: sharpClock, suppressMoon: !talkMoon, moonChar: talkMoon ? { expr: 'chill', lid: .22 } : {}, onionWho: sh.id === 'o5' ? 'onion' : undefined, noCots: false };
   const furn = lt2 => [
-    { z: 1450, fn: () => { if (sh.k === 'moon' || sh.k === 'moon2') plainCounter(); else { S13.counter({ t: lt, phoneRing: 0, plaque: false }); deskLamp(lt, env, G); coffeeMaker(lt, env, G); } } },
-  ].concat(sh.id === 'o5' || sh.k === 'moon' || sh.k === 'moon2' ? [] : [{ z: LAY.cart.Z, fn: () => medCart(lt, env, G) }]);
+    { z: 1450, fn: () => { if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow') plainCounter(); else { S13.counter({ t: lt, phoneRing: 0, plaque: false }); deskLamp(lt, env, G); coffeeMaker(lt, env, G); } } },
+  ].concat(sh.id === 'o5' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' ? [] : [{ z: LAY.cart.Z, fn: () => medCart(lt, env, G) }]);
   const room = () => { G = Object.assign(G, drawRoom(lt, env, ro)); };
   const chars = C.map(c => ({ z: c.z, fn: () => {
     const f = inFrame(c.o), foc = sh.foc === c.name || sh.k === 'lapse' || sh.k === 'wide';
@@ -694,6 +688,29 @@ function ghosts(lt) {
     drawChar(m.o);
   }
   REG.suppress--;
+}
+
+
+// ------------------------------------------------------------------ the plow outside (A20.plowTruck + Turnip in the cab): enters from the left at the end of the dawn, passes the window while he speaks (tu3), the wave buries the doors
+const PLOW = { s: 1.35, v: 192, cab0: 400, t0: 27.739 };
+function plowAt(lt) {
+  const gy = wpt(0, 0, ZB)[1] - 10, xc = PLOW.cab0 + PLOW.v * (lt - PLOW.t0);
+  return { cabX: xc, xo: xc + 38 * PLOW.s, gy, s: PLOW.s, on: lt > 24.9 && lt < 30.6 };
+}
+function drawPlow(lt, env, where, reg) {
+  const p = plowAt(lt); if (!p.on || !has('A20', 'plowTruck')) return;
+  const push = ss(lt, 27.4, 28.2), T = A20.plowTruck(ctx, { x: p.xo, y: p.gy, s: p.s, facing: 1, t: lt, blade: .16 + .12 * push, load: .85, beacon: true, beaconOn: ss(lt, 25.9, 26.8), headlights: true, cab: true, wheelRot: p.xo / 58, snow: .3, seed: 11 });
+  if (where === 'win' && has('A20', 'turnip') && T.cab) {
+    const [x0, y0, x1, y1] = T.cab, cx = (x0 + x1) / 2, up = ss(lt, 27.93, 28.25) * (1 - ss(lt, 29.05, 29.4));
+    if (!reg) REG.suppress++;
+    ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+    const o = A20.turnip({ x: cx, y: y1 + 70 * p.s, s: .41 * p.s * 1.0, noLegs: false, t: lt, mugUp: up, who: 'turnip', yaw: 0, look: [.3, 0] });
+    drawChar(o);
+    ctx.restore();
+    if (!reg) REG.suppress--;
+    if (A20.cabGlass) A20.cabGlass(ctx, { x: p.xo, y: p.gy, s: p.s, facing: 1, t: lt });
+  }
+  if (T.blade && ss(lt, 26.0, 27.0) > 0 && lt < 29.7) sprayN(ctx, { x: T.blade[0], y: T.blade[1], ang: -1.0, t: lt, t0: 25.9, t1: 29.8, seed: 5, power: 1, width: 1, gravity: 700 });
 }
 
 // ------------------------------------------------------------------ the scene

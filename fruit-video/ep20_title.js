@@ -425,5 +425,79 @@ const TITLE = {
 };
 window.__EP20_SCENES.title = TITLE;
 
-/* @@END2@@ */
+// ====================================================================================================================================================================
+// END (7.5 s, noScrim, noChyron): THE CLOSINGS. A local TV station's SNOW CLOSINGS graphic fills the frame: a studio-blue screen with a CHANNEL 12 STORM CENTER bug and a LIVE tag, the cast as small portrait chips (ESSENTIAL
+// STAFF), a ruled table that types itself in (SCHOOLS CLOSED ... FRUIT SALAD NURSING AND REHAB OPEN), a red ESSENTIAL stamp, a live picture-in-picture of the night nurse in her car in the ditch with a pizza (A20.ditchPicture,
+// a stand-in until it lands) under a lower third, and a pale-blue teaser strip: NEXT: EPISODE 21 / THE INSPECTION. Snow falls over the picture, never over the table.
+// Cues (scene-local s, python3 /tmp/shift_tools/cues.py 20 end): theme20 .1 | typing 1.1 | stamp 4.0 | textding 5.1, each snapped to a frame.
+//   0.00-0.10 fade up   0.10-0.60 the bug, the header and the LIVE tag slide in, the table frame draws   0.35-0.95 the portrait chips pop in, one after another   0.55-1.0 the picture-in-picture opens
+//   1.10-3.70 the six rows are typed (a row every .43 s)   4.00 ESSENTIAL lands (the table dips 4 px, the camera jolts, an ink ring), PER POLICY. beside it   5.10 the teaser strip slides up with its shine and stars
+//   5.45-7.2 a calm hold, a slow push-in; the LIVE dot, the hazard lights and the snow are the only motion   7.2-7.5 a dip to black.
+// ====================================================================================================================================================================
+const SE = snapOf('end');
+const E = { type0: SE(1.1), stamp: SE(4.0), ding: SE(5.1) };
+const ROWS = [['SCHOOLS', 'CLOSED'], ['BANKS', 'CLOSED'], ['DMV', 'CLOSED'], ['LIBRARY', 'CLOSED'], ['THE MALL', 'CLOSED'], ['FRUIT SALAD NURSING AND REHAB', 'OPEN']];
+const rowT = i => E.type0 + i * .43;
+const TB = { x: 40, y: 500, w: 1000, rowH: 80 };                                  /* the table: a header row and six rows */
+const PIP = { x: 540, y: 1440, w: 844, h: 475 };                                  /* the picture-in-picture (centre) */
+const TS = { x: 60, y: 1706, w: 960, h: 134 };                                    /* the teaser strip */
+const CAST = [
+  { key: 'straw', bg: '#ffe2cf', ring: '#e8782c', s: .23, expr: 'sour' }, { key: 'lemon', bg: '#fff3b8', ring: '#e8a82c', s: .23, expr: 'sour' }, { key: 'mango', bg: '#ffe7c2', ring: '#e8782c', s: .21, expr: 'neutral' },
+  { key: 'onion', bg: '#e6e2fb', ring: '#6d5bd0', s: .22, expr: null }, { key: 'tomato', bg: '#fbd8d2', ring: '#c8473a', s: .22, expr: null }, { key: 'bind', bg: '#e5e8ec', ring: '#5b6470', s: .26, expr: null },
+  { key: 'turnip', bg: '#e8dcf2', ring: '#7a4fa0', s: .2, expr: null }, { key: 'egg', bg: '#e3d5f2', ring: '#5b3a8a', s: .2, expr: null },
+];
+const CAST_FALLBACK = new Set();
+function castCtor(key) {
+  const g = window;
+  return { straw: () => (g.A11 && g.A11.straw) || (g.A7 && g.A7.straw), lemon: () => g.A7 && g.A7.lemon, mango: () => g.A7 && g.A7.mango, onion: () => g.A15 && g.A15.onion, tomato: () => g.A15 && g.A15.tomato,
+    bind: () => g.A15 && g.A15.binder, turnip: () => g.A20 && g.A20.turnip, egg: () => g.A20 && g.A20.eggplant }[key]();
+}
+/* the cast chips (ep19_title.js): a portrait in a circle, drawn live with the real constructors, guarded one by one */
+function chip(p, cx, cy, rad, lt) {
+  ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.fillStyle = p.bg; ctx.fill();
+  const ctor = castCtor(p.key);
+  if (ctor) {
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, rad - 1, 0, TAU); ctx.clip();
+    try {
+      const x = { t: lt, noLegs: true, noShadow: true, noReflect: true, s: p.s, x: 0, y: 0 };
+      if (p.expr) x.expr = p.expr;
+      if (p.key === 'onion') x.pose = 'rest';
+      if (p.key === 'tomato') x.formsN = 0;
+      if (p.key === 'bind') Object.assign(x, { grin: .55, glint: .5, center: true, bob: 0, hover: 0 });
+      const o = Object.assign(ctor(x), x);
+      if (p.key === 'tomato' || p.key === 'onion') o.hold = {};                      /* a portrait carries no props: they would cover the small faces */
+      o.noLegs = true; o.s = p.s;
+      if (p.key === 'bind') { o.x = cx; o.y = cy - 12 * p.s; }
+      else { const [fx, fy] = window.H6.faceC(o); o.x = cx - fx; o.y = cy - fy + 3; }
+      drawChar(o);
+    } catch (e) { if (!CAST_FALLBACK.has(p.key)) { CAST_FALLBACK.add(p.key); console.error('CARDS20 chip ' + p.key + ': ' + e.message); } }
+    ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.lineWidth = 4; ctx.strokeStyle = p.ring; ctx.stroke();
+}
+/* the picture until A20.ditchPicture lands: a night ditch, a small car nose down in it with its hazards blinking slowly, the nurse's purple head at the wheel, a pizza box on the dash */
+function ditchStandIn(cx, cy, w, h, lt) {
+  ctx.save(); ctx.translate(cx - w / 2, cy - h / 2); ctx.beginPath(); ctx.roundRect(0, 0, w, h, 18); ctx.clip();
+  let g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#12285a'); g.addColorStop(.6, '#223f7a'); g.addColorStop(1, '#4a6aa0'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  g = ctx.createLinearGradient(0, h * .6, 0, h); g.addColorStop(0, '#e9f2ff'); g.addColorStop(1, '#a9c0e4'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, h * .62); ctx.quadraticCurveTo(w * .22, h * .5, w * .38, h * .74); ctx.lineTo(w * .62, h * .74); ctx.quadraticCurveTo(w * .8, h * .5, w, h * .6); ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath(); ctx.fill();
+  ctx.save(); ctx.translate(w * .5, h * .66); ctx.rotate(-.2);
+  ctx.fillStyle = '#d94a3a'; ctx.beginPath(); ctx.roundRect(-150, -52, 300, 74, 22); ctx.fill(); outline(4); ctx.fillStyle = '#c23b2d'; ctx.beginPath(); ctx.roundRect(-84, -112, 168, 64, [26, 26, 4, 4]); ctx.fill(); outline(4);
+  ctx.fillStyle = '#26164a'; ctx.beginPath(); ctx.roundRect(-72, -102, 144, 46, 14); ctx.fill();
+  ctx.fillStyle = '#7b4fb4'; ctx.beginPath(); ctx.ellipse(-8, -78, 24, 28, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#3d9a45'; ctx.fillRect(-22, -108, 28, 9);
+  ctx.fillStyle = '#f4e6c0'; ctx.fillRect(22, -70, 36, 20); ctx.fillStyle = '#d93025'; ctx.fillRect(26, -66, 12, 12);
+  const hz = .45 + .55 * (.5 + .5 * Math.sin(lt * TAU * 1));                                  /* hazards: a slow 1 Hz breath, never a flash */
+  for (const sx of [-146, 146]) { ctx.fillStyle = `rgba(255,170,40,${hz})`; ctx.beginPath(); ctx.arc(sx, -24, 9, 0, TAU); ctx.fill(); glowAt(sx, -24, 70, '#ffaa28', .45 * hz, .3); }
+  for (const sx of [-92, 92]) { ctx.fillStyle = '#1c1c22'; ctx.beginPath(); ctx.arc(sx, 24, 30, 0, TAU); ctx.fill(); }
+  ctx.fillStyle = '#f6faff'; ctx.beginPath(); ctx.ellipse(-4, -110, 90, 14, 0, Math.PI, 0); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+/* the teaser strip's snowflake paper-cut dressing */
+function flakeMark(x, y, r) {
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  for (let i = 0; i < 6; i++) { const a = i * PI / 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r * .6 - Math.sin(a) * r * .22, y + Math.sin(a) * r * .6 + Math.cos(a) * r * .22); ctx.lineTo(x + Math.cos(a) * r * .6 + Math.sin(a) * r * .22, y + Math.sin(a) * r * .6 - Math.cos(a) * r * .22); ctx.stroke(); }
+  ctx.restore();
+}
+
+/* @@END3@@ */
 })();

@@ -18,7 +18,7 @@
  *  P20.stopwatchPose(o, t) -> { x, y, hx, hy } the LCD centre (world units), for the L20 point light.
  *
  * ------------------------------------------------------------------ SET PIECES
- *  P20.ledCandle(ctx, o)        o = { x, y (bottom centre), s, on 0..1, t, seed, kind 'pillar' (default, 42 x 96) | 'tea' (a battery tea light, 56 x 24), sticker 0..1 (an APPROVED label on the body), glow (default 1) }.
+ *  P20.ledCandle(ctx, o)        o = { x, y (bottom centre), s, on 0..1, t, seed, kind 'pillar' (default, 42 x 96) | 'tea' (a battery tea light, 56 x 24), sticker 0..1 (an APPROVED label on the body, 104 x 36, wider than the candle: it wraps round it), glow (default 1) }.
  *                               Returns { fx, fy, r } the flame centre and a glow radius (current coordinates) for the scene's point light. The flicker is slow and soft (under 1.2 Hz, +-5 percent).
  *  (the rest of the contract lands in the following blocks of this file: cot, moon, outlet, coffeeMaker, exitSign, emergencyLamp)
  */
@@ -170,8 +170,8 @@ P20.ledCandle = (c, o = {}) => {
     if (o.sticker > 0 && kind !== 'tea') {   /* an APPROVED label pressed onto the body */
       const k = c01(o.sticker), sc = .6 + .4 * Math.min(1, k * 1.4);
       g.save(); g.globalAlpha *= c01(k * 4); g.translate(0, -h * .42); g.rotate(-.05); g.scale(sc, sc);
-      g.fillStyle = '#f4f7ee'; rr(-34, -13, 68, 26, 4); g.fill(); g.strokeStyle = '#2f8f4a'; g.lineWidth = 2.4; g.stroke();
-      lab('APPROVED', 0, 0.5, { size: 12.5, weight: 900, fill: '#1f7a3a', maxW: 60, spacing: .4 });
+      g.fillStyle = '#f4f7ee'; rr(-52, -18, 104, 36, 5); g.fill(); g.strokeStyle = '#2f8f4a'; g.lineWidth = 3; g.stroke();
+      lab('APPROVED', 0, 0.5, { size: 17, weight: 900, fill: '#1f7a3a', maxW: 94, spacing: .5 });
       g.restore();
     }
     if (on > .02 && o.glow !== 0) {
@@ -525,5 +525,26 @@ P20.emergencyLamp = (c, o = {}) => {
     for (let i = 0; i < 2; i++) if (on > .02) { const [hx, hy] = hd[i]; g.save(); g.globalCompositeOperation = 'lighter'; glow(g, hx + (i ? 10 : -10), hy + 14, 66, col, .65 * on, .6); g.restore(); }
   });
   return res;
+};
+})();
+(() => {
+/* ---- block 4: a candle in the hand (fp20_candle) and where its flame is */
+const P20 = window.P20, { PI, c01 } = P20._;
+/* held prop: an LED candle in the hand, the flame up; o.candOn 0..1, o.candSticker 0..1 (the APPROVED label), o.candScale (default 1), o.candSeed */
+PROP_BOX.fp20_candle = o => { const S = o.candScale ?? 1; return Object.assign([-60 * S, -150 * S, 60 * S, 34 * S], { nearFace: true }); };
+EXT.prop.fp20_candle = (side, o, t) => {
+  const S = o.candScale ?? 1;
+  ctx.save(); ctx.rotate(side * -.06); ctx.scale(S, S);
+  P20.ledCandle(ctx, { x: 0, y: 30, s: 1, on: o.candOn ?? 1, t, seed: o.candSeed ?? 1, kind: 'pillar', sticker: o.candSticker || 0, glow: 0 });
+  ctx.restore();
+};
+/* the flame of the held candle in the character's units (for the scene's point light) */
+P20.candlePose = (o, t) => {
+  const key = o.hold && (o.hold.r === 'fp20_candle' ? 'r' : o.hold.l === 'fp20_candle' ? 'l' : null);
+  if (!key) return null;
+  const k = KINDS[o.kind] || KINDS.lemon, s = o.s || 1, fl = o.flip ? -1 : 1, leg = (o.noLegs || o.center) ? 0 : (k.leg || 90), up = o.center ? 0 : (leg + k.ry * .9), S = o.candScale ?? 1;
+  const cx = o.x, cy = o.y - (o.lift || 0) - s * up, g = o.grip && o.grip[key], side = key === 'l' ? -1 : 1;
+  const hx = g ? cx + g[0] * s * fl : cx + side * (k.rx * .9 + 40) * s * fl, hy = g ? cy + g[1] * s : cy + 40 * s;
+  return { x: hx, y: hy + (30 - 96 - 14) * S * s, hx, hy };
 };
 })();

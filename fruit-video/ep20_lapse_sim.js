@@ -120,9 +120,9 @@ const LAY = {
   doors: { x0: 380, x1: 610, y1: 560 },                                    /* the glass doors of the entrance, to the right of the window */
   clock: { X: 0, Y: 940, r: 100 },                                         /* the wall clock above the window */
   counter: { x0: -120, x1: 720, z0: 1380, z1: 1520, top: 190 },            /* S13's counter */
-  cart: { X: 40, Z: 1235 },                                               /* the med cart */
-  home: { X: 235, Z: 1210 },                                               /* where Strawberry stands beside the cart */
-  cots: { mango: { X: -575, Z: 1850 }, lemon: { X: -429, Z: 1850 }, tom: { X: -283, Z: 1850 }, onion: { X: -137, Z: 1850 } },   /* four cots in an overlapping row along the back wall, heads to the left */
+  cart: { X: 120, Z: 1235 },                                               /* the med cart */
+  home: { X: 300, Z: 1210 },                                               /* where Strawberry stands beside the cart */
+  cots: { mango: { X: -505, Z: 1850 }, lemon: { X: -365, Z: 1850 }, tom: { X: -225, Z: 1850 }, onion: { X: -85, Z: 1850 } },   /* four cots in an overlapping row along the back wall, heads to the left */
 };
 
 /* ------------------------------------------------------------------ Strawberry's rounds (the ghost trail of the lapse): a loop of stops, walked again and again */

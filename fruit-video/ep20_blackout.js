@@ -310,7 +310,7 @@ const faceZ = (o, z, up) => { const [fx, fy] = faceC(o); zoomTo(fx, fy + up / z,
 function windowPane(lt) {
   const L = S13.LAY.win, w = S13.wallBox(S13.LAY.zb, L.x0, L.y0, L.x1, L.y1);
   ctx.save(); ctx.beginPath(); ctx.rect(w[0], w[1], w[2], w[3]); ctx.clip();
-  ctx.fillStyle = lg(0, w[1], 0, w[1] + w[3], [[0, '#b4c6e2'], [1, '#869dc6']]); ctx.fillRect(w[0], w[1], w[2], w[3]);
+  ctx.fillStyle = lg(0, w[1], 0, w[1] + w[3], [[0, '#96b0dc'], [1, '#6c88b8']]); ctx.fillRect(w[0], w[1], w[2], w[3]);
   if (window.SN20 && SN20.snow) SN20.snow(ctx, { x0: w[0], y0: w[1], x1: w[0] + w[2], y1: w[1] + w[3], t: lt, seed: 21, layers: 3, density: 1.5, tone: 'light', wind: -90, size: .8, fore: false });
   else { ctx.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 60; i++) { const px = w[0] + ((B.sr(i, 1) * w[2] - lt * 40 * (.5 + B.sr(i, 2)) + w[2] * 4) % w[2]), py = w[1] + ((B.sr(i, 3) * w[3] + lt * 120 * (.5 + B.sr(i, 4))) % w[3]); ctx.beginPath(); ctx.arc(px, py, 2 + 3 * B.sr(i, 5), 0, TAU); ctx.fill(); } }
   ctx.fillStyle = 'rgba(90,110,150,.5)'; ctx.fillRect(w[0] + w[2] / 2 - 3, w[1], 6, w[3]); ctx.fillRect(w[0], w[1] + w[3] * .46, w[2], 6);                      /* the mullions */
@@ -369,7 +369,8 @@ function castI(lt, sh) {
   const sob = Math.max(0, 1 - Math.abs(lt - CUE.sniffle[0] - .12) / .5, 1 - Math.abs(lt - CUE.sniffle[1] - .12) / .5);
   /* ONION: the stopwatch in her left hand (the screen-left one), starts at 2.4 and stops at 10.0; she cries throughout; relief at "Within code." */
   { const tw = toward('onion', spk === 'onion' || !attn ? 'lemon' : attn, .34);
-    C.onion = person(A15.onion, () => POS.onion, lt, { t: lt, pose: 'free', arms: { l: 'hold', r: 'rest' }, grip: { l: SWG }, hold: { l: 'fp20_stopwatch' }, swTime: sw, swOn, swRun: lt >= T_SW && lt < T_SWSTOP ? 1 : 0,
+    const cand = sh.id === 'o4', ck = ss(lt, 19.68, 19.98);
+    C.onion = person(A15.onion, () => POS.onion, lt, { t: lt, pose: 'free', arms: { l: 'hold', r: cand ? 'hold' : 'rest' }, grip: cand ? { l: SWG, r: [lerp(70, 112, ck), lerp(150, 52, ck)] } : { l: SWG }, hold: cand ? { l: 'fp20_stopwatch', r: 'fp20_candle' } : { l: 'fp20_stopwatch' }, candOn: 1, candSticker: ss(lt, 20.2, 20.5), candSeed: 2, swTime: sw, swOn, swRun: lt >= T_SW && lt < T_SWSTOP ? 1 : 0,
       yaw: tw.yaw - .1, headYaw: tw.headYaw - .08, look: lt < 2.7 || (spk !== 'onion' && !attn) ? [-.55, .7] : spk === 'onion' ? [-.3, .1] : tw.look, expr: 'onion_cry', cry: lt >= 13.98 && lt < 15.4 ? .85 : .62, sob, who: 'onion' }); }
   /* STRAWBERRY: flat and tired; she watches the stopwatch, Binder, the camera for one beat at "Yes."; one tear at the coffee */
   { const tw = toward('straw', spk === 'straw' ? 'lemon' : attn, .3), cam = ss(lt, 7.45, 7.55) * (1 - ss(lt, 8.0, 8.15)), bd = lt >= CUE.binderpop && lt < 9.4;
@@ -429,11 +430,12 @@ function atScreen(sx, sy, S, fn) {
 }
 B.atScreen = atScreen;
 /* the foreground candles of a close-up: three LED candles in a row at the bottom of the frame, the flame of each coming on at its click */
-const FGC = [{ x: 150, y: 1372, s: 2.35 }, { x: 540, y: 1384, s: 2.0 }, { x: 930, y: 1372, s: 2.35 }];
+const FGC = [{ x: 150, y: 1372, s: 2.1 }, { x: 540, y: 1384, s: 1.9 }, { x: 930, y: 1372, s: 2.1 }];
 function fgCandles(lt, sh, out) {
   for (let i = 0; i < 3; i++) {
+    if (i === 1 && sh.id === 'o4') continue;
     const c = FGC[i], on = ss(lt, CUE.candle[i], CUE.candle[i] + .15), pos = atScreen(c.x, c.y, c.s * 1.0, (k, p) => {
-      const r = P20.ledCandle(ctx, { x: 0, y: 0, s: 1, on, t: lt, seed: i + 1, kind: 'pillar', sticker: sh.sticker && i === 1 ? ss(lt, 20.2, 20.5) : 0, glow: 0 });
+      const r = P20.ledCandle(ctx, { x: 0, y: 0, s: 1, on, t: lt, seed: i + 1, kind: 'pillar', sticker: 0, glow: 0 });
       out.push({ i, on, fx: r.fx * k + p[0], fy: r.fy * k + p[1] });
     });
   }
@@ -496,35 +498,36 @@ function drawBinder(lt, sh, C) {
 function lightsFor(lt, sh, C, R) {
   const L = [], k = kz(S13.LAY.zb), kk = k / .7;
   const emR = ss(lt, 12.9, 13.35), hall = ss(lt, CUE.relay2, 13.7), gen = ss(lt, 12.9, 13.7);
-  /* the window: snow light, a pale blue rect */
-  if (R.window) { const w = R.window; L.push({ kind: 'rect', x: w[0] + w[2] / 2, y: w[1] + w[3] / 2, w: w[2], h: w[3], color: '#a8c4ff', power: .62, facing: PI / 2, soft: .6 }); }
+  const sob = Math.max(0, 1 - Math.abs(lt - CUE.sniffle[0] - .12) / .5, 1 - Math.abs(lt - CUE.sniffle[1] - .12) / .5);
+  /* the window: snow light, a pale blue rect (small: it is a glow, not a lamp) */
+  if (R.window) { const w = R.window; L.push({ kind: 'rect', x: w[0] + w[2] / 2, y: w[1] + w[3] / 2, w: w[2], h: w[3], color: '#9ab8f4', power: .34, facing: PI / 2, soft: .6 }); }
   /* the exit sign over the doorway (it hums brighter at the generator) and the twin battery lamp */
-  if (R.exitAt) L.push({ kind: 'point', x: R.exitAt[0], y: R.exitAt[1] + 40, r: 360 * kk, color: '#38ff7a', power: .5 + .3 * ss(lt, CUE.genstart, CUE.genstart + .5), soft: .8 });
-  const lampPow = .42 + .58 * emR;
-  for (const h of (R.lampHeads || [])) L.push({ kind: 'cone', x: h.x, y: h.y + 12, ang: h.ang, spread: 1.0, len: 900 * kk, color: '#ff9650', power: lampPow, soft: .7 });
-  /* the ceiling lights, dim, from the relay at 13.13 */
-  if (hall > .01) for (const [X, Z] of [[-330, 900], [330, 900], [-330, 1500], [330, 1500]]) { const q = V2.p2(X, 700, Z); L.push({ kind: 'cone', x: q[0], y: q[1] - 60, ang: PI / 2, spread: 1.7, len: 780 * kz(Z) / .7, color: '#ffe6c4', power: .3 * hall, soft: .9 }); }
-  /* the stopwatch (aqua), held by Onion */
-  if (C && C.onion) { const p = P20.stopwatchPose(C.onion, lt), on = ss(lt, T_SW, T_SW + .12) * (lt < T_SWSTOP + .9 ? 1 : .6); if (on > .01) L.push({ kind: 'point', x: p.x, y: p.y, r: 430 * kk * (sh.sw ? 1.15 : 1), color: '#59f0d6', power: .95 * on, soft: .7 }); }
+  if (R.exitAt) L.push({ kind: 'point', x: R.exitAt[0], y: R.exitAt[1] + 40, r: 330 * kk, color: '#38ff7a', power: .5 + .3 * ss(lt, CUE.genstart, CUE.genstart + .5), soft: .8 });
+  const lampPow = .5 + .5 * emR;
+  for (const h of (R.lampHeads || [])) L.push({ kind: 'cone', x: h.x, y: h.y + 12, ang: h.ang, spread: 1.0, len: 900 * kk, color: '#ff8a44', power: lampPow, soft: .7 });
+  /* the ceiling lights, dim and warm, from the relay at 13.13 */
+  if (hall > .01) for (const [X, Z] of [[-330, 900], [330, 900], [-330, 1500], [330, 1500]]) { const q = V2.p2(X, 700, Z); L.push({ kind: 'cone', x: q[0], y: q[1] - 60, ang: PI / 2, spread: 1.7, len: 760 * kz(Z) / .7, color: '#ffc896', power: .26 * hall, soft: .9 }); }
+  /* the stopwatch (aqua), held by Onion; it shivers when she sobs */
+  if (C && C.onion) { const p = P20.stopwatchPose(C.onion, lt), on = ss(lt, T_SW, T_SW + .12) * (lt < T_SWSTOP + .9 ? 1 : .6); if (on > .01) L.push({ kind: 'point', x: p.x + 4 * sob * Math.sin(lt * 70), y: p.y, r: 400 * kk * (sh.sw ? 1.15 : 1), color: '#59f0d6', power: .95 * on * (1 - .28 * sob), soft: .7 }); }
   /* Mango's phone: a white cone, wobbling across the wall */
   if (C && C.mango && C.mango.plOn > .01) { const p = P20.phonePose(C.mango, lt); L.push({ kind: 'cone', x: p.x, y: p.y, ang: p.ang, spread: .62, len: 1100 * kk, color: '#eef4ff', power: .9 * C.mango.plOn, soft: .55 }); }
   /* Binder's bubble: the cool white-blue light of the only screen in the room (it dips once at the low battery and dies) */
   if (FR.bind) { const on = ss(lt, CUE.binderpop, CUE.binderpop + .22) * (1 - ss(lt, CUE.lowbattery + .1, CUE.lowbattery + .32)), dip = lt >= CUE.lowbattery && lt < CUE.lowbattery + .08 ? .45 : 1, p = FR.bind.p;
-    if (on > .01) L.push({ kind: 'point', x: p[0] + 160, y: p[1] - 160, r: 760, color: '#c4dcff', power: 1.05 * on * dip, soft: .75 }); }
+    if (on > .01) L.push({ kind: 'point', x: p[0] + 160, y: p[1] - 130, r: 700, color: '#c4dcff', power: 1.05 * on * dip, soft: .75 }); }
   /* the candles: warm points at the flames (foreground ones in a close-up, the ledge ones in a wide) */
-  for (const c of (FR.candleLights || [])) if (c.on > .01) L.push({ kind: 'point', x: c.fx, y: c.fy, r: 520 * (sh.k === 'w' ? kk : 1.0), color: '#ffb25a', power: .9 * c.on, soft: .7, flicker: { seed: c.i + 3, amt: .06, rate: .9 } });
+  const sting = 1 + .18 * Math.max(0, 1 - Math.abs(lt - CUE.sting - .1) / .25);
+  for (const c of (FR.candleLights || [])) if (c.on > .01) L.push({ kind: 'point', x: c.fx, y: c.fy, r: 460 * (sh.k === 'w' ? kk : 1.0), color: '#ffb25a', power: .95 * c.on * sting, soft: .7, flicker: { seed: c.i + 3, amt: .06, rate: .9 } });
   /* a motivated fill on the face that matters in a close-up, so a speaking face is always lit by something in the frame */
   if (sh.k === 'cu' || sh.k === 'two') { const ids = Array.isArray(sh.foc) ? sh.foc : [sh.foc];
     for (const id of ids) { const o = C[id]; if (!o) continue; const f = faceC(o), s = o.s, warm = lt >= CUE.candle[0] + .1;
-      const cold = id === 'brenda' ? '#ffd2b0' : warm ? '#ffb86a' : lt < 12.9 ? '#59f0d6' : '#ffb070', pw = (id === 'brenda' ? .5 : .34) * (warm ? 1 : lt < 5.28 ? 1 : .4) * (sh.bub ? 0 : 1);
-      if (pw > .02) L.push({ kind: 'point', x: f[0] - 40 * s, y: f[1] + 130 * s, r: 330 * s / .85, color: cold, power: pw, soft: .8 }); } }
+      const col = id === 'brenda' ? '#ffd8bc' : warm ? '#ffb86a' : lt < 12.9 ? '#59f0d6' : '#ff9a60', pw = (id === 'brenda' ? .55 : .3) * (warm ? 1 : lt < 5.28 ? 1 : .4) * (sh.bub ? 0 : 1);
+      if (pw > .02) L.push({ kind: 'point', x: f[0] - 40 * s, y: f[1] + 130 * s, r: 300 * s / .85, color: col, power: pw, soft: .8 }); } }
   return L;
 }
 B.lightsFor = lightsFor;
 function passParams(lt, sh) {
-  const gen = ss(lt, 12.9, 13.7), emR = ss(lt, 12.9, 13.35);
-  const dark = sh.bub && lt < 9.5;
-  return { ambient: lerp(.2, .32, gen), tint: mixh('#0a1030', '#240c10', gen), bloom: .55, vignette: .3, lift: .1, glow: .34, grade: emR > .01 ? { color: '#ff5a24', alpha: .13 * emR, mode: 'soft-light' } : null };
+  const gen = ss(lt, 12.9, 13.7);
+  return { ambient: lerp(.15, .29, gen), tint: mixh('#050b26', '#2a0a0c', gen), bloom: .55, vignette: .32, lift: .08, glow: .34 };
 }
 B.passParams = passParams;
 
@@ -569,6 +572,7 @@ function drawI(lt) {
     drawChar(c);
   }
   drawBinder(lt, sh, C);
+  { const cp = C.onion && P20.candlePose(C.onion, lt); if (cp) FR.candleLights.push({ i: 1, on: 1, fx: cp.x, fy: cp.y }); }
   /* the foreground of a close-up: the three candles at the bottom of the frame */
   if (sh.candles && sh.k !== 'w' && lt >= CUE.candle[0] - .2) fgCandles(lt, sh, FR.candleLights);
   if (sh.coffee) B.fgCoffee(lt, sh);
@@ -696,7 +700,7 @@ const SC = {
   draw: lt => { const sh = FR.sh; if (sh.k === 'cut') B.drawCut(lt); else if (sh.k === 'wall') B.drawWall(lt); else B.drawI(lt); },
   fx: lt => ({ bloom: .62, vignette: .36, grain: .05, contrast: .12, sat: .06 }),
   blur: lt => 1,
-  over: lt => { const sh = FR.sh; if (sh.bub) overBubble(lt, sh); },
+  over: lt => { const sh = FR.sh; if (sh.bub) overBubble(lt, sh); if (sh.k !== 'cut' && window.L20 && L20.emergency) { const lv = ss(lt, 12.9, 13.35) * .8; if (lv > .01) L20.emergency(ctx, { level: lv, t: lt, pulse: .12 }); } },
 };
 window.__EP20_SCENES = window.__EP20_SCENES || {};
 window.__EP20_SCENES.blackout = SC;
