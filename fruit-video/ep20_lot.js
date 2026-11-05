@@ -428,6 +428,7 @@ SD.end = (lt, sh, v) => {
   const hy = { mango: .2, lemon: -.15, straw: .3, tom: -.25, onion: .1 };
   const nb = [], END_X = endX(); for (const id of order) { const o = person(id, lt, { gear: { breath: false }, o: { x: END_X[id], yaw: PI, headYaw: PI + hy[id], expr: 'neutral' } }); drawP(o); nb.push(o); }
   drawPile(lt);
+  if (lt >= CUE.sting) glowAt(BLD.doorX, 930, 460, '#ffdca0', .42 * Math.exp(-(lt - CUE.sting) / .3));   /* the sting: the lit entrance swells once, on the cue frame (with the bloom pop in fx) */
   if (window.SN20 && SN20.breath) for (let i = 0; i < nb.length; i++) { const o = nb[i], k = KINDS[o.kind], fy = faceXY(o)[1]; SN20.breath(ctx, { x: o.x + (hy[order[i]] > 0 ? 1 : -1) * ST * 62, y: fy + ST * 28, t: lt, seed: 70 + i, dir: hy[order[i]] > 0 ? 1 : -1, size: .5, alpha: .75, phase: i * .43 }); }
 };
 /* @@LOT-SD4 */
@@ -457,7 +458,7 @@ function drawSnowman(lt) {
 }
 /* the head: off at HEAD_T0, a hop to the right, a landing and a roll that dies away next to Onion's head */
 function headState(lt) {
-  const d = lt - HEAD_T0, r = 34 * SW.s, x0 = SW.x - 6 * SW.s, y0 = GY - 4 - 232 * SW.s, vx = 380, vy = -300, g = 1500, yG = GY - r;
+  const d = lt - HEAD_T0, r = 34 * SW.s, x0 = SW.x - 6 * SW.s, y0 = GY - 4 - 232 * SW.s, vx = 470, vy = -300, g = 1500, yG = GY - r;
   const tL = (-vy + Math.sqrt(vy * vy + 2 * g * (yG - y0))) / g;     /* the time the ballistic arc reaches the ground */
   if (d < tL) return { x: x0 + vx * d, y: y0 + vy * d + .5 * g * d * d, rot: 3.2 * d, air: true };
   const xL = x0 + vx * tL, dd = d - tL, k = 4.5, run = 240 * (1 - Math.exp(-k * dd)) / k;
@@ -509,7 +510,7 @@ Object.assign(CAM_FN, {
   dig: lt => { const k = sg(lt, bS('dig'), bE('dig')); return [SXP + 50 + 10 * Math.sin(lt * 2.4), 1240, lerp(2.0, 2.1, k)]; },
   t1: lt => [(SX.tom + SW.x) / 2 + 6, 1228, 2.35 + .06 * sg(lt, bS('t1'), bE('t1'))],
   o1: lt => { const o = onionState(lt); return [lerp(2650, 2570, ss(lt, 16.6, 17.4)), 1236, 2.0]; },
-  o2: lt => { CAM.shake = 0; return [2552, 1262, 2.65 + .05 * sg(lt, bS('o2'), bE('o2'))]; },
+  o2: lt => { CAM.shake = 0; return [2566, 1262, 2.5 + .05 * sg(lt, bS('o2'), bE('o2'))]; },
   ring: lt => closeCam('straw', 3.1, 680, 8, lt, bS('ring'), bE('ring')),
   s3: lt => closeCam('straw', 3.1, 740, -8, lt, bS('s3'), bE('s3')),
   m2: lt => closeCam('mango', 3.1, 740, 10, lt, bS('m2'), bE('m2')),
@@ -546,7 +547,7 @@ const LOTSC = {
   shot: lt => shotAt(lt).id,
   cam(lt) { const sh = shotAt(lt), f = CAM_FN[sh.id]; const [x, y, z] = f ? f(lt) : [2000, 1180, 1]; zoomTo(x, y, z); },
   draw: drawL,
-  fx: lt => ({ bloom: .55, vignette: .3, grain: .04, contrast: .1, sat: .1, tint: [['#27348f', .1, 'soft-light']], fade: lt < .3 ? 1 - lt / .3 : 0, fadeColor: '236,243,255' }),
+  fx: lt => ({ bloom: .55 + (lt >= CUE.sting ? .4 * Math.exp(-(lt - CUE.sting) / .22) : 0), vignette: .3, grain: .04, contrast: .1, sat: .1, tint: [['#27348f', .1, 'soft-light']], fade: lt < .3 ? 1 - lt / .3 : 0, fadeColor: '236,243,255' }),
   blur: lt => 1,
   over: lt => {},
 };
