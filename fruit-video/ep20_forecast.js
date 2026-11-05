@@ -874,12 +874,12 @@ const DFL = 1300, DSHELF = 950, DSILL = 1060;
 const DBAY = [[20, 340], [390, 710], [760, 1080]];                        /* the three windows: outer frame x0, x1 */
 const DWY = { y0: 300, y1: 1060 };                                         /* the frame runs from y0 to the sill */
 const DSEAT = { goji: { x: 470, s: 1.12, kind: 'wheel', col: '#6a6a78' }, pear: { x: 650, s: .96, kind: 'arm', col: '#8a3b3b' }, banana: { x: 830, s: .95, kind: 'wheel', col: '#3b6aa8' }, cran: { x: 1000, s: 1.08, kind: 'arm', col: '#5f7f4f' } };
-const DSTAND = { mango: [255, DFL], lemon: [1165, DFL] };
+const DSTAND = { mango: [285, DFL], lemon: [1130, DFL] };
 const DRES = ['goji', 'pear', 'banana', 'cran'];
 const DC = { cupset1: 9.938, slurp1: 10.095, cupset2: 11.859, slurp2: 12.159, cupset3: 12.559, slurp3: 12.859, cupset4: 13.159, pentick: 15.009, plowdist: 15.754, sting: 19.196 };
 for (const k in DC) DC[k] = TD.snapT(DC[k]);
 const D_MO = TD.ls('mo1'), D_MOE = TD.le('mo1');
-const dstate = lt => ({ sillD: 30 + 26 * ss(lt, 0, 20.5) + 60 * (SNk() && hasK(SNk(), 'depthAt') ? SNk().depthAt(1240 + lt / 60) - .45 : 0), cloud: lt < 16.6 ? 1 : lt < 17.6 ? lerp(1, .58, ss(lt, 16.6, 17.6)) : lt < 18.3 ? .58 : lerp(.58, .98, ss(lt, 18.25, 18.75)) });
+const dstate = lt => ({ sillD: 30 + 44 * ss(lt, 0, 20.5) + 60 * (SNk() && hasK(SNk(), 'depthAt') ? SNk().depthAt(1240 + lt / 60) - .45 : 0), cloud: lt < 16.6 ? 1 : lt < 17.5 ? lerp(1, .42, ss(lt, 16.6, 17.5)) : lt < 18.25 ? .42 : lerp(.42, .98, ss(lt, 18.25, 18.8)) });
 const DGUSTS = [[15.6, 1.4, .5]];
 function dSky(x, y, w, h, lt, seed, o = {}) {
   ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
@@ -895,7 +895,7 @@ function dWindow(lt, i, st) {
   /* the sky is behind everything (the opening under a raised sash shows it too) */
   dSky(x0 + 14, y0 + 14, w - 28, y1 - y0 - 28, lt, 61 + i * 5);
   if (i === 1 && window.P20 && typeof P20.moon === 'function') {                                         /* the Moon, behind the weather, in the middle window's upper pane */
-    P20.moon(ctx, { x: up[0] + up[2] / 2, y: up[1] + up[3] / 2, w: up[2], h: up[3], r: 62, t: lt, cloud: st.cloud, rise: .12, rad: 3, expr: lt > 18.2 ? 'sad' : 'neutral' });
+    P20.moon(ctx, { x: up[0] + up[2] / 2, y: up[1] + up[3] / 2, w: up[2], h: up[3], r: 70, t: lt, cloud: st.cloud, rise: .12, rad: 3, expr: lt > 18.2 ? 'sad' : 'neutral' });
     snow({ x0: up[0], y0: up[1], x1: up[0] + up[2], y1: up[1] + up[3], t: lt, seed: 66, layers: 3, density: 16, wind: -55, gusts: DGUSTS, tone: 'dark', fore: false });
   }
   for (const [px, py, pw, ph, sd] of [[up[0], up[1], up[2], up[3], 1], [lo[0], lo[1], lo[2], lo[3], 2]]) {
@@ -1039,7 +1039,7 @@ function castD(lt) {
     if (n === 'pear') expr = lt >= DRINK.pear[1] && lt < DRINK.pear[2] ? 'chill' : 'happy';
     if (n === 'banana') { expr = lt >= DRINK.banana[1] && lt < DRINK.banana[2] ? 'shock' : lt >= DRINK.banana[2] && lt < 13.7 ? 'sour' : lt >= 3.7 && lt < 4.6 ? 'weak' : 'sour'; }
     if (n === 'cran') expr = lt >= DRINK.cran[1] ? 'smug' : 'happy';
-    if (lt >= 15.6 && lt < 17.0) { head = lerp(-.92, .55, plow); look = [lerp(-.8, .8, plow), -.25]; yaw = lerp(-.4, .2, plow); }
+    if (lt >= 15.6 && lt < 17.0) { head = lerp(-.92, -.34, plow); look = [lerp(-.8, .7, plow), -.25]; yaw = lerp(-.4, -.2, plow); }
     if (lt >= 12.0 && lt < 12.5 && n === 'pear') look = [-.3, .4];
     const o = Object.assign(A7[n]({}), { x: S.x, y: seatY, s, t: lt, noLegs: true, noShadow: true, noReflect: true, plant: true, yaw, headYaw: head, look, expr, lid, who: n, arms: { l: 'rest', r: 'rest' } });
     const R = { o, y: seatY, s, n, up: 0 };
@@ -1050,7 +1050,7 @@ function castD(lt) {
     }
     if (n === 'cran') {                                                            /* "a hundred inches": her hand measures the air */
       const m = ss(lt, TD.wS('cr1', 6) - .2, TD.wS('cr1', 6) + .25) * (1 - ss(lt, TD.wE('cr1', 7) + .3, TD.wE('cr1', 7) + .7));
-      if (m > .02) { o.arms = { l: 'rest', r: 'hold' }; o.grip = { r: [lerp(80, 150, m), lerp(60, -120, m)] }; o.hand = { r: 'flat' }; }
+      if (m > .02) { o.arms = { l: 'rest', r: 'hold' }; o.grip = { r: [lerp(80, 132, m), lerp(60, -96, m)] }; o.hand = { r: 'flat' }; }
     }
     if (n === 'goji') {                                                            /* the empty cup upside down; then the cup of snow */
       const cup = lt < DRINK.goji[0] ? [1, PI, 0] : [1, 0, 1], lift = lt < DRINK.goji[0] ? ss(lt, 7.0, 7.5) * (1 - ss(lt, 9.3, 9.8)) : dk;
@@ -1065,12 +1065,12 @@ function castD(lt) {
     C.res[n] = R;
   }
   /* Lemon: the clipboard, a flat look; the tick on the pen cue */
-  { const sp = dSpeaks('lemon', lt), tick = ss(lt, DC.pentick - .05, DC.pentick + .28), plowH = lt >= 15.6 && lt < 17.0 ? lerp(-.9, .5, plow) : -.7;
+  { const sp = dSpeaks('lemon', lt), tick = ss(lt, DC.pentick - .05, DC.pentick + .28), plowH = lt >= 15.6 && lt < 17.0 ? lerp(-.9, -.1, plow) : -.7;
     C.lemon = A7.lemon({ x: DSTAND.lemon[0], y: DSTAND.lemon[1], s: .88, t: lt, yaw: -.35, headYaw: sp ? -.25 : plowH, look: sp ? [-.1, .05] : [plowH, -.1], expr: sp ? 'dead' : 'neutral', lid: sp ? .5 : .3, face: { curve: .02 }, acc: ['readers', 'lanyard7'], who: 'lemon', plant: true,
-      arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp20f_clip' }, clipScale: 1.45, tick, grip: { l: [-102, 8] } }); }
+      arms: { l: 'rest', r: 'hold' }, hold: { r: 'fp20f_clip' }, clipScale: 1.45, tick, grip: { r: [104, 0] } }); }
   /* Mango: the tray of cups on her right; she scoops snow from the heap on the sill (left window) with her left hand at 9.59 to 9.94 */
-  { const sc = ss(lt, 9.3, 9.6), dip = ss(lt, 9.62, 9.76), up = ss(lt, 9.76, 9.92), sp = dSpeaks('mango', lt), reach = sc * (1 - ss(lt, 10.0, 10.4)), lift = 14 * reach;
-    const hx = 150, hy = 1034, k = KINDS.mango, s = .88, cy = DSTAND.mango[1] - lift - s * ((k.leg || 90) + k.ry * .9);
+  { const sc = ss(lt, 9.3, 9.6) * (1 - ss(lt, 10.0, 10.4)), dip = ss(lt, 9.62, 9.76), up = ss(lt, 9.76, 9.92), sp = dSpeaks('mango', lt), reach = sc, lift = 14 * reach;
+    const hx = 160, hy = 1034, k = KINDS.mango, s = .88, cy = DSTAND.mango[1] - lift - s * ((k.leg || 90) + k.ry * .9);
     const gx = lerp(-70, (hx - DSTAND.mango[0]) / s, sc), gy = lerp(40, (hy - cy) / s + 8 * (1 - dip) - 6 * up, sc);
     C.mango = A7.mango({ x: DSTAND.mango[0], y: DSTAND.mango[1], s, t: lt, lift, yaw: lerp(-.3, -.75, sc), headYaw: sp ? -.3 : lerp(-.4, -.55, sc), look: sp ? [-.3, .2] : [-.6, .15], expr: sp ? 'dead' : 'neutral', lid: sp ? .5 : undefined, who: 'mango', plant: true, armScale: lerp(1.12, 1.38, sc),
       arms: { l: sc > .02 ? 'hold' : 'rest', r: 'hold' }, hold: { l: sc > .02 ? 'fp20f_cup' : undefined, r: 'fp20f_tray' }, grip: { l: [gx, gy], r: [92, 50] }, cupScale: 1.6, cupSnow: dip * (1 - ss(lt, 9.95, 10.0)) * 1 + 0, cupTip: -.15, trayN: lt < DRINK.pear[0] ? 3 : lt < DRINK.banana[0] ? 2 : lt < DRINK.cran[0] ? 1 : 0, trayScale: 1.2, traySnow: 1 });
@@ -1096,21 +1096,21 @@ function dArm(lt, tSet, tx, ty, s) {
 // ------------------------------------------------------------------ the shots of the day room
 const DALL = ['mango', 'goji', 'pear', 'banana', 'cran', 'lemon'];
 const DSH = [
-  { id: 'open', s: 0, k: 'wide', x: 640, y: 1010, z: [.82, .98], show: DALL },
+  { id: 'open', s: 0, k: 'wide', x: 722, y: 950, z: [.93, .99], show: DALL },
   { id: 'pe1', s: 2.50, k: 'face', foc: 'pear', z: [2.0, 2.12], up: 130, dx: -50, dof: 9, show: ['pear'], bg: ['goji', 'banana'] },
   { id: 'ba1', s: 3.72, k: 'face', foc: 'banana', z: [2.0, 2.12], up: 130, dx: -50, dof: 9, show: ['banana'], bg: ['pear', 'cran'] },
   { id: 'cr1', s: 4.54, k: 'face', foc: 'cran', z: [2.0, 2.15], up: 130, dx: -40, dof: 9, show: ['cran'], bg: ['banana', 'lemon'] },
   { id: 'go1', s: 6.92, k: 'face', foc: 'goji', z: [2.05, 2.2], up: 130, dx: 0, dof: 9, show: ['goji'], bg: ['mango', 'pear'] },
   { id: 'l1', s: 8.56, k: 'face', foc: 'lemon', z: [2.1, 2.2], up: 120, dof: 9, show: ['lemon'], bg: ['cran'] },
-  { id: 'm1a', s: 9.59, k: 'pt', x: 215, y: 1060, z: [1.75, 1.85], dof: 9, show: ['mango'], bg: ['goji'] },
+  { id: 'm1a', s: 9.59, k: 'pt', x: 235, y: 1060, z: [1.75, 1.85], dof: 9, show: ['mango'], bg: ['goji'] },
   { id: 'go2', s: 9.94, k: 'face', foc: 'goji', z: [2.1, 2.22], up: 130, dx: 20, dof: 9, show: ['goji'], bg: ['pear'], arm: ['goji', DC.cupset1] },
   { id: 'cp1', s: 11.66, k: 'face', foc: 'pear', z: [2.0, 2.1], up: 130, dx: 0, dof: 9, show: ['pear'], bg: ['goji', 'banana'], arm: ['pear', DC.cupset2] },
   { id: 'cp2', s: 12.42, k: 'face', foc: 'banana', z: [2.0, 2.1], up: 130, dx: 0, dof: 9, show: ['banana'], bg: ['pear', 'cran'], arm: ['banana', DC.cupset3] },
   { id: 'cp3', s: 13.02, k: 'face', foc: 'cran', z: [2.0, 2.1], up: 130, dx: 0, dof: 9, show: ['cran'], bg: ['banana', 'lemon'], arm: ['cran', DC.cupset4] },
   { id: 'l2', s: 13.71, k: 'face', foc: 'lemon', z: [2.2, 2.3], up: 120, dof: 9, show: ['lemon'], bg: ['cran'] },
-  { id: 'plow', s: 15.55, k: 'wide', x: 640, y: 1030, z: [.86, .9], show: DALL },
+  { id: 'plow', s: 15.55, k: 'wide', x: 722, y: 960, z: [.96, .99], show: DALL },
   { id: 'mo1', s: 17.00, k: 'pt', x: 550, y: 486, z: [2.3, 2.5], obj: 'moon', show: [] },
-  { id: 'end', s: 19.10, k: 'wide', x: 640, y: 1000, z: [.92, .86], show: DALL },
+  { id: 'end', s: 19.10, k: 'wide', x: 722, y: 950, z: [.99, .94], show: DALL },
 ];
 for (const sh of DSH) sh.s = sh.s === 0 ? 0 : TD.snapT(sh.s);
 DSH.forEach((sh, i) => { sh.e = i + 1 < DSH.length ? DSH[i + 1].s : 99; });
@@ -1154,9 +1154,11 @@ function drawD(lt) {
   /* the row, left to right, then the two standing nurses */
   const order = sh.show.filter(n => C.res[n]).sort((a, b) => DSEAT[a].x - DSEAT[b].x);
   const showM = sh.show.includes('mango'), showL = sh.show.includes('lemon');
+  if (sh.id === 'm1a') dSill(lt, st);                                              /* the sill and its heap in focus with Mango (a shallow depth of field) */
   if (showM) stand('mango');
   for (const n of order) drawResD(n, lt, C.res[n]);
   if (showL) stand('lemon');
+  if (sh.id === 'm1a' && lt >= 9.6 && lt < 10.3) flurry({ x: 168, y: 1022, r: 30, t: lt, t0: 9.7, life: .6, seed: 4, n: 26 });      /* the puff of powder as the cup digs in */
   /* Mango's arm and the cup of snow, in the close-ups on the residents */
   if (sh.arm) { const n = sh.arm[0], S = DSEAT[n], k = KINDS[C.res[n].o.kind]; dArm(lt, sh.arm[1], S.x + k.rx * .5 * S.s, C.res[n].y + 8 * S.s - 6, S.s); }
   /* the lights: warm candles and lamps, the cool windows, three dim downlights */
@@ -1165,12 +1167,12 @@ function drawD(lt) {
   for (const lx of [-30, 1275]) lights.push({ kind: 'point', x: lx, y: 740, r: 520, color: '#ffc884', power: .9 });
   for (const [x0, x1] of DBAY) lights.push({ kind: 'rect', x: (x0 + x1) / 2, y: 690, w: x1 - x0 - 30, h: 640, color: '#8fb0ff', power: .5 });
   for (const lx of [330, 700, 1070]) lights.push({ kind: 'cone', x: lx, y: 336, ang: PI / 2, spread: 1.2, len: 900, color: '#ffe6c0', power: .42 });
-  lightPass({ ambient: .56, tint: '#10163a', lights, bloom: .5, vignette: .3, lift: .1, t: lt, glow: .3 });
+  lightPass({ ambient: .6, tint: '#10163a', lights, bloom: .5, vignette: .28, lift: .1, t: lt, glow: .3 });
   /* the amber beacon of the plow crossing the room: one slow pass, never a strobe */
   const pw = ss(lt, 15.55, 15.95) * (1 - ss(lt, 16.5, 16.95));
   if (pw > .01) {
     const bx = lerp(-380, 1560, ss(lt, 15.55, 16.95)); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.translate(bx, 1000); ctx.rotate(.28);
-    ctx.fillStyle = lg(-300, 0, 300, 0, [[0, 'rgba(255,170,60,0)'], [.5, 'rgba(255,170,60,' + .25 * pw + ')'], [1, 'rgba(255,170,60,0)']]); ctx.fillRect(-300, -1500, 600, 3000); ctx.restore();
+    ctx.fillStyle = lg(-380, 0, 380, 0, [[0, 'rgba(255,170,60,0)'], [.5, 'rgba(255,176,70,' + .26 * pw + ')'], [1, 'rgba(255,170,60,0)']]); ctx.fillRect(-380, -1500, 760, 3000); ctx.restore();
   }
 }
 const DAYROOM = {

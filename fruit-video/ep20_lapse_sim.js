@@ -131,7 +131,7 @@ const R = { t0: 10.72, loop: 1.93, n: 4, rate: 300 };
 const STOPS = [   /* the walk to the stop (s), the dwell there (s), the yaw she holds at it (0 front, PI the back, +PI/2 profile facing right) */
   { X: -215, Z: 1330, face: PI_, walk: .2, dwell: 0 },                    /* round the left end of the counter */
   { X: -215, Z: 1580, face: PI_, walk: .2, dwell: 0 },
-  { X: -10, Z: 1760, face: PI_, walk: .24, dwell: .16 },                   /* the window: her back to us, looking at the snow */
+  { X: -185, Z: 1740, face: PI_, walk: .24, dwell: .16 },                   /* the window: her back to us, looking at the snow */
   { X: -300, Z: 1640, face: -1.9, walk: .26, dwell: .14 },                 /* the cots: a profile looking left, at the sleepers */
   { X: -250, Z: 1200, face: .25, walk: .26, dwell: 0 },                    /* the floor in front of the cart */
   { X: 135, Z: 1150, face: 2.45, walk: .3, dwell: .14 },                   /* the doors: a three-quarter back view toward the glass doors */
@@ -168,7 +168,7 @@ const SLEEP = {
   mango: [[1380, 0], [1452, 2], [1566, 1], [1688, 3], [1790, 2]],
   lemon: [[1380, 1], [1426, 0], [1540, 2], [1650, 1], [1770, 0]],
   tom: [[1380, 2], [1478, 3], [1598, 1], [1724, 0], [1812, 2]],
-  onion: [[1380, 0], [1500, 1], [1632, 2], [1760, 1]],
+  onion: [[1380, 0], [1500, 1], [1632, 2], [1760, 1], [1835, 0]],
 };
 const SIT = { tom: [1536, 1552, 1568, 1584] };                             /* sits up 1536-1552, stays, lies down 1568-1584 */
 function sleepers(lt) {

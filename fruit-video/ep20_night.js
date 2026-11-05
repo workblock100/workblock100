@@ -7,17 +7,22 @@
  * (L20.pass) turns it into a night and, over the lapse, into a sunrise: ambient, tint and the window's colour follow the sim's sky (ep20_lapse_sim.js, shared with tools_lapse.js -> build/ep20/lapse.json).
  * Every shot is the same perspective camera plus a 2D camera (zoomTo); close-ups are the same room, out of focus behind the face.
  *
- * SHOTS (scene-local seconds; the list is SH below)
- *   open 0-1.90 wide push-in (clocktick .40) | s1 1.90-3.32 Strawberry "Is the oncoming nurse here?", cold breath, looks at the doors then the clock | w1 3.32-4.17 the clock and the window: the minute hand drops
- *   onto 11:00 (tick 3.316), the gust in the window (windgust 3.516) | w2 4.17-4.87 her shoulders drop | s2 4.87-6.25 "I am the oncoming nurse." a slow turn to the camera |
- *   THE TWIN: t1 6.25-7.94 the two-shot, the outgoing (3-11) reports, the oncoming peels her badge sticker (badgepeel 6.766) and re-sticks it as 11-7 | t2 7.94-8.97 the oncoming "Any concerns?" |
- *   t3 8.97-9.85 the outgoing "I am tired." | t4 9.85-10.65 the two-shot, "Noted." (she writes it down) |
- *   THE LAPSE 10.65-18.65 one locked wide (lapsewhoosh 10.653, clockspin 10.853, windswell 11.653): the world clock 11 PM to 7 AM, the sky, the Moon, the snow, the sleepers, Strawberry's rounds as a ghost trail |
- *   mo1 18.67-20.31 the Moon in the pane, setting, golden light begins to fall | s7r 20.31-20.84 Strawberry wakes to it | s7 20.84-21.45 "What time is it?" (she looks up) | ck 21.45-21.85 clock and window: 7:00 |
- *   mo2 21.85-22.90 the Moon "Seven." | s8 22.90-23.72 "In the morning?" | mo3 23.72-24.78 "Yes." | s9 24.78-25.69 "Okay." |
- *   dawn 25.69-27.74 wide, push-in, golden light, the sleepers stir, the amber beacon at the glass (plowdist 25.989) | tu3 27.74-29.61 the plow passes in the window, Turnip raises his mug "I plowed the lot.",
- *   the wave of snow slides up the glass doors | o5 29.61-31.34 Onion sits up on her cot, crying "The entrance is blocked." (sniffle 31.205) | s10 31.34-32.41 Strawberry "Of course." |
- *   end 32.41-34.36 a held wide: Strawberry small at the med cart in the sunrise, the buried doors, the cots, the snow glittering (sting 32.512).
+ * SHOTS (scene-local seconds, snapped to frames; the table is SH below)
+ *   open 0-1.90 wide, slow push-in on the empty station, the sleepers, Strawberry at the cart looking at the doors (clocktick .40: the minute hand jolts) |
+ *   s1 1.90-3.32 close, "Is the oncoming nurse here?", cold breath, her eyes go to the doors then up to the clock |
+ *   w1 3.32-3.90 the clock and the window: the minute hand drops onto 11:00 and the LCD reads 11:00 on the tick (3.316), the gust rattles the glass and bends the snow (windgust 3.516) |
+ *   w1b 3.90-4.30 the glass doors, snow hissing on them, nobody comes | w2 4.30-4.87 her shoulders drop | s2 4.87-6.25 "I am the oncoming nurse." she straightens and turns to the camera |
+ *   THE TWIN (one Strawberry drawn twice, facing across the med cart): t1 6.25-7.94 two-shot, the outgoing (slumped, 3-11) reports, the oncoming (tablet) peels her badge sticker at badgepeel 6.766, turns it over and
+ *   presses it back as 11-7 | t2 7.94-8.97 the oncoming "Any concerns?" (badge reads 11-7) | t3 8.97-9.85 the outgoing "I am tired." | t4 9.85-10.65 two-shot, "Noted." (she writes it down) |
+ *   THE LAPSE 10.65-18.65 one locked wide (speed streaks at lapsewhoosh 10.653, the hands spin from clockspin 10.853, the wind swells from 11.653): the world clock 11 PM to 7 AM (ep20_lapse_sim.js), the sky through blizzard,
+ *   clearing, stars, violet, rose and gold, the Moon crossing the pane, the snow rising on the sill, frost, the sleepers turning over (Tomato sits up and lies down), the call lights, the desk lamp's one flicker,
+ *   Strawberry's rounds as a five-figure ghost trail |
+ *   mo1 18.67-20.70 the Moon, low and large in the pane, setting, "Good morning, three to eleven.", golden light begins to fall | s7 20.70-21.55 "What time is it?" she looks up | mo2 21.55-22.90 the clock above, the
+ *   Moon below: "Seven." | s8 22.90-23.72 "In the morning?" | mo3 23.72-24.78 "Yes." | s9 24.78-25.69 "Okay." (a slow blink, a tiny smile) |
+ *   dawn 25.69-27.74 wide push-in, snow stopped, golden light, the Moon fades, Mango and Lemon roll over, the beacon's amber washes the snow (plowdist 25.989) and the plow slides in from the left |
+ *   tu3 27.74-29.61 the plow's cab in the right pane of the window, Turnip raises his mug "I plowed the lot.", the wave of snow rises up the glass doors beside it | o5 29.61-31.34 Onion sits up on her cot,
+ *   crying: "The entrance is blocked." (the sniffle shakes her at 31.205) | s10 31.34-32.41 Strawberry "Of course." | end 32.41-34.36 a held wide pulling out: Strawberry small at the med cart picking up a cup,
+ *   the buried doors, Onion still sitting up in her blanket, the snow glittering (a sparkle on the drifts at the sting 32.512).
  *
  * KITS: SN20 / L20 (ep20_fx.js) and P20 (ep20_props.js) are called when they exist; a small stand-in of the same shape is drawn for what has not landed yet (checked at DRAW time). A20 (ep20_art.js) likewise. */
 (() => {
@@ -328,7 +333,7 @@ function deskLamp(lt, env, G) {
   G.lamp = { x: lx, y: ly, k, on };
 }
 function coffeeMaker(lt, env, G) {
-  const X = 560 + CSH - 90, Z = 1450, [bx, by] = wpt(X, LAY.counter.top, Z), k = kzP(Z);
+  const X = 318, Z = 1450, [bx, by] = wpt(X, LAY.counter.top, Z), k = kzP(Z);
   if (has('P20', 'coffeeMaker')) P20.coffeeMaker(ctx, { x: bx, y: by, s: k * .58, power: 0, display: '--:--', pot: .55, sad: 1, t: lt });
   else {
     ctx.save(); ctx.translate(bx, by); ctx.scale(k, k); ctx.lineJoin = 'round';
@@ -359,30 +364,36 @@ function plainCounter() {
 }
 // ------------------------------------------------------------------ the cots (P20.cot) with the sleepers; a pose is a jump: 0 on the back, 1 on the other side (the cot mirrored), 2 and 3 a little curled
 const COTW = ['mango', 'lemon', 'tom', 'onion'], COTK = .9;
+const POSE_END = { mango: 2, lemon: 0, tom: 2, onion: 0 };                  /* how they lie after the lapse (the cot is mirrored for 1 and 3) */
+const STIR = { mango: [26.35, 1], lemon: [26.95, 3] };                      /* at the dawn Mango rolls over, then Lemon curls up */
+const poseOf = (who, lt) => lt >= L.t1 ? (STIR[who] && lt >= STIR[who][0] ? STIR[who][1] : POSE_END[who]) : SIM.sleepers(lt)[who].pose;
 function cotBase(lt, env, who, o = {}) {
   const C = LAY.cots[who], [cx, cy, k] = V2.proj(C.X, 0, C.Z), s = k * COTK, st = o.stir ?? 0;
   const pose = o.pose ?? 0, flip = pose === 1 || pose === 3, sq = pose >= 2 ? .9 : 1;
-  const breathe = 1 + .012 * Math.sin(lt * 1.9 + C.X), tw = st * .03 * Math.sin(lt * 5.1 + C.X);
+  const breathe = 1 + (.012 + .03 * st) * Math.sin(lt * (1.9 + 2.2 * st) + C.X), tw = st * .05 * Math.sin(lt * 4.3 + C.X);
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(tw); if (flip) ctx.scale(-1, 1); ctx.scale(1, sq * breathe); ctx.translate(-cx, -cy);
   const r = P20.cot ? P20.cot(ctx, { x: cx, y: cy, s, sleeper: o.sitter ? null : who, zzz: 0, t: lt }) : null;
   ctx.restore();
   return { cx, cy, k, s, flip, r };
 }
-/* a sleeper sitting up (Tomato in the lapse, Onion at 29.6): the cot without its sleeper, the fruit rising from the pillow, the blanket over the lap */
+/* a sleeper sitting up (Tomato in the lapse, Onion at 29.6): the cot without its sleeper, the fruit rising from the pillow, the blanket (P20.cot's own mound, shrinking to a lap) over it: at amt 0 this is the lying sleeper of P20.cot */
 function cotSitter(lt, env, who, amt, o = {}) {
   const u = easeIO(c01(amt));
   const C = cotBase(lt, env, who, { sitter: true, pose: o.pose ?? 0 }), s = C.s;
-  if (u < .02) return null;
   const ctor = who === 'onion' ? A15.onion : who === 'tom' ? A15.tomato : who === 'lemon' ? A7.lemon : A7.mango;
-  const ch = ctor(Object.assign({ t: lt, noLegs: true, noShadow: true, noReflect: true, noBob: true, center: true, s: s * lerp(.62, .84, u), x: C.cx + s * lerp(-112, -96, u) * (C.flip ? -1 : 1), y: C.cy - s * lerp(138, 196, u),
-    rot: lerp(-PI / 2, -.04, u) * (C.flip ? -1 : 1), expr: o.expr || 'neutral', lid: o.lid ?? lerp(.97, .3, u), look: o.look || [0, .1], arms: { l: 'rest', r: 'rest' } }, o.extra || {}));
-  if (who === 'onion') { ch.cry = o.cry ?? .6; ch.sob = o.sob ?? 0; }
+  const fl = C.flip ? -1 : 1;
+  const ch = ctor(Object.assign({ t: lt, noLegs: true, noShadow: true, noReflect: true, noBob: true, noArms: u < .3, center: true, s: s * lerp(.62, .84, u), x: C.cx + s * lerp(-112, -96, u) * fl, y: C.cy - s * lerp(138, 196, u),
+    rot: lerp(-PI / 2, -.04, u) * fl, expr: o.expr || (who === 'onion' ? 'onion_stoic' : 'chill'), lid: o.lid ?? lerp(.97, .3, u), look: o.look || [0, .1], arms: { l: 'rest', r: 'rest' } }, o.extra || {}));
+  if (who === 'onion') { ch.cry = o.cry ?? .6 * u; ch.sob = o.sob ?? 0; }
   ch.who = o.who;
   drawChar(ch);
-  ctx.save(); ctx.translate(C.cx, C.cy); if (C.flip) ctx.scale(-1, 1); ctx.scale(s, s);                      /* the blanket across the lap, folded */
-  ctx.fillStyle = lg(0, -120, 0, -70, [[0, '#9aa0ac'], [1, '#6c7280']]); ctx.strokeStyle = 'rgba(20,14,26,.86)'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.moveTo(-96, -78); ctx.quadraticCurveTo(-90, -118, -20, -120); ctx.quadraticCurveTo(100, -126, 196, -96); ctx.quadraticCurveTo(204, -86, 200, -74); ctx.quadraticCurveTo(70, -58, -96, -78); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.restore();
+  const mound = lerp(56, 22, u), g = ctx;
+  g.save(); g.translate(C.cx, C.cy); if (C.flip) g.scale(-1, 1); g.scale(s, s); g.lineJoin = 'round';
+  g.fillStyle = lg(0, -96 - mound, 0, -70, [[0, '#9aa0ac'], [1, '#6c7280']]); g.strokeStyle = 'rgba(20,14,26,.86)'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(-58, -76); g.quadraticCurveTo(-52, -96 - mound, 6, -98 - mound * .95); g.quadraticCurveTo(100, -102 - mound * .8, 188, -96 - mound * .35); g.quadraticCurveTo(204, -88, 200, -74); g.quadraticCurveTo(70, -58, -58, -76); g.closePath(); g.fill(); g.stroke();
+  g.save(); g.clip(); g.strokeStyle = 'rgba(40,46,60,.32)'; g.lineWidth = 7; for (let i = 0; i < 6; i++) { g.beginPath(); g.moveTo(-30 + i * 42, -150); g.lineTo(-10 + i * 42, -40); g.stroke(); } g.strokeStyle = 'rgba(255,255,255,.2)'; g.lineWidth = 3; for (let i = 0; i < 6; i++) { g.beginPath(); g.moveTo(-8 + i * 42, -150); g.lineTo(12 + i * 42, -40); g.stroke(); } g.restore();
+  g.fillStyle = 'rgba(255,255,255,.24)'; g.beginPath(); g.moveTo(-54, -80); g.quadraticCurveTo(-48, -96 - mound, 6, -98 - mound * .95); g.lineTo(8, -88 - mound * .9); g.quadraticCurveTo(-36, -88 - mound * .7, -44, -78); g.closePath(); g.fill();
+  g.restore();
   return { ch, base: C };
 }
 
@@ -467,14 +478,15 @@ const SH = [
   { id: 'tu3', s: 27.739, e: 29.605, k: 'plow', z: 2.0 },
   { id: 'o5', s: 29.605, e: 31.338, k: 'cu', foc: 'onion', z: 3.0, dz: .2, up: 120 },
   { id: 's10', s: 31.338, e: 32.412, k: 'cu', foc: 'straw', z: 2.15, dz: .15, up: 150 },
-  { id: 'end', s: 32.412, e: 99, k: 'wide', z0: 1.3, z1: 1.2, cx: 530, cy: 850 },
+  { id: 'end', s: 32.412, e: 99, k: 'wide', z0: 1.16, z1: 1.04, cx: 520, cy: 830 },
 ];
 for (const sh of SH) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
 const shotAt = lt => { let r = SH[0]; for (const sh of SH) if (lt >= sh.s - 1e-6) r = sh; return r; };
+const IX = { t1: SH.findIndex(x => x.id === 't1'), t4: SH.findIndex(x => x.id === 't4'), lapse: SH.findIndex(x => x.id === 'lapse') };
 const nearCut = lt => SH.some(sh => sh.s > 0 && Math.abs(lt - sh.s) < .045);          /* motion blur is off around a cut (a cut inside the shutter is a double exposure) */
 
 // ------------------------------------------------------------------ the cast
-const mouthOf = o => { const k = KINDS[o.kind], s = o.s || 1, legLen = o.noLegs ? 0 : (k.leg || 90), yw = o.headYaw ?? o.yaw ?? 0; return [o.x + Math.sin(yw) * k.rx * .5 * s, o.y - (o.lift || 0) - (legLen + k.ry * .9 - k.mouthY) * s]; };
+const mouthOf = o => { const k = KINDS[o.kind], s = o.s || 1, legLen = o.noLegs ? 0 : (k.leg || 90), yw = o.headYaw ?? o.yaw ?? 0, fa = window.V2C && V2C.faceAng ? V2C.faceAng(yw) : yw; return [o.x + Math.sin(fa) * k.rx * .85 * s, o.y - (o.lift || 0) - (legLen + k.ry * .9 - k.mouthY) * s]; };
 /* Strawberry (the per diem look of Episode 11: steth, bandage, PER DIEM badge with a slot for the shift sticker) placed on the floor of the room at world (X, Z) */
 function strawAt(lt, X, Z, extra = {}) {
   const q = V2.at(X, Z);
@@ -516,9 +528,9 @@ function drawRoom(lt, env, o = {}) {
   G.cots = {};
   for (const who of COTW) {
     const sit = who === 'tom' ? sl.tom.sit : 0, onionUp = who === 'onion' ? ss(lt, 29.05, 29.6) : 0, amt = Math.max(sit, onionUp);
-    const pose = lt >= L.t1 ? (who === 'mango' ? 2 : who === 'lemon' ? 0 : who === 'tom' ? 2 : 1) : sl[who].pose;
+    const pose = poseOf(who, lt);
     if (o.noCots) continue;
-    if (amt > .02) G.cots[who] = cotSitter(lt, env, who, amt, who === 'onion' ? { pose, cry: .62, sob: Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .12) / .5), expr: 'onion_cry', lid: .3, who: o.onionWho } : { pose, expr: 'shock', lid: .1 });
+    if (amt > .03) G.cots[who] = cotSitter(lt, env, who, amt, who === 'onion' ? { pose, cry: .62, sob: Math.max(0, 1 - Math.abs(lt - CUE.sniffle - .12) / .5), expr: 'onion_cry', lid: .3, who: o.onionWho } : { pose, expr: 'shock', lid: .1 });
     else G.cots[who] = cotBase(lt, env, who, { pose, stir });
   }
   return G;
@@ -575,9 +587,10 @@ function castFor(lt, sh) {
   const C = [];
   if (EMPTY(sh)) return C;
   const add = (name, o, z) => C.push({ name, o, z });
-  if (lt < 6.249) add('straw', strawIdle(lt), HOME.Z);
-  else if (lt < L.t0) { add('out', twinOut(lt, sh), TW.out[1]); add('on', twinOn(lt, sh), TW.on[1]); }
-  else if (lt < L.t1) { const m = roundsOpts(lt); add('straw', m.o, m.r.Z); }
+  const ix = SH.indexOf(sh);                                               /* who is in the picture follows the SHOT (its start is snapped to a frame), never a raw beat time */
+  if (ix < IX.t1) add('straw', strawIdle(lt), HOME.Z);
+  else if (ix <= IX.t4) { add('out', twinOut(lt, sh), TW.out[1]); add('on', twinOn(lt, sh), TW.on[1]); }
+  else if (ix === IX.lapse) { const m = roundsOpts(lt); add('straw', m.o, m.r.Z); }
   else add('straw', strawPost(lt), HOME.Z + 10);
   return C;
 }
@@ -631,7 +644,7 @@ function onionFace() {
 }
 
 // ------------------------------------------------------------------ the light: ONE pass over the finished picture (L20.pass). Night is deep blue, never black; every speaking face has a light that is in the frame.
-const NIGHT_TINT = [30, 48, 100], DAWN_TINT = [112, 92, 104];
+const NIGHT_TINT = [20, 34, 84], DAWN_TINT = [112, 92, 104];
 function lightsFor(lt, env, G, sh, C) {
   const sun = env.sun, warm = c01(sun * 1.15), L_ = [];
   const winCol = hex(mixa([150, 184, 255], [255, 206, 140], warm)), dawnPow = 1 + .1 * sun;
@@ -655,7 +668,7 @@ function lightsFor(lt, env, G, sh, C) {
   return L_;
 }
 function lightPass(lt, env, G, sh, C) {
-  const sun = env.sun, amb = .34 + .27 * Math.pow(sun, 1.1), tint = hex(mixa(NIGHT_TINT, DAWN_TINT, sun));
+  const sun = env.sun, amb = .3 + .31 * Math.pow(sun, 1.1), tint = hex(mixa(NIGHT_TINT, DAWN_TINT, sun));
   if (!has('L20', 'pass')) return;
   L20.pass(ctx, { ambient: amb, tint, lights: lightsFor(lt, env, G, sh, C), bloom: .5, vignette: .22, lift: .1, t: lt, glow: .2 });
 }
@@ -669,7 +682,7 @@ function drawScene(lt) {
   V2.setLight({ key: [lerp(.5, -.5, warm), -.6], keyColor: hex(mixa([170, 196, 255], [255, 214, 160], warm)), keyA: .22, rim: '#ffb070', rimA: .4, shadow: '#101838', shadowA: .36, bounce: '#ffd9a0', bounceA: .1, amb: '#aab4e8', ambA: .08 });
   V2.opts.reflect = true;
   let G = {};
-  const ro = { winKids: () => drawPlow(lt, env, 'win', sh.k === 'plow'), doorKids: () => drawPlow(lt, env, 'doors', false), sharp: sharpClock, suppressMoon: !talkMoon, moonChar: talkMoon ? { expr: 'chill', lid: .22 } : {}, onionWho: sh.id === 'o5' ? 'onion' : undefined, noCots: false };
+  const ro = { winKids: () => drawPlow(lt, env, 'win', sh.k === 'plow'), doorKids: () => drawPlow(lt, env, 'doors', false), sharp: sharpClock, suppressMoon: !talkMoon, moonChar: talkMoon ? { expr: 'chill', lid: .22 } : {}, onionWho: sh.id === 'o5' ? 'onion' : undefined, noCots: sh.k === 'plow' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'doors' };
   const furn = lt2 => [
     { z: 1450, fn: () => { if (sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' || sh.k === 'doors') plainCounter(); else { counterShifted(() => S13.counter({ t: lt, phoneRing: 0, plaque: false })); deskLamp(lt, env, G); coffeeMaker(lt, env, G); } } },
   ].concat(sh.id === 'o5' || sh.k === 'moon' || sh.k === 'moon2' || sh.k === 'plow' || sh.k === 'doors' ? [] : [{ z: LAY.cart.Z, fn: () => medCart(lt, env, G) }]);
@@ -687,13 +700,13 @@ function drawScene(lt) {
     if (sh.id !== 'o5') REG.suppress++; room(); if (sh.id !== 'o5') REG.suppress--;
     for (const it of furn(lt).concat(chars).sort((a, b) => b.z - a.z)) it.fn();
   }
-  /* cold breath (the building is on the generator) */
+  lightPass(lt, env, G, sh, C);
+  /* cold breath (the building is on the generator): after the light pass, so it stays a pale puff in the dark */
   for (const c of C) if (c.name !== 'on' || lt < 10) {
     if (sh.k === 'wide') continue;
     const o = c.o, dir = (o.headYaw ?? o.yaw ?? 0) >= 0 ? 1 : -1;
-    if (lt < 18 && sh.k !== 'lapse') { const m = mouthOf(o); breathN(ctx, { x: m[0] + dir * 78 * (o.s || 1), y: m[1] - 12 * (o.s || 1), t: lt, seed: c.name === 'on' ? 9 : 4, period: 1.9, dir, size: (o.s || 1) * .85, alpha: .55, phase: c.name === 'on' ? .7 : 0 }); }
+    if (lt < 18 && sh.k !== 'lapse') { const m = mouthOf(o), sz = o.s || 1; for (let q = 0; q < 2; q++) breathN(ctx, { x: m[0] + dir * 60 * sz, y: m[1] - 10 * sz, t: lt, seed: (c.name === 'on' ? 9 : 4) + q * 10, period: 1.9, dir, size: sz * (1.1 + .25 * q), alpha: 1, phase: (c.name === 'on' ? .7 : 0) + .35 * q }); }
   }
-  lightPass(lt, env, G, sh, C);
   FR.G = G;
 }
 /* the ghost trail of the lapse: five earlier positions of her round at fading alpha, drawn BEFORE her (not held to the layout audit: they are trails, not bodies) */
@@ -722,9 +735,9 @@ function paneGlints(lt, x, y, w, h) {
   }
 }
 // ------------------------------------------------------------------ the plow outside (A20.plowTruck + Turnip in the cab): enters from the left at the end of the dawn, passes the window while he speaks (tu3), the wave buries the doors
-const PLOW = { s: 1.35, v: 192, cab0: 400, t0: 27.739 };
-function plowAt(lt) {
-  const gy = wpt(0, 0, ZB)[1] - 10, xc = PLOW.cab0 + PLOW.v * (lt - PLOW.t0);
+const PLOW = { s: 1.35 };
+function plowAt(lt) {                                                       /* the cab's x on the canvas: in from the left at the end of the dawn, then a slow crawl past the window's right pane (clear of the mullion) while he speaks */
+  const gy = wpt(0, 0, ZB)[1] - 10, xc = K([[24.9, -120], [25.99, 150], [27.2, 520], [27.739, 592], [29.3, 702], [30.0, 770]], lt);
   return { cabX: xc, xo: xc + 38 * PLOW.s, gy, s: PLOW.s, on: lt > 24.9 && lt < 30.6 };
 }
 function drawPlow(lt, env, where, reg) {
@@ -751,7 +764,6 @@ const NSC = {
     const sh = shotAt(lt), env = envAt(lt), C = castFor(lt, sh);
     FR = { sh, env, C, lt, G: {} };
     camFor(lt, sh, C, env);
-    if (window.__NTDBG) console.error('NTDBG', lt.toFixed(3), sh.id, sh.k, C.map(c => c.name).join(','), JSON.stringify({ x: CAM.x | 0, y: CAM.y | 0, z: +CAM.z.toFixed(2) }));
     CAM.x += 1.8 * hnoise(lt, 1.1, 1); CAM.y += 1.3 * hnoise(lt, .9, 2); CAM.r += .0012 * hnoise(lt, .7, 3);
   },
   draw(lt) { drawScene(lt); },
@@ -760,7 +772,17 @@ const NSC = {
     return { bloom: .5, vignette: .3, grain: .05, contrast: .1, sat: .1, tint: [['#4a6ad0', .1 * (1 - sun), 'soft-light'], ['#ffb868', .16 * sun, 'soft-light']] };
   },
   blur: lt => nearCut(lt) ? 1 : shotAt(lt).k === 'lapse' ? 3 : 2,
-  over(lt) {},
+  over(lt) {                                                               /* the whoosh of the lapse (lapsewhoosh 10.653): thin streaks leaving the centre, additive and faint, gone in .7 s (no flash) */
+    const k = (lt - CUE.lapsewhoosh) / .7;
+    if (k <= 0 || k >= 1) return;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    for (let i = 0; i < 52; i++) {
+      const a = i / 52 * TAU + (sr(i, 5) - .5) * .06, r0 = 360 + 420 * k + 90 * sr(i, 6), r1 = r0 + 230 + 260 * sr(i, 7);
+      ctx.strokeStyle = 'rgba(190,215,255,' + (.2 * (1 - k) * (.5 + .5 * sr(i, 8))) + ')'; ctx.lineWidth = 2 + 3 * sr(i, 9);
+      ctx.beginPath(); ctx.moveTo(540 + Math.cos(a) * r0, 820 + Math.sin(a) * r0 * 1.15); ctx.lineTo(540 + Math.cos(a) * r1, 820 + Math.sin(a) * r1 * 1.15); ctx.stroke();
+    }
+    ctx.restore();
+  },
   clock(lt) { const P = SIM.clockParts(SIM.worldMin(lt)); return P.text + ' ' + P.ampm; },
 };
 window.__EP20_SCENES = window.__EP20_SCENES || {};

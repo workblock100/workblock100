@@ -220,12 +220,12 @@ function drawCut(lt) {
     veil(R, 1 - lit);
     ctx.restore();
     /* the exit sign over the room's door and the red battery lamps, which wake at their relay */
-    const ek = exitK(rm, lt), ex = rm.c === 1 ? R.x0 + 46 : R.x1 - 46, ey = R.y0 + 46;
-    if (window.P20 && P20.exitSign) P20.exitSign(ctx, { x: ex, y: ey, s: .46, glow: ek * (1 - .45 * lit), t: lt, halo: .8 });
-    if ((rm.id === 'station' || rm.id === 'break' || rm.id === 'med') && window.P20 && P20.emergencyLamp) {
-      const on = ss(lt, CUE.relay[rm.exit], CUE.relay[rm.exit] + .12) * (1 - lit);
-      P20.emergencyLamp(ctx, { x: rm.c === 1 ? R.x1 - 46 : R.cx + 40, y: R.y0 + 34, s: .34, on, color: '#ff7a3a', t: lt });
-      if (on > .02) V2.glow(rm.c === 1 ? R.x1 - 46 : R.cx + 40, R.y0 + 60, 150, '255,110,50', .3 * on, 'screen', .3);
+    const ek = exitK(rm, lt), EXP = { kitchen: [R.x0 + 46, R.y0 + 92], station: [R.x1 - 46, R.y0 + 116], dayroom: [R.x1 - 46, R.y0 + 46], med: [R.x0 + 216, R.y0 + 46], break: [R.x0 + 46, R.y0 + 46], oxygen: [R.x1 - 46, R.y0 + 46] }[rm.id];
+    if (window.P20 && P20.exitSign) P20.exitSign(ctx, { x: EXP[0], y: EXP[1], s: .46, glow: ek * (1 - .45 * lit), t: lt, halo: .8 });
+    if ((rm.id === 'station' || rm.id === 'break') && window.P20 && P20.emergencyLamp) {
+      const on = ss(lt, CUE.relay[rm.exit], CUE.relay[rm.exit] + .12) * (1 - lit), lx = R.x1 - 46, ly = R.y0 + 34;
+      P20.emergencyLamp(ctx, { x: lx, y: ly, s: .34, on, color: '#ff7a3a', t: lt });
+      if (on > .02) V2.glow(lx, ly + 26, 150, '255,110,50', .3 * on, 'screen', .3);
     }
     roomLabel(rm, lt);
   }
@@ -252,9 +252,9 @@ function drawCut(lt) {
   if (window.SN20 && SN20.snow) SN20.snow(ctx, { x0: -60, y0: 0, x1: W + 60, y1: H, t: lt, seed: 9, layers: 3, density: .8, tone: 'dark', slice: 'front', wind: -34 });
 }
 /* the camera of the cutaway: a slow settle, then a push into the STATION (the middle room of the top row) from 0.9 s; the cut to the interior is at 2.30 */
-const CUTZ = { z1: 3.05, cy0: 930, cy1: 800 };
+const CUTZ = { z1: 2.4, cy0: 930, cy1: 830 };
 function camCut(lt) {
-  const k = easeIO(sg(lt, .9, 2.28)), drift = sg(lt, 0, .9);
+  const k = ss(lt, .85, 2.28), drift = sg(lt, 0, .85);
   const z = (1 + .035 * drift) + (CUTZ.z1 - 1.035) * k, cy = lerp(CUTZ.cy0, CUTZ.cy1, k), cx = 540 + 6 * Math.sin(lt * .9);
   zoomTo0(cx, cy, z);
 }
@@ -282,8 +282,8 @@ const SH = [
   { id: 'r1', s: 4.35, e: 5.43, k: 'cu', foc: 'straw', z: 2.3, z2: 2.4, up: 80, dx: -30, dof: 10, bsmall: 1 },
   { id: 'b1', s: 5.43, e: 7.49, k: 'cu', foc: 'straw', z: 2.0, z2: 2.08, up: -120, dx: 205, dof: 12, bub: 1 },
   { id: 's1', s: 7.49, e: 8.20, k: 'cu', foc: 'straw', z: 2.15, z2: 2.2, up: -120, dx: 205, dof: 12, bub: 1 },
-  { id: 'b2', s: 8.20, e: 9.50, k: 'cu', foc: 'straw', z: 2.0, z2: 2.0, up: -120, dx: 205, dof: 12, bub: 2 },
-  { id: 'c1', s: 9.50, e: 10.65, k: 'sw', foc: 'onion', z: 2.9, z2: 3.5, fx: 215, fy: -100, dof: 10, sw: 1 },
+  { id: 'b2', s: 8.20, e: 9.40, k: 'cu', foc: 'straw', z: 2.0, z2: 2.0, up: -120, dx: 205, dof: 12, bub: 2 },
+  { id: 'c1', s: 9.40, e: 10.65, k: 'sw', foc: 'onion', z: 2.9, z2: 3.5, fx: 215, fy: -100, dof: 10, sw: 1 },
   { id: 'c2', s: 10.65, e: 11.67, k: 'w', z: 1.45, x: 640, y: 900, cx: -40, dof: 6, whole: 1 },
   { id: 'l1', s: 11.67, e: 12.33, k: 'two', foc: ['lemon', 'onion'], z: 1.95, z2: 2.0, up: 70, dof: 8 },
   { id: 'gen', s: 12.33, e: 13.98, k: 'w', z: 1.0, y: 930, cx: -40, gen: 1 },
@@ -396,9 +396,9 @@ function castI(lt, sh) {
     C.tom = person(A15.tomato, () => PX.tom, lt, { t: lt, tomPose: 'fruit', yaw: tw.yaw, headYaw: tw.headYaw, look: tw.look, who: 'tom', hold: {}, arms: { l: party ? 'cheer' : 'rest', r: party ? 'cheer' : 'rest' } }); }
   /* BRENDA: in the corner chair, dusty, the dead flashlight from 2019 in her right hand; it comes up at "flashlight" (28.19), clicks twice (31.29, 31.74), goes down */
   { const raise = ss(lt, 27.95, 28.4) * (1 - ss(lt, 33.6, 34.4)), clk = [CUE.clickdead[0], CUE.clickdead[1]].reduce((a, t0) => a + Math.max(0, 1 - Math.abs(lt - t0 - .04) / .09), 0);
-    const look = lt >= 31.1 && lt < 32.5 ? [-.3, .8] : [-.6, .1];
+    const look = lt >= 31.1 && lt < 32.5 ? [.75, -.15] : [-.6, .1];
     let o = A13.brenda({ t: lt, id: 'brenda', who: 'brenda', expr: A13.expr(lt >= 32.5 ? 'weak' : 'wake'), lid: .3, dust: .7, specsDrop: .6, look, yaw: -.35, headYaw: -.3 + .06 * Math.sin(lt * .8),
-      arms: { l: 'rest', r: 'hold' }, grip: { r: [lerp(46, 124, raise), lerp(100, 6, raise)] }, hold: { r: 'fp20_flashlight' }, flOn: 0, flOld: 1, flTag: '2019', flAng: -2.1 + .35 * clk, noLegs: true });
+      arms: { l: 'rest', r: 'hold' }, grip: { r: [lerp(46, 124, raise), lerp(100, 6, raise) + 9 * clk] }, hold: { r: 'fp20_flashlight' }, flOn: 0, flOld: 1, flTag: '2019', flAng: -2.1 + .35 * clk, noLegs: true });
     const q = V2.at(POS.brenda[0], POS.brenda[1]), seat = V2.p2(POS.brenda[0], 96, POS.brenda[1]);
     Object.assign(o, { x: q.x, y: seat[1] + 12 * q.s, s: q.s * 1.04 });
     C.brenda = o; }
@@ -482,7 +482,7 @@ const BIG = { x: 300, y: 1040, S: 1.75 };
 B.BIG = BIG;
 function bindPose(lt, sh, C) {
   if (!sh.bub && !sh.bsmall) return null;
-  if (lt < CUE.binderpop - .02 || lt >= 9.6) { if (!(sh.bsmall && lt < CUE.binderpop)) return null; }
+  if (lt < CUE.binderpop - .02 || lt >= 9.45) { if (!(sh.bsmall && lt < CUE.binderpop)) return null; }
   const st = C.straw, [fx, fy] = faceC(st), s = st.s, pop = sg(lt, CUE.binderpop, CUE.binderpop + .3);
   if (sh.id === 'r1') {                                                  /* the clip on the lanyard at her chest, asleep until the pop */
     if (lt < CUE.binderpop) { const p = toScr(fx + 4 * s, fy + 122 * s); return { sx: p[0], sy: p[1], S: .24 * 2.4 * s / .85, asleep: 1, pop: 0, small: 1 }; }
@@ -526,7 +526,7 @@ function lightsFor(lt, sh, C, R) {
   /* Mango's phone: a white cone, wobbling across the wall */
   if (C && C.mango && C.mango.plOn > .01) { const p = P20.phonePose(C.mango, lt); L.push({ kind: 'cone', x: p.x, y: p.y, ang: p.ang, spread: .62, len: 1100 * kk, color: '#eef4ff', power: .9 * C.mango.plOn, soft: .55 }); }
   /* Binder's bubble: the cool white-blue light of the only screen in the room (it dips once at the low battery and dies) */
-  if (FR.bind) { const on = ss(lt, CUE.binderpop, CUE.binderpop + .22) * (1 - ss(lt, CUE.lowbattery + .1, CUE.lowbattery + .32)), dip = lt >= CUE.lowbattery && lt < CUE.lowbattery + .08 ? .45 : 1, p = FR.bind.p;
+  if (FR.bind) { const on = ss(lt, CUE.binderpop + .05, CUE.binderpop + .5) * (1 - ss(lt, CUE.lowbattery + .1, CUE.lowbattery + .32)), dip = lt >= CUE.lowbattery && lt < CUE.lowbattery + .08 ? .7 : 1, p = FR.bind.p;
     if (on > .01) L.push({ kind: 'point', x: p[0] + 190, y: p[1] - 110, r: 470, color: '#c4dcff', power: .95 * on * dip, soft: .8 }); }
   if (sh.k === 'w' && lt >= CUE.flash[1] + .1 && C && C.brenda) { const bf = faceC(C.brenda); L.push({ kind: 'point', x: bf[0], y: bf[1] + 40, r: 230, color: '#ffe2c8', power: .8, soft: .8 }); }
   /* the candles: warm points at the flames (foreground ones in a close-up, the ledge ones in a wide) */
@@ -535,14 +535,18 @@ function lightsFor(lt, sh, C, R) {
   /* a motivated fill on the face that matters in a close-up, so a speaking face is always lit by something in the frame */
   if (sh.k === 'cu' || sh.k === 'two') { const ids = Array.isArray(sh.foc) ? sh.foc : [sh.foc];
     for (const id of ids) { const o = C[id]; if (!o) continue; const f = faceC(o), s = o.s, warm = lt >= CUE.candle[0] + .1;
-      const col = id === 'brenda' ? '#ffd8bc' : warm ? '#ffb86a' : lt < 12.9 ? '#59f0d6' : '#ff9a60', pw = (id === 'brenda' ? .55 : .3) * (warm ? 1 : lt < 5.28 ? 1 : .4) * (sh.bub ? 0 : 1);
+      const col = id === 'brenda' ? '#ffd8bc' : warm ? '#ffb86a' : lt < 12.9 ? '#59f0d6' : '#ff9a60', pw = (id === 'brenda' ? .55 : .3) * (warm ? 1 : lt < 5.28 ? 1 : .4) * (sh.bub ? ss(lt, 9.15, 9.4) * 1.3 : 1);
       if (pw > .02) L.push({ kind: 'point', x: f[0] - 30 * s, y: f[1] + 110 * s, r: 215 * s / .85, color: col, power: pw * .8, soft: .85 }); } }
   return L;
 }
 B.lightsFor = lightsFor;
+const GAIN = { o1: .84, b1: .74, s1: .72, b2: .74, c1: .85, l1: .85, o3: .76, t2: .8, o4: .76, s2: .72, o2: .77, s3: .7 };
+const LIFT = { w1: .5, r1: .12, c2: .22, gen: .3, m1b: .5, end: .26 };
+const trim = (id, lt) => id === 'r1' && lt > CUE.binderpop ? { color: hex([255, 255, 255].map(v => v * lerp(1, .74, ss(lt, CUE.binderpop, CUE.binderpop + .45)))), alpha: 1, mode: 'multiply' } : GAIN[id] ? { color: hex([255 * GAIN[id], 255 * GAIN[id], 255 * GAIN[id]]), alpha: 1, mode: 'multiply' } : LIFT[id] ? { color: '#2a3560', alpha: LIFT[id], mode: 'screen' } : null;
+B.trim = trim;
 function passParams(lt, sh) {
   const gen = ss(lt, 12.9, 13.4);
-  return { ambient: lerp(sh.bub ? .12 : .14, .3, gen), tint: mixh('#050b26', '#2a0a0c', gen), bloom: .55, vignette: .32, lift: .08, glow: .34 };
+  return { ambient: lerp(sh.bub ? .12 : .14, .3, gen), tint: mixh('#050b26', '#2a0a0c', gen), bloom: .55, vignette: .32, lift: .08, glow: .34, grade: trim(sh.id, lt) };
 }
 B.passParams = passParams;
 
@@ -648,7 +652,7 @@ function drawWall(lt) {
     { kind: 'point', x: 960, y: 120, r: 720, color: '#ff9650', power: .5, soft: .8 },
     { kind: 'point', x: 800, y: 860, r: 400, color: '#38ff7a', power: .12 + .2 * toRed, soft: .8 },
   ];
-  if (!inMask() && window.L20 && L20.pass) L20.pass(g, { t: lt, ambient: .3, tint: '#240c10', bloom: .5, vignette: .34, lift: .1, glow: .3, lights, grade: { color: '#ff5a24', alpha: .1, mode: 'soft-light' } });
+  if (!inMask() && window.L20 && L20.pass) L20.pass(g, { t: lt, ambient: .3, tint: '#240c10', bloom: .5, vignette: .34, lift: .1, glow: .3, lights, grade: B.trim ? B.trim('m1b') : null });
 }
 B.drawWall = drawWall;
 
@@ -679,8 +683,8 @@ function bubbleOpts(lt) {
   return o;
 }
 function overBubble(lt, sh) {
-  if (lt < bS('b1') || lt >= 9.6) return;
-  const dying = lt >= CUE.lowbattery, a = dying ? (lt < CUE.lowbattery + .08 ? .4 : lt < CUE.lowbattery + .2 ? .95 : 1 - ss(lt, CUE.lowbattery + .2, CUE.lowbattery + .42)) : 1;
+  if (lt < bS('b1') || lt >= 9.45) return;
+  const dying = lt >= CUE.lowbattery, a = dying ? (lt < CUE.lowbattery + .08 ? .62 : lt < CUE.lowbattery + .2 ? .95 : 1 - ss(lt, CUE.lowbattery + .2, CUE.lowbattery + .42)) : 1;
   if (a <= .01) return;
   const bo = bubbleOpts(lt), g = SH15.binderRect(bo);
   ctx.save(); ctx.globalAlpha *= a;
@@ -715,7 +719,7 @@ const SC = {
   draw: lt => { const sh = FR.sh; if (sh.k === 'cut') B.drawCut(lt); else if (sh.k === 'wall') B.drawWall(lt); else B.drawI(lt); },
   fx: lt => ({ bloom: .62, vignette: .36, grain: .05, contrast: .12, sat: .06 }),
   blur: lt => 1,
-  over: lt => { const sh = FR.sh; if (sh.bub) overBubble(lt, sh); if (sh.k !== 'cut' && window.L20 && L20.emergency) { const lv = ss(lt, 13.2, 13.8) * .5; if (lv > .01) L20.emergency(ctx, { level: lv, t: lt, pulse: .12 }); } },
+  over: lt => { const sh = FR.sh; if (sh.bub) overBubble(lt, sh); if (sh.id === 'br2b' && window.A12 && A12.sfx) { A12.sfx(lt, CUE.clickdead[0], 'click.', 690, 400, { size: 96, hold: .3, rot: -.1, maxW: 420 }); A12.sfx(lt, CUE.clickdead[1], 'click.', 760, 520, { size: 96, hold: .3, rot: .08, maxW: 420 }); } if (sh.k !== 'cut' && window.L20 && L20.emergency) { const lv = ss(lt, 13.2, 13.8) * .5; if (lv > .01) L20.emergency(ctx, { level: lv, t: lt, pulse: .12 }); } },
 };
 window.__EP20_SCENES = window.__EP20_SCENES || {};
 window.__EP20_SCENES.blackout = SC;

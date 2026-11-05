@@ -635,7 +635,7 @@ DUCK_DB = {   # how far a cue is dipped (dB) while a voice speaks, by effect nam
     "sniffle": 4, "typing": 6, "step": 7, "snowstep": 7, "plowengine": 5, "plowdist": 6, "windswell": 5, "windgust": 3, "stopwatchticks": 3, "swtick": 3, "slurp": 3, "cupset": 2,
     "clockspin": 4, "breath": 2, "shovel": 4, "flashlight": 3, "lapsewhoosh": 3, "whoosh_s": 3, "rustle": 3, "plowrumble": 6, "genstart": 9, "relay": 6, "powerdown": 6, "snowdump": 6, "doorgust": 4,
     "plowdump": 5, "plowscrape": 3, "thud": 3, "hum_on": 3,
-    "bed_title": 3, "bed_forecast": 4, "bed_lot": 6, "bed_blackout": 3, "bed_dayroom": 4, "bed_night": 4, "bed_end": 2,
+    "bed_title": 3, "bed_forecast": 4, "bed_lot": 9, "bed_blackout": 3, "bed_dayroom": 4, "bed_night": 4, "bed_end": 2,
 }
 NOREV = ("bed_title", "bed_forecast", "bed_lot", "bed_blackout", "bed_dayroom", "bed_night", "bed_end", "genstart", "lapsewhoosh", "clockspin", "windswell", "whoosh_s", "rustle", "glint", "plowrumble")
 DRY_WHO = ("brenda",)                                  # voices that skip the room: close and dry
@@ -1853,7 +1853,8 @@ def sfx_clockspin():
         tt = tarr(.04)
         c = _band(2801 + j % 16, .04, 900, 4500) * expdecay(.04, .004) * .8 + np.sin(2 * np.pi * f * tt) * np.exp(-tt / .008) * .6
         _place(x, c, i / SR, (1.0 / (1 + 4 * uu)) * (.85 + .3 * r.uniform()))
-    whir = _sin_of(120 + 6 * rate) * (.7 + .3 * np.sin(2 * np.pi * 4 * t)) * u ** 1.5
+    mh = np.cumsum(1.1 * u) / SR                                                    # the minute hand: 66 minutes a second is 1.1 turns a second, once round per sweep of the whir
+    whir = _sin_of(120 + 6 * rate * (1 + .04 * u * np.sin(2 * np.pi * .37 * t))) * (.65 + .35 * np.sin(2 * np.pi * mh)) * u ** 1.5
     x = x + _lp4(whir, 2500, 2) * .18
     ti = int((end - cue) * SR)
     tt = tarr(.16)
@@ -2327,7 +2328,7 @@ def _select_phys(phys, scripted):
 # ================================================================ Episode 20: the room tone of every space (beds)
 # A bed is a designed event the script does not list (see _designed_events): a stereo texture that fills one scene. It is returned at unit RMS; the event's gain sets its level (BED_DB: dB under a
 # spoken line). Beds skip the scene's reverb (NOREV): each already has its room baked in (the lot has no room at all).
-BED_DB = {"title": -34, "forecast": -25, "lot": -11, "blackout": -19, "dayroom": -24, "night": -24, "end": -40}
+BED_DB = {"title": -34, "forecast": -25, "lot": -8, "blackout": -19, "dayroom": -24, "night": -24, "end": -40}
 BED_SCENE = {"title": "title", "forecast": "forecast", "lot": "lot", "blackout": "blackout", "dayroom": "dayroom", "night": "night", "end": "end"}
 
 
@@ -2399,9 +2400,9 @@ def room_forecast(d, seed=2100):
     if tdoor is not None:
         env = uniform_filter1d(_door_env(d, tdoor), 480)
         opened = _lp4(wind(d, seed + 25, howl=1.0, base=.6, var=.2), 4500, 2)
-        parts += [(leak * (1 - .7 * env), .8), (opened * env, 1.1)]
+        parts += [(leak * (1 - .7 * env), 1.4), (opened * env, 1.8)]
     else:
-        parts += [(leak, .8)]
+        parts += [(leak, 1.4)]
     return _mix(parts, d)
 
 
@@ -2424,12 +2425,12 @@ def room_blackout(d, seed=2300):
     t = tarr(d)
     hum_on = _rms(sum(a * np.sin(2 * np.pi * 120 * h * t + h) for h, a in ((1, 1.0), (2, .6), (3, .5), (4, .3), (5, .2))), 1.0) * .5 + _rms(_lp4(noise6(d, seed), 300, 2), 1.0) * .3
     hum_on = hum_on * np.interp(t, [0, .19, .225, d], [1, 1, 0, 0])
-    leak = wind(d, seed + 5, wall=480, howl=.8, base=.4, var=.2) * np.interp(t, [0, .35, .9, 12.9, 13.9, d], [0, 0, .5, .5, .38, .38])
+    leak = wind(d, seed + 5, wall=480, howl=.9, base=.45, var=.22) * np.interp(t, [0, .35, .9, 12.9, 13.9, d], [0, 0, 1.0, 1.0, .75, .75])
     sub = _ctr(_rms(_lp4(noise6(d, seed + 6), 55, 2), 1.0), 0.0) * np.interp(t, [0, .4, 1.2, 12.9, 13.9, d], [0, 0, .12, .12, .05, .05])
     gen = _diffuse(lambda s: _gen_drone(d, s), seed + 10)
     gen = gen * np.interp(t, [0, 12.8, 13.9, d], [0, 0, 1.0, 1.0])
     em = _ctr(_emerg_buzz(d, seed + 20), .15) * np.interp(t, [0, 12.9, 13.9, d], [0, 0, .2, .2])
-    return _mix([(_st(hum_on), 1.0), (leak, .45), (sub, 1.0), (gen, .55), (em, 1.0)], d)
+    return _mix([(_st(hum_on), 1.0), (leak, 1.0), (sub, 1.0), (gen, .5), (em, 1.0)], d)
 
 
 def room_dayroom(d, seed=2400):
@@ -2438,7 +2439,7 @@ def room_dayroom(d, seed=2400):
     air = _diffuse(lambda s: _rms(_hvac(d, s, 110.0, 240.0), 1.0), seed)
     gen = _diffuse(lambda s: _gen_drone(d, s, 330), seed + 10)
     leak = wind(d, seed + 20, wall=460, howl=1.0, base=.45, var=.22)
-    return _mix([(air, .3), (gen, .35), (_ctr(_emerg_buzz(d, seed + 30), -.3), .08), (leak, .9)], d)
+    return _mix([(air, .3), (gen, .35), (_ctr(_emerg_buzz(d, seed + 30), -.3), .08), (leak, 1.6)], d)
 
 
 def room_night(d, seed=2500):
@@ -2458,7 +2459,7 @@ def room_night(d, seed=2500):
     a = (LAPSE.a - sc["start"]) if LAPSE.active else 10.65
     uu = LAPSE.u_at(sc["start"] + t) if LAPSE.active else np.zeros(len(t))
     lvl = np.interp(t, [0, a, b, b + 1.8, d], [1.0, 1.0, 1.0, .1, .1]) * (1 + .9 * uu)
-    return _mix([(r_tone, 1.0), (leak * lvl, 1.0)], d)
+    return _mix([(r_tone, 1.0), (leak * lvl, 1.6)], d)
 
 
 def room_end(d, seed=2600):

@@ -62,7 +62,14 @@ const truckX = lt => {                              /* the truck's origin: it id
   if (lt <= CUE.dump + .02) return xb0 + V_PLOW * (lt - T_BLADE0);
   if (lt < CUE.engine2) return lerp(xA, xStop, eo(sg(lt, CUE.dump + .02, CUE.dump + .55)));
   const d = lt - CUE.engine2;
-  return xStop + 70 * d * d + 700 * Math.max(0, d - .5) * Math.max(0, d - .5);
+  return xStop + 70 * d * d + 700 * Math.max(0, d - .9) * Math.max(0, d - .9);
+};
+/* the tu2 camera follows the truck as it pulls away at no more than 160 world px/s (z 4.15: 660 screen px/s, under the 700 limit), so the cab and Turnip's last word stay in the frame */
+const followX = lt => {
+  if (lt <= CUE.engine2) return 0;
+  const N = Math.max(1, Math.ceil((lt - CUE.engine2) * 60)), h = (lt - CUE.engine2) / N; let f = 0;
+  for (let i = 0; i < N; i++) { const t0 = CUE.engine2 + i * h; f += Math.min(truckX(t0 + h) - truckX(t0), 160 * h); }
+  return f;
 };
 const GUSTS = [[1.9, 1.5, .8], [7.0, 1.6, .9], [14.0, 1.0, .5], [16.5, .9, .4]];
 const windAt = lt => (window.SN20 && SN20.wind) ? SN20.wind(lt, GUSTS) : .3 + .2 * Math.sin(lt * 1.3) + .1 * Math.sin(lt * 2.9 + 1);
@@ -230,7 +237,7 @@ const CAM_FN = {
     return [lerp(xPan, c[0] - 90, e), lerp(1130, c[1] + 30, e), lerp(.7, 1.05, e)];
   },
   tu1: lt => { const c = cabCenter(CAB_T); return [c[0] + 1.5 * Math.sin(lt * 1.7), c[1] + 2 + 1.5 * Math.cos(lt * 1.3), lerp(3.9, 4.15, sg(lt, bS('tu1'), bE('tu1')))]; },
-  tu2: lt => { const c = cabCenter(CAB_T); return [c[0] + 1.5 * Math.sin(lt * 1.7), c[1] + 2 + 1.5 * Math.cos(lt * 1.3), lerp(3.9, 4.15, sg(lt, bS('tu2'), bE('tu2')))]; },
+  tu2: lt => { const c = cabCenter(CAB_T); return [c[0] + followX(lt) + 1.5 * Math.sin(lt * 1.7), c[1] + 2 + 1.5 * Math.cos(lt * 1.3), lerp(3.9, 4.15, sg(lt, bS('tu2'), bE('tu2')))]; },
 };
 // ------------------------------------------------------------------ snow layers (screen space: constant flake size at every zoom, the near layer only in wides) and the little things
 function snowLayer(lt, slice, o = {}) {
@@ -299,7 +306,7 @@ SD.s1 = (lt, sh, v) => {
 // l1: Lemon points, a mound among mounds
 SD.l1 = (lt, sh, v) => {
   const k = ss(lt, bS('l1') - .05, bS('l1') + .2);
-  drawStaffClose(lt, v, 'lemon', { lemon: { o: { yaw: .32, look: [.8, 0], expr: 'neutral', arms: { l: 'rest', r: k > .05 ? 'point' : 'rest' } } }, straw: { o: { yaw: -.2, expr: 'neutral' }, post: o => heldShovel(o, lt) } });
+  drawStaffClose(lt, v, 'lemon', { lemon: { o: { yaw: .32, look: [.8, -.1], expr: 'neutral', arms: { l: 'rest', r: k > .05 ? 'hold' : 'rest' }, grip: { r: [lerp(80, 124, k), lerp(70, -62, k)] }, hand: { r: 'point' } } }, straw: { o: { yaw: -.2, expr: 'neutral' }, post: o => heldShovel(o, lt) } });
 };
 // s2: the hill, the red mirror and the antenna above her shoulder: "That is a hill."
 SD.s2 = (lt, sh, v) => {
@@ -310,22 +317,21 @@ const shovelTip = t => A20.shovelThrow({ kind: 'straw', x: SXP, y: GY, s: ST, se
 SD.dig = (lt, sh, v) => {
   const tD = CUE.snowdump, after = lt >= tD, dk = ss(lt, tD, tD + .22), land = tD + .3;
   drawPit(shovelTip(CUE.shovel[0]).x, lt);
-  const tip = shovelTip(lt), hop = after ? 0 : -Math.abs(Math.sin((lt - CUE.shovel[0]) * PI / .6)) * 0;
-  const o = person('straw', lt, { o: { yaw: after ? .3 : 1.2, expr: after ? 'shock' : (lt < CUE.shovel[0] ? 'weak' : 'sour'), look: [.9, .35], squash: after ? .16 * Math.exp(-Math.max(0, lt - land) * 7) * (lt > land ? 1 : 0) : 0, plant: true }, post: p => { if (!after) A20.shovelThrow(p, lt, CUE.shovel[0]); else { p.arms = { l: 'up', r: 'up' }; p.hold = {}; } if (!after) p.rot = .05 * Math.sin((lt - CUE.shovel[0]) * TAU / .6); } });
-  drawP(o);
-  if (window.SN20 && SN20.spray) CUE.shovel.forEach((tp, k) => { const tr = tp + A20.SHOVEL.release * A20.SHOVEL.period, tt = shovelTip(tr); if (lt >= tr && lt < tr + 1.8) SN20.spray(ctx, { x: tt.x, y: tt.y, ang: -.8, t: lt, t0: tr, t1: tr + .1, seed: 20 + k, power: .95, width: .85, gravity: 1200 }); });
-  /* the door pops open (a dark gap and the red panel swinging out) and a block of snow comes out and slides onto her */
+  /* the door pops open (a dark gap and the red panel swinging out) and a block of snow comes out and slides down behind her onto her legs */
   const door = A20.carInfo({ x: carX(HERS), y: CY, s: CARS_S, facing: 1 }).door;
   if (dk > .02) {
-    ctx.save(); ctx.translate(door[0] + 6, door[1] - 6);
+    ctx.save(); ctx.translate(door[0] + 8, door[1] - 4); ctx.scale(.8, .8);
     ctx.fillStyle = '#1d1830'; ctx.strokeStyle = OUT_; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(-30, -40, 62, 128, 8); ctx.fill(); ctx.stroke();
     const th = dk * 1.15; ctx.fillStyle = V2.grad(0, -40, 0, 88, [[0, '#e94a68'], [1, '#a31f3a']]); ctx.beginPath(); ctx.moveTo(32, -40); ctx.lineTo(32 + 54 * Math.sin(th), -34); ctx.lineTo(32 + 54 * Math.sin(th), 80); ctx.lineTo(32, 88); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.restore();
-    const sk = sg(lt, tD + .04, land), bx = lerp(door[0] - 20, SXP + 8, ei(sk)), by = lerp(door[1] + 20, GY - 22, sk * sk), ang = -.5 * sk;
-    if (lt < land + .08) { ctx.save(); ctx.translate(bx, by); ctx.rotate(ang); ctx.fillStyle = V2.grad(0, -46, 0, 46, [[0, '#f9fcff'], [1, '#b8c8e6']]); ctx.strokeStyle = 'rgba(70,92,150,.8)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(-70, -46, 140, 92, 22); ctx.fill(); ctx.stroke(); ctx.restore(); }
+    const sk = sg(lt, tD + .04, land), bx = lerp(door[0] - 10, SXP + 30, ei(sk)), by = lerp(door[1] + 30, GY - 30, sk * sk), ang = -.4 * sk;
+    if (lt < land + .06) { ctx.save(); ctx.translate(bx, by); ctx.rotate(ang); ctx.fillStyle = V2.grad(0, -40, 0, 40, [[0, '#f9fcff'], [1, '#b8c8e6']]); ctx.strokeStyle = 'rgba(70,92,150,.8)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(-58, -38, 116, 76, 20); ctx.fill(); ctx.stroke(); ctx.restore(); }
   }
+  const o = person('straw', lt, { o: { yaw: after ? .25 : .75, expr: after ? 'shock' : (lt < CUE.shovel[0] ? 'weak' : 'sour'), look: [.9, .35], squash: after && lt > land ? .16 * Math.exp(-(lt - land) * 7) : 0, plant: true }, post: p => { if (!after) A20.shovelThrow(p, lt, CUE.shovel[0]); else { p.arms = { l: 'up', r: 'up' }; p.hold = {}; } if (!after) p.rot = .05 * Math.sin((lt - CUE.shovel[0]) * TAU / .6); } });
+  if (window.SN20 && SN20.flurry && lt >= land && lt < land + 1.3) SN20.flurry(ctx, { x: SXP + 6, y: GY - 30, r: 96, t: lt, t0: land, life: 1.15, seed: 31, n: 56 });
+  drawP(o);
+  if (window.SN20 && SN20.spray) CUE.shovel.forEach((tp, k) => { const tr = tp + A20.SHOVEL.release * A20.SHOVEL.period, tt = shovelTip(tr); if (lt >= tr && lt < tr + 1.8) SN20.spray(ctx, { x: tt.x, y: tt.y, ang: -.8, t: lt, t0: tr, t1: tr + .1, seed: 20 + k, power: .95, width: .85, gravity: 1200 }); });
   drawPile(lt);
-  if (window.SN20 && SN20.flurry && lt >= land && lt < land + 1.3) SN20.flurry(ctx, { x: SXP + 6, y: GY - 36, r: 100, t: lt, t0: land, life: 1.15, seed: 31, n: 56 });
 };
 const OUT_ = 'rgba(25,10,20,.92)';
 // t1: Tomato and the snowman growing; the party whistle pops confetti
@@ -346,22 +352,22 @@ SD.t1 = (lt, sh, v) => {
 };
 // o1 / o2: Onion steps onto the ice, slips, slides on her back into the snowman (its head comes off) and writes the incident report lying down
 function onionShot(lt, v) {
-  const { o, st } = onionO(lt, { o: { expr: lt < CUE.slip ? 'onion_stoic' : 'onion_wail', arms: lt < ONION.walk1 ? { l: 'hold', r: 'rest' } : (lt < CUE.thud ? { l: 'flail', r: 'flail' } : undefined) }, pre: {} });
-  const upK = ss(lt, CUE.thud + .15, CUE.thud + .55);
-  if (st.lying > .6) {   /* the clipboard goes straight up in the world: the left arm's target is world-up turned into the body's frame (the body is rotated by o.rot) */
-    const ux = -Math.sin(o.rot), uy = -Math.cos(o.rot);   /* world up as a vector in the body's own frame (the body is turned by o.rot) */
-    const sx = -97, sy = 12, L = 108;
-    o.arms = { l: 'hold', r: 'rest' }; o.grip = { l: [lerp(-62, sx + ux * L, upK), lerp(84, sy + uy * L, upK)] };
-    o.hold = { l: 'fp15_tabletclip' }; o.tabRot = -o.rot + .06 * Math.sin(lt * 15) * upK; o.tabAt = [.5, .5]; o.tabScale = .9;
+  const { o, st } = onionO(lt, { o: { expr: lt < CUE.slip ? 'onion_stoic' : 'onion_wail', arms: lt < ONION.walk1 ? { l: 'hold', r: 'rest' } : { l: 'hold', r: lt < CUE.thud ? 'flail' : 'rest' } }, pre: {} });
+  const upK = ss(lt, CUE.thud + .15, CUE.thud + .55), fk = ss(lt, ONION.walk1, CUE.slip + .12), fall = sg(lt, CUE.slip, CUE.thud);
+  if (lt >= ONION.walk1) {   /* from the first wobble the clipboard rides a world-space direction: flung out up and away from her face in the fall, then straight up while she lies (the body is turned by o.rot) */
+    const wa = lt < CUE.thud ? lerp(-1.1, -.5, fall) : lerp(-.5, 0, upK), wx = Math.sin(wa), wy = -Math.cos(wa), c = Math.cos(o.rot), sn = Math.sin(o.rot);
+    const bx = wx * c + wy * sn, by = -wx * sn + wy * c, sx = -97, sy = 12, L = 108;   /* the world direction in the body's own frame */
+    o.grip = { l: [lerp(-62, sx + bx * L, fk), lerp(84, sy + by * L, fk)] };
+    o.hold = { l: 'fp15_tabletclip' }; o.tabAt = [lerp(.3, .5, fk), lerp(.12, .5, fk)]; o.tabScale = lerp(1, .9, fk);
+    o.tabRot = -o.rot * fk - .04 * (1 - fk) + .06 * Math.sin(lt * 15) * upK;
   }
   o.acc = (o.acc || []).filter(a => a !== 'fp20_ice').concat('fp20_ice'); o.iceBeads = ss(lt, CUE.thud + .35, CUE.thud + 1.7);
-  drawIce(v); drawSnowman(lt);
-  drawP(o);
-  if (window.SN20) {
+  drawIce(v); drawSnowman(lt); drawHead(lt);
+  if (window.SN20) {   /* the impact puff and the spray go BEHIND her so that no flake crosses her face */
     if (SN20.flurry && lt >= CUE.thud && lt < CUE.thud + 1.1) SN20.flurry(ctx, { x: 2612, y: GY - 14, r: 110, t: lt, t0: CUE.thud, life: 1.0, seed: 61, n: 54 });
     if (SN20.spray && lt >= CUE.thud && lt < CUE.thud + 1.8 && st.slideV > 6) SN20.spray(ctx, { x: o.x - 78, y: GY - 6, ang: -2.55, t: lt, t0: CUE.thud, t1: CUE.thud + .7, seed: 62, power: .8, width: .7, gravity: 1000 });
   }
-  drawHead(lt);
+  drawP(o);
   return o;
 }
 SD.o1 = (lt, sh, v) => { onionShot(lt, v); };
@@ -381,8 +387,8 @@ function drawPiP(lt, big, o = {}) {
 }
 SD.ring = (lt, sh, v) => {
   const k = answerK(lt), rg = lt >= CUE.ring;
-  const o = drawStrawPile(lt, v, { o: { yaw: .1, look: [.15, .5], expr: 'neutral', arms: { l: 'rest', r: 'hold' }, grip: { r: [lerp(84, 66, k), lerp(64, -6, Math.max(k, ss(lt, 19.2, 19.5) * .6))] }, hold: { r: 'fp20_phone' }, phoneLit: 1, phoneBuzz: rg && k < .5 ? 1 : 0 } });
-  if (rg) { const hx = o.x + ST * 70, hy = faceXY(o)[1] + ST * 70; for (let i = 0; i < 3; i++) { const kk = ((lt - CUE.ring) / .6 - i * .33); if (kk > 0 && kk < 1.0 && lt < 19.9) V2.ring(hx, hy - 30, kk, { r0: 20, r1: 120, color: '255,240,160', lw: 4, alpha: .55, bloom: 0 }); } }
+  const o = drawStrawPile(lt, v, { o: { yaw: .1, look: [.15, .5], expr: 'neutral', arms: { l: 'rest', r: 'hold' }, grip: { r: [lerp(106, 70, k), lerp(52, -6, Math.max(k, ss(lt, 19.2, 19.5) * .6))] }, hold: { r: 'fp20_phone' }, phoneLit: 1, phoneBuzz: rg && k < .5 ? 1 : 0 } });
+  if (rg) { const hx = o.x + ST * 70, hy = faceXY(o)[1] + ST * 70; for (let i = 0; i < 3; i++) { const kk = ((lt - CUE.ring) / .6 - i * .33); if (kk > 0 && kk < 1.0 && lt < 19.9) V2.ring(hx, hy - 30, kk, { r0: 14, r1: 76, color: '255,240,160', lw: 4, alpha: .55, bloom: 0 }); } }
   drawPiP(lt, false);
 };
 function drawStrawPile(lt, v, ov) {
@@ -391,12 +397,12 @@ function drawStrawPile(lt, v, ov) {
 }
 // the call: Eggplant's picture full frame for her lines, small at the top right for the listeners
 const callStraw = (lt, v, ex) => drawStrawPile(lt, v, { o: Object.assign({ yaw: .15, look: [.5, -.45], arms: { l: 'rest', r: 'rest' } }, ex || {}) });
-for (const id of ['e1', 'e2', 'e3', 'e4']) SD[id] = (lt, sh, v) => { drawStrawPile(lt, v, { o: { look: [.3, -.3], expr: 'neutral' } }); drawPiP(lt, true); };
+for (const id of ['e1', 'e2', 'e3', 'e4']) SD[id] = (lt, sh, v) => { REG.suppress++; try { drawStrawPile(lt, v, { o: { look: [.3, -.3], expr: 'neutral' } }); } finally { REG.suppress--; } drawPiP(lt, true); };
 SD.s3 = (lt, sh, v) => { callStraw(lt, v, { expr: 'hopeful' }); drawPiP(lt, false); };
 SD.m2 = (lt, sh, v) => { drawStaffClose(lt, v, 'mango', { mango: { o: { yaw: -.3, look: [.8, -.5], expr: 'sour' } } }); drawPiP(lt, false); };
 SD.s4 = (lt, sh, v) => { callStraw(lt, v, { expr: 'weak' }); drawPiP(lt, false); };
 // end: all five from behind, in a row, looking at the lit building, small and cold
-const endX = () => ({ mango: 1640, lemon: 1795, straw: SXP, tom: 2105, onion: 2260 });
+const endX = () => ({ mango: 1690, lemon: 1820, straw: SXP, tom: 2080, onion: 2200 });
 SD.end = (lt, sh, v) => {
   const order = ['mango', 'lemon', 'straw', 'tom', 'onion'];
   const hy = { mango: .2, lemon: -.15, straw: .3, tom: -.25, onion: .1 };
@@ -414,7 +420,7 @@ const HEAD_T0 = snapT(17.42);                         /* the head comes off */
 const SXP = 1950;                                     /* Strawberry's spot: beside her car, where she digs and where the pile lands */
 const pileK = lt => ss(lt, CUE.snowdump + .1, CUE.snowdump + .45);
 const snowmanBuild = lt => lt < bS('t1') ? 0 : .2 + .8 * sg(lt, bS('t1') + .05, 17.1);
-function drawPile(lt, x = SXP) { const k = pileK(lt); if (k < .03 || !(window.SN20 && SN20.bank)) return; SN20.bank(ctx, { x, y: GY + 8, w: 250 * k, h: 78 * k, seed: 4, shade: .5 }); }
+function drawPile(lt, x = SXP) { const k = pileK(lt); if (k < .03 || !(window.SN20 && SN20.bank)) return; SN20.bank(ctx, { x, y: GY + 8, w: 215 * k, h: 46 * k, seed: 4, shade: .5 }); }
 function drawIce(v) {
   if (!inView(ICE.x, 200, v)) return;
   ctx.save(); ctx.translate(ICE.x, GY + 6); ctx.scale(ICE.rx, 1);
@@ -431,10 +437,10 @@ function drawSnowman(lt) {
 }
 /* the head: off at HEAD_T0, a hop to the right, a landing and a roll that dies away next to Onion's head */
 function headState(lt) {
-  const d = lt - HEAD_T0, r = 34 * SW.s, x0 = SW.x - 6 * SW.s, y0 = GY - 4 - 232 * SW.s, vx = 210, vy = -300, g = 1500, yG = GY - r;
+  const d = lt - HEAD_T0, r = 34 * SW.s, x0 = SW.x - 6 * SW.s, y0 = GY - 4 - 232 * SW.s, vx = 380, vy = -300, g = 1500, yG = GY - r;
   const tL = (-vy + Math.sqrt(vy * vy + 2 * g * (yG - y0))) / g;     /* the time the ballistic arc reaches the ground */
   if (d < tL) return { x: x0 + vx * d, y: y0 + vy * d + .5 * g * d * d, rot: 3.2 * d, air: true };
-  const xL = x0 + vx * tL, dd = d - tL, k = 4.5, run = 190 * (1 - Math.exp(-k * dd)) / k + 30 * Math.min(dd, .1) * 0;
+  const xL = x0 + vx * tL, dd = d - tL, k = 4.5, run = 240 * (1 - Math.exp(-k * dd)) / k;
   const bounce = dd < .25 ? Math.abs(Math.sin(dd * 12.5)) * 18 * Math.exp(-dd * 6) : 0;
   return { x: xL + run, y: yG - bounce, rot: 3.2 * tL + (xL + run - xL) / r * 1.0, air: false };
 }
@@ -475,21 +481,21 @@ const faceY = id => faceXY({ kind: CTOR_KIND[id], x: SX[id], y: GY, s: ST })[1];
 const CTOR_KIND = { mango: 'mango', lemon: 'lemon', straw: 'straw', tom: 'tomato', onion: 'onion' };
 const closeCam = (id, z, sy = 700, dx = 0, lt = 0, t0 = 0, t1 = 1, dz = .05) => [SX[id] + dx + 3 * Math.sin(lt * .9 + SEEDS[id]), faceY(id) + (960 - sy) / z, z * (1 + dz * sg(lt, t0, t1))];
 Object.assign(CAM_FN, {
-  m1: lt => closeCam('mango', 3.2, 720, 14, lt, bS('m1'), bE('m1')),
+  m1: lt => closeCam('mango', 3.4, 640, 14, lt, bS('m1'), bE('m1')),
   leave: lt => [1800 + 6 * Math.sin(lt * 1.2), 1190, 1.5 + .06 * sg(lt, bS('leave'), bE('leave'))],
-  s1: lt => closeCam('straw', 3.2, 700, -6, lt, bS('s1'), bE('s1')),
-  l1: lt => closeCam('lemon', 2.7, 700, 60, lt, bS('l1'), bE('l1')),
-  s2: lt => { const f = closeCam('straw', 2.25, 790, 26, lt, bS('s2'), bE('s2')); return f; },
-  dig: lt => { const k = sg(lt, bS('dig'), bE('dig')); return [SXP + 34 + 14 * Math.sin(lt * 2.4), 1236, lerp(1.7, 1.8, k)]; },
+  s1: lt => closeCam('straw', 3.4, 640, -6, lt, bS('s1'), bE('s1')),
+  l1: lt => closeCam('lemon', 2.8, 640, 60, lt, bS('l1'), bE('l1')),
+  s2: lt => { const f = closeCam('straw', 2.4, 740, 24, lt, bS('s2'), bE('s2')); return f; },
+  dig: lt => { const k = sg(lt, bS('dig'), bE('dig')); return [SXP + 50 + 10 * Math.sin(lt * 2.4), 1240, lerp(2.0, 2.1, k)]; },
   t1: lt => [(SX.tom + SW.x) / 2 + 6, 1228, 2.35 + .06 * sg(lt, bS('t1'), bE('t1'))],
   o1: lt => { const o = onionState(lt); return [lerp(2650, 2570, ss(lt, 16.6, 17.4)), 1236, 2.0]; },
   o2: lt => { CAM.shake = 0; return [2548, 1272, 2.3 + .05 * sg(lt, bS('o2'), bE('o2'))]; },
-  ring: lt => closeCam('straw', 3.0, 700, 8, lt, bS('ring'), bE('ring')),
-  s3: lt => closeCam('straw', 3.0, 760, -8, lt, bS('s3'), bE('s3')),
-  m2: lt => closeCam('mango', 3.0, 760, 10, lt, bS('m2'), bE('m2')),
-  s4: lt => closeCam('straw', 3.0, 760, -8, lt, bS('s4'), bE('s4')),
+  ring: lt => closeCam('straw', 3.1, 680, 8, lt, bS('ring'), bE('ring')),
+  s3: lt => closeCam('straw', 3.1, 740, -8, lt, bS('s3'), bE('s3')),
+  m2: lt => closeCam('mango', 3.1, 740, 10, lt, bS('m2'), bE('m2')),
+  s4: lt => closeCam('straw', 3.1, 740, -8, lt, bS('s4'), bE('s4')),
   e1: lt => [SXP, 1240, 1.2], e2: lt => [SXP, 1240, 1.2], e3: lt => [SXP, 1240, 1.2], e4: lt => [SXP, 1240, 1.2],
-  end: lt => [1950, 1226, lerp(1.5, 1.62, sg(lt, bS('end'), 28.1))],
+  end: lt => [1950, 1215, lerp(1.32, 1.42, sg(lt, bS('end'), 28.1))],
 });
 /* neighbours in a close shot are drawn but not held to the layout audit (the subject is) */
 const drawBg = o => { REG.suppress++; try { drawChar(o); } finally { REG.suppress--; } };
