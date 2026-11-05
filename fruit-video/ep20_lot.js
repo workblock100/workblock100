@@ -509,7 +509,7 @@ Object.assign(CAM_FN, {
   dig: lt => { const k = sg(lt, bS('dig'), bE('dig')); return [SXP + 50 + 10 * Math.sin(lt * 2.4), 1240, lerp(2.0, 2.1, k)]; },
   t1: lt => [(SX.tom + SW.x) / 2 + 6, 1228, 2.35 + .06 * sg(lt, bS('t1'), bE('t1'))],
   o1: lt => { const o = onionState(lt); return [lerp(2650, 2570, ss(lt, 16.6, 17.4)), 1236, 2.0]; },
-  o2: lt => { CAM.shake = 0; return [2548, 1272, 2.3 + .05 * sg(lt, bS('o2'), bE('o2'))]; },
+  o2: lt => { CAM.shake = 0; return [2552, 1262, 2.65 + .05 * sg(lt, bS('o2'), bE('o2'))]; },
   ring: lt => closeCam('straw', 3.1, 680, 8, lt, bS('ring'), bE('ring')),
   s3: lt => closeCam('straw', 3.1, 740, -8, lt, bS('s3'), bE('s3')),
   m2: lt => closeCam('mango', 3.1, 740, 10, lt, bS('m2'), bE('m2')),
