@@ -382,6 +382,7 @@ function onionShot(lt, v) {
     o.tabRot = -o.rot * fk - .04 * (1 - fk) + .06 * Math.sin(lt * 15) * upK;
   }
   o.acc = (o.acc || []).filter(a => a !== 'fp20_ice').concat('fp20_ice'); o.iceBeads = ss(lt, CUE.thud + .35, CUE.thud + 1.7);
+  if (lt >= CUE.sniffle) { const d = lt - CUE.sniffle, e = Math.exp(-d / .2), h = Math.max(0, Math.sin(d * 22)); o.squash = (o.squash || 0) + .1 * e * h; o.browUp = (o.browUp || 0) + 5 * e * h; }   /* the sniffle: one quick hiccup that starts on the cue frame */
   drawIce(v); drawSnowman(lt); drawHead(lt);
   if (window.SN20) {   /* the impact puff and the spray go BEHIND her so that no flake crosses her face */
     if (SN20.flurry && lt >= CUE.thud && lt < CUE.thud + 1.1) SN20.flurry(ctx, { x: 2612, y: GY - 14, r: 110, t: lt, t0: CUE.thud, life: 1.0, seed: 61, n: 54 });
