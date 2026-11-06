@@ -1,0 +1,954 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 2: Survey Says",
+ "clips_from": {
+  "timeline": "build/timeline.json",
+  "audio": "build/audio.wav"
+ },
+ "music": {
+  "from": "back",
+  "to": "leave",
+  "mute": [
+   "code:freeze",
+   "crush:lower",
+   "crush:st1",
+   "crush:freeze",
+   "banana:slow",
+   "leave:gone",
+   "chaos:open"
+  ]
+ },
+ "no_whoosh": [
+  "title",
+  "end",
+  "results",
+  "recap"
+ ],
+ "voices": {
+  "narr": {
+   "name": "NARRATOR",
+   "voice": "bm_george",
+   "lang": "en-gb",
+   "speed": 1.07,
+   "semis": 0,
+   "color": "#e8e8e8"
+  },
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "lang": "en-us",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a"
+  },
+  "blue": {
+   "name": "MR. BLUEBERRY",
+   "voice": "am_santa",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#5b6cff"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a"
+  },
+  "gfruit": {
+   "name": "GRAPEFRUIT",
+   "voice": "bm_lewis",
+   "lang": "en-gb",
+   "speed": 0.95,
+   "semis": -3,
+   "color": "#ff7b5c"
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "lang": "en-us",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f"
+  },
+  "apple2": {
+   "name": "DR. APPLE",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#e63946",
+   "fx": "phone"
+  },
+  "strawjar": {
+   "name": "NURSE STRAWBERRY (IN THE JAR)",
+   "voice": "af_heart",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "fx": "muffled"
+  },
+  "pa": {
+   "name": "OVERHEAD PAGE",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "phone"
+  },
+  "star": {
+   "name": "STATE SURVEYOR",
+   "voice": "af_nicole",
+   "lang": "en-us",
+   "speed": 0.95,
+   "semis": 0,
+   "color": "#c9d22a"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a"
+  },
+  "kiwis": {
+   "name": "AGENCY NURSES (ALL FIVE)",
+   "voice": "am_liam",
+   "chorus": [
+    "am_liam",
+    "af_sky",
+    "am_echo",
+    "af_nova",
+    "am_puck"
+   ],
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#8a6a3a"
+  },
+  "capsule": {
+   "name": "NIFEDIPINE ER",
+   "voice": "af_sky",
+   "lang": "en-us",
+   "speed": 1.05,
+   "semis": 7,
+   "color": "#e63946"
+  },
+  "host": {
+   "name": "DR. APPLE (HOSTING, SOMEHOW)",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#2a6fdb"
+  },
+  "nooo": {
+   "name": "EVERYONE (IN SLOW MOTION)",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "am_michael",
+    "am_liam"
+   ],
+   "lang": "en-us",
+   "speed": 0.85,
+   "semis": -7,
+   "color": "#e8e8e8"
+  }
+ },
+ "scenes": [
+  {
+   "id": "recap",
+   "clock": "",
+   "label": "PREVIOUSLY ON",
+   "head": 0.2,
+   "tail": 0.25,
+   "beats": [
+    {
+     "id": "n0",
+     "who": "narr",
+     "say": "Previously... on Shift Happens.",
+     "text": "Previously... on Shift Happens.",
+     "sfx": [
+      [
+       "rewind",
+       0.0,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "r1",
+     "clip": {
+      "scene": "ratio",
+      "line": "l2",
+      "pad_after": 0.4,
+      "from_word": 5
+     },
+     "sfx": [
+      [
+       "static",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "r2",
+     "clip": {
+      "scene": "prune",
+      "line": "p2",
+      "pad_after": 0.9
+     },
+     "sfx": [
+      [
+       "static",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "r3",
+     "clip": {
+      "scene": "raisin",
+      "line": "r1",
+      "pad_after": 0.15
+     },
+     "sfx": [
+      [
+       "static",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "r4",
+     "clip": {
+      "scene": "jam",
+      "line": "l2",
+      "pad_after": 2.3
+     },
+     "sfx": [
+      [
+       "static",
+       0.0,
+       0.5
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "title",
+   "clock": "",
+   "label": "ONE WEEK LATER",
+   "head": 0.2,
+   "tail": 1.5,
+   "beats": [
+    {
+     "id": "jingle",
+     "pause": 1.8,
+     "sfx": [
+      [
+       "theme",
+       0.0,
+       0.9
+      ],
+      [
+       "car",
+       0.2,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "One week later.",
+     "text": "One week later.",
+     "sfx": [
+      [
+       "squeal",
+       0.2,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "door",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "doorclose",
+       0.1,
+       0.7
+      ],
+      [
+       "sting",
+       0.55,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "back",
+   "clock": "2:59 PM",
+   "label": "NURSES' STATION",
+   "head": 0.3,
+   "tail": 0.35,
+   "beats": [
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Last week, our nurse turned into jam.",
+     "text": "Last week, our nurse turned into jam."
+    },
+    {
+     "id": "wobble",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "rattle",
+       0.05,
+       0.8
+      ],
+      [
+       "pop",
+       0.85,
+       0.9
+      ],
+      [
+       "boing",
+       0.9,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "She got better.",
+     "text": "She got better."
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I'm fine! Totally fine!",
+     "text": "I'm fine! Totally fine!"
+    }
+   ]
+  },
+  {
+   "id": "code",
+   "clock": "3:01 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.35,
+   "beats": [
+    {
+     "id": "chime",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "pachime",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Attention all staff. Mister Stateman is in the lobby.",
+     "text": "Attention all staff. Mr. Stateman is in the lobby."
+    },
+    {
+     "id": "freeze",
+     "pause": 1.0
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "The state is here!",
+     "text": "THE STATE IS HERE!",
+     "sfx": [
+      [
+       "klaxon",
+       0.0,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Survey week. The one week a year the building follows every rule.",
+     "text": "Survey week. The one week a year the building follows every rule."
+    }
+   ]
+  },
+  {
+   "id": "chaos",
+   "clock": "3:02 PM",
+   "label": "MED ROOM",
+   "head": 0.2,
+   "tail": 0.45,
+   "beats": [
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Hide the food! Hide everything!",
+     "text": "HIDE THE FOOD! Hide everything!"
+    },
+    {
+     "id": "open",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "fridge",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "g1",
+     "who": "gfruit",
+     "say": "I'm not food. I'm a lifestyle.",
+     "text": "I'm not food. I'm a lifestyle."
+    },
+    {
+     "id": "slam",
+     "pause": 0.8,
+     "sfx": [
+      [
+       "slam",
+       0.15,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "admin",
+   "clock": "3:03 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.35,
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "fanfare",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "melon",
+     "say": "Hi team! I'm the administrator! Who wants pizza?",
+     "text": "Hi team! I'm the administrator! Who wants pizza?"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "We have an administrator?",
+     "text": "We have an administrator?"
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "A rare sighting. The administrator only leaves the office during survey.",
+     "text": "A rare sighting. The administrator only leaves the office during survey."
+    }
+   ]
+  },
+  {
+   "id": "kiwis",
+   "clock": "3:05 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.35,
+   "beats": [
+    {
+     "id": "slide",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "whooshes",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "k1",
+     "who": "kiwis",
+     "say": "Hi! We're agency!",
+     "text": "Hi! We're agency!"
+    },
+    {
+     "id": "flip",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "flips",
+       0.1,
+       0.8
+      ],
+      [
+       "ding1",
+       0.75,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "So this is what staffing looks like.",
+     "text": "So this is what staffing looks like."
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Scientists still can't explain it. Staff only appears when the State does.",
+     "text": "Scientists still can't explain it. Staff only appears when the State does."
+    }
+   ]
+  },
+  {
+   "id": "observe",
+   "clock": "3:30 PM",
+   "label": "ROOM 12",
+   "head": 0.3,
+   "tail": 0.3,
+   "beats": [
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "Don't mind me. I'm just going to observe.",
+     "text": "Don't mind me. I'm just going to observe."
+    },
+    {
+     "id": "wash",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "pumps",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Hi Mister Blueberry! Can I get your name and date of birth?",
+     "text": "Hi Mr. Blueberry! Can I get your name and date of birth?"
+    },
+    {
+     "id": "b1",
+     "who": "blue",
+     "say": "Sweetheart. I've known you three years.",
+     "text": "Sweetheart. I've known you three years."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Name and date of birth, please.",
+     "text": "Name. And date of birth. Please."
+    },
+    {
+     "id": "b2",
+     "who": "blue",
+     "say": "Blueberry. March fifth, nineteen thirty-one.",
+     "text": "Blueberry. March 5th, 1931.",
+     "sfx": [
+      [
+       "scribble",
+       "end",
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "write",
+     "pause": 0.7
+    }
+   ]
+  },
+  {
+   "id": "crush",
+   "clock": "3:40 PM",
+   "label": "HALLWAY",
+   "head": 0.2,
+   "tail": 0.35,
+   "beats": [
+    {
+     "id": "lower",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "drone",
+       0.0,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "Is that extended release?",
+     "text": "Is that extended release?",
+     "sfx": [
+      [
+       "stab",
+       -0.05,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "freeze",
+     "pause": 0.4
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "We do not crush that.",
+     "text": "We do NOT crush that."
+    },
+    {
+     "id": "c1",
+     "who": "capsule",
+     "say": "Thank you.",
+     "text": "Thank you."
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Rule number one. Never crush the E R.",
+     "text": "Rule number one: never crush the ER."
+    }
+   ]
+  },
+  {
+   "id": "banana",
+   "clock": "4:00 PM",
+   "label": "HALLWAY",
+   "head": 0.2,
+   "tail": 0.35,
+   "beats": [
+    {
+     "id": "wobble",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "wobble",
+       0.2,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "slow",
+     "who": "nooo",
+     "say": "Noooooo!",
+     "text": "NOOOOOOOO!",
+     "sfx": [
+      [
+       "slowwhoosh",
+       0.0,
+       0.7
+      ],
+      [
+       "choir",
+       0.3,
+       0.45
+      ]
+     ]
+    },
+    {
+     "id": "caught",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "thud",
+       0.05,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "banana",
+     "say": "I just wanted a snack!",
+     "text": "I just wanted a snack!"
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Zero falls. A facility record.",
+     "text": "Zero falls. A facility record."
+    }
+   ]
+  },
+  {
+   "id": "cran",
+   "clock": "4:20 PM",
+   "label": "ROOM 7",
+   "head": 0.2,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "c1",
+     "who": "cran",
+     "say": "Officer! They never feed us! And it's nineteen sixty-two!",
+     "text": "Officer! They never feed us! And it's 1962!"
+    },
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "Noted.",
+     "text": "Noted.",
+     "sfx": [
+      [
+       "scribble",
+       "end",
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "She ate lunch twice! It's charted!",
+     "text": "She ate lunch TWICE! It's charted!"
+    }
+   ]
+  },
+  {
+   "id": "leave",
+   "clock": "4:45 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "st1",
+     "who": "star",
+     "say": "Thank you. I'll see myself out.",
+     "text": "Thank you. I'll see myself out."
+    },
+    {
+     "id": "gone",
+     "pause": 0.8,
+     "sfx": [
+      [
+       "doorclose",
+       0.3,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "poof",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "poofs",
+       0.0,
+       0.8
+      ],
+      [
+       "flips",
+       1.2,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "melon",
+     "say": "The pizza was for survey.",
+     "text": "The pizza was for survey."
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Also... night shift called out.",
+     "text": "Also... night shift called out."
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I'm going back in the jar.",
+     "text": "I'm going back in the jar."
+    },
+    {
+     "id": "jar",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "pop",
+       0.75,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "results",
+   "clock": "",
+   "label": "SURVEY RESULTS",
+   "head": 0.2,
+   "tail": 0.3,
+   "beats": [
+    {
+     "id": "h1",
+     "who": "host",
+     "say": "Survey says!",
+     "text": "SURVEY SAYS!"
+    },
+    {
+     "id": "reveal",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "flips",
+       0.15,
+       0.8
+      ],
+      [
+       "bell",
+       0.45,
+       0.7
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "fridge",
+   "clock": "5:00 PM",
+   "label": "MED ROOM",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "sfx": [
+      [
+       "fridge",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "g1",
+     "who": "gfruit",
+     "say": "What? It's cold in here.",
+     "text": "What? It's cold in here."
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "One deficiency. The grapefruit strikes again.",
+     "text": "One deficiency. The grapefruit strikes again.",
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "",
+   "head": 0.0,
+   "tail": 0.0,
+   "beats": [
+    {
+     "id": "card",
+     "pause": 5.6,
+     "sfx": [
+      [
+       "theme",
+       0.1,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "post",
+   "clock": "3:00 AM",
+   "label": "YOUR BEDROOM",
+   "head": 0.3,
+   "tail": 1.3,
+   "beats": [
+    {
+     "id": "ringing",
+     "pause": 1.5,
+     "sfx": [
+      [
+       "ringtone",
+       0.1,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "apple2",
+     "say": "Hey, it's Doctor Apple. Is the State still there?",
+     "text": "Hey, it's Dr. Apple. Is the State still there?"
+    },
+    {
+     "id": "s1",
+     "who": "strawjar",
+     "say": "It's three A M.",
+     "text": "...It's 3 AM.",
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.9
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

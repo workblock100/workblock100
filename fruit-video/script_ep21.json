@@ -1,0 +1,1249 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 21: The Inspection",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "kale": {
+   "name": "MS. KALE, STATE SURVEYOR",
+   "voice": "bf_alice",
+   "lang": "en-gb",
+   "speed": 0.98,
+   "semis": 0,
+   "color": "#3f8f4a",
+   "pan": -0.15
+  },
+  "radish": {
+   "name": "MR. RADISH, STATE SURVEYOR",
+   "voice": "am_echo",
+   "lang": "en-us",
+   "speed": 0.92,
+   "semis": -2,
+   "color": "#c2304f",
+   "pan": 0.2
+  },
+  "staff": {
+   "name": "THE WHOLE 3-11",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "af_bella",
+    "am_michael",
+    "af_river",
+    "bf_isabella"
+   ],
+   "lang": "en-us",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#ffb703",
+   "pan": 0
+  },
+  "chor": {
+   "name": "ALL THE STRAWBERRIES",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "af_bella",
+    "af_kore",
+    "af_nicole",
+    "af_sky",
+    "af_nova"
+   ],
+   "lang": "en-us",
+   "speed": 1.02,
+   "semis": 0,
+   "color": "#ff4d6d",
+   "pan": 0
+  },
+  "brenda": {
+   "name": "BRENDA, RN (ON BREAK)",
+   "voice": "bf_alice",
+   "speed": 0.88,
+   "semis": -4,
+   "color": "#8e5a9b",
+   "pan": 0.1,
+   "lang": "en-us"
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "egg": {
+   "name": "EGGPLANT, NIGHTS",
+   "voice": "af_jessica",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": -1,
+   "color": "#8a5aa8",
+   "pan": 0.2
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 6.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme21",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "penclick",
+       0.8,
+       0.4,
+       0
+      ],
+      [
+       "checktick",
+       1.6,
+       0.4,
+       -0.1
+      ],
+      [
+       "checktick",
+       2.2,
+       0.4,
+       0
+      ],
+      [
+       "checktick",
+       2.8,
+       0.4,
+       0.1
+      ],
+      [
+       "stamp",
+       3.6,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.2,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "arrive",
+   "clock": "3:02 PM",
+   "label": "THE ARRIVAL",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "doorchime",
+       0.2,
+       0.5,
+       -0.2
+      ],
+      [
+       "dramatic",
+       0.5,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "ka1",
+     "who": "kale",
+     "say": "Department of Health. This is an unannounced survey.",
+     "text": "Department of Health. This is an unannounced survey.",
+     "gap": 0.3
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "The State is here.",
+     "text": "The State is here.",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "The State is here.",
+     "text": "The State is here.",
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "The State is here.",
+     "text": "The State is here.",
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "The State is here!",
+     "text": "The State is here!",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "sniffle",
+       1.0,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "This is the best day of my life.",
+     "text": "This is the best day of my life.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "sniffle",
+       1.9,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "ra0",
+     "who": "radish",
+     "say": "We will start with your staffing sheet.",
+     "text": "We will start with your staffing sheet.",
+     "gap": 0.2
+    },
+    {
+     "id": "me1",
+     "who": "melon",
+     "say": "Code Survey. Code Survey. All staff to your stations.",
+     "text": "Code Survey. Code Survey. All staff to your stations.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "pachime",
+       -0.45,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're being inspected. Would you like help?",
+     "text": "It looks like you're being inspected. Would you like help?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "st1",
+     "who": "staff",
+     "say": "Yes!",
+     "text": "Yes!",
+     "gap": 0.25
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! I'll hide everything.",
+     "text": "Great! I'll hide everything.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "grin",
+       0.9,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "prep",
+   "clock": "3:05 PM",
+   "label": "SURVEY MODE",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.8,
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Label everything!",
+     "text": "Label everything!",
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Date it. Time it. Initial it.",
+     "text": "Date it. Time it. Initial it.",
+     "gap": 0.15
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Should I cancel the Fun Committee?",
+     "text": "Should I cancel the Fun Committee?",
+     "gap": 0.1
+    },
+    {
+     "id": "o1b",
+     "who": "onion",
+     "say": "Laminate it.",
+     "text": "Laminate it.",
+     "gap": 0.2
+    },
+    {
+     "id": "montage",
+     "pause": 12.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "labelgun",
+       0.0,
+       0.45,
+       -0.2
+      ],
+      [
+       "padlock",
+       1.0,
+       0.45,
+       0.2
+      ],
+      [
+       "spray",
+       2.0,
+       0.4,
+       -0.1
+      ],
+      [
+       "thermobeep",
+       3.0,
+       0.4,
+       0.2
+      ],
+      [
+       "binderslam",
+       4.0,
+       0.5,
+       0
+      ],
+      [
+       "mop",
+       5.0,
+       0.4,
+       -0.2
+      ],
+      [
+       "posterflip",
+       6.0,
+       0.4,
+       0.2
+      ],
+      [
+       "closetslam",
+       7.0,
+       0.5,
+       0.3
+      ],
+      [
+       "coffeehide",
+       8.0,
+       0.45,
+       -0.2
+      ],
+      [
+       "sanitizer",
+       9.0,
+       0.4,
+       0.1
+      ],
+      [
+       "crashcart",
+       10.0,
+       0.45,
+       -0.1
+      ],
+      [
+       "sparkle",
+       11.0,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "me1",
+     "who": "melon",
+     "say": "Where is our staffing?",
+     "text": "Where is our staffing?",
+     "gap": 0.1
+    },
+    {
+     "id": "agency",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "poof",
+       0.1,
+       0.4,
+       -0.3
+      ],
+      [
+       "poof",
+       0.35,
+       0.4,
+       0
+      ],
+      [
+       "poof",
+       0.6,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "ch1",
+     "who": "chor",
+     "say": "Agency!",
+     "text": "Agency!",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Who are they?",
+     "text": "Who are they?",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Agency. For one day.",
+     "text": "Agency. For one day.",
+     "gap": 0.2
+    },
+    {
+     "id": "br1",
+     "who": "brenda",
+     "say": "I have been hiding since twenty nineteen.",
+     "text": "I have been hiding since twenty nineteen.",
+     "gap": 0.2
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Survey ready.",
+     "text": "Survey ready.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "sparkle",
+       0.5,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "medpass",
+   "clock": "5:30 PM",
+   "label": "THE OBSERVATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.3,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "splitwipe",
+       0.3,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "ka1",
+     "who": "kale",
+     "say": "Please proceed as you normally would.",
+     "text": "Please proceed as you normally would.",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I always do this.",
+     "text": "I always do this.",
+     "gap": 0.2
+    },
+    {
+     "id": "hygiene",
+     "pause": 1.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sanitizer",
+       0.2,
+       0.4,
+       -0.4
+      ],
+      [
+       "sanitizer",
+       0.9,
+       0.4,
+       -0.4
+      ],
+      [
+       "cupclatter",
+       0.4,
+       0.4,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "What is your name and date of birth?",
+     "text": "What is your name and date of birth?",
+     "gap": 0.1
+    },
+    {
+     "id": "pe1",
+     "who": "pear",
+     "say": "The same as yesterday.",
+     "text": "The same as yesterday.",
+     "gap": 0.2
+    },
+    {
+     "id": "ka4",
+     "who": "kale",
+     "say": "Do you always lock the cart?",
+     "text": "Do you always lock the cart?",
+     "gap": 0.1
+    },
+    {
+     "id": "s7",
+     "who": "straw",
+     "say": "Always.",
+     "text": "Always.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "cartroll",
+       0.3,
+       0.4,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "ka5",
+     "who": "kale",
+     "say": "And explain every medication?",
+     "text": "And explain every medication?",
+     "gap": 0.1
+    },
+    {
+     "id": "s8",
+     "who": "straw",
+     "say": "Always.",
+     "text": "Always.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "cupclatter",
+       0.3,
+       0.4,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "ka2",
+     "who": "kale",
+     "say": "How long does your med pass take?",
+     "text": "How long does your med pass take?",
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Two hours.",
+     "text": "Two hours.",
+     "gap": 0.15
+    },
+    {
+     "id": "ka3",
+     "who": "kale",
+     "say": "And today?",
+     "text": "And today?",
+     "gap": 0.1
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Six.",
+     "text": "Six.",
+     "gap": 0.25
+    },
+    {
+     "id": "pe2",
+     "who": "pear",
+     "say": "Who is that?",
+     "text": "Who is that?",
+     "gap": 0.1
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "The State.",
+     "text": "The State.",
+     "gap": 0.1
+    },
+    {
+     "id": "pe3",
+     "who": "pear",
+     "say": "Should I behave?",
+     "text": "Should I behave?",
+     "gap": 0.1
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "Please.",
+     "text": "Please.",
+     "gap": 0.15
+    },
+    {
+     "id": "pe4",
+     "who": "pear",
+     "say": "I always behave.",
+     "text": "I always behave.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "closet",
+   "clock": "7:10 PM",
+   "label": "THE POLICY CLOSET",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1
+    },
+    {
+     "id": "ra1",
+     "who": "radish",
+     "say": "I would like to see your policy on breaks.",
+     "text": "I would like to see your policy on breaks.",
+     "gap": 0.15
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Of course.",
+     "text": "Of course.",
+     "gap": 0.1
+    },
+    {
+     "id": "avalanche",
+     "pause": 2.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "closetopen",
+       0.1,
+       0.45,
+       0
+      ],
+      [
+       "binderavalanche",
+       0.3,
+       0.7,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Policy seven point four. Revised Tuesday.",
+     "text": "Policy seven point four. Revised Tuesday.",
+     "gap": 0.15
+    },
+    {
+     "id": "ra2",
+     "who": "radish",
+     "say": "Impressive.",
+     "text": "Impressive.",
+     "gap": 0.2
+    },
+    {
+     "id": "scan",
+     "pause": 2.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "scanbeep",
+       0.2,
+       0.35,
+       -0.2
+      ],
+      [
+       "scanbeep",
+       0.7,
+       0.35,
+       0.2
+      ],
+      [
+       "scanlock",
+       1.4,
+       0.45,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "ra3",
+     "who": "radish",
+     "say": "Who is in the closet?",
+     "text": "Who is in the closet?",
+     "gap": 0.15
+    },
+    {
+     "id": "br1",
+     "who": "brenda",
+     "say": "Nobody.",
+     "text": "Nobody.",
+     "gap": 0.2
+    },
+    {
+     "id": "ra4",
+     "who": "radish",
+     "say": "How long have you been on break?",
+     "text": "How long have you been on break?",
+     "gap": 0.15
+    },
+    {
+     "id": "br2",
+     "who": "brenda",
+     "say": "Since twenty nineteen.",
+     "text": "Since twenty nineteen.",
+     "gap": 0.2
+    },
+    {
+     "id": "ra5",
+     "who": "radish",
+     "say": "Noted.",
+     "text": "Noted.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "penscratch",
+       0.5,
+       0.35,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "Not Brenda.",
+     "text": "Not Brenda.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "sniffle",
+       0.8,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "exit",
+   "clock": "10:45 PM",
+   "label": "THE EXIT INTERVIEW",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.2,
+     "gap": 0.1
+    },
+    {
+     "id": "ka1",
+     "who": "kale",
+     "say": "We found one deficiency.",
+     "text": "We found one deficiency.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "gasp",
+       1.5,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "me1",
+     "who": "melon",
+     "say": "What is it?",
+     "text": "What is it?",
+     "gap": 0.1
+    },
+    {
+     "id": "ra1",
+     "who": "radish",
+     "say": "Your nurse has not taken a break.",
+     "text": "Your nurse has not taken a break.",
+     "gap": 0.25
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Which nurse?",
+     "text": "Which nurse?",
+     "gap": 0.15
+    },
+    {
+     "id": "ra2",
+     "who": "radish",
+     "say": "The one.",
+     "text": "The one.",
+     "gap": 0.25
+    },
+    {
+     "id": "ka2",
+     "who": "kale",
+     "say": "Per regulation, she takes one now.",
+     "text": "Per regulation, she takes one now.",
+     "gap": 0.15
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Per regulation!",
+     "text": "Per regulation!",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "sniffle",
+       0.9,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "clock",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "clocktick",
+       0.2,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Okay.",
+     "text": "Okay.",
+     "gap": 0.2
+    },
+    {
+     "id": "break",
+     "pause": 3.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "chairsit",
+       0.1,
+       0.45,
+       0
+      ],
+      [
+       "exhale",
+       0.8,
+       0.35,
+       0
+      ],
+      [
+       "clocktick",
+       2.9,
+       0.35,
+       0
+      ],
+      [
+       "shiftbell",
+       3.3,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "ka3",
+     "who": "kale",
+     "say": "Deficiency corrected.",
+     "text": "Deficiency corrected.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "stamp",
+       0.9,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "revert",
+     "pause": 2.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "doorclose",
+       0.1,
+       0.4,
+       -0.3
+      ],
+      [
+       "poof",
+       0.6,
+       0.4,
+       0
+      ],
+      [
+       "closetopen",
+       1.0,
+       0.4,
+       0.3
+      ],
+      [
+       "coffeemaker",
+       1.5,
+       0.4,
+       -0.2
+      ],
+      [
+       "labelpeel",
+       1.9,
+       0.35,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "eg1",
+     "who": "egg",
+     "say": "I'm here!",
+     "text": "I'm here!",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "doorchime",
+       -0.3,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "From the ditch?",
+     "text": "From the ditch?",
+     "gap": 0.1
+    },
+    {
+     "id": "eg2",
+     "who": "egg",
+     "say": "Spring came early.",
+     "text": "Spring came early.",
+     "gap": 0.25
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Report. Everyone is alive.",
+     "text": "Report. Everyone is alive.",
+     "gap": 0.1
+    },
+    {
+     "id": "eg3",
+     "who": "egg",
+     "say": "Any concerns?",
+     "text": "Any concerns?",
+     "gap": 0.15
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "I took a break.",
+     "text": "I took a break.",
+     "gap": 0.4
+    },
+    {
+     "id": "end",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme21",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "arrive",
+  "to_": "exit",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

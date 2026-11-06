@@ -1,0 +1,1254 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 22: The Secret Santa",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "brenda": {
+   "name": "BRENDA, RN (ON BREAK)",
+   "voice": "bf_alice",
+   "speed": 0.88,
+   "semis": -4,
+   "color": "#8e5a9b",
+   "pan": 0.1,
+   "lang": "en-us"
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a",
+   "pan": 0.35
+  },
+  "rall": {
+   "name": "THE RESIDENTS",
+   "voice": "am_fenrir",
+   "chorus": [
+    "am_fenrir",
+    "am_echo",
+    "bf_emma",
+    "am_puck"
+   ],
+   "speed": 0.95,
+   "semis": 0,
+   "color": "#c9d22a",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "staff": {
+   "name": "THE WHOLE 3-11",
+   "voice": "af_heart",
+   "chorus": [
+    "af_heart",
+    "af_bella",
+    "am_michael",
+    "af_river",
+    "bf_isabella"
+   ],
+   "lang": "en-us",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#ffb703",
+   "pan": 0
+  },
+  "egg": {
+   "name": "EGGPLANT, NIGHTS",
+   "voice": "af_jessica",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": -1,
+   "color": "#8a5aa8",
+   "pan": 0.2
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 6.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme22",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "ribbonpull",
+       0.9,
+       0.45,
+       0
+      ],
+      [
+       "paperrip",
+       1.6,
+       0.5,
+       -0.15
+      ],
+      [
+       "paperrip",
+       2.1,
+       0.5,
+       0.15
+      ],
+      [
+       "jinglebells",
+       2.6,
+       0.4,
+       0
+      ],
+      [
+       "textding",
+       5.0,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "draw",
+   "clock": "3:15 PM",
+   "label": "THE DRAW",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "jinglebells",
+       0.1,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Secret Santa! Ten dollar limit!",
+     "text": "Secret Santa! Ten dollar limit!",
+     "gap": 0.15
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Gifts over five dollars must be reported.",
+     "text": "Gifts over five dollars must be reported.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "sniffle",
+       1.6,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Last year I got a candle.",
+     "text": "Last year I got a candle.",
+     "gap": 0.1
+    },
+    {
+     "id": "l0",
+     "who": "lemon",
+     "say": "We all got a candle.",
+     "text": "We all got a candle.",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Am I on the list?",
+     "text": "Am I on the list?",
+     "gap": 0.15
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "You're per diem.",
+     "text": "You're per diem.",
+     "gap": 0.25
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're drawing names. Would you like help?",
+     "text": "It looks like you're drawing names. Would you like help?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "t3",
+     "who": "tom",
+     "say": "Yes!",
+     "text": "Yes!",
+     "gap": 0.15
+    },
+    {
+     "id": "draw",
+     "pause": 4.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "shuffle",
+       0.1,
+       0.4,
+       0
+      ],
+      [
+       "namewhoosh",
+       0.8,
+       0.35,
+       -0.3
+      ],
+      [
+       "namewhoosh",
+       1.1,
+       0.35,
+       0.3
+      ],
+      [
+       "namewhoosh",
+       1.4,
+       0.35,
+       -0.2
+      ],
+      [
+       "namewhoosh",
+       1.7,
+       0.35,
+       0.2
+      ],
+      [
+       "ding",
+       3.2,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Everyone drew Strawberry.",
+     "text": "Everyone drew Strawberry.",
+     "gap": 0.15
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Who did I draw?",
+     "text": "Who did I draw?",
+     "gap": 0.15
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Everyone.",
+     "text": "Everyone.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "grin",
+       0.5,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Per policy, that is allowed.",
+     "text": "Per policy, that is allowed.",
+     "gap": 0.15
+    },
+    {
+     "id": "t4",
+     "who": "tom",
+     "say": "Ten dollars each!",
+     "text": "Ten dollars each!",
+     "gap": 0.15
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "That's a hundred and twenty dollars.",
+     "text": "That's a hundred and twenty dollars.",
+     "gap": 0.15
+    },
+    {
+     "id": "t5",
+     "who": "tom",
+     "say": "Merry Christmas!",
+     "text": "Merry Christmas!",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "wrap",
+   "clock": "6:00 PM",
+   "label": "THE WRAPPING",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Did you go shopping?",
+     "text": "Did you go shopping?",
+     "gap": 0.1
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "When?",
+     "text": "When?",
+     "gap": 0.3
+    },
+    {
+     "id": "wrap",
+     "pause": 6.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "chuxrustle",
+       0.2,
+       0.4,
+       -0.1
+      ],
+      [
+       "chuxfold",
+       1.2,
+       0.4,
+       0.1
+      ],
+      [
+       "chuxfold",
+       1.9,
+       0.4,
+       -0.1
+      ],
+      [
+       "tapepull",
+       2.6,
+       0.4,
+       0.2
+      ],
+      [
+       "tapepull",
+       3.2,
+       0.4,
+       -0.2
+      ],
+      [
+       "glovesnap",
+       4.0,
+       0.4,
+       0
+      ],
+      [
+       "gloveinflate",
+       4.3,
+       0.45,
+       0
+      ],
+      [
+       "glovesqueak",
+       5.4,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "Is that a Chux?",
+     "text": "Is that a Chux?",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It's festive.",
+     "text": "It's festive.",
+     "gap": 0.2
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "What's in it?",
+     "text": "What's in it?",
+     "gap": 0.1
+    },
+    {
+     "id": "s2b",
+     "who": "straw",
+     "say": "Pudding. Sugar free.",
+     "text": "Pudding. Sugar free.",
+     "gap": 0.2
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Is it labeled?",
+     "text": "Is it labeled?",
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Dated, timed, initialed.",
+     "text": "Dated, timed, initialed.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "labelgun",
+       0.1,
+       0.4,
+       0.1
+      ]
+     ]
+    },
+    {
+     "id": "pe1",
+     "who": "pear",
+     "say": "Can I have a balloon?",
+     "text": "Can I have a balloon?",
+     "gap": 0.15
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "You can have twelve.",
+     "text": "You can have twelve.",
+     "gap": 0.2
+    },
+    {
+     "id": "balloons",
+     "pause": 2.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "gloveinflate",
+       0.1,
+       0.4,
+       -0.3
+      ],
+      [
+       "gloveinflate",
+       0.5,
+       0.4,
+       0.3
+      ],
+      [
+       "glovesqueak",
+       1.2,
+       0.35,
+       0
+      ],
+      [
+       "balloonbonk",
+       1.8,
+       0.35,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Balloons are a latex hazard.",
+     "text": "Balloons are a latex hazard.",
+     "gap": 0.1
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "They're nitrile.",
+     "text": "They're nitrile.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "santa",
+   "clock": "7:30 PM",
+   "label": "SANTA'S VISIT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "sleighbells",
+       0.1,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "me1",
+     "who": "melon",
+     "say": "Ho ho ho!",
+     "text": "Ho ho ho!",
+     "gap": 0.15
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Santa, have you fallen in the last ninety days?",
+     "text": "Santa, have you fallen in the last ninety days?",
+     "gap": 0.15
+    },
+    {
+     "id": "me2",
+     "who": "melon",
+     "say": "Every Christmas Eve. Down a chimney.",
+     "text": "Every Christmas Eve. Down a chimney.",
+     "gap": 0.2
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Gait belt.",
+     "text": "Gait belt.",
+     "gap": 0.1
+    },
+    {
+     "id": "belt",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "beltbuckle",
+       0.4,
+       0.45,
+       0
+      ],
+      [
+       "belttug",
+       0.9,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "cr1",
+     "who": "cran",
+     "say": "Santa, I want my teeth.",
+     "text": "Santa, I want my teeth.",
+     "gap": 0.15
+    },
+    {
+     "id": "me3",
+     "who": "melon",
+     "say": "Ho ho... what?",
+     "text": "Ho ho... what?",
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "I wrapped everything on the counter.",
+     "text": "I wrapped everything on the counter.",
+     "gap": 0.2
+    },
+    {
+     "id": "search",
+     "pause": 3.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "paperrip",
+       0.2,
+       0.45,
+       -0.2
+      ],
+      [
+       "paperrip",
+       0.8,
+       0.45,
+       0.2
+      ],
+      [
+       "paperrip",
+       1.4,
+       0.45,
+       -0.1
+      ],
+      [
+       "paperrip",
+       2.0,
+       0.45,
+       0.1
+      ],
+      [
+       "dentureclack",
+       2.8,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Found them.",
+     "text": "Found them.",
+     "gap": 0.2
+    },
+    {
+     "id": "cr2",
+     "who": "cran",
+     "say": "Merry Christmas!",
+     "text": "Merry Christmas!",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "ding",
+       0.3,
+       0.35,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "me4",
+     "who": "melon",
+     "say": "I can't get up.",
+     "text": "I can't get up.",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Get the Hoyer.",
+     "text": "Get the Hoyer.",
+     "gap": 0.1
+    },
+    {
+     "id": "hoyer",
+     "pause": 2.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "hoyerroll",
+       0.1,
+       0.4,
+       -0.2
+      ],
+      [
+       "slingrustle",
+       0.7,
+       0.35,
+       0
+      ],
+      [
+       "hoyerlift",
+       1.2,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "me5",
+     "who": "melon",
+     "say": "This is the best Christmas.",
+     "text": "This is the best Christmas.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "swap",
+   "clock": "9:00 PM",
+   "label": "THE EXCHANGE",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Everybody open at once!",
+     "text": "Everybody open at once!",
+     "gap": 0.1
+    },
+    {
+     "id": "rip",
+     "pause": 2.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "paperrip",
+       0.1,
+       0.45,
+       -0.3
+      ],
+      [
+       "paperrip",
+       0.25,
+       0.45,
+       0.3
+      ],
+      [
+       "paperrip",
+       0.4,
+       0.45,
+       -0.1
+      ],
+      [
+       "paperrip",
+       0.55,
+       0.45,
+       0.1
+      ],
+      [
+       "ribbonzip",
+       0.9,
+       0.35,
+       0
+      ],
+      [
+       "crinkle",
+       1.4,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "A candle.",
+     "text": "A candle.",
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "A candle.",
+     "text": "A candle.",
+     "gap": 0.1
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "A candle!",
+     "text": "A candle!",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       0.8,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "It's the same candle.",
+     "text": "It's the same candle.",
+     "gap": 0.2
+    },
+    {
+     "id": "br1",
+     "who": "brenda",
+     "say": "It is my candle. From twenty nineteen.",
+     "text": "It is my candle. From twenty nineteen.",
+     "gap": 0.25
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "And all of ours go to Strawberry.",
+     "text": "And all of ours go to Strawberry.",
+     "gap": 0.1
+    },
+    {
+     "id": "pile",
+     "pause": 2.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "giftpile",
+       0.2,
+       0.5,
+       0
+      ],
+      [
+       "giftthump",
+       1.2,
+       0.45,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Grip socks.",
+     "text": "Grip socks.",
+     "gap": 0.15
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Yellow. Fall risk.",
+     "text": "Yellow. Fall risk.",
+     "gap": 0.2
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "A mug.",
+     "text": "A mug.",
+     "gap": 0.1
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "Read it.",
+     "text": "Read it.",
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "World's okayest nurse.",
+     "text": "World's okayest nurse.",
+     "gap": 0.25
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "And these are from me.",
+     "text": "And these are from me.",
+     "gap": 0.1
+    },
+    {
+     "id": "st1",
+     "who": "staff",
+     "say": "Pudding!",
+     "text": "Pudding!",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "carol",
+   "clock": "10:55 PM",
+   "label": "THE CAROL",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.08
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1
+    },
+    {
+     "id": "pe1",
+     "who": "pear",
+     "say": "Nurse. We made you something.",
+     "text": "Nurse. We made you something.",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "You didn't have to.",
+     "text": "You didn't have to.",
+     "gap": 0.2
+    },
+    {
+     "id": "intro",
+     "pause": 2.142857142857143,
+     "gap": 0.0,
+     "sfx": [
+      [
+       "pitchpipe",
+       0.1,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "rall",
+     "say": "On the fifth shift of Christmas,",
+     "text": "On the fifth shift of Christmas,",
+     "gap": 0.1929
+    },
+    {
+     "id": "c2",
+     "who": "rall",
+     "say": "my nurse she gave to me:",
+     "text": "my nurse she gave to me:",
+     "gap": 0.3359
+    },
+    {
+     "id": "c3",
+     "who": "rall",
+     "say": "five pudding cups!",
+     "text": "five pudding cups!",
+     "gap": 0.5969
+    },
+    {
+     "id": "c4",
+     "who": "rall",
+     "say": "Four warm blankets,",
+     "text": "Four warm blankets,",
+     "gap": 0.6359
+    },
+    {
+     "id": "c5",
+     "who": "rall",
+     "say": "three call bells,",
+     "text": "three call bells,",
+     "gap": 0.7099
+    },
+    {
+     "id": "c6",
+     "who": "rall",
+     "say": "two grippy socks,",
+     "text": "two grippy socks,",
+     "gap": 0.6649
+    },
+    {
+     "id": "c7",
+     "who": "rall",
+     "say": "and a pill in the applesauce!",
+     "text": "and a pill in the applesauce!",
+     "gap": 0.3049
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That's not a carol.",
+     "text": "That's not a carol.",
+     "gap": 0.15
+    },
+    {
+     "id": "pe2",
+     "who": "pear",
+     "say": "It's a care plan.",
+     "text": "It's a care plan.",
+     "gap": 0.3
+    },
+    {
+     "id": "eg1",
+     "who": "egg",
+     "say": "I'm here! On time!",
+     "text": "I'm here! On time!",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "doorchime",
+       -0.3,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "A Christmas miracle.",
+     "text": "A Christmas miracle.",
+     "gap": 0.25
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "Merry Christmas, three to eleven.",
+     "text": "Merry Christmas, three to eleven.",
+     "gap": 0.4
+    },
+    {
+     "id": "end",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme22",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "draw",
+  "to_": "carol",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ],
+ "carol": {
+  "scene": "carol",
+  "bpm": 112,
+  "bar": 2.142857142857143,
+  "lines": [
+   "c1",
+   "c2",
+   "c3",
+   "c4",
+   "c5",
+   "c6",
+   "c7"
+  ],
+  "intro": "intro"
+ }
+}

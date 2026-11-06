@@ -1,0 +1,588 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 17: The Module",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "arti": {
+   "name": "MR. ARTICHOKE, CEO",
+   "voice": "bm_daniel",
+   "lang": "en-gb",
+   "speed": 0.93,
+   "semis": -2,
+   "color": "#8fbf5a",
+   "pan": 0.22
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 5.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "click",
+       1.0,
+       0.4,
+       -0.15
+      ],
+      [
+       "spinner",
+       1.6,
+       0.3,
+       0.2
+      ],
+      [
+       "click",
+       2.6,
+       0.4,
+       0.2
+      ],
+      [
+       "textding",
+       3.8,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "assign",
+   "clock": "9:15 PM",
+   "label": "THE ASSIGNMENT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.3,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Mandatory training. Module seven.",
+     "text": "Mandatory training. Module seven.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "How long?",
+     "text": "How long?",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Four hours.",
+     "text": "Four hours.",
+     "gap": 0.15
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "We have eight hours of residents.",
+     "text": "We have eight hours of residents.",
+     "gap": 0.1
+    },
+    {
+     "id": "t3",
+     "who": "tom",
+     "say": "Efficiency.",
+     "text": "Efficiency.",
+     "gap": 0.15
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're learning. Would you like help?",
+     "text": "It looks like you're learning. Would you like help?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! I'll help.",
+     "text": "Great! I'll help.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "grin",
+       0.55,
+       0.3,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "t4",
+     "who": "tom",
+     "say": "Due before you clock out.",
+     "text": "Due before you clock out.",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "video",
+   "clock": "9:50 PM",
+   "label": "THE VIDEO",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.14
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.7,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "callconnect",
+       0.1,
+       0.35,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "ar1",
+     "who": "arti",
+     "say": "Welcome to Break Safety. Your break is important to us.",
+     "text": "Welcome to Break Safety. Your break is important to us.",
+     "gap": 0.2
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Please keep your eyes on the screen.",
+     "text": "Please keep your eyes on the screen.",
+     "gap": 0.1
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "A call light is on.",
+     "text": "A call light is on.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "textding",
+       0.1,
+       0.3,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Looking away pauses the video!",
+     "text": "Looking away pauses the video!",
+     "gap": 0.1
+    },
+    {
+     "id": "ar2",
+     "who": "arti",
+     "say": "At the end of your shift, you may take a break.",
+     "text": "At the end of your shift, you may take a break.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "glitch",
+       1.9,
+       0.4,
+       0.25
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "The shift ends at eleven.",
+     "text": "The shift ends at eleven.",
+     "gap": 0.1
+    },
+    {
+     "id": "ar3",
+     "who": "arti",
+     "say": "Your break begins at eleven.",
+     "text": "Your break begins at eleven.",
+     "gap": 0.15
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That is not a break.",
+     "text": "That is not a break.",
+     "gap": 0.1
+    },
+    {
+     "id": "ar4",
+     "who": "arti",
+     "say": "Thank you for your feedback.",
+     "text": "Thank you for your feedback.",
+     "gap": 0.15
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Ninety-nine percent complete!",
+     "text": "Ninety-nine percent complete!",
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "It has said that for an hour.",
+     "text": "It has said that for an hour.",
+     "gap": 0.15
+    },
+    {
+     "id": "end",
+     "pause": 0.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "quiz",
+   "clock": "10:59 PM",
+   "label": "THE QUIZ",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.2,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "Question one. When should you take a break?",
+     "text": "Question one. When should you take a break?",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "A, B, C or D?",
+     "text": "A, B, C or D?",
+     "gap": 0.1
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "A, pending. B, pending. C, pending. D, all of the above.",
+     "text": "A, pending. B, pending. C, pending. D, all of the above.",
+     "gap": 0.2
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "D.",
+     "text": "D.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.15,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "b3",
+     "who": "bind",
+     "say": "Correct! You scored one hundred percent!",
+     "text": "Correct! You scored one hundred percent!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "textding",
+       0.1,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "The certificate expires at eleven.",
+     "text": "The certificate expires at eleven.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       1.7,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "So does the shift.",
+     "text": "So does the shift.",
+     "gap": 0.1
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "You must pass to clock out.",
+     "text": "You must pass to clock out.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I passed.",
+     "text": "I passed.",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Clock out requires a taken break.",
+     "text": "Clock out requires a taken break.",
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "My break is pending.",
+     "text": "My break is pending.",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Until you clock out.",
+     "text": "Until you clock out.",
+     "gap": 0.25
+    },
+    {
+     "id": "end",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "error",
+       0.2,
+       0.45,
+       0
+      ],
+      [
+       "pending",
+       0.5,
+       0.45,
+       0
+      ],
+      [
+       "sting",
+       1.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 6.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme15",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "click",
+       3.0,
+       0.4,
+       0
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "assign",
+  "to_": "quiz",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

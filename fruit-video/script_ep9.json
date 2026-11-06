@@ -1,0 +1,991 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 9: The Agency Nurse",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "persimmon": {
+   "name": "AGENCY NURSE PERSIMMON",
+   "voice": "af_aoede",
+   "speed": 1.0,
+   "semis": -1,
+   "color": "#ff9a3c",
+   "pan": 0.22,
+   "lang": "en-us"
+  },
+  "persphone": {
+   "name": "PERSIMMON, ON THE BADGE",
+   "voice": "af_aoede",
+   "speed": 1.0,
+   "semis": -1,
+   "color": "#ff9a3c",
+   "pan": 0,
+   "lang": "en-us",
+   "fx": "phone"
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 4.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "textding",
+       0.12,
+       0.45,
+       0
+      ],
+      [
+       "honk",
+       1.7,
+       0.22,
+       0.3
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "arrival",
+   "clock": "2:58 PM",
+   "label": "THE FRONT DOOR",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "lobby",
+   "amb": {
+    "name": "lobby",
+    "gain": 0.3
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "pop",
+       0.35,
+       0.35,
+       -0.3
+      ],
+      [
+       "pop",
+       0.6,
+       0.3,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Is it somebody's birthday?",
+     "text": "Is it somebody's birthday?",
+     "gap": 0.3
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "We have an agency nurse tonight.",
+     "text": "We have an agency nurse tonight.",
+     "gap": 0.25
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "A real nurse?",
+     "text": "A real nurse?",
+     "gap": 0.2
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Licensed.",
+     "text": "Licensed.",
+     "gap": 0.25
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "And breathing?",
+     "text": "And breathing?",
+     "gap": 0.2
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "We checked.",
+     "text": "We checked.",
+     "gap": 0.45
+    },
+    {
+     "id": "door",
+     "pause": 2.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0.3
+      ],
+      [
+       "drumroll",
+       0.45,
+       0.4,
+       0
+      ],
+      [
+       "partyhorn",
+       1.3,
+       0.5,
+       0
+      ],
+      [
+       "pop",
+       1.35,
+       0.5,
+       -0.2
+      ],
+      [
+       "pop",
+       1.45,
+       0.5,
+       0.25
+      ],
+      [
+       "cheer9",
+       1.35,
+       0.6,
+       0
+      ],
+      [
+       "sparkle",
+       1.5,
+       0.35,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Welcome to Fruit Bowl!",
+     "text": "Welcome to Fruit Bowl!",
+     "gap": 0.15
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "Gift basket. Parking pass. Lunch.",
+     "text": "Gift basket. Parking pass. Lunch.",
+     "gap": 0.3
+    },
+    {
+     "id": "p1",
+     "who": "persimmon",
+     "say": "Cool.",
+     "text": "Cool.",
+     "gap": 0.5
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I got a pen.",
+     "text": "I got a pen.",
+     "gap": 0.35
+    },
+    {
+     "id": "a3",
+     "who": "melon",
+     "say": "That was a gift. To share.",
+     "text": "That was a gift. To share.",
+     "gap": 0.5
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Are we getting a raise?",
+     "text": "Are we getting a raise?",
+     "gap": 0.3
+    },
+    {
+     "id": "a4",
+     "who": "melon",
+     "say": "We don't have the budget.",
+     "text": "We don't have the budget.",
+     "gap": 0.35
+    },
+    {
+     "id": "p2",
+     "who": "persimmon",
+     "say": "Mine is a hundred and eighteen dollars an hour.",
+     "text": "Mine is a hundred and eighteen dollars an hour.",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "You have a budget for that?",
+     "text": "You have a budget for that?",
+     "gap": 0.3
+    },
+    {
+     "id": "a5",
+     "who": "melon",
+     "say": "That's a different budget.",
+     "text": "That's a different budget.",
+     "gap": 0.4
+    },
+    {
+     "id": "sting",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "trombone",
+       0.1,
+       0.3,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "orient",
+   "clock": "3:06 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.3
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "wheels",
+       0.1,
+       0.45,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Okay. Orientation. This is the med cart.",
+     "text": "Okay. Orientation. This is the med cart.",
+     "gap": 0.25
+    },
+    {
+     "id": "p1",
+     "who": "persimmon",
+     "say": "My contract says orientation is four minutes.",
+     "text": "My contract says orientation is four minutes.",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Mine was three days.",
+     "text": "Mine was three days.",
+     "gap": 0.3
+    },
+    {
+     "id": "p2",
+     "who": "persimmon",
+     "say": "I'm per deeum.",
+     "text": "I'm per diem.",
+     "gap": 0.3
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "Per-simmon. Per deeum.",
+     "text": "Persimmon. Per diem.",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "I hate it.",
+     "text": "I hate it.",
+     "gap": 0.4
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Log in.",
+     "text": "Log in.",
+     "gap": 0.2
+    },
+    {
+     "id": "login",
+     "pause": 2.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "typing",
+       0.1,
+       0.5,
+       0
+      ],
+      [
+       "err",
+       1.3,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "p3",
+     "who": "persimmon",
+     "say": "It says my account expired.",
+     "text": "It says my account expired.",
+     "gap": 0.3
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "Use mine.",
+     "text": "Use mine.",
+     "gap": 0.3
+    },
+    {
+     "id": "p4",
+     "who": "persimmon",
+     "say": "That's against policy.",
+     "text": "That's against policy.",
+     "gap": 0.3
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "So is this.",
+     "text": "So is this.",
+     "gap": 0.5
+    },
+    {
+     "id": "deal",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "flips",
+       0.1,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Per-simmon, you have twelve residents.",
+     "text": "Persimmon, you have twelve residents.",
+     "gap": 0.3
+    },
+    {
+     "id": "p5",
+     "who": "persimmon",
+     "say": "Per my contract.",
+     "text": "Per my contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Strawberry, you have twenty-eight.",
+     "text": "Strawberry, you have twenty-eight.",
+     "gap": 0.3
+    },
+    {
+     "id": "s7",
+     "who": "straw",
+     "say": "That's forty.",
+     "text": "That's forty.",
+     "gap": 0.3
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "It's contract math.",
+     "text": "It's contract math.",
+     "gap": 0.45
+    },
+    {
+     "id": "tag",
+     "pause": 0.8,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "floor",
+   "clock": "5:32 PM",
+   "label": "THE FLOOR",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "alarms",
+    "gain": 0.28
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.3,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "whoosh2",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "a_call",
+       0.15,
+       0.5,
+       -0.3
+      ],
+      [
+       "a_bed",
+       0.5,
+       0.45,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Per-simmon. I need help in Room nine.",
+     "text": "Persimmon. I need help in Room nine.",
+     "gap": 0.3
+    },
+    {
+     "id": "p1",
+     "who": "persphone",
+     "say": "That's not in my contract.",
+     "text": "That's not in my contract.",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Which part isn't?",
+     "text": "Which part isn't?",
+     "gap": 0.3
+    },
+    {
+     "id": "p2",
+     "who": "persphone",
+     "say": "Helping.",
+     "text": "Helping.",
+     "gap": 0.5
+    },
+    {
+     "id": "lapse1",
+     "pause": 1.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "timelapse",
+       0,
+       0.6,
+       0
+      ],
+      [
+       "chaching9",
+       0.9,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "She's been on break since four.",
+     "text": "She's been on break since four.",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Lunch at four. Break at five. Second lunch at six.",
+     "text": "Lunch at four. Break at five. Second lunch at six.",
+     "gap": 0.3
+    },
+    {
+     "id": "p3",
+     "who": "persphone",
+     "say": "It's called self-care.",
+     "text": "It's called self-care.",
+     "gap": 0.5
+    },
+    {
+     "id": "lapse2",
+     "pause": 1.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "timelapse",
+       0,
+       0.6,
+       0
+      ],
+      [
+       "chaching9",
+       0.8,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "How many residents do you have?",
+     "text": "How many residents do you have?",
+     "gap": 0.3
+    },
+    {
+     "id": "p4",
+     "who": "persphone",
+     "say": "Twelve. They're all asleep.",
+     "text": "Twelve. They're all asleep.",
+     "gap": 0.3
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "I have twenty-eight. None of them are.",
+     "text": "I have twenty-eight. None of them are.",
+     "gap": 0.3
+    },
+    {
+     "id": "p5",
+     "who": "persphone",
+     "say": "Sounds like a you problem.",
+     "text": "Sounds like a you problem.",
+     "gap": 0.5
+    },
+    {
+     "id": "end",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "trombone",
+       0.1,
+       0.3,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "exit",
+   "clock": "10:58 PM",
+   "label": "THE FRONT DOOR",
+   "head": 0.2,
+   "tail": 0.3,
+   "room": "lobby",
+   "amb": {
+    "name": "lobby",
+    "gain": 0.25
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "tick",
+       0,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Report?",
+     "text": "Report?",
+     "gap": 0.3
+    },
+    {
+     "id": "p1",
+     "who": "persimmon",
+     "say": "Twelve residents. Zero events.",
+     "text": "Twelve residents. Zero events.",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That's it?",
+     "text": "That's it?",
+     "gap": 0.25
+    },
+    {
+     "id": "p2",
+     "who": "persimmon",
+     "say": "That's the report.",
+     "text": "That's the report.",
+     "gap": 0.4
+    },
+    {
+     "id": "cd",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "tick",
+       0,
+       0.35,
+       0
+      ],
+      [
+       "tick",
+       0.5,
+       0.35,
+       0
+      ],
+      [
+       "tick",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "tick",
+       1.5,
+       0.35,
+       0
+      ],
+      [
+       "textding",
+       1.9,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "p3",
+     "who": "persimmon",
+     "say": "It's eleven.",
+     "text": "It's eleven.",
+     "gap": 0.15
+    },
+    {
+     "id": "out",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0.3
+      ],
+      [
+       "rattle",
+       0.0,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "melon",
+     "say": "Thank you for your service!",
+     "text": "Thank you for your service!",
+     "gap": 0.2
+    },
+    {
+     "id": "a2",
+     "who": "melon",
+     "say": "Five stars!",
+     "text": "Five stars!",
+     "gap": 0.4,
+     "sfx": [
+      [
+       "stars9",
+       0.15,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "She has the keys.",
+     "text": "She has the keys.",
+     "gap": 0.25
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "The keys.",
+     "text": "The keys.",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "THE KEYS!",
+     "text": "THE KEYS!",
+     "gap": 0.1
+    },
+    {
+     "id": "run",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "whoosh2",
+       0,
+       0.6,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lot",
+   "clock": "11:00 PM",
+   "label": "THE PARKING LOT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "outside",
+   "amb": {
+    "name": "night",
+    "gain": 0.35
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "crickets",
+       0,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "car",
+     "pause": 2.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "car",
+       0,
+       0.6,
+       0.3
+      ],
+      [
+       "honk",
+       0.9,
+       0.4,
+       0.4
+      ],
+      [
+       "screech9",
+       1.3,
+       0.5,
+       0.4
+      ],
+      [
+       "engine9",
+       1.5,
+       0.6,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "Don't look at me. I didn't take them.",
+     "text": "Don't look at me. I didn't take them.",
+     "gap": 0.5
+    },
+    {
+     "id": "ph",
+     "pause": 1.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "textding",
+       0.2,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "...Where do I sign?",
+     "text": "...Where do I sign?",
+     "gap": 0.5
+    },
+    {
+     "id": "mo2",
+     "who": "moon",
+     "say": "Do it.",
+     "text": "Do it.",
+     "gap": 0.4
+    },
+    {
+     "id": "tap",
+     "pause": 1.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "click",
+       0.1,
+       0.5,
+       0
+      ],
+      [
+       "sparkle",
+       0.45,
+       0.5,
+       0
+      ],
+      [
+       "stars9",
+       0.6,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "arrival",
+  "to_": "lot",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

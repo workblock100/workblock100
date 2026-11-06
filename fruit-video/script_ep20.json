@@ -1,0 +1,1394 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 20: The Snow Day",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "onion": {
+   "name": "ONION, COMPLIANCE",
+   "voice": "af_river",
+   "lang": "en-us",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#e6c27a",
+   "pan": -0.2
+  },
+  "tom": {
+   "name": "TOMATO, HR",
+   "voice": "bf_isabella",
+   "lang": "en-gb",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff6a4d",
+   "pan": 0.15
+  },
+  "bind": {
+   "name": "BINDER",
+   "voice": "af_sarah",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 2,
+   "color": "#5b6b82",
+   "pan": -0.1
+  },
+  "arti": {
+   "name": "MR. ARTICHOKE, CEO",
+   "voice": "bm_daniel",
+   "lang": "en-gb",
+   "speed": 0.93,
+   "semis": -2,
+   "color": "#8fbf5a",
+   "pan": 0.22
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a",
+   "pan": 0.12,
+   "lang": "en-us"
+  },
+  "wx": {
+   "name": "CHANNEL 12 WEATHER",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.06,
+   "semis": 1,
+   "color": "#6aa0ff",
+   "pan": 0.3
+  },
+  "turnip": {
+   "name": "TURNIP, SNOW PLOW",
+   "voice": "am_onyx",
+   "lang": "en-us",
+   "speed": 0.9,
+   "semis": -2,
+   "color": "#c9a4d6",
+   "pan": 0.3
+  },
+  "egg": {
+   "name": "EGGPLANT, NIGHTS (ON THE PHONE)",
+   "voice": "af_jessica",
+   "lang": "en-us",
+   "speed": 1.0,
+   "semis": -1,
+   "color": "#8a5aa8",
+   "pan": 0.2
+  },
+  "brenda": {
+   "name": "BRENDA, RN (ON BREAK)",
+   "voice": "bf_alice",
+   "speed": 0.88,
+   "semis": -4,
+   "color": "#8e5a9b",
+   "pan": 0.1,
+   "lang": "en-us"
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a",
+   "pan": 0.35
+  },
+  "goji": {
+   "name": "MR. GOJI",
+   "voice": "am_echo",
+   "speed": 0.82,
+   "semis": -3,
+   "color": "#ff6a3d",
+   "pan": 0.25,
+   "lang": "en-us"
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 6.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme20",
+       0,
+       0.8,
+       0
+      ],
+      [
+       "globeshake",
+       0.9,
+       0.5,
+       0
+      ],
+      [
+       "snowsettle",
+       2.6,
+       0.4,
+       0
+      ],
+      [
+       "textding",
+       5.2,
+       0.45,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "forecast",
+   "clock": "2:00 PM",
+   "label": "THE FORECAST",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "wind",
+    "gain": 0.12
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.3,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "tvjingle",
+       0.2,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "w1",
+     "who": "wx",
+     "say": "Thirty inches by morning. Travel is not advised.",
+     "text": "Thirty inches by morning. Travel is not advised.",
+     "gap": 0.2
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Snow day!",
+     "text": "Snow day!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "popper",
+       0.4,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Per policy, healthcare is essential.",
+     "text": "Per policy, healthcare is essential.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "sniffle",
+       2.1,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Essential.",
+     "text": "Essential.",
+     "gap": 0.2
+    },
+    {
+     "id": "ar1",
+     "who": "arti",
+     "say": "This is not a snow day. It is a weather-related productivity opportunity.",
+     "text": "This is not a snow day. It is a weather-related productivity opportunity.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "phoneclick",
+       -0.25,
+       0.35,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Is there hazard pay?",
+     "text": "Is there hazard pay?",
+     "gap": 0.1
+    },
+    {
+     "id": "me1",
+     "who": "melon",
+     "say": "There is pizza.",
+     "text": "There is pizza.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "phoneclick",
+       -0.2,
+       0.3,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Of course.",
+     "text": "Of course.",
+     "gap": 0.2
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "The day shift cannot leave.",
+     "text": "The day shift cannot leave.",
+     "gap": 0.1
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "The night shift cannot arrive.",
+     "text": "The night shift cannot arrive.",
+     "gap": 0.15
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Who is working?",
+     "text": "Who is working?",
+     "gap": 0.1
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "You are.",
+     "text": "You are.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "boardflip",
+       0.05,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "door",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "doorgust",
+       0.3,
+       0.6,
+       -0.3
+      ],
+      [
+       "snowdump",
+       0.5,
+       0.6,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "The entrance is blocked.",
+     "text": "The entrance is blocked.",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "Snow day!",
+     "text": "Snow day!",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "popper",
+       0.35,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "end",
+     "pause": 1.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lot",
+   "clock": "4:30 PM",
+   "label": "THE PARKING LOT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "wind",
+    "gain": 0.2
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "plowengine",
+       0.1,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "plow",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "plowscrape",
+       0.2,
+       0.6,
+       0.3
+      ],
+      [
+       "plowdump",
+       1.4,
+       0.6,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "tu1",
+     "who": "turnip",
+     "say": "I plowed the lot.",
+     "text": "I plowed the lot.",
+     "gap": 0.15
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "You plowed in the cars.",
+     "text": "You plowed in the cars.",
+     "gap": 0.15
+    },
+    {
+     "id": "tu2",
+     "who": "turnip",
+     "say": "I plowed the lot.",
+     "text": "I plowed the lot.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "plowengine",
+       0.6,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "leave",
+     "pause": 0.9,
+     "gap": 0.05
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Where is my car?",
+     "text": "Where is my car?",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "That one.",
+     "text": "That one.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That is a hill.",
+     "text": "That is a hill.",
+     "gap": 0.25
+    },
+    {
+     "id": "dig",
+     "pause": 2.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "shovel",
+       0.3,
+       0.4,
+       -0.2
+      ],
+      [
+       "shovel",
+       0.9,
+       0.4,
+       -0.2
+      ],
+      [
+       "shovel",
+       1.5,
+       0.4,
+       -0.2
+      ],
+      [
+       "snowdump",
+       2.0,
+       0.5,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Snowman contest!",
+     "text": "Snowman contest!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "partywhistle",
+       0.15,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "It is a fall risk.",
+     "text": "It is a fall risk.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "slip",
+       0.9,
+       0.5,
+       -0.3
+      ],
+      [
+       "thud",
+       1.3,
+       0.5,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Incident report.",
+     "text": "Incident report.",
+     "gap": 0.3,
+     "sfx": [
+      [
+       "sniffle",
+       0.6,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "ring",
+     "pause": 0.9,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "phonering",
+       0,
+       0.5,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "e1",
+     "who": "egg",
+     "say": "I am stuck.",
+     "text": "I am stuck.",
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Where?",
+     "text": "Where?",
+     "gap": 0.1
+    },
+    {
+     "id": "e2",
+     "who": "egg",
+     "say": "A ditch.",
+     "text": "A ditch.",
+     "gap": 0.1
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "Which ditch?",
+     "text": "Which ditch?",
+     "gap": 0.1
+    },
+    {
+     "id": "e3",
+     "who": "egg",
+     "say": "A ditch.",
+     "text": "A ditch.",
+     "gap": 0.15
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "When will you be here?",
+     "text": "When will you be here?",
+     "gap": 0.1
+    },
+    {
+     "id": "e4",
+     "who": "egg",
+     "say": "Spring.",
+     "text": "Spring.",
+     "gap": 0.35
+    },
+    {
+     "id": "end",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "blackout",
+   "clock": "6:12 PM",
+   "label": "THE BLACKOUT",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.08
+   },
+   "beats": [
+    {
+     "id": "lightsout",
+     "pause": 2.4,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "powerdown",
+       0,
+       0.7,
+       0
+      ],
+      [
+       "relay",
+       0.5,
+       0.5,
+       -0.3
+      ],
+      [
+       "relay",
+       0.9,
+       0.5,
+       0.3
+      ],
+      [
+       "relay",
+       1.3,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "o1",
+     "who": "onion",
+     "say": "Per code, the generator starts in ten seconds.",
+     "text": "Per code, the generator starts in ten seconds.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "flashlight",
+       -0.4,
+       0.4,
+       -0.2
+      ],
+      [
+       "sniffle",
+       3.1,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "b1",
+     "who": "bind",
+     "say": "It looks like you're in the dark. Would you like help?",
+     "text": "It looks like you're in the dark. Would you like help?",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "binderpop",
+       -0.15,
+       0.4,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Yes.",
+     "text": "Yes.",
+     "gap": 0.2
+    },
+    {
+     "id": "b2",
+     "who": "bind",
+     "say": "Great! I'll...",
+     "text": "Great! I'll...",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "lowbattery",
+       0.9,
+       0.45,
+       -0.1
+      ]
+     ]
+    },
+    {
+     "id": "count",
+     "pause": 2.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "stopwatchticks",
+       0,
+       0.4,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Ten.",
+     "text": "Ten.",
+     "gap": 0.1
+    },
+    {
+     "id": "gen",
+     "pause": 1.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "genstart",
+       0,
+       0.7,
+       0.3
+      ],
+      [
+       "relay",
+       0.8,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "o1b",
+     "who": "onion",
+     "say": "Within code.",
+     "text": "Within code.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "sniffle",
+       0.8,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "t1",
+     "who": "tom",
+     "say": "Candle party!",
+     "text": "Candle party!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "candleclick",
+       0.35,
+       0.35,
+       0.2
+      ],
+      [
+       "candleclick",
+       0.6,
+       0.35,
+       0.1
+      ],
+      [
+       "candleclick",
+       0.85,
+       0.35,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "o3",
+     "who": "onion",
+     "say": "Open flames are prohibited.",
+     "text": "Open flames are prohibited.",
+     "gap": 0.1
+    },
+    {
+     "id": "t2",
+     "who": "tom",
+     "say": "They are LED.",
+     "text": "They are LED.",
+     "gap": 0.1
+    },
+    {
+     "id": "o4",
+     "who": "onion",
+     "say": "Approved.",
+     "text": "Approved.",
+     "gap": 0.25
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "The coffee maker is not on the red outlet.",
+     "text": "The coffee maker is not on the red outlet.",
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "What.",
+     "text": "What.",
+     "gap": 0.15
+    },
+    {
+     "id": "o2",
+     "who": "onion",
+     "say": "Coffee is not life safety.",
+     "text": "Coffee is not life safety.",
+     "gap": 0.15
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "It is to me.",
+     "text": "It is to me.",
+     "gap": 0.3
+    },
+    {
+     "id": "br1",
+     "who": "brenda",
+     "say": "I have a flashlight.",
+     "text": "I have a flashlight.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "flashlight",
+       -0.25,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "br2",
+     "who": "brenda",
+     "say": "It is from twenty nineteen.",
+     "text": "It is from twenty nineteen.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "clickdead",
+       1.7,
+       0.4,
+       0.2
+      ],
+      [
+       "clickdead",
+       2.15,
+       0.4,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "br3",
+     "who": "brenda",
+     "say": "It was a good flashlight.",
+     "text": "It was a good flashlight.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.2,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dayroom",
+   "clock": "8:40 PM",
+   "label": "THE DAY ROOM",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "wind",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 2.2,
+     "gap": 0.1
+    },
+    {
+     "id": "pe1",
+     "who": "pear",
+     "say": "It is beautiful.",
+     "text": "It is beautiful.",
+     "gap": 0.15
+    },
+    {
+     "id": "ba1",
+     "who": "banana",
+     "say": "It is cold.",
+     "text": "It is cold.",
+     "gap": 0.15
+    },
+    {
+     "id": "cr1",
+     "who": "cran",
+     "say": "In nineteen sixty-two we had a hundred inches.",
+     "text": "In nineteen sixty-two we had a hundred inches.",
+     "gap": 0.15
+    },
+    {
+     "id": "go1",
+     "who": "goji",
+     "say": "Is it water?",
+     "text": "Is it water?",
+     "gap": 0.1
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "It is snow.",
+     "text": "It is snow.",
+     "gap": 0.1
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "It is water.",
+     "text": "It is water.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "cupset",
+       0.35,
+       0.3,
+       0.2
+      ]
+     ]
+    },
+    {
+     "id": "go2",
+     "who": "goji",
+     "say": "Water.",
+     "text": "Water.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "slurp",
+       -0.4,
+       0.35,
+       0.1
+      ]
+     ]
+    },
+    {
+     "id": "cups",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "cupset",
+       0.2,
+       0.3,
+       -0.2
+      ],
+      [
+       "slurp",
+       0.5,
+       0.3,
+       -0.1
+      ],
+      [
+       "cupset",
+       0.9,
+       0.3,
+       0.1
+      ],
+      [
+       "slurp",
+       1.2,
+       0.3,
+       0.2
+      ],
+      [
+       "cupset",
+       1.5,
+       0.3,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Everyone is hydrated.",
+     "text": "Everyone is hydrated.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "pentick",
+       1.3,
+       0.3,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "plowlight",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "plowdist",
+       0.2,
+       0.35,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "I cannot see you. Weather.",
+     "text": "I cannot see you. Weather.",
+     "gap": 0.3
+    },
+    {
+     "id": "end",
+     "pause": 1.3,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "night",
+   "clock": "10:59 PM",
+   "label": "THE LONG NIGHT",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "wind",
+    "gain": 0.1
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "clocktick",
+       0.2,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Is the oncoming nurse here?",
+     "text": "Is the oncoming nurse here?",
+     "gap": 0.1
+    },
+    {
+     "id": "wait",
+     "pause": 1.5,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "windgust",
+       0.2,
+       0.4,
+       0
+      ],
+      [
+       "clocktick",
+       0,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I am the oncoming nurse.",
+     "text": "I am the oncoming nurse.",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "badgepeel",
+       1.9,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Report. Everyone is alive.",
+     "text": "Report. Everyone is alive.",
+     "gap": 0.1
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Any concerns?",
+     "text": "Any concerns?",
+     "gap": 0.1
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "I am tired.",
+     "text": "I am tired.",
+     "gap": 0.1
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "Noted.",
+     "text": "Noted.",
+     "gap": 0.25
+    },
+    {
+     "id": "lapse",
+     "pause": 8.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "lapsewhoosh",
+       0,
+       0.7,
+       0
+      ],
+      [
+       "clockspin",
+       0.2,
+       0.5,
+       0
+      ],
+      [
+       "windswell",
+       1.0,
+       0.4,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "mo1",
+     "who": "moon",
+     "say": "Good morning, three to eleven.",
+     "text": "Good morning, three to eleven.",
+     "gap": 0.15
+    },
+    {
+     "id": "s7",
+     "who": "straw",
+     "say": "What time is it?",
+     "text": "What time is it?",
+     "gap": 0.1
+    },
+    {
+     "id": "mo2",
+     "who": "moon",
+     "say": "Seven.",
+     "text": "Seven.",
+     "gap": 0.15
+    },
+    {
+     "id": "s8",
+     "who": "straw",
+     "say": "In the morning?",
+     "text": "In the morning?",
+     "gap": 0.1
+    },
+    {
+     "id": "mo3",
+     "who": "moon",
+     "say": "Yes.",
+     "text": "Yes.",
+     "gap": 0.25
+    },
+    {
+     "id": "s9",
+     "who": "straw",
+     "say": "Okay.",
+     "text": "Okay.",
+     "gap": 0.35
+    },
+    {
+     "id": "dawn",
+     "pause": 2.0,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "plowdist",
+       0.3,
+       0.35,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "tu3",
+     "who": "turnip",
+     "say": "I plowed the lot.",
+     "text": "I plowed the lot.",
+     "gap": 0.3
+    },
+    {
+     "id": "o5",
+     "who": "onion",
+     "say": "The entrance is blocked.",
+     "text": "The entrance is blocked.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "sniffle",
+       1.6,
+       0.3,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "s10",
+     "who": "straw",
+     "say": "Of course.",
+     "text": "Of course.",
+     "gap": 0.4
+    },
+    {
+     "id": "end",
+     "pause": 1.4,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "sting",
+       0.1,
+       0.35,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme20",
+       0,
+       0.5,
+       0
+      ],
+      [
+       "typing",
+       1.0,
+       0.35,
+       0
+      ],
+      [
+       "stamp",
+       3.9,
+       0.5,
+       0
+      ],
+      [
+       "textding",
+       5.0,
+       0.4,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "forecast",
+  "to_": "night",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

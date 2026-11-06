@@ -1,0 +1,1555 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 7: The Actual Full Moon",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "papa": {
+   "name": "ACTIVITIES DIRECTOR PAPAYA",
+   "voice": "af_jessica",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff9a5c",
+   "pan": -0.15,
+   "lang": "en-us"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a",
+   "pan": 0.35
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "pinephone": {
+   "name": "PINEAPPLE, ON THE PHONE",
+   "voice": "af_nova",
+   "speed": 1.18,
+   "semis": 0,
+   "color": "#f4a300",
+   "fx": "phone",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "goji": {
+   "name": "MR. GOJI",
+   "voice": "am_echo",
+   "speed": 0.82,
+   "semis": -3,
+   "color": "#ff6a3d",
+   "pan": 0.25,
+   "lang": "en-us"
+  },
+  "apple": {
+   "name": "DR. APPLE, ON THE PHONE",
+   "voice": "am_eric",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#e63946",
+   "fx": "phone",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "drag": {
+   "name": "NIGHT NURSE DRAGONFRUIT",
+   "voice": "af_nicole",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#ff4fa3",
+   "pan": 0.2,
+   "lang": "en-us"
+  }
+ },
+ "scenes": [
+  {
+   "id": "lot",
+   "clock": "2:59 PM",
+   "label": "THE PARKING LOT",
+   "head": 0.3,
+   "tail": 0.5,
+   "room": "outside",
+   "amb": {
+    "name": "day",
+    "gain": 0.5
+   },
+   "beats": [
+    {
+     "id": "walk",
+     "pause": 2.5,
+     "sfx": [
+      [
+       "carclose",
+       0.1,
+       0.5,
+       -0.5
+      ],
+      [
+       "birds6",
+       0.3,
+       0.5,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "Told you. Tomorrow.",
+     "text": "Told you. Tomorrow.",
+     "gap": 0.4
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "No.",
+     "text": "No.",
+     "gap": 0.3
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "I haven't said anything.",
+     "text": "I haven't said anything.",
+     "gap": 0.25
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "You're full. I can tell.",
+     "text": "You're full. I can tell.",
+     "gap": 0.3
+    },
+    {
+     "id": "m3",
+     "who": "moon",
+     "say": "It's astronomical. I don't get a vote.",
+     "text": "It's astronomical. I don't get a vote.",
+     "gap": 0.25
+    },
+    {
+     "id": "run",
+     "pause": 0.9,
+     "gap": 0.1
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "Strawberry! I made us a card!",
+     "text": "Strawberry! I made us a card!",
+     "gap": 0.4
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "Full Moon Bingo. Someone leaves. Someone howls. Someone gets peeled.",
+     "text": "Full Moon Bingo. Someone leaves. Someone howls. Someone gets peeled.",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Peeled?",
+     "text": "Peeled?",
+     "gap": 0.15
+    },
+    {
+     "id": "g3",
+     "who": "mango",
+     "say": "It's a banana thing.",
+     "text": "It's a banana thing.",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Why does the middle one say break?",
+     "text": "Why does the middle one say break?",
+     "gap": 0.15
+    },
+    {
+     "id": "g4",
+     "who": "mango",
+     "say": "It's the free space!",
+     "text": "It's the free space!",
+     "gap": 0.3
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "That square has never been hit.",
+     "text": "That square has never been hit."
+    }
+   ]
+  },
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 4.8,
+     "sfx": [
+      [
+       "theme7",
+       0.0,
+       0.8,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "station",
+   "clock": "3:05 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.45
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 0.5
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Good news. We are fully staffed.",
+     "text": "Good news. We are fully staffed.",
+     "gap": 0.3
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "On a full moon?",
+     "text": "On a full moon?",
+     "gap": 0.2
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Corporate says the moon is not a staffing factor.",
+     "text": "Corporate says the moon is not a staffing factor.",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "paper",
+       1.9,
+       0.4,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "Lunar phenomena are anecdotal.",
+     "text": "Lunar phenomena are anecdotal.",
+     "gap": 0.3
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "What's anecdotal?",
+     "text": "What's anecdotal?",
+     "gap": 0.2
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "It means we're on our own.",
+     "text": "It means we're on our own.",
+     "gap": 0.3
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "Also, two CNAs called out.",
+     "text": "Also, two CNAs called out.",
+     "gap": 0.2
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "I'll be both.",
+     "text": "I'll be both.",
+     "gap": 0.35
+    },
+    {
+     "id": "rule",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "stamp7",
+       0.15,
+       0.7,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Rule one. Nobody says the Q word.",
+     "text": "Rule one. Nobody says the Q word.",
+     "gap": 0.15
+    },
+    {
+     "id": "g3",
+     "who": "mango",
+     "say": "Quiet?",
+     "text": "Quiet?",
+     "gap": 0.1
+    },
+    {
+     "id": "flick",
+     "pause": 0.9,
+     "sfx": [
+      [
+       "flicker",
+       0.05,
+       0.7,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Mango.",
+     "text": "Mango.",
+     "gap": 0.25
+    },
+    {
+     "id": "g4",
+     "who": "mango",
+     "say": "Sorry.",
+     "text": "Sorry."
+    }
+   ]
+  },
+  {
+   "id": "bingo",
+   "clock": "5:30 PM",
+   "label": "THE ACTIVITY ROOM",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "lobby",
+   "amb": {
+    "name": "bingo",
+    "gain": 0.55
+   },
+   "beats": [
+    {
+     "id": "p1",
+     "who": "papa",
+     "say": "Good evening, bingo friends! Are we feeling lucky?",
+     "text": "Good evening, bingo friends! Are we feeling lucky?",
+     "gap": 0.2
+    },
+    {
+     "id": "cage1",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "cage",
+       0.0,
+       0.6,
+       -0.15
+      ]
+     ],
+     "gap": 0.05
+    },
+    {
+     "id": "p2",
+     "who": "papa",
+     "say": "B. Seven.",
+     "text": "B. Seven.",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "ball",
+       0.0,
+       0.6,
+       -0.15
+      ]
+     ]
+    },
+    {
+     "id": "r7",
+     "pause": 0.75,
+     "sfx": [
+      [
+       "a_chair",
+       0.05,
+       0.55,
+       0.3
+      ]
+     ],
+     "gap": 0.05
+    },
+    {
+     "id": "c1",
+     "who": "cran",
+     "say": "I just wanted to see if it works.",
+     "text": "I just wanted to see if it works.",
+     "gap": 0.25
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "It works.",
+     "text": "It works.",
+     "gap": 0.25
+    },
+    {
+     "id": "c2",
+     "who": "cran",
+     "say": "Good.",
+     "text": "Good.",
+     "gap": 0.15
+    },
+    {
+     "id": "d1",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "dab",
+       0.1,
+       0.8,
+       0
+      ],
+      [
+       "bingo_ding",
+       0.12,
+       0.5,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "p3",
+     "who": "papa",
+     "say": "I. Twenty-two!",
+     "text": "I. Twenty-two!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "ball",
+       0.0,
+       0.6,
+       -0.15
+      ]
+     ]
+    },
+    {
+     "id": "x1",
+     "pause": 0.8,
+     "sfx": [
+      [
+       "honk",
+       0.05,
+       0.6,
+       0.5
+      ]
+     ],
+     "gap": 0.05
+    },
+    {
+     "id": "pe1",
+     "who": "pear",
+     "say": "My taxi is here.",
+     "text": "My taxi is here.",
+     "gap": 0.25
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Mr. Pear. You live here.",
+     "text": "Mr. Pear. You live here.",
+     "gap": 0.25
+    },
+    {
+     "id": "pe2",
+     "who": "pear",
+     "say": "I'm aware. It's my break.",
+     "text": "I'm aware. It's my break.",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Enjoy it.",
+     "text": "Enjoy it.",
+     "gap": 0.15
+    },
+    {
+     "id": "d2",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "dab",
+       0.1,
+       0.8,
+       0
+      ],
+      [
+       "bingo_ding",
+       0.12,
+       0.5,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "p4",
+     "who": "papa",
+     "say": "N. Forty-five!",
+     "text": "N. Forty-five!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "ball",
+       0.0,
+       0.6,
+       -0.15
+      ]
+     ]
+    },
+    {
+     "id": "ring",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "phonering",
+       0.05,
+       0.6,
+       -0.2
+      ]
+     ],
+     "gap": 0.05
+    },
+    {
+     "id": "pi1",
+     "who": "pinephone",
+     "say": "Hi, it's about my mother's left sock.",
+     "text": "Hi, it's about my mother's left sock.",
+     "gap": 0.25
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Her sock?",
+     "text": "Her sock?",
+     "gap": 0.2
+    },
+    {
+     "id": "pi2",
+     "who": "pinephone",
+     "say": "It's a full moon. I want it handled before things escalate.",
+     "text": "It's a full moon. I want it handled before things escalate.",
+     "gap": 0.25
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "It's a sock.",
+     "text": "It's a sock.",
+     "gap": 0.2
+    },
+    {
+     "id": "pi3",
+     "who": "pinephone",
+     "say": "It's the left one.",
+     "text": "It's the left one.",
+     "gap": 0.25
+    },
+    {
+     "id": "d3",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "dab",
+       0.1,
+       0.8,
+       0
+      ],
+      [
+       "bingo_ding",
+       0.12,
+       0.5,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "p5",
+     "who": "papa",
+     "say": "G. Fifty-two!",
+     "text": "G. Fifty-two!",
+     "gap": 0.1,
+     "sfx": [
+      [
+       "ball",
+       0.0,
+       0.6,
+       -0.15
+      ]
+     ]
+    },
+    {
+     "id": "ba1",
+     "who": "banana",
+     "say": "I'M FREE!",
+     "text": "I'M FREE!",
+     "gap": 0.2,
+     "sfx": [
+      [
+       "peel",
+       -0.25,
+       0.6,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "Mr. Banana! We talked about this!",
+     "text": "Mr. Banana! We talked about this!",
+     "gap": 0.3
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "Peeled!",
+     "text": "Peeled!",
+     "gap": 0.15,
+     "sfx": [
+      [
+       "dab",
+       -0.05,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       0.0,
+       0.3,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "Mango.",
+     "text": "Mango.",
+     "gap": 0.2
+    },
+    {
+     "id": "g3",
+     "who": "mango",
+     "say": "It's on the card!",
+     "text": "It's on the card!",
+     "gap": 0.35
+    },
+    {
+     "id": "p6",
+     "who": "papa",
+     "say": "Does anyone have a bingo?",
+     "text": "Does anyone have a bingo?"
+    }
+   ]
+  },
+  {
+   "id": "howl",
+   "clock": "7:48 PM",
+   "label": "ROOM 14",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "night",
+    "gain": 0.5
+   },
+   "beats": [
+    {
+     "id": "rise",
+     "pause": 3.2,
+     "sfx": [
+      [
+       "moonrise7",
+       0.0,
+       0.7,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "For the record. At this distance, I have no effect on anyone.",
+     "text": "For the record. At this distance, I have no effect on anyone.",
+     "gap": 0.3
+    },
+    {
+     "id": "howl",
+     "pause": 2.2,
+     "sfx": [
+      [
+       "howl7",
+       0.1,
+       0.9,
+       0.3
+      ]
+     ],
+     "gap": 0.15
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "Is that",
+     "text": "Is that",
+     "gap": 0.15
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Room fourteen. Mr. Goji.",
+     "text": "Room fourteen. Mr. Goji.",
+     "gap": 0.3
+    },
+    {
+     "id": "go1",
+     "who": "goji",
+     "say": "I am the wolf.",
+     "text": "I am the wolf.",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Ninety-nine point eight.",
+     "text": "Ninety-nine point eight.",
+     "gap": 0.25,
+     "sfx": [
+      [
+       "thermo",
+       -0.28,
+       0.5,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "He's a werewolf?",
+     "text": "He's a werewolf?",
+     "gap": 0.2
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "He is ninety-four, and he has not had water since lunch.",
+     "text": "He is ninety-four, and he has not had water since lunch.",
+     "gap": 0.3
+    },
+    {
+     "id": "call",
+     "pause": 0.9,
+     "sfx": [
+      [
+       "dial",
+       0.05,
+       0.5,
+       0
+      ]
+     ],
+     "gap": 0.05
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Dr. Apple. Mr. Goji is howling.",
+     "text": "Dr. Apple. Mr. Goji is howling.",
+     "gap": 0.25
+    },
+    {
+     "id": "a1",
+     "who": "apple",
+     "say": "Is he febrile?",
+     "text": "Is he febrile?",
+     "gap": 0.2
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "He's howling.",
+     "text": "He's howling.",
+     "gap": 0.2
+    },
+    {
+     "id": "a2",
+     "who": "apple",
+     "say": "Get a UA.",
+     "text": "Get a UA.",
+     "gap": 0.2
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "It's a full moon.",
+     "text": "It's a full moon.",
+     "gap": 0.2
+    },
+    {
+     "id": "a3",
+     "who": "apple",
+     "say": "Get a UA and a culture. I'll call you back at three.",
+     "text": "Get a UA and a culture. I'll call you back at three.",
+     "gap": 0.35
+    },
+    {
+     "id": "s7",
+     "who": "straw",
+     "say": "It's not you. It's a UTI.",
+     "text": "It's not you. It's a UTI.",
+     "gap": 0.4
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "That is the nicest thing anyone has ever said to me.",
+     "text": "That is the nicest thing anyone has ever said to me.",
+     "gap": 0.2
+    },
+    {
+     "id": "d5",
+     "pause": 0.9,
+     "sfx": [
+      [
+       "dab",
+       0.1,
+       0.8,
+       0
+      ],
+      [
+       "bingo_ding",
+       0.12,
+       0.5,
+       0
+      ],
+      [
+       "dab",
+       0.5,
+       0.8,
+       0
+      ],
+      [
+       "bingo_ding",
+       0.52,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "quiet",
+   "clock": "10:31 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "night",
+    "gain": 0.4
+   },
+   "beats": [
+    {
+     "id": "calm",
+     "pause": 2.6
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "It's quiet.",
+     "text": "It's quiet.",
+     "gap": 0.2
+    },
+    {
+     "id": "freeze",
+     "pause": 1.7,
+     "sfx": [
+      [
+       "hold7",
+       0.0,
+       0.6,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "g1",
+     "who": "mango",
+     "say": "You said it.",
+     "text": "You said it.",
+     "gap": 0.35
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I know.",
+     "text": "I know.",
+     "gap": 0.35
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "I did not do that.",
+     "text": "I did not do that.",
+     "gap": 0.2
+    },
+    {
+     "id": "chaos",
+     "pause": 8.2,
+     "sfx": [
+      [
+       "flicker",
+       0.0,
+       0.8,
+       0
+      ],
+      [
+       "a_chair",
+       0.35,
+       0.35,
+       -0.7
+      ],
+      [
+       "a_pump",
+       0.66,
+       0.37,
+       0.6
+      ],
+      [
+       "a_pulse",
+       0.97,
+       0.39,
+       0.1
+      ],
+      [
+       "a_bed",
+       1.16,
+       0.4,
+       -0.3
+      ],
+      [
+       "a_door",
+       1.47,
+       0.42,
+       0.8
+      ],
+      [
+       "a_call",
+       1.78,
+       0.44,
+       -0.5
+      ],
+      [
+       "a_chair",
+       1.97,
+       0.46,
+       0.4
+      ],
+      [
+       "a_pump",
+       2.28,
+       0.48,
+       -0.9
+      ],
+      [
+       "a_pulse",
+       2.59,
+       0.49,
+       0.2
+      ],
+      [
+       "a_bed",
+       2.78,
+       0.51,
+       0.7
+      ],
+      [
+       "a_door",
+       3.09,
+       0.53,
+       -0.2
+      ],
+      [
+       "a_call",
+       3.4,
+       0.55,
+       0.5
+      ],
+      [
+       "a_chair",
+       3.59,
+       0.57,
+       -0.6
+      ],
+      [
+       "a_pump",
+       3.9,
+       0.58,
+       0.3
+      ],
+      [
+       "a_pulse",
+       4.21,
+       0.6,
+       0
+      ],
+      [
+       "a_bed",
+       4.4,
+       0.62,
+       0.9
+      ],
+      [
+       "a_door",
+       4.71,
+       0.64,
+       -0.7
+      ],
+      [
+       "a_call",
+       5.02,
+       0.66,
+       0.6
+      ],
+      [
+       "a_chair",
+       5.21,
+       0.67,
+       0.1
+      ],
+      [
+       "a_pump",
+       5.52,
+       0.69,
+       -0.3
+      ],
+      [
+       "a_pulse",
+       5.83,
+       0.71,
+       0.8
+      ],
+      [
+       "a_bed",
+       6.02,
+       0.73,
+       -0.5
+      ],
+      [
+       "a_door",
+       6.33,
+       0.75,
+       0.4
+      ],
+      [
+       "a_call",
+       6.64,
+       0.76,
+       -0.9
+      ],
+      [
+       "a_chair",
+       6.83,
+       0.78,
+       0.2
+      ],
+      [
+       "a_pump",
+       7.14,
+       0.8,
+       0.7
+      ],
+      [
+       "howl7",
+       0.5,
+       0.5,
+       -0.3
+      ],
+      [
+       "honk",
+       1.4,
+       0.5,
+       0.5
+      ],
+      [
+       "stampede",
+       2.0,
+       0.55,
+       0
+      ],
+      [
+       "flicker",
+       5.0,
+       0.7,
+       0
+      ],
+      [
+       "honk",
+       5.7,
+       0.55,
+       -0.4
+      ],
+      [
+       "flicker",
+       7.2,
+       0.8,
+       0
+      ],
+      [
+       "dab",
+       1.0,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       1.02,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       1.4,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       1.42,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       1.8,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       1.82,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       2.2,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       2.22,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       2.6,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       2.62,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       3.0,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       3.02,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       3.4,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       3.42,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       3.8,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       3.82,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       4.2,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       4.22,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       4.6,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       4.62,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       5.0,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       5.02,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       5.4,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       5.42,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       5.8,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       5.82,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       6.2,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       6.22,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       6.6,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       6.62,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       7.0,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       7.02,
+       0.35,
+       0
+      ],
+      [
+       "dab",
+       7.4,
+       0.5,
+       0
+      ],
+      [
+       "bingo_ding",
+       7.42,
+       0.35,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "g2",
+     "who": "mango",
+     "say": "One square left!",
+     "text": "One square left!",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "The middle one.",
+     "text": "The middle one.",
+     "gap": 0.25
+    },
+    {
+     "id": "g3",
+     "who": "mango",
+     "say": "The free space!",
+     "text": "The free space!",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "It says break.",
+     "text": "It says break.",
+     "gap": 0.4
+    },
+    {
+     "id": "g4",
+     "who": "mango",
+     "say": "Oh.",
+     "text": "Oh.",
+     "gap": 0.3
+    },
+    {
+     "id": "clock",
+     "pause": 1.3
+    }
+   ]
+  },
+  {
+   "id": "report",
+   "clock": "11:00 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.6,
+   "room": "hall",
+   "amb": {
+    "name": "night",
+    "gain": 0.35
+   },
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0.3
+      ]
+     ],
+     "gap": 0.05
+    },
+    {
+     "id": "d1",
+     "who": "drag",
+     "say": "Hi! How was the full moon?",
+     "text": "Hi! How was the full moon?",
+     "gap": 0.35
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Quiet.",
+     "text": "Quiet.",
+     "gap": 0.2
+    },
+    {
+     "id": "stamp",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "stamp7",
+       0.08,
+       0.8,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "d2",
+     "who": "drag",
+     "say": "Oh, good!",
+     "text": "Oh, good!",
+     "gap": 0.2
+    },
+    {
+     "id": "flick2",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "flicker",
+       0.1,
+       0.8,
+       0
+      ]
+     ],
+     "gap": 0.1
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Good luck.",
+     "text": "Good luck.",
+     "gap": 0.35
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "I am so sorry.",
+     "text": "I am so sorry."
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "sfx": [
+      [
+       "theme7",
+       0.0,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "lot",
+  "to_": "report",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}

@@ -1,0 +1,180 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FX18 demo (not loaded by index.html)</title>
+<style>body{margin:0;background:#111;color:#ddd;font:14px sans-serif}canvas{display:block}</style></head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="ep18_fx.js"></script>
+<script>
+'use strict';
+/* FX18 demo and harness (standalone: loads only ep18_fx.js). The driver is fx18_test.js (Playwright); open this page by hand with ?case=flame&t=1.2 to see one case.
+ * A case is { view: [w, h], draw(c, t) }: it draws into an offscreen canvas of its own native size, and sheet() tiles cases x times into one picture. */
+const F = window.FX18, PI = Math.PI, TAU = PI * 2;
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const BG = {
+  wall(c, w, h) { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#46525c'); g.addColorStop(.7, '#38434d'); g.addColorStop(.7, '#2a2e34'); g.addColorStop(1, '#202328'); c.fillStyle = g; c.fillRect(0, 0, w, h); },
+  dark(c, w, h) { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#120e12'); g.addColorStop(1, '#1d1618'); c.fillStyle = g; c.fillRect(0, 0, w, h); },
+  light(c, w, h) { c.fillStyle = '#c9d2c6'; c.fillRect(0, 0, w, h); c.fillStyle = '#9aa59b'; c.fillRect(0, h * .72, w, h * .28); },
+  grid(c, w, h) { c.fillStyle = '#5a6068'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 1; for (let x = 0; x < w; x += 60) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } for (let y = 0; y < h; y += 60) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } },
+};
+/* a stand-in character: a round red body, two eyes, so that haze or foam over a face is easy to judge (the engine-mode test in fx18_test.js draws the real Strawberry) */
+function dummy(c, x, y, s = 1) {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = '#d6303a'; c.beginPath(); c.ellipse(0, -150, 95, 120, 0, 0, TAU); c.fill();
+  c.fillStyle = '#3d9a45'; c.beginPath(); c.ellipse(0, -265, 60, 22, 0, 0, TAU); c.fill();
+  c.fillStyle = '#fff'; for (const dx of [-34, 34]) { c.beginPath(); c.ellipse(dx, -170, 20, 26, 0, 0, TAU); c.fill(); }
+  c.fillStyle = '#222'; for (const dx of [-34, 34]) { c.beginPath(); c.arc(dx + 3, -166, 9, 0, TAU); c.fill(); }
+  c.strokeStyle = '#4a1010'; c.lineWidth = 6; c.lineCap = 'round'; c.beginPath(); c.arc(0, -120, 30, .25, PI - .25); c.stroke();
+  c.restore();
+}
+const label = (c, s, x, y, col = '#fff') => { c.save(); c.font = '600 20px sans-serif'; c.fillStyle = col; c.shadowColor = '#000'; c.shadowBlur = 4; c.fillText(s, x, y); c.restore(); };
+const CASES = {};
+
+/* ---- batch 1 */
+CASES.horn = { view: [900, 520], draw(c, t) {
+  BG.dark(c, 900, 520); c.fillStyle = 'rgba(255,255,255,.08)'; for (let i = 0; i < 9; i++) c.fillRect(40 + i * 100, 40, 1, 420);
+  const X = s => 40 + s * 100, T = 8;
+  c.lineWidth = 3; for (const [fn, col, y0, h] of [[F.hornOn, '#ff6a4a', 230, 150], [F.strobe, '#ffe27a', 440, 150]]) {
+    c.strokeStyle = col; c.beginPath(); for (let i = 0; i <= 1600; i++) { const s = i / 1600 * T, v = fn(s); i ? c.lineTo(X(s), y0 - v * h) : c.moveTo(X(s), y0 - v * h); } c.stroke();
+  }
+  label(c, 'hornOn(k)', 50, 70, '#ff9a80'); label(c, 'strobe(k)', 50, 290, '#ffe27a'); label(c, 'k = 0..8 s  (grid = 1 s)', 560, 500, '#aaa');
+  label(c, 'k=-1 -> ' + F.hornOn(-1) + '/' + F.strobe(-1) + '   k=0 -> ' + F.hornOn(0) + '/' + F.strobe(0).toFixed(2) + '   k=.5 -> ' + F.hornOn(.5) + '/' + F.strobe(.5).toFixed(2) + '   k=1 -> ' + F.hornOn(1) + '/' + F.strobe(1).toFixed(2), 50, 30, '#bbb');
+} };
+CASES.wash = { view: [1080, 1920], draw(c, t) {
+  BG.wall(c, 1080, 1920); dummy(c, 540, 1100, 2.2);
+  const m = ['add', 'screen', 'multiply', 'normal'], i = Math.min(3, Math.floor(t));
+  F.wash(c, { color: ['#ffeedd', '#aaccff', '#ff2020', '#001030'][i], alpha: [.35, .3, .35, .4][i], mode: m[i] });
+  label(c, 'wash mode: ' + m[i], 40, 60);
+} };
+CASES.vignette = { view: [1080, 1920], draw(c, t) { BG.light(c, 1080, 1920); dummy(c, 540, 1100, 2.2); F.vignette(c, { alpha: [.3, .55, .8][Math.min(2, Math.floor(t))], color: '#12060a' }); } };
+CASES.glow = { view: [900, 520], draw(c, t) {
+  BG.dark(c, 900, 520);
+  [['#38ff7a', 0, 150], ['#ff3a2a', .5, 450], ['#ffcc66', 1, 750]].forEach(([col, core, x]) => { F.glow(c, { x, y: 180, r: 120 + 16 * Math.sin(t * 3), color: col, alpha: .8, core }); c.fillStyle = col; c.beginPath(); c.arc(x, 180, 7, 0, TAU); c.fill(); label(c, 'core ' + core, x - 30, 340); });
+  F.glow(c, { x: 450, y: 440, r: 300, color: '#ffeedd', alpha: .35 }); label(c, 'wide soft glow alpha .35', 330, 500);
+} };
+CASES.cone = { view: [900, 700], draw(c, t) {
+  BG.wall(c, 900, 700); c.fillStyle = '#10141a'; c.fillRect(0, 0, 900, 700); c.fillStyle = '#2a3038'; c.fillRect(0, 520, 900, 180);
+  F.cone(c, { x: 80, y: 120, ang: .45 + .2 * Math.sin(t * 1.3), spread: .45, len: 700, color: '#fff2c8', alpha: .75 });
+  F.cone(c, { x: 450, y: 60, ang: PI / 2, spread: 1.0, len: 460, color: '#c8ffd8', alpha: .5, soft: .9 });
+  F.cone(c, { x: 820, y: 100, ang: PI / 2 + .4, spread: .3, len: 640, color: '#ffd9a0', alpha: .8, soft: .2 });
+  for (const [x, y] of [[80, 120], [450, 60], [820, 100]]) { c.fillStyle = '#fff'; c.beginPath(); c.arc(x, y, 6, 0, TAU); c.fill(); }
+  label(c, 'flashlight', 60, 40); label(c, 'downlight soft .9', 350, 28); label(c, 'narrow soft .2', 740, 40);
+} };
+CASES.lamp = { view: [900, 360], draw(c, t) {
+  BG.dark(c, 900, 360); c.fillStyle = '#394148'; c.fillRect(0, 0, 900, 360);
+  [0, .3, 1].forEach((lv, i) => { const x = 150 + i * 300; c.fillStyle = '#c1121f'; c.beginPath(); c.roundRect(x - 56, 130, 112, 110, 10); c.fill(); F.lamp(c, { x, y: 185, level: lv, r: 24 }); label(c, 'level ' + lv, x - 36, 290); });
+  label(c, 'wall strobe plate, horn running: k = t', 20, 30);
+} };
+CASES.lampStrobe = { view: [520, 520], draw(c, t) {
+  BG.wall(c, 520, 520); c.fillStyle = '#c1121f'; c.beginPath(); c.roundRect(200, 220, 120, 100, 10); c.fill();
+  const k = t; F.lamp(c, { x: 260, y: 270, level: F.strobe(k), r: 20 }); F.wash(c, { color: '#ffeedd', alpha: .3 * F.strobe(k), mode: 'add' }); label(c, 'k=' + k.toFixed(2) + ' strobe ' + F.strobe(k).toFixed(2), 20, 30);
+} };
+CASES.pool = { view: [700, 420], draw(c, t) {
+  BG.wall(c, 700, 420); F.pool(c, { x: 350, y: 330, rx: 240, ry: 60, color: '#46ff8a', alpha: .55 }); F.glow(c, { x: 350, y: 90, r: 90, color: '#46ff8a', alpha: .7, core: .5 }); c.fillStyle = '#0c5a2a'; c.fillRect(300, 70, 100, 40);
+} };
+
+/* ---- batch 2 */
+CASES.foamJet = { view: [900, 640], draw(c, t) {
+  BG.wall(c, 900, 640); dummy(c, 760, 600, .8);
+  F.foamJet(c, { nozzle: te => ({ x: 70, y: 250 + 8 * Math.sin(te * 5), ang: .12 + .05 * Math.sin(te * 3) }), t0: 0, t1: 2.2, t, speed: 1500, spread: .34, size: 30, seed: 3 });
+  c.fillStyle = '#c1121f'; c.beginPath(); c.roundRect(20, 236, 56, 28, 8); c.fill();
+  label(c, 't = ' + t.toFixed(2), 20, 30);
+} };
+CASES.foamSpin = { view: [900, 700], draw(c, t) {
+  BG.wall(c, 900, 700);
+  const nz = te => ({ x: 450 + 260 * Math.sin(te * 1.6), y: 330 + 120 * Math.cos(te * 2.1), ang: te * 3.6 });
+  F.foamJet(c, { nozzle: nz, t0: 0, t1: 3.2, t, speed: 900, spread: .3, size: 26, seed: 5, gravity: 900 });
+  const p = nz(Math.min(t, 3.2)); c.save(); c.translate(p.x, p.y); c.rotate(p.ang); c.fillStyle = '#c1121f'; c.fillRect(-46, -12, 46, 24); c.restore();
+  label(c, 't = ' + t.toFixed(2) + '  (the can on the loose)', 20, 30);
+} };
+CASES.foamPile = { view: [520, 520], draw(c, t) {
+  BG.light(c, 520, 520); dummy(c, 260, 470, 1.15);
+  F.foamPile(c, { x: 260, y: 395, w: 170, h: 90, t, t0: .3, grow: 1.0, seed: 4 });
+  F.foamPile(c, { x: 150, y: 480, w: 140, h: 70, t, t0: .6, grow: .8, seed: 11 });
+  F.foamPile(c, { x: 390, y: 480, w: 140, h: 70, t, t0: .8, grow: .8, seed: 17 });
+  label(c, 't = ' + t.toFixed(2), 20, 30, '#223');
+} };
+
+/* ---- batch 3 */
+CASES.flameKinds = { view: [1000, 420], draw(c, t) {
+  BG.dark(c, 1000, 420); c.fillStyle = '#241a18'; c.fillRect(0, 330, 1000, 90);
+  F.flame(c, { x: 130, y: 330, w: 190, h: 150, t, seed: 1, kind: 'log' });
+  F.flame(c, { x: 360, y: 330, w: 70, h: 220, t, seed: 2, kind: 'torch' });
+  F.flame(c, { x: 560, y: 330, w: 26, h: 80, t, seed: 3, kind: 'candle' });
+  F.flame(c, { x: 820, y: 330, w: 280, h: 300, t, seed: 4, kind: 'blaze' });
+  F.embers(c, { x: 820, y: 300, w: 200, t, seed: 4, count: 16, rise: 260 });
+  for (const [s2, x] of [['log', 130], ['torch', 360], ['candle', 560], ['blaze', 820]]) label(c, s2, x - 24, 396);
+} };
+CASES.flameLog = { view: [700, 560], draw(c, t) {
+  BG.dark(c, 700, 560); const g = c.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, '#1a0f0c'); g.addColorStop(1, '#2a1610'); c.fillStyle = g; c.fillRect(0, 0, 700, 560);
+  c.fillStyle = '#3a2418'; c.beginPath(); c.roundRect(120, 420, 460, 70, 30); c.fill();
+  F.flame(c, { x: 350, y: 430, w: 400, h: 250, t, seed: 7, kind: 'log' });
+  c.fillStyle = '#4a2e1e'; c.beginPath(); c.roundRect(110, 440, 480, 62, 28); c.fill(); c.fillStyle = '#5a3a26'; c.beginPath(); c.roundRect(120, 444, 460, 18, 9); c.fill();
+  F.embers(c, { x: 350, y: 400, w: 300, t, seed: 7, count: 14, rise: 300 });
+  label(c, 'Yule log  t=' + t.toFixed(2), 20, 30);
+} };
+CASES.flamePower = { view: [1000, 380], draw(c, t) {
+  BG.dark(c, 1000, 380); [[.12, 0], [.35, 0], [.7, 0], [1, 0], [1.4, 0], [1, -1], [1, 1]].forEach(([pw, ln], i) => { const x = 70 + i * 140; F.flame(c, { x, y: 320, w: 90, h: 200, t, seed: 20 + i, kind: 'torch', power: pw, lean: ln }); label(c, 'p' + pw + (ln ? ' L' + ln : ''), x - 30, 360); });
+} };
+CASES.flameOver = { view: [700, 560], draw(c, t) {
+  BG.light(c, 700, 560); dummy(c, 350, 520, 1.5); F.flame(c, { x: 560, y: 500, w: 140, h: 190, t, seed: 9, kind: 'torch' }); F.flame(c, { x: 130, y: 500, w: 160, h: 130, t, seed: 10, kind: 'log' });
+  label(c, 'flames over a light wall and a character', 20, 30, '#223');
+} };
+
+/* ---- batch 4 */
+CASES.puff = { view: [900, 300], draw(c, t) {
+  BG.wall(c, 900, 300);
+  [[.1, 120], [.3, 280], [.6, 440], [1.0, 600], [1.6, 760]].forEach(([tt, x], i) => { F.puff(c, { x, y: 230, r: 90, t: t * 0 + tt, t0: 0, life: 1.8, seed: i }); });
+  label(c, 'puff r=90 life 1.8, ages .1 .3 .6 1.0 1.6', 20, 30);
+} };
+CASES.sparks = { view: [900, 300], draw(c, t) {
+  BG.dark(c, 900, 300);
+  [[.03, 120], [.1, 280], [.2, 440], [.35, 600], [.5, 760]].forEach(([tt, x], i) => { F.sparks(c, { x, y: 90, t: tt, t0: 0, seed: i + 2, count: 22, speed: 560, gravity: 900 }); });
+  label(c, 'sparks ages .03 .1 .2 .35 .5', 20, 30);
+} };
+CASES.smoke = { view: [900, 640], draw(c, t) {
+  BG.wall(c, 900, 640); c.fillStyle = '#2a2e34'; c.fillRect(0, 560, 900, 80); dummy(c, 640, 600, 1.0);
+  F.smoke(c, { x: 200, y: 580, w: 90, h: 420, t, t0: 0, seed: 3, density: .7, drift: 80 });
+  F.smoke(c, { x: 640, y: 560, w: 80, h: 300, t, t0: .2, seed: 8, density: .45, drift: -40, color: '#8a8a90' });
+  label(c, 't=' + t.toFixed(2) + ' (left: dark plume, right: pale haze in front of a face)', 20, 30);
+} };
+
+/* ---- batch 5 */
+CASES.water = { view: [800, 700], draw(c, t) {
+  BG.wall(c, 800, 700); c.fillStyle = '#1d2026'; c.fillRect(0, 600, 800, 100); c.fillStyle = '#394148'; c.fillRect(0, 0, 800, 60);
+  F.water(c, { x: 200, y: 60, t, t0: .1, t1: 2.5, seed: 2 }); F.water(c, { x: 600, y: 60, ang: PI / 2 + .35, spread: .7, len: 620, t, t0: .4, t1: 2.8, seed: 5, drops: 70 });
+  c.fillStyle = '#c1121f'; c.beginPath(); c.arc(200, 60, 9, 0, TAU); c.fill(); c.beginPath(); c.arc(600, 60, 9, 0, TAU); c.fill();
+  label(c, 't=' + t.toFixed(2), 20, 100);
+} };
+CASES.smokeLayer = { view: [1000, 560], draw(c, t) {
+  BG.wall(c, 1000, 560); c.fillStyle = '#20252b'; c.fillRect(0, 0, 1000, 40); dummy(c, 500, 540, .9);
+  F.smokeLayer(c, { x0: 0, x1: 1000, yTop: 40, depth: 230, t, seed: 4, alpha: .55 });
+  label(c, 't=' + t.toFixed(2) + ' smoke layer under the ceiling', 20, 530);
+} };
+
+/* ---- rendering */
+function renderCase(name, t) { const cs = CASES[name], cv = mk(cs.view[0], cs.view[1]), c = cv.getContext('2d'); cs.draw(c, t); return cv; }
+/* names: cases; times: seconds; cellW: width of one tile. Rows = names, columns = times. */
+function sheet(names, times, cellW = 340) {
+  const gap = 6, rows = names.map(n => { const v = CASES[n].view; return Math.round(cellW * v[1] / v[0]); });
+  const cv = document.getElementById('c'), Wd = times.length * (cellW + gap) + gap, Hd = rows.reduce((a, b) => a + b + gap, gap);
+  cv.width = Wd; cv.height = Hd; const c = cv.getContext('2d'); c.fillStyle = '#000'; c.fillRect(0, 0, Wd, Hd);
+  let y = gap;
+  names.forEach((n, ri) => { times.forEach((t, ci) => { c.drawImage(renderCase(n, t), gap + ci * (cellW + gap), y, cellW, rows[ri]); }); y += rows[ri] + gap; });
+  return cv.toDataURL('image/png');
+}
+function one(name, t) { const cv = document.getElementById('c'), r = renderCase(name, t); cv.width = r.width; cv.height = r.height; cv.getContext('2d').drawImage(r, 0, 0); return cv.toDataURL('image/png'); }
+/* pixel hash of a case at t: for the determinism test */
+function hashCase(name, t) { const cv = renderCase(name, t), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let h = 2166136261; for (let i = 0; i < d.length; i++) { h ^= d[i]; h = Math.imul(h, 16777619); } return (h >>> 0).toString(16) + ':' + d.length; }
+/* wall-clock cost (ms per draw, averaged) of the FX18 calls inside one case: every effect function is wrapped with a timer, the background, dummy and labels are not counted */
+const NOT_FX = new Set(['rnd', 'noise', 'sprite', 'clamp01', 'seg', 'lerp', 'rgb', 'rgba', 'mix', 'hornOn', 'strobe', 'hornK', 'hornPulse', 'ease', 'HORN', 'STROBE_TAU']);
+function cost(name, t, n = 40) {
+  const cs = CASES[name], cv = mk(cs.view[0], cs.view[1]), c = cv.getContext('2d'), acc = { ms: 0 }, orig = {};
+  for (const k of Object.keys(F)) if (typeof F[k] === 'function' && !NOT_FX.has(k)) { orig[k] = F[k]; F[k] = (...a) => { const t0 = performance.now(); const r = orig[k](...a); acc.ms += performance.now() - t0; return r; }; }
+  try { cs.draw(c, t); acc.ms = 0; for (let i = 0; i < n; i++) cs.draw(c, t + i * .01); } finally { for (const k in orig) F[k] = orig[k]; }
+  return acc.ms / n;
+}
+Object.assign(window, { CASES, BG, dummy, renderCase, sheet, one, hashCase, cost, mk, label });
+const q = new URLSearchParams(location.search);
+if (q.get('case') && CASES[q.get('case')]) one(q.get('case'), parseFloat(q.get('t') || '1'));
+</script>
+</body></html>

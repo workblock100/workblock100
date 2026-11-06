@@ -1,0 +1,112 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>F19 demo (not loaded by index.html)</title>
+<style>body{margin:0;background:#111;color:#ddd;font:14px sans-serif}canvas{display:block}</style></head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script src="ep18_fx.js"></script>
+<script src="ep19_food.js"></script>
+<script>
+'use strict';
+/* F19 demo and harness (standalone: loads ep18_fx.js and ep19_food.js, no engine, no UI kit). The driver is f19_test.js (Playwright); open this page by hand with ?case=pour&t=1.2&bg=wall to see one case.
+ * A case is { view: [w, h], draw(c, t, bg) }: it draws into an offscreen canvas of its own native size; sheet() tiles cases x times into one picture. bg = 'neutral' | 'wall' | 'dark'. */
+const F = window.F19, PI = Math.PI, TAU = PI * 2;
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const BG = {
+  neutral(c, w, h) { c.fillStyle = '#8d939c'; c.fillRect(0, 0, w, h); c.fillStyle = '#7b818a'; c.fillRect(0, h * .78, w, h * .22); },
+  wall(c, w, h) { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#9fb3a6'); g.addColorStop(.74, '#8ea194'); c.fillStyle = g; c.fillRect(0, 0, w, h); c.fillStyle = '#b98a58'; c.fillRect(0, h * .78, w, h * .22); c.fillStyle = '#a07445'; c.fillRect(0, h * .78, w, 6); },
+  dark(c, w, h) { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#2a1d14'); g.addColorStop(.78, '#3a281a'); c.fillStyle = g; c.fillRect(0, 0, w, h); c.fillStyle = '#4b3524'; c.fillRect(0, h * .78, w, h * .22); },
+  top(c, w, h) { c.fillStyle = '#c9a77a'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(90,60,30,.18)'; c.lineWidth = 2; for (let y = 24; y < h; y += 48) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } },
+};
+const label = (c, s, x, y, col = '#fff') => { c.save(); c.font = '600 18px sans-serif'; c.fillStyle = col; c.shadowColor = '#000'; c.shadowBlur = 4; c.fillText(s, x, y); c.restore(); };
+/* a dish on the ground line of a 520 x 460 cell */
+const one = (kind, o, view = [520, 460], gy = .8, bgk) => ({ view, draw(c, t, bg) { (BG[bgk || bg] || BG.neutral)(c, view[0], view[1]); F.dish(c, kind, Object.assign({ x: view[0] / 2, y: view[1] * gy, t }, typeof o === 'function' ? o(t) : o)); if (!window.__nolabel) label(c, kind + (typeof o === 'function' ? '' : ''), 10, 24); } });
+const CASES = {};
+
+/* ---- batch 1 */
+CASES.steam = { view: [520, 460], draw(c, t, bg) {
+  (BG[bg] || BG.neutral)(c, 520, 460); c.fillStyle = '#e8e0d2'; c.fillRect(60, 380, 400, 30);
+  [[110, 0.4, .3], [260, 1, .6], [410, 1, 1]].forEach(([x, p, cu], i) => { c.fillStyle = '#c6482e'; c.fillRect(x - 30, 350, 60, 30); F.steam(c, { x, y: 350, w: 56, h: 280, t, seed: i + 1, power: p, curl: cu }); });
+} };
+CASES.roll = one('roll', { s: 2.2 });
+CASES.rollTop = one('roll', { s: 2.2, view: 'top' }, [520, 460], .52, 'top');
+CASES.basket = one('basket', { s: 1.4 });
+CASES.rolls = one('rolls', { s: 1.4, n: 9 });
+CASES.rolls3 = one('rolls', { s: 1.4, n: 3 });
+CASES.rolls9c0 = one('rolls', { s: 1.4, n: 9, cover: 0 });
+CASES.rolls5c1 = one('rolls', { s: 1.4, n: 5, cover: 1 });
+CASES.rolls12 = one('rolls', { s: 1.4, n: 12 });
+CASES.rollsTop = one('rolls', { s: 1.4, n: 9, view: 'top' }, [520, 460], .5, 'top');
+CASES.rollsTop5 = one('rolls', { s: 1.4, n: 5, view: 'top' }, [520, 460], .5, 'top');
+CASES.plate = one('plate', { s: 1.5, items: ['turkeyMold', 'roll', 'pieMold', 'coffee'] });
+CASES.plateTop = one('plate', { s: 1.5, view: 'top', items: ['turkeyMold', 'roll', 'pieMold', 'coffee'] }, [520, 460], .5, 'top');
+CASES.coffee = { view: [520, 460], draw(c, t, bg) { (BG[bg] || BG.neutral)(c, 520, 460); [[90, 0], [210, .35], [330, .7], [450, 1]].forEach(([x, th]) => F.dish(c, 'coffee', { x, y: 400, s: 1.05, thick: th, fill: .85, steam: 1, t, seed: 4 })); } };
+CASES.mug = one('coffee', { s: 2, mug: true, fill: .9, steam: 1, seed: 2 });
+CASES.coffeeTop = { view: [520, 460], draw(c, t, bg) { BG.top(c, 520, 460); [[90, 0], [210, .35], [330, .7], [450, 1]].forEach(([x, th]) => F.dish(c, 'coffee', { x, y: 230, s: 1, thick: th, fill: .85, view: 'top', t })); } };
+const topRow = (kind, o) => ({ view: [520, 460], draw(c, t, bg) { BG.top(c, 520, 460); F.dish(c, kind, Object.assign({ x: 260, y: 230, s: 1.05, view: 'top', t }, o)); label(c, kind + ' (top)', 10, 24); } });
+CASES.tTurkey = topRow('turkey', { s: .9 }); CASES.tTurkeyMold = topRow('turkeyMold', { s: .9 }); CASES.tPie = topRow('pie', { slice: .5 }); CASES.tPieMold = topRow('pieMold', { slice: .5 });
+CASES.tJello = topRow('jello', {}); CASES.tCran = topRow('cranCan', { slices: 2 }); CASES.tCass = topRow('casserole', {}); CASES.tCooker = topRow('slowcooker', {}); CASES.tPizza = topRow('pizzaBox', { open: 1 });
+CASES.tSlices = topRow('turkeySlices', {}); CASES.tChop = topRow('turkeyChop', {}); CASES.tMince = topRow('turkeyMince', {}); CASES.tPuree = topRow('turkeyPuree', {}); CASES.tBlender = topRow('blender', {});
+CASES.plateTop2 = { view: [520, 460], draw(c, t, bg) { BG.top(c, 520, 460); F.dish(c, 'plate', { x: 260, y: 230, s: 1.4, view: 'top', items: ['turkeyMold', 'roll', 'pieMold', { kind: 'coffee', thick: 1, fill: .9 }], t }); } };
+CASES.stickers = { view: [520, 460], draw(c, t, bg) { (BG[bg] || BG.neutral)(c, 520, 460); F.dish(c, 'plate', { x: 260, y: 360, s: 1.5, items: ['roll'] });
+  F.sticker(c, { kind: 'note', x: 110, y: 120, s: 1.3, rot: -.08, text: 'FOR STRAWBERRY', t }); F.sticker(c, { kind: 'sticker', x: 400, y: 110, s: 1.3, rot: .12, text: 'FUN COMMITTEE', t });
+  F.sticker(c, { kind: 'label', x: 120, y: 260, s: 1.3, rot: .02, text: 'CONTAINS: BREAD', t }); F.sticker(c, { kind: 'tag', x: 400, y: 250, s: 1.3, rot: -.1, text: '78 F', t }); F.sticker(c, { kind: 'clip', x: 260, y: 40, s: 1.4, rot: .3 }); } };
+
+/* ---- batch 2 */
+CASES.turkey = one('turkey', { s: 1.3, steam: 1, seed: 3 }, [520, 460], .84);
+CASES.turkeyCarved = one('turkey', { s: 1.3, carve: .8 }, [520, 460], .84);
+CASES.turkeySlices = one('turkeySlices', { s: 1.3 }, [520, 460], .84);
+CASES.turkeyChop = one('turkeyChop', { s: 1.4 }, [520, 460], .84);
+CASES.turkeyMince = one('turkeyMince', { s: 1.4 }, [520, 460], .84);
+CASES.turkeyPuree = one('turkeyPuree', { s: 1.4 }, [520, 460], .84);
+CASES.pie = one('pie', { s: 1.4, steam: 1, seed: 3 }, [520, 460], .84);
+CASES.pieCut = one('pie', { s: 1.4, slice: .6 }, [520, 460], .84);
+CASES.pieMold = one('pieMold', { s: 1.4, seed: 3 }, [520, 460], .84);
+CASES.pieMoldCut = one('pieMold', { s: 1.4, slice: .6 }, [520, 460], .84);
+CASES.pieSlice = one('pieSlice', { s: 2.2 }, [520, 460], .78);
+/* a pour test: a pot with a spout above a cup that fills while the pour lands (fill from the returned lands / ends) */
+const pourCase = (visc, opt = {}) => ({ view: [520, 460], draw(c, t, bg) {
+  (BG[bg] || BG.neutral)(c, 520, 460);
+  const x0 = 250, y0 = 96, x1 = 250 + (opt.dx || 0), T0 = .1, T1 = opt.t1 || 1.5, th = F.thickOf(visc);
+  const r = F.pour(c, { x0, y0, x1, y1: 300, t: -9, t0: T0, t1: T1, visc, width: opt.width });
+  const fill = .25 + .6 * ease(Math.max(0, Math.min(1, (t - r.lands) / (r.ends - r.lands + .4))));
+  const yS = 295 + (3 + (1 - fill) * 40) * 1.2 - 0;
+  c.save(); c.translate(x0 - 60, y0 - 36); c.rotate(-.18); c.fillStyle = '#4a4e5a'; c.beginPath(); c.roundRect(-110, -40, 130, 78, 12); c.fill(); c.strokeStyle = '#15161a'; c.lineWidth = 4; c.stroke(); c.beginPath(); c.moveTo(14, -30); c.lineTo(66, 6); c.lineTo(66, 24); c.lineTo(14, 22); c.closePath(); c.fill(); c.stroke(); c.restore();
+  F.dish(c, 'coffee', { x: 250, y: 420, s: 1.2, thick: th, fill, t, seed: 2 });
+  F.pour(c, { x0, y0, x1, y1: yS, t, t0: T0, t1: T1, visc, width: opt.width });
+  label(c, 'visc ' + visc + '  t=' + t.toFixed(2) + '  lands ' + r.lands.toFixed(2) + ' ends ' + r.ends.toFixed(2), 10, 24);
+} });
+const ease = k => 1 - Math.pow(1 - k, 3);
+CASES.pour50w = pourCase(.5, { width: 26 }); CASES.pour100w = pourCase(1, { width: 26 });
+CASES.pour0 = pourCase(0); CASES.pour25 = pourCase(.25); CASES.pour50 = pourCase(.5); CASES.pour70 = pourCase(.7); CASES.pour100 = pourCase(1);
+CASES.blender = one('blender', { s: 1.1, fill: .55, on: 0 }, [520, 460], .96); CASES.blenderOn = one('blender', { s: 1.1, fill: .6, on: 1 }, [520, 460], .96);
+CASES.blenderOpen = one('blender', { s: 1.1, fill: .0, lid: 1 }, [520, 460], .96);
+CASES.turkeyMold = one('turkeyMold', { s: 1.3, steam: 1, seed: 3, shine: .7 }, [520, 460], .84);
+/* ---- batch 3 */
+CASES.slowcooker = one('slowcooker', { s: 1.25, steam: 1, light: 1, seed: 2 }, [520, 460], .9);
+CASES.slowRattle = { view: [520, 460], draw(c, t, bg) { (BG[bg] || BG.neutral)(c, 520, 460); const k = Math.max(0, Math.sin(t * 9)); F.dish(c, 'slowcooker', { x: 260, y: 410, s: 1.25, steam: .8, light: .6 + .4 * Math.sin(t * 3), hop: t > .3 && t < .6 ? 1 : 0, lid: t > 1 ? .5 * Math.sin(t * 20) : 0, t, seed: 2 }); } };
+CASES.jello = one('jello', { s: 1.7, wobble: 1, t0: .1, seed: 2 }, [520, 460], .9);
+CASES.jelloRed = one('jello', { s: 1.7, wobble: 0, color: '#d62a3e' }, [520, 460], .9);
+CASES.cranCan = one('cranCan', { s: 1.5, slices: 0 }, [520, 460], .9);
+CASES.cranCan3 = one('cranCan', { s: 1.5, slices: 3 }, [520, 460], .9);
+CASES.casserole = one('casserole', { s: 1.4, steam: 1 }, [520, 460], .9);
+CASES.casseroleOpen = one('casserole', { s: 1.4, foil: 0 }, [520, 460], .9);
+CASES.pizzaBox = one('pizzaBox', { s: 1.3, open: 0 }, [520, 460], .9);
+CASES.pizzaBoxOpen = one('pizzaBox', { s: 1.3, open: 1, steam: 1 }, [520, 460], .9);
+
+window.CASES = CASES;
+const names = () => Object.keys(CASES);
+function drawCase(n, t, bg) { const cs = CASES[n], cv = mk(cs.view[0], cs.view[1]), c = cv.getContext('2d'); cs.draw(c, t, bg || 'neutral'); return cv; }
+window.drawCase = drawCase;
+/* a contact sheet: rows = cases, columns = times, every cell scaled to cellW wide */
+window.sheet = function (cases, times, w, bg) {
+  const cells = cases.map(n => times.map(t => drawCase(n, t, bg))), rowH = cases.map((n, r) => Math.round(w * CASES[n].view[1] / CASES[n].view[0]));
+  const cv = mk(times.length * (w + 4) + 4, rowH.reduce((a, b) => a + b + 4, 4)), g = cv.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, cv.width, cv.height);
+  let y = 4; cells.forEach((row, r) => { row.forEach((cvv, k) => g.drawImage(cvv, 4 + k * (w + 4), y, w, rowH[r])); y += rowH[r] + 4; });
+  return cv.toDataURL('image/png');
+};
+window.hashCase = function (n, t, bg) { const cv = drawCase(n, t, bg), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let h = 2166136261; for (let i = 0; i < d.length; i += 4) { h ^= d[i] ^ (d[i + 1] << 8) ^ (d[i + 2] << 16) ^ (d[i + 3] << 24); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16); };
+window.cost = function (n, t, reps) { const cs = CASES[n], cv = mk(cs.view[0], cs.view[1]), c = cv.getContext('2d'); const t0 = performance.now(); for (let i = 0; i < reps; i++) { cs.draw(c, t + i * .0001, 'neutral'); c.getImageData(0, 0, 1, 1); } return (performance.now() - t0) / reps; };
+const q = new URLSearchParams(location.search);
+if (q.get('case') && CASES[q.get('case')]) { const cs = CASES[q.get('case')], c = document.getElementById('c').getContext('2d'); const cv = drawCase(q.get('case'), parseFloat(q.get('t') || '0'), q.get('bg') || 'neutral'); c.drawImage(cv, 0, 0); }
+</script>
+</body></html>

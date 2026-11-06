@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E15-ART demo (A15 cast sheets)</title>
+<style>
+  @font-face { font-family: Bangers; src: url(fonts/Bangers-Regular.ttf); }
+  @font-face { font-family: Lucky; src: url(fonts/LuckiestGuy-Regular.ttf); }
+  @font-face { font-family: Nunito; src: url(fonts/Nunito.ttf); font-weight: 200 1000; }
+  html, body { margin: 0; background: #111; color: #fff; font-family: Nunito, system-ui, sans-serif; }
+  canvas { display: block; width: 100%; max-width: 540px; height: auto; margin: 0 auto; }
+  #log { font: 12px monospace; padding: 6px 10px; color: #9f9; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="log"></div>
+<script>
+/* STANDALONE TEST PAGE for ep15_art.js (window.A15). It loads exactly the scripts of index.html, in the same order (it reads index.html and appends every <script src> except main.js,
+ * which would start an episode), then draws one demo view.  URL: art15_demo.html?view=<name>&t=<seconds>&...   Views: lineup, lineupbig, expr, peel, arti, arti2, layer, onion, cry, aura, tomato, broc, carrot, binder, props, plates, close, turn, turnrow, perf (add &s=<scale> where a view takes it).
+ * The page is a test bench: its small captions are drawn with plain canvas text and are NOT part of any sprite. Render it with build/ep15_art/shots.js (Playwright). */
+const Q = new URLSearchParams(location.search);
+const LOGEL = document.getElementById('log');
+const log = (...a) => { LOGEL.textContent += a.join(' ') + '\n'; };
+window.addEventListener('error', e => log('ERROR', e.message, (e.filename || '').split('/').pop() + ':' + e.lineno));
+window.READY = (async () => {
+  const idx = await (await fetch('index.html')).text();
+  let srcs = [...idx.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]).filter(s => s !== 'main.js');
+  if (!srcs.includes('ep15_art.js')) srcs.splice(Math.max(0, srcs.indexOf('ep15.js')), 0, 'ep15_art.js');
+  for (const s of srcs) await new Promise(res => { const e = document.createElement('script'); e.src = s + '?v=' + Date.now(); e.async = false; e.onload = res; e.onerror = () => { log('LOAD FAIL', s); res(); }; document.body.appendChild(e); });
+  await Promise.all(['400 40px Bangers', '900 40px Nunito', '700 40px Nunito'].map(f => document.fonts.load(f)));
+  /* a stand-in episode so the v2 character renderer runs: no timeline lines, so mouths are set by hand through o.mouthState */
+  EP = { num: 15, v2: true, textGate: false, TL: { lines: [], scenes: [], duration: 10, beats: {} }, SCENES: {}, layout: 'v2' };
+  TL = EP.TL; CUR = null;
+  window.A15loaded = !!window.A15;
+  log('A15:', window.A15 ? Object.keys(window.A15).join(' ') : 'MISSING');
+  if (window.drawView) window.drawView(Q.get('view') || 'lineup', Object.fromEntries(Q.entries()));
+  return true;
+})();
+</script>
+<script>
+/* VIEWS: filled in below */
+/* ---- the test bench: cells of a contact sheet ---- */
+const DEMO = { cw: 360, ch: 480 };
+const LIGHT_DOLL = { key: [-.55, -.72], keyColor: '#ffe3ac', keyA: .26, rim: '#9fc4ff', rimA: .38, shadow: '#1a1030', shadowA: .3, bounce: '#ffd9a0', bounceA: .16 };
+const LIGHT_NEUTRAL = {};
+function sheetCells(cols, rows, cells, opt = {}) {
+  ctx = mainCtx; V2.setLight(opt.light || LIGHT_DOLL);
+  const cw = opt.cw || Math.floor(W / cols), chh = opt.ch || Math.floor(H / rows);
+  ctx.fillStyle = '#20242b'; ctx.fillRect(0, 0, W, H);
+  cells.forEach((c, i) => {
+    if (!c) return;
+    const col = i % cols, row = Math.floor(i / cols), x0 = col * cw, y0 = row * chh;
+    ctx.save(); ctx.beginPath(); ctx.rect(x0 + 2, y0 + 2, cw - 4, chh - 4); ctx.clip();
+    const wall = ctx.createLinearGradient(0, y0, 0, y0 + chh); wall.addColorStop(0, c.wall0 || '#8a9fae'); wall.addColorStop(1, c.wall1 || '#6d8393');
+    ctx.fillStyle = wall; ctx.fillRect(x0, y0, cw, chh);
+    const fy = y0 + chh - (opt.floor ?? 58);
+    ctx.fillStyle = c.floor || '#a58b6e'; ctx.fillRect(x0, fy, cw, chh - (fy - y0));
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(x0, fy, cw, 3);
+    T = c.t ?? 1.3;
+    ctx.translate(x0, y0);
+    try { c.draw(cw / 2, fy - y0, cw, chh); } catch (e) { ctx.fillStyle = '#f66'; ctx.font = '14px monospace'; ctx.fillText('ERR ' + e.message, 8, 40); console.error('cell ' + i + ': ' + e.stack); }
+    ctx.restore();
+    if (c.label) { ctx.save(); ctx.font = '700 15px Nunito'; ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 4; ctx.textBaseline = 'top'; ctx.strokeText(c.label, x0 + 8, y0 + 6); ctx.fillText(c.label, x0 + 8, y0 + 6); ctx.restore(); }
+  });
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 2;
+  for (let i = 1; i < cols; i++) { ctx.beginPath(); ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, rows * chh); ctx.stroke(); }
+  for (let j = 1; j < rows; j++) { ctx.beginPath(); ctx.moveTo(0, j * chh); ctx.lineTo(cols * cw, j * chh); ctx.stroke(); }
+}
+const mouths = { closed: null, a: { open: .8, spread: .35, teeth: .2 }, ee: { open: .35, spread: 1, teeth: .8 }, oo: { open: .5, spread: 0, teeth: 0 } };
+/* draw a sprite at a cell: o = options from an A15 constructor; the demo strips `who` when a manual mouth is given (no timeline lines here) */
+function put(o, x, y, s, extra = {}) {
+  const r = Object.assign({}, o, { x, y, s }, extra);
+  if (r.mouthState) { delete r.who; if (r.talk == null) r.talk = r.mouthState.open; }
+  drawChar(r);
+}
+const VIEWS = {};
+window.drawView = (view, P) => {
+  const f = VIEWS[view]; if (!f) { log('unknown view ' + view); return; }
+  f(P);
+};
+/* ---- artichoke: the peel, 0 to 1 over three seconds, a strip every 0.25 s (13 frames: from=0 gives 0..2.75, from=3 the last) ---- */
+VIEWS.peel = P => {
+  const dur = +(P.dur || 3), step = +(P.step || .25), n = Math.round(dur / step) + 1, cells = [], sc = +(P.s || .72);
+  for (let i = 0; i < n; i++) {
+    const tt = i * step, pk = clamp(tt / dur);
+    cells.push({ label: `t ${tt.toFixed(2)}  peel ${pk.toFixed(2)}  layers ${A15.layersLeft({ peel: pk })}`, t: tt + .2, draw: (cx, fy) => put(A15.artichoke({ peel: pk, t: tt + .2 }), cx, fy, sc) });
+  }
+  sheetCells(3, 5, cells, { cw: 360, ch: 384 });
+};
+
+/* ---- artichoke close-ups: explicit ring counts removed (m), including mid-leave frames ---- */
+VIEWS.arti = P => {
+  const ms = (P.m || '0,.35,.7,1.4,3.35,5.5,7.5,9.4,10.2,10.55,10.85,11').split(',').map(Number), cells = [], sc = +(P.s || .95), yaw = +(P.yaw || 0);
+  ms.forEach((m, i) => cells.push({ label: `m ${m}  layers ${A15.layersLeft({ peelTo: 11 - m })}`, t: 1.3 + i * .21, draw: (cx, fy) => put(A15.artichoke({ peelTo: 11 - m, t: 1.3 + i * .21, yaw }), cx, fy, sc) }));
+  sheetCells(3, 4, cells);
+};
+
+/* ---- one layer leaving, close up: m = the layer index + progress ---- */
+VIEWS.layer = P => {
+  const ms = (P.m || '.06,.14,.22,.3,.4,.52').split(',').map(Number), cells = [], sc = +(P.s || 1.3), yaw = +(P.yaw || 0);
+  ms.forEach((m, i) => cells.push({ label: `m ${m}`, t: 1.3, draw: (cx, fy) => put(A15.artichoke({ peelTo: 11 - m, t: 1.3, yaw }), cx, fy, sc) }));
+  sheetCells(2, 3, cells, { cw: 540, ch: 640 });
+};
+
+/* ---- artichoke specials: the heart, frozen, glitch, head-and-shoulders, expressions ---- */
+VIEWS.arti2 = P => {
+  const cells = [];
+  const mk = (label, fn, extra = {}) => cells.push(Object.assign({ label, t: 1.3, draw: fn }, extra));
+  mk('heart m=11 s3.2', (cx, fy) => put(A15.artichoke({ peelTo: 0, t: 1.3 }), cx, fy, 3.2));
+  mk('heart talking', (cx, fy) => put(A15.artichoke({ peelTo: 0, t: 1.5 }), cx, fy, 3.2, { mouthState: mouths.a }));
+  mk('m=10.5 (last layer leaving) s3.2', (cx, fy) => put(A15.artichoke({ peelTo: .5, t: 1.3 }), cx, fy, 3.2));
+  mk('frozen (peel 0)', (cx, fy) => put(A15.artichoke({ frozen: true, frozenAt: 1.3, t: 1.3 }), cx, fy, .95));
+  mk('frozen, 0.2 s after (twitch)', (cx, fy) => put(A15.artichoke({ frozen: true, frozenAt: 1.3, t: 1.5 }), cx, fy, .95));
+  mk('glitch k1 (A15.draw)', (cx, fy) => A15.draw(Object.assign(A15.artichoke({ t: 1.3 }), { x: cx, y: fy, s: .95, glitch: { k: 1, y: .45, h: .14, dx: 40, seed: 3 } })));
+  mk('noLegs TV, anchor centre peel .5', (cx, fy) => put(A15.artichoke({ peel: .5, t: 1.3, noLegs: true, anchor: 'centre', y: fy - 120 }), cx, fy - 120, 1.2, { noLegs: true }));
+  mk('warm / mouth a', (cx, fy) => put(A15.artichoke({ expr: 'arti_warm', t: 1.3 }), cx, fy, .95, { mouthState: mouths.a }));
+  mk('stern', (cx, fy) => put(A15.artichoke({ expr: 'arti_stern', t: 1.3 }), cx, fy, .95));
+  mk('shock', (cx, fy) => put(A15.artichoke({ expr: 'shock', t: 1.3 }), cx, fy, .95));
+  mk('sad', (cx, fy) => put(A15.artichoke({ expr: 'sad', t: 1.3 }), cx, fy, .95));
+  mk('happy + mouth ee', (cx, fy) => put(A15.artichoke({ expr: 'happy', t: 1.3 }), cx, fy, .95, { mouthState: mouths.ee }));
+  sheetCells(3, 4, cells);
+};
+
+/* ---- Binder: poses, expressions, mouths, the grin, turns ---- */
+VIEWS.binder = P => {
+  const cells = [], sc = +(P.s || .95);
+  const mk = (label, o, extra = {}) => cells.push({ label, t: 1.3, draw: (cx, fy) => put(A15.binder(Object.assign({ t: 1.3, hover: 120 }, o)), cx, fy - 212 * sc, sc, extra) });
+  mk('rest', { pose: 'rest' }); mk('wave', { pose: 'wave' }); mk('point', { pose: 'point' });
+  mk('thumb', { pose: 'thumb' }); mk('helpful', { pose: 'helpful' }); mk('grin 1 + glint (rest)', { pose: 'rest', grin: 1, glint: 1 });
+  mk('ears + shock', { pose: 'ears', expr: 'shock' }); mk('sad (still smiling)', { pose: 'rest', expr: 'sad' }); mk('talking a', { pose: 'wave' }, { mouthState: mouths.a });
+  mk('yaw 35', { pose: 'rest', yaw: .61 }); mk('yaw 75', { pose: 'rest', yaw: 1.3 }); mk('yaw 180 (back)', { pose: 'rest', yaw: PI });
+  sheetCells(3, 4, cells);
+};
+
+/* ---- Onion and the tears accessory ---- */
+VIEWS.onion = P => {
+  const cells = [], sc = +(P.s || .95);
+  const mk = (label, o, extra = {}, t = 1.3) => cells.push({ label, t, draw: (cx, fy) => put(A15.onion(Object.assign({ t }, o)), cx, fy, sc, extra) });
+  mk('cry 0', { cry: 0, expr: 'neutral' }); mk('cry .35 stoic', { cry: .35, expr: 'onion_stoic' }); mk('cry .6 (default)', {});
+  mk('cry .9 talking a', { cry: .9, expr: 'onion_cry' }, { mouthState: mouths.a }); mk('wail cry 1', { cry: 1, expr: 'onion_wail' }, { mouthState: mouths.oo }); mk('sob 1 (t 1.3)', { cry: .8, sob: 1 }, {}, 1.3);
+  mk('sob 1 (t 1.36)', { cry: .8, sob: 1 }, {}, 1.36); mk('happy cry .8', { cry: .8, expr: 'happy' }); mk('no clipboard, shock', { cry: .5, pose: 'rest', expr: 'shock' });
+  mk('visor off, glasses off', { cry: .7, visor: false, glasses: false }); mk('yaw .6 (decor turns)', { yaw: .6 }); mk('yaw 3.0 (back)', { yaw: 3.0 });
+  sheetCells(3, 4, cells);
+};
+VIEWS.cry = P => {   /* the cry accessory on five other characters */
+  const cells = [], sc = +(P.s || .9), c = +(P.c || .85), t = 1.3;
+  const mk = (label, o) => cells.push({ label, t, draw: (cx, fy) => put(A15.cryOn(o, c), cx, fy, sc) });
+  mk('Strawberry (A7.straw)', A7.straw({ t })); mk('Lemon (A7.lemon)', A7.lemon({ t })); mk('Mango (A7.mango)', A7.mango({ t }));
+  mk('Clementine (A10.clem)', A10.clem({ t })); mk('Melon (A9.melon)', A9.melon({ t, s: 1 })); mk('Mrs Cranberry (A7.cran)', A7.cran({ t }));
+  mk('Strawberry cry .3', A7.straw({ t })); cells[6].draw = (cx, fy) => put(A15.cryOn(A7.straw({ t }), .3), cx, fy, sc);
+  mk('Lemon sad cry 1', A7.lemon({ t, expr: 'sad' })); cells[7].draw = (cx, fy) => put(A15.cryOn(A7.lemon({ t, expr: 'sad' }), 1), cx, fy, sc);
+  mk('Banana (A7.banana)', A7.banana({ t })); mk('Mr Pear (A7.pear)', A7.pear({ t })); mk('Artichoke', A15.artichoke({ t, expr: 'sad' })); mk('Binder? (no: engine face only)', A15.binder({ t }));
+  sheetCells(3, 4, cells);
+};
+
+/* ---- Tomato: both poses, the flip, expressions, mouths ---- */
+VIEWS.tomato = P => {
+  const cells = [], sc = +(P.s || .95);
+  const mk = (label, o, extra = {}, t = 1.3) => cells.push({ label, t, draw: (cx, fy) => put(A15.tomato(Object.assign({ t }, o)), cx, fy, sc, extra) });
+  mk('fruit (default)', {}); mk('veg', { tomPose: 'veg' }); mk('fruit talking a', {}, { mouthState: mouths.a });
+  mk('flip t .03 (turning)', { tomPose: 'veg', flipT: .03 }); mk('flip t .12', { tomPose: 'veg', flipT: .12 }); mk('flip t .25', { tomPose: 'veg', flipT: .25 });
+  mk('neutral', { expr: 'neutral' }); mk('sad', { expr: 'sad' }); mk('shock + mouth oo', { expr: 'shock' }, { mouthState: mouths.oo });
+  mk('half (0.5), no headset', { tomPose: .5, headset: false }); mk('yaw .7', { yaw: .7 }); mk('yaw 1.57 (profile)', { yaw: 1.57 });
+  sheetCells(3, 4, cells);
+};
+
+/* ---- Broccoli ---- */
+VIEWS.broc = P => {
+  const cells = [], sc = +(P.s || .9);
+  const mk = (label, o, extra = {}, t = 1.3) => cells.push({ label, t, draw: (cx, fy) => put(A15.broccoli(Object.assign({ t }, o)), cx, fy, sc, extra) });
+  mk('boom (default)', {}); mk('talking a', {}, { mouthState: mouths.a }); mk('stern', { expr: 'broc_stern' });
+  mk('neutral', { expr: 'neutral' }); mk('sad', { expr: 'sad' }); mk('shock + oo', { expr: 'shock' }, { mouthState: mouths.oo });
+  mk('no bowl, wave', { bowl: false, arms: { l: 'rest', r: 'wave' } }); mk('t 1.3 vs 1.9 (shimmer)', {}, {}, 1.9); mk('yaw .6', { yaw: .6 });
+  mk('yaw 1.5 (profile)', { yaw: 1.5 }); mk('yaw 2.6', { yaw: 2.6 }); mk('yaw 3.14 (back)', { yaw: 3.14 });
+  sheetCells(3, 4, cells);
+};
+
+/* ---- Carrot (and the Greenleaf uniform on anybody) ---- */
+VIEWS.carrot = P => {
+  const cells = [], sc = +(P.s || .8);
+  const mk = (label, o, extra = {}, t = 1.3) => cells.push({ label, t, draw: (cx, fy) => put(A15.carrot(Object.assign({ t }, o)), cx, fy, sc, extra) });
+  mk('calm (default)', {}); mk('polite talking a', { expr: 'carrot_polite' }, { mouthState: mouths.a }); mk('firm', { expr: 'carrot_firm' });
+  mk('neutral', { expr: 'neutral' }); mk('sad', { expr: 'sad' }); mk('shock + oo', { expr: 'shock' }, { mouthState: mouths.oo });
+  mk('yaw .6', { yaw: .6 }); mk('yaw 1.57 (profile)', { yaw: 1.57 }); mk('yaw 3.0', { yaw: 3.0 });
+  cells.push({ label: 'Greenleaf Mango', t: 1.3, draw: (cx, fy) => put(A15.greenleaf(A7.mango({ t: 1.3 })), cx, fy, .95) });
+  cells.push({ label: 'Greenleaf Mrs Cranberry', t: 1.3, draw: (cx, fy) => put(A15.greenleaf(A7.cran({ t: 1.3 })), cx, fy, .95) });
+  cells.push({ label: 'Greenleaf Strawberry', t: 1.3, draw: (cx, fy) => put(A15.greenleaf(A7.straw({ t: 1.3 })), cx, fy, .95) });
+  sheetCells(3, 4, cells);
+};
+
+/* ---- the line-up: the six at the dollhouse scale (0.44) next to the older cast (silhouettes must differ), and at a bigger size ---- */
+VIEWS.lineup = P => {
+  ctx = mainCtx; V2.setLight(LIGHT_DOLL); const s = +(P.s || .44);
+  ctx.fillStyle = '#20242b'; ctx.fillRect(0, 0, W, H);
+  const rows = [['new cast (A15)', [() => A15.artichoke({ t: 1.3 }), () => A15.onion({ t: 1.3 }), () => A15.tomato({ t: 1.3 }), () => A15.broccoli({ t: 1.3 }), () => A15.carrot({ t: 1.3 }), () => A15.binder({ t: 1.3 })]],
+    ['older cast (A7 / A9 / A10 / A14)', [() => A7.straw({ t: 1.3 }), () => A7.lemon({ t: 1.3 }), () => A7.mango({ t: 1.3 }), () => A10.clem({ t: 1.3 }), () => A9.melon({ t: 1.3, s: 1.22 * .44 / .44 * .9 }), () => A14.stateman({ t: 1.3 })]]];
+  rows.forEach(([label, fns], r) => {
+    const y0 = 60 + r * 470, fy = y0 + 400; ctx.fillStyle = r ? '#7f8f9a' : '#8a9fae'; ctx.fillRect(0, y0 - 20, W, 460); ctx.fillStyle = '#a58b6e'; ctx.fillRect(0, fy, W, 40);
+    ctx.font = '700 18px Nunito'; ctx.fillStyle = '#fff'; ctx.fillText(label + `  (s ${s})`, 10, y0 - 2);
+    fns.forEach((f, i) => { const o = f(); put(o, 90 + i * 180, fy, s * (o.kind === 'melon' ? 1 : 1) * 1 / (s === .44 ? 1 : 1), {}); });
+  });
+};
+VIEWS.lineupbig = P => {
+  const s = +(P.s || .72), cells = [];
+  const mk = (label, o) => cells.push({ label, t: 1.3, draw: (cx, fy) => put(o, cx, fy, s) });
+  mk('Artichoke', A15.artichoke({ t: 1.3 })); mk('Onion', A15.onion({ t: 1.3 })); mk('Tomato', A15.tomato({ t: 1.3 }));
+  mk('Broccoli', A15.broccoli({ t: 1.3 })); mk('Carrot', A15.carrot({ t: 1.3 })); mk('Binder', A15.binder({ t: 1.3, pose: 'wave' }));
+  sheetCells(3, 2, cells, { cw: 360, ch: 560 });
+};
+/* ---- props and accessories on other characters ---- */
+VIEWS.props = P => {
+  const cells = [], t = 1.3, sc = .92;
+  const mk = (label, o, extra = {}) => cells.push({ label, t, draw: (cx, fy) => put(o, cx, fy, sc, extra) });
+  mk('laptop (held, right hand)', A7.straw({ t, arms: { l: 'rest', r: 'hold' }, grip: { r: [64, 96] }, hold: { r: 'fp15_laptop' }, lapRot: .05 }));
+  mk('tablet clip (Lemon)', A7.lemon({ t, arms: { l: 'rest', r: 'hold' }, grip: { r: [84, 96] }, hold: { r: 'fp15_tabletclip' }, tabAt: [.3, .12] }));
+  mk('megaphone + hard hat (Mango)', A7.mango({ t, arms: { l: 'rest', r: 'hold' }, grip: { r: [70, 54] }, hold: { r: 'fp15_megaphone' }, acc: ['fp15_hardhat'], megaWaves: 1 }));
+  mk('hard hat (Clementine)', A10.clem({ t, acc: ['fp15_hardhat'], hatColor: '#ff7a1a' }));
+  mk('hard hat (Strawberry, white)', A7.straw({ t, acc: ['fp15_hardhat'], hatColor: '#f6f6f2', cap: false }));
+  mk('laptop back (Mrs Cran)', A7.cran({ t, arms: { l: 'hold', r: 'rest' }, grip: { l: [-60, 80] }, hold: { l: 'fp15_laptop' }, lapBack: true }));
+  mk('formstack (Mr Pear)', A7.pear({ t, arms: { l: 'hold', r: 'rest' }, grip: { l: [-80, 80] }, hold: { l: 'fp15_formstack' } }));
+  mk('saladbowl (Melon)', A9.melon({ t, s: 1, arms: { l: 'rest', r: 'hold' }, grip: { r: [110, 70] }, hold: { r: 'fp15_saladbowl' } }));
+  mk('Greenleaf Lemon + megaphone', A15.greenleaf(A7.lemon({ t, arms: { l: 'rest', r: 'hold' }, grip: { r: [96, 40] }, hold: { r: 'fp15_megaphone' } })));
+  cells.push({ label: 'laptop set piece + screen rect', t, draw: (cx, fy) => { const r = A15.laptop(cx, fy - 120, { lapScale: 1.6, lapScreen: false }); ctx.strokeStyle = '#f0f'; ctx.lineWidth = 2; ctx.save(); ctx.translate(r.x, r.y); ctx.strokeRect(0, 0, r.w, r.h); ctx.restore(); } });
+  cells.push({ label: 'laptop set piece (mini sheet)', t, draw: (cx, fy) => A15.laptop(cx, fy - 120, { lapScale: 1.6 }) });
+  cells.push({ label: 'tablet clip set piece', t, draw: (cx, fy) => { const r = A15.tabletClip(cx, fy - 160, { tabScale: 2.2, rot: .08 }); ctx.strokeStyle = '#f0f'; ctx.strokeRect(r.x, r.y, r.w, r.h); } });
+  sheetCells(3, 4, cells);
+};
+
+/* ---- yaw turntables (needs E15-TURN's rig; without it the bodies' decorations still turn but the faces do not) ---- */
+VIEWS.turn = P => {
+  const who = P.who || 'arti', ys = (P.ys || '0,30,60,90,120,150,180,210,240,270,300,330').split(',').map(Number), cells = [], sc = +(P.s || .72), t = 1.3;
+  const mkC = { arti: o => A15.artichoke(o), onion: o => A15.onion(o), tom: o => A15.tomato(o), broc: o => A15.broccoli(o), carrot: o => A15.carrot(o), bind: o => A15.binder(o) }[who];
+  ys.forEach(d => cells.push({ label: `${who} yaw ${d}`, t, draw: (cx, fy) => put(mkC({ t, yaw: d * PI / 180, ...(who === 'bind' ? { pose: 'wave' } : {}), ...(who === 'arti' && P.peel ? { peel: +P.peel } : {}) }), cx, fy, sc, P.talk ? { mouthState: mouths.a } : {}) }));
+  sheetCells(3, 4, cells);
+};
+VIEWS.turnrow = P => {   /* every kind at 0, 35, 90, 180 degrees, one row per kind */
+  const cells = [], sc = +(P.s || .44), t = 1.3, ds = [0, 35, 90, 180];
+  const kinds = [['arti', o => A15.artichoke(o)], ['onion', o => A15.onion(o)], ['tom', o => A15.tomato(o)], ['broc', o => A15.broccoli(o)], ['carrot', o => A15.carrot(o)], ['bind', o => A15.binder(o)]];
+  kinds.forEach(([n, f]) => ds.forEach(d => cells.push({ label: n + ' ' + d, t, draw: (cx, fy) => put(f({ t, yaw: d * PI / 180 }), cx, fy, sc * 1.35) })));
+  sheetCells(4, 6, cells, { cw: 270, ch: 320, floor: 40 });
+};
+
+/* ---- performance: ms per draw at scale 1 (200 draws each, after a warm-up); the result is also left in window.VIEW_INFO ---- */
+VIEWS.perf = P => {
+  ctx = mainCtx; V2.setLight(LIGHT_DOLL); ctx.fillStyle = '#6b7f8c'; ctx.fillRect(0, 0, W, H);
+  const cases = { arti: () => A15.artichoke({ t: 1.3 }), 'arti peel .4': () => A15.artichoke({ peel: .4, t: 1.3 }), 'arti mid-leave': () => A15.artichoke({ peelTo: 7.6, t: 1.3 }), onion: () => A15.onion({ t: 1.3, cry: .9 }), tomato: () => A15.tomato({ t: 1.3 }), broc: () => A15.broccoli({ t: 1.3 }), carrot: () => A15.carrot({ t: 1.3 }), bind: () => A15.binder({ t: 1.3, pose: 'wave' }), strawberry: () => A7.straw({ t: 1.3 }) };
+  const out = {};
+  for (const [n, f] of Object.entries(cases)) {
+    for (let i = 0; i < 20; i++) { T = 1.3 + i * .033; drawChar(Object.assign(f(), { x: 540, y: 1000, s: 1 })); }
+    const t0 = performance.now(), N = 200;
+    for (let i = 0; i < N; i++) { T = 1.3 + i * .033; ctx.clearRect(0, 0, W, H); drawChar(Object.assign(f(), { x: 540, y: 1000, s: 1, t: T })); }
+    out[n] = +((performance.now() - t0) / N).toFixed(2);
+  }
+  window.VIEW_INFO = out; log('perf ms/draw @ s=1: ' + JSON.stringify(out));
+};
+/* ---- the lettering plates the art leaves empty, outlined where A15.plate says they are ---- */
+VIEWS.plates = P => {
+  const cells = [], sc = 1.5, t = 1.3;
+  const mk = (label, o, names) => cells.push({ label, t, draw: (cx, fy) => { put(o, cx, fy, sc); for (const n of names) { const r = A15.plate(Object.assign({}, o, { x: cx, y: fy, s: sc }), n); if (r) { ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.rot); ctx.strokeStyle = '#f0f'; ctx.lineWidth = 2; ctx.strokeRect(-r.w / 2, -r.h / 2, r.w, r.h); ctx.restore(); } } } });
+  mk('arti_lanyard', A15.artichoke({ t, noLegs: true }), ['arti_lanyard']); mk('onion_visor', A15.onion({ t }), ['onion_visor']); mk('tomato_tag', A15.tomato({ t }), ['tomato_tag']);
+  mk('broc_tag', A15.broccoli({ t }), ['broc_tag']); mk('gl_lanyard (carrot)', A15.carrot({ t }), ['gl_lanyard']); mk('gl_lanyard (Mango)', A15.greenleaf(A7.mango({ t })), ['gl_lanyard']);
+  sheetCells(3, 2, cells, { cw: 360, ch: 640 });
+};
+
+/* ---- expressions: every character with neutral, happy, sad, shock and its own, with lip-sync mouth states, at the dollhouse scale (0.44) and bigger (s=) ---- */
+VIEWS.expr = P => {
+  const cells = [], sc = +(P.s || .44), t = 1.3, mm = { neutral: null, happy: mouths.ee, sad: null, shock: mouths.oo, own: mouths.a };
+  const rows = [
+    ['arti', e => A15.artichoke({ t, expr: e === 'own' ? 'arti_stern' : e === 'neutral' ? 'arti_ceo' : e })],
+    ['onion', e => A15.onion({ t, expr: e === 'own' ? 'onion_wail' : e, cry: e === 'happy' ? .5 : .75 })],
+    ['tom', e => A15.tomato({ t, expr: e === 'neutral' ? undefined : e === 'own' ? 'tom_veg' : e, tomPose: e === 'own' ? 'veg' : 'fruit' })],
+    ['broc', e => A15.broccoli({ t, expr: e === 'own' ? 'broc_stern' : e === 'neutral' ? 'broc_boom' : e })],
+    ['carrot', e => A15.carrot({ t, expr: e === 'own' ? 'carrot_firm' : e === 'neutral' ? 'carrot_calm' : e })],
+    ['bind', e => A15.binder({ t, expr: e === 'own' ? 'angry' : e === 'neutral' ? 'bind_happy' : e, grin: e === 'own' ? 1 : 0, pose: 'wave', hover: 100 })]];
+  for (const [n, f] of rows) for (const e of ['neutral', 'happy', 'sad', 'shock', 'own']) {
+    const lab = n + ' ' + e; cells.push({ label: lab, t, draw: (cx, fy) => { const o = f(e); put(o, cx, n === 'bind' ? fy - 190 * sc * 1.2 : fy, sc * (P.k ? +P.k : 1.15), mm[e] ? { mouthState: mm[e] } : {}); } });
+  }
+  sheetCells(5, 6, cells, { cw: 216, ch: 320, floor: 26 });
+};
+
+VIEWS.close = P => {   /* close-ups: 2 x 2 cells of 540 x 960, one per character (c=binder|onion|...) */
+  const sc = +(P.s || 1.9), t = 1.3, cells = [];
+  const mk = (label, o, extra = {}, dy = 0) => cells.push({ label, t, draw: (cx, fy) => put(o, cx, fy + dy, sc, extra) });
+  const list = (P.c || 'binder').split(',');
+  for (const c of list) {
+    if (c === 'binder') { mk('binder grin', A15.binder({ t, pose: 'helpful', grin: 1, glint: .9, hover: 60 }), {}, -250); mk('binder talking', A15.binder({ t, pose: 'wave', hover: 60 }), { mouthState: mouths.a }, -250); }
+    if (c === 'onion') { mk('onion', A15.onion({ t, cry: .8 }), { mouthState: mouths.a }, 60); mk('onion sob', A15.onion({ t: 1.33, cry: 1, sob: 1, expr: 'onion_wail' }), {}, 60); }
+    if (c === 'tomato') { mk('tomato', A15.tomato({ t }), { mouthState: mouths.ee }, 60); mk('tomato veg', A15.tomato({ t, tomPose: 'veg' }), {}, 60); }
+    if (c === 'broc') { mk('broc', A15.broccoli({ t }), { mouthState: mouths.a }, 60); mk('broc stern', A15.broccoli({ t, expr: 'broc_stern', bowl: false }), {}, 60); }
+  }
+  sheetCells(2, 2, cells, { cw: 540, ch: 960, floor: 140 });
+};
+
+VIEWS.aura = P => {
+  const cells = [], sc = .9;
+  for (const [u, t, bg] of [[.35, 1.3, null], [.8, 1.3, null], [1, 2.1, null], [1, 1.3, ['#2a3340', '#1a2028']]]) cells.push({ label: `aura u ${u} t ${t}`, t, wall0: bg ? bg[0] : undefined, wall1: bg ? bg[1] : undefined, draw: (cx, fy) => { A15.tearsAura(cx, fy - 150, u, { t, r: 250 }); put(A15.onion({ t, cry: .4 + u * .5 }), cx, fy, sc); } });
+  sheetCells(2, 2, cells, { cw: 540, ch: 640, floor: 60 });
+};
+
+/* ---- profile walks (needs E15-TURN's rig): each kind walks left to right, a frame every 0.2 s ---- */
+VIEWS.walk = P => {
+  const cells = [], s = +(P.s || .6), sp = 190;   /* screen px per second */
+  const kinds = [['carrot', o => A15.carrot(o)], ['tom', o => A15.tomato(o)], ['broc', o => A15.broccoli(Object.assign(o, { bowl: false, arms: { l: 'rest', r: 'rest' } }))], ['onion', o => A15.onion(Object.assign(o, { pose: 'rest' }))], ['arti', o => A15.artichoke(o)]];
+  for (const [n, f] of kinds) for (let i = 0; i < 6; i++) {
+    const tt = 1 + i * .2, dist = i * .2 * sp;
+    cells.push({ label: `${n} ${tt.toFixed(1)}`, t: tt, draw: (cx, fy) => put(f({ t: tt, yaw: PI / 2, dir: 1, gaitW: dist / s, axis: 'x', vx: sp }), cx - 150 + dist, fy, s) });
+  }
+  sheetCells(6, 5, cells, { cw: 180, ch: 300, floor: 30 });
+};
+</script>
+</body>
+</html>

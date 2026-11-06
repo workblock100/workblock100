@@ -1,0 +1,806 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 3: The Holiday Schedule",
+ "music": {
+  "from": "posted",
+  "to": "next",
+  "bells": true,
+  "mute": [
+   "quiet:freeze",
+   "nye:count",
+   "nye:pop",
+   "next:jar"
+  ]
+ },
+ "beds": {
+  "office": "mob"
+ },
+ "no_whoosh": [
+  "title",
+  "end",
+  "thanks",
+  "xmas",
+  "nye"
+ ],
+ "level_lines": true,
+ "voices": {
+  "narr": {
+   "name": "NARRATOR",
+   "voice": "bm_george",
+   "lang": "en-gb",
+   "speed": 1.07,
+   "semis": 0,
+   "color": "#e8e8e8"
+  },
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "lang": "en-us",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a"
+  },
+  "apple2": {
+   "name": "DR. APPLE",
+   "voice": "am_eric",
+   "lang": "en-us",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#e63946",
+   "fx": "phone"
+  },
+  "strawjar": {
+   "name": "NURSE STRAWBERRY (IN THE JAR)",
+   "voice": "af_heart",
+   "lang": "en-us",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "fx": "muffled"
+  },
+  "melon": {
+   "name": "THE ADMINISTRATOR",
+   "voice": "am_adam",
+   "lang": "en-us",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#e8a86a"
+  },
+  "cherry": {
+   "name": "DAY NURSE CHERRY",
+   "voice": "af_bella",
+   "lang": "en-us",
+   "speed": 1.25,
+   "semis": 1,
+   "color": "#c2003a"
+  },
+  "pine": {
+   "name": "PINEAPPLE (FAMILY)",
+   "voice": "af_nova",
+   "lang": "en-us",
+   "speed": 1.18,
+   "semis": 0,
+   "color": "#f4a300"
+  },
+  "raisin": {
+   "name": "MRS. GRAPE (NOW A RAISIN)",
+   "voice": "bf_alice",
+   "lang": "en-gb",
+   "speed": 0.95,
+   "semis": -4,
+   "color": "#7a4a2a"
+  },
+  "sched": {
+   "name": "THE SCHEDULER",
+   "voice": "am_onyx",
+   "lang": "en-us",
+   "speed": 0.92,
+   "semis": -2,
+   "color": "#8e4a7e"
+  },
+  "schedtxt": {
+   "name": "THE SCHEDULER (TEXTING)",
+   "voice": "am_onyx",
+   "lang": "en-us",
+   "speed": 0.92,
+   "semis": -2,
+   "color": "#8e4a7e"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "OCTOBER 1ST",
+   "head": 0.2,
+   "tail": 1.2,
+   "beats": [
+    {
+     "id": "jingle",
+     "pause": 1.8,
+     "sfx": [
+      [
+       "theme3",
+       0.0,
+       0.9
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "October first.",
+     "text": "October first."
+    },
+    {
+     "id": "n2",
+     "who": "narr",
+     "say": "The day the holiday schedule comes out.",
+     "text": "The day the holiday schedule comes out.",
+     "sfx": [
+      [
+       "sting",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "logo",
+     "pause": 1.2
+    }
+   ]
+  },
+  {
+   "id": "posted",
+   "clock": "3:00 PM",
+   "label": "NURSES' STATION",
+   "head": 0.3,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Heads up. The holiday schedule is posted.",
+     "text": "Heads up. The holiday schedule is posted."
+    },
+    {
+     "id": "rush",
+     "pause": 1.8,
+     "sfx": [
+      [
+       "fight",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Every year, the holiday schedule goes up. And every year, one nurse gets all of them.",
+     "text": "Every year, the holiday schedule goes up. And every year, one nurse gets all of them."
+    }
+   ]
+  },
+  {
+   "id": "board",
+   "clock": "3:01 PM",
+   "label": "THE HOLIDAY SCHEDULE",
+   "head": 0.3,
+   "tail": 0.45,
+   "beats": [
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Thanksgiving. Christmas Eve. Christmas. New Year's Eve. New Year's Day.",
+     "text": "Thanksgiving. Christmas Eve. Christmas. New Year's Eve. New Year's Day."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I have all of them?",
+     "text": "I have ALL of them?",
+     "sfx": [
+      [
+       "stamp",
+       "end",
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "It's the rotation.",
+     "text": "It's the rotation."
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "I worked all of them last year!",
+     "text": "I worked all of them LAST year!"
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Exactly. That's the rotation.",
+     "text": "Exactly. That's the rotation."
+    }
+   ]
+  },
+  {
+   "id": "cherry",
+   "clock": "3:02 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.55,
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "zip",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "c1",
+     "who": "cherry",
+     "say": "I put in my request on January first. At twelve oh one A M!",
+     "text": "I put in my request on January 1st. At 12:01 AM!"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Who does that?!",
+     "text": "Who does that?!"
+    },
+    {
+     "id": "c2",
+     "who": "cherry",
+     "say": "Winners do! Byeee!",
+     "text": "Winners do! Byeee!",
+     "sfx": [
+      [
+       "zip",
+       "end",
+       0.7
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "office",
+   "clock": "3:15 PM",
+   "label": "STAFFING OFFICE",
+   "head": 0.3,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "creak",
+       0.0,
+       0.7
+      ],
+      [
+       "chair",
+       0.95,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "f1",
+     "who": "sched",
+     "say": "You come into my office... on posting day... and you ask me for Christmas.",
+     "text": "You come into my office... on posting day... and you ask me for Christmas."
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Just one holiday. Please.",
+     "text": "Just one holiday. Please."
+    },
+    {
+     "id": "f2",
+     "who": "sched",
+     "say": "I'm gonna make you an offer you can't refuse.",
+     "text": "I'm gonna make you an offer you can't refuse."
+    },
+    {
+     "id": "offer",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "paperslide",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I refuse.",
+     "text": "I refuse."
+    },
+    {
+     "id": "f3",
+     "who": "sched",
+     "say": "You can't. It's in the name.",
+     "text": "You can't. It's in the name."
+    }
+   ]
+  },
+  {
+   "id": "pen",
+   "clock": "4:00 PM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 1.0,
+     "sfx": [
+      [
+       "fanfare",
+       0.0,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "melon",
+     "say": "To thank our holiday heroes, the company got you all a gift!",
+     "text": "To thank our holiday heroes, the company got you all a gift!"
+    },
+    {
+     "id": "open",
+     "pause": 1.7,
+     "sfx": [
+      [
+       "drumroll",
+       0.0,
+       0.6
+      ],
+      [
+       "choir",
+       0.75,
+       0.45
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "One pen?",
+     "text": "One pen?"
+    },
+    {
+     "id": "m2",
+     "who": "melon",
+     "say": "To share!",
+     "text": "To share."
+    }
+   ]
+  },
+  {
+   "id": "thanks",
+   "clock": "5:00 PM",
+   "label": "THANKSGIVING",
+   "head": 0.1,
+   "tail": 0.6,
+   "beats": [
+    {
+     "id": "date",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "flipcal",
+       0.0,
+       0.8
+      ]
+     ],
+     "gap": 0.25
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Happy Thanksgiving, Mrs. Cranberry! Look, cranberry sauce!",
+     "text": "Happy Thanksgiving, Mrs. Cranberry! Look, cranberry sauce!"
+    },
+    {
+     "id": "c1",
+     "who": "cran",
+     "say": "That's my cousin Doris!",
+     "text": "That's my cousin DORIS!",
+     "sfx": [
+      [
+       "trombone",
+       "end",
+       0.45
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Rest in peace, Doris.",
+     "text": "Rest in peace, Doris."
+    }
+   ]
+  },
+  {
+   "id": "xmas",
+   "clock": "3:00 PM",
+   "label": "CHRISTMAS DAY",
+   "head": 0.1,
+   "tail": 0.45,
+   "beats": [
+    {
+     "id": "date",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "flipcal",
+       0.0,
+       0.8
+      ],
+      [
+       "sleighbells",
+       0.5,
+       0.5
+      ]
+     ],
+     "gap": 0.25
+    },
+    {
+     "id": "p1",
+     "who": "pine",
+     "say": "We're here for our yearly visit! Why does Mom look different?",
+     "text": "We're here for our yearly visit! Why does Mom look different?"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "It's been a year.",
+     "text": "It's been a year."
+    },
+    {
+     "id": "r1",
+     "who": "raisin",
+     "say": "Could I get some water?",
+     "text": "...could I get some water?"
+    }
+   ]
+  },
+  {
+   "id": "quiet",
+   "clock": "3:30 PM",
+   "label": "CHRISTMAS DAY",
+   "head": 0.2,
+   "tail": 0.45,
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 0.9,
+     "sfx": [
+      [
+       "sleighbells",
+       0.0,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "m1",
+     "who": "melon",
+     "say": "Merry Christmas, heroes! Quick photo!",
+     "text": "Merry Christmas, heroes! Quick photo!"
+    },
+    {
+     "id": "flash",
+     "pause": 0.6,
+     "sfx": [
+      [
+       "shutter",
+       0.05,
+       0.9
+      ]
+     ]
+    },
+    {
+     "id": "m2",
+     "who": "melon",
+     "say": "Wow. Nice and quiet in here. Bye!",
+     "text": "Wow. Nice and quiet in here. Bye!",
+     "sfx": [
+      [
+       "zip",
+       "end",
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "freeze",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "scratch",
+       0.0,
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "He said it.",
+     "text": "He said it."
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "He said the Q word.",
+     "text": "He said the Q word.",
+     "sfx": [
+      [
+       "stab",
+       "end",
+       0.8
+      ]
+     ]
+    },
+    {
+     "id": "lights",
+     "pause": 1.8,
+     "sfx": [
+      [
+       "callbells",
+       0.1,
+       0.8
+      ],
+      [
+       "sleighbells",
+       0.3,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "n1",
+     "who": "narr",
+     "say": "Every call light. At once. The only Christmas lights on this unit that actually work.",
+     "text": "Every call light. At once. The only Christmas lights on this unit that actually work."
+    }
+   ]
+  },
+  {
+   "id": "nye",
+   "clock": "11:59 PM",
+   "label": "NEW YEAR'S EVE",
+   "head": 0.1,
+   "tail": 0.5,
+   "beats": [
+    {
+     "id": "date",
+     "pause": 1.6,
+     "sfx": [
+      [
+       "flipcal",
+       0.0,
+       0.8
+      ]
+     ],
+     "gap": 0.25
+    },
+    {
+     "id": "count",
+     "who": "narr",
+     "say": "Three. Two. One.",
+     "text": "3... 2... 1..."
+    },
+    {
+     "id": "pop",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "pop",
+       0.0,
+       0.8
+      ],
+      [
+       "partyhorn",
+       0.15,
+       0.7
+      ],
+      [
+       "auld",
+       0.35,
+       0.5
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Happy new year.",
+     "text": "Happy new year."
+    },
+    {
+     "id": "ring",
+     "pause": 1.1,
+     "sfx": [
+      [
+       "ringtone",
+       0.0,
+       0.6
+      ]
+     ]
+    },
+    {
+     "id": "a1",
+     "who": "apple2",
+     "say": "Happy new year! It's Doctor Apple, returning your page from Thanksgiving.",
+     "text": "Happy new year! It's Dr. Apple, returning your page from Thanksgiving."
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "That was five weeks ago.",
+     "text": "That was five weeks ago."
+    },
+    {
+     "id": "a2",
+     "who": "apple2",
+     "say": "Great! So... why'd you call?",
+     "text": "Great! So... why'd you call?"
+    }
+   ]
+  },
+  {
+   "id": "next",
+   "clock": "12:05 AM",
+   "label": "NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.4,
+   "beats": [
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Good news! Next year's holiday schedule is up!",
+     "text": "Good news! Next year's holiday schedule is up!"
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "It's all of them. Again.",
+     "text": "It's all of them. Again."
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "It's the rotation.",
+     "text": "It's the rotation."
+    },
+    {
+     "id": "jar",
+     "pause": 1.3,
+     "sfx": [
+      [
+       "pop",
+       0.75,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "",
+   "head": 0.0,
+   "tail": 0.0,
+   "beats": [
+    {
+     "id": "card",
+     "pause": 5.6,
+     "sfx": [
+      [
+       "theme3",
+       0.1,
+       0.9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "post",
+   "clock": "3:00 AM",
+   "label": "YOUR BEDROOM",
+   "head": 0.3,
+   "tail": 1.3,
+   "beats": [
+    {
+     "id": "buzz",
+     "pause": 1.4,
+     "sfx": [
+      [
+       "textding",
+       0.1,
+       0.7
+      ],
+      [
+       "textding",
+       0.75,
+       0.7
+      ]
+     ]
+    },
+    {
+     "id": "f1",
+     "who": "schedtxt",
+     "say": "Hey. Smiley face. Any chance you can pick up Christmas?",
+     "text": "Hey. Smiley face. Any chance you can pick up Christmas?"
+    },
+    {
+     "id": "s1",
+     "who": "strawjar",
+     "say": "I'm already working Christmas.",
+     "text": "I'm already working Christmas."
+    },
+    {
+     "id": "f2",
+     "who": "schedtxt",
+     "say": "Perfect. So you're already there. Double?",
+     "text": "Perfect. So you're already there. Double?"
+    },
+    {
+     "id": "rattle",
+     "pause": 1.2,
+     "sfx": [
+      [
+       "rattle",
+       0.0,
+       0.8
+      ],
+      [
+       "sting",
+       0.35,
+       0.8
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,915 @@
+{
+ "title": "SHIFT HAPPENS",
+ "episode": "Episode 8: The Double Shift",
+ "v2": true,
+ "level_lines": true,
+ "voices": {
+  "straw": {
+   "name": "NURSE STRAWBERRY",
+   "voice": "af_heart",
+   "speed": 1.1,
+   "semis": 0,
+   "color": "#ff3b55",
+   "pan": -0.22,
+   "lang": "en-us"
+  },
+  "mango": {
+   "name": "CNA MANGO",
+   "voice": "af_bella",
+   "speed": 1.12,
+   "semis": -3,
+   "color": "#ff9f1c",
+   "pan": 0.26,
+   "lang": "en-us"
+  },
+  "moon": {
+   "name": "THE MOON",
+   "voice": "am_onyx",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#9fb3c8",
+   "fx": "moon",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "lemon": {
+   "name": "CHARGE NURSE LEMON",
+   "voice": "am_michael",
+   "speed": 1.02,
+   "semis": -1,
+   "color": "#ffd60a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "papa": {
+   "name": "ACTIVITIES DIRECTOR PAPAYA",
+   "voice": "af_jessica",
+   "speed": 1.12,
+   "semis": 1,
+   "color": "#ff9a5c",
+   "pan": -0.15,
+   "lang": "en-us"
+  },
+  "cran": {
+   "name": "MRS. CRANBERRY",
+   "voice": "bf_emma",
+   "lang": "en-gb",
+   "speed": 1.18,
+   "semis": 1,
+   "color": "#e0114a",
+   "pan": 0.35
+  },
+  "pear": {
+   "name": "MR. PEAR",
+   "voice": "am_fenrir",
+   "speed": 0.92,
+   "semis": -1,
+   "color": "#c9d22a",
+   "pan": 0.3,
+   "lang": "en-us"
+  },
+  "pinephone": {
+   "name": "PINEAPPLE, ON THE PHONE",
+   "voice": "af_nova",
+   "speed": 1.18,
+   "semis": 0,
+   "color": "#f4a300",
+   "fx": "phone",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "banana": {
+   "name": "MR. BANANA",
+   "voice": "am_puck",
+   "speed": 1.15,
+   "semis": 1,
+   "color": "#ffd23f",
+   "pan": -0.3,
+   "lang": "en-us"
+  },
+  "goji": {
+   "name": "MR. GOJI",
+   "voice": "am_echo",
+   "speed": 0.82,
+   "semis": -3,
+   "color": "#ff6a3d",
+   "pan": 0.25,
+   "lang": "en-us"
+  },
+  "apple": {
+   "name": "DR. APPLE, ON THE PHONE",
+   "voice": "am_eric",
+   "speed": 1.05,
+   "semis": 0,
+   "color": "#e63946",
+   "fx": "phone",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "drag": {
+   "name": "NIGHT NURSE DRAGONFRUIT",
+   "voice": "af_nicole",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#ff4fa3",
+   "pan": 0.2,
+   "lang": "en-us"
+  },
+  "lime": {
+   "name": "MR. LIME",
+   "voice": "bm_fable",
+   "speed": 0.96,
+   "semis": 0,
+   "color": "#9be564",
+   "pan": -0.35,
+   "lang": "en-us"
+  },
+  "pa": {
+   "name": "OVERHEAD PAGE",
+   "voice": "af_sarah",
+   "speed": 1.0,
+   "semis": 0,
+   "color": "#e8a86a",
+   "fx": "pa",
+   "pan": 0,
+   "lang": "en-us"
+  },
+  "dragphone": {
+   "name": "DRAGONFRUIT, ON THE PHONE",
+   "voice": "af_nicole",
+   "speed": 1.12,
+   "semis": 0,
+   "color": "#ff4fa3",
+   "pan": 0,
+   "lang": "en-us",
+   "fx": "phone"
+  }
+ },
+ "scenes": [
+  {
+   "id": "title",
+   "clock": "",
+   "label": "",
+   "head": 0.2,
+   "tail": 0.1,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "logo",
+     "pause": 4.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0.0,
+       0.8,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "station",
+   "clock": "10:52 PM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "hall",
+   "amb": {
+    "name": "night",
+    "gain": 0.35
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.0,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "phonering",
+       0.1,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "l1",
+     "who": "lemon",
+     "say": "Strawberry. I need you to sit down.",
+     "text": "Strawberry. I need you to sit down.",
+     "gap": 0.3
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "I'm clocking out in eight minutes.",
+     "text": "I'm clocking out in eight minutes.",
+     "gap": 0.25
+    },
+    {
+     "id": "l2",
+     "who": "lemon",
+     "say": "Dragonfruit called out.",
+     "text": "Dragonfruit called out.",
+     "gap": 0.3
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Why?",
+     "text": "Why?",
+     "gap": 0.15
+    },
+    {
+     "id": "dp1",
+     "who": "dragphone",
+     "say": "Hi! I can't come in tonight.",
+     "text": "Hi! I can't come in tonight.",
+     "gap": 0.3
+    },
+    {
+     "id": "dp2",
+     "who": "dragphone",
+     "say": "Last night was quiet. I am not going back there.",
+     "text": "Last night was quiet. I am not going back there.",
+     "gap": 0.35
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "She's not wrong.",
+     "text": "She's not wrong.",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "So who's on nights?",
+     "text": "So who's on nights?",
+     "gap": 0.3
+    },
+    {
+     "id": "l3",
+     "who": "lemon",
+     "say": "You are.",
+     "text": "You are.",
+     "gap": 0.35
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "I'm the three to eleven.",
+     "text": "I'm the three to eleven.",
+     "gap": 0.3
+    },
+    {
+     "id": "l4",
+     "who": "lemon",
+     "say": "Now you're the three to seven.",
+     "text": "Now you're the three to seven.",
+     "gap": 0.3
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "That is not math.",
+     "text": "That is not math.",
+     "gap": 0.25
+    },
+    {
+     "id": "l5",
+     "who": "lemon",
+     "say": "It's staffing.",
+     "text": "It's staffing.",
+     "gap": 0.3
+    },
+    {
+     "id": "form",
+     "pause": 1.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "paper",
+       0.1,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "l6",
+     "who": "lemon",
+     "say": "It says mandatory.",
+     "text": "It says mandatory.",
+     "gap": 0.3
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "I'll stay too! I love overtime!",
+     "text": "I'll stay too! I love overtime!",
+     "gap": 0.3
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "Nobody loves overtime.",
+     "text": "Nobody loves overtime.",
+     "gap": 0.3
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "Time and a half.",
+     "text": "Time and a half.",
+     "gap": 0.3
+    },
+    {
+     "id": "s7",
+     "who": "straw",
+     "say": "...Fine.",
+     "text": "...Fine.",
+     "gap": 0.3
+    }
+   ]
+  },
+  {
+   "id": "hall",
+   "clock": "2:47 AM",
+   "label": "THE HALL",
+   "head": 0.2,
+   "tail": 0.4,
+   "room": "hall",
+   "amb": {
+    "name": "night",
+    "gain": 0.4
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.1,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "a_call",
+       0.1,
+       0.55,
+       -0.3
+      ],
+      [
+       "a_bed",
+       0.5,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Mango. How many call lights?",
+     "text": "Mango. How many call lights?",
+     "gap": 0.25
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "All of them.",
+     "text": "All of them.",
+     "gap": 0.25
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Which ones?",
+     "text": "Which ones?",
+     "gap": 0.15
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "Yes.",
+     "text": "Yes.",
+     "gap": 0.3
+    },
+    {
+     "id": "chime",
+     "pause": 0.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "pa_chime",
+       0.0,
+       0.7,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "pa1",
+     "who": "pa",
+     "say": "Attention staff. Breaks are available.",
+     "text": "Attention staff. Breaks are available.",
+     "gap": 0.4
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "Does that mean us?",
+     "text": "Does that mean us?",
+     "gap": 0.25
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "That means nobody.",
+     "text": "That means nobody.",
+     "gap": 0.3
+    },
+    {
+     "id": "all",
+     "pause": 1.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "a_pump",
+       0.1,
+       0.5,
+       0.4
+      ],
+      [
+       "a_pulse",
+       0.4,
+       0.5,
+       -0.4
+      ],
+      [
+       "a_chair",
+       0.7,
+       0.5,
+       0.2
+      ],
+      [
+       "a_door",
+       1.0,
+       0.5,
+       -0.2
+      ]
+     ]
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Forty residents.",
+     "text": "Forty residents.",
+     "gap": 0.2
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "One nurse.",
+     "text": "One nurse.",
+     "gap": 0.2
+    },
+    {
+     "id": "m4",
+     "who": "mango",
+     "say": "And me.",
+     "text": "And me.",
+     "gap": 0.25
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "And you.",
+     "text": "And you.",
+     "gap": 0.3
+    },
+    {
+     "id": "run",
+     "pause": 1.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "whoosh2",
+       0.1,
+       0.6,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "break",
+   "clock": "3:34 AM",
+   "label": "THE BREAK ROOM",
+   "head": 0.1,
+   "tail": 0.4,
+   "room": "break",
+   "amb": {
+    "name": "break",
+    "gain": 0.5
+   },
+   "beats": [
+    {
+     "id": "calm",
+     "pause": 1.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Four minutes. I have four minutes.",
+     "text": "Four minutes. I have four minutes.",
+     "gap": 0.25
+    },
+    {
+     "id": "m1",
+     "who": "mango",
+     "say": "A break!",
+     "text": "A break!",
+     "gap": 0.15
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "A break.",
+     "text": "A break.",
+     "gap": 0.35
+    },
+    {
+     "id": "sit",
+     "pause": 1.3,
+     "gap": 0.1
+    },
+    {
+     "id": "m2",
+     "who": "mango",
+     "say": "What do you do on a break?",
+     "text": "What do you do on a break?",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "I've forgotten.",
+     "text": "I've forgotten.",
+     "gap": 0.35
+    },
+    {
+     "id": "ring",
+     "pause": 0.8,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "a_call",
+       0.0,
+       0.8,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Forty seconds. That's a personal best.",
+     "text": "Forty seconds. That's a personal best.",
+     "gap": 0.3
+    },
+    {
+     "id": "m3",
+     "who": "mango",
+     "say": "Does it count?",
+     "text": "Does it count?",
+     "gap": 0.25
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "Mark the middle square.",
+     "text": "Mark the middle square.",
+     "gap": 0.3
+    },
+    {
+     "id": "dab",
+     "pause": 1.7,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "dab",
+       0.3,
+       0.9,
+       0
+      ],
+      [
+       "bingo_ding",
+       0.5,
+       0.6,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "m4",
+     "who": "mango",
+     "say": "That's a bingo!",
+     "text": "That's a bingo!",
+     "gap": 0.2
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "Of course it is.",
+     "text": "Of course it is.",
+     "gap": 0.3
+    }
+   ]
+  },
+  {
+   "id": "dawn",
+   "clock": "6:40 AM",
+   "label": "ROOM 14",
+   "head": 0.2,
+   "tail": 0.5,
+   "room": "room",
+   "amb": {
+    "name": "hum",
+    "gain": 0.3
+   },
+   "beats": [
+    {
+     "id": "open",
+     "pause": 1.2,
+     "gap": 0.1
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Last round.",
+     "text": "Last round.",
+     "gap": 0.3
+    },
+    {
+     "id": "m1",
+     "who": "moon",
+     "say": "Long night?",
+     "text": "Long night?",
+     "gap": 0.35
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "Sixteen hours.",
+     "text": "Sixteen hours.",
+     "gap": 0.3
+    },
+    {
+     "id": "m2",
+     "who": "moon",
+     "say": "I rise, I set, I repeat. Forever.",
+     "text": "I rise, I set, I repeat. Forever.",
+     "gap": 0.3
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Do you ever get a break?",
+     "text": "Do you ever get a break?",
+     "gap": 0.25
+    },
+    {
+     "id": "m3",
+     "who": "moon",
+     "say": "Eclipses. Four minutes, on a good one.",
+     "text": "Eclipses. Four minutes, on a good one.",
+     "gap": 0.35
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Same.",
+     "text": "Same.",
+     "gap": 0.4
+    },
+    {
+     "id": "set",
+     "pause": 2.2,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "birds6",
+       0.3,
+       0.5,
+       -0.3
+      ]
+     ]
+    },
+    {
+     "id": "m4",
+     "who": "moon",
+     "say": "Go home, Strawberry.",
+     "text": "Go home, Strawberry.",
+     "gap": 0.3
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "After report.",
+     "text": "After report.",
+     "gap": 0.3
+    },
+    {
+     "id": "m5",
+     "who": "moon",
+     "say": "Don't say the word.",
+     "text": "Don't say the word.",
+     "gap": 0.25
+    },
+    {
+     "id": "s6",
+     "who": "straw",
+     "say": "I wouldn't dare.",
+     "text": "I wouldn't dare.",
+     "gap": 0.3
+    }
+   ]
+  },
+  {
+   "id": "report",
+   "clock": "7:00 AM",
+   "label": "THE NURSES' STATION",
+   "head": 0.2,
+   "tail": 0.6,
+   "room": "hall",
+   "amb": {
+    "name": "hum",
+    "gain": 0.3
+   },
+   "beats": [
+    {
+     "id": "enter",
+     "pause": 1.6,
+     "gap": 0.05,
+     "sfx": [
+      [
+       "slidedoor",
+       0.1,
+       0.5,
+       0.3
+      ]
+     ]
+    },
+    {
+     "id": "li1",
+     "who": "lime",
+     "say": "Good morning! How was your night?",
+     "text": "Good morning! How was your night?",
+     "gap": 0.4
+    },
+    {
+     "id": "s1",
+     "who": "straw",
+     "say": "Quiet.",
+     "text": "Quiet.",
+     "gap": 0.2
+    },
+    {
+     "id": "flick",
+     "pause": 1.3,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "flicker",
+       0.1,
+       0.8,
+       0
+      ]
+     ]
+    },
+    {
+     "id": "li2",
+     "who": "lime",
+     "say": "You said the word.",
+     "text": "You said the word.",
+     "gap": 0.25
+    },
+    {
+     "id": "s2",
+     "who": "straw",
+     "say": "I'm off the clock.",
+     "text": "I'm off the clock.",
+     "gap": 0.35
+    },
+    {
+     "id": "calls",
+     "pause": 1.6,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "a_call",
+       0.0,
+       0.7,
+       -0.3
+      ],
+      [
+       "a_bed",
+       0.2,
+       0.6,
+       0.3
+      ],
+      [
+       "a_chair",
+       0.4,
+       0.6,
+       0
+      ],
+      [
+       "a_pump",
+       0.6,
+       0.6,
+       0.4
+      ]
+     ]
+    },
+    {
+     "id": "s3",
+     "who": "straw",
+     "say": "Good luck.",
+     "text": "Good luck.",
+     "gap": 0.35
+    },
+    {
+     "id": "li3",
+     "who": "lime",
+     "say": "Wait. You are back at three?",
+     "text": "Wait. You are back at three?",
+     "gap": 0.3
+    },
+    {
+     "id": "s4",
+     "who": "straw",
+     "say": "Yes.",
+     "text": "Yes.",
+     "gap": 0.25
+    },
+    {
+     "id": "li4",
+     "who": "lime",
+     "say": "Doesn't that...",
+     "text": "Doesn't that...",
+     "gap": 0.25
+    },
+    {
+     "id": "s5",
+     "who": "straw",
+     "say": "Yes.",
+     "text": "Yes.",
+     "gap": 0.3
+    }
+   ]
+  },
+  {
+   "id": "end",
+   "clock": "",
+   "label": "THANKS FOR WATCHING",
+   "head": 0.1,
+   "tail": 0.3,
+   "room": "hall",
+   "beats": [
+    {
+     "id": "card",
+     "pause": 7.5,
+     "gap": 0.1,
+     "sfx": [
+      [
+       "theme7",
+       0.0,
+       0.5,
+       0
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "music": {
+  "from_": "station",
+  "to_": "report",
+  "mute": []
+ },
+ "no_whoosh": [
+  "title",
+  "end"
+ ]
+}
