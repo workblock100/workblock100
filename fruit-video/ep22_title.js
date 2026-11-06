@@ -387,7 +387,7 @@ function stampInk(lt) {
   if (age < .8) for (let i = 0; i < 14; i++) { const a = rnd(2330, i) * TAU, d = STAMP.r + 8 + 50 * rnd(2331, i) * eO(sg(age, 0, .25)); ctx.fillStyle = `rgba(200,16,46,${(.8 * (1 - sg(age, .3, .8))).toFixed(3)})`; ctx.beginPath(); ctx.arc(STAMP.x + Math.cos(a) * d, STAMP.y + Math.sin(a) * d, 2 + 4 * rnd(2332, i), 0, TAU); ctx.fill(); }
 }
 const CHIPS = [
-  { name: 'STRAWBERRY', role: 'DREW BY EVERYONE', mk: t => window.A11 ? A11.straw({ t, expr: 'weak' }) : null, bg: '#ffe3e7' },
+  { name: 'STRAWBERRY', role: 'DRAWN BY EVERYONE', mk: t => window.A11 ? A11.straw({ t, expr: 'weak' }) : null, bg: '#ffe3e7' },
   { name: 'TOMATO', role: 'FUN COMMITTEE', mk: t => window.A15 && A15.tomato ? (window.A22 && A22.santaHat ? A22.santaHat(A15.tomato({ t, tomPose: 'fruit' }), { hatFlop: .55 }) : A15.tomato({ t })) : null, bg: '#ffe7d6' },
   { name: 'SANTA', role: 'THE ADMINISTRATOR', mk: t => window.A22 && A22.santa ? A22.santa({ t, expr: 'santa_jolly', hat: { hatFlop: .5 } }) : null, bg: '#f9dcdc' },
   { name: 'ONION', role: 'COMPLIANCE', mk: t => window.A15 && A15.onion ? A15.onion({ t, pose: 'rest', expr: 'onion_cry', cry: .5 }) : null, bg: '#f7eed6' },

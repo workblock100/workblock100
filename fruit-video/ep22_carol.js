@@ -77,7 +77,7 @@ function dipAt(lt) { const v = (lt - B0) / (BAR / 2), f = (v - Math.round(v)) * 
 // ------------------------------------------------------------------ the stage: numbers (world units)
 const FLW = 1200, FL = 1330, CEIL = 250;
 const WIN = { x0: 330, x1: 750, y0: 400, y1: 800 };                     /* the window's pane; the frame is 22 px round it, the sill below */
-const MOON = { x: 540, y: 600, s: 1.1 };                                /* A7.moon: radius 150 x s */
+const MOON = { x: 540, y: 600, s: 1.0 };                                /* A7.moon: radius 150 x s: 300 px across at zoom 1 (the match cut out) */
 const DOOR = { x0: 2020, x1: 2300, y0: 660 };                           /* the door to the corridor, hinged on its right edge, opening into the room */
 const CLOCK = { x: 2160, y: 560, r: 70 };                               /* THE clock (10:55): 140 px across, so 300 px on screen at zoom 2.14 */
 const TREE = { x: -310, y: FLW + 10, h: 830, w: 500 };
@@ -691,7 +691,7 @@ function eggOpts(lt) {
   Object.assign(o, { x, y, s, plant: true, who: 'egg', look: [-.5, .02], yaw: lerp(-.1, -.3, u), headYaw: -.3, arms: { l: 'rest', r: 'rest' } });
   if (u > 0 && u < 1) { o.gait = (2120 - x) * 3 / s; o.dir = -1; o.stride = 30; }
   if (lt >= wS('eg1', 1) - .15 && lt < wS('eg1', 2) - .05) { o.arms = { l: 'cheer', r: 'cheer' }; }
-  if (lt >= wS('eg1', 2) - .05) { const k = ss(lt, wS('eg1', 2) - .05, wS('eg1', 2) + .2); o.arms = { l: 'rest', r: 'hold' }; o.hand = { r: 'point' }; o.grip = { r: [lerp(80, 104, k), lerp(40, -150, k)] }; o.look = [.3, -.8]; o.headYaw = .1; }
+  if (lt >= wS('eg1', 2) - .05) { const k = ss(lt, wS('eg1', 2) - .05, wS('eg1', 2) + .2); o.arms = { l: 'rest', r: 'hold' }; o.hand = { r: 'point' }; o.grip = { r: [lerp(80, 110, k), lerp(40, -86, k)] }; o.look = [.3, -.8]; o.headYaw = .1; }
   if (lt >= ls('s3') - .1) { o.look = [-.8, .05]; o.headYaw = -.35; o.arms = { l: 'rest', r: 'rest' }; o.hand = {}; }
   return o;
 }
@@ -701,23 +701,23 @@ function eggOpts(lt) {
 const ROW = ['pear', 'straw', 'apple', 'moon'];                            /* the centre: Pear, Strawberry, Apple and the Moon in the window above her */
 const SH = [
   { id: 'open', s: 0, k: 'clock', show: [] },
-  { id: 'pe1', s: 1.20, k: 'face', foc: 'pear', z: [1.55, 1.6], up: 440, dx: -170, show: ['pear', 'straw'] },
-  { id: 's1', s: 2.80, k: 'pt', x: 546, y: [1040, 1050], z: [1.1, 1.13], show: ROW },
-  { id: 'pp', s: DB(0), k: 'face', foc: 'cran', z: [1.6, 1.66], up: 260, dx: 0, dof: 6, show: ['cran'] },
-  { id: 'up', s: DB(0) + 2 * BEAT, k: 'pt', x: 546, y: 1035, z: [1.04, 1.07], show: ROW },
-  { id: 'c1', s: DB(1), k: 'pt', x: [-80, -62], y: 1040, z: [1.1, 1.13], show: ['banana', 'cran', 'pear'] },
-  { id: 'c2', s: DB(2), k: 'pt', x: [546, 540], y: [1040, 1060], z: [1.06, 1.2], show: ROW },
-  { id: 'c3', s: DB(3), k: 'pt', x: 546, y: [1060, 990], z: [1.0, 1.06], show: ROW },
-  { id: 'c4', s: DB(4), k: 'pt', x: [1210, 1240], y: 1040, z: [1.1, 1.13], show: ['apple', 'goji', 'lime'] },
-  { id: 'c5', s: DB(5), k: 'pt', x: [-75, -85], y: 1040, z: [1.1, 1.14], show: ['banana', 'cran', 'pear'] },
-  { id: 'rx', s: RX, k: 'face', foc: 'straw', z: [1.7, 1.76], up: 320, dx: -130, dof: 6, show: ['straw'] },
-  { id: 'c6', s: DB(6), k: 'pt', x: [1410, 1418], y: 1040, z: [1.25, 1.28], show: ['goji', 'lime'] },
-  { id: 'c7a', s: DB(7), k: 'pt', x: 370, y: 1040, z: [1.35, 1.38], show: ['pear', 'straw', 'moon'] },
-  { id: 'c7b', s: C7B, k: 'pt', x: 546, y: [1040, 1030], z: [1.07, 1.09], show: ROW },
-  { id: 's2', s: DB(8), k: 'face', foc: 'straw', z: [1.85, 1.9], up: 320, dx: 0, dof: 6, show: ['straw'] },
-  { id: 'pe2', s: ls('pe2'), k: 'face', foc: 'pear', z: [1.6, 1.64], up: 380, dx: -150, dof: 6, show: ['pear'] },
+  { id: 'pe1', s: 1.20, k: 'pt', x: 380, y: [960, 970], z: [1.4, 1.44], show: ['pear', 'straw', 'moon'] },
+  { id: 's1', s: 2.80, k: 'pt', x: 540, y: [1000, 1010], z: [1.5, 1.54], dof: 6, show: ['straw'] },
+  { id: 'pp', s: DB(0), k: 'face', foc: 'cran', z: [1.6, 1.66], up: -60, dx: 0, dof: 6, show: ['cran'] },
+  { id: 'up', s: DB(0) + 2 * BEAT, k: 'pt', x: 546, y: 950, z: [1.04, 1.07], show: ROW },
+  { id: 'c1', s: DB(1), k: 'pt', x: [-118, -108], y: 950, z: [1.1, 1.12], show: ['banana', 'cran', 'pear'] },
+  { id: 'c2', s: DB(2), k: 'pt', x: [546, 540], y: [950, 975], z: [1.06, 1.2], show: ROW },
+  { id: 'c3', s: DB(3), k: 'pt', x: 546, y: [1000, 930], z: [1.0, 1.06], show: ROW },
+  { id: 'c4', s: DB(4), k: 'pt', x: [1210, 1240], y: 950, z: [1.1, 1.13], show: ['apple', 'goji', 'lime'] },
+  { id: 'c5', s: DB(5), k: 'pt', x: [-108, -118], y: 950, z: [1.1, 1.12], show: ['banana', 'cran', 'pear'] },
+  { id: 'rx', s: RX, k: 'pt', x: 620, y: [975, 985], z: [1.6, 1.64], dof: 6, show: ['straw'] },
+  { id: 'c6', s: DB(6), k: 'pt', x: [1410, 1418], y: 960, z: [1.25, 1.28], show: ['goji', 'lime'] },
+  { id: 'c7a', s: DB(7), k: 'pt', x: 370, y: 970, z: [1.35, 1.38], show: ['pear', 'straw', 'moon'] },
+  { id: 'c7b', s: C7B, k: 'pt', x: 546, y: [950, 940], z: [1.07, 1.09], show: ROW },
+  { id: 's2', s: DB(8), k: 'pt', x: 540, y: [1010, 1020], z: [1.5, 1.55], dof: 6, show: ['straw'] },
+  { id: 'pe2', s: ls('pe2'), k: 'pt', x: 348, y: 1000, z: [1.55, 1.58], show: ['pear', 'straw', 'moon'] },
   { id: 'eg1', s: CUE.doorchime, k: 'pt', x: 2150, y: [1000, 1010], z: [1.2, 1.24], show: ['egg'] },
-  { id: 's3', s: ls('s3'), k: 'face', foc: 'straw', z: [1.8, 1.88], up: 320, dx: 0, dof: 6, show: ['straw'] },
+  { id: 's3', s: ls('s3'), k: 'pt', x: 540, y: [1020, 1030], z: [1.55, 1.62], dof: 6, show: ['straw'] },
   { id: 'mo1', s: 26.33, k: 'pt', x: 540, y: [880, 860], z: [1.16, 1.22], show: ROW },
   { id: 'end', s: bS('end'), k: 'end', show: ROW },
 ];
@@ -725,7 +725,7 @@ for (const sh of SH) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
 SH.forEach((sh, i) => { sh.e = i + 1 < SH.length ? SH[i + 1].s : DUR; });
 const shotAt = lt => { let r = SH[0]; for (const sh of SH) if (lt >= sh.s - 1e-6) r = sh; return r; };
 const MZ = 1 / MOON.s, MCY = MOON.y + 200 / MZ;                          /* the match cut out: the Moon 300 px across, centred at (540, 760) */
-const END_IN = snapT(bS('end') + .08), END_HOLD = snapT(DUR - .45);
+const END_IN = snapT(bS('end') + .02), END_HOLD = snapT(DUR - .45);
 const OPEN_Z = 300 / (2 * CLOCK.r);
 let FR = null;
 function camC(lt) {
@@ -738,8 +738,8 @@ function camC(lt) {
     const k = ss(lt, .5, 1.6), z = lerp(OPEN_Z, 1.78, k);
     zoomTo(CLOCK.x, lerp(CLOCK.y - 20 / OPEN_Z, 640, k), z); still = lt < .55;
   } else if (sh.k === 'end') {                                               /* the warm wide, then a slow push into the window; still for the last .45 s */
-    const k = ss(lt, END_IN, END_HOLD), z = lerp(.66, MZ, k);
-    zoomTo(540, lerp(1000, MCY, k), z); still = lt >= END_HOLD - .02;
+    const k = ss(lt, END_IN, END_HOLD), z = lerp(.7, MZ, k);
+    zoomTo(540, lerp(980, MCY, k), z); still = lt >= END_HOLD - .02;
   } else if (sh.k === 'face') {
     const o = sh.foc === 'straw' ? C.straw : C.res[sh.foc], z = lerp(sh.z[0], sh.z[1], easeIO(u)), [fx, fy] = faceC(o);
     zoomTo(fx - (sh.dx || 0) / z, fy + sh.up / z, z);

@@ -598,12 +598,12 @@ function beltOn(lt, b, hands) {
 }
 
 // ------------------------------------------------------------------ torn paper and tossed things of the search (stand-ins: closed-form flights with air drag, landings, rests)
-const LAND = [[690, 1336, -.4], [826, 1342, .3], [946, 1334, -.15]];                /* where the stapler, the candle and the glove box come to rest (in front of the pile) */
+const LAND = [[540, 1338, -.4], [628, 1348, .3], [452, 1342, -.15]];                /* where the stapler, the candle and the glove box come to rest (tossed low to her left, on the floor) */
 function flight(i, j, lt) {
   const t0 = RIPS[i], age = lt - t0; if (age < 0) return null;
   const g = SG[i], big = j < 3, k = i * 10 + j;
-  const x0 = POS.straw.x + 96 + (sr(k, 1) - .5) * 40, y0 = 1170 + (sr(k, 2) - .5) * 30;
-  const vx = (j % 2 ? 1 : -1) * (120 + 380 * sr(k, 3)) + 60, vy = -(420 + 420 * sr(k, 4)) * (big ? 1 : 1.15), tau = big ? .42 : .3, vt = big ? 210 : 260;
+  const x0 = HOLDP[0] + g.w * .3 + 30 * sr(k, 1), y0 = HOLDP[1] - g.h * .6 + (sr(k, 2) - .5) * 30;
+  const vx = (220 + 460 * sr(k, 3)) * (big ? 1 : 1.2), vy = -(260 + 420 * sr(k, 4)) * (big ? 1 : 1.1), tau = big ? .42 : .3, vt = big ? 210 : 260;
   const yL = (x => (x > PILE.x0 + 20 && x < PILE.x1 - 20 && sr(k, 5) < .4) ? 1190 + 30 * sr(k, 6) : 1306 + 52 * sr(k, 6));
   const X = t => x0 + vx * tau * (1 - Math.exp(-t / tau)) + 26 * Math.sin(t * 5 + k) * (1 - Math.exp(-t / tau)), Y = t => y0 + vt * t + (vy - vt) * tau * (1 - Math.exp(-t / tau));
   let lo = .05, hi = 6, land = yL(X(hi)); if (Y(hi) < land) hi = 99;
@@ -749,20 +749,12 @@ function tomOpts(lt) {
 /* Strawberry (per diem, flat): the search at the pile, the cup, "Found them." */
 function strawOpts(lt) {
   const s = POS.straw.s, x = 712;
-  let arms = { l: 'hold', r: 'hold' }, grip = { l: [70, 70], r: [130, 64] }, hand = { l: 'grip', r: 'grip' }, look = [.6, .35], yaw = .4, head = .45, expr = 'neutral', lid = .45;
-  const g = searchState(lt);
-  if (g) {
-    const o0 = { kind: 'straw', x, y: FY, s, lift: -11.8 * s };
-    if (g.hold) { grip.l = toLocal(o0, [g.hold[0] - 34, g.hold[1] + 4]); grip.r = toLocal(o0, [g.hold[0] + 34, g.hold[1] + 4]); }
-    if (g.reach) grip.r = toLocal(o0, g.reach);
-    if (g.yank) grip.r = toLocal(o0, g.yank);
-    if (g.toss) grip.l = toLocal(o0, g.toss);
-    look = g.look || look;
-  }
-  if (lt >= 16.9) { arms = { l: 'hold', r: 'rest' }; grip = { l: [92, 6] }; look = [.35, -.05]; head = .25; }
-  if (lt >= 17.8) { arms = { l: 'rest', r: 'hold' }; grip = { r: [118, -64] }; hand = { r: 'grip' }; look = [-.1, -.05]; yaw = .15; head = .05; expr = 'neutral'; lid = .5; }
-  const o = A11.straw({ t: lt, x, y: FY, s, who: 'straw', expr, lid, look, yaw, headYaw: head, arms, grip, hand, seed: 23 });
-  return o;
+  let arms = { l: 'hold', r: 'hold' }, grip = { l: [-60, 90], r: [60, 90] }, hand = { l: 'grip', r: 'grip' }, look = [.1, .5], yaw = .15, head = .1, expr = 'neutral', lid = .45;
+  const o0 = { kind: 'straw', x, y: FY, s, lift: -11.8 * s }, g = searchState(lt);
+  if (g) { if (g.l) grip.l = toLocal(o0, g.l); if (g.r) grip.r = toLocal(o0, g.r); look = g.look; }
+  if (lt >= 16.9 && lt < 17.8) { grip = { l: toLocal(o0, [HOLDP[0] - 46, HOLDP[1] - 44]), r: toLocal(o0, [HOLDP[0] + 46, HOLDP[1] - 44 - 26 * ss(lt, 17.0, 17.12)]) }; look = [0, .6]; lid = lt > CUE.clack ? .2 : .45; expr = lt > CUE.clack + .05 ? 'shock' : 'neutral'; }
+  if (lt >= 17.8) { arms = { l: 'rest', r: 'hold' }; grip = { r: [150, -50] }; hand = { r: 'grip' }; look = [-.15, -.05]; yaw = .12; head = .05; expr = 'neutral'; lid = .5; }
+  return A11.straw({ t: lt, x, y: FY, s, who: 'straw', expr, lid, look, yaw, headYaw: head, arms, grip, hand, armScale: 1.38, seed: 23 });
 }
 /* Lemon: flat; "Get the Hoyer." with her hand already on it; she pushes it in */
 function lemonOpts(lt) {
@@ -818,8 +810,8 @@ function wheelFront(x, y, s, col, ryS, rxS, fl) {
   }
   ctx.restore();
 }
-function lapBlanket(x, y, s, rxS, col, col2) {
-  ctx.save(); ctx.lineJoin = 'round'; const w = (rxS + 6) * s, ty = y - 38 * s;
+function lapBlanket(x, y, s, rxS, col, col2, top = 38) {
+  ctx.save(); ctx.lineJoin = 'round'; const w = (rxS + 6) * s, ty = y - top * s;
   ctx.beginPath(); ctx.moveTo(x - w, ty); ctx.quadraticCurveTo(x, ty - 16 * s, x + w, ty); ctx.lineTo(x + w * 1.06, y + 52 * s); for (let i = 6; i >= 0; i--) ctx.lineTo(x - w * 1.06 + (i / 6) * w * 2.12, y + 52 * s + (i % 2 ? 9 : 0) * s); ctx.closePath();
   ctx.fillStyle = col; ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = Math.max(2, 3.6 * s); ctx.stroke(); ctx.clip();
   ctx.strokeStyle = col2; ctx.globalAlpha = .55; ctx.lineWidth = Math.max(2, 9 * s); for (let i = -4; i <= 4; i++) { ctx.beginPath(); ctx.moveTo(x + i * w / 4, ty - 40 * s); ctx.lineTo(x + i * w / 4, y + 70 * s); ctx.stroke(); }
@@ -831,33 +823,33 @@ function drawResident(n, o, audited) {
   if (!audited) REG.suppress++;
   wheelBack(x, y, s, R.col, k.ry, k.rx, FY);
   drawChar(o);
-  lapBlanket(x, y, s, k.rx, R.blanket[0], R.blanket[1]);
+  lapBlanket(x, y, s, k.rx, R.blanket[0], R.blanket[1], n === 'cran' ? 4 : 30);
   wheelFront(x, y, s, R.col, k.ry, k.rx, FY);
   if (!audited) REG.suppress--;
 }
 
 // ------------------------------------------------------------------ the search: which gift is where, the hands, the tossed things (pure functions of lt)
-const HOLDP = [842, 1214];
+const HOLDP = [722, 1262];                                  /* where she holds each gift: its bottom centre, in front of her belly */
 function giftAt(i, lt) {
   const g = SG[i], R = RIPS[i], t0 = R - .26, t1 = R - .05;
   if (lt < t0) return { x: g.x, y: g.y, rot: g.rot, k: 0 };
-  const k = ss(lt, t0 + .06, t1), arc = Math.sin(PI * k) * 40;
-  return { x: lerp(g.x, HOLDP[0], k), y: lerp(g.y, HOLDP[1] + g.h * .45, k) - arc, rot: lerp(g.rot, 0, k), k };
+  const k = ss(lt, t0 + .04, t1), arc = Math.sin(PI * k) * 46;
+  return { x: lerp(g.x, HOLDP[0], k), y: lerp(g.y, HOLDP[1], k) - arc, rot: lerp(g.rot, 0, k), k };
 }
 function itemAt(i, lt) {
   const R = RIPS[i]; if (lt < R) return null;
-  if (i === 3) { const up = ss(lt, 16.55, 16.85); return { x: HOLDP[0] - 6 * up, y: HOLDP[1] + 26 - 34 * up, rot: 0, held: true }; }
-  const tT = R + .2, tL = R + .52, [lx, ly, lr] = LAND[i];
-  if (lt < tT) return { x: HOLDP[0], y: HOLDP[1] + 24, rot: 0, held: true };
-  if (lt < tL) { const u = (lt - tT) / (tL - tT); return { x: lerp(HOLDP[0], lx, u), y: lerp(HOLDP[1] + 24, ly, u) - 170 * u * (1 - u) * 1.6, rot: lerp(0, lr + 2 * PI * (i % 2 ? 1 : -1), u), held: false }; }
-  const bt = lt - tL; return { x: lx, y: ly - 14 * Math.abs(Math.sin(bt * 14)) * Math.exp(-bt * 9), rot: lr, held: false };
+  if (i === 3) { const up = ss(lt, 16.5, 16.8); return { x: HOLDP[0], y: HOLDP[1] - 4 - 16 * up, rot: 0, held: true }; }
+  const tT = R + .2, tL = R + .5, [lx, ly, lr] = LAND[i];
+  if (lt < tT) return { x: HOLDP[0], y: HOLDP[1] - 4, rot: 0, held: true };
+  if (lt < tL) { const u = (lt - tT) / (tL - tT); return { x: lerp(HOLDP[0], lx, u), y: lerp(HOLDP[1] - 4, ly, u) - 90 * u * (1 - u), rot: lerp(0, lr + 2 * PI * (i % 2 ? 1 : -1), u), held: false }; }
+  const bt = lt - tL; return { x: lx, y: ly - 12 * Math.abs(Math.sin(bt * 14)) * Math.exp(-bt * 9), rot: lr, held: false };
 }
 function drawItem(i, it, lt, s = 1) {
   const kind = SG[i].item;
   if (kind === 'stapler') stapler(it.x, it.y, s, it.rot);
   else if (kind === 'candle') candle(it.x, it.y, s * .95, it.rot);
   else if (kind === 'gloves') gloveBox(it.x, it.y, s * .9, it.rot);
-  else dentureCup(it.x, it.y, s, it.rot, cupOpen(lt), cupClack(lt), lt, false);
+  else dentureCup(it.x, it.y, 1.22 * s, it.rot, cupOpen(lt), cupClack(lt), lt, FR && FR.sh.k === 'cup');
 }
 const cupOpen = lt => ss(lt, 17.02, 17.2);
 const cupClack = lt => lt < CUE.clack ? 0 : Math.abs(Math.sin((lt - CUE.clack) * 22)) * Math.exp(-(lt - CUE.clack) * 5);
@@ -865,10 +857,11 @@ const cupClack = lt => lt < CUE.clack ? 0 : Math.abs(Math.sin((lt - CUE.clack) *
 function searchState(lt) {
   if (lt < 14.3 || lt >= 16.9) return null;
   let i = 0; for (let j = 0; j < 4; j++) if (lt >= RIPS[j] - .3) i = j;
-  const R = RIPS[i], g = giftAt(i, lt), r = { hold: null, reach: null, yank: null, toss: null, look: [.7, .45] };
-  if (lt < R - .05) { const k = ss(lt, R - .3, R - .2) * (1 - ss(lt, R - .2, R - .05)); r.reach = [lerp(HOLDP[0] + 34, g.x, Math.max(k, g.k < 1 ? ss(lt, R - .3, R - .2) : 0)), lerp(HOLDP[1], g.y - SG[i].h * .5, ss(lt, R - .3, R - .2))]; if (g.k > 0) r.reach = [g.x + 30, g.y - SG[i].h * .5]; r.hold = [HOLDP[0], HOLDP[1] + 6]; r.look = [.75, .5]; }
-  else if (lt < R + .2) { r.hold = [HOLDP[0], HOLDP[1] + 6]; const y = ss(lt, R - .02, R + .1); r.yank = [lerp(HOLDP[0] + 34, HOLDP[0] + 130, y), lerp(HOLDP[1], HOLDP[1] - 70, y)]; r.look = [.55, .3]; }
-  else { r.hold = [HOLDP[0], HOLDP[1] + 6]; if (i < 3) { const k = ss(lt, R + .2, R + .3); r.toss = [lerp(HOLDP[0] - 34, HOLDP[0] + 20, k), lerp(HOLDP[1] + 4, HOLDP[1] - 40, k)]; } r.look = [.6, .3]; }
+  const R = RIPS[i], g = giftAt(i, lt), G = SG[i], r = { l: null, r: null, look: [.1, .5] };
+  const sideL = [g.x - G.w / 2 - 4, g.y - G.h * .45], sideR = [g.x + G.w / 2 + 4, g.y - G.h * .45];
+  if (lt < R - .05) { const k = ss(lt, R - .3, R - .2); r.r = k < 1 && g.k === 0 ? [lerp(HOLDP[0] + 60, G.x + G.w / 2, k), lerp(HOLDP[1] - 50, G.y - G.h * .5, k)] : sideR; r.l = g.k > .3 ? sideL : [HOLDP[0] - 70, HOLDP[1] - 70]; r.look = [.4, .3]; }
+  else if (lt < R + .2) { const y = ss(lt, R - .03, R + .09); r.l = [HOLDP[0] - 40, HOLDP[1] - 40]; r.r = [lerp(sideR[0], HOLDP[0] + 150, y), lerp(sideR[1], HOLDP[1] - 120, y)]; r.look = [.15, .55]; }
+  else { const k = ss(lt, R + .2, R + .32); r.l = i < 3 ? [lerp(HOLDP[0] - 40, HOLDP[0] - 120, k), lerp(HOLDP[1] - 40, HOLDP[1] - 10, k)] : [HOLDP[0] - 40, HOLDP[1] - 40]; r.r = [HOLDP[0] + 50, HOLDP[1] - 40]; r.look = i < 3 ? [-.3, .5] : [0, .55]; }
   return r;
 }
 
@@ -967,14 +960,15 @@ function drawS(lt) {
   const bg = new Set(sh.bg || []);
   const room = () => { roomShell(lt); nightWindow(lt); stringLights(lt, bulbs); fireTV(lt); tree(lt, bulbs); };
   const bgCast = () => { REG.suppress++; for (const n of bg) { const o = C[n]; if (!o) continue; if (n === 'pear' || n === 'cran') drawResident(n, o, false); else drawChar(o); } REG.suppress--; };
-  if (bg.size) { SOFT++; V2.dof(5, () => { room(); bgCast(); }); SOFT--; } else room();
+  if (bg.size) { SOFT++; V2.dof(5, room); SOFT--; } else room();
   const H = lt >= 20.6 ? hoyerAt(lt) : null;
   if (H) hoyerDraw(H, lt, 'back');
   /* the pile, the paper and the gifts still on it */
   for (const g of PILEG) gift(g);
   paperStand(lt, 'back');
   for (let i = 0; i < 4; i++) if (lt < RIPS[i] - .26) gift(SG[i]);
-  const drawIf = (n, fn) => { const o = C[n]; if (!o || bg.has(n)) return; const p = place(o); if (p === 'in' || (o.transit && p !== 'out')) fn(o, true); else if (p === 'sliver') fn(o, false); };
+  const moving = sh.k === 'open' && lt > .28 && lt < 1.46;
+  const drawIf = (n, fn) => { const o = C[n]; if (!o || bg.has(n)) return; if (moving) o.transit = true; const p = place(o); if (p === 'in' || (o.transit && p !== 'out')) fn(o, true); else if (p === 'sliver') fn(o, false); };
   const plain = (o, audited) => { if (!audited) REG.suppress++; drawChar(o); if (!audited) REG.suppress--; };
   drawIf('pear', (o, a) => drawResident('pear', o, a));
   drawIf('cran', (o, a) => drawResident('cran', o, a));
@@ -984,6 +978,7 @@ function drawS(lt) {
   const so = C.santa, b = so.__b, seated = so.__pose === 'seated', lifted = so.__pose === 'hoyer', slingOn = lt >= 21.9, sim = !!simInit();
   chairBack(lt, seated || lifted ? 1 - ss(lt, CUE.lift + .3, CUE.lift + .9) : 0);
   if (!seated) chairFront(lt, 0);
+  if (bg.size) { SOFT++; V2.dof(5, bgCast); SOFT--; }                              /* the neighbours out of focus, in front of the set */
   if (H) hoyerDraw(H, lt, 'bar');
   if (slingOn && sim) slingSim(lt);                                                    /* the sling behind him: he sits in it */
   const santa = (o, a) => {

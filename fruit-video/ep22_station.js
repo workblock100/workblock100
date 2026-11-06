@@ -366,7 +366,11 @@ function tinselP(pts, o = {}) {
 }
 /* a named stocking hanging from a hook (A22.stocking when the kit has it): o = { x, y (the hook), s, name, color, t, seed } */
 function stockingP(o) {
-  if (hasA('stocking')) return A22.stocking(ctx, o);
+  if (hasA('stocking')) {                                /* the kit's stocking without its name; the name ours (dressing that may be cropped at a frame edge) */
+    const k = .5 * (o.s || 1); A22.stocking(ctx, { x: o.x, y: o.y + 4, s: k, color: o.color, t: o.t, seed: o.seed, dir: 1 });
+    if (o.name) TXT(o.name, o.x, o.y + 4 + 19 * k, { size: 17 * k * 1.1, fill: '#8a1622', weight: 900, maxW: 84 * k, hero: false, crop: true });
+    return;
+  }
   const s = o.s || 1, col = o.color || '#c62828', sw = .03 * Math.sin((o.t || 0) * 1.2 + (o.seed || 0));
   ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(sw); ctx.scale(s, s); ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(-30, 30); ctx.lineTo(-30, 118); ctx.quadraticCurveTo(-30, 150, 2, 150); ctx.lineTo(34, 150); ctx.quadraticCurveTo(56, 148, 56, 128); ctx.quadraticCurveTo(54, 110, 30, 106); ctx.lineTo(30, 30); ctx.closePath();
@@ -634,7 +638,7 @@ function stRoom(st, o = {}) {
 const DC = { jingle: .3, sniffle: 5.058, pop: 11.437, shuffle: 14.87, whoosh: [15.57, 15.87, 16.17, 16.47], ding: 17.97, grin: 21.969, sting: 28.74 };
 for (const k in DC) DC[k] = Array.isArray(DC[k]) ? DC[k].map(TD.snapT) : TD.snapT(DC[k]);
 const DFL = FL + 20;                                                               /* the back row stands just in front of the counter */
-const DX = { straw: 300, mango: 476, tom: 800, onion: 1124, lemon: 1316 };          /* the row at the station (Tomato a step forward in the middle) */
+const DX = { straw: 222, mango: 410, tom: 800, onion: 1124, lemon: 1316 };          /* the row at the station (Tomato a step forward in the middle) */
 const DY = { straw: DFL, mango: DFL, tom: FL + 104, onion: DFL, lemon: DFL };
 const DS = { straw: .84, mango: .86, tom: .9, onion: .84, lemon: .84 };
 const DLAP = { x: 640 };                                                           /* the laptop sits between Mango and Tomato in this scene */
@@ -868,10 +872,10 @@ function insBubble(lt, sh) {
 // ------------------------------------------------------------------ DRAW: the shots (scene-local s; every start snapped to a frame; the boundary frame is the NEW shot)
 const ALLD = ['straw', 'mango', 'tom', 'onion', 'lemon'];
 const DSH = [
-  { id: 'hat', s: 0, k: 'hat', show: ALLD },                                                                  /* the match cut: the hat of names at (540, 760), still; the pull back from 0.30 */
-  { id: 't1', s: 1.40, k: 'pt', x: 712, y: 1128, z: [1.3, 1.36], show: ALLD, dof: 3 },
+  { id: 'hat', s: 0, k: 'hat', show: ['mango', 'tom'] },                                                                  /* the match cut: the hat of names at (540, 760), still; the pull back from 0.30 */
+  { id: 't1', s: 1.40, k: 'pt', x: 712, y: 1128, z: [1.3, 1.36], show: ['mango', 'tom'], dof: 3 },
   { id: 'o1', s: 3.40, k: 'face', foc: 'onion', z: [1.72, 1.8], up: 130, dx: -110, show: ['tom', 'onion', 'lemon'], dof: 4 },
-  { id: 'm1', s: 6.00, k: 'face', foc: 'mango', z: [1.66, 1.72], up: 120, dx: -70, show: ['straw', 'mango', 'tom'], dof: 4 },
+  { id: 'm1', s: 6.00, k: 'face', foc: 'mango', z: [1.66, 1.72], up: 120, dx: -70, show: ['straw', 'mango'], dof: 4 },
   { id: 'l0', s: 7.72, k: 'face', foc: 'lemon', z: [1.62, 1.68], up: 110, dx: 50, show: ['onion', 'lemon'], dof: 4 },
   { id: 's1', s: 9.25, k: 'face', foc: 'straw', z: [1.6, 1.66], up: 110, dx: -60, show: ['straw', 'mango'], dof: 4 },
   { id: 't2', s: 10.38, k: 'face', foc: 'tom', z: [1.42, 1.46], up: 90, dx: 120, show: ['mango', 'tom'], dof: 4 },
@@ -879,15 +883,15 @@ const DSH = [
   { id: 'pop', s: 11.40, k: 'lap', z: [2.7, 2.78], show: [], dof: 3 },
   { id: 'b1', s: 11.90, k: 'lap', ins: 'bubble', z: [2.78, 2.8], show: [], dof: 12 },
   { id: 't3', s: 13.76, k: 'face', foc: 'tom', z: [1.4, 1.46], up: 40, dx: 150, show: ['mango', 'tom'], dof: 4 },
-  { id: 'draw', s: 14.70, k: 'draw', show: ALLD },
+  { id: 'draw', s: 14.70, k: 'draw', show: ['mango', 'tom'] },
   { id: 'l1', s: 18.80, k: 'face', foc: 'lemon', z: [1.6, 1.66], up: 120, dx: 60, show: ['onion', 'lemon'], dof: 4 },
   { id: 's2', s: 20.38, k: 'face', foc: 'straw', z: [1.7, 1.76], up: 120, dx: -40, show: ['straw', 'mango'], dof: 4 },
-  { id: 'b2', s: 21.40, k: 'draw', ins: 'graph', show: ALLD, still: true },
+  { id: 'b2', s: 21.40, k: 'draw', ins: 'graph', show: ['straw', 'mango', 'tom'], still: true },
   { id: 'o2', s: 22.24, k: 'face', foc: 'onion', z: [1.72, 1.8], up: 120, dx: -110, show: ['tom', 'onion', 'lemon'], dof: 4 },
-  { id: 't4', s: 24.16, k: 'face', foc: 'tom', z: [1.48, 1.54], up: 60, dx: 130, show: ['mango', 'tom'], dof: 4 },
+  { id: 't4', s: 24.16, k: 'face', foc: 'tom', z: [1.48, 1.54], up: 60, dx: 130, show: ['tom'], dof: 4 },
   { id: 's3', s: 25.38, k: 'face', foc: 'straw', z: [1.55, 1.6], up: -10, dx: -40, show: ['straw', 'mango'], dof: 4 },
-  { id: 't5', s: 27.24, k: 'pt', x: 760, y: 1116, z: [1.06, 1.1], show: ALLD, dof: 2 },
-  { id: 'end', s: 28.56, k: 'draw', ins: 'graph', show: ALLD, still: true },
+  { id: 't5', s: 27.24, k: 'pt', x: 760, y: 1116, z: [1.06, 1.1], show: ['mango', 'tom', 'onion'], dof: 2 },
+  { id: 'end', s: 28.56, k: 'draw', ins: 'graph', show: ['straw', 'mango', 'tom'], still: true },
 ];
 const dShot = shots(TD, DSH);
 const SH_OF = id => DSH.find(s => s.id === id);

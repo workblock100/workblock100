@@ -267,7 +267,7 @@ function labelGunArt(fire) {
 EXT.prop.fp22w_labelgun = (side, o, t) => { const S = o.lgScale || 1.1; ctx.save(); ctx.rotate((o.lgRot ?? -.15) * side); ctx.scale(S * side, S); labelGunArt(c01(o.lgFire || 0)); ctx.restore(); };
 PROP_BOX.fp22w_labelgun = Object.assign([-46, -72, 74, 46], { mirror: true });
 /* the box of gloves held up (s4, balA): a held prop in the left hand */
-EXT.prop.fp22w_gbox = (side, o, t) => { const S = o.gbScale || .9; ctx.save(); ctx.scale(S, S); ctx.translate(-4, 40); REG.suppress++; gloveBox(ctx, { x: 0, y: 0, s: 1, t, peek: 1, label: false }); REG.suppress--; ctx.restore(); };
+EXT.prop.fp22w_gbox = (side, o, t) => { const S = o.gbScale || .9; ctx.save(); ctx.scale(S, S); ctx.translate(-4, 40); gloveBox(ctx, { x: 0, y: 0, s: 1, t, peek: 1, hero: false }); ctx.restore(); };
 PROP_BOX.fp22w_gbox = o => { const S = o.gbScale || .9; return Object.assign([-66 * S, -50 * S, 72 * S, 44 * S], { nearFace: true }); };
 
 // ------------------------------------------------------------------ THE SET (world px): ceiling, wall, floor, doors, the cart, the holiday dressing
@@ -411,7 +411,7 @@ function medCart(lt) {
   ctx.fillStyle = '#d6203a'; rr(x0 - 28, top + 30, 26, 52, 5); ctx.fill(); ink(2.2); ctx.fillStyle = '#f4f4f4'; rr(x0 - 30, top + 24, 30, 9, 3); ctx.fill(); ink(1.6);   /* the sharps box on its side */
   ctx.restore();
   /* the PUDDING CUPS label on the top drawer (the match cut's label; hero only in the shot that is on it) */
-  wlabel(DLAB.x, DLAB.y, DLAB.w, DLAB.h, [{ t: 'PUDDING CUPS', size: 17 }], { hero: HEROMODE && DLAB.hero });
+  wlabel(DLAB.x, DLAB.y, DLAB.w, DLAB.h, [{ t: 'PUDDING CUPS', size: 17 }], { hero: HEROMODE && DLAB.hero ? undefined : false });
 }
 const DLAB = { x: 380, y: 1134, w: 140, h: 40, hero: false };
 /* the gift in the hall (world px): an open box (the pudding goes in at PUT), then the Chux-wrapped box (after the insert), its tape, the label (from the slap), the glove bow (from SET) */
@@ -558,7 +558,7 @@ function insertProps(lt) {
   tapeRoll(ctx, { x: I.roll[0], y: I.roll[1], s: 1.55, t: lt });
   const tab = HAND.tape.every(tp => lt < tp.t0 || lt >= tp.tear);                                 /* the tape's end sticking out of the roll, waiting */
   if (tab) { ctx.fillStyle = 'rgba(250,247,236,.95)'; ctx.strokeStyle = 'rgba(120,110,90,.55)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(I.roll[0] + 46, I.roll[1] - 30); ctx.lineTo(I.roll[0] + 72, I.roll[1] - 22); ctx.lineTo(I.roll[0] + 70, I.roll[1] - 4); ctx.lineTo(I.roll[0] + 50, I.roll[1] - 12); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  gloveBox(ctx, { x: I.gbox[0], y: I.gbox[1], s: 1.05, t: lt, peek: 1, hero: false });
+  gloveBox(ctx, { x: I.gbox[0] + 60, y: I.gbox[1], s: 1.05, t: lt, peek: 1, hero: false });
 }
 /* insert A, the wrap: shake, drop, drape, fold, fold, tape, tape */
 function drawInsertA(lt) {
@@ -689,7 +689,7 @@ function mangoOpts(lt, sh) {
   const id = sh ? sh.id : '';
   if (speaking('m1', lt)) { o.expr = 'hopeful'; o.browUp = 4; }
   if (id === 'm2' || (lt >= 9.26 && lt < 10.4)) { o.expr = 'neutral'; o.browUp = 10; o.look = [.6, .35]; o.headYaw = .7; }
-  if (id === 'm3' || id === 's2') { o.expr = 'hopeful'; o.look = [.6, .3]; o.lean = 4; }
+  if (id === 'm3' || id === 's2') { o.expr = 'hopeful'; o.look = [.6, .3]; o.yaw = .3; o.headYaw = .6; }
   if (id === 's2b' && lt > 13.0) { o.expr = 'happy'; o.look = [.5, .1]; }
   return o;
 }
@@ -698,6 +698,7 @@ function onionOpts(lt, sh) {
   if (lt < T_MANGO_GONE) return null;
   const sp = speaking('o1', lt) || speaking('o2', lt), joy = ss(lt, W_INIT, W_INIT + .3) * (1 - ss(lt, 16.6, 17.2)) + ss(lt, W_NITRILE + .1, W_NITRILE + .4);
   const o = A15.onion({ t: lt, x: L.pos.onion, y: FY, s: 1, who: 'onion', yaw: .55, headYaw: .6, look: [.5, .05], cry: c01(.55 + (sp ? .25 : 0) + .4 * joy), sob: joy > .3 ? .5 + .5 * Math.sin(lt * 9) : 0, expr: 'onion_cry' });
+  if (o.grip && o.grip.l) o.grip = Object.assign({}, o.grip, { l: [-64, 110] });                     /* the tablet a little lower than the kit's: clear of her face at a three-quarter turn */
   const id = sh ? sh.id : '';
   if (id === 'o2' && lt > W_LATEX - .25) { o.arms = Object.assign({}, o.arms, { r: 'up' }); o.hand = { r: 'point' }; o.headYaw = .45; o.look = [.25, -.7]; }
   if (id === 'balB' || id === 'end') { o.look = [.3, -.7]; }
@@ -843,7 +844,7 @@ function drawWorld(lt, sh, C) {
   medCart(lt);
   /* on the cart top: the tape roll, the gift, the glove box (until she picks it up) */
   tapeRoll(ctx, { x: 352, y: CART.top - 22, s: .62, t: lt });
-  if (lt < 17.95) gloveBox(ctx, { x: 596, y: CART.top - 2, s: .55, t: lt, peek: 1, hero: false });
+  if (lt < 17.95) gloveBox(ctx, { x: 596, y: CART.top - 2, s: .55, t: lt, peek: 1, hero: false, label: false });
   giftWorld(lt, { noLabel: sh.id === 's3' });
   const m = C.straw ? mouthOf(C.straw) : [575, 1065], bow = bowState(lt, [m[0] - 6, m[1] + 4]);
   if (bow && !bow.held) gloveBalloon(ctx, bow);
