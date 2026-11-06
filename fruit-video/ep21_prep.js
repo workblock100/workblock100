@@ -1181,35 +1181,34 @@ function lemonH(lt, X, Z, o = {}) {
   return A7.lemon({ x: q.x, y: q.y, s: q.s * CSl, t: lt, who: 'lemon', expr: 'neutral', lid: .48, face: { curve: .02 }, look: o.look || [.7, 0], yaw: o.yaw ?? .45, headYaw: o.yaw ?? .45, plant: true,
     arms: { l: 'rest', r: one ? 'hold' : 'rest' }, hand: { r: one ? 'point' : 'open' }, grip: { r: [96, -60] } });
 }
-const HSHOT = {
-  melon: { cx: 520, cy: 980, z: [1.22, 1.3] }, agency: { cx: 540, cy: 900, z: [1.0, 1.04] }, front: { cx: 540, cy: 1010, z: [1.36, 1.42] }, straw: { cx: 470, cy: 960, z: [1.12, 1.18] }, lemon: { cx: 560, cy: 960, z: [1.16, 1.24] },
-};
+/* the hall shots: where the speakers stand (X, Z) and the 2D framing on top of the perspective (z = zoom; the frame centre follows the speaker's face) */
+const HPOS = { melon: [0, 1180], strawA: [-232, 1080], melonA: [232, 1080], strawS: [170, 980], lemonL: [-170, 980] };
+const faceH = o => faceC(o);
 function camHall(lt, sh) {
   V2.setCam(HALLC);
-  const c = HSHOT[sh.k], u = c01((lt - sh.s) / Math.max(.1, sh.e - sh.s)), z = lerp(c.z[0], c.z[1], easeIO(u));
-  zoomTo(c.cx, c.cy, z); CAM.x += 1.6 * hnoise(lt, 1.3, 4); CAM.y += 1.2 * hnoise(lt, 1.1, 5);
-  if (sh.k === 'agency') CAM.shake = 3 * (hitK(lt - CUE.poof[2], .1) + .6 * hitK(lt - CUE.poof[1], .1) + .4 * hitK(lt - CUE.poof[0], .1));
+  const u = c01((lt - sh.s) / Math.max(.1, sh.e - sh.s)), e = easeIO(u);
+  let cx = 540, cy = 1000, z = 1;
+  if (sh.k === 'melon') { const [fx, fy] = faceH(melonH(lt, ...HPOS.melon)); cx = fx; cy = fy + 70; z = lerp(1.52, 1.6, e); }
+  if (sh.k === 'agency') { cx = 540; cy = 1070; z = lerp(1.16, 1.2, e); }
+  if (sh.k === 'front') { cx = 540; cy = 1040; z = lerp(1.46, 1.5, e); }
+  if (sh.k === 'straw') { const [fx, fy] = faceH(strawH(lt, ...HPOS.strawS)); cx = fx - 110; cy = fy + 70; z = lerp(1.28, 1.34, e); }
+  if (sh.k === 'lemon') { const [fx, fy] = faceH(lemonH(lt, ...HPOS.lemonL)); cx = fx + 110; cy = fy + 70; z = lerp(1.28, 1.36, e); }
+  zoomTo(cx, cy, z); CAM.x += 1.6 * hnoise(lt, 1.3, 4); CAM.y += 1.2 * hnoise(lt, 1.1, 5);
+  if (sh.k === 'agency') CAM.shake = 2.4 * (hitK(lt - CUE.poof[2], .1) + .6 * hitK(lt - CUE.poof[1], .1) + .4 * hitK(lt - CUE.poof[0], .1));
   FR = { sh, C: {} };
 }
 function drawHallShot(lt) {
   const sh = FR.sh; hallSet(lt);
-  const whole = o => inFrame(o, 6).whole;
-  if (sh.k === 'melon') { const m = melonH(lt, -40, 1250); drawChar(m); }
+  const bgSix = o => { REG.suppress++; for (const c of frontSix(lt, o)) if (inFrame(c).inter) drawChar(c); REG.suppress--; };
+  if (sh.k === 'melon') drawChar(melonH(lt, ...HPOS.melon));
   if (sh.k === 'agency') {
-    drawCrowd(lt); const six = frontSix(lt, {}); for (const o of six) if (whole(o)) drawChar(o);
-    poofs(lt);
-    const s = strawH(lt, -250, 1120, { look: [.5, -.1], yaw: .35 }), m = melonH(lt, 230, 1120, { yaw: -.35, lx: -.4 });
-    for (const o of [s, m]) if (whole(o)) drawChar(o);
+    drawCrowd(lt); bgSix({}); poofs(lt);
+    const s = strawH(lt, ...HPOS.strawA, { look: [.6, -.15], yaw: .75 }), m = melonH(lt, ...HPOS.melonA, { yaw: -.75, lx: -.5 });
+    for (const o of [s, m]) if (inFrame(o, 6).whole) drawChar(o);
   }
-  if (sh.k === 'front') { drawCrowd(lt); for (const o of frontSix(lt, {})) if (whole(o)) drawChar(o); }
-  if (sh.k === 'straw') {
-    drawCrowd(lt, { yi: 1 }); REG.suppress++; for (const o of frontSix(lt, { yaw: .5, look: [.7, 0] })) if (inFrame(o).inter) drawChar(o); REG.suppress--;
-    const s = strawH(lt, 230, 1040, { look: [-.85, -.05], yaw: -.6 }); drawChar(s);
-  }
-  if (sh.k === 'lemon') {
-    drawCrowd(lt, { yi: 2 }); REG.suppress++; for (const o of frontSix(lt, { yaw: -.45, look: [-.6, 0] })) if (inFrame(o).inter) drawChar(o); REG.suppress--;
-    const l = lemonH(lt, -215, 1060, { look: [.75, -.05], yaw: .5 }); drawChar(l);
-  }
+  if (sh.k === 'front') { drawCrowd(lt); for (const o of frontSix(lt, {})) if (inFrame(o, 6).whole) drawChar(o); }
+  if (sh.k === 'straw') { drawCrowd(lt, { yi: 1 }); bgSix({ yaw: .45, look: [.7, 0] }); drawChar(strawH(lt, ...HPOS.strawS, { look: [-.85, -.05], yaw: -.62 })); }
+  if (sh.k === 'lemon') { drawCrowd(lt, { yi: 2 }); bgSix({ yaw: -.45, look: [-.6, 0] }); drawChar(lemonH(lt, ...HPOS.lemonL, { look: [.75, -.05], yaw: .55 })); }
 }
 /* @@TAIL@@ */
 })();
