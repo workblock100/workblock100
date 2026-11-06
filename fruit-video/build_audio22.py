@@ -289,19 +289,31 @@ def fx_moon(x, seed):
 
 
 # ---------------------------------------------------------------- Santa (new in Episode 22)
-def _syllables(x, thr=.3, gap=.11):
-    """Sample positions where the voice rises into a syllable: the 5 ms envelope (smoothed over 25 ms) crosses `thr` of its loudest frame upwards after falling under half of that, at least
-    `gap` seconds after the last one."""
-    e = uniform_filter1d(_env10(x, 240), 5)
-    m = e.max()
-    out, up, last = [], False, -1e9
-    for i, v in enumerate(e):
-        if not up and v > thr * m and i * 240 - last > gap * SR:
-            out.append(i * 240)
-            last = i * 240
-            up = True
-        elif up and v < thr * .5 * m:
-            up = False
+def _syllables(x, prom=6.0, gap=.15, before_gap=False):
+    """Sample positions where the voice rises into each syllable: the peaks of the 5 ms envelope (in dB, smoothed over 15 ms) that stand `prom` dB above their surroundings, at least `gap`
+    seconds apart; each syllable starts where the envelope last climbed through 10 dB under its peak. `before_gap`: only the syllables before the line's last silence (under -40 dB for 50 ms
+    or more: the pause in 'Ho ho... what?')."""
+    from scipy.signal import find_peaks
+    e = uniform_filter1d(_env10(x, 240), 3)
+    edb = 20 * np.log10(e / e.max())
+    pk, _ = find_peaks(edb, prominence=prom, distance=max(1, int(gap * 200)))
+    if before_gap:
+        q = edb < -40
+        cut = None
+        for i in range(len(q) - 10, 20, -1):
+            if q[i:i + 10].all():
+                cut = i
+                break
+        if cut is not None:
+            while cut > 0 and q[cut - 1]:
+                cut -= 1
+            pk = [p for p in pk if p < cut]
+    out = []
+    for p in pk:
+        j = p
+        while j > 0 and edb[j - 1] > edb[p] - 10 and p - j < 20:
+            j -= 1
+        out.append(int(j * 240))
     return out
 
 
@@ -312,19 +324,18 @@ def fx_santa(x):
     return _match_active_rms(y, x)
 
 
-def fx_santa_ho(x, until=None):
-    """'Ho ho ho!' (santa me1) and the 'Ho ho' of 'Ho ho... what?' (santa me3): Santa's chest (fx_santa) and A JOLLY BOUNCE on every 'ho' before `until` (a fraction of the clip): the syllable is
+def fx_santa_ho(x, count=None):
+    """'Ho ho ho!' (santa me1) and the 'Ho ho' of 'Ho ho... what?' (santa me3): Santa's chest (fx_santa) and A JOLLY BOUNCE on every 'ho': the syllable is
     read through a delay that swells and returns over 0.2 s (sin squared, 1.3 ms deep), so its pitch scoops up about a third of a semitone and falls back (the delay is back at zero after each
-    'ho', so nothing drifts and the clip keeps its length), and a punch on its attack (+2 dB, dying in 90 ms)."""
+    'ho', so nothing drifts and the clip keeps its length), and a punch on its attack (+2 dB, dying in 90 ms). The 'ho's are found by _syllables (for 'Ho ho... what?' only
+    the first two: 'what?' is plain)."""
     y = fx_santa(x)
     n = len(y)
     i = np.arange(n, dtype=float)
     pos = i.copy()
     acc = np.ones(n)
     L, B = int(.2 * SR), .0013 * SR
-    for s in _syllables(x):
-        if until is not None and s > until * n:
-            break
+    for s in _syllables(x)[:count]:
         j = np.arange(s, min(n, s + L))
         u = (j - s) / L
         pos[j] += B * np.sin(np.pi * u) ** 2
@@ -446,7 +457,7 @@ def fx_staff(kokoro, v, say, mono, tag):
 # ---------------------------------------------------------------- which treatment does each line get? (scene, line id) first, then the speaker
 LINE_KIND = {("santa", "me1"): "santa_ho", ("santa", "me3"): "santa_ho3", ("santa", "me5"): "sling", ("swap", "br1"): "closet"}
 WHO_KIND = {"bind": "bind", "onion": "onion", "brenda": "closet", "pear": "res", "cran": "res", "melon": "santa", "moon": "moon", "staff": "staff", "rall": "carol"}
-KIND_V = {"santa": "1", "santa_ho": "1", "santa_ho3": "1", "sling": "1", "carol": "1", "staff": "1", "closet": "2", "moon": "1"}
+KIND_V = {"santa": "1", "santa_ho": "2", "santa_ho3": "3", "sling": "1", "carol": "1", "staff": "1", "closet": "2", "moon": "1"}
 
 
 def line_kind(scene, lid, who):
@@ -472,7 +483,7 @@ def apply_kind(kind, mono, seed, kokoro=None, v=None, say=None, tag=None):
     if kind == "santa_ho":
         return fx_santa_ho(mono)
     if kind == "santa_ho3":
-        return fx_santa_ho(mono, until=.55)
+        return fx_santa_ho(mono, count=2)
     if kind == "sling":
         return fx_sling(mono)
     if kind == "staff":
@@ -1974,6 +1985,25 @@ SOFT_FAMILY = {   # the scripted cues that already carry a material's sound: a s
     "paper": ("paperrip", "crinkle", "ribbonpull", "giftpile", "namewhoosh", "shuffle"), "chux": ("chuxrustle", "chuxfold"), "tape": ("tapepull",),
     "nitrile": ("glovesnap", "gloveinflate", "glovesqueak", "balloonbonk"), "canvas": ("beltbuckle", "belttug"), "fabric": ("slingrustle", "hoyerlift"), "ribbon": ("ribbonzip", "ribbonpull"),
     "tinsel": (), "string": ()}
+SOFT_ALIAS = {"felt": "fabric", "wool": "fabric", "sling": "fabric", "gauze": "fabric", "satin": "ribbon", "foil": "tinsel", "latex": "nitrile", "glove": "nitrile",
+              "tissue": "paper", "cellophane": "paper", "giftwrap": "paper", "pad": "chux", "cord": "string"}
+SOFT_PRI = ("paper", "tape", "nitrile", "chux", "canvas", "ribbon", "tinsel", "fabric", "string")
+KIND_PRI = {"tear": ("paper", "tape", "ribbon"), "crinkle": ("paper", "chux", "tinsel"), "squeak": ("nitrile", "canvas", "fabric"), "stretch": ("nitrile", "canvas", "fabric", "tape", "ribbon"),
+            "pop": ("nitrile",), "flap": ("paper", "chux", "ribbon", "tinsel", "fabric")}
+
+
+def _soft_pair(mat, kind=""):
+    """(soft material, the other material) of a soft event: soft2d's eventsToFoley joins the body's material and the collider's in alphabetical order ('cardboard+chux' is the Chux on a box), so the
+    soft one is picked out of the pair (a scene's own cloth names map onto the families: felt is fabric ...); with two soft materials, the one the kind belongs to."""
+    parts = [SOFT_ALIAS.get(m, m) for m in str(mat or "paper").split("+") if m]
+    soft = [m for m in parts if m in SOFT_LOUD]
+    if not soft:
+        return "fabric" if not parts else ("paper" if parts[0] not in _MV else "fabric"), (parts[0] if parts else "")
+    pref = tuple(KIND_PRI.get(kind, ())) + SOFT_PRI
+    sm = min(soft, key=lambda m: pref.index(m))
+    rest = list(parts)
+    rest.remove(sm)
+    return sm, (rest[0] if rest else "")
 
 
 def _flutter(seed, d, lo, hi, rate):
@@ -2041,7 +2071,9 @@ def _soft_voice(mat, kind, mag, seed, other=""):
         else:
             d = .25
             t = tarr(d)
-            x = _band(seed, d, 300, 2500) * np.exp(-t / .006) + _ping(2200 * r.uniform(.95, 1.05), d, .05, (1.0, 1.68, 2.9), (1.0, .5, .25), (1.0, .55, .3)) * .35
+            x = _band(seed, d, 300, 2500) * np.exp(-t / .006)
+            if other == "metal" or mag > .5:
+                x = x + _ping(2200 * r.uniform(.95, 1.05), d, .05, (1.0, 1.68, 2.9), (1.0, .5, .25), (1.0, .55, .3)) * .35
     elif mat == "ribbon":
         if kind in ("slide", "stretch"):
             d = .06 + .12 * mag
@@ -2094,6 +2126,7 @@ def _soft_voice(mat, kind, mag, seed, other=""):
             d = .08 + .1 * mag
             t = tarr(d)
             x = _tv_filter(noise6(d, seed), 3000 * (1200 / 3000) ** (t / d), 1.2, "bp") * _arch(d, 1.0)
+    other = {"felt": "fabric", "skin": "fabric"}.get(other, other)
     if other in _MV and kind == "hit":
         x = _sum(np.asarray(x) * .75, _unit(_MV[other](1.2 - .4 * mag, .7 + .5 * mag, seed + 3)) * np.max(np.abs(x)) * .35)
     return np.asarray(x, dtype=float)
@@ -2104,9 +2137,10 @@ def sfx_soft():
     every repeat is different. The level is the event's (set by _select_soft from the magnitude, the material and the kind); the pan is the event's."""
     k = _nth("soft")
     ev = SOFT_EVENTS[k] if k < len(SOFT_EVENTS) else {"mat": "paper", "k": "crinkle", "mag": .3, "t": k}
-    mats = str(ev.get("mat", "paper")).split("+")
+    kind = str(ev.get("k", "hit"))
+    sm, other = _soft_pair(ev.get("mat", "paper"), kind)
     seed = 5000 + 7 * k + int(ev.get("t", 0) * 1000) % 997
-    x = _soft_voice(mats[0], str(ev.get("k", "hit")), float(np.clip(ev.get("mag", .3), 0, 1)), seed, mats[1] if len(mats) > 1 else "")
+    x = _soft_voice(sm, kind, float(np.clip(ev.get("mag", .3), 0, 1)), seed, other)
     return norm6(_edge(x, .0004, .02), .6)
 
 
@@ -2131,7 +2165,7 @@ def _select_soft(ev, scripted, lines):
     keep = []
     for i in order:
         e = ev[i]
-        mat = str(e.get("mat", "paper")).split("+")[0]
+        mat = _soft_pair(e.get("mat"), e.get("k"))[0]
         mag = float(e.get("mag", 0))
         if any(abs(e["t"] - t) < .06 for t in fam.get(mat, ())):
             continue
@@ -2142,14 +2176,14 @@ def _select_soft(ev, scripted, lines):
             continue
         near = [j for j in keep if abs(ev[j]["t"] - e["t"]) < .04]
         sec = [j for j in keep if abs(ev[j]["t"] - e["t"]) < .5]
-        same = [j for j in sec if ev[j].get("k") == e.get("k") and str(ev[j].get("mat", "")).split("+")[0] == mat]
+        same = [j for j in sec if ev[j].get("k") == e.get("k") and _soft_pair(ev[j].get("mat"), ev[j].get("k"))[0] == mat]
         if len(near) >= 2 or len(sec) >= 12 or len(same) >= 5:
             continue
         keep.append(i)
     out = []
     for i in sorted(keep, key=lambda j: ev[j]["t"]):
         e = ev[i]
-        mat = str(e.get("mat", "paper")).split("+")[0]
+        mat = _soft_pair(e.get("mat"), e.get("k"))[0]
         mag = float(e.get("mag", .3))
         under = any(a <= e["t"] <= b for a, b in talk)
         vol = (.03 + .3 * mag ** 1.2) * SOFT_LOUD.get(mat, .5) * KIND_LOUD.get(e.get("k"), .7) * (.6 if under else 1.0)
@@ -2228,7 +2262,8 @@ def _m_tile(ps, ds, seed):
 
 
 _MV = {"tile": _m_tile, "paper": _m_paper, "leaf": _m_paper, "wood": _m_wood, "metal": _m_metal, "plastic": _m_plastic, "glass": _m_glass, "ceramic": _m_ceramic, "cardboard": _m_cardboard,
-       "fabric": _m_fabric, "concrete": _m_concrete, "rubber": _m_rubber, "soil": _m_paper}
+       "fabric": _m_fabric, "concrete": _m_concrete, "rubber": _m_rubber, "soil": _m_paper, "felt": _m_fabric, "skin": _m_fabric}
+LOUD.update({"felt": .4, "skin": .45})
 
 
 def sfx_phys():
@@ -2258,6 +2293,11 @@ def sfx_phys():
     x = np.zeros(n)
     x[:len(ca)] += ca
     x[:len(cb)] += cb
+    if any(w in str(ev.get("tag", "")) for w in ("head", "nurse")):           # a gift landing on Strawberry: the box's knock and a soft comic bump (a thump that sags from 230 to 150 Hz)
+        d = .16
+        t = tarr(d)
+        bump = _sin_of(150 + 80 * np.exp(-t / .025)) * np.exp(-t / .045) * np.minimum(1, t / .002)
+        x = _sum(x * .7, _unit(bump) * .6)
     return norm6(_edge(x * loud, .0003, .02), .7)
 
 
@@ -2394,20 +2434,29 @@ def _tune_steps(events, tab):
     return out
 
 
+def _raw_syllables(scene, lid, count=None):
+    """Absolute times of the syllables of a line's plain clip (from the voice cache, placed at the line's start), or None before the first build."""
+    ln = _line(scene, lid)
+    p = os.path.join(VOX_DIR[0] or "", f"{scene}_{lid}.raw.wav")
+    if not ln or not VOX_DIR[0] or not os.path.exists(p):
+        return None
+    x, _ = sf.read(p, dtype="float64")
+    return [ln["s"] + q / SR for q in _syllables(x)[:count]]
+
+
 def _santa_moves():
     """Absolute times (and gains) of Santa's moves that jingle: each 'ho' of 'Ho ho ho!' and of 'Ho ho... what?' and the double take on 'what?', a gesture on 'Every Christmas Eve.' and on
     'Down', rocking in the low chair on 'I can't get up.', the sling swaying as the Hoyer lifts him, and the ends of each swing under 'This is the best Christmas.'."""
     out = []
-    for j in range(3):
-        t = _word_abs("santa", "me1", "ho", j)
+    hos = _raw_syllables("santa", "me1") or [_word_abs("santa", "me1", "ho", j) for j in range(3)]
+    for t in hos:
         if t is not None:
             out.append((t + .03, .28))
     for w in ("every", "down"):
         t = _word_abs("santa", "me2", w)
         if t is not None:
             out.append((t + .05, .2))
-    for j in range(2):
-        t = _word_abs("santa", "me3", "ho", j)
+    for t in (_raw_syllables("santa", "me3", 2) or [_word_abs("santa", "me3", "ho", j) for j in range(2)]):
         if t is not None:
             out.append((t + .03, .24))
     t = _word_abs("santa", "me3", "what")
@@ -2748,7 +2797,7 @@ def write_cue_report(out_dir):
     fams = {}
     for e in ev:
         if e.get("name") == "soft":
-            key = f"{str(e.get('mat')).split('+')[0]}:{e.get('k')}"
+            key = f"{_soft_pair(e.get('mat'), e.get('k'))[0]}:{e.get('k')}"
             fams[key] = fams.get(key, 0) + 1
     if fams:
         lines.append("soft families placed (material:kind): " + ", ".join(f"{k} {v}" for k, v in sorted(fams.items())))
@@ -2913,6 +2962,8 @@ def main():
             if os.path.exists(p):
                 src = p
                 break
+    VOX_DIR[0] = os.path.join(out_dir, "voice")
+    os.makedirs(VOX_DIR[0], exist_ok=True)
     tuned = _make_events(src, phys_src, out_dir)
     print(f"events: footsteps {SOURCES['steps']}; rigid {SOURCES['phys']} ({len(PHYS_EVENTS)} placed); soft {SOURCES['soft']} ({len(SOFT_EVENTS)} placed); {len(BED_VOL)} room-tone beds; "
           f"{len(DESIGNED)} designed events")

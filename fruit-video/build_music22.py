@@ -244,6 +244,8 @@ def bounce(T, D, a, bl, lvl=1.0, until=None, melody=True, bars=2, seed=0):
             break
         ch = "C7" if (k // 4) % 2 == 1 and k % 4 >= 2 else "F"
         T.put(pz(ROOT22[ch] + (7 if k % 2 else 0), .3), at, .11 * lvl, -.1)
+        if k % 2 == 0:
+            T.put(ubass(ROOT22[ch], .35, .7), at, .045 * lvl, -.05)
         comp(T, at + bl / 2, [m + 12 for m in CH22[ch][1:]], .2, .028 * lvl, .3)
         shake(T, at + bl / 2, .1, 7, .022 * lvl, .35, seed + k)
     if melody:
@@ -664,7 +666,9 @@ def carol_bar(T, D, b0, B, k, lvl=1.0, big=False):
         ch = [c for hb, c in har if hb <= beat][-1]
         root = ROOT22[ch]
         if beat in (0, 2):
-            T.put(pz(root + (7 if beat == 2 and ch == [c for hb, c in har if hb <= 0][-1] else 0), .4), at, .12 * lvl, -.1)
+            bm = root + (7 if beat == 2 and ch == [c for hb, c in har if hb <= 0][-1] else 0)
+            T.put(pz(bm, .4), at, .12 * lvl, -.1)
+            T.put(ubass(bm, .5, .7), at, .05 * lvl, -.05)
             if big:
                 T.put(cello(root, B * 1.8, .8, a=.02, r=.2), at, .032 * lvl, -.1)
         else:

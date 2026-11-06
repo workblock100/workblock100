@@ -187,6 +187,8 @@ function SoftObj(W, type, def) {
   this.silent = !!def.silent;
   this.dim3 = false;
   this.events = 0;
+  const act = def.active || null;   // ADDED: [t0, t1] simulated only then; frozen (pins too) before and after, so long scenes stay cheap
+  this.a0 = act ? num(act[0], -INF) : -INF; this.a1 = act ? num(act[1], INF) : INF; this.on = true;
 }
 SoftObj.prototype._alloc = function (n) {
   this.n = n;
@@ -458,6 +460,7 @@ World.prototype._prepare = function () {
     const c = o.cons[m], k = o.c0 + m;
     ca[k] = o.p0 + c[0]; cb[k] = o.p0 + c[1]; cr[k] = c[2]; cal[k] = o._alpha(c[3], c[2], o.mp); ck[k] = c[4]; cbk[k] = c[5] > 0 ? c[5] * c[2] : 0; con[k] = (c[4] === K_MAX || c[5] > 0) ? 2 : 1; cob[k] = o.oi;
   }
+  this.csm = Float64Array.from(cr);   // smoothed lengths of the breakable constraints
   const cord = this.cord = new Int32Array(nc);   // sweep order of the planar solver (ropes: even segments, then odd)
   for (const o of this.objects) for (let m = 0; m < o.cons.length; m++) cord[o.c0 + m] = o.c0 + (o.order ? o.order[m] : m);
   this._tearOn = false;
@@ -512,7 +515,7 @@ World.prototype._breakCon = function (k, t, scripted) {
   o.tornLen += this.crest[k];
   if (!this._warm && !o.silent) {
     const a = this.ca[k], b = this.cb[k];
-    this._push('tear', o, null, 0.5 * (this.x[a] + this.x[b]), 0.5 * (this.y[a] + this.y[b]), scripted ? 0.6 : 0.5, t, { len: this.crest[k] });
+    this._push('tear', o, null, 0.5 * (this.x[a] + this.x[b]), 0.5 * (this.y[a] + this.y[b]), scripted ? 0.6 : 0.5, t, { len: this.crest[k], strain: Math.round(this.csm[k] / this.crest[k] * 1000) / 1000 });
   }
 };
 World.prototype._tearCloth = function (o, m, t) {
@@ -532,6 +535,10 @@ World.prototype._killTri = function (o, tr, t) {
     const v = o.tri[3 * tr + e];
     let alive = false; for (let s = o.vtS[v]; s < o.vtS[v + 1]; s++) if (o.triDead[o.vtL[s]] === INF) { alive = true; break; }
     if (alive && o.tornT[v] === INF) o.tornT[v] = t;
+    if (!alive) {   // an orphan (no triangle left): it is invisible, so freeze it where it is instead of letting it fly off
+      const p = o.p0 + v; this.im[p] = 0; this.im0[p] = 0; this.vx[p] = 0; this.vy[p] = 0; this.vz[p] = 0;
+      for (let k = o.c0; k < o.c1; k++) if (this.con[k] && (this.ca[k] === p || this.cb[k] === p)) this.con[k] = 0;
+    }
   }
 };
 World.prototype._cutPair = function (o, a, b, t) {
@@ -594,7 +601,7 @@ World.prototype._pinTargets = function (t0, t1) {
 World.prototype._applyPins = function (f) {
   const P = this._pins, x = this.x, y = this.y, z = this.z;
   for (let i = 0; i < P.length; i++) {
-    const p = P[i]; if (!p.on) continue;
+    const p = P[i]; if (!p.on || !p.obj.on) continue;
     const k = p.p;
     if (p.mode === 3) { const q = p.tob.p0 + p.tk; x[k] = x[q]; y[k] = y[q]; if (p.obj.dim3) z[k] = z[q]; continue; }
     x[k] = p.sx + (p.ex - p.sx) * f; y[k] = p.sy + (p.ey - p.sy) * f;
@@ -615,6 +622,7 @@ World.prototype._integrate = function (h) {
   const O = this.objects, x = this.x, y = this.y, z = this.z, px = this.px, py = this.py, pz = this.pz, vx = this.vx, vy = this.vy, vz = this.vz, im = this.im, ax = this.ax, ay = this.ay, az = this.az;
   for (let oi = 0; oi < O.length; oi++) {
     const o = O[oi], p0 = o.p0, p1 = o.p0 + o.n, df = o.dfac, gx = o.ab[0], gy = o.ab[1], gz = o.ab[2];
+    if (!o.on) { for (let p = p0; p < p1; p++) { px[p] = x[p]; py[p] = y[p]; pz[p] = z[p]; vx[p] = 0; vy[p] = 0; vz[p] = 0; } continue; }
     if (o.dim3) {
       for (let p = p0; p < p1; p++) {
         px[p] = x[p]; py[p] = y[p]; pz[p] = z[p];
@@ -638,6 +646,7 @@ World.prototype._solve = function (ih2, rev) {
   const O = this.objects, n = O.length;
   for (let q = 0; q < n; q++) {
     const o = O[rev ? n - 1 - q : q];
+    if (!o.on) continue;
     if (o.c1 > o.c0) {
       if (o.dim3) {
         const cs = o.c0 + o.nStruct;
@@ -677,7 +686,11 @@ World.prototype._solve3 = function (c0, c1, ih2, rev) {
 World.prototype._special = function (k, d) {
   if (d < this.crest[k] && this.ckind[k] === K_MAX) return true;
   const b = this.cbrk[k];
-  if (b > 0 && d > b) { const r = d / b; if (r > this._bR) { this._bR = r; this._bK = k; } }   // broken after the sweep: only the worst one
+  if (b > 0) {
+    // tear on a smoothed length: a sweep leaves its residual on alternate batches each substep, and one impulsive spike should not tear
+    const ds = this.csm[k] = this.csm[k] * 0.75 + d * 0.25;
+    if (ds > b) { const r = ds / b; if (r > this._bR) { this._bR = r; this._bK = k; } }   // broken after the sweep: only the worst one
+  }
   return false;
 };
 /* after an object's sweep: tear its most strained over-limit constraint (one per object per substep: the tear runs from the
@@ -699,7 +712,7 @@ World.prototype._collide = function () {
   const O = this.objects, C = this.colliders, x = this.x, y = this.y;
   for (let oi = 0; oi < O.length; oi++) {
     const o = O[oi], cl = o.cl;
-    if (!cl.length) continue;
+    if (!cl.length || !o.on) continue;
     const p0 = o.p0, p1 = p0 + o.n;
     let x0 = INF, x1 = -INF, y0 = INF, y1 = -INF;
     for (let p = p0; p < p1; p++) { const a = x[p], b = y[p]; if (a < x0) x0 = a; if (a > x1) x1 = a; if (b < y0) y0 = b; if (b > y1) y1 = b; }
@@ -825,8 +838,10 @@ World.prototype._velocities = function (ih) {
 /* forces held for one step: gravity per object (gravityScale, balloon buoyancy) and the sheet drag (flutter) */
 World.prototype._stepForces = function (t0) {
   const h = this.dt / this.sub, O = this.objects;
+  const tw = this._warm ? 0 : t0;
   for (let oi = 0; oi < O.length; oi++) {
     const o = O[oi];
+    o.on = tw >= o.a0 - 1e-9 && tw < o.a1 - 1e-9;
     o.dfac = 1 / (1 + h * (this.damping + o.damping));
     o.ab[0] = this.gx * o.gscale; o.ab[1] = this.gy * o.gscale; o.ab[2] = this.gz * o.gscale;
     if (o.type === 'cloth') this._flutter(o);
@@ -880,7 +895,7 @@ World.prototype.step = function () {
     this._integrate(h);
     this._applyPins(f);
     this._solve(ih2, (s & 1) === 0);
-    if (this._softOn) this._softCollide();
+    if (this._softOn && (s & 1) === 0) this._softCollide();   // every second substep: contacts between soft bodies are slow
     this._collide();
     this._velocities(this._ih);
   }
@@ -920,6 +935,7 @@ World.prototype._stepEvents = function (t) {
   const O = this.objects, C = this.colliders, dt = this.dt;
   for (let oi = 0; oi < O.length; oi++) {
     const o = O[oi], cl = o.cl;
+    if (!o.on) continue;
     for (let m = 0; m < cl.length; m++) {
       const ci = cl[m], c = C[ci];
       const v = o.hitV[ci];
@@ -1054,7 +1070,7 @@ World.prototype.makeState = function () {
     st.cloths.push(e); st.by[o.id] = e;
   }
   for (const o of this.ropes) { const e = { id: o.id, type: 'rope', tag: o.tag, mat: o.mat, n: o.n, width: o.width, pts: new Float32Array(2 * o.n), alive: new Uint8Array(o.N).fill(1) }; st.ropes.push(e); st.by[o.id] = e; }
-  for (const o of this.balloons) { const e = { id: o.id, type: 'balloon', tag: o.tag, mat: o.mat, n: o.n, pts: new Float32Array(2 * o.n), area: 0, area0: o.area0, pressure: 0, popped: false, outline: o.outlineKind, cuff: o.cuff, knot: o.knot }; st.balloons.push(e); st.by[o.id] = e; }
+  for (const o of this.balloons) { const e = { id: o.id, type: 'balloon', tag: o.tag, mat: o.mat, n: o.n, pts: new Float32Array(2 * o.n), area: 0, area0: o.area0, pressure: 0, popped: false, outline: o.outlineKind, cuff: o.cuff, knot: o.knot, tips: o.tips }; st.balloons.push(e); st.by[o.id] = e; }
   for (const c of this.colliders) st.colliders.push({ id: c.id, tag: c.tag, x: c.x, y: c.y, angle: c.angle });
   return st;
 };
@@ -1102,13 +1118,14 @@ World.prototype.at = function (t, out) {
 /* the glove outline, raw: knot first, visually counter-clockwise (bottom -> right -> fingers right to left -> thumb -> left -> cuff),
  * origin at the palm centre, about 250 px tall at puff 1. puff 0 is the flat (limp) glove: same points, thinner fingers. */
 function gloveRaw(puff) {
-  const pf = puff < 0 ? 0 : (puff > 1.6 ? 1.6 : puff), out = [];
+  const pf = puff < 0 ? 0 : (puff > 1.6 ? 1.6 : puff), out = [], tips = [];
   const fw = 16 + 13 * pf, pw = 52 + 9 * pf, ph = 44 + 8 * pf, cwT = 19 + 3 * pf, cwB = 23 + 4 * pf, cy0 = ph * 0.92, cuffY = ph + 30 + 2 * pf;
   const push = function (x, y) { out.push([x, y]); };
   const ell = function (a0, a1, n) { for (let i = 0; i <= n; i++) { const a = (a0 + (a1 - a0) * i / n) * PI / 180; sincos(a); push(pw * _cs, ph * _sn); } };
   const finger = function (bx, by, th, L, w) {   // up the right side, over the tip, down the left side
     sincos(th); const ux = _sn, uy = -_cs, rx = _cs, ry = _sn, tx = bx + ux * (L - w / 2), ty = by + uy * (L - w / 2);
     for (let i = 0; i < 3; i++) { const f = i / 3; push(bx + rx * w / 2 + (tx - bx) * f, by + ry * w / 2 + (ty - by) * f); }
+    tips.push(out.length + 3);
     for (let i = 0; i <= 6; i++) { const a = PI * i / 6; sincos(a); push(tx + rx * _cs * w / 2 + ux * _sn * w / 2, ty + ry * _cs * w / 2 + uy * _sn * w / 2); }
     for (let i = 1; i <= 3; i++) { const f = i / 3; push(tx - rx * w / 2 + (bx - tx) * f, ty - ry * w / 2 + (by - ty) * f); }
   };
@@ -1125,15 +1142,20 @@ function gloveRaw(puff) {
   finger(-pw * 0.84, -ph * 0.02, -1.02, 62 - 4 * pf, fw * 1.12);
   ell(158, 105, 4);                                     // palm, left side down to the neck
   push(-cwT, cy0 + 6); push(-cwB, cuffY);               // cuff, left
+  out.tips = tips;                                      // raw indices of the finger tips: pinky, ring, middle, index, thumb
   return out;
 }
+/* the particle nearest each raw tip index after resampling */
+function tipIdx(rawTips, idx) { return rawTips.map(function (r) { let best = 0, bd = INF; for (let k = 0; k < idx.length; k++) { const d = Math.abs(idx[k] - r); if (d < bd) { bd = d; best = k; } } return best; }); }
 /* SOFT2D.gloveOutline({ scale, puff, segments }): the inflated glove (puff 1) as [[x,y],...], knot first, counter-clockwise */
 function gloveOutline(o) {
   o = o || {};
   const sc = num(o.scale, 1), raw = gloveRaw(num(o.puff, 1));
   if (!o.segments) return raw.map(function (q) { return [q[0] * sc, q[1] * sc]; });
   const full = gloveRaw(1), fr = resampleIdx(full, o.segments | 0);
-  return fr.map(function (r) { const q = atIdx(raw, r); return [q[0] * sc, q[1] * sc]; });
+  const res = fr.map(function (r) { const q = atIdx(raw, r); return [q[0] * sc, q[1] * sc]; });
+  res.tips = tipIdx(full.tips, fr); res.knot = 0;
+  return res;
 }
 /* fractional raw indices of n points evenly spaced by arc length along a closed polyline (the first point stays first) */
 function resampleIdx(P, n) {
@@ -1153,9 +1175,11 @@ World.prototype.balloon = function (def) {
   const n = Math.max(8, (def.segments | 0) || 64), sc = num(def.scale, 1);
   let full, flat;
   o.outlineKind = typeof def.outline === 'string' ? def.outline : (def.outline ? 'custom' : 'circle');
+  o.tips = [];
   if (o.outlineKind === 'glove') {
     const rf = gloveRaw(1), r0 = gloveRaw(0), idx = resampleIdx(rf, n);
     full = idx.map(function (r) { return atIdx(rf, r); }); flat = idx.map(function (r) { return atIdx(r0, r); });
+    o.tips = tipIdx(rf.tips, idx);   // ADDED: particle indices of the finger tips (pinky, ring, middle, index, thumb)
   } else {
     let P;
     if (o.outlineKind === 'circle') { P = []; const R = num(def.radius, 60); for (let k = 0; k < 96; k++) { sincos(HALF_PI + TWO_PI * k / 96); P.push([R * _cs, R * _sn]); } }   // knot at the bottom
@@ -1312,10 +1336,20 @@ World.prototype._prepareSoft = function () {
 World.prototype._softCollide = function () {
   const L = this._softList, x = this.x, y = this.y, px = this.px, py = this.py, im = this.im, rs = this.rs, pob = this.pob, head = this._shHead, next = this._shNext, keys = this._shKeys;
   const cell = this._softCell, inv = 1 / cell, ih = this._ih, O = this.objects;
-  let nk = 0;
-  for (let a = 0; a < L.length; a++) { const o = L[a]; for (let p = o.p0; p < o.p0 + o.n; p++) { const key = ((Math.floor(x[p] * inv) * 73856093) ^ (Math.floor(y[p] * inv) * 19349663)) & 8191; if (head[key] < 0) keys[nk++] = key; next[p] = head[key]; head[key] = p; } }
+  // broad phase: only objects whose box (grown by a cell) overlaps another soft object's box take part
   for (let a = 0; a < L.length; a++) {
-    const o = L[a];
+    const o = L[a]; o.near = false; if (!o.on) continue;
+    let x0 = INF, x1 = -INF, y0 = INF, y1 = -INF;
+    for (let p = o.p0; p < o.p0 + o.n; p++) { const u = x[p], v = y[p]; if (u < x0) x0 = u; if (u > x1) x1 = u; if (v < y0) y0 = v; if (v > y1) y1 = v; }
+    o.bx0 = x0 - cell; o.bx1 = x1 + cell; o.by0 = y0 - cell; o.by1 = y1 + cell;
+  }
+  let any = false;
+  for (let a = 0; a < L.length; a++) { const o = L[a]; if (!o.on) continue; for (let b = a + 1; b < L.length; b++) { const q = L[b]; if (!q.on) continue; if (o.bx0 < q.bx1 && q.bx0 < o.bx1 && o.by0 < q.by1 && q.by0 < o.by1) { o.near = true; q.near = true; any = true; } } }
+  if (!any) return;
+  let nk = 0;
+  for (let a = 0; a < L.length; a++) { const o = L[a]; if (!o.near) continue; for (let p = o.p0; p < o.p0 + o.n; p++) { const key = ((Math.floor(x[p] * inv) * 73856093) ^ (Math.floor(y[p] * inv) * 19349663)) & 8191; if (head[key] < 0) keys[nk++] = key; next[p] = head[key]; head[key] = p; } }
+  for (let a = 0; a < L.length; a++) {
+    const o = L[a]; if (!o.near) continue;
     for (let p = o.p0; p < o.p0 + o.n; p++) {
       const cx = Math.floor(x[p] * inv), cy = Math.floor(y[p] * inv);
       for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {

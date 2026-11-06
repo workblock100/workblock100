@@ -32,7 +32,7 @@ const L = {
   SANTA: { x: 1150, s: 1.0, rx: 136, ry: 128, leg: 90, standCy: 1300 - (90 + 128 * .9), sitCy: 1102, r: 132 },
   ONION: { x: 1460, belt: 1330 },
   HOY: { park: 2023, home: 1570, mastH: 640, boom: 420, a0: -.24, aTravel: -.10, a1: .36, swivel: 40, bar: 150, hookIn: 118 },
-  BELT: { BX: -3000, BY: 1100, R0: 133, e: 30, half: 11, n: 56, len: 1104, dy: 40 },
+  BELT: { BX: -3000, BY: 1100, R0: 133, e: 30, half: 11, n: 50, len: 1001, dy: 14 },
   SLING: { cols: 26, rows: 5, L: 1080, Wd: 56, rest: 330 },
 };
 /* the script (scene-local s, on the frames the scene snaps to) */
@@ -90,13 +90,20 @@ function beltTop(t, which) {
     const u = eo(sg(t, P.throw[0], P.throw[1])), a = lerp(.31, .31 - (.31 + 1.5 * PI), u), r = lerp(297, R, u * u);
     return [X + r * cos(a), Y + r * sin(a)];
   }
-  const side = [X + B.R0 + 20, Y + 60], thru = [X + 26, Y + R + 3], tugged = [X + 170, Y + 190], tuck = [X + 64, Y + R + 6];
+  const side = [X + B.R0 + 20, Y + 60], thru = [X + 26, Y + R + 3], tugged = [X + 85, Y + 190], tuck = [X + 92, Y + 175];
   if (t < P.toBuckle[0]) return side;
   if (t < P.tug[0]) { const k = ss(t, P.toBuckle[0], P.toBuckle[1]); return [lerp(side[0], thru[0], k), lerp(side[1], thru[1], k)]; }
   if (t < P.tuck[0]) { const k = ss(t, P.tug[0], P.tug[1]); return [lerp(thru[0], tugged[0], k), lerp(thru[1], tugged[1], k)]; }
   const k = ss(t, P.tuck[0], P.tuck[1]); return [lerp(tugged[0], tuck[0], k), lerp(tugged[1], tuck[1], k)];
 }
-const beltFront = (b, X, Z) => [b.x + (X - L.BELT.BX), b.y + L.BELT.dy + (Z - L.BELT.BY) * L.BELT.e / L.BELT.R0];
+/* top view -> front view. Far from his waist (in her hands, the end in flight): x stays, depth becomes a small y offset. Near it: the strap hugs his outline and any slack beyond the waist droops
+ * (the top view has no gravity; a loose belt sags in front). Returns [x, y, visible] (behind him and inside his outline = hidden). */
+function beltFront(b, X, Z) {
+  const B = L.BELT, dx = X - B.BX, dz = Z - B.BY, r = Math.hypot(dx, dz) || 1, R = B.R0 + B.half, f = ss(r, R + 10, R + 60);
+  const hx = R * dx / r, hy = B.e * dz / r + .45 * Math.max(0, r - R), lx = dx, ly = dz * B.e / B.R0;
+  const x = b.x + lerp(hx, lx, f), y = b.y + B.dy + lerp(hy, ly, f);
+  return [x, y, dz / r > -.06 || Math.abs(x - b.x) > R + 8];
+}
 const tailHand = t => { const p = beltTop(t, 'tail'); return beltFront(body(t), p[0], p[1]); };
 /* the sling's end columns: their creation spot, the rest on the floor beside the chair, then the hooks */
 function slingEnd(t, side, j) {

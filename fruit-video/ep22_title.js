@@ -258,6 +258,14 @@ function subText(lt) {
   const ds = lt - CUE.ding;   /* textding: star glints round the title */
   if (ds > 0 && ds < 1.4) for (const [dx, dy, r, d] of [[-440, -50, 34, 0], [430, -40, 30, .12], [-320, 70, 22, .28], [370, 76, 26, .2]]) { const k = sg(ds, d, d + .55); star(TT.x + dx, TT.y + dy, r * Math.sin(PI * k), 1, k * .9); }
 }
+/* the soft bodies (ep22_title_sim.js on SOFT2D): built once on first use, sampled with world.at(min(lt, T)); null until both are loaded (then the hand-animated stand-in) */
+let SIMR;
+function titleSim() {
+  if (SIMR === undefined) { let r = null; try { const api = window.__EP22_SIMS && window.__EP22_SIMS.title; if (api && window.SOFT2D && SOFT2D.world && SOFT2D.drawCloth && SOFT2D.drawRope) r = api.build(); } catch (e) { r = null; } SIMR = r || null; }
+  return SIMR;
+}
+let PRINT22 = null;   /* ONE print callback (SOFT2D caches its texture by the function) */
+const printCb = () => PRINT22 || (K22() ? (PRINT22 = K22().paperPrint(PAPER[0], PAPER[1], PAPER[2])) : null);
 function titleDraw(lt) {
   ctx.drawImage(roomSprite(), 0, 0);
   const K = K22();
@@ -266,15 +274,23 @@ function titleDraw(lt) {
   if (off) boxMouth(glow);
   titleText(lt);
   boxFront(lt, glow);
-  for (const [side, t0] of [[-1, CUE.rip1], [1, CUE.rip2]]) {
-    if (lt < t0) { ctx.save(); ripPath(side); ctx.clip(); ctx.translate(BOX.x0, BOX.y0); paperFace(0, 0, BOX.x1 - BOX.x0, BOX.y1 - BOX.y0); ctx.restore(); ctx.strokeStyle = OUTL; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(side < 0 ? BOX.x0 : BOX.x1, BOX.y0); ctx.lineTo(side < 0 ? BOX.x0 : BOX.x1, BOX.y1); ctx.stroke(); if (lt >= CUE.rip1) ragged(side, 1); }
-    else paperHalf(side, lt, t0);
+  const sim = titleSim(), st = sim ? sim.world.at(Math.min(lt, sim.T)) : null, pc = printCb(), K2 = K22();
+  if (st && pc) {   /* the paper and the scraps on SOFT2D (ep22_title_sim.js), printed with A22.paperPrint like A22.gift */
+    SOFT2D.drawCloth(ctx, st.by[sim.meta.paper], { fill: pc, back: K2.paperBack, shade: .32, ragged: 1, res: 1.5, edge: { color: 'rgba(25,10,20,.8)', width: 2.6 } });
+    if (lt < CUE.rip1) { ctx.strokeStyle = OUTL; ctx.lineWidth = 4; ctx.strokeRect(BOX.x0, BOX.y0, BOX.x1 - BOX.x0, BOX.y1 - BOX.y0); }
+    for (const sc of sim.meta.scraps) if (lt >= sc.t0) SOFT2D.drawCloth(ctx, st.by[sc.id], { fill: pc, back: K2.paperBack, shade: .3, ragged: 0, view: { kx: 0, ky: .42 }, edge: { color: 'rgba(25,10,20,.6)', width: 1.4 } });
+  } else {   /* the hand-animated stand-in */
+    for (const [side, t0] of [[-1, CUE.rip1], [1, CUE.rip2]]) {
+      if (lt < t0) { ctx.save(); ripPath(side); ctx.clip(); ctx.translate(BOX.x0, BOX.y0); paperFace(0, 0, BOX.x1 - BOX.x0, BOX.y1 - BOX.y0); ctx.restore(); ctx.strokeStyle = OUTL; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(side < 0 ? BOX.x0 : BOX.x1, BOX.y0); ctx.lineTo(side < 0 ? BOX.x0 : BOX.x1, BOX.y1); ctx.stroke(); if (lt >= CUE.rip1) ragged(side, 1); }
+      else paperHalf(side, lt, t0);
+    }
+    if (lt < CUE.rip1) { ctx.strokeStyle = OUTL; ctx.lineWidth = 4; ctx.strokeRect(BOX.x0, BOX.y0, BOX.x1 - BOX.x0, BOX.y1 - BOX.y0); }
+    scraps(lt);
   }
-  if (lt < CUE.rip1) { ctx.strokeStyle = OUTL; ctx.lineWidth = 4; ctx.strokeRect(BOX.x0, BOX.y0, BOX.x1 - BOX.x0, BOX.y1 - BOX.y0); }
-  scraps(lt);
   sparkles(lt);
   lid(lt, P, lt < CUE.pull);
-  ribbon(lt);
+  if (st) { if (lt < CUE.pull + 1.4) SOFT2D.drawRope(ctx, st.by[sim.meta.ribbon], { width: 48, color: RIB, style: 'ribbon', shadow: false, twist: .6 }); }
+  else ribbon(lt);
   const bow = bowAt(lt, P);
   tag(lt, bow, P);
   subText(lt);

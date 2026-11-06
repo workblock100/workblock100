@@ -120,8 +120,18 @@ function gloveShape(c, p, o = {}) {
   parts.push(['n', 0, -10, 10 + 2 * p, 22]);
   return parts;
 }
+/* GLOVE GEOMETRY used by the scene's physics (the knot is the anchor): the kit's glove (A22.gloveBalloon) is drawn about its palm, 84 px above the knot at s 1, 180 x 220, its top 194 above
+   the knot; the stand-in measures 173 x 194 about (-26.6, -98) */
+const GLV = () => has22('gloveBalloon') ? { palm: 84, w: 180, cx: 0, cy: -84, top: 194 } : { palm: 84, w: 173.2, cx: -26.6, cy: -98, top: 194.8 };
 function gloveBalloon(c, o = {}) {
-  if (has22('gloveBalloon') && !o.stand) return A22.gloveBalloon(c, o);
+  if (has22('gloveBalloon') && !o.stand) {
+    const s = o.s || 1, a = o.rot || 0, px = (o.x || 0) + 84 * s * Math.sin(a), py = (o.y || 0) - 84 * s * Math.cos(a), sq = o.squeeze || 0;
+    c.save();
+    if (sq > .001) { c.translate(px, py); c.scale(1 + .12 * sq, 1 - .1 * sq); c.translate(-px, -py); }
+    if (o.alpha != null) c.globalAlpha *= o.alpha;
+    const r = A22.gloveBalloon(c, { x: px, y: py, rot: a, s, puff: c01(o.puff ?? 1), face: !!o.face, side: o.side || 1, t: o.still ? 0 : (o.t ?? 0), seed: o.seed || 1, string: false });
+    c.restore(); return r;
+  }
   const p = c01(o.puff ?? 1), s = o.s || 1, parts = gloveShape(c, p, o), fill = o.fill || NIT.fill;
   c.save(); c.translate(o.x || 0, o.y || 0); c.rotate(o.rot || 0); c.scale(s, s); c.lineJoin = 'round'; c.lineCap = 'round';
   if (o.alpha != null) c.globalAlpha *= o.alpha;
@@ -267,8 +277,8 @@ function labelGunArt(fire) {
 EXT.prop.fp22w_labelgun = (side, o, t) => { const S = o.lgScale || 1.1; ctx.save(); ctx.rotate((o.lgRot ?? -.15) * side); ctx.scale(S * side, S); labelGunArt(c01(o.lgFire || 0)); ctx.restore(); };
 PROP_BOX.fp22w_labelgun = Object.assign([-46, -72, 74, 46], { mirror: true });
 /* the box of gloves held up (s4, balA): a held prop in the left hand */
-EXT.prop.fp22w_gbox = (side, o, t) => { const S = o.gbScale || .9; ctx.save(); ctx.scale(S, S); ctx.translate(-4, 40); gloveBox(ctx, { x: 0, y: 0, s: 1, t, peek: 1, hero: false }); ctx.restore(); };
-PROP_BOX.fp22w_gbox = o => { const S = o.gbScale || .9; return Object.assign([-66 * S, -50 * S, 72 * S, 44 * S], { nearFace: true }); };
+EXT.prop.fp22w_gbox = (side, o, t) => { const S = o.gbScale || .7; ctx.save(); ctx.scale(S, S); ctx.translate(-4, 40); gloveBox(ctx, { x: 0, y: 0, s: 1, t, peek: 1, hero: false }); ctx.restore(); };
+PROP_BOX.fp22w_gbox = o => { const S = o.gbScale || .7; return Object.assign([-88 * S, -86 * S, 88 * S, 44 * S], { nearFace: true }); };
 
 // ------------------------------------------------------------------ THE SET (world px): ceiling, wall, floor, doors, the cart, the holiday dressing
 const FY = L.FY, CEIL = L.CEIL, CART = L.cart, GIFT = L.gift;
@@ -524,11 +534,11 @@ function drawTapes(list) { for (const s of list) tapeStrip(s.a, s.b, 26, { sag: 
 /* the wrapped box in insert px (the world gift draws it scaled): the box, the Chux (sim or stand-in) at time t (frozen at the end of the insert), the tape */
 const WRAP_DONE = 6.95;
 function wrappedBox(t) {
-  const tt = Math.min(t, WRAP_DONE);
+  const tt = Math.min(t, WRAP_DONE), sim = simState(tt), M = SIMW && SIMW.meta;
+  if (sim && M && hasSoft('drawCloth')) { SIMDRAW.cloth(sim, tt, 'back'); openBox(true); SIMDRAW.cloth(sim, tt, 'front'); SIMDRAW.tapes(sim, tt); return; }
   openBox(true);
-  const sim = simState(tt);
-  if (sim && sim.cloth && hasSoft('drawCloth')) SIMDRAW.cloth(sim, tt); else drawChuxStand(chuxStand(tt));
-  if (sim && sim.tapes && hasSoft('drawRope')) SIMDRAW.tapes(sim, tt); else drawTapes(tapeAt(tt));
+  drawChuxStand(chuxStand(tt));
+  drawTapes(tapeAt(tt));
 }
 
 // ------------------------------------------------------------------ THE INSERTS (screen units at zoom 1; their own compositions)
@@ -570,9 +580,10 @@ function drawInsertA(lt) {
     for (const [x, y, s] of [[hl[0] - 30, hl[1] + 200, -1], [hr[0] + 30, hr[1] + 200, 1], [hl[0] - 24, hl[1] + 330, -1], [hr[0] + 24, hr[1] + 330, 1]]) { ctx.beginPath(); ctx.arc(x + s * 40 * k, y, 46, s > 0 ? -.6 : PI - .6 + 1.2, s > 0 ? .6 : PI + .6, s < 0); ctx.stroke(); } ctx.restore(); }
   for (const [t0, sd] of [[CUE.fold1, -1], [CUE.fold2, 1]]) { const ag = lt - t0 - .18; if (ag > 0 && ag < .4) { const k = ag / .4; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (.7 * (1 - k)) + ')'; ctx.lineWidth = 4; ctx.lineCap = 'round'; for (let i = 0; i < 3; i++) { const y = 1150 + i * 22, x = 540 + sd * (190 + 50 * k + i * 12); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + sd * 40, y + 6); ctx.stroke(); } ctx.restore(); } }
   for (const tp of HAND.tape) { const ag = lt - tp.tear; if (ag > 0 && ag < .2) { const k = ag / .2, x = I.roll[0] + 60, y = I.roll[1] - 26; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - k) + ')'; ctx.lineWidth = 3; for (let i = 0; i < 5; i++) { const a = -PI / 2 + (i - 2) * .5; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * (12 + 10 * k), y + Math.sin(a) * (12 + 10 * k)); ctx.lineTo(x + Math.cos(a) * (24 + 18 * k), y + Math.sin(a) * (24 + 18 * k)); ctx.stroke(); } ctx.restore(); } }
-  /* her hands */
+  /* her hands (while she folds a flap, the hand is where the flap's corner is in the sim) */
   for (const side of ['L', 'R']) {
-    const [x, y] = HAND.at(side, lt), pose = HAND.pose(side, lt), arm = HAND.arm(side);
+    let [x, y] = HAND.at(side, lt); const pose = HAND.pose(side, lt), arm = HAND.arm(side), fp = foldHand(side, lt);
+    if (fp) { x = fp[0]; y = fp[1]; }
     insHand(x, y, arm + PI, arm, 2.5, pose === 'flat' ? 'flat' : pose === 'pinch' ? 'pinch' : pose === 'grip' ? 'grip' : 'open');
   }
 }
@@ -600,9 +611,31 @@ function simState(lt) {
   if (!SIMW) return null;
   try { return SIMW.world.at(lt); } catch (e) { return null; }
 }
+let CHUXP = null;
+/* the screen point of a flap's folded corner (the outer column, rows 14..18 of the pad) while a fold is under way: her hand holds it there */
+function foldHand(side, lt) {
+  if (!SIMW || !SIMW.meta) return null;
+  const f = side === 'L' ? [CUE.fold1 - .06, CUE.fold1 + .42] : [CUE.fold2 - .06, CUE.fold2 + .42]; if (lt < f[0] || lt > f[1]) return null;
+  const st = simState(lt), M = SIMW.meta, c = st && st.by[M.chux]; if (!c) return null;
+  const i = side === 'L' ? 0 : M.cols; let x = 0, y = 0, n = 0;
+  for (let j = 14; j <= 18; j++) { const k = j * (M.cols + 1) + i; x += c.pts[2 * k]; y += c.pts[2 * k + 1] - M.dy + M.view.ky * c.z[k]; n++; }
+  const k = ss(lt, f[0], f[0] + .06) * (1 - ss(lt, f[1] - .08, f[1])), h = HAND.at(side, lt);
+  return [lerp(h[0], x / n + (side === 'L' ? -10 : 10), k), lerp(h[1], y / n + 6, k)];
+}
 const SIMDRAW = {
-  cloth(st, t) {},
-  tapes(st, t) {},
+  /* the Chux: the part behind the box first (zMax), then the box, then the rest (zMin): the kit's print (quilted blue, white border), its white plastic back where it folds over */
+  cloth(st, t, part) {
+    const M = SIMW.meta, c = st.by[M.chux]; if (!c) return;
+    if (!CHUXP && has22('chuxPrint')) CHUXP = A22.chuxPrint();
+    const o = { fill: CHUXP || CHUX.field, back: chuxColors().back, shade: .42, view: M.view, edge: { color: 'rgba(30,60,120,.6)', width: 2 }, res: 1.2 };
+    if (part === 'back') o.zMax = -M.box.hd; else o.zMin = -M.box.hd;
+    ctx.save(); ctx.translate(0, -M.dy); SOFT2D.drawCloth(ctx, c, o); ctx.restore();
+  },
+  /* the paper tape (ropes in the plane z 150): from the moment each is pulled off the roll */
+  tapes(st, t) {
+    const M = SIMW.meta;
+    M.tapes.forEach((id, n) => { const tp = HAND.tape[n], r = st.by[id]; if (!r || t < tp.t0) return; ctx.save(); ctx.translate(0, -M.dy + M.view.ky * 150); SOFT2D.drawRope(ctx, r, { style: 'tape', width: 26 }); ctx.restore(); });
+  },
 };
 
 // ------------------------------------------------------------------ THE CAST (world px)
@@ -664,7 +697,7 @@ function strawOpts(lt, sh) {
   /* "You can have twelve.": she turns to Mr. Pear, the box of gloves up in her right hand; for the balloons the box rests low at her right side and her left hand does two gloves at a time */
   if (lt >= 17.95) {
     const up = ss(lt, 18.0, W_TWELVE) * (1 - ss(lt, 18.95, 19.12)) + (id === 's5' ? ss(lt, W_NITRILE - .3, W_NITRILE) : 0);
-    o.arms.r = 'hold'; o.hold = Object.assign({}, o.hold || {}, { r: 'fp22w_gbox' }); o.gbScale = .8;
+    o.arms.r = 'hold'; o.hold = Object.assign({}, o.hold || {}, { r: 'fp22w_gbox' }); o.gbScale = .62;
     o.grip = Object.assign({}, o.grip || {}, { r: grab(o, 'r', lerp(770, 764, up), lerp(1098, 960, up)) });
     o.yaw = .3; o.headYaw = lerp(.6, .75, ss(lt, 18.1, 18.5)); o.look = [.45, 0]; o.lid = .5;
   }
@@ -743,7 +776,7 @@ function balloonAt(b, lt) {
   const d = pairDur(k), rel = c + d, s = b.s * BALW;
   if (lt < rel) {
     const h = balPhase(lt).hand, puff = lt < c + d * .34 ? .3 * sg(lt, c, c + d * .34) : .3 + .7 * ss(lt, c + d * .34, rel);
-    return { x: h[0] + b.side * 14, y: h[1] - 6, rot: -.85 + b.side * .38, puff, s, knot: 0 };
+    return { x: h[0] + b.side * 14, y: h[1] - 6, rot: -.85 + b.side * .38, puff, s, knot: 0, t: lt, seed: b.seed };
   }
   const tau = lt - rel, yc = CEIL + 195 * s + 2, tr = b.i === 4 ? Math.max(.3, CUE.bonk - rel) : b.i === 2 || b.i === 3 ? Math.max(.3, CUE.squeak2 - rel) : .62;
   const x0 = UP_B[0] + b.side * 14, y0 = UP_B[1] - 6;
@@ -760,7 +793,7 @@ function balloonAt(b, lt) {
   const sway = b.i === 8 && lt >= snapT(24.784) ? 1 - ss(lt, snapT(25.934) - .45, snapT(25.934)) : 1;
   let rot = lerp(-.85 + b.side * .38, .14 * Math.sin(b.seed), ss(tau, 0, .8)) + sway * .07 * Math.sin(lt * 1.1 + b.seed);
   if (b.i === 8 && lt >= snapT(24.784)) rot *= sway;
-  return { x: x + sway * 4 * Math.sin(lt * 1.3 + b.seed) * ss(tau, .4, 1.2), y, rot, puff: 1, s, knot: 1, face: b.face, squeeze };
+  return { x: x + sway * 4 * Math.sin(lt * 1.3 + b.seed) * ss(tau, .4, 1.2), y, rot, puff: 1, s, knot: 1, face: b.face, squeeze, t: lt, seed: b.seed, still: b.i === 8 && lt >= snapT(25.934) - .02 };
 }
 function drawBalloons(lt) {
   const sim = simState(lt);
@@ -777,7 +810,7 @@ function bowState(lt, mouth) {
   const held = lt < BOW.set[1];
   const rotHeld = lerp(PI * .7, -1.45, ss(p, .06, .5)), rot = held ? lerp(rotHeld, -.35, set) : -.35;
   const tie = ss(lt, BOW.tie[0], BOW.tie[1]), sq = .4 * bump(lt, CUE.squeak - .08, CUE.squeak + .16) + (lt > BOW.set[1] ? .3 * bump(lt, BOW.set[1], BOW.set[1] + .2) : 0);
-  return { x: c[0], y: c[1], rot: rot + (lt > BOW.tie[0] && lt < BOW.tie[1] + .1 ? .12 * Math.sin((lt - BOW.tie[0]) * 40) : 0), puff: p, s: BOW_S, knot: tie, squeeze: sq, held };
+  return { x: c[0], y: c[1], rot: rot + (lt > BOW.tie[0] && lt < BOW.tie[1] + .1 ? .12 * Math.sin((lt - BOW.tie[0]) * 40) : 0), puff: p, s: BOW_S, knot: tie, squeeze: sq, held, t: lt, seed: 5 };
 }
 
 // ------------------------------------------------------------------ THE SHOTS (scene-local s, snapped; the boundary frame belongs to the NEW shot)
@@ -812,11 +845,12 @@ function castFor(lt, sh) { return { straw: strawOpts(lt, sh), mango: mangoOpts(l
 /* the camera of a shot */
 const OPEN = { z0: 3.0, z1: 1.25, a: snapT(.30), b: 1.7, c0: [DLAB.x, DLAB.y + 60 / 3.0], c1: [440, 1130] };
 /* the last shot: the hero balloon (8) at rest, upright, its knot at (1260, yc): the glove's box is (-113..60, -195..-1) x s, centre (-26.6, -98) x s, 173.2 x s wide (measured): 260 px wide at (540, 520) */
-const END = (() => { const sB = BAL[8].s * BALW, yc = CEIL + 195 * sB + 2, z1 = 260 / (173.2 * sB); return { cx: 1260 - 26.6 * sB, cy: yc - 98 * sB + (960 - 520) / z1, z0: z1 * .95, z1, still: snapT(25.934) }; })();
+const END = { still: snapT(25.934) };
+function endCam() { const g = GLV(), sB = BAL[8].s * BALW, yc = CEIL + 195 * sB + 2, z1 = 260 / (g.w * sB); return { cx: 1260 + g.cx * sB, cy: yc + g.cy * sB + (960 - 520) / z1, z0: z1 * .95, z1 }; }
 function camOf(lt, sh, C) {
   const dur = Math.min(sh.e, DUR) - sh.s, u = c01((lt - sh.s) / dur), zz = a => lerp(a[0], a[1], easeIO(u));
   if (sh.k === 'open') { const k = 1 - Math.pow(1 - sg(lt, OPEN.a, OPEN.b), 1.6), z = OPEN.z0 * Math.pow(OPEN.z1 / OPEN.z0, k); return { x: lerp(OPEN.c0[0], OPEN.c1[0], Math.sqrt(k)), y: lerp(OPEN.c0[1], OPEN.c1[1], k), z: z * (1 + .015 * ss(lt, OPEN.b, 2.5)) }; }
-  if (sh.k === 'end') { const k = easeIO(sg(lt, sh.s, END.still - .02)); return { x: END.cx, y: END.cy + 12 * (1 - k), z: lerp(END.z0, END.z1, k) }; }
+  if (sh.k === 'end') { const k = easeIO(sg(lt, sh.s, END.still - .02)), e = endCam(); return { x: e.cx, y: e.cy + 12 * (1 - k), z: lerp(e.z0, e.z1, k) }; }
   if (sh.k === 'fix') return { x: sh.cx, y: sh.cy, z: zz(sh.z) };
   if (sh.k === 'face') { const o = C[sh.foc]; if (!o) return { x: 540, y: 960, z: 1 }; const z = zz(sh.z), [fx, fy] = faceC(o); return { x: sh.cx ?? fx - (sh.dx || 0) / z, y: fy + sh.up / z, z }; }
   if (sh.k === 'two') {

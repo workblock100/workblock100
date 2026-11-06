@@ -537,32 +537,29 @@ function slingSim(lt) {
 const BRUN = { pts: new Float32Array(160) };
 function beltSim(lt, b) {
   const S = simInit(), st = S && simAt(lt), r = st && st.by[S.meta.belt.id]; if (!r) return false;
-  const G = GEO(), B = SIMM().L.BELT, n = r.n, P = r.pts, cin = G.beltWrap(lt).cinch;
-  if (!G.beltWrap(lt).on) return true;
-  const front = []; for (let i = 0; i < n; i++) front.push(P[2 * i + 1] > B.BY - 4 || Math.abs(P[2 * i] - B.BX) > B.R0 + 30);
-  let i = 0;
-  while (i < n) {
-    if (!front[i]) { i++; continue; }
-    let j = i; while (j + 1 < n && front[j + 1]) j++;
-    if (j > i) {
-      const m = j - i + 1, Q = BRUN.pts;
-      for (let k = 0; k < m; k++) { const X = P[2 * (i + k)], Z = P[2 * (i + k) + 1], sq = 1 - .05 * cin, [fx, fy] = G.beltFront(b, B.BX + (X - B.BX) * sq, B.BY + (Z - B.BY) * sq); Q[2 * k] = fx; Q[2 * k + 1] = fy; }
-      SOFT2D.drawRope(ctx, { id: r.id, n: m, pts: Q }, { style: 'belt', width: 22, color: BELTC.canvas, buckle: i === 0 && lt >= SIMM().T.belt.hold - .02, shadow: true });
-    }
+  const G = GEO(); if (!G.beltWrap(lt).on) return true;
+  const n = r.n, P = r.pts, F = []; for (let i = 0; i < n; i++) F.push(G.beltFront(b, P[2 * i], P[2 * i + 1]));
+  for (let i = 0; i < n;) {
+    if (!F[i][2]) { i++; continue; }
+    let j = i; while (j + 1 < n && F[j + 1][2]) j++;
+    if (j > i) strap(F.slice(i, j + 1), 22);
     i = j + 1;
   }
+  if (F[0][2] && lt >= SIMM().T.belt.hold - .1) buckle(F[0][0], F[0][1], Math.atan2(F[1][1] - F[0][1], F[1][0] - F[0][0]) * .3, 1.1);
   return true;
 }
 // ------------------------------------------------------------------ the gait belt (stand-in: the front half of a ring round his waist, projected; the buckle; the tail in Onion's hand)
-const BELTC = { canvas: '#efe6cf', stripe: '#3b6fc4', edge: 'rgba(60,50,30,.7)' };
+const BELTC = { canvas: '#e9e1cd', stripe: '#2f6fd0', edge: 'rgba(29,26,34,.9)' };
 function beltPath(cx, wy, R, e, a0, a1, n = 24) { const p = []; for (let i = 0; i <= n; i++) { const a = lerp(a0, a1, i / n); p.push([cx + R * Math.cos(a), wy + e * Math.sin(a)]); } return p; }
-function strap(pts, w = 20) {
+/* a canvas strap along a polyline (smoothed through the midpoints), as A22.gaitBelt draws it: dark outline, canvas, a blue centre stripe */
+function strap(pts, w = 22) {
   if (pts.length < 2) return;
   ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'butt';
-  const go = () => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); };
-  go(); ctx.strokeStyle = BELTC.edge; ctx.lineWidth = w + 5; ctx.stroke();
+  const go = () => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length - 1; i++) ctx.quadraticCurveTo(pts[i][0], pts[i][1], (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2); ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]); };
+  go(); ctx.strokeStyle = 'rgba(20,10,10,.22)'; ctx.lineWidth = w + 9; ctx.save(); ctx.translate(0, 4); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = BELTC.edge; ctx.lineWidth = w + 5; ctx.stroke();
   ctx.strokeStyle = BELTC.canvas; ctx.lineWidth = w; ctx.stroke();
-  ctx.strokeStyle = BELTC.stripe; ctx.lineWidth = 2.5; ctx.setLineDash([]); ctx.save(); ctx.translate(0, -w * .28); go(); ctx.stroke(); ctx.restore(); ctx.save(); ctx.translate(0, w * .28); go(); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = BELTC.stripe; ctx.lineWidth = 3; ctx.stroke();
   ctx.restore();
 }
 function buckle(x, y, rot, s = 1) {
@@ -598,7 +595,7 @@ function beltOn(lt, b, hands) {
 }
 
 // ------------------------------------------------------------------ torn paper and tossed things of the search (stand-ins: closed-form flights with air drag, landings, rests)
-const LAND = [[540, 1338, -.4], [628, 1348, .3], [452, 1342, -.15]];                /* where the stapler, the candle and the glove box come to rest (tossed low to her left, on the floor) */
+const LAND = [[624, 1346, -.3], [702, 1340, .02], [652, 1318, -.03]];               /* where the stapler, the candle and the glove box come to rest: dropped upright at her feet, in a strip every shot sees whole or not at all */
 function flight(i, j, lt) {
   const t0 = RIPS[i], age = lt - t0; if (age < 0) return null;
   const g = SG[i], big = j < 3, k = i * 10 + j;
@@ -661,7 +658,7 @@ function santaOpts(lt) {
   if (lt >= 5.2 && lt < 7.5) {
     look = [.25, -.1]; expr = 'happy';
     if (lt < wS('me2', 3) - .1) { arms = { l: 'rest', r: 'point' }; extra.swing = 0; }
-    else { const k = ss(lt, wS('me2', 3) - .12, wS('me2', 3) + .1), d = ss(lt, wS('me2', 5), wE('me2', 5)); arms = { l: 'hold', r: 'hold' }; grip = { l: [-120, lerp(-120, 80, d) - 40 * (1 - k)], r: [120, lerp(-120, 80, d) - 40 * (1 - k)] }; hand = { l: 'open', r: 'open' }; extra.squash = d > .02 && d < .98 ? .06 * Math.sin(d * PI) : 0; }
+    else { const k = ss(lt, wS('me2', 3) - .12, wS('me2', 3) + .1), d = ss(lt, wS('me2', 5), wE('me2', 5)); arms = { l: 'hold', r: 'hold' }; grip = { l: [-132, lerp(-92, 80, d) - 20 * (1 - k)], r: [132, lerp(-92, 80, d) - 20 * (1 - k)] }; hand = { l: 'open', r: 'open' }; extra.squash = d > .02 && d < .98 ? .06 * Math.sin(d * PI) : 0; }
   }
   /* "Gait belt.": the smile freezes; the belt: arms up out of the way, the tug, eyes wide; then he sits down hard */
   if (lt >= 7.5 && lt < 9.6) { expr = 'happy'; look = [.6, 0]; if (lt > 7.9) { expr = 'neutral'; extra.face = { curve: .25 }; } }
@@ -677,7 +674,12 @@ function santaOpts(lt) {
   if (lt >= 19.85 && lt < 22.1) { expr = lt < 21.0 ? 'sad' : 'neutral'; const rk = Math.sin((lt - 19.85) * 9) * ss(lt, 19.85, 20.0) * (1 - ss(lt, 20.7, 21.0)); extra.rot = .05 * rk; extra.squash = -.04 * Math.abs(rk); look = lt < 20.9 ? [0, .2] : [.8, -.05]; if (grip) { grip.l[1] -= 14 * Math.abs(rk); grip.r[1] -= 14 * Math.abs(rk); } }
   /* the Hoyer: up he goes; arms up, beaming */
   if (lt >= 22.1) { look = [.6, -.1]; expr = 'shock'; if (lt > CUE.lift + .6) { expr = 'happy'; look = [0, -.15]; } }
-  if (lifted) { const k = ss(lt, CUE.lift + .3, CUE.lift + .8); arms = { l: 'hold', r: 'hold' }; grip = { l: [lerp(-140, -150, k), lerp(-10, -150, k)], r: [lerp(140, 150, k), lerp(-10, -150, k)] }; hand = { l: 'open', r: 'open' }; if (lt >= ls('me5') - .1) { const w = Math.sin((lt - ls('me5')) * 5) * ss(lt, ls('me5'), ls('me5') + .2); grip.l[0] -= 10 * w; grip.r[0] += 10 * w; } extra.sparkle = lt > ls('me5'); }
+  if (lifted) {
+    arms = { l: 'hold', r: 'hold' }; grip = { l: [-166, -58], r: [166, -58] }; hand = { l: 'grip', r: 'grip' };
+    const wv = ss(lt, wS('me5', 3) - .15, wS('me5', 3) + .1) * (1 - ss(lt, 26.4, 26.9));          /* "best": the right hand lets go and waves */
+    if (wv > .02) { grip.r = [lerp(166, 146, wv) + 16 * wv * Math.sin((lt - wS('me5', 3)) * 9), lerp(-58, -96, wv)]; hand.r = 'open'; }
+    extra.sparkle = lt > ls('me5');
+  }
   if (lt >= CUE.sting - .05) { extra.sparkle = true; look = [0, -.05]; }
 
   let o = null;
@@ -721,7 +723,7 @@ function onionOpts(lt) {
     yaw = -.35; head = -.4; look = [-.6, .3]; expr = 'onion_stoic';
     const o0 = { kind: 'onion', x, y: FY, s }, b = bodyAt(lt), wy = b.y + 40;
     const thr = ss(lt, 8.6, 8.84), back = ss(lt, 8.84, 8.98);
-    grip.r = [lerp(110, 70, back) - 40 * thr, lerp(40, -150, thr) + lerp(0, 190, back)];                          /* the throw: up and over, then down */
+    grip.r = [lerp(110, 70, back) - 30 * thr, lerp(40, -96, thr) + lerp(0, 136, back)];                          /* the throw: up and over, then down */
     const tailSide = [b.x + b.r + 26, wy + 14], front = [b.x + 16, wy + 36], tugTo = [b.x + 110, wy + 30];
     let tgt = lt < 8.62 ? handW(o0, grip.l) : lt < 8.88 ? tailSide : lt < CUE.tug - .02 ? [lerp(front[0], front[0] + 52, ss(lt, 9.1, 9.3)), front[1]] : lt < 9.62 ? [lerp(front[0] + 52, tugTo[0], ss(lt, CUE.tug - .02, CUE.tug + .08)), lerp(front[1], tugTo[1], ss(lt, CUE.tug - .02, CUE.tug + .08))] : handW(o0, [-80, 80]);
     if (lt >= 8.88 && lt < 8.96) tgt = [lerp(tailSide[0], front[0], ss(lt, 8.88, 8.95)), lerp(tailSide[1], front[1], ss(lt, 8.88, 8.95))];
@@ -761,8 +763,8 @@ function lemonOpts(lt) {
   const h = hoyerAt(lt), s = POS.lemon.s, x = h.mastX + 150, sp = spk('l1', lt), push = lt >= CUE.roll - .1 && lt < 22.75;
   const o = A7.lemon({ t: lt, x, y: FY, s, who: 'lemon', expr: sp ? 'dead' : 'neutral', lid: .5, look: [-.8, 0], yaw: -.45, headYaw: sp ? -.15 : -.5, face: { curve: .02 }, acc: ['readers', 'lanyard7'], arms: { l: 'hold', r: 'rest' }, hand: { l: 'grip' }, plant: true });
   const o0 = { kind: 'lemon', x, y: FY, s };
-  o.grip = { l: toLocal(o0, [h.mastX + 86 - (push ? 0 : 6), FY - 446]) };
-  if (lt >= 22.75) { o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: toLocal(o0, [h.mastX + 40, FY - 262]), r: toLocal(o0, [h.mastX + 52, FY - 250]) }; o.hand = { l: 'grip', r: 'point' }; o.look = [-.7, -.4]; o.headYaw = -.35; }
+  o.grip = { l: toLocal(o0, [h.mastX + 16, FY - 200]) };
+  if (lt >= 22.75) { const pr = ss(lt, 22.8, 23.05); o.arms = { l: 'hold', r: 'rest' }; o.grip = { l: toLocal(o0, [h.mastX + lerp(16, 30, pr), lerp(FY - 200, FY - 252, pr)]) }; o.hand = { l: pr > .5 ? 'point' : 'grip' }; o.look = [-.7, -.4]; o.headYaw = -.35; }
   if (push) { o.gaitW = (x - (SIMM().L.HOY.park + 150)) / s; o.dir = -1; o.stride = 46; o.vx = -600 * s; }
   return o;
 }
@@ -841,7 +843,7 @@ function itemAt(i, lt) {
   if (i === 3) { const up = ss(lt, 16.5, 16.8); return { x: HOLDP[0], y: HOLDP[1] - 4 - 16 * up, rot: 0, held: true }; }
   const tT = R + .2, tL = R + .5, [lx, ly, lr] = LAND[i];
   if (lt < tT) return { x: HOLDP[0], y: HOLDP[1] - 4, rot: 0, held: true };
-  if (lt < tL) { const u = (lt - tT) / (tL - tT); return { x: lerp(HOLDP[0], lx, u), y: lerp(HOLDP[1] - 4, ly, u) - 90 * u * (1 - u), rot: lerp(0, lr + 2 * PI * (i % 2 ? 1 : -1), u), held: false }; }
+  if (lt < tL) { const u = (lt - tT) / (tL - tT); return { x: lerp(HOLDP[0], lx, u), y: lerp(HOLDP[1] - 4, ly, u * u) - 50 * u * (1 - u), rot: i === 0 ? lerp(0, lr - 2 * PI, u) : lr * u + .06 * Math.sin(u * PI * 3), held: false }; }
   const bt = lt - tL; return { x: lx, y: ly - 12 * Math.abs(Math.sin(bt * 14)) * Math.exp(-bt * 9), rot: lr, held: false };
 }
 function drawItem(i, it, lt, s = 1) {
@@ -897,7 +899,7 @@ function camOf(lt, sh, C) {
   const dur = Math.min(sh.e, SCN.dur) - sh.s, u = c01((lt - sh.s) / dur);
   if (sh.k === 'open') return { x: K([[.3, 790], [1.42, 1021], [2.43, 1022]], lt), y: K([[.3, 760 + 440 / 3], [1.42, 1000], [2.43, 1004]], lt), z: 1 / K([[.3, 1 / 3], [1.42, 1 / .94], [2.43, 1 / .955]], lt) };
   if (sh.k === 'face') { const o = C[sh.foc]; if (!o) return { x: 540, y: 960, z: 1 }; const z = lerp(sh.z[0], sh.z[1], easeIO(u)), [fx, fy] = faceC(o); return { x: fx - (sh.dx || 0) / z, y: fy + sh.up / z, z }; }
-  if (sh.k === 'cup') return { x: 800, y: 1176, z: lerp(2.15, 2.28, easeIO(u)) };
+  if (sh.k === 'cup') return { x: 762, y: 1176, z: lerp(2.15, 2.28, easeIO(u)) };
   if (sh.k === 'rise') return { x: K([[23.93, 1396], [26.15, 1404]], lt), y: K([[23.93, 1010], [24.7, 960], [26.15, 950]], lt), z: K([[23.93, 1.14], [26.15, 1.18]], lt) };
   if (sh.k === 'end') { const f = endFrame(27.3), a = { x: f.x + 10, y: f.y - 14, z: f.z * 1.07 }, k = ss(lt, sh.s, 27.3); return { x: lerp(a.x, f.x, k), y: lerp(a.y, f.y, k), z: lerp(a.z, f.z, k) }; }
   return { x: sh.x, y: sh.y, z: lerp(sh.z[0], sh.z[1], easeIO(u)) };
@@ -968,7 +970,7 @@ function drawS(lt) {
   paperStand(lt, 'back');
   for (let i = 0; i < 4; i++) if (lt < RIPS[i] - .26) gift(SG[i]);
   const moving = sh.k === 'open' && lt > .28 && lt < 1.46;
-  const drawIf = (n, fn) => { const o = C[n]; if (!o || bg.has(n)) return; if (moving) o.transit = true; const p = place(o); if (p === 'in' || (o.transit && p !== 'out')) fn(o, true); else if (p === 'sliver') fn(o, false); };
+  const drawIf = (n, fn) => { const o = C[n]; if (!o || bg.has(n)) return; if (moving) o.transit = true; const p = place(o); o.__drawn = false; if (p === 'in' || (o.transit && p !== 'out')) { fn(o, true); o.__drawn = true; } else if (p === 'sliver') { fn(o, false); o.__drawn = true; } };
   const plain = (o, audited) => { if (!audited) REG.suppress++; drawChar(o); if (!audited) REG.suppress--; };
   drawIf('pear', (o, a) => drawResident('pear', o, a));
   drawIf('cran', (o, a) => drawResident('cran', o, a));
@@ -996,7 +998,7 @@ function drawS(lt) {
     if (lt >= RIPS[i] - .26 && lt < RIPS[i]) gift(Object.assign({}, SG[i], giftAt(i, lt)));
     const it = itemAt(i, lt); if (it && !(i === 3 && lt >= 17.8)) drawItem(i, it, lt);
   }
-  if (lt >= 17.8 && C.straw) { const o = C.straw, p = handW(o, o.grip.r); dentureCup(p[0] + 4, p[1] + 42, 1.05, .05, 1, cupClack(lt), lt, false); }
+  if (lt >= 17.8 && C.straw && C.straw.__drawn) { const o = C.straw, p = handW(o, o.grip.r); dentureCup(p[0] + 4, p[1] + 42, 1.05, .05, 1, cupClack(lt), lt, false); }
   drawIf('lemon', plain);
   paperStand(lt, 'front');
   /* light: the tree's glow, the TV's fire, the window, warm downlights; then the bulbs */

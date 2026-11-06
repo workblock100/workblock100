@@ -444,7 +444,7 @@ EXT.prop.fp22s_mug = (side, o, t) => { mugP({ x: o.mugDx || 0, y: o.mugDy ?? 24,
 PROP_BOX.fp22s_mug = o => { const s = o.mugS || .6, dx = o.mugDx || 0, dy = o.mugDy ?? 24; return Object.assign([dx - 116 * s, dy - 216 * s, dx + 176 * s, dy], { nearFace: true }); };
 /* Strawberry's Chux-wrapped pudding with its glove-balloon bow, offered on the palm */
 EXT.prop.fp22s_pud = (side, o, t) => { pudGift({ x: 0, y: 26, s: o.pudS || .7, t, seed: side > 0 ? 2 : 1, rise: o.pudRise ?? 120 }); };
-PROP_BOX.fp22s_pud = o => { const s = o.pudS || .7, r = o.pudRise ?? 120; return [-56 * s, 26 - (r + 112) * s, 56 * s, 26]; };
+PROP_BOX.fp22s_pud = o => { const s = o.pudS || .7, r = o.pudRise ?? 120; return Object.assign([-56 * s, 26 - (r + 112) * s, 56 * s, 26], { nearFace: true }); };
 
 // ================================================================== THE STATION (draw by day, swap by night)
 const FL = 1250;
@@ -1090,8 +1090,8 @@ function lemonS(lt, sh) {
   const B = blockB(lt), x = xOf('lemon', lt);
   const o = A7.lemon({ x, y: SFL, s: SSC.lemon, t: lt, who: lt > 24 ? 'staff' : 'lemon', expr: 'neutral', lid: .35, plant: true, arms: { l: 'rest', r: 'rest' } });
   lookAt(o, B ? PILE.SX : XA.tom, 0);
-  if (!B && lt < 5.2) giftHold(o, 'lemon', lt);
-  if (!B && lt >= 5.2 && lt < 13.0) { candleUp(o, 'r', ss(lt, 5.2, 5.5)); o.look = [0, .05]; o.headYaw = 0; o.lid = .5; }
+  if (!B && lt < 5.3) giftHold(o, 'lemon', lt);
+  if (!B && lt >= 5.3 && lt < 13.0) { candleUp(o, 'r', ss(lt, 5.3, 5.55)); o.look = [0, .05]; o.headYaw = 0; o.lid = .5; }
   if (sh.id === 't2') { o.look = [-.6, 0]; o.headYaw = -.15; }
   if (sh.id === 'br1b' || sh.id === 'br1c') { o.look = [1, -.05]; o.headYaw = .3; }
   if (sh.id === 'l2') { giftHold(o, 'lemon2', lt, ['stripes', '#2f8f4e', '#ffffff']); o.look = [-1, 0]; o.headYaw = -.3; o.lid = .3; }
@@ -1103,8 +1103,8 @@ function mangoS(lt, sh) {
   const B = blockB(lt), x = xOf('mango', lt);
   const o = A7.mango({ x, y: SFL, s: SSC.mango, t: lt, who: lt > 24 ? 'staff' : 'mango', expr: 'neutral', plant: true, arms: { l: 'rest', r: 'rest' } });
   lookAt(o, B ? PILE.SX : XA.tom, 0);
-  if (!B && lt < 5.2) giftHold(o, 'mango', lt);
-  if (!B && lt >= 5.2 && lt < 13.0) { candleUp(o, 'r', ss(lt, 6.0, 6.35)); o.expr = 'sad'; o.look = [0, .05]; }
+  if (!B && lt < 5.3) giftHold(o, 'mango', lt);
+  if (!B && lt >= 5.3 && lt < 13.0) { candleUp(o, 'r', ss(lt, 6.0, 6.35)); o.expr = 'sad'; o.look = [0, .05]; }
   if (sh.id === 'br1b' || sh.id === 'br1c') { o.look = [1, -.05]; o.headYaw = .3; o.expr = 'shock'; }
   if (sh.id === 'l2') { giftHold(o, 'mango2', lt, ['trees', '#7a4fd8', '#3fae5f']); o.look = [-1, 0]; o.headYaw = -.3; }
   if (sh.id === 'st1') { o.expr = 'happy'; o.arms = { l: 'cheer', r: 'cheer' }; o.rot = -.07; o.x -= 26; }
@@ -1114,8 +1114,8 @@ function onionS(lt, sh) {
   const B = blockB(lt), x = xOf('onion', lt);
   const o = A15.onion({ x, y: SFL, s: SSC.onion, t: lt, who: lt > 24 ? 'staff' : 'onion', pose: 'rest', cry: .55, plant: true });
   o.expr = 'onion_cry'; lookAt(o, B ? PILE.SX : XA.tom, 0);
-  if (!B && lt < 5.2) { o.pose = 'free'; giftHold(o, 'onion', lt); }
-  if (!B && lt >= 5.2 && lt < 13.0) { o.pose = 'free'; candleUp(o, 'r', ss(lt, 6.9, 7.2)); }
+  if (!B && lt < 5.3) { o.pose = 'free'; giftHold(o, 'onion', lt); }
+  if (!B && lt >= 5.3 && lt < 13.0) { o.pose = 'free'; candleUp(o, 'r', ss(lt, 6.9, 7.2)); }
   if (talking(TS, 'o1', lt)) { const sob = Math.max(0, 1 - Math.abs(lt - SC.sniffle - .08) / .3); Object.assign(o, { expr: 'happy', cry: .95, sob, look: [-.2, -.1] }); o.joy = 1; }
   if (sh.id === 't2') { o.look = [-.8, 0]; o.headYaw = -.2; }
   if (sh.id === 'br1b' || sh.id === 'br1c') { o.look = [1, -.05]; o.headYaw = .3; o.expr = 'shock'; o.cry = .3; }
@@ -1129,8 +1129,8 @@ function strawS(lt, sh) {
   const B = blockB(lt);
   const o = A11.straw({ x: B ? PILE.SX : XA.straw, y: B ? PILE.FY : SFL, s: B ? PILE.S : SSC.straw, t: lt, who: 'straw', expr: 'dead', lid: .5, plant: true, arms: { l: 'rest', r: 'rest' } });
   lookAt(o, XA.tom, 0);
-  if (!B && lt < 5.2) giftHold(o, 'straw', lt);
-  if (!B && lt >= 5.2 && lt < 13.0) { candleUp(o, 'r', ss(lt, 5.4, 5.8)); o.lid = .6; o.look = [.3, .05]; }
+  if (!B && lt < 5.3) giftHold(o, 'straw', lt);
+  if (!B && lt >= 5.3 && lt < 13.0) { candleUp(o, 'r', ss(lt, 5.4, 5.8)); o.lid = .6; o.look = [.3, .05]; }
   if (sh.id === 'l2') { o.expr = 'neutral'; o.lid = .3; o.look = [.8, 0]; o.headYaw = .2; }
   if (B) {
     o.look = [0, 0]; o.headYaw = 0; o.yaw = 0;
@@ -1139,14 +1139,14 @@ function strawS(lt, sh) {
     if (lt < 17.3) { o.expr = lt < SC.pile ? 'shock' : 'dead'; o.lid = lerp(.1, .55, ss(lt, 16.8, 17.3)); o.look = [.6 * Math.sin(lt * 3), -.2]; o.squash = .04 * flinch; }
     const arm = ss(lt, 17.2, 17.6);
     o.arms = { l: 'rest', r: arm > .01 ? 'hold' : 'rest' }; o.grip = { r: [lerp(80, 96, arm), lerp(60, -135, arm)] };
-    if (sh.id === 's1' || sh.id === 'o2') { o.hold = { r: 'fp22s_socks' }; o.socksS = .8; o.socksRot = -.9 + .05 * Math.sin(lt * 2); o.lid = .55; }
+    if (sh.id === 's1' || sh.id === 'o2') { o.hold = { r: 'fp22s_socks' }; o.socksS = .5; o.socksRot = .04 * Math.sin(lt * 2); o.grip = { r: [lerp(80, 120, arm), lerp(60, -135, arm)] }; o.lid = .55; }
     if (sh.id === 's2' || sh.id === 'l3' || sh.id === 's3' || sh.id === 'end') {
       const up = sh.id === 's2' ? ss(lt, TS.ls('s2') - .1, TS.ls('s2') + .25) : 1;
-      o.hold = { r: 'fp22s_mug' }; o.mugS = sh.id === 's2' || sh.id === 'l3' ? .85 : 1; o.mugHero = sh.id === 's3' || sh.id === 'end'; o.grip = { r: [96, lerp(40, -95, up)] }; o.mugDx = 92; o.mugDy = 26;
+      o.hold = { r: 'fp22s_mug' }; o.mugS = sh.id === 's2' || sh.id === 'l3' ? .85 : 1; o.mugHero = sh.id === 's3' || sh.id === 'end'; o.grip = { r: [96, lerp(-70, -95, up)] }; o.mugDx = 92; o.mugDy = 26;
       o.lid = sh.id === 's3' ? .62 : .5; o.look = sh.id === 's3' ? [.6, .2] : [.2, 0];
       if (sh.id === 'end') { o.lid = .35; o.expr = 'chill'; o.look = [.4, .3]; }
     }
-    if (sh.id === 's4' || sh.id === 'st1') { o.hold = { r: 'fp22s_pud' }; o.pudS = 1; o.pudRise = 90; o.grip = { r: [96, -120] }; o.expr = sh.id === 'st1' ? 'happy' : 'neutral'; o.lid = sh.id === 'st1' ? .2 : .4; o.look = [.7, -.1]; }
+    if (sh.id === 's4' || sh.id === 'st1') { o.hold = { r: 'fp22s_pud' }; o.pudS = 1; o.pudRise = 90; o.grip = { r: [124, -118] }; o.expr = sh.id === 'st1' ? 'happy' : 'neutral'; o.lid = sh.id === 'st1' ? .2 : .4; o.look = [.7, -.1]; }
   }
   return o;
 }
@@ -1248,7 +1248,7 @@ const SSH = [
   { id: 'o2', s: 18.48, k: 'face', foc: 'onion', z: [1.72, 1.78], up: 120, dx: -40, show: ['onion', 'lemon'], dof: 4 },
   { id: 's2', s: 20.05, k: 'pt', x: 430, y: 1060, z: [1.6, 1.64], show: ['straw'], pile: true, dof: 3 },
   { id: 'l3', s: 20.74, k: 'face', foc: 'lemon', z: [1.7, 1.75], up: 120, dx: -30, show: ['onion', 'lemon', 'tom'], dof: 4 },
-  { id: 's3', s: 21.58, k: 'pt', x: 440, y: 1050, z: [1.9, 1.96], show: ['straw'], pile: true, dof: 3 },
+  { id: 's3', s: 21.58, k: 'pt', x: 476, y: 1040, z: [1.86, 1.92], show: ['straw'], pile: true, dof: 3 },
   { id: 's4', s: 23.10, k: 'pt', x: 500, y: 1010, z: [1.5, 1.55], show: ['straw'], pile: true, dof: 2 },
   { id: 'st1', s: 24.36, k: 'pt', x: 1210, y: 1110, z: [1.02, 1.05], show: ['onion', 'lemon', 'tom', 'mango'], dof: 2 },
   { id: 'end', s: 25.30, k: 'mug', show: ['straw'], pile: true },
