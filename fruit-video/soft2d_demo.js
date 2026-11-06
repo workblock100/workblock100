@@ -205,6 +205,20 @@ CASES.balloons = { T: 4.5, build: function () {
   } };
 } };
 
+// the draw budget case: a 24 x 24 printed paper hanging from two corners, swinging a little (flat), and the same sheet in 3D
+CASES.print = { T: 2, build: function () {
+  const w = S.world({ gravity: [0, 1500], seed: 1 });
+  w.cloth({ x: 300, y: 500, width: 480, height: 480, cols: 24, rows: 24, mat: 'paper', pins: [{ i: 0, j: 0 }, { i: -1, j: 0, to: function (t) { return [780 - 60 * S.sin(3 * t), 500]; } }] });
+  w.cloth({ x: 300, y: 1150, width: 480, height: 480, cols: 24, rows: 24, mat: 'fabric', plane: 'xz', flutter: 0.3 });
+  w.collider({ box: [120, 80], x: 540, y: 1500, depth: 200 });
+  w.run(this.T);
+  return { w: w, draw: function (ctx, st) {
+    ctx.fillStyle = '#e9e2d8'; ctx.fillRect(0, 0, 1080, 1920);
+    S.drawCloth(ctx, st.cloths[0], { fill: giftPrint, back: '#f7f2e6', shade: 0.3 });
+    S.drawCloth(ctx, st.cloths[1], { fill: giftPrint, back: '#f7f2e6', shade: 0.4, view: { kx: 0, ky: 0.4 } });
+  } };
+} };
+
 if (typeof module === 'object' && module.exports) module.exports = { CASES: CASES };
 if (typeof document === 'undefined') return;
 // ---------------------------------------------------------------- page
@@ -227,6 +241,16 @@ times.forEach(function (t, k) {
   ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.font = 'bold 44px sans-serif'; ctx.fillText(name + '  t=' + t.toFixed(2), 30, 70);
   ctx.restore();
 });
-window.__stats = { bakeMs: Math.round(bakeMs), drawMs: +(drawMs / times.length).toFixed(2), events: built.w.events.length, warnings: built.w.warnings.slice(0, 5), hash: S.stateHash(built.w, 20) };
+let benchMs = null;
+if (q.get('bench')) {   // &bench=N: redraw the last frame N more times (texture caches warm) and time only the soft-body calls
+  const N = +q.get('bench'), st = built.w.at(times[times.length - 1]); let tot = 0;
+  const drawCloth = S.drawCloth, drawRope = S.drawRope, drawBalloon = S.drawBalloon; let inSoft = 0;
+  const wrapT = function (f) { return function () { const a = performance.now(); const r = f.apply(null, arguments); inSoft += performance.now() - a; return r; }; };
+  S.drawCloth = wrapT(drawCloth); S.drawRope = wrapT(drawRope); S.drawBalloon = wrapT(drawBalloon);
+  for (let i = 0; i < N; i++) { const a = performance.now(); built.draw(ctx, st); tot += performance.now() - a; }
+  S.drawCloth = drawCloth; S.drawRope = drawRope; S.drawBalloon = drawBalloon;
+  benchMs = { frame: +(tot / N).toFixed(2), softCalls: +(inSoft / N).toFixed(2) };
+}
+window.__stats = { bakeMs: Math.round(bakeMs), drawMs: +(drawMs / times.length).toFixed(2), bench: benchMs, events: built.w.events.length, warnings: built.w.warnings.slice(0, 5), hash: S.stateHash(built.w, 20) };
 window.__done = true;
 })();

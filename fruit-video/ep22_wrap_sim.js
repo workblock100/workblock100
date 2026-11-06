@@ -25,6 +25,7 @@ const L = {
   cart: { x0: 330, x1: 630, top: 1100 },                                  /* the med cart, against the wall (its top at hip height); Strawberry stands at its right end */
   gift: { cx: 470, w: 170, bottom: 1100 },                                /* the pudding's box on the cart top: the insert's box (312 wide) scaled by w / 312: front 1000..1100, top face 940..1000 */
   pos: { straw: 650, straw0: 730, mango: 185, onion: 230, pear: 1020 },
+  bowMouth: [574, 1068], bowScale: .72,                                                    /* her mouth while she blows the bow up (three-quarter to the left, the face of the bow shot); the bow's size */
   doors: [{ x0: 10, x1: 250, room: 2 }, { x0: 900, x1: 1140, room: 3 }], doorTop: 770,
   /* the insert (insert px at zoom 1; the sim adds INS.dy) */
   INS: { dy: 3000, cartBack: 868, cartFront: 1236, boxX0: 384, boxX1: 696, boxTop: 902, boxFront: 1012, boxBottom: 1196, roll: [196, 1150], gbox: [900, 1120] },
@@ -76,6 +77,8 @@ const BOW = {
   tie: [8.40, 8.662], set: [8.72, 9.05],
   /* the cuff's place (hall px): at her mouth, then down onto the gift's top */
   knot: [506, 966],                                                       /* where the knot sits on the gift's top face */
+  /* the bow's tilt while she holds it: limp, dangling down-left from her mouth; puffing up it swings out to the left (fingers away from her face); set on the gift it stands up, leaning a little */
+  rot(t) { const p = this.puff(t), set = sm(c01((t - this.set[0]) / (this.set[1] - this.set[0]))), held = 2.2 + (-1.45 - 2.2) * sm(c01((p - .06) / .44)); return held + (-.35 - held) * set + (t > this.tie[0] && t < this.tie[1] + .1 ? .12 * Math.sin((t - this.tie[0]) * 40) : 0); },
   cuff(t, mouth) { const a = mouth || [L.pos.straw - 84, 1052]; const k = sm(c01((t - this.set[0]) / (this.set[1] - this.set[0]))); return [a[0] + (this.knot[0] - a[0]) * k, a[1] + (this.knot[1] - a[1]) * k]; },
 };
 
@@ -84,13 +87,53 @@ const BOW = {
  * last shot's match cut. Balloon 4 bonks the lamp at 1020 (balloonbonk 20.917); balloons 2 and 3 meet and rub on the ceiling (glovesqueak 20.317). */
 const BAL = (() => {
   const out = [], cue = [19.217, 19.617, 19.86, 20.02, 20.16, 20.28];
-  const fin = [452, 612, 330, 520, 1016, 1092, 214, 1420, 1260, 772, 1580, 90];
+  const fin = [452, 612, 330, 520, 1016, 1040, 214, 1478, 1260, 772, 1640, 90];
   const sz = [1.0, .94, .98, 1.04, .96, 1.02, .95, 1.03, 1.4, .92, 1.0, .97];
   for (let i = 0; i < 12; i++) { const c = cue[i >> 1]; out.push({ i, t0: c, rel: c + .3, side: i % 2 ? 1 : -1, x1: fin[i], s: sz[i], face: i === 8, seed: 31 + i * 7 }); }
   return out;
 })();
-const BALCUE = [19.217, 19.617, 19.86, 20.02, 20.16, 20.28];
+const START = 36.89;                                                                                 /* the scene's start in the frozen timeline (build/ep22/timeline.json): cues snap to its frames */
+const BALCUE = [19.217, 19.617, 19.86, 20.02, 20.16, 20.28].map(t => Math.round((START + t) * 30) / 30 - START);
+const CUEB0 = { squeak: 20.317, bonk: 20.917, end: 24.784, still: 25.934 };
+for (const k in CUEB0) CUEB0[k] = Math.round((START + CUEB0[k]) * 30) / 30 - START;
+/* her left hand while she blows them up (hall px): at her mouth for the first third of each pair's turn, then up over her head to let go */
+const MOUTH_B = [574, 1064], UP_B = [556, 936], BOX_B = [770, 1098], BALW = .82, CEIL_TOP = 229;     /* CEIL_TOP: the glove's fingertips above its knot at scale 1 */
+const snap = (t, start) => start == null ? t : Math.round((start + t) * 30) / 30 - start;
+function pairDur(k, C) { return k + 1 < C.length ? Math.min(.3, C[k + 1] - C[k]) : .3; }
+function balPhase(t, C = BALCUE) {
+  let k = -1; for (let i = 0; i < C.length; i++) if (t >= C[i] - 1e-6) k = i;
+  if (k < 0) { const u = sm(c01((t - 18.95) / (C[0] - 18.95))); return { hand: [700 + (MOUTH_B[0] + 8 - 700) * u, 1010 + (MOUTH_B[1] - 4 - 1010) * u], blow: false, k }; }
+  const d = pairDur(k, C), u = t - C[k];
+  if (k === C.length - 1 && u > d) { const r = sm(c01((u - d) / .5)); return { hand: [UP_B[0] + (700 - UP_B[0]) * r, UP_B[1] + (1010 - UP_B[1]) * r], blow: false, k }; }
+  if (u < d * .34) return { hand: [MOUTH_B[0] + 8, MOUTH_B[1] - 4], blow: true, k };
+  const r = sm(c01((u - d * .34) / (d * .66))); return { hand: [MOUTH_B[0] + 8 + (UP_B[0] - MOUTH_B[0] - 8) * r, MOUTH_B[1] - 4 + (UP_B[1] - MOUTH_B[1] + 4) * r], blow: false, k };
+}
+/* where balloon b's knot is at t (hall px), its puff, tilt and whether it is free; C = the pair cues (snapped by the scene), CUEB = { squeak, bonk, end, still } (scene times).
+   The sim pins the knot to this path until the balloon reaches the ceiling (`free`), the hero (8) to the end. */
+function knotPath(b, t, C = BALCUE, CUEB = CUEB0) {
+  const k = b.i >> 1, c = C[k], d = pairDur(k, C), rel = c + d, s = b.s * BALW, sd = b.side;
+  if (t < c) { const u = sm(c01((t - (c - .3)) / .3)); const w0 = [600 + 46 * b.i, 1560]; return { x: w0[0] + (BOX_B[0] - w0[0]) * u, y: w0[1] + (BOX_B[1] - w0[1]) * u, rot: 0, puff: 0, s, held: true, vis: false }; }
+  if (t < rel) { const h = balPhase(t, C).hand, puff = t < c + d * .34 ? .3 * c01((t - c) / (d * .34)) : .3 + .7 * sm(c01((t - c - d * .34) / (d * .66))); return { x: h[0] + sd * 14, y: h[1] - 6, rot: -.85 + sd * .38, puff, s, held: true, vis: true }; }
+  const tau = t - rel, yc = CEIL_Y() + CEIL_TOP * s - 6, tr = b.i === 4 ? Math.max(.3, CUEB.bonk - rel) : (b.i === 2 || b.i === 3) ? Math.max(.3, CUEB.squeak - rel) : .62;
+  const x0 = UP_B[0] + sd * 14, y0 = UP_B[1] - 6;
+  let y = y0 + (yc - y0) * sm(c01(tau / tr)), x = x0 + (b.x1 - x0) * sm(c01(tau / Math.max(tr, 1.5)));
+  if (b.i === 2 || b.i === 3) { const m = Math.sin(Math.PI * c01((t - CUEB.squeak + .25) / .7)); x = x + (425 + sd * 70 - x) * .6 * m; }
+  if (b.i === 8) { const xe = t < CUEB.end ? x0 + (1188 - x0) * sm(c01(tau / 1.5)) : 1188 + 72 * sm(c01((t - CUEB.end) / (CUEB.still - .1 - CUEB.end))); x = t >= CUEB.still ? 1260 : xe; }
+  return { x, y, rot: -.85 + sd * .38 + (.14 * Math.sin(b.seed) + .85 - sd * .38) * sm(c01(tau / .8)), puff: 1, s, held: false, vis: true, arrive: rel + tr, free: b.i !== 8 && tau > tr + .02 };
+}
+let CEIL_Y = () => L.CEIL;
 
+/* pin every particle of balloon `id` to an art-directed glove: pose(t) = { x, y (the knot), rot, f (0 the flat glove .. 1 puffed), sc (scale of the shape) }, from .. until (world time) */
+function holdShape(S, w, id, pose0, from, until) {
+  const o = w.object(id), n = o.n;
+  let lt = NaN, lp = null, lc = 1, ls = 0;                                                  /* the pose is evaluated once per substep, not once per particle */
+  const pose = t => { if (t !== lt) { lt = t; lp = pose0(t); lc = S.cos(lp.rot); ls = S.sin(lp.rot); } return lp; };
+  for (let k = 0; k < n; k++) w.pin(id, k, t => {
+    const P = pose(t), f = P.f, c = lc, sn = ls;
+    const lx = o.Q0x[k] + (o.QFx[k] - o.Q0x[k]) * f, ly = o.Q0y[k] + (o.QFy[k] - o.Q0y[k]) * f, kx = o.Q0x[0] + (o.QFx[0] - o.Q0x[0]) * f, ky = o.Q0y[0] + (o.QFy[0] - o.Q0y[0]) * f;
+    const dx = (lx - kx) * P.sc, dy = (ly - ky) * P.sc; return [P.x + c * dx - sn * dy, P.y + sn * dx + c * dy];
+  }, { from, until });
+}
 /* ------------------------------------------------------------------ the SOFT2D world
  * INSERT geometry in 3D (insert px, y down, z toward the viewer; drawn with VIEW: a point at depth z is drawn at y + 0.42 z, so the box's top face shows): the pudding's box is a collider box of half
  * sizes 156 x 92 x 131 standing on the cart top (floor y 1141): its top face projects to y 902..1012 and its front face to 1012..1196, exactly the drawn box. The Chux (cloth, mat chux, 24 x 20 cells,
@@ -106,19 +149,19 @@ const toW = (p, z) => [p[0], p[1] - VIEW.ky * z, z];                            
 function build(opts = {}) {
   const S = (typeof window !== 'undefined' && window.SOFT2D) || SOFT2D;
   if (!S || typeof S.world !== 'function') return null;
-  const DY = L.INS.dy, w = S.world({ gravity: [0, 1500], dt: 1 / 240, iterations: 12, seed: 22, damping: .02 });
+  const DY = L.INS.dy, w = S.world({ gravity: [0, 1500], dt: 1 / 240, iterations: 10, seed: 22, damping: .02 }), O = TW0;   /* world time 0 = scene time TW0 */
   const sh = (p) => [p[0], p[1] + DY, p[2] || 0];
   w.collider({ floor: BOX.floor + DY, mat: 'plastic', tag: 'cart' });
   const box = w.collider({ box: [BOX.hw, BOX.hh], x: BOX.x, y: BOX.y + DY, depth: 2 * BOX.hd, mat: 'cardboard', tag: 'box' });
   /* the hands in world space (pins): the screen path (HAND) at the hands' depth */
-  const handW = side => t => { const z = HZ(t); return sh(toW(HAND.at(side, t), z)); };
+  const handW = side => t => { const z = HZ(t + O); return sh(toW(HAND.at(side, t + O), z)); };
   const NU = 24, NV = 20, CWD = 720, CLN = 560;
   /* the far edge's particles spread along the line between the hands (bunched while the hands are close); the near edge pinned up beside it until the shake */
   const pins = [];
   const along = (i, t) => { const a = handW('L')(t), b = handW('R')(t), u = i / NU; return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u]; };
   for (let i = 0; i <= NU; i++) {
     const corner = i === 0 || i === NU;
-    pins.push({ i, j: 0, to: corner ? handW(i === 0 ? 'L' : 'R') : (t => along(i, t)), until: corner ? T.drop : T.rustle + .16 });
+    pins.push({ i, j: 0, to: corner ? handW(i === 0 ? 'L' : 'R') : (t => along(i, t)), until: (corner ? T.drop : T.rustle + .16) - O });
   }
   const h0 = handW('L')(0), h1 = handW('R')(0);
   const pad = w.cloth({ cx: (h0[0] + h1[0]) / 2, y: h0[1], width: CWD, height: CLN, cols: NU + 1, rows: NV + 1, plane: 'xy', z: h0[2], mat: 'chux', tag: 'chux', friction: .8, damping: .45, flutter: .12, pins });
@@ -135,30 +178,73 @@ function build(opts = {}) {
       });
     }
   };
-  fold(-1, T.fold1, T.fold1 + .3); fold(1, T.fold2, T.fold2 + .3);
+  fold(-1, T.fold1 - O, T.fold1 + .3 - O); fold(1, T.fold2 - O, T.fold2 + .3 - O);
   /* the tape: unrolled by the left hand, torn at the roll, laid and pressed */
   const TZ = 150, roll = sh(toW([L.INS.roll[0] + 34, L.INS.roll[1] - 30], TZ)), tapes = [];
   HAND.tape.forEach((tp, n) => {
-    const N = 14, seg = 12, hand = handW('L'), tpins = [{ k: 0, to: roll, until: tp.tear }];
-    const handZ = t => { const p = sh(toW(HAND.at('L', t), TZ)); return [p[0], p[1], TZ]; };
+    const N = 14, seg = 12, tpins = [{ k: 0, to: roll, until: tp.tear - O }];
+    const handZ = t => { const p = sh(toW(HAND.at('L', t + O), TZ)); return [p[0], p[1], TZ]; };
     for (let k = 1; k < N; k++) {                                                                      /* particle k leaves the roll once the hand is (N - k) segments away */
-      let tk = tp.tear; for (let t = tp.t0; t <= tp.tear; t += 1 / 240) { const h = handZ(t); if (Math.hypot(h[0] - roll[0], h[1] - roll[1]) >= (N - k) * seg) { tk = t; break; } }
+      let tk = tp.tear - O; for (let t = tp.t0 - O; t <= tp.tear - O; t += 1 / 240) { const h = handZ(t); if (Math.hypot(h[0] - roll[0], h[1] - roll[1]) >= (N - k) * seg) { tk = t; break; } }
       tpins.push({ k, to: [roll[0], roll[1], TZ], from: 0, until: tk });
     }
-    tpins.push({ k: -1, to: handZ, from: tp.t0, until: tp.lay + .02 });
+    tpins.push({ k: -1, to: handZ, from: tp.t0 - O, until: tp.lay + .02 - O });
     const A = sh(toW(tp.a, TZ)), B = sh(toW(tp.b, TZ));
-    for (let k = 0; k <= N; k++) { const u = k / N, tk = tp.lay + (tp.press - tp.lay) * u; tpins.push({ k: k === N ? -1 : k, to: [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, TZ], from: tk + .01 }); }
+    for (let k = 0; k <= N; k++) { const u = k / N, tk = tp.lay + (tp.press - tp.lay) * u - O; tpins.push({ k: k === N ? -1 : k, to: [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, TZ], from: tk + .01 }); }
     const r = w.rope({ from: [roll[0], roll[1]], to: [roll[0] + 1, roll[1]], length: N * seg, segments: N, width: 26, thickness: 3, mat: 'tape', tag: 'tape', z: TZ, collide: false, pins: tpins });
-    w.schedule(tp.tear, w2 => w2.cut(r.id, 0, 1));
+    w.schedule(tp.tear - O, w2 => w2.cut(r.id, 0, 1));
     tapes.push(r.id);
   });
+  /* the bow (hall px, z 0): limp below the floor until she brings it to her mouth (7.25-7.40), blown up in three breaths, tied, carried onto the gift's top and held there by its knot (a little
+     buoyancy stands it up like a bow) */
+  const bowPath = t => { const tt = t + O; if (tt < 7.25) return [L.bowMouth[0], 1500]; if (tt < 7.40) { const u = sm(c01((tt - 7.25) / .15)); return [L.bowMouth[0], 1500 + (L.bowMouth[1] - 1500) * u]; } return BOW.cuff(tt, L.bowMouth); };
+  const bp0 = bowPath(0);
+  const bow = w.balloon({ x: bp0[0], y: bp0[1] - 70, outline: 'glove', scale: L.bowScale, segments: 40, pressure: t => 1.05 * BOW.puff(t + O), buoyancy: 1700, mat: 'nitrile', tag: 'glove' });
+  holdShape(S, w, bow.id, t => { const tt = t + O, p = BOW.puff(tt), q = bowPath(t); return { x: q[0], y: q[1], rot: BOW.rot(tt), f: Math.min(1, p * 1.1), sc: .72 + .28 * p }; }, 0, BOW.set[1] - O);
+  w.pin(bow.id, 0, BOW.knot, { from: BOW.set[1] - O });
+  /* once wrapped (7.0), the pad and the tape are held where they lie (pinned particles cost little): the bow alone settles until 10.6 */
+  w.schedule(7.0 - O, w2 => { const o = w2.object(pad.id); for (let k = 0; k < o.n; k++) w2.pin(pad.id, k); });
   w.warmup(opts.warm ?? .6);
-  if (opts.run !== false) w.run(opts.T || T.wrapEnd, { sampleHz: 120 });
-  return { world: w, T: opts.T || T.wrapEnd, screen: { w: 1080, h: 1920, cx: 540, cam: { x: 540, y: 960 + DY, z: 1 } }, sampleHz: 120, maxEvents: 80,
-    meta: { view: VIEW, box: BOX, dy: DY, chux: pad.id, tapes, boxCollider: box.id, cols: NU, rows: NV, size: [CWD, CLN] } };
+  const TT = opts.T || (10.6 - O);
+  if (opts.run !== false) { w.run(TT, { sampleHz: 120 }); for (const e of w.events) e.t += O; }
+  return { world: w, T: TT, t0: O, screen: { w: 1080, h: 1920, cx: 540, cam: { x: 540, y: 960 + DY, z: 1 } }, sampleHz: 120, maxEvents: 80,
+    meta: { t0: O, view: VIEW, box: BOX, dy: DY, chux: pad.id, tapes, bow: bow.id, boxCollider: box.id, cols: NU, rows: NV, size: [CWD, CLN] } };
 }
 
-const api = { build, L, T, HAND, HK, BOW, BAL, BALCUE, keys, VIEW, BOX };
+/* ------------------------------------------------------------------ the balloon world: the dozen (hall px), from TB0 = 18.9 s (world time 0 = scene time TB0; events are shifted back to scene time)
+ * The bow glove lives in the wrap world. Each glove balloon (outline 'glove', scale .82 x size, 48 segments): limp in the box (her right hand) until its pair's turn, puffed at her mouth (pressure 0 -> 1.05),
+ * carried up and let go; its knot follows knotPath (the drift along the ceiling: two of them meet and rub at the squeak, one bonks the lamp at 1020) until it is up, then it is free: buoyancy holds it
+ * against the ceiling and softCollide makes the dozen push each other; the hero (8) is led to its place over Room 3 and held there (the match cut). */
+const TB0 = 18.9, TW0 = 3.0;
+function buildBalloons(opts = {}) {
+  const S = (typeof window !== 'undefined' && window.SOFT2D) || SOFT2D;
+  if (!S || typeof S.world !== 'function' || typeof S.balloon !== 'function' && !(S.world({}).balloon)) return null;
+  const w = S.world({ gravity: [0, 1500], dt: 1 / 240, iterations: 6, seed: 12, damping: .02 });
+  const C = BALCUE, CUEB = CUEB0;
+  w.collider({ ceiling: L.CEIL, mat: 'plastic', tag: 'ceiling' });
+  w.collider({ box: [104, 10], x: 1020, y: L.CEIL + 8, mat: 'plastic', tag: 'lamp' });
+  /* the hero (8) is art-directed (the scene draws it on this path): here it is a kinematic circle the others bump into */
+  const H = BAL[8], hs = H.s * BALW, heroC = t => { const q = knotPath(H, t + TB0, C, CUEB); return { x: q.x + 111 * hs * S.sin(q.rot), y: q.y - 111 * hs * S.cos(q.rot), angle: 0 }; };
+  const h0 = heroC(0);
+  const hero = w.collider({ circle: 92 * hs, x: h0.x, y: h0.y, pose: heroC, mat: 'rubber', tag: 'glove' });
+  const ids = [];
+  for (const b of BAL) {
+    if (b.i === 8) { ids.push(null); continue; }
+    const path = t => { const q = knotPath(b, t + TB0, C, CUEB); return [q.x, q.y]; };
+    const until = b.i === 8 ? 99 : Math.max(0, (knotPath(b, 99, C, CUEB).arrive || 22) + .02 - TB0);
+    const k = b.i >> 1, c = C[k], d = pairDur(k, C);
+    const pr = t => { const tt = t + TB0; return tt < c ? 0 : 1.05 * (tt < c + d * .34 ? .3 * c01((tt - c) / (d * .34)) : .3 + .7 * sm(c01((tt - c - d * .34) / (d * .66)))); };
+    const p0 = path(0), rel = c + d - TB0;
+    const bl = w.balloon({ x: p0[0], y: p0[1] - 90 * b.s * BALW, outline: 'glove', scale: b.s * BALW, segments: 34, pressure: pr, buoyancy: 1900, mat: 'nitrile', tag: 'glove', softCollide: true });
+    holdShape(S, w, bl.id, t => { const q = knotPath(b, t + TB0, C, CUEB); return { x: q.x, y: q.y, rot: q.rot, f: q.vis ? Math.min(1, q.puff * 1.1) : 0, sc: q.vis ? .7 + .3 * q.puff : .35 }; }, 0, rel);
+    w.pin(bl.id, 0, path, { from: rel, until });
+    ids.push(bl.id);
+  }
+  w.warmup(.3);
+  if (opts.run !== false) { w.run(opts.T || (T.dur + .1 - TB0), { sampleHz: 120 }); for (const e of w.events) e.t += TB0; }
+  return { world: w, T: opts.T || (T.dur + .1 - TB0), t0: TB0, screen: { w: 1080, h: 1920, cx: 540, cam: { x: 850, y: 960, z: 1.2 } }, sampleHz: 120, maxEvents: 60, meta: { ids, t0: TB0, hero: hero.id } };
+}
+const api = { CUEB0, START, build, buildWrap: build, buildBalloons, L, T, HAND, HK, BOW, BAL, BALCUE, keys, VIEW, BOX, balPhase, knotPath, pairDur, MOUTH_B, UP_B, BALW, TB0, TW0 };
 if (typeof module === 'object' && module.exports) module.exports = api;
 if (typeof window !== 'undefined') { window.__EP22_SIMS = window.__EP22_SIMS || {}; window.__EP22_SIMS.wrap = api; }
 })();

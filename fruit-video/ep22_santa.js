@@ -328,10 +328,10 @@ const PILEG = [
 ];
 /* the four gifts Tomato wrapped off the counter, in the order Strawberry rips them: where each sits on the pile, what is inside */
 const SG = [
-  { x: 668, y: 1172, w: 118, h: 52, paper: 'candy', color: '#f6f0e6', color2: '#2e7d4f', ribbonColor: '#c62828', item: 'stapler', rot: -.05 },
-  { x: 790, y: 1134, w: 84, h: 92, paper: 'stripes', color: '#2f5fb0', color2: '#f2f6ff', ribbonColor: '#f2c94c', item: 'candle', rot: .04 },
-  { x: 882, y: 1180, w: 112, h: 74, paper: 'trees', color: '#c62828', color2: '#f7efe2', ribbonColor: '#f2c94c', item: 'gloves', rot: .06 },
-  { x: 728, y: 1226, w: 76, h: 64, paper: 'dots', color: '#2e7d4f', color2: '#ffe9a8', ribbonColor: '#d8263a', item: 'cup', rot: -.03 },
+  { x: 842, y: 1210, w: 112, h: 50, paper: 'candy', color: '#f6f0e6', color2: '#2e7d4f', ribbonColor: '#c62828', item: 'stapler', rot: -.05 },
+  { x: 900, y: 1196, w: 80, h: 84, paper: 'stripes', color: '#2f5fb0', color2: '#f2f6ff', ribbonColor: '#f2c94c', item: 'candle', rot: .04 },
+  { x: 860, y: 1250, w: 110, h: 70, paper: 'trees', color: '#c62828', color2: '#f7efe2', ribbonColor: '#f2c94c', item: 'gloves', rot: .06 },
+  { x: 872, y: 1264, w: 76, h: 64, paper: 'dots', color: '#2e7d4f', color2: '#ffe9a8', ribbonColor: '#d8263a', item: 'cup', rot: -.03 },
 ];
 function stapler(x, y, s, rot) {
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); ctx.lineJoin = 'round';
@@ -519,17 +519,39 @@ function slingStand(lt, b, h) {
 /* the sling from the sim: the band hangs from the hooks and cradles him; its ends (the loops up to the hooks) are drawn narrower than the seat; drawn BEHIND him (he sits in it, his legs over its front) */
 const SLST = { pts: null, o: null };
 const SLING_PRINT = (c, w, h) => { c.fillStyle = SLING.col; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(255,255,255,.16)'; c.lineWidth = 2; for (let x = -h; x < w + h; x += 14) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x + h, h); c.stroke(); } c.fillStyle = SLING.edge; c.fillRect(0, 0, w, 3); c.fillRect(0, h - 3, w, 3); c.fillStyle = SLING.loop[0]; c.fillRect(0, 0, w * .2, h); c.fillRect(w * .8, 0, w * .2, h); };
-function slingSim(lt) {
+function slingSim(lt, layer, b) {
   const S = simInit(), st = S && simAt(lt), c = st && st.by[S.meta.sling.id]; if (!c) return false;
-  const cols = c.cols, rows = c.rows, n = cols * rows;
-  if (!SLST.pts || SLST.pts.length !== c.pts.length) { SLST.pts = new Float32Array(c.pts.length); SLST.o = Object.assign({}, c); }
-  const P = SLST.pts, Q = c.pts;
+  const cols = c.cols, rows = c.rows, nt = c.tri.length / 3;
+  if (!SLST.pts || SLST.pts.length !== c.pts.length) { SLST.pts = new Float32Array(c.pts.length); SLST.o = {}; SLST.alive = new Uint8Array(nt); SLST.below = new Uint8Array(cols); }
+  const P = SLST.pts, Q = c.pts, hooked = ss(lt, 22.7, 22.9);
   for (let i = 0; i < cols; i++) {
     const u = i / (cols - 1), f = lerp(.42, 1, ss(Math.min(u, 1 - u), .1, .28));
     let mx = 0, my = 0; for (let j = 0; j < rows; j++) { const k = j * cols + i; mx += Q[2 * k]; my += Q[2 * k + 1]; } mx /= rows; my /= rows;
     for (let j = 0; j < rows; j++) { const k = j * cols + i; P[2 * k] = mx + (Q[2 * k] - mx) * f; P[2 * k + 1] = my + (Q[2 * k + 1] - my) * f; }
+    SLST.below[i] = hooked > 0 && my > b.y + 6 ? 1 : 0;
   }
-  const o = Object.assign(SLST.o, c, { pts: P }); delete o._scr;
+  /* behind him: the loops (and, before the hooks, all of it); in front: the cradle under his middle */
+  for (let t = 0; t < nt; t++) { const col = Math.min(c.tri[3 * t] % cols, c.tri[3 * t + 1] % cols, c.tri[3 * t + 2] % cols), fr = SLST.below[col] && SLST.below[Math.min(cols - 1, col + 1)]; SLST.alive[t] = c.alive[t] && (layer === 'front' ? fr : !fr) ? 1 : 0; }
+  const o = Object.assign(SLST.o, c, { pts: P, alive: SLST.alive }); delete o._scr;
+  if (layer === 'front' && hooked > 0) {
+    /* the pouch: the band's inner edge round his bottom, closed by a rim that dips under his mouth */
+    const inner = []; for (let i = 0; i < cols; i++) if (SLST.below[i]) { const k = (rows - 1) * cols + i; inner.push([P[2 * k], P[2 * k + 1]]); }
+    if (inner.length > 3) {
+      const L0 = inner[0], R0 = inner[inner.length - 1], cx = b.x, rim = [[R0[0], R0[1]], [cx + 112, b.y + 66], [cx + 72, b.y + 86], [cx - 72, b.y + 86], [cx - 112, b.y + 66], [L0[0], L0[1]]];
+      ctx.save(); ctx.globalAlpha *= hooked; ctx.lineJoin = 'round';
+      ctx.beginPath(); inner.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+      for (let i = 1; i < rim.length - 1; i++) ctx.quadraticCurveTo(rim[i][0], rim[i][1], (rim[i][0] + rim[i + 1][0]) / 2, (rim[i][1] + rim[i + 1][1]) / 2);
+      ctx.closePath();
+      ctx.fillStyle = lg(0, b.y + 40, 0, b.y + b.r + 30, [[0, SLING.col], [1, SLING.col2]]); ctx.fill();
+      ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2.4; for (let x = cx - 200; x < cx + 200; x += 18) { ctx.beginPath(); ctx.moveTo(x, b.y + 30); ctx.lineTo(x + 70, b.y + b.r + 40); ctx.stroke(); }
+      ctx.fillStyle = 'rgba(20,40,50,.18)'; ctx.fillRect(cx - 200, b.y + b.r - 30, 400, 80); ctx.restore();
+      ctx.strokeStyle = 'rgba(20,40,50,.85)'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(rim[0][0], rim[0][1]); for (let i = 1; i < rim.length - 1; i++) ctx.quadraticCurveTo(rim[i][0], rim[i][1], (rim[i][0] + rim[i + 1][0]) / 2, (rim[i][1] + rim[i + 1][1]) / 2); ctx.lineTo(L0[0], L0[1]);
+      ctx.strokeStyle = SLING.edge; ctx.lineWidth = 7; ctx.stroke(); ctx.strokeStyle = 'rgba(20,40,50,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.restore();
+      SLST.u = { x0: Math.min(L0[0], ...inner.map(p => p[0])), x1: Math.max(R0[0], ...inner.map(p => p[0])), y0: Math.min(L0[1], R0[1]), y1: Math.max(...inner.map(p => p[1])) };
+    }
+  }
   SOFT2D.drawCloth(ctx, o, { fill: SLING_PRINT, back: SLING.col2, shade: .4, edge: { color: 'rgba(20,40,50,.85)', width: 3 } });
   return true;
 }
@@ -595,14 +617,14 @@ function beltOn(lt, b, hands) {
 }
 
 // ------------------------------------------------------------------ torn paper and tossed things of the search (stand-ins: closed-form flights with air drag, landings, rests)
-const LAND = [[624, 1346, -.3], [702, 1340, .02], [652, 1318, -.03]];               /* where the stapler, the candle and the glove box come to rest: dropped upright at her feet, in a strip every shot sees whole or not at all */
+const LAND = [[640, 1350, -.3], [728, 1342, .02], [626, 1316, -.03]];               /* where the stapler, the candle and the glove box come to rest: dropped upright at her feet, in a strip every shot sees whole or not at all */
 function flight(i, j, lt) {
   const t0 = RIPS[i], age = lt - t0; if (age < 0) return null;
   const g = SG[i], big = j < 3, k = i * 10 + j;
-  const x0 = HOLDP[0] + g.w * .3 + 30 * sr(k, 1), y0 = HOLDP[1] - g.h * .6 + (sr(k, 2) - .5) * 30;
-  const vx = (220 + 460 * sr(k, 3)) * (big ? 1 : 1.2), vy = -(260 + 420 * sr(k, 4)) * (big ? 1 : 1.1), tau = big ? .42 : .3, vt = big ? 210 : 260;
+  const x0 = HOLDP[0] + g.w * .5 + 46 + 24 * sr(k, 1), y0 = HOLDP[1] - g.h * .55 + (sr(k, 2) - .5) * 24;
+  const vx = (420 + 520 * sr(k, 3)) * (big ? 1 : 1.15), vy = -(160 + 380 * sr(k, 4)) * (big ? 1 : 1.1), tau = big ? .42 : .3, vt = big ? 210 : 260;
   const yL = (x => (x > PILE.x0 + 20 && x < PILE.x1 - 20 && sr(k, 5) < .4) ? 1190 + 30 * sr(k, 6) : 1306 + 52 * sr(k, 6));
-  const X = t => x0 + vx * tau * (1 - Math.exp(-t / tau)) + 26 * Math.sin(t * 5 + k) * (1 - Math.exp(-t / tau)), Y = t => y0 + vt * t + (vy - vt) * tau * (1 - Math.exp(-t / tau));
+  const X = t => x0 + vx * tau * (1 - Math.exp(-t / tau)) + 12 * Math.sin(t * 5 + k) * (1 - Math.exp(-t / tau)), Y = t => y0 + vt * t + (vy - vt) * tau * (1 - Math.exp(-t / tau));
   let lo = .05, hi = 6, land = yL(X(hi)); if (Y(hi) < land) hi = 99;
   for (let it = 0; it < 22; it++) { const m = (lo + hi) / 2; if (Y(m) >= yL(X(m))) hi = m; else lo = m; }
   const tl = hi, tt = Math.min(age, tl), done = age >= tl;
@@ -754,18 +776,18 @@ function strawOpts(lt) {
   let arms = { l: 'hold', r: 'hold' }, grip = { l: [-60, 90], r: [60, 90] }, hand = { l: 'grip', r: 'grip' }, look = [.1, .5], yaw = .15, head = .1, expr = 'neutral', lid = .45;
   const o0 = { kind: 'straw', x, y: FY, s, lift: -11.8 * s }, g = searchState(lt);
   if (g) { if (g.l) grip.l = toLocal(o0, g.l); if (g.r) grip.r = toLocal(o0, g.r); look = g.look; }
-  if (lt >= 16.9 && lt < 17.8) { grip = { l: toLocal(o0, [HOLDP[0] - 46, HOLDP[1] - 44]), r: toLocal(o0, [HOLDP[0] + 46, HOLDP[1] - 44 - 26 * ss(lt, 17.0, 17.12)]) }; look = [0, .6]; lid = lt > CUE.clack ? .2 : .45; expr = lt > CUE.clack + .05 ? 'shock' : 'neutral'; }
-  if (lt >= 17.8) { arms = { l: 'rest', r: 'hold' }; grip = { r: [150, -50] }; hand = { r: 'grip' }; look = [-.15, -.05]; yaw = .12; head = .05; expr = 'neutral'; lid = .5; }
+  if (lt >= SH_CUP && lt < 17.8) { const it = itemAt(3, lt); arms = { l: 'rest', r: 'hold' }; grip = { r: toLocal(o0, [it.x + 30, it.y - 46]) }; hand = { r: 'grip' }; look = [.75, .05]; yaw = .3; head = .35; lid = lt > CUE.clack ? .15 : .45; expr = lt > CUE.clack + .05 ? 'shock' : 'neutral'; }
+  if (lt >= 17.8) { arms = { l: 'rest', r: 'hold' }; grip = { r: toLocal(o0, [CUPUP[0] + 30, CUPUP[1] - 46]) }; hand = { r: 'grip' }; look = [-.15, -.05]; yaw = .12; head = .05; expr = 'neutral'; lid = .5; }
   return A11.straw({ t: lt, x, y: FY, s, who: 'straw', expr, lid, look, yaw, headYaw: head, arms, grip, hand, armScale: 1.38, seed: 23 });
 }
 /* Lemon: flat; "Get the Hoyer." with her hand already on it; she pushes it in */
 function lemonOpts(lt) {
-  const h = hoyerAt(lt), s = POS.lemon.s, x = h.mastX + 150, sp = spk('l1', lt), push = lt >= CUE.roll - .1 && lt < 22.75;
+  const h = hoyerAt(lt), s = POS.lemon.s, x = h.mastX + 120, sp = spk('l1', lt), push = lt >= CUE.roll - .1 && lt < 22.75;
   const o = A7.lemon({ t: lt, x, y: FY, s, who: 'lemon', expr: sp ? 'dead' : 'neutral', lid: .5, look: [-.8, 0], yaw: -.45, headYaw: sp ? -.15 : -.5, face: { curve: .02 }, acc: ['readers', 'lanyard7'], arms: { l: 'hold', r: 'rest' }, hand: { l: 'grip' }, plant: true });
   const o0 = { kind: 'lemon', x, y: FY, s };
   o.grip = { l: toLocal(o0, [h.mastX + 16, FY - 200]) };
   if (lt >= 22.75) { const pr = ss(lt, 22.8, 23.05); o.arms = { l: 'hold', r: 'rest' }; o.grip = { l: toLocal(o0, [h.mastX + lerp(16, 30, pr), lerp(FY - 200, FY - 252, pr)]) }; o.hand = { l: pr > .5 ? 'point' : 'grip' }; o.look = [-.7, -.4]; o.headYaw = -.35; }
-  if (push) { o.gaitW = (x - (SIMM().L.HOY.park + 150)) / s; o.dir = -1; o.stride = 46; o.vx = -600 * s; }
+  if (push) { o.gaitW = (x - (SIMM().L.HOY.park + 120)) / s; o.dir = -1; o.stride = 46; o.vx = -600 * s; }
   return o;
 }
 /* the residents in wheelchairs, in Santa hats: they watch Santa, lean in for the search, cheer the lift */
@@ -831,16 +853,18 @@ function drawResident(n, o, audited) {
 }
 
 // ------------------------------------------------------------------ the search: which gift is where, the hands, the tossed things (pure functions of lt)
-const HOLDP = [722, 1262];                                  /* where she holds each gift: its bottom centre, in front of her belly */
+const HOLDP = [722, 1262];
+const CUPUP = [894, 1196];
+const SH_CUP = snapT(16.75);                                  /* the cup held up beside her face (bottom centre): the lid pops, the teeth hop clear of her face */                                  /* where she holds each gift: its bottom centre, in front of her belly */
 function giftAt(i, lt) {
   const g = SG[i], R = RIPS[i], t0 = R - .26, t1 = R - .05;
   if (lt < t0) return { x: g.x, y: g.y, rot: g.rot, k: 0 };
-  const k = ss(lt, t0 + .04, t1), arc = Math.sin(PI * k) * 46;
+  const k = ss(lt, t0 + .04, t1), arc = 0;
   return { x: lerp(g.x, HOLDP[0], k), y: lerp(g.y, HOLDP[1], k) - arc, rot: lerp(g.rot, 0, k), k };
 }
 function itemAt(i, lt) {
   const R = RIPS[i]; if (lt < R) return null;
-  if (i === 3) { const up = ss(lt, 16.5, 16.8); return { x: HOLDP[0], y: HOLDP[1] - 4 - 16 * up, rot: 0, held: true }; }
+  if (i === 3) return lt < SH_CUP ? { x: HOLDP[0], y: HOLDP[1] - 4, rot: 0, held: true } : { x: CUPUP[0], y: CUPUP[1], rot: 0, held: true };   /* up by her face from the cut to the cup shot */
   const tT = R + .2, tL = R + .5, [lx, ly, lr] = LAND[i];
   if (lt < tT) return { x: HOLDP[0], y: HOLDP[1] - 4, rot: 0, held: true };
   if (lt < tL) { const u = (lt - tT) / (tL - tT); return { x: lerp(HOLDP[0], lx, u), y: lerp(HOLDP[1] - 4, ly, u * u) - 50 * u * (1 - u), rot: i === 0 ? lerp(0, lr - 2 * PI, u) : lr * u + .06 * Math.sin(u * PI * 3), held: false }; }
@@ -850,7 +874,7 @@ function drawItem(i, it, lt, s = 1) {
   const kind = SG[i].item;
   if (kind === 'stapler') stapler(it.x, it.y, s, it.rot);
   else if (kind === 'candle') candle(it.x, it.y, s * .95, it.rot);
-  else if (kind === 'gloves') gloveBox(it.x, it.y, s * .9, it.rot);
+  else if (kind === 'gloves') gloveBox(it.x, it.y, s * .66, it.rot);
   else dentureCup(it.x, it.y, 1.22 * s, it.rot, cupOpen(lt), cupClack(lt), lt, FR && FR.sh.k === 'cup');
 }
 const cupOpen = lt => ss(lt, 17.02, 17.2);
@@ -861,7 +885,7 @@ function searchState(lt) {
   let i = 0; for (let j = 0; j < 4; j++) if (lt >= RIPS[j] - .3) i = j;
   const R = RIPS[i], g = giftAt(i, lt), G = SG[i], r = { l: null, r: null, look: [.1, .5] };
   const sideL = [g.x - G.w / 2 - 4, g.y - G.h * .45], sideR = [g.x + G.w / 2 + 4, g.y - G.h * .45];
-  if (lt < R - .05) { const k = ss(lt, R - .3, R - .2); r.r = k < 1 && g.k === 0 ? [lerp(HOLDP[0] + 60, G.x + G.w / 2, k), lerp(HOLDP[1] - 50, G.y - G.h * .5, k)] : sideR; r.l = g.k > .3 ? sideL : [HOLDP[0] - 70, HOLDP[1] - 70]; r.look = [.4, .3]; }
+  if (lt < R - .05) { const k = ss(lt, R - .3, R - .2), near = [g.x - G.w / 2 + 10, g.y - G.h * .55]; r.r = g.k === 0 ? [lerp(HOLDP[0] + 60, near[0], k), lerp(HOLDP[1] - 50, near[1], k)] : [lerp(near[0], sideR[0], ss(g.k, .6, 1)), lerp(near[1], sideR[1], ss(g.k, .6, 1))]; r.l = g.k > .3 ? sideL : [HOLDP[0] - 70, HOLDP[1] - 70]; r.look = [.4, .3]; }
   else if (lt < R + .2) { const y = ss(lt, R - .03, R + .09); r.l = [HOLDP[0] - 40, HOLDP[1] - 40]; r.r = [lerp(sideR[0], HOLDP[0] + 150, y), lerp(sideR[1], HOLDP[1] - 120, y)]; r.look = [.15, .55]; }
   else { const k = ss(lt, R + .2, R + .32); r.l = i < 3 ? [lerp(HOLDP[0] - 40, HOLDP[0] - 120, k), lerp(HOLDP[1] - 40, HOLDP[1] - 10, k)] : [HOLDP[0] - 40, HOLDP[1] - 40]; r.r = [HOLDP[0] + 50, HOLDP[1] - 40]; r.look = i < 3 ? [-.3, .5] : [0, .55]; }
   return r;
@@ -879,11 +903,11 @@ const SH = [
   { id: 't1', s: 12.50, k: 'face', foc: 'tom', z: [1.85, 1.95], up: 120, dx: 70, bg: ['cran'] },
   { id: 'search', s: 14.36, k: 'fix', x: 728, y: 1150, z: [1.58, 1.62] },
   { id: 'cup', s: 16.75, k: 'cup' },
-  { id: 's1', s: 17.55, k: 'fix', x: 500, y: 1130, z: [1.28, 1.32] },
+  { id: 's1', s: 17.55, k: 'fix', x: 548, y: 1130, z: [1.28, 1.31] },
   { id: 'cr2', s: 18.63, k: 'face', foc: 'cran', z: [2.2, 2.3], up: 120, dx: 40 },
   { id: 'me4', s: 19.80, k: 'face', foc: 'santa', z: [1.8, 1.88], up: 150, dx: 0 },
   { id: 'l1', s: 20.84, k: 'face', foc: 'lemon', z: [1.95, 2.05], up: 130, dx: 60 },
-  { id: 'hoyer', s: 21.93, k: 'fix', x: 1300, y: 1010, z: [1.0, 1.02] },
+  { id: 'hoyer', s: 21.93, k: 'fix', x: 1322, y: 1030, z: [1.07, 1.09] },
   { id: 'rise', s: 23.93, k: 'rise' },
   { id: 'end', s: 26.15, k: 'end' },
 ];
@@ -891,25 +915,37 @@ for (const sh of SH) sh.s = sh.s === 0 ? 0 : snapT(sh.s);
 SH.forEach((sh, i) => { sh.e = i + 1 < SH.length ? SH[i + 1].s : SCN.dur + .5; });
 const shotAt = lt => { let r = SH[0]; for (const sh of SH) if (lt >= sh.s - 1e-6) r = sh; return r; };
 /* the sling's U at the end (the match cut out): its box centred at (540, 980), about 520 px wide */
-function endFrame(lt) {
-  const b = bodyAt(Math.min(lt, 27.3)), R = b.r + 6 + 2 + 15, w = 2 * R, cy = b.y + 4 + (R) / 2, z = 520 / w;
-  return { x: b.x, y: cy - 20 / z, z };
+let ENDF = null;
+function endFrame() {
+  if (ENDF) return ENDF;
+  const b = bodyAt(27.3), S = simInit();
+  let x0 = b.x - b.r - 66, x1 = b.x + b.r + 66, y0 = b.y + 6, y1 = b.y + b.r + 66;
+  if (S) {
+    const c = S.world.at(27.3).by[S.meta.sling.id]; x0 = 1e9; x1 = -1e9; y1 = -1e9;
+    for (let i = 0; i < c.pts.length / 2; i++) { const x = c.pts[2 * i], y = c.pts[2 * i + 1]; if (y < b.y + 6) continue; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  }
+  const z = 520 / (x1 - x0), cy = (y0 + y1) / 2;
+  return (ENDF = { x: (x0 + x1) / 2, y: cy - 20 / z, z, box: [x0, y0, x1, y1] });
 }
 function camOf(lt, sh, C) {
   const dur = Math.min(sh.e, SCN.dur) - sh.s, u = c01((lt - sh.s) / dur);
   if (sh.k === 'open') return { x: K([[.3, 790], [1.42, 1021], [2.43, 1022]], lt), y: K([[.3, 760 + 440 / 3], [1.42, 1000], [2.43, 1004]], lt), z: 1 / K([[.3, 1 / 3], [1.42, 1 / .94], [2.43, 1 / .955]], lt) };
-  if (sh.k === 'face') { const o = C[sh.foc]; if (!o) return { x: 540, y: 960, z: 1 }; const z = lerp(sh.z[0], sh.z[1], easeIO(u)), [fx, fy] = faceC(o); return { x: fx - (sh.dx || 0) / z, y: fy + sh.up / z, z }; }
+  if (sh.k === 'face') { const o = C[sh.foc]; if (!o) return { x: 540, y: 960, z: 1 }; const z = lerp(sh.z[0], sh.z[1], easeIO(u)), [fx, fy] = faceOf(o); return { x: fx - (sh.dx || 0) / z, y: fy + sh.up / z, z }; }
   if (sh.k === 'cup') return { x: 762, y: 1176, z: lerp(2.15, 2.28, easeIO(u)) };
   if (sh.k === 'rise') return { x: K([[23.93, 1396], [26.15, 1404]], lt), y: K([[23.93, 1010], [24.7, 960], [26.15, 950]], lt), z: K([[23.93, 1.14], [26.15, 1.18]], lt) };
-  if (sh.k === 'end') { const f = endFrame(27.3), a = { x: f.x + 10, y: f.y - 14, z: f.z * 1.07 }, k = ss(lt, sh.s, 27.3); return { x: lerp(a.x, f.x, k), y: lerp(a.y, f.y, k), z: lerp(a.z, f.z, k) }; }
+  if (sh.k === 'end') { const f = endFrame(), a = { x: f.x + 12, y: f.y - 16, z: f.z * 1.08 }, k = ss(lt, sh.s, 27.3); return { x: lerp(a.x, f.x, k), y: lerp(a.y, f.y, k), z: lerp(a.z, f.z, k) }; }
   return { x: sh.x, y: sh.y, z: lerp(sh.z[0], sh.z[1], easeIO(u)) };
 }
 /* frame tests: a character is drawn sharp when wholly inside; with only a sliver of body in frame (its face well outside) it is drawn but not audited; a face across the edge is not drawn */
+/* the face centre (Santa from his body circle: the kit's seated and hoyer poses place him by the floor or by his centre) */
+const faceOf = o => { if (o.__b) { const k = KINDS[o.kind], s = o.s || 1; return [o.__b.x, o.__b.y + (k.eyeY + k.mouthY) / 2 * s]; } return faceC(o); };
 function boxOf(o, pad = 0) {
-  const k = KINDS[o.kind], s = o.s || 1, legLen = o.noLegs ? 0 : (k.leg || 90), top = o.y - (o.lift || 0) - (legLen + k.ry * .9 + headTop(o, k)) * s, half = (k.rx * 1.12 + pad) * s;
+  const k = KINDS[o.kind], s = o.s || 1, half = (k.rx * 1.12 + pad) * s;
+  if (o.__b) { const b = o.__b, bot = o.__pose === 'stand' ? k.ry * .8 + (k.leg || 90) + 22 : k.ry * 1.1; return [b.x - half, b.y - headTop(o, k) * s, b.x + half, b.y + bot * s]; }
+  const legLen = o.noLegs ? 0 : (k.leg || 90), top = o.y - (o.lift || 0) - (legLen + k.ry * .9 + headTop(o, k)) * s;
   return [o.x - half, top, o.x + half, o.y + (o.noLegs ? k.ry * .1 * s : 24 * s)];
 }
-function faceBoxOf(o) { const k = KINDS[o.kind], s = o.s || 1, [fx, fy] = faceC(o), hw = (k.eyeX + k.er * 1.45 + 12) * s; return [fx - hw, fy - (k.er * 2.4 + 20) * s, fx + hw, fy + (k.mouthY + 60) * s]; }
+function faceBoxOf(o) { const k = KINDS[o.kind], s = o.s || 1, [fx, fy] = faceOf(o), hw = (k.eyeX + k.er * 1.45 + 12) * s; return [fx - hw, fy - (k.er * 2.4 + 20) * s, fx + hw, fy + (k.mouthY + 60) * s]; }
 function scr(b) { const m = ctx.getTransform(), p = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f], q = [p(b[0], b[1]), p(b[2], b[1]), p(b[0], b[3]), p(b[2], b[3])]; return [Math.min(...q.map(a => a[0])), Math.min(...q.map(a => a[1])), Math.max(...q.map(a => a[0])), Math.max(...q.map(a => a[1]))]; }
 function place(o) {
   const b = scr(boxOf(o, 6)), f = scr(faceBoxOf(o));
@@ -982,11 +1018,12 @@ function drawS(lt) {
   if (!seated) chairFront(lt, 0);
   if (bg.size) { SOFT++; V2.dof(5, bgCast); SOFT--; }                              /* the neighbours out of focus, in front of the set */
   if (H) hoyerDraw(H, lt, 'bar');
-  if (slingOn && sim) slingSim(lt);                                                    /* the sling behind him: he sits in it */
+  if (slingOn && sim) slingSim(lt, 'back', b);                                        /* the loops of the sling behind him */
   const santa = (o, a) => {
     plain(o, a);
     if (!(sim && beltSim(lt, b))) beltOn(lt, b, C.onion && C.onion.__gripL && lt < 9.62 ? C.onion.__gripL : null);
     if (slingOn && !sim) slingStand(lt, b, H);
+    if (slingOn && sim) slingSim(lt, 'front', b);                                      /* the cradle round his bottom and its pouch, in front */
   };
   drawIf('santa', santa);
   if (seated) { chairFront(lt, 1); drawIf('santa', o => knees(o, lt)); }
@@ -996,9 +1033,9 @@ function drawS(lt) {
   drawIf('straw', plain);
   for (let i = 0; i < 4; i++) {
     if (lt >= RIPS[i] - .26 && lt < RIPS[i]) gift(Object.assign({}, SG[i], giftAt(i, lt)));
-    const it = itemAt(i, lt); if (it && !(i === 3 && lt >= 17.8)) drawItem(i, it, lt);
+    const it = itemAt(i, lt); if (it && !(i === 3 && (lt >= 17.8 || !(C.straw && C.straw.__drawn)))) drawItem(i, it, lt);
   }
-  if (lt >= 17.8 && C.straw && C.straw.__drawn) { const o = C.straw, p = handW(o, o.grip.r); dentureCup(p[0] + 4, p[1] + 42, 1.05, .05, 1, cupClack(lt), lt, false); }
+  if (lt >= 17.8 && C.straw && C.straw.__drawn) dentureCup(CUPUP[0], CUPUP[1], 1.22, 0, 1, cupClack(lt), lt, false);
   drawIf('lemon', plain);
   paperStand(lt, 'front');
   /* light: the tree's glow, the TV's fire, the window, warm downlights; then the bulbs */

@@ -9,15 +9,17 @@
  * no Math.sin/cos/atan2/pow/exp. The same code and seed give bit-identical results in node and the browser.
  * Units: scene pixels, y down, seconds; angles in radians, clockwise on screen (the ctx.rotate direction).
  *
- * ADDED to the SOFT22_API contract (names there are unchanged):
- *   cloth: plane:'xy'|'xz' (a sheet in the screen plane, or a horizontal sheet: width along x, height along z), z (depth of
- *     the sheet or of its back row), cx/cy (centre instead of the top-left x, y), damping, flutter (air drag on the sheet's
- *     normal: scraps glide and tumble), gravityScale, sticky; pin targets { obj:id, index } (follow another object's particle)
- *   collider: z, depth (a finite slab in z; default infinite), side (wall: +1 free space to the right, -1 to the left),
- *     sticky (tape sticks to it), silent
- *   world: wind:[x,y,z], substeps are `iterations`; w.unpin(id, index), w.setPressure(id, p), w.release(id) (all pins off),
- *     w.object(id), w.colliderPose(id, t), w.makeState(), state.colliders[{id,x,y,angle}], state cloth z (Float32Array)
- *   SOFT2D.project(x, y, z, view), SOFT2D.materials, SOFT2D.rng, SOFT2D.version
+ * ADDED to the SOFT22_API contract (names there are unchanged; details in GUIDE_SOFT.md):
+ *   world: wind:[x,y,z], maxSpeed (4000 px/s cap), substeps are `iterations`; w.unpin(id, k), w.release(id), w.set(id, {gravityScale, damping,
+ *     flutter, friction, pressure, buoyancy}), w.setPressure(id, p), w.rip(id, {path, t0, t1, jag}) (an art-directed tear along a path in
+ *     rest space), w.object(id), w.colliderPose(id, t), w.makeState(); state.colliders[{id,x,y,angle}], cloth state z (Float32Array)
+ *   every object: active:[t0,t1] (frozen outside the window, pins too), silent, gravityScale, damping, sticky
+ *   cloth: plane:'xy'|'xz' (in the screen plane, or a level sheet that drapes in depth), z, cx/cy (centre per axis; x,y is the top-left)
+ *   rope: length (sag; from = to with a length starts coiled at a point), thickness (collision radius, default width/2)
+ *   balloon: radius (circle), shape, limp, gasHz, keel; balloon.tips (the glove's five finger tips); pin targets { obj:id, index }
+ *   collider: z, depth (a slab of finite depth; default infinite), side (wall), sticky, silent
+ *   drawCloth: view {kx,ky}, zMin/zMax, res, smooth, coarse, fiber; drawRope: shadow, twist, colors
+ *   SOFT2D.project(x, y, z, view), gloveOutline({scale, puff, segments}), SOFT2D.materials, SOFT2D.rng, SOFT2D.version
  */
 (function (root, factory) {
   'use strict';
@@ -640,8 +642,8 @@ World.prototype._integrate = function (h) {
     }
   }
 };
-/* cloth: stretch and shear every substep; bending (soft by nature) every other substep with its compliance taken over the
- * doubled step (XPBD-consistent: alpha / (2h)^2), which saves a third of the work */
+/* cloth: stretch every substep; shear and bending every other substep with their compliance taken over the doubled step
+ * (XPBD-consistent: alpha / (2h)^2), which saves about 40 % of the work */
 World.prototype._solve = function (ih2, rev) {
   const O = this.objects, n = O.length;
   for (let q = 0; q < n; q++) {
@@ -649,9 +651,9 @@ World.prototype._solve = function (ih2, rev) {
     if (!o.on) continue;
     if (o.c1 > o.c0) {
       if (o.dim3) {
-        const cs = o.c0 + o.nStruct;
-        if (!rev) { this._solve3(o.c0, cs, ih2, false); }
-        else { if (o.c1 > cs) this._solve3(cs, o.c1, ih2 * 0.25, true); this._solve3(o.c0, cs, ih2, true); }
+        const cs = o.c0 + o.nStruct, sh = o.c0 + (o.shear0 != null ? o.shear0 : o.nStruct);
+        if (!rev) { this._solve3(o.c0, sh, ih2, false); }   // odd substeps: stretch only
+        else { if (o.c1 > cs) this._solve3(cs, o.c1, ih2 * 0.25, true); if (cs > sh) this._solve3(sh, cs, ih2 * 0.25, true); this._solve3(o.c0, sh, ih2, true); }   // even: bend, shear (over 2h), stretch
       } else this._solve2(o.c0, o.c1, ih2, rev);
       if (this._bK >= 0) this._breakWorst();
     }
@@ -732,7 +734,7 @@ World.prototype._collideOC = function (o, c, R, p0, p1) {
   const cx = c.cx, cy = c.cy, sn = c.sn, cs = c.cs, kin = !!c.pose, ox = c.ox, oy = c.oy, osn = c.osn, ocs = c.ocs;
   const zc = c.zc, hd = c.hd, finZ = hd !== INF, d3 = o.dim3, ih = this._ih;
   const hitV = o.hitV, slideV = o.slideV, slideN = o.slideN, contactN = o.contactN;
-  const sticky = o.sticky && c.sticky;
+  const sticky = o.sticky && c.sticky, bR = c.br + R;
   for (let p = p0; p < p1; p++) {
     if (im[p] === 0) continue;
     const X = x[p], Y = y[p], Z = z[p];
@@ -742,6 +744,7 @@ World.prototype._collideOC = function (o, c, R, p0, p1) {
     else if (type === C_WALL) { d = c.side * (X - c.X); nlx = c.side; if (d >= R) hit = false; }
     else {
       const rx = X - cx, ry = Y - cy;
+      if (rx > bR || rx < -bR || ry > bR || ry < -bR) { if (ctc[p] === ci) ctc[p] = -1; continue; }   // outside the bounding square
       lx = cs * rx + sn * ry; ly = -sn * rx + cs * ry;
       if (type === C_BOX) {
         const qx = (lx < 0 ? -lx : lx) - c.hw, qy = (ly < 0 ? -ly : ly) - c.hh;
@@ -815,6 +818,35 @@ World.prototype._collideOC = function (o, c, R, p0, p1) {
       this.stuck[p] = ci;
       const rx2 = fx - cx, ry2 = fy - cy;
       this._addPin(o, p - o.p0, { collider: c.id, local: [cs * rx2 + sn * ry2, -sn * rx2 + cs * ry2] }, { from: this._ts });
+    }
+  }
+};
+/* velocities from the substep's motion (capped) fused with the next substep's integration: one pass over the particles.
+ * Exact, because nothing between two substeps of one step reads the velocities (pins switch per step). */
+World.prototype._velInt = function (h, ih) {
+  const O = this.objects, x = this.x, y = this.y, z = this.z, px = this.px, py = this.py, pz = this.pz, vx = this.vx, vy = this.vy, vz = this.vz, im = this.im, ax = this.ax, ay = this.ay, az = this.az;
+  const vm = this.maxSpeed, vm2 = vm * vm;
+  for (let oi = 0; oi < O.length; oi++) {
+    const o = O[oi], p0 = o.p0, p1 = p0 + o.n, df = o.dfac, gx = o.ab[0], gy = o.ab[1], gz = o.ab[2];
+    if (!o.on) { for (let p = p0; p < p1; p++) { px[p] = x[p]; py[p] = y[p]; pz[p] = z[p]; vx[p] = 0; vy[p] = 0; vz[p] = 0; } continue; }
+    if (o.dim3) for (let p = p0; p < p1; p++) {
+      const X = x[p], Y = y[p], Z = z[p];
+      let a = (X - px[p]) * ih, b = (Y - py[p]) * ih, c = (Z - pz[p]) * ih;
+      px[p] = X; py[p] = Y; pz[p] = Z;
+      if (im[p] === 0) { vx[p] = a; vy[p] = b; vz[p] = c; continue; }
+      const v2 = a * a + b * b + c * c;
+      if (v2 > vm2) { const k = vm / Math.sqrt(v2); a *= k; b *= k; c *= k; }
+      a = (a + (gx + ax[p]) * h) * df; b = (b + (gy + ay[p]) * h) * df; c = (c + (gz + az[p]) * h) * df;
+      vx[p] = a; vy[p] = b; vz[p] = c; x[p] = X + a * h; y[p] = Y + b * h; z[p] = Z + c * h;
+    } else for (let p = p0; p < p1; p++) {
+      const X = x[p], Y = y[p];
+      let a = (X - px[p]) * ih, b = (Y - py[p]) * ih;
+      px[p] = X; py[p] = Y;
+      if (im[p] === 0) { vx[p] = a; vy[p] = b; continue; }
+      const v2 = a * a + b * b;
+      if (v2 > vm2) { const k = vm / Math.sqrt(v2); a *= k; b *= k; }
+      a = (a + (gx + ax[p]) * h) * df; b = (b + (gy + ay[p]) * h) * df;
+      vx[p] = a; vy[p] = b; x[p] = X + a * h; y[p] = Y + b * h;
     }
   }
 };
@@ -892,13 +924,13 @@ World.prototype.step = function () {
     const f = s / sub;
     this._ts = warm ? 0 : t0 + dt * f;
     this._colliderLerp(f);
-    this._integrate(h);
+    if (s === 1) this._integrate(h); else this._velInt(h, this._ih);   // the previous substep's velocities and this one's prediction
     this._applyPins(f);
     this._solve(ih2, (s & 1) === 0);
     if (this._softOn && (s & 1) === 0) this._softCollide();   // every second substep: contacts between soft bodies are slow
     this._collide();
-    this._velocities(this._ih);
   }
+  this._velocities(this._ih);
   if (!warm) this._stepEvents(t1);
   else this._clearContacts();
   if (!warm) { this.stepIndex++; this.time = this.stepIndex * dt; }
@@ -1482,9 +1514,9 @@ function parseColor(c) {   // '#rgb' | '#rrggbb' | 'rgb(...)' -> [r, g, b]
   const m = c.match(/[\d.]+/g); return m ? [+m[0], +m[1], +m[2]] : [200, 200, 200];
 }
 function mix(c, k, to) { const a = parseColor(c), b = to || [0, 0, 0]; return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * k) + ',' + Math.round(a[1] + (b[1] - a[1]) * k) + ',' + Math.round(a[2] + (b[2] - a[2]) * k) + ')'; }
-function newCanvas(w, h) {
-  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
+function newCanvas(w, h) {   // a plain canvas when there is a document (an OffscreenCanvas as a pattern source is re-snapshotted on every fill)
   if (typeof document !== 'undefined') { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
   return null;
 }
 /* a cached texture of the cloth's print in rest space (res texture px per rest px); quilt draws Chux quilting over a flat colour */
@@ -1573,31 +1605,75 @@ DRAW.cloth = function (ctx, st, o) {
   if (alpha < 1) ctx.globalAlpha *= alpha;
   const textured = typeof fill === 'function' || o.quilt > 0;
   const tex = textured ? clothTexture(st, o, o.res || 1.5) : null;
-  const pat = tex ? ctx.createPattern(tex.canvas, 'no-repeat') : null;
+  let pat = null;
+  if (tex) { if (tex.ctx !== ctx || !tex.pat) { tex.pat = ctx.createPattern(tex.canvas, 'no-repeat'); tex.ctx = ctx; } pat = tex.pat; }
   const base = ctx.getTransform ? ctx.getTransform() : null;
   const res = tex ? tex.res : 1, grow = 0.9 / Math.max(2, Math.min(W / (cols - 1), H / (rows - 1)));
   const flatFill = typeof fill === 'string' ? fill : (o.base || '#999');
-  // solid underlay under the front faces hides hairline seams between textured triangles
-  if (pat) { ctx.fillStyle = mix(flatFill === '#999' ? '#c0c0c0' : flatFill, 0); ctx.beginPath(); for (let i = 0; i < m; i++) { const t = ORD[i]; if (!FR[t]) continue; triPath(ctx, SX, SY, T, t); } ctx.fill(); }
-  const levels = 8;
+  if (o.smooth === false) ctx.imageSmoothingEnabled = false;   // nearest sampling of the print: cheaper in software raster
+  const levels = 8, TW = W * res, TH = H * res;
+  // coarse cells: cs x cs quads whose triangles are all drawn, all facing the same way and evenly shaded are textured as one quad
+  // (two big triangles: a quarter of the fills); folds, tears and edges fall back to single triangles. Shading stays per triangle.
+  const cs = o.coarse != null ? o.coarse : (nt > 400 ? 3 : (nt > 160 ? 2 : 1)), qc = cols - 1, qr = rows - 1;
+  const inSet = sc.inSet || (sc.inSet = new Uint8Array(nt)), used = sc.used || (sc.used = new Uint8Array(nt));
+  inSet.fill(0); used.fill(0); for (let i = 0; i < m; i++) inSet[ORD[i]] = 1;
+  const cells = [];
+  if (cs > 1) for (let cj = 0; cj < qr; cj += cs) for (let ci = 0; ci < qc; ci += cs) {
+    const i1 = Math.min(ci + cs, qc), j1 = Math.min(cj + cs, qr), f0 = FR[2 * (cj * qc + ci)];
+    let ok = true, dmin = 2, dmax = -1, zs = 0, ds = 0, nn = 0;
+    for (let j = cj; j < j1 && ok; j++) for (let i = ci; i < i1; i++) {
+      const q = j * qc + i, t0 = 2 * q, t1 = t0 + 1;
+      if (!inSet[t0] || !inSet[t1] || FR[t0] !== f0 || FR[t1] !== f0) { ok = false; break; }
+      if (!st.flat && (edgeOf(st, t0) || edgeOf(st, t1))) { ok = false; break; }   // sorted: border triangles stroke their own edges
+      for (const t of [t0, t1]) { const d = DK[t]; if (d < dmin) dmin = d; if (d > dmax) dmax = d; zs += DZ[t]; ds += d; nn++; }
+    }
+    if (!ok || dmax - dmin > 0.12) continue;
+    for (let j = cj; j < j1; j++) for (let i = ci; i < i1; i++) { const q = j * qc + i; used[2 * q] = 1; used[2 * q + 1] = 1; }
+    cells.push({ a: cj * cols + ci, b: cj * cols + i1, c: j1 * cols + ci, d: j1 * cols + i1, fr: f0, z: zs / nn, dk: ds / nn, k: cells.length });
+  }
+  const growC = grow / cs;
+  const quadPath = function (cl) { ctx.beginPath(); ctx.moveTo(SX[cl.a], SY[cl.a]); ctx.lineTo(SX[cl.b], SY[cl.b]); ctx.lineTo(SX[cl.d], SY[cl.d]); ctx.lineTo(SX[cl.c], SY[cl.c]); ctx.closePath(); };
+  let hasBack = false; for (let i = 0; i < m; i++) if (!FR[ORD[i]]) { hasBack = true; break; }
   if (st.flat) {   // batched: one fill per side and shade level
-    if (pat) for (let i = 0; i < m; i++) { const t = ORD[i]; if (FR[t]) texTri(ctx, base, pat, SX, SY, UV, T, t, W * res, H * res, grow); }
-    else { ctx.fillStyle = fill; ctx.beginPath(); for (let i = 0; i < m; i++) { const t = ORD[i]; if (FR[t]) triPath(ctx, SX, SY, T, t); } ctx.fill(); }
+    if (pat) {
+      for (const cl of cells) if (cl.fr) { texTri3(ctx, base, pat, SX, SY, UV, cl.a, cl.b, cl.d, TW, TH, growC); texTri3(ctx, base, pat, SX, SY, UV, cl.a, cl.d, cl.c, TW, TH, growC); }
+      for (let i = 0; i < m; i++) { const t = ORD[i]; if (FR[t] && !used[t]) texTri(ctx, base, pat, SX, SY, UV, T, t, TW, TH, grow); }
+    } else if (m === nt && !hasBack && o.zMin == null && o.zMax == null) {   // whole, unfolded, untorn: fill its outline (one polygon)
+      ctx.fillStyle = fill; ctx.beginPath();
+      for (let i = 0; i < cols; i++) { const k = i; if (i) ctx.lineTo(SX[k], SY[k]); else ctx.moveTo(SX[k], SY[k]); }
+      for (let j = 1; j < rows; j++) { const k = j * cols + cols - 1; ctx.lineTo(SX[k], SY[k]); }
+      for (let i = cols - 2; i >= 0; i--) { const k = (rows - 1) * cols + i; ctx.lineTo(SX[k], SY[k]); }
+      for (let j = rows - 2; j > 0; j--) { const k = j * cols; ctx.lineTo(SX[k], SY[k]); }
+      ctx.closePath(); ctx.fill();
+    } else { ctx.fillStyle = fill; ctx.beginPath(); for (let i = 0; i < m; i++) { const t = ORD[i]; if (FR[t]) triPath(ctx, SX, SY, T, t); } ctx.fill(); }
     ctx.fillStyle = back; ctx.beginPath(); let anyBack = false; for (let i = 0; i < m; i++) { const t = ORD[i]; if (!FR[t]) { triPath(ctx, SX, SY, T, t); anyBack = true; } } if (anyBack) ctx.fill();
     if (shade > 0) for (let L = 1; L < levels; L++) {
       ctx.beginPath(); let any = false;
       for (let i = 0; i < m; i++) { const t = ORD[i]; if (Math.min(levels - 1, Math.floor(DK[t] * levels)) === L) { triPath(ctx, SX, SY, T, t); any = true; } }
       if (any) { ctx.fillStyle = 'rgba(20,16,30,' + (shade * L / (levels - 1)).toFixed(3) + ')'; ctx.fill(); }
     }
-  } else {   // depth-sorted: one triangle at a time, back to front
-    for (let i = 0; i < m; i++) {
-      const t = ORD[i];
-      if (FR[t] && pat) texTri(ctx, base, pat, SX, SY, UV, T, t, W * res, H * res, grow);
-      else { ctx.fillStyle = FR[t] ? flatFill : back; ctx.beginPath(); triPath(ctx, SX, SY, T, t, 0.35); ctx.fill(); }
-      const L = Math.min(levels - 1, Math.floor(DK[t] * levels));
-      if (shade > 0 && L > 0) { ctx.fillStyle = 'rgba(20,16,30,' + (shade * L / (levels - 1)).toFixed(3) + ')'; ctx.beginPath(); triPath(ctx, SX, SY, T, t, 0.35); ctx.fill(); }
+  } else {   // depth-sorted, back to front: coarse cells and single triangles
+    const items = [];
+    for (const cl of cells) items.push(cl);
+    for (let i = 0; i < m; i++) { const t = ORD[i]; if (!used[t]) items.push({ t: t, z: DZ[t], k: cells.length + i }); }
+    items.sort(function (p, q) { return p.z - q.z || p.k - q.k; });
+    for (const it of items) {
+      if (it.t == null) {
+        if (it.fr && pat) { texTri3(ctx, base, pat, SX, SY, UV, it.a, it.b, it.d, TW, TH, growC); texTri3(ctx, base, pat, SX, SY, UV, it.a, it.d, it.c, TW, TH, growC); }
+        else { ctx.fillStyle = it.fr ? flatFill : back; quadPath(it); ctx.fill(); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 0.7; ctx.stroke(); }
+        const L = Math.min(levels - 1, Math.floor(it.dk * levels));
+        if (shade > 0 && L > 0) { ctx.fillStyle = 'rgba(20,16,30,' + (shade * L / (levels - 1)).toFixed(3) + ')'; quadPath(it); ctx.fill(); }
+      } else {
+        const t = it.t;
+        if (FR[t] && pat) texTri(ctx, base, pat, SX, SY, UV, T, t, TW, TH, grow);
+        else { ctx.fillStyle = FR[t] ? flatFill : back; ctx.beginPath(); triPath(ctx, SX, SY, T, t, 0.35); ctx.fill(); }
+        const L = Math.min(levels - 1, Math.floor(DK[t] * levels));
+        if (shade > 0 && L > 0) { ctx.fillStyle = 'rgba(20,16,30,' + (shade * L / (levels - 1)).toFixed(3) + ')'; ctx.beginPath(); triPath(ctx, SX, SY, T, t, 0.35); ctx.fill(); }
+        if (edgeOf(st, t)) { sortedOne[0] = t; clothEdges(ctx, st, o, SX, SY, sortedOne, 1); }   // its border, in depth order
+      }
     }
   }
+  if (!st.flat) { ctx.restore(); return; }
   clothEdges(ctx, st, o, SX, SY, ORD, m);
   ctx.restore();
 };
@@ -1611,8 +1687,8 @@ function triPath(ctx, SX, SY, T, t, g) {
   ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.lineTo(C[0], C[1]); ctx.closePath();
 }
 /* fill one triangle with the print: the affine map from rest (texture) space to screen, composed with the canvas transform */
-function texTri(ctx, base, pat, SX, SY, UV, T, t, TW, TH, grow) {
-  const a = T[3 * t], b = T[3 * t + 1], c = T[3 * t + 2];
+function texTri(ctx, base, pat, SX, SY, UV, T, t, TW, TH, grow) { texTri3(ctx, base, pat, SX, SY, UV, T[3 * t], T[3 * t + 1], T[3 * t + 2], TW, TH, grow); }
+function texTri3(ctx, base, pat, SX, SY, UV, a, b, c, TW, TH, grow) {
   const r0x = UV[2 * a] * TW, r0y = UV[2 * a + 1] * TH, r1x = UV[2 * b] * TW, r1y = UV[2 * b + 1] * TH, r2x = UV[2 * c] * TW, r2y = UV[2 * c + 1] * TH;
   const u1x = r1x - r0x, u1y = r1y - r0y, u2x = r2x - r0x, u2y = r2y - r0y, det = u1x * u2y - u2x * u1y;
   if (det === 0) return;
@@ -1626,6 +1702,9 @@ function texTri(ctx, base, pat, SX, SY, UV, T, t, TW, TH, grow) {
   ctx.fillStyle = pat; ctx.fill();
   if (base) ctx.setTransform(base); else ctx.restore();
 }
+const sortedOne = new Int32Array(1);
+/* does triangle t have a border (outer or torn) edge? */
+function edgeOf(st, t) { const N = st.triN, A = st.alive; if (!N) return false; for (let e = 0; e < 3; e++) { const nb = N[3 * t + e]; if (nb < 0 || !A[nb]) return true; } return false; }
 /* boundary and torn edges: an optional edge stroke and, along tears, thin white ragged fibres (paper's torn core) */
 function clothEdges(ctx, st, o, SX, SY, ORD, m) {
   const T = st.tri, A = st.alive, N = st.triN, edge = o.edge, rag = o.ragged != null ? o.ragged : 1;
@@ -1846,7 +1925,7 @@ function tinselRun(ctx, X, Y, NX, NY, m, width, color, o) {
 }
 
 return {
-  version: '0.1', kind: 'soft',
+  version: '1.0', kind: 'soft',
   world: function (o) { return new World(o); },
   eventsToFoley: eventsToFoley, stateHash: stateHash, project: project, debugDraw: debugDraw,
   drawCloth: function (ctx, st, o) { return DRAW.cloth(ctx, st, o); },

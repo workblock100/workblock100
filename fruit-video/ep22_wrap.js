@@ -122,7 +122,7 @@ function gloveShape(c, p, o = {}) {
 }
 /* GLOVE GEOMETRY used by the scene's physics (the knot is the anchor): the kit's glove (A22.gloveBalloon) is drawn about its palm, 84 px above the knot at s 1, 180 x 220, its top 194 above
    the knot; the stand-in measures 173 x 194 about (-26.6, -98) */
-const GLV = () => has22('gloveBalloon') ? { palm: 84, w: 180, cx: 0, cy: -84, top: 194 } : { palm: 84, w: 173.2, cx: -26.6, cy: -98, top: 194.8 };
+const GLV = () => has22('gloveBalloon') ? { palm: 84, w: 180, cx: -15, cy: -111, top: 229 } : { palm: 84, w: 173.2, cx: -26.6, cy: -98, top: 194.8 };   /* the kit's glove measured on a frame: fingertips 229 above the knot, 180 wide, thumb to the left */
 function gloveBalloon(c, o = {}) {
   if (has22('gloveBalloon') && !o.stand) {
     const s = o.s || 1, a = o.rot || 0, px = (o.x || 0) + 84 * s * Math.sin(a), py = (o.y || 0) - 84 * s * Math.cos(a), sq = o.squeeze || 0;
@@ -609,7 +609,7 @@ let SIMW = null, SIMTRY = false;
 function simState(lt) {
   if (!SIMTRY) { SIMTRY = true; try { const r = SIMM.build(); SIMW = r && r.world ? r : null; } catch (e) { SIMW = null; } }
   if (!SIMW) return null;
-  try { return SIMW.world.at(lt); } catch (e) { return null; }
+  try { return SIMW.world.at(Math.max(0, Math.min(SIMW.T, lt - (SIMW.t0 || 0)))); } catch (e) { return null; }
 }
 let CHUXP = null;
 /* the screen point of a flap's folded corner (the outer column, rows 14..18 of the pad) while a fold is under way: her hand holds it there */
@@ -676,7 +676,7 @@ function strawOpts(lt, sh) {
   if (id === 's1') { o.headYaw = -.95; o.look = [-.55, 0]; o.lid = .52; o.browUp = 3; if (lt > 3.06) { o.look = [-.2, .45]; o.headYaw = lerp(-.95, -.6, ss(lt, 3.06, 3.24)); } }
   /* the bow: the limp glove to her mouth, three breaths, the knot, onto the gift */
   if (lt >= 7.40 && lt < 9.40) {
-    o.yaw = -.85; o.headYaw = -.85; const m = mouthOf(o), c = BOW.cuff(lt, [m[0] - 6, m[1] + 4]);
+    o.yaw = -.85; o.headYaw = -.85; const c = BOW.cuff(lt, L.bowMouth);
     o.arms.l = 'hold'; o.grip = { l: grab(o, 'l', c[0] + 4, c[1] + 10) }; o.hand = { l: 'grip' };
     const br = BOW.breaths.some(([a, b]) => lt >= a - .04 && lt < b);
     if (br) { o.face = { o: true }; o.lid = .3; } else o.lid = .45;
@@ -757,53 +757,44 @@ function drawPear(o) {
   ctx.strokeStyle = 'rgba(255,240,220,.6)'; ctx.lineWidth = 4 * s; for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(x + i * 44 * s, fy - 146 * s); ctx.lineTo(x + i * 44 * s, fy - 90 * s); ctx.stroke(); } ctx.restore();   /* a lap blanket */
 }
 
-// ------------------------------------------------------------------ THE BALLOONS (world px). SOFT2D balloons when the sim has them; until then a hand-animated stand-in: each pair puffed at her mouth from its cue,
-// swelling as her hand rises over her head, let go; a buoyant rise to the ceiling, a bounce, a slow sway along it. The hero (8) bumps into its place over Room 3 in the last shot and is still from 25.93.
-const BCUE = SIMM.BALCUE.map(snapT);
-const MOUTH_B = [574, 1064], UP_B = [556, 936];
-function pairDur(k) { return k + 1 < BCUE.length ? Math.min(.3, BCUE[k + 1] - BCUE[k]) : .3; }
-function balPhase(lt) {
-  let k = -1; for (let i = 0; i < BCUE.length; i++) if (lt >= BCUE[i] - 1e-6) k = i;
-  if (k < 0) return { hand: [lerp(700, MOUTH_B[0] + 8, ss(lt, 18.95, BCUE[0])), lerp(1010, MOUTH_B[1] - 4, ss(lt, 18.95, BCUE[0]))], blow: false, k };
-  const d = pairDur(k), u = lt - BCUE[k];
-  if (k === BCUE.length - 1 && u > d) return { hand: [lerp(UP_B[0], 700, ss(u, d, d + .5)), lerp(UP_B[1], 1010, ss(u, d, d + .5))], blow: false, k };
-  if (u < d * .34) return { hand: [MOUTH_B[0] + 8, MOUTH_B[1] - 4], blow: true, k };
-  const r = ss(u, d * .34, d); return { hand: [lerp(MOUTH_B[0] + 8, UP_B[0], r), lerp(MOUTH_B[1] - 4, UP_B[1], r)], blow: false, k };
-}
-const BALW = .82;
+// ------------------------------------------------------------------ THE BALLOONS (world px): SOFT2D glove balloons (ep22_wrap_sim.js buildBalloons) on the module's shared paths (knotPath: the pair's turn
+// at her mouth, carried up, let go, drifting up to the ceiling); the hero (8) is art-directed (the kit's glove on its path; a kinematic circle in the sim), bumps into its place over Room 3 in the last shot
+// and is still from 25.93. Until the library has balloons: the kit's glove on the same paths (stand-in).
+const BCUE = SIMM.BALCUE, CUEB = SIMM.CUEB0, BALW = SIMM.BALW;
+const balPhase = lt => SIMM.balPhase(lt, BCUE);
 function balloonAt(b, lt) {
-  const k = b.i >> 1, c = BCUE[k]; if (lt < c) return null;
-  const d = pairDur(k), rel = c + d, s = b.s * BALW;
-  if (lt < rel) {
-    const h = balPhase(lt).hand, puff = lt < c + d * .34 ? .3 * sg(lt, c, c + d * .34) : .3 + .7 * ss(lt, c + d * .34, rel);
-    return { x: h[0] + b.side * 14, y: h[1] - 6, rot: -.85 + b.side * .38, puff, s, knot: 0, t: lt, seed: b.seed };
+  const q = SIMM.knotPath(b, lt, BCUE, CUEB); if (!q.vis) return null;
+  const o = { x: q.x, y: q.y, rot: q.rot, puff: q.puff, s: q.s, knot: q.held ? 0 : 1, t: lt, seed: b.seed, face: b.face };
+  if (!q.held) { const tau = lt - (q.arrive - (b.i === 4 ? CUEB.bonk - (q.arrive - .0) : 0)), tr = q.arrive; const ar = lt - q.arrive; if (ar > 0) o.y += 14 * q.s * Math.exp(-5 * ar) * Math.abs(Math.sin(9 * ar)); }
+  if (b.i === 2 || b.i === 3) o.squeeze = .5 * bump(lt, CUEB.squeak - .12, CUEB.squeak + .3);
+  if (b.i === 8 && lt >= CUEB.end) {                                                     /* the hero bumps the ceiling once as it arrives, then settles upright and still */
+    const bt = lt - (CUEB.end + .55), st = CUEB.still;
+    o.y += bt > 0 ? 14 * Math.exp(-6 * bt) * Math.abs(Math.sin(10 * bt)) * (1 - ss(lt, st - .2, st)) : 0;
+    o.squeeze = bt > 0 && bt < .2 ? .35 * Math.sin(PI * bt / .2) : 0;
+    o.rot *= 1 - ss(lt, st - .45, st);
+    if (lt >= st - .02) { o.y = SIMM.knotPath(b, st, BCUE, CUEB).y; o.rot = 0; o.squeeze = 0; o.still = true; }
   }
-  const tau = lt - rel, yc = CEIL + 195 * s + 2, tr = b.i === 4 ? Math.max(.3, CUE.bonk - rel) : b.i === 2 || b.i === 3 ? Math.max(.3, CUE.squeak2 - rel) : .62;
-  const x0 = UP_B[0] + b.side * 14, y0 = UP_B[1] - 6;
-  let y = lerp(y0, yc, ss(tau, 0, tr)), x = lerp(x0, b.x1, ss(tau, 0, Math.max(tr, 1.5)));
-  if (tau > tr) y += 18 * s * Math.exp(-5 * (tau - tr)) * Math.abs(Math.sin(9 * (tau - tr)));
-  if (b.i === 2 || b.i === 3) { const m = bump(lt, CUE.squeak2 - .25, CUE.squeak2 + .45); x = lerp(x, 425 + b.side * 70, .6 * m); }
-  let squeeze = (b.i === 2 || b.i === 3) ? .5 * bump(lt, CUE.squeak2 - .12, CUE.squeak2 + .3) : 0;
-  if (b.i === 8) {                                                                  /* the hero: drifts in along the ceiling in the last shot, bumps, settles; still from 25.93 */
-    const e0 = snapT(24.784), still = snapT(25.934);
-    const xe = lt < e0 ? lerp(x0, 1188, ss(tau, 0, 1.5)) : lerp(1188, 1260, ss(lt, e0, still - .1));
-    x = xe; if (lt >= e0) { const bt = lt - (e0 + .55); y = yc + (bt > 0 ? 14 * Math.exp(-6 * bt) * Math.abs(Math.sin(10 * bt)) * (1 - ss(lt, still - .2, still)) : 0); squeeze = bt > 0 && bt < .2 ? .35 * Math.sin(PI * bt / .2) : 0; }
-    if (lt >= still) { x = 1260; y = yc; squeeze = 0; }
-  }
-  const sway = b.i === 8 && lt >= snapT(24.784) ? 1 - ss(lt, snapT(25.934) - .45, snapT(25.934)) : 1;
-  let rot = lerp(-.85 + b.side * .38, .14 * Math.sin(b.seed), ss(tau, 0, .8)) + sway * .07 * Math.sin(lt * 1.1 + b.seed);
-  if (b.i === 8 && lt >= snapT(24.784)) rot *= sway;
-  return { x: x + sway * 4 * Math.sin(lt * 1.3 + b.seed) * ss(tau, .4, 1.2), y, rot, puff: 1, s, knot: 1, face: b.face, squeeze, t: lt, seed: b.seed, still: b.i === 8 && lt >= snapT(25.934) - .02 };
+  return o;
 }
+let SIMBW = null, SIMBTRY = false;
+function simBalloons(lt) {
+  if (!SIMBTRY) { SIMBTRY = true; try { const r = SIMM.buildBalloons(); SIMBW = r && r.world ? r : null; } catch (e) { SIMBW = null; } }
+  if (!SIMBW) return null;
+  try { return SIMBW.world.at(Math.max(0, Math.min(SIMBW.T, lt - SIMBW.t0))); } catch (e) { return null; }
+}
+const BAL_DRAW = { fill: '#8d6ad8', outline: '#2b1a4a', shine: .58, cuff: true };
 function drawBalloons(lt) {
-  const sim = simState(lt);
-  if (sim && sim.balloons && sim.balloons.length && hasSoft('drawBalloon')) { SIMDRAW.balloons && SIMDRAW.balloons(sim, lt); return; }
-  for (const b of BAL) { const q = balloonAt(b, lt); if (q) gloveBalloon(ctx, q); }
-  const bk = lt - CUE.bonk, b4 = balloonAt(BAL[4], lt);                             /* the bonk on the lamp: three short lines off the balloon's top */
-  if (b4 && bk > 0 && bk < .3) { const k = bk / .3; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - k) + ')'; ctx.lineWidth = 5; ctx.lineCap = 'round'; for (const a of [-1.1, -1.57, -2.0]) { const r0 = 30 + 30 * k; ctx.beginPath(); ctx.moveTo(b4.x + Math.cos(a) * r0 * 1.6, CEIL + 30 + Math.sin(a) * r0 * .5); ctx.lineTo(b4.x + Math.cos(a) * (r0 + 26) * 1.6, CEIL + 30 + Math.sin(a) * (r0 + 26) * .5); ctx.stroke(); } ctx.restore(); }
+  const sim = hasSoft('drawBalloon') && lt >= SIMM.TB0 ? simBalloons(lt) : null;
+  for (const b of BAL) {
+    const q = balloonAt(b, lt); if (!q) continue;
+    if (sim && b.i !== 8 && SIMBW.meta.ids[b.i] != null) { const st = sim.by[SIMBW.meta.ids[b.i]]; if (st) { SOFT2D.drawBalloon(ctx, st, BAL_DRAW); continue; } }
+    gloveBalloon(ctx, q);
+  }
+  const bk = lt - CUEB.bonk;                                                              /* the bonk on the lamp: three short lines off the ceiling above balloon 4 */
+  if (bk > 0 && bk < .3) { const k = bk / .3, x4 = BAL[4].x1; ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - k) + ')'; ctx.lineWidth = 5; ctx.lineCap = 'round'; for (const a of [-1.1, -1.57, -2.0]) { const r0 = 30 + 30 * k; ctx.beginPath(); ctx.moveTo(x4 + Math.cos(a) * r0 * 1.6, CEIL + 30 + Math.sin(a) * r0 * .5); ctx.lineTo(x4 + Math.cos(a) * (r0 + 26) * 1.6, CEIL + 30 + Math.sin(a) * (r0 + 26) * .5); ctx.stroke(); } ctx.restore(); }
 }
 /* the bow: limp in her hand at her mouth, blown up in three breaths, tied (squeak), set on the gift (knot at BOW.knot), a squash as it lands */
-const BOW_S = .66;
+const BOW_S = L.bowScale;
 function bowState(lt, mouth) {
   if (lt < 7.40) return null;
   const p = BOW.puff(lt), set = ss(lt, BOW.set[0], BOW.set[1]), c = BOW.cuff(lt, mouth);
@@ -830,7 +821,7 @@ const SH = [
   { id: 's4', s: 17.82, k: 'fix', cx: 625, cy: 1000, z: [2.1, 2.14] },
   { id: 'balA', s: 19.117, k: 'fix', cx: 625, cy: 875, z: [2.08, 2.05] },
   { id: 'balB', s: 20.317, k: 'fix', cx: 760, cy: 969, z: [1.35, 1.33] },
-  { id: 'o2', s: 21.567, k: 'face', foc: 'onion', cx: 100, z: [1.98, 2.04], up: -40 },
+  { id: 'o2', s: 21.567, k: 'face', foc: 'onion', cx: 60, z: [1.68, 1.72], up: -140 },
   { id: 's5', s: 23.60, k: 'two', who: ['onion', 'straw'], up: 70, label: true },
   { id: 'end', s: 24.784, k: 'end' },
 ];
@@ -846,7 +837,7 @@ function castFor(lt, sh) { return { straw: strawOpts(lt, sh), mango: mangoOpts(l
 const OPEN = { z0: 3.0, z1: 1.25, a: snapT(.30), b: 1.7, c0: [DLAB.x, DLAB.y + 60 / 3.0], c1: [440, 1130] };
 /* the last shot: the hero balloon (8) at rest, upright, its knot at (1260, yc): the glove's box is (-113..60, -195..-1) x s, centre (-26.6, -98) x s, 173.2 x s wide (measured): 260 px wide at (540, 520) */
 const END = { still: snapT(25.934) };
-function endCam() { const g = GLV(), sB = BAL[8].s * BALW, yc = CEIL + 195 * sB + 2, z1 = 260 / (g.w * sB); return { cx: 1260 + g.cx * sB, cy: yc + g.cy * sB + (960 - 520) / z1, z0: z1 * .95, z1 }; }
+function endCam() { const g = GLV(), sB = BAL[8].s * BALW, yc = SIMM.knotPath(BAL[8], END.still, BCUE, CUEB).y, z1 = 260 / (g.w * sB); return { cx: 1260 + g.cx * sB, cy: yc + g.cy * sB + (960 - 520) / z1, z0: z1 * .95, z1 }; }
 function camOf(lt, sh, C) {
   const dur = Math.min(sh.e, DUR) - sh.s, u = c01((lt - sh.s) / dur), zz = a => lerp(a[0], a[1], easeIO(u));
   if (sh.k === 'open') { const k = 1 - Math.pow(1 - sg(lt, OPEN.a, OPEN.b), 1.6), z = OPEN.z0 * Math.pow(OPEN.z1 / OPEN.z0, k); return { x: lerp(OPEN.c0[0], OPEN.c1[0], Math.sqrt(k)), y: lerp(OPEN.c0[1], OPEN.c1[1], k), z: z * (1 + .015 * ss(lt, OPEN.b, 2.5)) }; }
@@ -871,7 +862,7 @@ function drawWorld(lt, sh, C) {
   DLAB.hero = HEROMODE;
   REG.suppress++;
   setCeiling(lt); setWall(lt); setFloor(lt); stringLights(lt);
-  for (const [x, y, r, a] of [[300, 640, 30, .2], [560, 600, 22, .9], [780, 690, 26, .4], [1240, 640, 30, .7], [-120, 660, 24, 1.1]]) snowflake(x, y, r, a);
+  for (const [x, y, r, a] of [[300, 700, 30, .2], [560, 680, 22, .9], [780, 740, 26, .4], [1520, 700, 30, .7], [-120, 720, 24, 1.1]]) snowflake(x, y, r, a);
   for (const d of L.doors) doorUnit(d, lt);
   handrail(lt);
   REG.suppress--;
@@ -880,15 +871,17 @@ function drawWorld(lt, sh, C) {
   tapeRoll(ctx, { x: 352, y: CART.top - 22, s: .62, t: lt });
   if (lt < 17.95) gloveBox(ctx, { x: 596, y: CART.top - 2, s: .55, t: lt, peek: 1, hero: false, label: false });
   giftWorld(lt, { noLabel: sh.id === 's3' });
-  const m = C.straw ? mouthOf(C.straw) : [575, 1065], bow = bowState(lt, [m[0] - 6, m[1] + 4]);
-  if (bow && !bow.held) gloveBalloon(ctx, bow);
+  const bow = bowState(lt, L.bowMouth), bowSim = bow && SIMW && SIMW.meta && SIMW.meta.bow != null && hasSoft('drawBalloon') ? simState(lt) : null;
+  const drawBow = () => { if (bowSim && bowSim.by[SIMW.meta.bow]) SOFT2D.drawBalloon(ctx, bowSim.by[SIMW.meta.bow], BAL_DRAW); else gloveBalloon(ctx, bow); };
+  if (bow && !bow.held) drawBow();
   /* the cast: whole in the frame (or walking through its edge); Mr. Pear in the doorway behind, then Onion / Mango, then Strawberry in front of the cart's end */
   const show = o => { if (!o) return false; const f = inFrame(o, 6); return f.whole || (o.transit && f.inter); };
   if (C.pear && show(C.pear)) drawPear(C.pear);
   for (const n of ['mango', 'onion']) if (show(C[n])) drawChar(C[n]);
   if (C.straw) { if (sh.id === 'open' && lt < 1.3) C.straw.transit = true; if (show(C.straw)) drawChar(C.straw); }
-  if (bow && bow.held) gloveBalloon(ctx, bow);
+  if (bow && bow.held) drawBow();
   if (lt >= BCUE[0] - .05) drawBalloons(lt);
+  if (FR) FR.balDone = true;
   bulbGlows(lt);
   if (lt >= CUE.labelgun - .01 && sh.id === 's3') giftLabel(lt);
 }

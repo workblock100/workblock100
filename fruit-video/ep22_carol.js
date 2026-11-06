@@ -101,7 +101,7 @@ let LIGHTS = [];                                                         /* the 
 const addLight = l => LIGHTS.push(l);
 function drawCeiling(lt) {
   const y0 = -900, y1 = CEIL;
-  ctx.fillStyle = lg(0, y0, 0, y1, [[0, '#3c3046'], [.55, '#5a4858'], [1, '#86685c']]); ctx.fillRect(-1600, y0, 4800, y1 - y0 + 2);
+  ctx.fillStyle = lg(0, y0, 0, y1, [[0, '#54404e'], [.55, '#76606a'], [1, '#a88a72']]); ctx.fillRect(-1600, y0, 4800, y1 - y0 + 2);
   /* ceiling tiles: rows spaced in perspective, seams running away from VP */
   ctx.save(); ctx.strokeStyle = 'rgba(30,20,30,.28)'; ctx.lineWidth = 2;
   for (let i = 1; i < 9; i++) { const y = y1 - 46 * (Math.pow(1.42, i) - 1); if (y < y0) break; ctx.beginPath(); ctx.moveTo(-1600, y); ctx.lineTo(3200, y); ctx.stroke(); }
@@ -345,6 +345,8 @@ function drawDoor(lt) {
   /* the frame */
   ctx.fillStyle = '#e6dac4'; ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.fillRect(x0 - 22, y0 - 22, w + 44, FLW - y0 + 22); ctx.strokeRect(x0 - 22, y0 - 22, w + 44, FLW - y0 + 22);
   if (th > .01) drawCorridor(lt, th); else { ctx.fillStyle = '#1a1418'; ctx.fillRect(x0, y0, w, FLW - y0); }
+  if (lt >= CUE.doorchime - .02 && lt < CUE.doorchime + 1.8) doorGust(lt);                 /* the cold air, behind her */
+  if (FR && FR.C.egg && lt < EGG_THRU) { const bg = !FR.sh.show.includes('egg'); if (bg) REG.suppress++; drawChar(FR.C.egg); if (bg) REG.suppress--; }
   const c = Math.cos(th), sn = Math.sin(th), xf = x1 - w * c, yt = y0 - 46 * sn, yb = FLW + 70 * sn;
   const P = (u, v) => [lerp(xf, x1, u), lerp(lerp(yt, y0, u), lerp(yb, FLW, u), v)];          /* a point of the panel: u across from the free edge to the hinge, v down */
   const quad = (u0, v0, u1, v1) => { const a = P(u0, v0), b = P(u1, v0), cc = P(u1, v1), d = P(u0, v1); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(cc[0], cc[1]); ctx.lineTo(d[0], d[1]); ctx.closePath(); };
@@ -461,17 +463,23 @@ EXT.prop.fp22c_pipe = (side, o, t) => {                                 /* a rou
   ctx.restore();
 };
 PROP_BOX.fp22c_pipe = o => { const S = o.pipeScale || 1; return Object.assign([-18 * S, -18 * S, 18 * S, 18 * S], { nearFace: true }); };
-EXT.prop.fp22c_spoon = (side, o, t) => {                                /* a spoon of applesauce; o.spoonPill 0..1 drops the pill into it */
+EXT.prop.fp22c_spoon = (side, o, t) => {                                /* a spoon of applesauce held up, its bowl tipped toward us; o.spoonPill 0..1 drops a red and white capsule into it */
   const S = o.spoonScale || 1, p = o.spoonPill ?? -1;
-  ctx.save(); ctx.rotate(o.spoonRot || -.5); ctx.scale(S, S); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.strokeStyle = '#9aa2b0'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, -34); ctx.stroke();
-  ctx.fillStyle = lg(-16, 0, 16, 0, [[0, '#e8ecf2'], [1, '#9aa2b0']]); ctx.strokeStyle = 'rgba(25,16,30,.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, -48, 15, 19, 0, 0, TAU); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#f2d98a'; ctx.beginPath(); ctx.ellipse(0, -51, 12, 11, 0, PI, 0); ctx.quadraticCurveTo(10, -44, 0, -42); ctx.quadraticCurveTo(-10, -44, -12, -51); ctx.fill(); ctx.strokeStyle = 'rgba(150,110,40,.6)'; ctx.lineWidth = 1.4; ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.ellipse(-4, -56, 3.5, 2, -.4, 0, TAU); ctx.fill();
-  if (p >= 0) { const y = -62 - 70 * (1 - eb(c01(p))) , a = c01(p * 4); ctx.globalAlpha *= a; ctx.fillStyle = '#ffffff'; ctx.strokeStyle = 'rgba(25,16,30,.85)'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.ellipse(2, y, 7, 4.2, .3, 0, TAU); ctx.fill(); ctx.stroke(); ctx.strokeStyle = 'rgba(120,120,140,.7)'; ctx.beginPath(); ctx.moveTo(-1, y - 3); ctx.lineTo(5, y + 3); ctx.stroke(); }
+  ctx.save(); ctx.rotate(o.spoonRot || -.2); ctx.scale(S, S); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(25,16,30,.85)'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(0, -30); ctx.stroke();
+  ctx.strokeStyle = '#b8c0cc'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(0, -30); ctx.stroke();
+  ctx.fillStyle = lg(-22, 0, 22, 0, [[0, '#eef2f6'], [1, '#98a0ae']]); ctx.strokeStyle = 'rgba(25,16,30,.85)'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.ellipse(0, -46, 22, 15, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#f0d070'; ctx.beginPath(); ctx.ellipse(0, -48, 17, 10.5, 0, 0, TAU); ctx.fill();                                   /* applesauce */
+  ctx.fillStyle = '#e2b850'; ctx.beginPath(); ctx.ellipse(3, -45, 10, 5, .2, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.ellipse(-8, -52, 5, 2.2, -.3, 0, TAU); ctx.fill();
+  if (p >= 0) { const k = eb(c01(p)), y = -50 - 46 * (1 - k), a = c01(p * 5);                                                          /* the capsule falls and settles in the sauce */
+    ctx.globalAlpha *= a; ctx.save(); ctx.translate(1, y); ctx.rotate(.5); ctx.lineWidth = 1.8; ctx.strokeStyle = 'rgba(25,16,30,.9)';
+    ctx.fillStyle = '#e8303e'; ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(-7, -5); ctx.arc(-7, 0, 5, PI / 2 * 3, PI / 2, true); ctx.lineTo(0, 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fbf8f0'; ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(7, -5); ctx.arc(7, 0, 5, -PI / 2, PI / 2); ctx.lineTo(0, 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(-9, -3.5, 6, 1.6); ctx.restore(); }
   ctx.restore();
 };
-PROP_BOX.fp22c_spoon = o => { const S = o.spoonScale || 1; return Object.assign([-40 * S, -80 * S, 30 * S, 12 * S], { nearFace: true }); };
+PROP_BOX.fp22c_spoon = o => { const S = o.spoonScale || 1; return Object.assign([-30 * S, -108 * S, 30 * S, 12 * S], { nearFace: true }); };
 EXT.prop.fp22c_plan = (side, o, t) => {                                 /* the song sheet held up: it is a CARE PLAN (hero text when it is big on the screen) */
   const S = o.planScale || 1, hero = !!o.planHero;
   ctx.save(); ctx.rotate(o.planRot || -.06); ctx.scale(S, S); ctx.lineJoin = 'round';
@@ -585,7 +593,7 @@ function pearArms(o, lt) {
   o.arms = { l: 'rest', r: 'rest' }; o.hand = {};
   if (lt >= wS('pe1', 4) - .1 && lt < ls('s1') + 1.0) { const k = ss(lt, wS('pe1', 4) - .1, wS('pe1', 4) + .2) * (1 - ss(lt, ls('s1') + .7, ls('s1') + 1.0)); if (k > .02) { o.arms.r = 'point'; o.armScale = 1.12; } }
   if (prep > 0 && !on && lt < cut) {                                          /* intro beat 3: both hands rise, beat 4: the upbeat */
-    o.arms = { l: 'hold', r: 'hold' }; o.grip = { r: [lerp(110, 140, prep), lerp(60, -56, prep) - 30 * up], l: [lerp(-110, -134, prep), lerp(60, -50, prep) - 24 * up] }; o.hand = { r: 'point', l: 'open' };
+    o.arms = { l: 'hold', r: 'hold' }; o.grip = { r: [lerp(110, 146, prep), lerp(60, -70, prep) - 22 * up], l: [lerp(-110, -140, prep), lerp(60, -64, prep) - 20 * up] }; o.hand = { r: 'point', l: 'open' };
   }
   if (on) {
     const [x, y] = conduct(lt), big = Math.max(ss(lt, DB(3) - .1, DB(3) + .3) * (1 - ss(lt, DB(4) - .3, DB(4))), ss(lt, DB(7) + 2 * BEAT - .1, DB(7) + 2 * BEAT + .15));
@@ -676,7 +684,8 @@ function strawOpts(lt) {
     if (reflex > .02) { o.expr = 'shock'; o.lid = .05; o.look = [-.3, -.1]; o.arms = { l: 'rest', r: 'reach' }; }
     if (lt >= DB(7) && lt < le('c7') + .3) { o.look = [-.6, -.1]; o.expr = 'neutral'; }
     if (lt >= ls('s2') - .1) { o.expr = 'neutral'; o.lid = .38; o.look = [-.15, .05]; o.sparkle = true; o.face = { curve: .03 }; }
-    if (lt >= ls('eg1') - .4 && lt < ls('s3') - .05) { o.look = [.9, -.05]; o.headYaw = .45; o.expr = 'shock'; o.lid = .1; }
+    if (lt >= wS('s2', 3) && lt < ls('eg1') - .4) { const k = ss(lt, wS('s2', 3), wE('s2', 3) + .5); if (k > .01) { o.tear = .16 * k; o.tearSide = 1; o.tearLen = 40; o.acc = (o.acc || []).concat(['fp13_tear']); } }
+    if (lt >= CUE.doorchime + .1 && lt < ls('s3') - .05) { o.look = [.9, -.05]; o.headYaw = .45; o.expr = 'shock'; o.lid = .1; }
     if (lt >= ls('s3') - .05) { o.expr = 'neutral'; o.lid = .32; o.look = [.35, 0]; o.headYaw = .2; o.face = { curve: .06 + .1 * ss(lt, wS('s3', 2), wE('s3', 2) + .3) }; o.sparkle = true; }
     if (lt >= ls('mo1') - .1) { o.look = [0, -.9]; o.headYaw = 0; }
   }
@@ -688,9 +697,10 @@ function drawStraw(lt, part) {
   if (part === 'front') { chairFront('arm', STR.x, seat, s, col, kk.ry, kk.rx, FL); return; }
 }
 /* Eggplant bursts in at the door on the chime, snow on her hat and shoulders: "I'm here! On time!" (she points up at the clock) */
+const EGG_IN = snapT(CUE.doorchime + .1), EGG_THRU = CUE.doorchime + .3;      /* she is seen from the second frame of the swing; in the doorway (behind the panel) until EGG_THRU */
 function eggOpts(lt) {
-  if (lt < CUE.doorchime - .02 || !window.A20 || typeof A20.eggplant !== 'function') return null;
-  const u = ss(lt, CUE.doorchime + .04, CUE.doorchime + .62), x = lerp(2120, 2070, u), y = lerp(FLW + 8, FL + 30, u), s = lerp(.98, 1.08, u);
+  if (lt < EGG_IN || !window.A20 || typeof A20.eggplant !== 'function') return null;
+  const u = ss(lt, EGG_IN, CUE.doorchime + .66), x = lerp(2105, 2070, u), y = lerp(FLW - 6, FL + 30, u), s = lerp(.95, 1.08, u);
   const o = A20.eggplant({ t: lt, pose: 'rest', expr: lt < wS('eg1', 2) - .1 ? 'egg_calm' : 'egg_cosy', gear: { snow: .9, wind: .2 * (1 - u) } });
   Object.assign(o, { x, y, s, plant: true, who: 'egg', look: [-.5, .02], yaw: lerp(-.1, -.3, u), headYaw: -.3, arms: { l: 'rest', r: 'rest' } });
   if (u > 0 && u < 1) { o.gait = (2120 - x) * 3 / s; o.dir = -1; o.stride = 30; }
@@ -711,8 +721,8 @@ const SH = [
   { id: 'up', s: DB(0) + 2 * BEAT, k: 'pt', x: 546, y: 950, z: [1.04, 1.07], show: ROW },
   { id: 'c1', s: DB(1), k: 'pt', x: [-118, -108], y: 950, z: [1.1, 1.12], show: ['banana', 'cran', 'pear'] },
   { id: 'c2', s: DB(2), k: 'pt', x: [546, 540], y: [950, 970], z: [1.06, 1.14], show: ROW },
-  { id: 'c3', s: DB(3), k: 'pt', x: 546, y: [1000, 930], z: [1.0, 1.06], show: ROW },
-  { id: 'c4', s: DB(4), k: 'pt', x: [1200, 1225], y: 950, z: [1.1, 1.13], show: ['apple', 'goji', 'lime'] },
+  { id: 'c3', s: DB(3), k: 'pt', x: 546, y: [1000, 935], z: [1.02, 1.07], show: ROW },
+  { id: 'c4', s: DB(4), k: 'pt', x: [1192, 1210], y: 950, z: [1.1, 1.13], show: ['apple', 'goji', 'lime'] },
   { id: 'c5', s: DB(5), k: 'pt', x: [-108, -118], y: 950, z: [1.1, 1.12], show: ['banana', 'cran', 'pear'] },
   { id: 'rx', s: RX, k: 'pt', x: 540, y: [1210, 1214], z: [2.2, 2.25], show: ['straw'] },
   { id: 'c6', s: DB(6), k: 'pt', x: [1410, 1418], y: 960, z: [1.25, 1.28], show: ['goji', 'lime'] },
@@ -751,6 +761,18 @@ function camC(lt) {
   if (!still) { const w = c01(lt / .9) * c01((DUR - lt - .5) / .5); CAM.x += 1.8 * hn(lt, 1.2, 4) * w; CAM.y += 1.3 * hn(lt, 1.0, 5) * w; CAM.r += .0009 * hn(lt, .8, 6) * w; }
   FR = { C, sh };
 }
+/* the pitch pipe's note: a little drawn eighth note that rises and fades (in front of the wall, beside her face) */
+function pipeNote(lt) {
+  const u = (lt - CUE.pitchpipe) / 1.3; if (u < 0 || u > 1) return;
+  const x = -30 + 110 * eo(u) + 10 * Math.sin(u * 9), y = 985 - 210 * eo(u), a = c01(u * 6) * (1 - ss(u, .6, 1));        /* from just above-right of her face box, up and away */
+  ctx.save(); ctx.globalAlpha *= a; ctx.translate(x, y); ctx.rotate(-.15 + .15 * Math.sin(u * 7)); ctx.scale(1.5, 1.5); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  glow(0, 0, 50, '#fff2c0', .5, .4);
+  ctx.fillStyle = '#fff8e8'; ctx.strokeStyle = 'rgba(25,16,30,.9)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(0, 0, 11, 8, -.4, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(9, -3); ctx.lineTo(9, -42); ctx.quadraticCurveTo(22, -30, 26, -16); ctx.stroke();
+  ctx.strokeStyle = '#fff8e8'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(9, -5); ctx.lineTo(9, -40); ctx.stroke();
+  ctx.restore();
+}
 /* the cold comes in with her: a soft puff of air at the doorway and a swirl of snowflakes off her coat (behind her, never over her face) */
 function doorGust(lt) {
   const t0 = CUE.doorchime, u = (lt - t0) / 1.6; if (u < 0 || u > 1) return;
@@ -782,9 +804,9 @@ function drawC(lt) {
   else roomDraw(lt);
   for (const [id] of all) if (mode(id) !== 'soft' && id !== sh.last) drawOne(id);
   if (sh.last) drawOne(sh.last);
-  if (lt >= CUE.doorchime - .02 && lt < CUE.doorchime + 1.8) doorGust(lt);
-  if (C.egg) { const bg = !sh.show.includes('egg'); if (bg) REG.suppress++; drawChar(C.egg); if (bg) REG.suppress--; }
+  if (C.egg && lt >= EGG_THRU) { const bg = !sh.show.includes('egg'); if (bg) REG.suppress++; drawChar(C.egg); if (bg) REG.suppress--; }
   drawCount(lt);
+  if (lt >= CUE.pitchpipe && lt < CUE.pitchpipe + 1.3) pipeNote(lt);
   /* the light: a lamp-lit night room (never a dark one), the tree and the string lights glowing, the window cool */
   if (KIT('L20', 'pass')) L20.pass(ctx, { ambient: .64, tint: '#151a3c', lights: LIGHTS, bloom: .5, vignette: .24, lift: .1, t: lt, glow: .3 });
 }

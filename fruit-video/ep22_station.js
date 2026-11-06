@@ -193,8 +193,8 @@ function giftP(o) {
   /* the open box under the paper: brown cardboard, the thing inside */
   if (tk > 0) { ctx.fillStyle = '#c9a26a'; ctx.fillRect(x0, y0, w, h); ctx.fillStyle = '#7a5a34'; ctx.fillRect(x0 + 8, y0 + 6, w - 16, 16); if (o.inside) o.inside(x0, y0, w / 2, 0); ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; ctx.strokeRect(x0, y0, w, h); }
   /* the paper: whole, or torn in strips that peel away from the top (ragged white edges) */
-  const n = 4, sw = w / n, pat = ctx.createPattern(printTile(o.paper || 'stripes', c1, c2), 'repeat');
-  for (let i = 0; i < n; i++) {
+  const n = 4, sw = w / n, print = paperPrint(o.paper || 'stripes', c1, c2);
+  for (let i = 0; i < n && !o.paperOff; i++) {
     const ki = tk > 0 ? c01((tk - i * .1) / .62) : 0, sx = x0 + i * sw, dir = i < n / 2 ? -1 : 1;
     if (ki >= 1) continue;
     ctx.save();
@@ -203,7 +203,7 @@ function giftP(o) {
     const jag = k => (rnd((o.seed || 1) * 3 + i, k) - .5) * 9;
     for (let k = 0; k <= 8; k++) ctx.lineTo(sx + (i ? jag(k) * (tk > 0 ? 1 : 0) : 0), y0 + h - h * k / 8);
     for (let k = 0; k <= 8; k++) ctx.lineTo(sx + sw + (i < n - 1 ? jag(k + 20) * (tk > 0 ? 1 : 0) : 0), y0 + h * k / 8);
-    ctx.closePath(); ctx.fillStyle = pat || c1; ctx.fill();
+    ctx.closePath(); ctx.save(); ctx.clip(); ctx.translate(x0, y0); print(ctx, w, h); ctx.restore();
     if (tk > 0) { ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 2.4; ctx.stroke(); }
     ctx.restore();
   }
@@ -688,7 +688,7 @@ function onionD(lt, sh) {
 function mangoD(lt, sh) {
   const o = A7.mango({ x: DX.mango, y: DY.mango, s: DS.mango, t: lt, who: 'mango', expr: 'neutral', plant: true, arms: { l: 'rest', r: 'rest' } });
   lookAt(o, DX.tom, 0);
-  if (sh.id === 'm1' || sh.id === 'l0') { const k = ss(lt, TD.ls('m1') - .3, TD.ls('m1') + .2); o.arms = { l: 'rest', r: 'hold' }; o.hold = { r: 'fp22s_candle' }; o.grip = { r: [lerp(70, 120, k), lerp(90, -10, k)] }; o.candleS = .82; o.expr = talking(TD, 'm1', lt) ? 'sad' : 'neutral'; o.look = [.4, -.05]; o.headYaw = .12;
+  if (sh.id === 'm1' || sh.id === 'l0') { const k = ss(lt, TD.ls('m1') - .3, TD.ls('m1') + .2); o.arms = { l: 'rest', r: 'hold' }; o.hold = { r: 'fp22s_candle' }; o.grip = { r: [lerp(70, 124, k), lerp(90, -6, k)] }; o.candleS = 1.1; o.expr = talking(TD, 'm1', lt) ? 'sad' : 'neutral'; o.look = [.4, -.05]; o.headYaw = .12;
     if (sh.id === 'l0') { lookAt(o, DX.lemon, 0); o.expr = 'shock'; } }
   if (sh.id === 'pop' || sh.id === 'b1') lookAt(o, DLAP.x, -.4);
   if (sh.id === 's2' || sh.id === 's3' || sh.id === 's1') lookAt(o, DX.straw, 0);
@@ -699,7 +699,7 @@ function lemonD(lt, sh) {
   const o = A7.lemon({ x: DX.lemon, y: DY.lemon, s: DS.lemon, t: lt, who: 'lemon', expr: 'neutral', lid: .35, plant: true, arms: { l: 'rest', r: 'rest' } });
   lookAt(o, DX.tom, 0);
   if (sh.id === 'm1') lookAt(o, DX.mango, 0);
-  if (sh.id === 'l0') { const k = ss(lt, TD.ls('l0') - .1, TD.ls('l0') + .35); o.arms = { l: 'hold', r: 'rest' }; o.hold = { l: 'fp22s_candle' }; o.grip = { l: [lerp(-60, -118, k), lerp(110, -6, k)] }; o.candleS = .82; o.lid = .5; o.look = [0, .05]; o.headYaw = 0; o.yaw = 0; }
+  if (sh.id === 'l0') { const k = ss(lt, TD.ls('l0') - .1, TD.ls('l0') + .35); o.arms = { l: 'hold', r: 'rest' }; o.hold = { l: 'fp22s_candle' }; o.grip = { l: [lerp(-60, -122, k), lerp(110, -2, k)] }; o.candleS = 1.1; o.lid = .5; o.look = [0, .05]; o.headYaw = 0; o.yaw = 0; }
   if (sh.id === 'pop' || sh.id === 'b1') lookAt(o, DLAP.x, -.4);
   if (talking(TD, 'l1', lt)) { o.arms = { l: 'point', r: 'rest' }; o.look = [-.5, -.3]; o.headYaw = -.14; o.lid = .3; o.expr = 'neutral'; }
   if (sh.id === 's2' || sh.id === 's3') lookAt(o, DX.straw, 0);
@@ -874,7 +874,7 @@ const ALLD = ['straw', 'mango', 'tom', 'onion', 'lemon'];
 const DSH = [
   { id: 'hat', s: 0, k: 'hat', show: ['mango', 'tom'] },                                                                  /* the match cut: the hat of names at (540, 760), still; the pull back from 0.30 */
   { id: 't1', s: 1.40, k: 'pt', x: 712, y: 1128, z: [1.3, 1.36], show: ['mango', 'tom'], dof: 3 },
-  { id: 'o1', s: 3.40, k: 'face', foc: 'onion', z: [1.72, 1.8], up: 130, dx: -110, show: ['tom', 'onion', 'lemon'], dof: 4 },
+  { id: 'o1', s: 3.40, k: 'face', foc: 'onion', z: [1.72, 1.8], up: 130, dx: -110, show: ['onion', 'lemon'], dof: 4 },
   { id: 'm1', s: 6.00, k: 'face', foc: 'mango', z: [1.66, 1.72], up: 120, dx: -70, show: ['straw', 'mango'], dof: 4 },
   { id: 'l0', s: 7.72, k: 'face', foc: 'lemon', z: [1.62, 1.68], up: 110, dx: 50, show: ['onion', 'lemon'], dof: 4 },
   { id: 's1', s: 9.25, k: 'face', foc: 'straw', z: [1.6, 1.66], up: 110, dx: -60, show: ['straw', 'mango'], dof: 4 },
@@ -887,7 +887,7 @@ const DSH = [
   { id: 'l1', s: 18.80, k: 'face', foc: 'lemon', z: [1.6, 1.66], up: 120, dx: 60, show: ['onion', 'lemon'], dof: 4 },
   { id: 's2', s: 20.38, k: 'face', foc: 'straw', z: [1.7, 1.76], up: 120, dx: -40, show: ['straw', 'mango'], dof: 4 },
   { id: 'b2', s: 21.40, k: 'draw', ins: 'graph', show: ['straw', 'mango', 'tom'], still: true },
-  { id: 'o2', s: 22.24, k: 'face', foc: 'onion', z: [1.72, 1.8], up: 120, dx: -110, show: ['tom', 'onion', 'lemon'], dof: 4 },
+  { id: 'o2', s: 22.24, k: 'face', foc: 'onion', z: [1.72, 1.8], up: 120, dx: -110, show: ['onion', 'lemon'], dof: 4 },
   { id: 't4', s: 24.16, k: 'face', foc: 'tom', z: [1.48, 1.54], up: 60, dx: 130, show: ['tom'], dof: 4 },
   { id: 's3', s: 25.38, k: 'face', foc: 'straw', z: [1.55, 1.6], up: -10, dx: -40, show: ['straw', 'mango'], dof: 4 },
   { id: 't5', s: 27.24, k: 'pt', x: 760, y: 1116, z: [1.06, 1.1], show: ['mango', 'tom', 'onion'], dof: 2 },
@@ -1044,13 +1044,16 @@ const SFL = FL + 30;
 /* blocking A (the open to "all of ours"): Strawberry at the left by the tree, the staff in a row; blocking B (after the pile): the staff stand right of the heap */
 const XA = { straw: 400, tom: 640, lemon: 860, mango: 1080, onion: 1300 };
 const XB = { onion: 930, lemon: 1130, tom: 1330, mango: 1520 };
+const XR = { straw: 470, tom: 650, lemon: 830, mango: 1010, onion: 1190 };                 /* blocking R (the open to the rip): shoulder to shoulder, the five gifts in one close row */
+const T_SPREAD = TS.snapT(5.30);
 const XC = { tom: 640, lemon: 860, mango: 1080, onion: 1300 };                 /* "It's the same candle.": each holds the candle up beside the face, four in a row at one height */
 const blockC = lt => lt >= TS.snapT(8.05) && lt < TS.snapT(13.15);
-const xOf = (n, lt) => blockB(lt) ? XB[n] : blockC(lt) ? XC[n] : XA[n];
+const xOf = (n, lt) => blockB(lt) ? XB[n] : blockC(lt) ? XC[n] : lt < T_SPREAD ? XR[n] : XA[n];
 const SSC = { straw: .86, tom: .88, lemon: .84, mango: .86, onion: .84 };
 const PILE = (window.__EP22_SIMS && window.__EP22_SIMS.swapPile && window.__EP22_SIMS.swapPile.L) || { SX: 400, FY: 1324, S: .9 };
 /* the five gifts of the exchange (the paper of each) and when each is torn: the four rips, then Tomato's ribbon zips off and her paper crinkles off */
 const GPAP = { lemon: ['trees', '#c62828', '#2f8f4e'], mango: ['dots', '#2b6cff', '#ffffff'], onion: ['candy', '#2f8f4e', '#d6202c'], straw: ['stripes', '#7a4fd8', '#ffd23f'], tom: ['stripes', '#d6202c', '#f4ead8'] };
+const GSIZE = { lemon: [170, 118], mango: [160, 104], onion: [160, 110], straw: [170, 118], tom: [170, 86] };   /* the same as ep22_swap_sim.js */
 const RIPT = { lemon: SC.rip[0], mango: SC.rip[1], onion: SC.rip[2], straw: SC.rip[3], tom: SC.crinkle - .1 };
 const T_BLOCKB = TS.snapT(15.38);
 const blockB = lt => lt >= T_BLOCKB;
@@ -1060,13 +1063,14 @@ function giftHold(o, n, lt, g = null) {
   const kd = KINDS[o.kind], fb = kd.mouthY + 55 * (kd.mw || 26) / 26, big = n === 'tom';
   let paper, c1, c2, tear = null;
   if (g) { [paper, c1, c2] = g; } else { [paper, c1, c2] = GPAP[n]; const a = lt - RIPT[n]; tear = a >= 0 ? { k: c01(a / .55), t: a } : null; }
-  const w = big ? 150 : 128, h = big ? 106 : 96, top = fb + 6 + (big && !g ? 22 : 0), hy = top + 22;
+  const [w, h] = g ? [128, 96] : GSIZE[n], top = fb + 6 + (big && !g ? 14 : 0), hy = top + 22;
   o.arms = { l: 'hold', r: 'hold' }; o.hold = { l: 'fp22s_gift' };
   o.grip = { l: [-w / 2 - 6, hy], r: [w / 2 + 6, hy] };
   const zipped = big && !g && lt >= SC.zip;
-  o.gift = { w, h, paper, color: c1, color2: c2, ribbon: zipped ? false : '#ffd23f', bow: big && !g && !zipped ? '#ffd23f' : false, bowBig: big && !g, tear, seed: n.length * 7, inside: g ? null : candleIn, t: lt };
+  const soft = !g && !!ripSim();                           /* the paper is the soft sim's cloth from just before its rip: the prop keeps only the open box */
+  if (soft) tear = lt >= RIPT[n] - .02 ? { k: 1, t: 0 } : null;
+  o.gift = { w, h, paper, color: c1, color2: c2, ribbon: zipped || (soft && tear) ? false : '#ffd23f', bow: big && !g && !zipped ? '#ffd23f' : false, bowBig: big && !g, tear, paperOff: soft && !!tear, seed: n.length * 7, inside: g ? null : candleIn, t: lt };
   o.giftDx = w / 2 + 6; o.giftDy = h - 22;
-  if (tear && tear.k > 0 && tear.k < 1) { const j = Math.sin(tear.t * 40) * (1 - tear.k); o.grip.l[0] -= 8 * j; o.grip.r[0] += 8 * j; }
   return o;
 }
 /* the candle held up beside the face, flat */
@@ -1127,7 +1131,7 @@ function onionS(lt, sh) {
 /* Strawberry: in blocking A with her own gift (a candle too); from the pile on, buried to the chin (her feet on the pile's floor line), one arm out */
 function strawS(lt, sh) {
   const B = blockB(lt);
-  const o = A11.straw({ x: B ? PILE.SX : XA.straw, y: B ? PILE.FY : SFL, s: B ? PILE.S : SSC.straw, t: lt, who: 'straw', expr: 'dead', lid: .5, plant: true, arms: { l: 'rest', r: 'rest' } });
+  const o = A11.straw({ x: B ? PILE.SX : lt < T_SPREAD ? XR.straw : XA.straw, y: B ? PILE.FY : SFL, s: B ? PILE.S : SSC.straw, t: lt, who: 'straw', expr: 'dead', lid: .5, plant: true, arms: { l: 'rest', r: 'rest' } });
   lookAt(o, XA.tom, 0);
   if (!B && lt < 5.3) giftHold(o, 'straw', lt);
   if (!B && lt >= 5.3 && lt < 13.0) { candleUp(o, 'r', ss(lt, 5.4, 5.8)); o.lid = .6; o.look = [.3, .05]; }
@@ -1139,14 +1143,14 @@ function strawS(lt, sh) {
     if (lt < 17.3) { o.expr = lt < SC.pile ? 'shock' : 'dead'; o.lid = lerp(.1, .55, ss(lt, 16.8, 17.3)); o.look = [.6 * Math.sin(lt * 3), -.2]; o.squash = .04 * flinch; }
     const arm = ss(lt, 17.2, 17.6);
     o.arms = { l: 'rest', r: arm > .01 ? 'hold' : 'rest' }; o.grip = { r: [lerp(80, 96, arm), lerp(60, -135, arm)] };
-    if (sh.id === 's1' || sh.id === 'o2') { o.hold = { r: 'fp22s_socks' }; o.socksS = .5; o.socksRot = .04 * Math.sin(lt * 2); o.grip = { r: [lerp(80, 120, arm), lerp(60, -135, arm)] }; o.lid = .55; }
+    if (sh.id === 's1' || sh.id === 'o2') { o.hold = { r: 'fp22s_socks' }; o.socksS = .8; o.socksRot = .04 * Math.sin(lt * 2); o.grip = { r: [lerp(80, 160, arm), lerp(60, -100, arm)] }; o.lid = .55; }
     if (sh.id === 's2' || sh.id === 'l3' || sh.id === 's3' || sh.id === 'end') {
       const up = sh.id === 's2' ? ss(lt, TS.ls('s2') - .1, TS.ls('s2') + .25) : 1;
       o.hold = { r: 'fp22s_mug' }; o.mugS = sh.id === 's2' || sh.id === 'l3' ? .85 : 1; o.mugHero = sh.id === 's3' || sh.id === 'end'; o.grip = { r: [96, lerp(-70, -95, up)] }; o.mugDx = 92; o.mugDy = 26;
       o.lid = sh.id === 's3' ? .62 : .5; o.look = sh.id === 's3' ? [.6, .2] : [.2, 0];
       if (sh.id === 'end') { o.lid = .35; o.expr = 'chill'; o.look = [.4, .3]; }
     }
-    if (sh.id === 's4' || sh.id === 'st1') { o.hold = { r: 'fp22s_pud' }; o.pudS = 1; o.pudRise = 90; o.grip = { r: [124, -118] }; o.expr = sh.id === 'st1' ? 'happy' : 'neutral'; o.lid = sh.id === 'st1' ? .2 : .4; o.look = [.7, -.1]; }
+    if (sh.id === 's4' || sh.id === 'st1') { o.hold = { r: 'fp22s_pud' }; o.pudS = 1.3; o.pudRise = 70; o.grip = { r: [124, -70] }; o.expr = sh.id === 'st1' ? 'happy' : 'neutral'; o.lid = sh.id === 'st1' ? .2 : .4; o.look = [.7, -.1]; }
   }
   return o;
 }
@@ -1160,6 +1164,28 @@ function brendaS(lt, bite0) {
 }
 const BRX = 1640;
 
+// ------------------------------------------------------------------ SWAP: the rip (SOFT2D, ep22_swap_sim.js: built once, lazily, when SOFT2D is loaded; sampled with world.at(lt))
+let RSIM = null, RERR = null;
+function ripSim() {
+  if (RSIM || RERR) return RSIM;
+  if (!hasSoft()) return null;
+  try { const M = window.__EP22_SIMS && window.__EP22_SIMS.swapRip; if (!M) { RERR = 'no sim'; return null; } RSIM = M.build({}); }
+  catch (e) { RERR = String(e && e.stack || e); console.error('rip sim: ' + RERR); }
+  return RSIM;
+}
+const RIPPRINT = {};
+/* the torn paper of the five gifts (from just before each rip): flying strips in front of the cast (front = true), then litter on the floor behind their feet */
+function drawRip(lt, front) {
+  const R = ripSim(); if (!R) return;
+  const st = R.world.at(Math.max(0, Math.min(R.T, lt)));
+  for (const g of R.meta.gifts) {
+    if (lt < g.t0 - .02) continue;
+    const landed = lt > g.t0 + 1.6; if (landed === front) continue;
+    const [paper, c1, c2] = GPAP[g.n], pr = RIPPRINT[g.n] || (RIPPRINT[g.n] = paperPrint(paper, c1, c2));
+    SOFT2D.drawCloth(ctx, st.by[g.id], { fill: pr, back: hasA('paperPrint') && A22.paperBack ? A22.paperBack : '#f6f2ea', shade: .35, ragged: 1 });
+  }
+}
+
 // ------------------------------------------------------------------ SWAP: the pile (PHYS2D, ep22_swap_rigid_sim.js: built once, lazily; sampled with world.at(lt))
 let PSIM = null, PERR = null;
 function pileSim() {
@@ -1171,11 +1197,11 @@ function pileSim() {
 const PILEPAL = [['stripes', '#c62828', '#f4ead8'], ['dots', '#2b6cff', '#ffffff'], ['trees', '#2f8f4e', '#ffffff'], ['candy', '#f4f1ea', '#d6202c'], ['plain', '#7a4fd8', '#ffd23f'], ['stripes', '#ffd23f', '#d6202c'],
   ['dots', '#d6202c', '#ffd23f'], ['trees', '#1f3166', '#e8e8f0'], ['candy', '#2f8f4e', '#ffffff'], ['plain', '#ff8ae6', '#ffffff'], ['stripes', '#2b6cff', '#ffd23f'], ['dots', '#3fae5f', '#d6202c'], ['plain', '#d6202c', '#ffd23f']];
 /* the gifts of one slab at lt (1 the side heaps, 2 the front, 3 the big one), each registered as foreground for the audit (a gift may never cover a face) */
-function drawPile(lt, slab) {
+function drawPile(lt, slab, side = 0) {
   const S = pileSim(); if (!S) return;
   const st = S.world.at(Math.max(0, Math.min(S.T, lt)));
   for (const g of S.meta.gifts) {
-    if (g.slab !== slab || lt < g.t0) continue;
+    if (g.slab !== slab || lt < g.t0 || (side && g.side !== side)) continue;
     const b = st.by[g.id]; if (!b) continue;
     const [paper, c1, c2] = PILEPAL[g.pal % PILEPAL.length], top = slab === 3 || g.i === 6 || g.i === 7 || g.i === 8 || g.i === 9;
     ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.angle);
@@ -1187,6 +1213,8 @@ function drawPile(lt, slab) {
 }
 /* the paper scraps of the hand-animated rip: they fly up off each gift, flutter, and settle on the floor (pure functions of time) */
 function scraps(lt, C) {
+  if (ripSim()) { tomRibbon(lt, C); return; }
+  tomRibbon(lt, C);
   const list = [['lemon', SC.rip[0]], ['mango', SC.rip[1]], ['onion', SC.rip[2]], ['straw', SC.rip[3]], ['tom', SC.crinkle - .1]];
   for (const [n, t0] of list) {
     const a0 = lt - t0; if (a0 < 0) continue;
@@ -1203,9 +1231,11 @@ function scraps(lt, C) {
       ctx.restore();
     }
   }
-  /* Tomato's ribbon zips off and the big bow flies away */
+}
+/* Tomato's ribbon zips off and the big bow flies away */
+function tomRibbon(lt, C) {
   const z = lt - SC.zip;
-  if (z >= 0 && z < .75 && C.ripShot) { const o = C.tom, kd = KINDS[o.kind], bx = o.x - 260 * z, by = o.y - (kd.leg + kd.ry * .9) * o.s + (kd.mouthY + 70) * o.s - 1100 * z + 700 * z * z;
+  if (z >= 0 && z < .75 && (C.ripShot || C.ripT)) { const o = C.tom, kd = KINDS[o.kind], bx = o.x - 60 - 520 * z, by = o.y - (kd.leg + kd.ry * .9) * o.s + (kd.mouthY + 74) * o.s - 160 * z + 900 * z * z;
     ctx.save(); ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); for (let k = 0; k <= 12; k++) { const u = k / 12; ctx.lineTo(bx - 120 * u + 30 * Math.sin(u * 9 + z * 20), by + 140 * u * (1 - z)); } ctx.stroke(); ctx.restore();
     bowP({ x: bx, y: by, s: 1.1, droop: .5, color: '#ffd23f', t: lt, seed: 2 }); }
 }
@@ -1233,8 +1263,9 @@ const ALLS = ['straw', 'tom', 'lemon', 'mango', 'onion'];
 const SSH = [
   { id: 'bow', s: 0, k: 'bow', show: [] },                                                     /* the match cut: Tomato's big drooping bow, a U at (540, 980); the pull back from 0.30 */
   { id: 't1', s: 1.25, k: 'face', foc: 'tom', z: [1.38, 1.42], up: 60, dx: 40, show: ['straw', 'tom', 'lemon'], dof: 3 },
-  { id: 'rip', s: 2.84, k: 'pt', x: 850, y: 1110, z: [.9, .93], show: ALLS, dof: 2 },
-  { id: 'ripr', s: 4.40, k: 'pt', x: 970, y: 1130, z: [1.32, 1.36], show: ['lemon', 'mango', 'onion'], dof: 3 },
+  { id: 'rip', s: 2.84, k: 'pt', x: 830, y: 1150, z: [1.12, 1.19], show: ALLS, dof: 2 },
+  { id: 'ripT', s: 3.62, k: 'pt', x: 662, y: 1180, z: [1.62, 1.68], show: ['tom', 'lemon'], dof: 3 },
+  { id: 'ripr', s: 4.40, k: 'pt', x: 1000, y: 1150, z: [1.5, 1.54], show: ['lemon', 'mango', 'onion'], dof: 3 },
   { id: 'l1', s: 5.30, k: 'face', foc: 'lemon', z: [1.75, 1.8], up: 120, dx: 0, show: ['lemon'], dof: 4 },
   { id: 'm1', s: 6.23, k: 'face', foc: 'mango', z: [1.75, 1.8], up: 120, dx: 0, show: ['mango'], dof: 4 },
   { id: 'o1', s: 7.00, k: 'face', foc: 'onion', z: [1.72, 1.78], up: 120, dx: -20, show: ['onion'], dof: 4 },
@@ -1297,10 +1328,13 @@ function drawS(lt) {
   const room = () => { const r = stRoom(st, { closet: closetO }); L = r.lights; const ct = stCounter(st); tr = ct.lights; lap = ct.lap; };
   const px = sh.dof || 0;
   if (px > .5) { SOFT++; REG.suppress++; V2.dof(px, room); REG.suppress--; SOFT--; } else room();
+  drawRip(lt, false);
+  if (sh.pile) drawPile(lt, 1, 1);                         /* the right heap behind her: her free arm and what she holds up are in front of it */
   const list = sorted(sh.show.map(n => C[n]));
   for (const o of list) { if (o.joy > .01) sparkles(o, o.joy, lt, 9); drawIn(o); }
-  if (sh.pile) { drawPile(lt, 1); drawPile(lt, 2); drawPile(lt, 3); }
-  C.ripShot = sh.id === 'rip'; if (lt < 6.5 && !blockB(lt)) scraps(lt, C);
+  drawRip(lt, true);
+  if (sh.pile) { drawPile(lt, 1, -1); drawPile(lt, 2); drawPile(lt, 3); }
+  C.ripShot = sh.id === 'rip'; C.ripT = sh.id === 'ripT'; if (lt < 6.5 && !blockB(lt)) scraps(lt, C);
   if (talking(TS, 'o1', lt) || talking(TS, 'o2', lt) || sh.id === 'st1') { const o = C.onion, [fx, fy] = faceC(o); if (A15.tearsAura && sh.show.includes('onion')) A15.tearsAura(fx, fy, 1, { r: 150 * o.s, n: 16, t: lt, size: 1.1 * o.s, seed: 5 }); }
   /* the glow of the bulbs, then the night light pass */
   lightsGlow(L.concat(tr), lt, 1.2, 54);

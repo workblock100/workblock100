@@ -220,6 +220,53 @@ def _small_ir(seed, rt=.3, pre=.003, lo=None, hi=3500, taps=((.007, .5), (.013, 
     return ir / np.sqrt(np.sum(ir ** 2))
 
 
+# ---------------------------------------------------------------- the dialogue de-esser (new in Episode 22)
+DEESS = dict(f=5500.0, thr=.35, ratio=3.0, maxcut=8.0, rel=.025, glitch=.025, glitchcut=14.0)
+DEESS_V = "3"
+
+
+def _deess(x):
+    """A dialogue de-esser applied to every line before its treatment (new in Episode 22). The voices' loudest sibilants (and a few TTS bursts of 7 kHz ringing) reach the line's own peak in
+    the band above 5.5 kHz; the mixer's soft clip turns them into harmonics near the Nyquist frequency and the AAC encoder overshoots on them. The band above 5.5 kHz (split off with a
+    zero-phase filter, so that wherever nothing is cut the line is untouched to the sample) is compressed 3:1 where its 1 ms peak exceeds 0.35 of the line's peak, at most 8 dB, an instant
+    attack one millisecond ahead and a 25 ms release; an isolated burst over the threshold (nothing else over it within 40 ms) shorter than 25 ms (a TTS glitch, not a sibilant) is
+    limited to the threshold outright (up to 14 dB).
+    Ordinary consonants are not touched."""
+    x = np.asarray(x, dtype=float)
+    sp = DEESS
+    hi = signal.sosfiltfilt(signal.butter(4, sp["f"] / (SR / 2), "high", output="sos"), x)
+    lo = x - hi
+    pk = np.max(np.abs(x)) + 1e-12
+    hop = 48
+    nf = len(x) // hop + 1
+    pad = np.zeros(nf * hop)
+    pad[:len(x)] = np.abs(hi)
+    env = pad.reshape(nf, hop).max(axis=1)
+    over = np.maximum(20 * np.log10(env / (sp["thr"] * pk) + 1e-12), 0)
+    cut = np.minimum(over * (1 - 1 / sp["ratio"]), sp["maxcut"])
+    if not np.any(cut > 0):
+        return x
+    on = np.concatenate([[False], over > 0, [False]])                          # a TTS glitch (a chirp of 8 to 9 kHz a dozen milliseconds long at the line's full peak) is not a sibilant
+    st_, en_ = np.where(on[1:] & ~on[:-1])[0], np.where(~on[1:] & on[:-1])[0]
+    seg = []
+    for a_, b_ in zip(st_, en_):                                                # clusters: bursts less than 40 ms apart are one sound (a sibilant crosses the threshold in many short bursts)
+        if seg and (a_ - seg[-1][1]) * hop < .04 * SR:
+            seg[-1][1] = b_
+        else:
+            seg.append([a_, b_])
+    for a_, b_ in seg:
+        if (b_ - a_) * hop < sp["glitch"] * SR:
+            cut[a_:b_] = np.minimum(over[a_:b_], sp["glitchcut"])
+    g_db = np.zeros(nf)
+    st, rel = 0.0, np.exp(-hop / (sp["rel"] * SR))
+    for i in range(nf):
+        st = cut[i] if cut[i] > st else st * rel + cut[i] * (1 - rel)
+        g_db[i] = st
+    g_db = np.maximum(g_db, np.concatenate([g_db[1:], [0.0]]))
+    g = 10 ** (-np.interp(np.arange(len(x)), (np.arange(nf) + .5) * hop, g_db) / 20)
+    return lo + hi * g
+
+
 # ---------------------------------------------------------------- the cast, as Episode 21 left them
 def fx_bind(x):
     """Binder: a bright, cheerful assistant, slightly synthetic: a lift at 2.2 to 7.5 kHz, a faint detuned double (a 6 ms delay that flutters at 5.5 Hz: a plastic sheen) and a 10-bit grain."""
@@ -345,21 +392,30 @@ def fx_santa_ho(x, count=None):
     return _match_active_rms(z, x)
 
 
-SLING_HZ = .55           # the sling's swing (a pendulum about 0.8 m long)
+SWAY = dict(t0=23.55, A=.12, tau=1.3, w=2.3, off=(26.6, 27.3))   # the sling's sway in the picture (ep22_santa_sim.js T.sway, scene-local s): theta = A exp(-u/tau) sin(w u), u = t - t0
+
+
+def _sway(t_loc):
+    """The picture's sway angle (rad) at scene-local times t_loc: a kick as he leaves the chair, damped, calmed to nothing by 27.3 s."""
+    W = SWAY
+    u = np.asarray(t_loc, dtype=float) - W["t0"]
+    off = 1 - _smoothstep((np.asarray(t_loc) - W["off"][0]) / (W["off"][1] - W["off"][0]))
+    return np.where(u > 0, W["A"] * np.exp(-np.maximum(u, 0) / W["tau"]) * off * np.sin(u * W["w"]), 0.0)
 
 
 def fx_sling(x, pan=.12):
-    """'This is the best Christmas.' (santa me5), Santa swinging in the Hoyer's sling: his chest (fx_santa) and a gentle wobble that is NOT a pitch change: the voice swings across the field
-    (pan +-0.14 round his place at 0.55 Hz), a little louder and brighter as he swings towards us (+-0.8 dB, +-1 dB above 3 kHz), all of it a gain and a pan: no delay, so no Doppler. Stereo."""
+    """'This is the best Christmas.' (santa me5), Santa swinging in the Hoyer's sling: his chest (fx_santa) and a gentle wobble that is NOT a pitch change, locked to the picture's own sway
+    (SWAY: 0.37 Hz, damped): the voice moves across the field with him (up to +-0.25 of pan at the kick, about +-0.1 when he speaks, dying away) and its level and brightness swell a little with
+    each swing (+-0.8 dB, +-1 dB above 3 kHz at the kick); all of it gains and a pan: no delay, so no Doppler. Stereo."""
     y = fx_santa(x)
     n = len(y)
-    t = np.arange(n) / SR
-    ph = 2 * np.pi * SLING_HZ * t + .6
-    p = pan + .14 * np.sin(ph)
-    near = np.cos(ph)
-    y = (y + .12 * near * _hp4(y, 3000, 2)) * 10 ** (.8 * near / 20)
-    th = (np.clip(p, -1, 1) + 1) * np.pi / 4
-    return _match_active_rms(np.stack([y * np.cos(th), y * np.sin(th)]), x)
+    ln, sc = _line("santa", "me5"), _scene_info("santa")
+    t0 = (ln["s"] - sc["start"]) if (ln and sc) else 24.632
+    th = _sway(t0 + np.arange(n) / SR) / SWAY["A"]                          # -1..1 at the kick
+    p = pan - .25 * th                                                       # theta > 0 turns the sling clockwise on screen: he swings to the left
+    y = (y + .12 * th * _hp4(y, 3000, 2)) * 10 ** (.8 * th / 20)
+    a = (np.clip(p, -1, 1) + 1) * np.pi / 4
+    return _match_active_rms(np.stack([y * np.cos(a), y * np.sin(a)]), x)
 
 
 # ---------------------------------------------------------------- the choruses: every voice spoken on its own, its onset found and aligned to the lead's
@@ -385,6 +441,7 @@ def _chorus_parts(kokoro, v, say, tag, plan):
         if abs(r - 1) > 1e-6:
             q = np.interp(np.arange(0, len(q) - 1, r), np.arange(len(q)), q)
         q = BA.semis_resample(q, v.get("semis", 0)) / (np.max(np.abs(q)) + 1e-12)
+        q = _deess(q)
         parts.append((q, _onset(q)))
     return parts
 
@@ -457,7 +514,7 @@ def fx_staff(kokoro, v, say, mono, tag):
 # ---------------------------------------------------------------- which treatment does each line get? (scene, line id) first, then the speaker
 LINE_KIND = {("santa", "me1"): "santa_ho", ("santa", "me3"): "santa_ho3", ("santa", "me5"): "sling", ("swap", "br1"): "closet"}
 WHO_KIND = {"bind": "bind", "onion": "onion", "brenda": "closet", "pear": "res", "cran": "res", "melon": "santa", "moon": "moon", "staff": "staff", "rall": "carol"}
-KIND_V = {"santa": "1", "santa_ho": "2", "santa_ho3": "3", "sling": "1", "carol": "1", "staff": "1", "closet": "2", "moon": "1"}
+KIND_V = {"santa": "1", "santa_ho": "2", "santa_ho3": "3", "sling": "2", "carol": "1", "staff": "1", "closet": "2", "moon": "1"}
 
 
 def line_kind(scene, lid, who):
@@ -516,6 +573,7 @@ _SPEECH = []        # [(scene id, beat)] in the order the mixer asks for the voi
 _TTS_K = [0]
 _TTS_ORIG = [None]
 KINDS = {}          # tag ('scene_beat') -> the treatment it got (for the cue report)
+DEESSED = {}        # plain lines -> how much the de-esser took out (dB re the line's peak)
 
 
 def _load_speech():
@@ -537,11 +595,15 @@ def tts22(kokoro, v, say):
     who = b["who"]
     kind = line_kind(sc, b["id"], who)
     KINDS[tag] = kind
+    dx_key = hashlib.sha1(json.dumps([raw_key, "deess", DEESS_V, DEESS], sort_keys=True).encode()).hexdigest()[:16]
+    clean = _vox_cache(tag + ".dx", dx_key, lambda: _deess(mono))
+    if not np.array_equal(clean, mono):
+        DEESSED[tag] = float(20 * np.log10(np.max(np.abs(clean)) / (np.max(np.abs(mono)) + 1e-12)))
     if kind == "plain":
-        return _Vox(mono, None, who, tag)
-    key = hashlib.sha1(json.dumps([raw_key, kind, FXV, KIND_V.get(kind, "")]).encode()).hexdigest()[:16]
+        return _Vox(mono, None if np.array_equal(clean, mono) else clean, who, tag)
+    key = hashlib.sha1(json.dumps([dx_key, kind, FXV, KIND_V.get(kind, "")]).encode()).hexdigest()[:16]
     seed = int(hashlib.sha1(tag.encode()).hexdigest()[:6], 16)
-    return _Vox(mono, _vox_cache(tag + ".fx", key, lambda: apply_kind(kind, mono, seed, kokoro, v, say, tag)), who, tag)
+    return _Vox(mono, _vox_cache(tag + ".fx", key, lambda: apply_kind(kind, clean, seed, kokoro, v, say, tag)), who, tag)
 
 
 # ---------------------------------------------------------------- the rooms (impulse responses) and the reverb
@@ -622,6 +684,18 @@ _PLACE2 = A6.place2
 _REVERB6 = A6.reverb
 
 
+CARPET = ("santa", "carol")
+
+
+def _scene_at(t):
+    """The id of the scene playing at absolute time t (the frozen timeline)."""
+    sid = None
+    for sc in _timeline()["scenes"]:
+        if t >= sc["start"]:
+            sid = sc["id"]
+    return sid
+
+
 def _line_at(clip, at):
     """Where a voice's treated clip goes: the carol's lines CAROL_PRE early, so the lead's onset (CAROL_PRE into the clip) lands exactly on the line's start, the downbeat."""
     return at - CAROL_PRE if KINDS.get(clip.tag) == "carol" and clip.alt is not None else at
@@ -659,6 +733,10 @@ def place2_22(buf, clip, at, gain=1.0, pan=0.0):
             _PLACE2(_DRY[1], v, at2, gain * dp, pan)
         return
     name = getattr(clip, "sfx", None) or "step"
+    if name == "step" and _scene_at(at) in CARPET:                 # the day room is carpeted: the mixer's tile step closed off at 1.6 kHz, 3 dB softer, a duller thud
+        c = np.asarray(clip, dtype=float)
+        c = _lp4(c, 1600, 2) if c.ndim == 1 else np.stack([_lp4(ch, 1600, 2) for ch in c])
+        clip = c * 10 ** (-3 / 20)
     db = DUCK_DB.get(name)
     if db and _WIN:
         i = int(round(at * SR))
@@ -2473,13 +2551,23 @@ def _santa_moves():
         while t < hb[1] - .05:
             out.append((t, .16))
             t += .27
-    me5 = _line("santa", "me5")
-    if me5:
-        t = me5["s"] + .1
-        while t < me5["e"] + .4:
-            out.append((t, .2))
-            t += .5 / SLING_HZ
-    return out
+    sc = _scene_info("santa")
+    if sc:                                                                   # the ends of each swing of the sling (the picture's sway), while it still swings
+        k = 0
+        while True:
+            u = (np.pi / 2 + k * np.pi) / SWAY["w"]
+            t = SWAY["t0"] + u
+            if t > SWAY["off"][0] - .2:
+                break
+            amp = abs(float(_sway(t))) / SWAY["A"]
+            if amp > .12:
+                out.append((sc["start"] + t, round(.1 + .14 * amp, 3)))
+            k += 1
+    keep = []
+    for t, g in sorted(out, key=lambda e: -e[1]):                            # two jingles closer than 0.12 s are one (the louder)
+        if all(abs(t - u) >= .12 for u, _ in keep):
+            keep.append((t, g))
+    return sorted(keep)
 
 
 def _designed_events(tab, phys):
@@ -2793,7 +2881,7 @@ def write_cue_report(out_dir):
             cnt[key] = cnt.get(key, 0) + 1
     for nm, src in (("step", SOURCES["steps"]), ("phys", SOURCES["phys"]), ("soft", SOURCES["soft"])):
         per = {sc: n for (k, sc), n in cnt.items() if k == nm}
-        lines.append(f"{nm} events placed per scene: {per or 'none'} ({src})")
+        lines.append(f"{nm} events placed per scene: {per} ({src})" if per else f"{nm} events placed: {src}")
     fams = {}
     for e in ev:
         if e.get("name") == "soft":
@@ -2802,6 +2890,10 @@ def write_cue_report(out_dir):
     if fams:
         lines.append("soft families placed (material:kind): " + ", ".join(f"{k} {v}" for k, v in sorted(fams.items())))
     lines.append("")
+    if DEESSED:
+        worst = sorted(DEESSED.items(), key=lambda kv: kv[1])[:6]
+        lines.append(f"the dialogue de-esser (above 5.5 kHz, 3:1 over 0.35 of the line's peak) touched {len(DEESSED)} of {len(KINDS)} lines; the line peak fell most in " +
+                     ", ".join(f"{k} {v:+.1f} dB" for k, v in worst))
     lines.append("voice treatments (scene_line: treatment):")
     for tag, kind in KINDS.items():
         if kind != "plain":

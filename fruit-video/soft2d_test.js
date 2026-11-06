@@ -13,6 +13,7 @@ function test(name, fn) {
 }
 const f = (v, d) => (+v).toFixed(d == null ? 2 : d);
 function timeMs(fn) { const t0 = process.hrtime.bigint(); const r = fn(); return [Number(process.hrtime.bigint() - t0) / 1e6, r]; }
+function cpuMs(fn) { const c0 = process.cpuUsage(), t0 = process.hrtime.bigint(); fn(); const c = process.cpuUsage(c0); return [(c.user + c.system) / 1000, Number(process.hrtime.bigint() - t0) / 1e6]; }   // CPU time (the machine is shared) and wall time
 function finite(w) { for (const a of [w.x, w.y, w.z]) for (let i = 0; i < a.length; i++) if (!(a[i] === a[i]) || Math.abs(a[i]) > 1e6) return false; return true; }
 
 // ------------------------------------------------------------------ worlds used by several tests
@@ -66,13 +67,14 @@ test('friction: a strap on a 20 degree slope slides at mu .2 and stays at mu .9 
   const out = [], th = 20 * Math.PI / 180, cs = Math.cos(th), sn = Math.sin(th);
   for (const mu of [0.2, 0.9]) {
     const w = S.world({ gravity: [0, 1500], seed: 3 });
-    w.collider({ box: [400, 20], x: 540, y: 1000, angle: th, friction: 1, mat: 'wood' });
+    w.collider({ box: [400, 20], x: 540, y: 1000, angle: th, friction: mu, mat: 'wood' });   // contact friction = sqrt(rope x collider) = mu
     const pts = []; for (let k = 0; k <= 10; k++) { const u = -80 + 16 * k; pts.push([540 + u * cs - (-23) * sn, 1000 + u * sn + (-23) * cs]); }   // on the surface (20 + thickness 3)
-    const r = w.rope({ points: pts, segments: 10, width: 6, thickness: 3, mat: 'canvas', friction: mu });
-    w.run(1.5);
-    const p = w.at(1.5).ropes[0].pts; out.push(Math.hypot(p[10] - pts[5][0], p[11] - pts[5][1]));
+    const r = w.rope({ points: pts, segments: 10, width: 6, thickness: 3, mat: 'canvas', friction: mu, damping: 0 });
+    w.run(1.0);
+    const p = w.at(1.0).ropes[0].pts; out.push(Math.hypot(p[10] - pts[5][0], p[11] - pts[5][1]));
   }
-  return { ok: out[0] > 200 && out[1] < 3, msg: 'moved ' + f(out[0], 0) + ' px at mu .2, ' + f(out[1], 2) + ' px at mu .9' };
+  const expect = 0.5 * 1500 * (sn - 0.2 * cs);   // g (sin - mu cos) t^2 / 2 at t = 1 s, no air drag
+  return { ok: Math.abs(out[0] / expect - 1) < 0.15 && out[1] < 3, msg: 'slid ' + f(out[0], 0) + ' px in 1 s at mu .2 (Coulomb ' + f(expect, 0) + '), ' + f(out[1], 2) + ' px at mu .9' };
 });
 function tearWorld(opt) {
   opt = opt || {};
@@ -113,7 +115,7 @@ function beltWorld() {
   const R = 150, T = 9, body = w.collider({ circle: R, x: 540, y: 1000, mat: 'felt', tag: 'santa' });
   // over the top half (a strap over a round body), both ends straight down and pinned there; then the ends are tugged 12 px down
   const pts = []; pts.push([540 - R - T, 1100]); for (let k = 0; k <= 24; k++) { const a = Math.PI * (1 + k / 24); pts.push([540 + (R + T) * Math.cos(a), 1000 + (R + T) * Math.sin(a)]); } pts.push([540 + R + T, 1100]);
-  const tug = t => 12 * Math.min(1, Math.max(0, (t - 0.8) / 0.3));
+  const tug = t => 6 * Math.min(1, Math.max(0, (t - 0.8) / 0.3));
   const r = w.rope({ points: pts, segments: 36, width: 18, thickness: T, mat: 'canvas', tag: 'belt', friction: 0.6,
     pins: [{ k: 0, to: t => [540 - R - T, 1100 + tug(t)] }, { k: -1, to: t => [540 + R + T, 1100 + tug(t)] }] });
   return { w, r, R, T };
@@ -125,7 +127,7 @@ test('a strap over a round body holds tension: it hugs the body and keeps its le
   let L = 0, hug = 0, top = 0, inner = 1e9; for (let i = 1; i < r.n; i++) L += Math.hypot(p[2 * i] - p[2 * i - 2], p[2 * i + 1] - p[2 * i - 1]);
   for (let i = 0; i < r.n; i++) { if (p[2 * i + 1] > 995) continue; top++; const d = Math.hypot(p[2 * i] - 540, p[2 * i + 1] - 1000); inner = Math.min(inner, d); if (Math.abs(d - (R + T)) < 1) hug++; }
   const stretch = w.events.filter(e => e.kind === 'stretch').length;
-  return { ok: inner > R + T - 1 && hug >= top - 1 && Math.abs(L / r.length - 1) < 0.03 && finite(w), msg: hug + '/' + top + ' particles over the body on its surface (closest ' + f(inner, 2) + ', surface ' + (R + T) + '), length ' + f(L, 1) + ' / ' + f(r.length, 1) + ' after a 12 px tug each side, stretch events ' + stretch };
+  return { ok: inner > R + T - 1 && hug >= top - 1 && Math.abs(L / r.length - 1) < 0.02 && finite(w), msg: hug + '/' + top + ' particles over the body on its surface (closest ' + f(inner, 2) + ', surface ' + (R + T) + '), length ' + f(L, 1) + ' / ' + f(r.length, 1) + ' after a 6 px tug each side (an inextensible strap between two pins must stretch by the tug), stretch events ' + stretch };
 });
 test('sticky tape sticks where it touches a sticky collider and stays after the hand lets go', () => {
   const w = S.world({ gravity: [0, 1500], seed: 9 });
@@ -149,7 +151,7 @@ test('no explosion: a ribbon yanked at 6000 px/s between pins stays finite and c
 test('a glove balloon inflates to five lobes (finger tips stay apart) and floats to the ceiling', () => {
   const { w, g } = gloveWorld(72);
   w.run(4);
-  const st = w.at(1.15).balloons[0], n = st.n, P = st.pts;
+  const st = w.at(1.15, w.makeState()).balloons[0], n = st.n, P = st.pts;   // its own state: at() reuses one object otherwise
   // finger tips: local maxima of the distance from the centroid, at least 0.85 of the largest
   let cx = 0, cy = 0; for (let k = 0; k < n; k++) { cx += P[2 * k] / n; cy += P[2 * k + 1] / n; }
   const tips = st.tips;   // pinky, ring, middle, index, thumb
@@ -158,7 +160,7 @@ test('a glove balloon inflates to five lobes (finger tips stay apart) and floats
   const areaOk = Math.abs(st.area / (g.area1 * 1.1) - 1) < 0.08;
   // each tip sticks out of the palm: farther from the centroid than the valleys next to it
   const dist = k => Math.hypot(P[2 * k] - cx, P[2 * k + 1] - cy);
-  const out_ = tips.every(k => dist(k) > 1.15 * Math.min(dist((k + 4) % n), dist((k + n - 4) % n)));
+  let out_ = true; for (let i = 0; i + 1 < tips.length; i++) { let v = 1e9; for (let k = tips[i] + 1; k < tips[i + 1]; k++) v = Math.min(v, dist(k)); if (!(v < 0.8 * Math.min(dist(tips[i]), dist(tips[i + 1])))) out_ = false; }   // a valley between each pair of fingers
   return { ok: tips.length === 5 && minSep > 25 && out_ && areaOk && ymin < 405 && finite(w), msg: tips.length + ' finger tips, closest ' + f(minSep, 0) + ' px apart, each a lobe: ' + out_ + ', area ' + f(st.area, 0) + ' vs target ' + f(g.area1 * 1.1, 0) + ', top at ' + f(ymin, 1) + ' (ceiling 400), events ' + w.events.map(e => e.kind).filter((v, i, a) => a.indexOf(v) === i).join('/') };
 });
 test('softCollide keeps two balloons apart on a ceiling (no particle inside the other)', () => {
@@ -198,11 +200,11 @@ test('budget: a 24 x 24 cloth with three colliders, 10 s at 240 Hz, bakes in und
     w = S.world({ gravity: [0, 1500], seed: 22 });
     w.collider({ floor: 1300 }); w.collider({ box: [80, 50], x: 540, y: 1200 }); w.collider({ circle: 60, x: 400, y: 1100 });
     w.cloth({ x: 380, y: 700, width: 320, height: 320, cols: 24, rows: 24, mat: 'fabric' });
-    times.push(timeMs(() => w.run(10))[0]);
+    times.push(cpuMs(() => w.run(10)));
   }
   const st = w.makeState(), [ms] = timeMs(() => { for (let i = 0; i < 2000; i++) w.at(i * 0.005, st); });
-  const best = Math.min.apply(null, times);
-  return { ok: best < 1500 && ms / 2000 < 0.1, msg: 'bake ' + times.map(t => f(t, 0)).join(' / ') + ' ms, at(t) ' + f(ms / 2000 * 1000, 1) + ' us' };
+  const best = Math.min.apply(null, times.map(t => t[0]));
+  return { ok: best < 1500 && ms / 2000 < 0.1, msg: 'bake CPU ' + times.map(t => f(t[0], 0)).join(' / ') + ' ms (wall ' + times.map(t => f(t[1], 0)).join(' / ') + '), at(t) ' + f(ms / 2000 * 1000, 1) + ' us' };
 });
 test('budget: twelve glove balloons with softCollide and a ceiling, 4.5 s, bake (best of two)', () => {
   const times = [];
@@ -210,10 +212,10 @@ test('budget: twelve glove balloons with softCollide and a ceiling, 4.5 s, bake 
     const w = S.world({ gravity: [0, 1500], seed: 12 });
     w.collider({ ceiling: 300 });
     for (let i = 0; i < 12; i++) { const t0 = 0.15 * (i >> 1); w.balloon({ x: 150 + (i % 6) * 156, y: 1350 + (i % 3) * 60, outline: 'glove', scale: 0.62, segments: 56, pressure: t => Math.max(0, Math.min(1.1, (t - t0) / 0.5 * 1.1)), buoyancy: 1900, softCollide: true }); }
-    times.push(timeMs(() => w.run(4.5))[0]);
+    times.push(cpuMs(() => w.run(4.5)));
   }
-  const best = Math.min.apply(null, times);
-  return { ok: best < 2500, msg: 'bake ' + times.map(t => f(t, 0)).join(' / ') + ' ms (budget 2.5 s)' };
+  const best = Math.min.apply(null, times.map(t => t[0]));
+  return { ok: best < 2500, msg: 'bake CPU ' + times.map(t => f(t[0], 0)).join(' / ') + ' ms (wall ' + times.map(t => f(t[1], 0)).join(' / ') + ', budget 2.5 s)' };
 });
 
 const pass = results.filter(Boolean).length;
