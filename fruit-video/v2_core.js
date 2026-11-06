@@ -265,9 +265,11 @@ const V2 = (() => {
     const l = lineAt(t);
     if (!l) return;
     const lt = t - l.s;
+    // Episode 22 on: a scene can ask for a sing-along ball over its caption (S.capBall = true, or a list of line ids); the speaker chip then sits 44 px higher to make room for the ball's hop
+    const ball = !!(S && S.capBall && (S.capBall === true || (Array.isArray(S.capBall) && S.capBall.includes(l.id))));
     l._chunks = l._chunks || chunkWords(l.words);
     const chunk = l._chunks.find(c => lt < c[c.length - 1][2]) || l._chunks[l._chunks.length - 1];
-    const size = 64, maxW = 960;
+    const size = ball ? 58 : 64, maxW = 960;      // a sing-along line is set a little smaller so a whole line of the carol fits on one line
     ctx.save(); ctx.font = `900 ${size}px Nunito`;
     const space = ctx.measureText(' ').width + 14;
     const lines = [[]]; let lw = 0;
@@ -287,16 +289,18 @@ const V2 = (() => {
     const baseY = 1536 - (lines.length - 1) * 38;
     // speaker chip
     ctx.font = '900 28px Nunito';
-    const nw = Math.min(900, ctx.measureText(l.name).width + 44), py = baseY - (lines.length > 1 ? 88 : 80);
+    const nw = Math.min(900, ctx.measureText(l.name).width + 44), py = baseY - (lines.length > 1 ? 88 : 80) - (ball ? 44 : 0);
     ctx.fillStyle = l.color; rr(540 - nw / 2, py - 23, nw, 46, 23); ctx.fill();
     ctx.strokeStyle = 'rgba(10,8,18,.9)'; ctx.lineWidth = 4; ctx.stroke();
     const dark = ['#ffd60a', '#ffd23f', '#e8e8e8', '#f4a300', '#ff9f1c', '#c9d22a', '#e8a86a', '#9fb3c8', '#ffe135'].includes(l.color);
     text(l.name, 540, py + 1, { size: 28, fill: dark ? '#15111a' : '#fff', maxW: nw - 30 });
     reg('panel', [40, py - 28, 1040, baseY + (lines.length - 1) * 80 + 54], { id: 'caption' });
+    const cen = [];
     lines.forEach((ln, i) => {
       const total = ln.reduce((a, [, ww]) => a + ww, 0) + space * (ln.length - 1);
       let x = 540 - total / 2;
       for (const [w, ww] of ln) {
+        if (ball) cen.push([x + ww / 2, baseY + i * 80, w[1], w[2]]);
         const said = lt >= w[1], active = said && lt < w[2];
         const pop = active ? 1 + .07 * Math.sin(seg(lt, w[1], w[1] + .12) * PI) : 1;
         ctx.save(); ctx.translate(x + ww / 2, baseY + i * 80); ctx.scale(pop, pop);
@@ -305,6 +309,40 @@ const V2 = (() => {
         x += ww + space;
       }
     });
+    if (ball) {
+      if (lines.length > 1) REG.errors.push(`sing-along caption must fit one line: "${chunk.map(w => w[0]).join(' ')}"`);
+      capBall(lt, cen, fade);
+    }
+    ctx.restore();
+  }
+  // the sing-along ball: it drops onto the first word as it is said, hops from word to word landing on each one at its start, and settles on the last; a pure function of the line's time
+  function capBall(lt, cen, alpha) {
+    if (!cen.length) return;
+    const R = 13, LIFT = 48;                                  // ball radius; resting centre above the word's centre line (ascenders reach about 32 px above it)
+    const rest = k => cen[k][1] - LIFT;
+    let x, y, sq = 0, a = 1;
+    const s0 = cen[0][2];
+    if (lt < s0) {                                            // falling in during the 0.3 s before the first word
+      const u = clamp((lt - (s0 - .3)) / .3);
+      x = cen[0][0]; y = rest(0) - 90 * (1 - u * u); a = clamp(u * 3);
+    } else {
+      let k = 0;
+      while (k + 1 < cen.length && lt >= cen[k + 1][2]) k++;
+      if (k + 1 < cen.length) {                               // hopping from word k to word k + 1
+        const span = Math.max(.06, cen[k + 1][2] - cen[k][2]), u = clamp((lt - cen[k][2]) / span), dx = cen[k + 1][0] - cen[k][0];
+        const hop = Math.min(34, 14 + .12 * Math.abs(dx));
+        x = cen[k][0] + dx * u; y = rest(k) + (rest(k + 1) - rest(k)) * u - hop * 4 * u * (1 - u);
+      } else {                                                // on the last word: a few small bounces that die away
+        const v = lt - cen[k][2];
+        x = cen[k][0]; y = rest(k) - 10 * Math.abs(Math.sin(v * 9)) * Math.exp(-v * 4);
+      }
+      sq = .22 * clamp(1 - (lt - cen[k][2]) / .08);           // a squash as it lands on each word
+    }
+    ctx.save(); ctx.globalAlpha *= alpha * a; ctx.translate(x, y + R * sq * .5); ctx.scale(1 + sq * .6, 1 - sq);
+    ctx.fillStyle = radial(-3, -4, 1, R + 3, [[0, '#ffd1dc'], [.35, '#ff3b5c'], [1, '#b5122f']]);
+    ell(0, 0, R, R); ctx.fill();
+    ctx.strokeStyle = '#0c0812'; ctx.lineWidth = 3.5; ell(0, 0, R, R); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; ell(-4, -5, 4, 3); ctx.fill();
     ctx.restore();
   }
   // clock and place, top left, below the phone's status bar and above the picture's action

@@ -120,3 +120,10 @@ build/ep21/*
 !build/ep21/events.json
 !build/ep21/phys_events.json
 !build/ep21/phys_sims.json
+!build/ep22/
+build/ep22/*
+!build/ep22/timeline.js
+!build/ep22/audio.m4a
+!build/ep22/events.json
+!build/ep22/phys_events.json
+!build/ep22/phys_sims.json
