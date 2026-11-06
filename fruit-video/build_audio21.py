@@ -343,17 +343,17 @@ def _whisperise(x, seed, smooth_hz=380.0, nfft=1024, hop=256):
 
 def fx_whisper(x, seed, voiced=0.0):
     """THE WHISPER CHAIN (arrive m1, l1, t1): breathy, unvoiced, close. The voice whispered (_whisperise), the chest gone (a 280 Hz high-pass: a whisper has no lows), the formants brightened
-    (+3 dB above 1.8 kHz), A HISS ON THE S'S (the frames whose energy is mostly above 4.5 kHz are lifted a further 5 dB at 4.5 to 10 kHz: the sibilants hiss), the breath of a mouth at the ear
+    (+1.6 dB above 1.8 kHz, the vowels' formants held up), A HISS ON THE S'S (the frames whose energy is mostly above 4.5 kHz are lifted a further 4 dB at 4.5 to 10 kHz), the breath of a mouth at the ear
     (a soft 700 to 2400 Hz air at -24 dB riding the words) and no room (the mixer keeps it dry). `voiced` keeps that much of the plain voice under it (a stage whisper)."""
     n = len(x)
     w = _whisperise(x, seed)
     w = _hp4(w, 280, 3)
-    w = w + .41 * _hp4(w, 1800, 2)
+    w = w + .2 * _hp4(w, 1800, 2) + .12 * _bp4(w, 500, 2500, 1)
     hi = _bp4(w, 4500, 10000, 2)
     eh, ea = _env10(hi, 480), _env10(w, 480)
     sib = np.clip((eh / (ea + 1e-9) - .35) / .3, 0, 1)
     sib = np.interp(np.arange(n), np.arange(len(sib)) * 480 + 240, uniform_filter1d(sib, 3))
-    w = w + hi * .78 * sib
+    w = w + hi * .55 * sib
     env = np.interp(np.arange(n), np.arange(len(_env10(x))) * 480 + 240, _env10(x))
     w = w + _bp4(rng6(seed + 3).uniform(-1, 1, n), 700, 2400, 1) * env * .1
     if voiced:
@@ -391,12 +391,12 @@ def fx_pa21(x, seed):
 
 
 def fx_closet(x, seed):
-    """Brenda inside a closet (prep br1, closet br1 and br2): her frail voice (fx_brenda) through a closed door. Muffled (a 24 dB/oct low-pass at 1.9 kHz, the air above it leaking at -22 dB),
+    """Brenda inside a closet (prep br1, closet br1 and br2): her frail voice (fx_brenda) through a closed door. Muffled (a 24 dB/oct low-pass at 2.3 kHz, the air above it leaking at -20 dB),
     boxy (the closet's two modes: +4 dB at 420 Hz, +2 dB at 950 Hz), a tiny hard box around her (0.09 s, reflections at 1.1, 2.3 and 3.6 ms) and close (+2 dB under 200 Hz). No room."""
     n = len(x)
     y = fx_brenda(x, seed)
-    lo = _lp4(y, 1900, 4)
-    y = lo + .08 * _bp4(y, 2000, 5000, 1)
+    lo = _lp4(y, 2300, 4)
+    y = lo + .1 * _bp4(y, 2300, 5000, 1)
     y = y + .58 * _res(y, 420, 2.0) + .26 * _res(y, 950, 2.5)
     ir = _small_ir(seed + 13, rt=.09, pre=.0008, lo=150, hi=2400, taps=((.0011, .7), (.0023, .55), (.0036, .4)))
     y = y + .35 * signal.fftconvolve(y, ir)[:n]
@@ -405,11 +405,11 @@ def fx_closet(x, seed):
 
 
 def fx_buried21(x, seed):
-    """Mr. Radish under a pile of binders (closet ra2 'Impressive.'): his flat voice (fx_radish) through cardboard: a 24 dB/oct low-pass at 1.3 kHz, a damped cavity (+3 dB at 300 Hz, no
+    """Mr. Radish under a pile of binders (closet ra2 'Impressive.'): his flat voice (fx_radish) through cardboard: a 24 dB/oct low-pass at 1.5 kHz, a damped cavity (+3 dB at 300 Hz, no
     reflections at all), pages shifting on him as he speaks (a 1.5 to 5 kHz paper rustle at -28 dB that follows the words), 1.5 dB quieter. No room."""
     n = len(x)
     y = fx_radish(x)
-    y = _lp4(y, 1300, 4)
+    y = _lp4(y, 1500, 4)
     y = y + .41 * _res(y, 300, 1.6)
     env = np.interp(np.arange(n), np.arange(len(_env10(x))) * 480 + 240, _env10(x))
     t = np.arange(n) / SR
@@ -497,7 +497,7 @@ LINE_KIND = {
 if PREP_PA:
     LINE_KIND[("prep", "me1")] = "pa"
 WHO_KIND = {"bind": "bind", "onion": "onion", "brenda": "brenda", "pear": "res", "kale": "kale", "radish": "radish", "staff": "staff", "chor": "agency"}
-KIND_V = {"whisper": "1", "stage_whisper": "1", "pa": "1", "closet": "1", "buried": "1", "kale": "1", "radish": "1", "staff": "1", "agency": "1", "bind_menace": "1"}
+KIND_V = {"whisper": "2", "stage_whisper": "2", "pa": "1", "closet": "2", "buried": "2", "kale": "1", "radish": "1", "staff": "1", "agency": "1", "bind_menace": "1"}
 
 
 def line_kind(scene, lid, who):
@@ -646,7 +646,7 @@ def scene_reverb(sid, seg, a):
 # ---------------------------------------------------------------- place2, patched: voices place their treated version where they are; cues dip under speech
 DUCK_DB = {   # how far a cue is dipped (dB) while a voice speaks, by effect name; anything missing here is not dipped. The hits the picture lands on are never dipped.
     "sniffle": 4, "typing": 6, "step": 7, "clocktick": 2, "gasp": 3, "pachime": 3, "grin": 3, "cupclatter": 4, "cartroll": 5, "penscratch": 4, "shiftbell": 4, "labelpeel": 4,
-    "doorchime": 3, "sparkle": 4, "binderavalanche": 6, "scanhum": 4, "dataticks": 3, "chaos": 6, "callbell": 5, "secondhand": 2, "scatter": 4, "crowdmurmur": 6, "offhit": 3,
+    "doorchime": 3, "sparkle": 4, "binderavalanche": 6, "scanhum": 4, "dataticks": 3, "scanon": 3, "hudmark": 2, "badge": 4, "headturn": 4, "paperhand": 5, "chaos": 6, "callbell": 5, "secondhand": 2, "scatter": 4, "crowdmurmur": 6, "offhit": 3,
     "bed_title": 3, "bed_arrive": 4, "bed_prep": 4, "bed_medpass": 5, "bed_closet": 4, "bed_exit": 3, "bed_end": 2,
 }
 NOREV = ("bed_title", "bed_arrive", "bed_prep", "bed_medpass", "bed_closet", "bed_exit", "bed_end", "chaos", "scanhum", "dataticks", "secondhand", "crowdmurmur")
@@ -786,7 +786,7 @@ def _cue_local(sid, name, k=0):
     return None
 
 
-# ================================================================ the world: the time-lapse's clock, the wind, the engines
+# ================================================================ small clip helpers (the effects' building blocks)
 class _P(np.ndarray):
     """A clip that adds like _sum: clips of different lengths are padded with silence (the effects' small building blocks return these, so `thump + noise burst` is a sum of two events that need not be as long)."""
 
@@ -877,7 +877,7 @@ def _click(seed, f=3200.0, tau=.004, d=.03, q=6.0):
 class Split:
     """Where the divider of the split screen is (screen px of the 1080 px frame, 540 is the middle), 20 Hz, absolute seconds. From build/ep21/split.json ([{t, x}] absolute or scene-local seconds,
     or [{t, pan}] -1..1) when it exists; else the picture's own schedule (ep21_medpass.js DIV): the middle, except under 'Six.' (s4) where it slides to squeeze the right half for a beat (to 760 px
-    over s4 + 0.04 to + 0.34 s, held, back over the 0.3 s before pe2). gain(side, t): the level of a side, 1 at half the frame, falling as its half shrinks (a half of 320 px is about -5 dB)."""
+    over s4 + 0.04 to + 0.34 s, held, back over the 0.3 s before pe2). gain(side, t): the level of a side, 1 at half the frame, falling as its half shrinks (a half of 320 px is about -10 dB: the squeeze is brief, so it has to read)."""
 
     def __init__(self):
         self.ts = self.x = None
@@ -915,7 +915,7 @@ class Split:
     def gain(self, side, t):
         x = self.x_at(np.asarray(t, dtype=float))
         w = (1080.0 - x) if side == "R" else x
-        return np.clip(w / 540.0, .2, 1.0) ** 1.3
+        return np.clip(w / 540.0, .2, 1.0) ** 2.2
 
 
 SPLIT = Split()
@@ -1283,12 +1283,12 @@ def _tacky(seed, d=.07, lo=2000, hi=6500):
 
 
 def sfx_labelgun():
-    """A pricing label gun (0.8 s): the trigger squeezed (a plastic ratchet, three fast clicks in 50 ms), the applicator's 'ka-CHUNK' (a 900 Hz plastic knock over a 150 Hz thump), the label torn
-    off its backing (a tacky rasp) and slapped onto the carton (a flat pat); on the off-beat a second, quicker label (a smaller clack and pat)."""
+    """A pricing label gun (0.8 s). ON THE CUT the applicator's 'ka-CHUNK' (a 900 Hz plastic knock over a 150 Hz thump, a hard click on top), then the trigger's ratchet letting go (three fast
+    clicks), the label torn off its backing (a tacky rasp) and pressed onto the carton (a flat pat); on the off-beat a second, quicker label (a smaller clack and pat)."""
     x = np.zeros(_n(.85))
+    _place(x, _plastic_knock(3223, 900, .12, 150) + _click(3228, 2800, .003) * .5, 0.0, 1.0)
     for j in range(3):
-        _place(x, _click(3220 + j, 2600 + 300 * j, .002), j * .017, .35)
-    _place(x, _plastic_knock(3223, 900, .12, 150), .055, 1.0)
+        _place(x, _click(3220 + j, 2600 + 300 * j, .002), .045 + j * .017, .3)
     _place(x, _tacky(3224), .1, .45)
     tt = tarr(.06)
     _place(x, _band(3225, .06, 300, 2500) * np.exp(-tt / .008) * .7, .17, 1.0)
@@ -1297,27 +1297,27 @@ def sfx_labelgun():
 
 
 def sfx_padlock():
-    """The snack drawer padlocked (0.85 s): the hasp swung over (a light metal rattle), the shackle snapped home (a hard steel clack: a 2.7 kHz ring with an inharmonic 4.8 kHz partial over a 600 Hz
-    body) and the lock's body swinging against the drawer front (a dull clank 80 ms later); on the off-beat the lock tugged once to check it (a short rattle and a tap)."""
+    """The snack drawer padlocked (0.85 s). ON THE CUT the shackle snapped home (a hard steel clack: a 2.7 kHz ring with an inharmonic 4.8 kHz partial over a 600 Hz body), the hasp rattling and the
+    lock's body swinging against the drawer front (a dull clank 80 ms later); on the off-beat the lock tugged once to check it (a short rattle and a tap)."""
     x = np.zeros(_n(.9))
-    _place(x, _hit_train(3230, .08, 6, 2500, 7000, .003, .4, .2)[0], 0.0, .5)
     clack = _ping(2700, .4, .05, (1.0, 1.78, 2.9), (1.0, .55, .3), (1.0, .5, .3)) + _band(3231, .05, 3000, 9000) * expdecay(.05, .002) * 1.2 + _thump(600, 420, .08, .012) * .5
-    _place(x, clack, .03, 1.0)
-    _place(x, _ping(1900, .25, .03, (1.0, 2.4), (1.0, .4), (1.0, .5)) * .4 + _thump(300, 200, .08, .015) * .4, .11, .7)
+    _place(x, clack, 0.0, 1.0)
+    _place(x, _hit_train(3230, .08, 6, 2500, 7000, .003, .4, .2)[0], .015, .4)
+    _place(x, _ping(1900, .25, .03, (1.0, 2.4), (1.0, .4), (1.0, .5)) * .4 + _thump(300, 200, .08, .015) * .4, .08, .7)
     _place(x, _hit_train(3232, .1, 7, 2000, 6500, .003, .5, .2)[0] + _ping(2300, .2, .02, (1.0, 2.6), (1.0, .3), (1.0, .5)) * .3, OFF, .6)
     return norm6(_edge(x, .0003, .08), .75)
 
 
 def sfx_spray():
-    """A spray bottle and a cloth (0.95 s): the trigger pulled twice (a plastic click and a fine mist, 'pssht', 1.8 to 9 kHz, 0.14 s, 0.13 s apart), then on the off-beat the cloth's quick squeaky
-    wipe (two strokes of a rubbery 1.1 kHz squeak) and the gleam: a small glass 'ting' at 3.5 kHz."""
+    """A spray bottle and a cloth (0.95 s): the trigger pulled twice (a plastic click and a fine mist, 'pssht', 1.8 to 9 kHz, 0.14 s, the first ON THE CUT, the second 0.13 s later), then on the
+    off-beat the cloth's quick squeaky wipe (two strokes of a rubbery 1.1 kHz squeak) and the gleam: a small glass 'ting' at 3.5 kHz."""
     x = np.zeros(_n(1.0))
     for j in range(2):
         at = j * .13
-        _place(x, _click(3240 + j, 2200, .003) * .4, at, 1.0)
+        _place(x, _click(3240 + j, 2200, .003) * .5, at, 1.0)
         dd = .14
         tt = tarr(dd)
-        _place(x, _band(3242 + j, dd, 1800, 9000) * np.minimum(1, tt / .006) * np.exp(-tt / .05) * .9, at + .006, 1.0)
+        _place(x, _band(3242 + j, dd, 1800, 9000) * np.minimum(1, tt / .003) * np.exp(-tt / .05) * 1.0, at + .002, 1.0 - .2 * j)
     for j, (at, dd) in enumerate(((OFF - .12, .1), (OFF - .01, .09))):
         tt = tarr(dd)
         sq = _sin_of(_glide(1050 + 80 * j, 1250 + 80 * j, dd)) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 45 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1))
@@ -1327,13 +1327,13 @@ def sfx_spray():
 
 
 def sfx_thermobeep():
-    """The fridge thermometer and its log (0.95 s): the digital thermometer's double beep (two short 3.9 kHz square-ish beeps, 70 ms each, 50 ms apart), and on the off-beat the temperature log
+    """The fridge thermometer and its log (0.95 s): ON THE CUT the digital thermometer's double beep (two short 3.9 kHz beeps, 70 ms each, 50 ms apart), and on the off-beat the temperature log
     signed (a quick pen scribble of four strokes on paper on a clipboard)."""
     x = np.zeros(_n(1.0))
     for j in range(2):
         dd = .07
         tt = tarr(dd)
-        b = (np.sin(2 * np.pi * 3900 * tt) + .3 * np.sin(2 * np.pi * 11700 * tt)) * np.minimum(1, np.minimum(tt / .003, (dd - tt) / .004))
+        b = (np.sin(2 * np.pi * 3900 * tt) + .3 * np.sin(2 * np.pi * 11700 * tt)) * np.minimum(1, np.minimum(tt / .002, (dd - tt) / .004))
         _place(x, b, j * .12, .45)
     for j, dd in enumerate((.05, .04, .06, .08)):
         _place(x, _scrape(3250 + j, dd, 1800, 7000, 80), OFF + .06 * j + .004 * (j % 2), .55 - .05 * j)
@@ -1343,84 +1343,84 @@ def sfx_thermobeep():
 
 
 def sfx_binderslam():
-    """A row of policy binders slammed into place (0.9 s): three binders shoved along the shelf in a fast 'thud-thud' (vinyl-covered board: a 160 Hz body, a cardboard slap) and the row slammed
-    home against the end of the shelf (a heavy wooden knock, the metal rings inside rattling); on the off-beat the last binder tipping upright against the row (a small slap and a ring tick)."""
+    """A row of policy binders slammed into place (0.9 s): ON THE CUT the row slammed home against the end of the shelf (a heavy wooden knock with a 95 Hz body, the vinyl boards' flat slap at 1.2 to
+    3 kHz), the binders in the row knocking into each other just after it (two quick slaps) and the metal rings inside rattling; on the off-beat the last binder tipping upright against the row (a
+    small slap and a ring tick)."""
     x = np.zeros(_n(.95))
-    for j, (at, g) in enumerate(((0.0, .55), (.05, .7), (.1, .85))):
-        _place(x, _m_binder(.6 + .1 * j, .9, 3260 + j), at, g)
     tt = tarr(.3)
-    _place(x, _sin_of(95 + 60 * np.exp(-tt / .02)) * np.exp(-tt / .05) * 1.0 + np.sin(2 * np.pi * 380 * tt) * np.exp(-tt / .018) * .5 + _band(3263, .3, 300, 2500) * np.exp(-tt / .012), .14, 1.0)
-    _place(x, _hit_train(3264, .2, 12, 2500, 6500, .004, .6, .1)[0], .15, .4)
+    _place(x, _sin_of(95 + 60 * np.exp(-tt / .02)) * np.exp(-tt / .05) * 1.0 + np.sin(2 * np.pi * 380 * tt) * np.exp(-tt / .018) * .5 + _band(3263, .3, 300, 2500) * np.exp(-tt / .012), 0.0, 1.0)
+    _place(x, _unit(_m_binder(.7, .9, 3260)) * .7, 0.0, 1.0)
+    for j, at in enumerate((.03, .055)):
+        _place(x, _unit(_m_binder(.8 + .1 * j, .8, 3261 + j)) * (.45 - .1 * j), at, 1.0)
+    _place(x, _hit_train(3264, .2, 12, 2500, 6500, .004, .6, .1)[0], .01, .4)
     _place(x, _m_binder(.35, .7, 3265) * .8 + _ping(2900, .15, .02, (1.0, 2.5), (1.0, .3), (1.0, .5)) * .2, OFF, .55)
     return norm6(_edge(x, .0003, .08), .85)
 
 
 def sfx_mop():
-    """A wet mop swipe and the WET FLOOR sign (0.95 s): the mop's swipe across the floor (a wet, squelchy sweep: a band of noise from 500 Hz to 3 kHz with a 22 Hz slosh, sliding as it goes, and the
-    drips of the strings) and on the off-beat the yellow sign snapped open and set down (a plastic clack and a small hollow boing)."""
+    """A wet mop and the WET FLOOR sign (0.95 s): ON THE CUT the wet mop head slapped onto the floor (a 'splat': a burst of 300 Hz to 3 kHz noise with a fast attack and a low wet thump), then its
+    squelchy swipe across the floor (a band of noise from 2 kHz down to 600 Hz with a 22 Hz slosh, fading) and the drips of the strings; on the off-beat the yellow sign snapped open and set down (a
+    plastic clack and a small hollow boing)."""
     x = np.zeros(_n(1.0))
-    dd = .32
-    tt = tarr(dd)
-    sw = _tv_filter(noise6(dd, 3270), 700 + 1800 * np.sin(np.pi * np.clip(tt / dd, 0, 1)), 1.2, "bp") * (.6 + .4 * np.abs(np.sin(2 * np.pi * 22 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** .8
-    _place(x, sw, 0.0, 1.0)
-    _place(x, _lp4(noise6(dd, 3271), 600, 2) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .5, 0.0, 1.0)
+    tt = tarr(.12)
+    _place(x, _band(3274, .12, 300, 3000) * np.minimum(1, tt / .002) * np.exp(-tt / .025) * 1.0 + np.sin(2 * np.pi * 140 * tt) * np.exp(-tt / .03) * .6, 0.0, 1.0)
+    dd = .3
+    t = tarr(dd)
+    sw = _tv_filter(noise6(dd, 3270), 2000 * (600 / 2000) ** (t / dd), 1.2, "bp") * (.6 + .4 * np.abs(np.sin(2 * np.pi * 22 * t))) * np.exp(-t / .12)
+    _place(x, sw, .02, .9)
+    _place(x, _lp4(noise6(dd, 3271), 600, 2) * np.exp(-t / .1) * .5, .02, 1.0)
     r = rng6(3272)
     for j in range(5):
         d2 = .03
         t2 = tarr(d2)
-        _place(x, np.sin(2 * np.pi * r.uniform(900, 1700) * t2 * (1 + 1.5 * t2 / d2)) * np.exp(-t2 / .008), .25 + r.uniform(0, .2), r.uniform(.05, .15))
+        _place(x, np.sin(2 * np.pi * r.uniform(900, 1700) * t2 * (1 + 1.5 * t2 / d2)) * np.exp(-t2 / .008), .2 + r.uniform(0, .2), r.uniform(.05, .15))
     _place(x, _plastic_knock(3273, 1100, .12, 200) * .8, OFF, 1.0)
     d3 = .3
     t3 = tarr(d3)
     _place(x, _sin_of(330 * (1 - .25 * (1 - np.exp(-t3 / .1))) * (1 + .06 * np.sin(2 * np.pi * 14 * t3) * np.exp(-t3 / .1))) * np.exp(-t3 / .08) * .3, OFF + .02, 1.0)
-    return norm6(_edge(x, .002, .08), .7)
-
-
-def sfx_posterflip():
-    """The FUN COMMITTEE poster flipped to a hand-hygiene poster (0.85 s): a big sheet of paper whipped over (a fast 'fwip': a band of air that rises from 600 Hz to 4 kHz in 0.12 s, the paper's
-    flutter at 40 Hz) and slapped flat on the board, and on the off-beat a thumb tack pushed in (a small hard click into cork)."""
-    x = np.zeros(_n(.9))
-    dd = .16
-    tt = tarr(dd)
-    _place(x, _tv_filter(noise6(dd, 3280), 600 * (4000 / 600) ** (tt / dd), 1.6, "bp") * (.6 + .4 * np.sin(2 * np.pi * 40 * tt)) * np.sin(np.pi * np.clip(tt / dd, 0, 1)), 0.0, 1.0)
-    t2 = tarr(.08)
-    _place(x, _band(3281, .08, 400, 3500) * np.exp(-t2 / .01) * .8 + np.sin(2 * np.pi * 240 * t2) * np.exp(-t2 / .015) * .4, .15, 1.0)
-    _place(x, _click(3282, 2900, .003) * .6 + _thump(180, 120, .05, .01) * .2, OFF, 1.0)
     return norm6(_edge(x, .001, .08), .7)
 
 
-def sfx_closetslam():
-    """A closet door slammed on Brenda (0.95 s): the door swung hard (a rush of air), its slam into the frame (a 110 Hz thud of a hollow-core door, a wooden knock at 420 Hz, the frame's rattle) and the
-    latch catching; on the off-beat the NOT A CLOSET sign swinging on its nail (two small taps) and, from inside, a muffled 'hm' (a 220 Hz hum through the door, 0.15 s)."""
-    x = np.zeros(_n(1.0))
-    dd = .12
+def sfx_posterflip():
+    """The FUN COMMITTEE poster flipped to a hand-hygiene poster (0.85 s): the sheet whipped over in a quick 'fwip' (a band of air that rises from 900 Hz to 4.5 kHz in 50 ms, the paper's flutter
+    at 40 Hz) and slapped flat on the board ON THE CUT (40 ms in: a papery smack and a 240 Hz knock of the board), and on the off-beat a thumb tack pushed in (a small hard click into cork)."""
+    x = np.zeros(_n(.9))
+    dd = .06
     tt = tarr(dd)
-    _place(x, _lp4(noise6(dd, 3290), 900, 2) * (tt / dd) ** 2 * .3, 0.0, 1.0)
+    _place(x, _tv_filter(noise6(dd, 3280), 900 * (4500 / 900) ** (tt / dd), 1.6, "bp") * (.6 + .4 * np.sin(2 * np.pi * 40 * tt)) * np.minimum(1, tt / .004) * .8, 0.0, 1.0)
+    t2 = tarr(.1)
+    _place(x, _band(3281, .1, 400, 4500) * np.exp(-t2 / .016) * 1.4 + np.sin(2 * np.pi * 240 * t2) * np.exp(-t2 / .015) * .45, .035, 1.0)
+    _place(x, _click(3282, 2900, .003) * .6 + _thump(180, 120, .05, .01) * .2, OFF, 1.0)
+    return norm6(_edge(x, .0005, .08), .7)
+
+
+def sfx_closetslam():
+    """A closet door slammed on Brenda (0.95 s): ON THE CUT the door's slam into the frame (a 110 Hz thud of a hollow-core door, a wooden knock at 420 Hz, a crack of the frame at 1 to 4 kHz), the
+    latch catching just after it and the frame rattling; on the off-beat the NOT A CLOSET sign swinging on its nail (two small taps) and, from inside, a muffled 'hm' (a 220 Hz hum through the door)."""
+    x = np.zeros(_n(1.0))
     t2 = tarr(.35)
-    _place(x, _sin_of(110 * (1 - .2 * (1 - np.exp(-t2 / .03)))) * np.exp(-t2 / .07) * 1.0 + np.sin(2 * np.pi * 420 * t2) * np.exp(-t2 / .02) * .55 + _band(3291, .35, 200, 2500) * np.exp(-t2 / .02) * .8, dd, 1.0)
-    _place(x, _hit_train(3292, .15, 8, 800, 3500, .004, .4, .1)[0] + _click(3293, 3100, .003) * .4, dd + .03, .5)
+    _place(x, _sin_of(110 * (1 - .2 * (1 - np.exp(-t2 / .03)))) * np.exp(-t2 / .07) * 1.0 + np.sin(2 * np.pi * 420 * t2) * np.exp(-t2 / .02) * .55 + _band(3291, .35, 200, 2500) * np.exp(-t2 / .02) * .8
+           + _band(3295, .35, 1000, 4000) * np.exp(-t2 / .01) * .9 + np.sin(2 * np.pi * 700 * t2) * np.exp(-t2 / .012) * .35, 0.0, 1.0)
+    _place(x, _hit_train(3292, .15, 8, 800, 3500, .004, .4, .1)[0] + _click(3293, 3100, .003) * .4, .03, .5)
     for j in range(2):
         _place(x, _plastic_knock(3294 + j, 1300, .06, 300) * .25, OFF + .07 * j, 1.0)
     t3 = tarr(.15)
     hm = _lp4(osc("saw", 220 * (1 - .05 * t3 / .15), .15), 500, 2) * np.sin(np.pi * np.clip(t3 / .15, 0, 1))
     _place(x, hm * .12, OFF + .1, 1.0)
-    return norm6(_edge(x, .001, .08), .85)
+    return norm6(_edge(x, .0005, .08), .85)
 
 
 def sfx_coffeehide():
-    """The coffee maker swept into a drawer (0.95 s): the machine dragged across the counter (a short scrape), the drawer slammed shut (a sliding rumble and a wooden bang) and the glass carafe clinking
-    inside it (a bright clink at 2.3 kHz, a smaller one after); on the off-beat the last of the rattle (a tiny clink and a slosh)."""
+    """The coffee maker swept into a drawer (0.95 s): ON THE CUT the drawer slammed shut on it (a wooden bang with a 120 Hz body) and the glass carafe clinking inside (a bright clink at 2.3 kHz a
+    hair after, a smaller one 0.1 s later), the drawer's runners rumbling to a stop; on the off-beat the last of the rattle (a tiny clink and a slosh)."""
     x = np.zeros(_n(1.0))
-    dd = .12
-    tt = tarr(dd)
-    _place(x, _band(3300, dd, 300, 2500) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 35 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .5, 0.0, 1.0)
-    _place(x, _lp4(noise6(.1, 3301), 800, 2) * np.interp(tarr(.1), [0, .1], [.2, 1]) * .5, .08, 1.0)
     t2 = tarr(.3)
-    _place(x, _sin_of(120 + 70 * np.exp(-t2 / .02)) * np.exp(-t2 / .05) * .9 + np.sin(2 * np.pi * 510 * t2) * np.exp(-t2 / .015) * .4 + _band(3302, .3, 300, 2500) * np.exp(-t2 / .01) * .6, .18, 1.0)
-    _place(x, _glass(2300, .4, .08, .001) * .5 + _glass(3450, .3, .05, .001) * .2, .2, 1.0)
-    _place(x, _glass(2650, .3, .06, .001) * .25, .29, 1.0)
+    _place(x, _sin_of(120 + 70 * np.exp(-t2 / .02)) * np.exp(-t2 / .05) * .9 + np.sin(2 * np.pi * 510 * t2) * np.exp(-t2 / .015) * .4 + _band(3302, .3, 300, 2500) * np.exp(-t2 / .01) * .6, 0.0, 1.0)
+    _place(x, _glass(2300, .4, .08, .001) * .55 + _glass(3450, .3, .05, .001) * .22, .012, 1.0)
+    _place(x, _glass(2650, .3, .06, .001) * .25, .11, 1.0)
+    _place(x, _lp4(noise6(.1, 3301), 800, 2) * np.exp(-tarr(.1) / .03) * .4, .02, 1.0)
     _place(x, _glass(2900, .25, .05, .001) * .18 + _lp4(noise6(.15, 3303), 1200, 2) * np.sin(np.pi * np.clip(tarr(.15) / .15, 0, 1)) * .12, OFF, 1.0)
-    return norm6(_edge(x, .001, .08), .8)
+    return norm6(_edge(x, .0005, .08), .8)
 
 
 def sfx_sanitizer():
@@ -1444,33 +1444,32 @@ def sfx_sanitizer():
 
 
 def sfx_crashcart():
-    """The crash cart sealed with a fresh red tag (0.85 s): the tag's plastic strap pulled through its lock (a ratcheting zip, 26 teeth in 0.16 s) and snapped tight (a crisp plastic snap), and on the
-    off-beat a flat pat on the cart's lid (a hollow metal 'tunk' at 520 Hz)."""
+    """The crash cart sealed with a fresh red tag (0.85 s): ON THE CUT the tag's lock snapped shut (a crisp plastic snap and a click of 2 to 8 kHz), then the spare strap zipped tight through it (a
+    ratchet of fourteen teeth in 70 ms that fades), and on the off-beat a flat pat on the cart's lid (a hollow metal 'tunk' at 520 Hz)."""
     x = np.zeros(_n(.9))
-    dd = .16
-    n_t = 26
-    for j in range(n_t):
-        _place(x, _click(3320 + j % 5, 3000 + 40 * (j % 7), .0015, .012) * (.2 + .25 * j / n_t), j * dd / n_t, 1.0)
-    _place(x, _click(3330, 2200, .004) * .9 + _band(3331, .04, 2000, 8000) * expdecay(.04, .003) * .6, dd + .01, 1.0)
-    tt = tarr(.25)
+    _place(x, _click(3330, 2200, .006) * 1.2 + _band(3331, .06, 1500, 8000) * expdecay(.06, .008) * 1.0 + _thump(400, 260, .06, .012) * .5
+           + _ping(1500, .12, .03, (1.0, 2.6, 4.3), (1.0, .4, .2), (1.0, .5, .3)) * .35, 0.0, 1.0)
+    for j in range(14):
+        _place(x, _click(3320 + j % 5, 3000 + 40 * (j % 7), .0015, .012) * (.4 - .02 * j), .03 + j * .005, 1.0)
     _place(x, _ping(520, .25, .05, (1.0, 2.2, 3.9), (1.0, .4, .2), (1.0, .5, .3)) * .45 + _thump(200, 140, .1, .02) * .4, OFF, 1.0)
-    return norm6(_edge(x, .0003, .08), .7)
+    return norm6(_edge(x, .0003, .08), .75)
 
 
 def sfx_sparkle():
-    """A sparkle (1.2 s): a shimmering glissando of glass up the D major scale (twelve notes in 0.3 s from A6), a cluster of tiny high glints scattered over 0.6 s and, on the off-beat, one clear ting
-    (D8). PREP's second (the station gleams, 'Survey ready.'): the same, softer and a little slower."""
+    """A sparkle (1.2 s): ON THE CUT one clear glass hit (D7 with a bright 2.76x partial), then a shimmering glissando of glass up the D major scale (twelve notes in 0.3 s from A6), a cluster of tiny
+    high glints scattered over 0.6 s and, on the off-beat, one clear ting (D8). PREP's second (the station gleams under 'Survey ready.'): the same, softer and a little slower."""
     k, scene, i = _ctx("sparkle")
     r = rng6(3340 + k)
     x = np.zeros(_n(1.25))
+    _place(x, _glass(midi(98), .6, .2, .0008, 1.4), 0.0, .9 if i == 0 else .5)
     sc = (93, 95, 97, 98, 100, 102, 103, 105, 107, 109, 110, 112)
     sp = .025 if i == 0 else .035
     for j, m in enumerate(sc):
-        _place(x, _glass(midi(m), .5, .12, .001), j * sp, .25 + .03 * j)
+        _place(x, _glass(midi(m), .5, .12, .001), .02 + j * sp, .25 + .03 * j)
     for j in range(18):
         _place(x, _glass(r.uniform(5000, 9500), .2, .03, .001), r.uniform(.05, .65), r.uniform(.05, .15))
     _place(x, _glass(midi(110), .7, .25, .001) * .6, OFF, 1.0)
-    return norm6(_edge(x, .0005, .2), .6 if i == 0 else .45)
+    return norm6(_edge(x, .0005, .2), .7 if i == 0 else .45)
 
 
 def _poof1(k):
@@ -1538,10 +1537,10 @@ def sfx_cupclatter():
     x = np.zeros(_n(1.0))
     if k == 0:
         for j in range(7):
-            at = j * .1 + r.uniform(0, .04)
+            at = j * .1 + (r.uniform(0, .04) if j else 0.0)
             tt = tarr(.06)
             f = r.uniform(1200, 2400)
-            _place(x, np.sin(2 * np.pi * f * tt) * np.exp(-tt / .008) * .6 + _band(3361 + j, .06, 900, 4500) * np.exp(-tt / .004) * .6, at, r.uniform(.5, 1.0))
+            _place(x, np.sin(2 * np.pi * f * tt) * np.exp(-tt / .008) * .6 + _band(3361 + j, .06, 900, 4500) * np.exp(-tt / .004) * .6, at, 1.0 if j == 0 else r.uniform(.5, 1.0))
         _place(x, _hit_train(3370, .7, 34, 2500, 8000, .002, .35, .1)[0], .02, .6)
         for j, at in enumerate((.72, .84, .9)):
             _place(x, _plastic_knock(3371 + j, 1500, .05, 260) * (.4 - .1 * j), at, 1.0)
@@ -1555,7 +1554,7 @@ def sfx_cupclatter():
 def sfx_cartroll():
     """The med cart rolls away down the hall by itself (2.6 s, stereo, on the right): four casters rumbling (rolling noise under 300 Hz with the wheels' thump at 7 Hz, slowing), the bottles and cups
     on top rattling, one caster's squeak (a 1.4 kHz squeal on every turn), all of it going away: the level falls, the top closes from 6 kHz to 1.3 kHz and it moves from 0.5 to 0.95 to the right;
-    far down the hall, at 2.2 s, it bumps into something (a soft distant clunk)."""
+    far down the hall, at 2.2 s, it bumps into something (a soft distant clunk). It starts ON the cue with the brake pedal let go (a metal clack)."""
     d = 2.6
     t = tarr(d)
     away = np.interp(t, [0, .2, d], [.6, 1.0, .05]) ** 1.2
@@ -1567,6 +1566,8 @@ def sfx_cartroll():
     x = _rms(rum) * 1.0 + _rms(rat) * .35 + _rms(sq) * .12
     x = _tv_filter(x * away, 6000 * (1300 / 6000) ** (t / d), .8, "lp")
     _place(x, (_thump(140, 90, .2, .04) + _band(3382, .2, 300, 1500) * expdecay(.2, .02) * .5) * .12, 2.2, 1.0)
+    tt = tarr(.15)
+    _place(x, (_ping(1300, .15, .02, (1.0, 2.3), (1.0, .4), (1.0, .5)) * .5 + _band(3383, .15, 800, 4000) * np.exp(-tt / .006) * .7) * np.max(np.abs(x)), 0.0, .9)
     return norm6(_edge(_pan_curve(x, np.interp(t, [0, d], [.5, .95])), .02, .3), .55)
 
 
@@ -1589,8 +1590,14 @@ def sfx_closetopen():
     0.35 s, the second a little lower) and the air of the doorway. EXIT (Brenda's closet, 0.7 s): one door: the latch, one quick creak and a soft bump against the wall."""
     k, scene, i = _ctx("closetopen")
     x = np.zeros(_n(1.1))
-    _place(x, _click(3390 + k, 2600, .004) * .6 + _thump(180, 120, .05, .01) * .3, 0.0, 1.0)
-    creaks = ((.06, 300, .35, .45), (.18, 270, .3, .35)) if scene == "closet" else ((.05, 330, .22, .4),)
+    if scene == "closet":                                                       # the doors burst under the weight behind them: a crack of the latch, the leaves banging their stops
+        tt = tarr(.2)
+        _place(x, _band(3395, .2, 900, 5000) * np.exp(-tt / .008) * 1.2 + _thump(160, 100, .2, .04) * .9 + _click(3396, 2900, .004) * .8, 0.0, 1.0)
+        for j, at in enumerate((.11, .15)):
+            _place(x, _thump(140, 95, .15, .03) * .6 + _band(3397 + j, .1, 300, 2500) * expdecay(.1, .01) * .5, at, .7 - .15 * j)
+    else:
+        _place(x, _click(3390 + k, 2600, .004) * .6 + _thump(180, 120, .05, .01) * .3, 0.0, 1.0)
+    creaks = ((.03, 300, .3, .35), (.08, 270, .28, .28)) if scene == "closet" else ((.05, 330, .22, .4),)
     for at, f0, dd, g in creaks:
         tt = tarr(dd)
         f = _glide(f0, f0 * 1.4, dd)
@@ -1657,16 +1664,16 @@ def sfx_scanbeep():
 
 
 def sfx_scanlock():
-    """The scanner locks on (1.0 s): a locking chirp (a sine that rushes up from 800 Hz to 3.2 kHz in 90 ms through a resonant zip), the reticle's brackets closing (two sharp clicks, 'chk-chk'), and a
+    """The scanner locks on (1.0 s): a locking chirp (a sine that rushes up from 800 Hz to 3.2 kHz in 50 ms through a resonant zip), the reticle's brackets closing (two sharp clicks, 'chk-chk'), and a
     low thud under it (a 70 Hz sub thump and a 160 Hz body), then a two-note warning, low and red (E5 and C5, square-ish, quiet): UNKNOWN."""
     x = np.zeros(_n(1.0))
-    dd = .09
+    dd = .05
     tt = tarr(dd)
-    _place(x, _sin_of(800 * (3200 / 800) ** (tt / dd)) * np.minimum(1, tt / .005) * .5 + _tv_filter(noise6(dd, 3430), 800 * (3200 / 800) ** (tt / dd), 6.0, "bp") * .4, 0.0, 1.0)
+    _place(x, _sin_of(800 * (3200 / 800) ** (tt / dd)) * np.minimum(1, tt / .003) * .5 + _tv_filter(noise6(dd, 3430), 800 * (3200 / 800) ** (tt / dd), 6.0, "bp") * .4, 0.0, 1.0)
     for j in range(2):
-        _place(x, _click(3431 + j, 3400, .002) * .7, dd + j * .045, 1.0)
+        _place(x, _click(3431 + j, 3400, .002) * .7, dd + j * .03, 1.0)
     t2 = tarr(.35)
-    _place(x, _sin_of(70 * (1 - .2 * t2 / .35)) * np.exp(-t2 / .08) * 1.1 + np.sin(2 * np.pi * 160 * t2) * np.exp(-t2 / .03) * .5, dd + .045, 1.0)
+    _place(x, _sin_of(70 * (1 - .2 * t2 / .35)) * np.exp(-t2 / .08) * 1.1 + np.sin(2 * np.pi * 160 * t2) * np.exp(-t2 / .03) * .5, dd, 1.0)
     for j, f in enumerate((659.25, 523.25)):
         d3 = .12
         t3 = tarr(d3)
@@ -1700,6 +1707,68 @@ def sfx_dataticks():
     tt = tarr(.04)
     _place(x, np.sin(2 * np.pi * 2637 * tt) * np.minimum(1, np.minimum(tt / .003, (.04 - tt) / .01)) * .3, .22, 1.0)
     return norm6(_edge(x, .0003, .03), .35)
+
+
+def sfx_badge():
+    """Ms. Kale raises her badge (designed event, on 'Health', 0.3 s): the lanyard's clip ticking (a small metal jingle) and the plastic badge holder flicked up (a light 1.6 kHz clack)."""
+    x = np.zeros(_n(.3))
+    _place(x, _hit_train(3580, .1, 5, 3000, 8000, .002, .4, .2)[0], 0.0, .5)
+    _place(x, _plastic_knock(3581, 1600, .06, 400) * .6, .05, 1.0)
+    return norm6(_edge(x, .0005, .05), .35)
+
+
+def sfx_headturn():
+    """Every head at the table turns to Strawberry (designed event, on 'break', 0.5 s, stereo): eight quick swishes of collars and hair (soft 600 Hz to 3 kHz air, 0.12 s each) and two chair creaks,
+    spread across the table and all within 0.15 s: a comic unison."""
+    r = rng6(3590)
+    out = np.zeros((2, _n(.5)))
+    for p in range(8):
+        dd = r.uniform(.09, .14)
+        tt = tarr(dd)
+        sw = _band(3591 + p, dd, 600, 3000) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** 1.5
+        _put2(out, sw, r.uniform(0, .15), r.uniform(.4, .8), np.linspace(-.8, .8, 8)[p])
+    for j, at in enumerate((.05, .12)):
+        dd = .15
+        tt = tarr(dd)
+        cr = _res(_sin_of(_glide(500 + 60 * j, 580 + 60 * j, dd)) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 26 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)), 540, 4.0)
+        _put2(out, cr * .1, at, 1.0, (-.5, .5)[j])
+    return norm6(_edge(out, .002, .1), .35)
+
+
+def sfx_paperhand():
+    """The report sheet handed over (designed event, 0.4 s): a sheet of paper lifted and passed (a soft 1 to 5 kHz rustle that swells and fades) and taken (a small crisp crinkle)."""
+    x = np.zeros(_n(.4))
+    dd = .25
+    tt = tarr(dd)
+    _place(x, _band(3600, dd, 1000, 5000) * (.6 + .4 * np.abs(np.sin(2 * np.pi * 30 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .5, 0.0, 1.0)
+    _place(x, _hit_train(3601, .08, 6, 2000, 7000, .003, .5, .2)[0], .24, .6)
+    return norm6(_edge(x, .002, .05), .3)
+
+
+def sfx_scanon():
+    """Mr. Radish's scanner glasses light up (designed event, 0.4 s): a soft power-up whine (a sine that climbs from 1.8 to 5.5 kHz in 0.25 s with a faint fifth over it) and a tiny ready blip."""
+    d = .3
+    t = tarr(d)
+    f = 1800 * (5500 / 1800) ** np.clip(t / .25, 0, 1)
+    x = np.zeros(_n(.4))
+    _place(x, (_sin_of(f) + .25 * _sin_of(f * 1.5)) * np.interp(t, [0, .05, .25, d], [0, 1, .8, 0]) * .5, 0.0, 1.0)
+    tt = tarr(.03)
+    _place(x, np.sin(2 * np.pi * 3136 * tt) * np.hanning(len(tt)) * .4, .3, 1.0)
+    return norm6(_edge(x, .002, .05), .3)
+
+
+def sfx_hudmark():
+    """The DEFICIENCY mark lands in his view (designed event, with the pen, 0.6 s): a short red alert (two square-ish notes falling, E5 then C5, 70 ms each), a synthetic stamp (a 90 Hz thump and a
+    bit-crushed click) under the first."""
+    x = np.zeros(_n(.6))
+    for j, f in enumerate((659.25, 523.25)):
+        d = .07
+        t = tarr(d)
+        sq = _lp4(np.sign(np.sin(2 * np.pi * f * t)) * .5 + np.sin(2 * np.pi * f * t) * .5, 2800, 2) * np.minimum(1, np.minimum(t / .004, (d - t) / .01))
+        _place(x, sq, .02 + j * .09, .35)
+    tt = tarr(.2)
+    _place(x, _sin_of(90 * (1 - .3 * tt / .2)) * np.exp(-tt / .05) * .8 + np.round(_band(3465, .2, 1000, 6000) * np.exp(-tt / .004) * 6) / 6 * .4, 0.0, 1.0)
+    return norm6(_edge(x, .001, .1), .4)
 
 
 def sfx_penscratch():
@@ -1828,26 +1897,28 @@ def sfx_shiftbell():
 
 
 def sfx_doorclose():
-    """The surveyors walk out and the glass front doors close behind them (0.8 s): the two leaves swinging shut on their closers (a push of air), the rubber seal meeting (a soft 130 Hz thump, a
-    wooden-metal frame knock at 380 Hz), the glass shivering in its frame (two faint high rings) and the magnetic lock clunking home a hair after it: the State has left the building."""
-    x = np.zeros(_n(.8))
-    dd = .2
-    tt = tarr(dd)
-    _place(x, _lp4(noise6(dd, 3530), 800, 2) * (tt / dd) ** 1.5 * .35, 0.0, 1.0)
+    """The surveyors walk out and the glass front doors close behind them (0.75 s): ON THE CUE the two leaves meeting on their closers (a soft 130 Hz thump of the rubber seal, a frame knock at
+    380 Hz, a slap of the glass at 1 to 4 kHz), the glass shivering in its frame (two faint high rings), the magnetic lock clunking home 60 ms later and the last of the air they pushed: the State has
+    left the building."""
+    x = np.zeros(_n(.75))
     t2 = tarr(.4)
-    _place(x, _sin_of(130 * (1 - .15 * (1 - np.exp(-t2 / .04)))) * np.exp(-t2 / .07) + np.sin(2 * np.pi * 380 * t2) * np.exp(-t2 / .02) * .45 + _band(3531, .4, 200, 2000) * np.exp(-t2 / .015) * .55, dd, 1.0)
-    _place(x, _glass(2600, .35, .06, .001) * .1 + _glass(3350, .3, .04, .001) * .06, dd + .005, 1.0)
+    _place(x, _sin_of(130 * (1 - .15 * (1 - np.exp(-t2 / .04)))) * np.exp(-t2 / .07) + np.sin(2 * np.pi * 380 * t2) * np.exp(-t2 / .02) * .45 + _band(3531, .4, 200, 2000) * np.exp(-t2 / .015) * .55
+           + _band(3533, .4, 1000, 4000) * np.exp(-t2 / .005) * .45, 0.0, 1.0)
+    _place(x, _glass(2600, .35, .06, .001) * .12 + _glass(3350, .3, .04, .001) * .07, .005, 1.0)
     tt = tarr(.12)
-    _place(x, _click(3532, 1800, .005) * .4 + np.sin(2 * np.pi * 220 * tt) * np.exp(-tt / .02) * .3, dd + .06, 1.0)
-    return norm6(_edge(x, .002, .1), .75)
+    _place(x, _click(3532, 1800, .005) * .45 + np.sin(2 * np.pi * 220 * tt) * np.exp(-tt / .02) * .3, .06, 1.0)
+    _place(x, _lp4(noise6(.3, 3530), 700, 2) * np.exp(-tarr(.3) / .1) * .15, .02, 1.0)
+    return norm6(_edge(x, .0005, .1), .75)
 
 
 def sfx_coffeemaker():
     """The coffee maker is back (1.2 s): it gurgles (a percolator: bubbles of 150 to 600 Hz blips, faster and faster, over a steam hiss) and beeps twice, ready (2.4 kHz, 90 ms each)."""
     r = rng6(3540)
     x = np.zeros(_n(1.2))
-    t = 0.0
-    while t < .75:
+    tt = tarr(.15)
+    _place(x, _plastic_knock(3542, 700, .15, 140) * .9 + _glass(2500, .3, .05, .001) * .2, 0.0, 1.0)
+    t = .08
+    while t < .78:
         dd = r.uniform(.02, .05)
         tt = tarr(dd)
         f = r.uniform(150, 600)
@@ -1865,7 +1936,7 @@ def sfx_coffeemaker():
 
 def sfx_labelpeel():
     """The labels let go (1.0 s): five survey labels peeling off the wall one after another (tacky rasps at 2 to 6 kHz, 60 to 100 ms, staggered over 0.35 s, each a little different) and fluttering
-    down (soft paper flutters at 1 to 4 kHz that tumble at 12 to 20 Hz and fade as they fall)."""
+    down (soft paper flutters at 1 to 4 kHz that tumble at 12 to 20 Hz and fade as they fall), and the poster flipping back to FUN COMMITTEE with the first label (a quick 'fwip' and a slap by 0.1 s, as the picture's poster turns in 0.12 s)."""
     r = rng6(3550)
     x = np.zeros(_n(1.0))
     for j in range(5):
@@ -1875,6 +1946,10 @@ def sfx_labelpeel():
         tt = tarr(dd)
         fl = _band(3560 + j, dd, 1000, 4000) * (.5 + .5 * np.abs(np.sin(2 * np.pi * r.uniform(12, 20) * tt))) * np.interp(tt, [0, .05, dd], [0, 1, 0])
         _place(x, fl * .25, at + .08, 1.0)
+    dd = .08
+    tt = tarr(dd)
+    _place(x, _tv_filter(noise6(dd, 3570), 900 * (4500 / 900) ** (tt / dd), 1.6, "bp") * np.minimum(1, tt / .004) * .5, .02, 1.0)
+    _place(x, _band(3571, .08, 400, 4500) * np.exp(-tarr(.08) / .014) * .7, .09, 1.0)
     return norm6(_edge(x, .001, .1), .55)
 
 
@@ -2040,14 +2115,15 @@ def room_title(d, seed=3600):
 
 def room_arrive(d, seed=3700):
     """The lobby and the nurses' station at 3:02 PM (24.7 s): the air handling, the staff's murmur and a keyboard, the call light far off, a phone. The front doors open at 0.4 s and the afternoon
-    comes in (traffic far away, a breeze) until they close (2.6 s). The murmur FREEZES on the silhouettes (0.7 s: gone in 0.15 s, the staff frozen mid-motion) and only comes back, thinner, after the
+    comes in (traffic far away, a breeze) until they close (2.6 s). The murmur FREEZES on the door chime (0.40 to 0.52 s: the picture's staff freeze there, so the sting lands in a hush) and only comes back,
+    thinner, after the
     PA has sent everyone running (18.2 s)."""
     t = tarr(d)
     air = _diffuse(lambda s: _rms(_hvac(d, s, 150.0, 340.0), 1.0), seed)
     bab = _diffuse(lambda s: _rms(_babble(d, s, 4), 1.0), seed + 11)
     me = _beat_abs("arrive", "me1")
     back = (me[1] - _scene_info("arrive")["start"]) if me else 18.2
-    frz = np.interp(t, [0, .7, .85, back, back + 1.5, d], [1, 1, 0, 0, .45, .45])
+    frz = np.interp(t, [0, .4, .52, back, back + 1.5, d], [1, 1, 0, 0, .45, .45])
     out_ = _diffuse(lambda s: _rms(_lp4(noise6(d, s), 1500, 2) + .3 * _band(s + 1, d, 2000, 6000), 1.0), seed + 21) * np.interp(t, [0, .4, .7, 2.0, 2.6, d], [0, 0, 1, .6, 0, 0])
     parts = [(air, .9), (bab * frz, .32), (_ctr(_rms(_typing_far(d, seed + 31, (3.0, 7.0)), .2), -.5) * frz, 1.0), (_ctr(_rms(_chimes_far(d, seed + 41, (8.0, 12.0)), .1), .3), 1.0),
              (_ctr(_rms(_phone(d, seed + 51, (11.0, 16.0)), .12), .55), 1.0), (out_, .35), (_ctr(_rms(_fluoro(d, seed + 61), .04), 0.0), 1.0)]
@@ -2299,7 +2375,7 @@ def sfx_phys():
     return norm6(_edge(x * loud, .0003, .02), .7)
 
 
-PHYS_BOOST = {"binder": 1.0}
+PHYS_BOOST = {"binder": 1.6}            # the binders ride on top of the designed roar
 
 
 def _tagkey(e):
@@ -2309,7 +2385,7 @@ def _tagkey(e):
 
 
 def _select_phys(phys, scripted):
-    """Choose the collisions that are heard: every first impact of a pair of objects, then the loudest, with the density cap (at most two within 50 ms, eighteen in any one second) and the 40 ms
+    """Choose the collisions that are heard: every first impact of a pair of objects, then the loudest, with the density cap (at most three within 50 ms, thirty in any one second) and the 40 ms
     rule (nothing within 40 ms of a scripted hit the picture lands on)."""
     ev = sorted((dict(e) for e in phys if e.get("name", "phys") == "phys"), key=lambda e: e["t"])
     seen, first = set(), set()
@@ -2329,7 +2405,7 @@ def _select_phys(phys, scripted):
             continue
         near = [j for j in keep if abs(ev[j]["t"] - e["t"]) < .05]
         sec = [j for j in keep if int(ev[j]["t"]) == int(e["t"])]
-        if len(near) >= 2 or len(sec) >= 18:
+        if len(near) >= 3 or len(sec) >= 30:
             continue
         keep.append(i)
     out = []
@@ -2343,9 +2419,10 @@ def _select_phys(phys, scripted):
 
 # ================================================================ registration (keep this at the end of the sfx section)
 BOOST = {   # textures that sat 15 to 20 dB under the voice at the script's gains: lifted so they register (the dialogue dip still takes them down under speech)
-    "sniffle": 1.6, "typing": 1.2, "clocktick": 1.6, "penclick": 1.5, "checktick": 1.6, "penscratch": 1.5, "scanbeep": 1.3, "dataticks": 1.0, "secondhand": 1.0, "exhale": 1.5, "chairsit": 1.4,
+    "sniffle": 1.6, "typing": 1.8, "clocktick": 1.6, "penclick": 2.4, "checktick": 2.2, "penscratch": 1.5, "scanbeep": 1.3, "dataticks": 1.0, "secondhand": 1.0, "exhale": 1.5, "chairsit": 1.4,
     "labelpeel": 1.3, "sanitizer": 1.3, "cupclatter": 1.3, "coffeemaker": 1.2, "cartroll": 1.3, "callbell": 1.2,
-    "labelgun": 1.6, "padlock": 1.6, "spray": 1.6, "thermobeep": 1.6, "binderslam": 1.5, "mop": 1.6, "posterflip": 1.6, "closetslam": 1.5, "coffeehide": 1.6, "crashcart": 1.6,
+    "labelgun": 1.7, "padlock": 1.7, "spray": 1.8, "thermobeep": 1.5, "binderslam": 1.8, "mop": 1.9, "posterflip": 2.3, "closetslam": 2.0, "coffeehide": 1.9, "crashcart": 2.6, "doorclose": 1.4,
+    "binderavalanche": 1.15, "closetopen": 1.3,
 }
 
 
@@ -2427,7 +2504,7 @@ def _tune_steps(events, tab):
 
 def _bonk_time(phys):
     """When the last binder lands on Mr. Radish (absolute s): the last collision whose tag names him or a head, else the last heavy one (magnitude 0.25 or more) of the closet before Onion's
-    'Policy seven point four.', else the simulation's own schedule (ep21_closet_sim.js: the last binder drops at 7.17 s and lands flat on his crown at about 7.65 s)."""
+    'Policy seven point four.', else the picture's own time (ep21_closet.js: the last binder lands flat on his head at 7.71 s)."""
     av, o2 = _beat_abs("closet", "avalanche"), _beat_abs("closet", "o2")
     if not av:
         return None, "no closet"
@@ -2440,7 +2517,7 @@ def _bonk_time(phys):
     if heavy:
         return float(heavy[-1]["t"]), f"the last heavy collision of the pile (mag {heavy[-1].get('mag')})"
     sc = _scene_info("closet")
-    return sc["start"] + 7.65, "the simulation's schedule (7.65 s, ep21_closet_sim.js; no phys_events.json yet)"
+    return sc["start"] + 7.71, "the picture's time (7.71 s, ep21_closet.js; no phys_events.json yet)"
 
 
 def _word_abs(scene, lid, word, k=0):
@@ -2453,8 +2530,9 @@ def _word_abs(scene, lid, word, k=0):
 
 
 def _designed_events(tab, phys):
-    """The events the script does not list: the room-tone beds (one per scene, a level in dB under a spoken line), the scatter after the PA, the call bells of the medpass's normal night (right),
-    the scanner's sweep and the tags' data ticks, the last binder's bonk, the second hand of the conference-room clock up to the shift bell."""
+    """The events the script does not list: the room-tone beds (one per scene, a level in dB under a spoken line), the scatter on 'All staff to your stations.', the call bells of the medpass's normal
+    night (right), the scanner glasses powering up, the scan's sweep, the tags' data ticks and the DEFICIENCY mark in his view, the last binder's bonk, the second hand of the conference-room clock
+    up to the shift bell."""
     ev = []
     by = {nm: (a, b) for nm, a, b, bt in tab}
     for nm, sid in BED_SCENE.items():
@@ -2462,9 +2540,18 @@ def _designed_events(tab, phys):
             continue
         BED_VOL[nm] = round(.1 * 10 ** (BED_DB[nm] / 20) / .6, 5)
         ev.append({"t": round(by[sid][0], 3), "name": "bed_" + nm, "vol": BED_VOL[nm], "pan": 0.0, "room": "hall"})
+    hb = _word_abs("arrive", "ka1", "health")
+    if hb:
+        ev.append({"t": round(hb, 3), "name": "badge", "vol": .3, "pan": -.15, "room": "hall"})
+    hb = _word_abs("exit", "ra1", "break")
+    if hb:
+        ev.append({"t": round(hb - .05, 3), "name": "headturn", "vol": .35, "pan": 0.0, "room": "hall"})      # the picture's T_TURN: 50 ms before 'break'
+    s4_ = _beat_abs("exit", "s4")
+    if s4_:
+        ev.append({"t": round(s4_[0] + .3, 3), "name": "paperhand", "vol": .3, "pan": 0.0, "room": "hall"})
     sc_t = _word_abs("arrive", "me1", "all")
     if sc_t:
-        ev.append({"t": round(sc_t, 3), "name": "scatter", "vol": .5, "pan": 0.0, "room": "hall"})
+        ev.append({"t": round(sc_t - .02, 3), "name": "scatter", "vol": .5, "pan": 0.0, "room": "hall"})        # the picture's T_SCAT: 20 ms before 'All'
     if "medpass" in by:
         a0 = by["medpass"][0]
         for t, p in ((2.7, .8), (6.3, .7), (9.6, .9), (13.4, .75), (16.9, .85), (20.9, .7), (23.9, .9)):
@@ -2474,10 +2561,14 @@ def _designed_events(tab, phys):
         ev.append({"t": round(sc[0], 3), "name": "scanhum", "vol": .4, "pan": 0.0, "room": "hall"})
         lock = _cue_local("closet", "scanlock", 0)
         a0 = by["closet"][0]
-        for j, dt in enumerate((.3, .58, .86, 1.14)):
+        for j, dt in enumerate((.2, .45, .7, .95)):                                   # the picture's tags type in at 12.48, 12.73, 12.98 and 13.23 s
             ev.append({"t": round(sc[0] + dt, 3), "name": "dataticks", "vol": .35, "pan": round(-.5 + .33 * j, 2), "room": "hall"})
         if lock is not None:
             ev.append({"t": round(a0 + lock + .14, 3), "name": "dataticks", "vol": .38, "pan": .3, "room": "hall"})
+        ev.append({"t": round(a0 + 11.9, 3), "name": "scanon", "vol": .3, "pan": .1, "room": "hall"})       # his scanner glasses light up (ep21_closet.js)
+        pen = _cue_local("closet", "penscratch", 0)
+        if pen is not None:
+            ev.append({"t": round(a0 + pen, 3), "name": "hudmark", "vol": .32, "pan": 0.0, "room": "hall"})   # his POV again: the DEFICIENCY mark lands on the closet
     bt, src = _bonk_time(phys)
     BONK["t"], BONK["source"] = bt, src
     if bt:

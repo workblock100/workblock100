@@ -81,20 +81,21 @@ const PC = { f: 1400, cy: 380, hy: 760, cz: 0, cx: 0 };
 const RM = { zb: 1800, hw: 560, ch: 760 };
 const DOOR = { x0: -450, x1: -250, y1: 540 };                        /* the doorway in the back wall (the hall runs away from it) */
 const HALL = { x0: -560, x1: -140, ch: 640, z1: 3900 };               /* the hall beyond the doorway */
-const WIN = { x0: 140, x1: 440, y0: 290, y1: 640 };                   /* the window above the bed */
-const CLK = { X: -150, Y: 640, r: 50 };                               /* the wall clock (above the nurse) */
+const WIN = { x0: 175, x1: 470, y0: 290, y1: 640 };                   /* the window above the bed */
+const CLK = { X: -100, Y: 640, r: 50 };                               /* the wall clock (above the nurse) */
 const PLQ = { x0: -238, x1: -120, y0: 400, y1: 470 };                 /* the ROOM 3 plaque beside the doorway */
-const BED = { x0: 110, x1: 390, z0: 1180, z1: 1790, top: 150 };        /* the bed, end-on: the head at the back wall */
+const BED = { x0: 145, x1: 425, z0: 1180, z1: 1790, top: 150 };        /* the bed, end-on: the head at the back wall */
 const CART = { X: 60, Z: 1470, w: 184 };                              /* the med cart, parked at the left side of the bed */
-const POS = { straw: [-155, 1540], pear: [250, 1660], kale: [-372, 1790] };
+const POS = { straw: [-110, 1540], pear: [285, 1660], kale: [-420, 1790] };
 const kzP = Z => PC.f / (Z - PC.cz);
 const P2 = (X, Y, Z) => V2.p2(X, Y, Z);
 
 // ------------------------------------------------------------------ the split (the divider's place in time) and the two halves' screen regions
 const GAP = 14;                                                       /* the divider band's width */
-const DIV = lt => {                                                   /* the divider's x: the middle, squeezed right for "Six." (s4) and back before Mr. Pear's whisper */
-  const a = snapT(bS('s4')) + .04, b = snapT(bS('pe2'));
-  return 540 + 220 * ss(lt, a, a + .3) * (1 - ss(lt, b - .3, b - .02));
+const SQX = 760;                                                      /* where the divider goes for "Six." */
+const DIV = lt => {                                                   /* the divider's x: the middle, squeezed right for "Six." (s4: the left side gets the room) and back as Mr. Pear whispers */
+  const a = snapT(bS('s4') - .06), b = snapT(bS('pe2') - .06);
+  return 540 + (SQX - 540) * ss(lt, a, a + .3) * (1 - ss(lt, b - .3, b - .02));
 };
 const WIPE = { a: snapT(.28), b: snapT(.66) };                        /* the band falls from the top between these (the whoosh peaks at .50) */
 const wipeY = lt => H * easeIO(sg(lt, WIPE.a, WIPE.b));              /* the front of the falling band (screen y) */
@@ -108,48 +109,43 @@ const INK = 'rgba(25,16,30,.62)', INKD = 'rgba(25,16,30,.85)';
 const PAL = { wall: '#e9e3d3', wain: '#88afa4', floorA: '#d8cfbb', floorB: '#b3a88f', ceil: '#f3f1ea', fog: '#cfc6b3' };
 const quadPath = pts => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); };
 const wallQuad = (X0, Y0, X1, Y1, Z = RM.zb) => [P2(X0, Y0, Z), P2(X1, Y0, Z), P2(X1, Y1, Z), P2(X0, Y1, Z)];
-/* the call-light domes of the hall: which are lit (0..1) on each side. Slow soft pulses (0.55 Hz, never a hard blink): photosensitivity-safe */
-const HDOORS = [2080, 2480, 2880, 3280, 3680];
-function domeLvl(i, lt, side) {
-  if (side === 'L') return i === 3 ? .18 : 0;                                         /* with the State in the building, nobody presses a call light */
-  const n = 2 + Math.floor(3 * ss(lt, 14.5, 16.5)) + (lt > 16.6 ? 1 : 0);           /* on a normal night more come on as the pass goes (ka2: all of them) */
-  const order = [1, 3, 0, 4, 2], rank = order.indexOf(i);
-  if (rank >= n && !(lt > 16.6)) return 0;
-  return .62 + .38 * Math.sin(lt * 3.45 + i * 1.9);
-}
-/* the hall beyond the doorway: floor, the left wall with doors and domes, ceiling lamps, the far wall; kids() draws what is in the hall (the cart, a running nurse), inside the same clip */
+/* the hall beyond the doorway, seen from the room: a corridor that runs along the line of sight through the doorway (its centre line X = DCX * Z / zb), so whatever is in it stays framed by the
+   doorway as it goes away: floor, both walls with doors and call-light domes, ceiling lamps, the far end; kids() draws what is in the hall (the cart, a running nurse) inside the same clip */
+const DCX = (DOOR.x0 + DOOR.x1) / 2, HHW = 150, HEND = 4700;
+const hallX = Z => DCX * Z / RM.zb;                                               /* the corridor's centre line at depth Z (room coordinates) */
+const HDZ = [2900, 3250, 3600, 3950, 4300];
 function hallView(lt, side, kids) {
-  const zb = RM.zb, H_ = HALL, q = wallQuad(DOOR.x0, 0, DOOR.x1, DOOR.y1);
+  const zb = RM.zb, q = wallQuad(DOOR.x0, 0, DOOR.x1, DOOR.y1);
   ctx.save(); quadPath(q); ctx.clip();
+  const fogC = [214, 220, 232], fz = z => .5 * Math.pow(c01((z - zb) / (HEND - zb)), .9), fogc = (c, z) => hex(mixa(V2.rgb(c), fogC, fz(z)));
   ctx.fillStyle = '#d4dae4'; ctx.fillRect(-400, -400, W + 800, H + 800);
-  const fogC = side === 'L' ? [214, 222, 232] : [200, 214, 222], fz = z => .55 * Math.pow(c01((z - zb) / (H_.z1 - zb)), .9);
-  const fogc = (c, z) => hex(mixa(V2.rgb(c), fogC, fz(z)));
-  V2.poly([P2(H_.x0, 0, zb), P2(H_.x1, 0, zb), P2(H_.x1, 0, H_.z1), P2(H_.x0, 0, H_.z1)], V2.grad(0, P2(0, 0, zb)[1], 0, P2(0, 0, H_.z1)[1], [[0, '#b9c1cf'], [1, fogc('#a4adbd', H_.z1)]]));
-  V2.poly([P2(H_.x0, H_.ch, zb), P2(H_.x1, H_.ch, zb), P2(H_.x1, H_.ch, H_.z1), P2(H_.x0, H_.ch, H_.z1)], V2.grad(0, P2(0, H_.ch, zb)[1], 0, P2(0, H_.ch, H_.z1)[1], [[0, '#f2f2ee'], [1, fogc('#e4e4e0', H_.z1)]]));
-  V2.poly(wallQuad(H_.x0, 0, H_.x1, H_.ch, H_.z1), fogc('#e2e6ee', H_.z1));
-  /* floor tiles running away, a sheen down the middle */
+  const L_ = (dx, Y, Z) => P2(hallX(Z) + dx, Y, Z), CHh = 640;
+  V2.poly([L_(-HHW, 0, zb), L_(HHW, 0, zb), L_(HHW, 0, HEND), L_(-HHW, 0, HEND)], V2.grad(0, P2(0, 0, zb)[1], 0, P2(0, 0, HEND)[1], [[0, '#bcc3d0'], [1, fogc('#a4adbd', HEND)]]));
+  V2.poly([L_(-HHW, CHh, zb), L_(HHW, CHh, zb), L_(HHW, CHh, HEND), L_(-HHW, CHh, HEND)], V2.grad(0, P2(0, CHh, zb)[1], 0, P2(0, CHh, HEND)[1], [[0, '#f2f2ee'], [1, fogc('#e4e4e0', HEND)]]));
+  V2.poly([L_(-HHW, 0, HEND), L_(HHW, 0, HEND), L_(HHW, CHh, HEND), L_(-HHW, CHh, HEND)], fogc('#e2e6ee', HEND));
   ctx.strokeStyle = 'rgba(60,64,80,.12)'; ctx.lineWidth = 1.4;
-  for (let z = zb + 120; z < H_.z1; z += 160) { const a = P2(H_.x0, 0, z), b = P2(H_.x1, 0, z); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
-  { const a = P2(-350, 0, zb), b = P2(-350, 0, H_.z1); ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 30 * kzP(zb); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
-  /* the left wall: wall above the rail, wainscot below, the handrail */
-  const XL = H_.x0, wq = (y0, y1, z0, z1, fill, st, lw) => V2.poly([P2(XL, y0, z0), P2(XL, y1, z0), P2(XL, y1, z1), P2(XL, y0, z1)], fill, st, lw);
-  wq(110, H_.ch, zb, H_.z1, V2.grad(P2(XL, 300, zb)[0], 0, P2(XL, 300, H_.z1)[0], 0, [[0, '#eef0f4'], [1, fogc('#e0e4ec', H_.z1)]]));
-  wq(0, 110, zb, H_.z1, V2.grad(P2(XL, 50, zb)[0], 0, P2(XL, 50, H_.z1)[0], 0, [[0, '#5f8f96'], [1, fogc('#5f8f96', H_.z1)]]));
-  wq(104, 118, zb, H_.z1, '#b98a5a');
-  ctx.strokeStyle = 'rgba(120,90,60,.6)'; ctx.lineWidth = 3; { const a = P2(XL + 14, 175, zb), b = P2(XL + 14, 175, H_.z1); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); }
-  /* doors and their domes, far to near */
-  for (let i = HDOORS.length - 1; i >= 0; i--) {
-    const z = HDOORS[i], c = ['#c9a06a', '#9fb7d6', '#c9a06a', '#a6c7a0', '#c9a06a'][i];
-    wq(0, 452, z - 88, z + 88, fogc('#f1ead8', z), 'rgba(25,18,30,.45)', 1.4);
-    wq(0, 436, z - 76, z + 76, fogc(c, z), 'rgba(25,18,30,.5)', 1.6);
-    const lv = domeLvl(i, lt, side), [dx, dy] = P2(XL, 500, z), k = kzP(z);
-    wq(472, 528, z - 46, z + 46, lv > .02 ? hex(mixa([236, 232, 226], [255, 92, 84], c01(lv))) : fogc('#dcdfe4', z), 'rgba(30,24,40,.55)', 1.4);
-    if (lv > .02) V2.glow(dx, dy, 260 * k, '255,96,84', .55 * lv, 'screen', .5);
+  for (let z = zb + 160; z < HEND; z += 200) { const a2 = L_(-HHW, 0, z), b2 = L_(HHW, 0, z); ctx.beginPath(); ctx.moveTo(...a2); ctx.lineTo(...b2); ctx.stroke(); }
+  for (const sd of [-1, 1]) {                                                        /* the two walls: wall, wainscot, doors and domes */
+    const wq = (y0, y1, z0, z1, fill, st, lw) => V2.poly([L_(sd * HHW, y0, z0), L_(sd * HHW, y1, z0), L_(sd * HHW, y1, z1), L_(sd * HHW, y0, z1)], fill, st, lw);
+    wq(110, CHh, zb, HEND, sd < 0 ? '#e6eaf0' : '#d9dee8'); wq(0, 110, zb, HEND, sd < 0 ? '#5f8f96' : '#527f86'); wq(104, 118, zb, HEND, '#b98a5a');
+    for (let i = HDZ.length - 1; i >= 0; i--) {
+      const z = HDZ[i] + (sd > 0 ? 170 : 0), c = ['#c9a06a', '#9fb7d6', '#a6c7a0', '#c9a06a', '#9fb7d6'][i];
+      wq(0, 436, z - 80, z + 80, fogc(c, z), 'rgba(25,18,30,.5)', 1.4);
+      const lv = domeLvl(i * 2 + (sd > 0 ? 1 : 0), lt, side), [dx, dy] = L_(sd * HHW, 500, z), k = kzP(z);
+      wq(472, 528, z - 44, z + 44, lv > .02 ? hex(mixa([236, 232, 226], [255, 92, 84], c01(lv))) : fogc('#dcdfe4', z), 'rgba(30,24,40,.55)', 1.2);
+      if (lv > .02) V2.glow(dx, dy, 240 * k, '255,96,84', .5 * lv, 'screen', .45);
+    }
   }
-  /* ceiling lamps */
-  for (const z of [2200, 2700, 3200, 3700]) { const a = [P2(-420, H_.ch - 2, z), P2(-280, H_.ch - 2, z), P2(-280, H_.ch - 2, z + 110), P2(-420, H_.ch - 2, z + 110)]; V2.poly(a, '#fbfaf2', 'rgba(110,110,125,.4)', 1.2); }
+  for (const z of [2300, 2900, 3500, 4100]) V2.poly([L_(-60, CHh - 2, z), L_(60, CHh - 2, z), L_(60, CHh - 2, z + 120), L_(-60, CHh - 2, z + 120)], '#fbfaf2', 'rgba(110,110,125,.4)', 1.2);
   if (kids) kids();
   ctx.restore();
+}
+/* which call lights are on (index 0..9 over both walls of the hall): with the State in the building, none; on a normal night more and more, all of them for "How long does your med pass take?" */
+function domeLvl(i, lt, side) {
+  if (side === 'L') return 0;
+  const n = 3 + Math.floor(5 * ss(lt, 13.5, 16.2)) + (lt > 15.6 ? 10 : 0), order = [3, 6, 1, 8, 4, 0, 9, 2, 7, 5], rank = order.indexOf(i % 10);
+  if (rank >= n) return 0;
+  return .62 + .38 * Math.sin(lt * 3.45 + i * 1.9);                                /* a slow soft pulse (0.55 Hz): never a hard blink */
 }
 /* the sky in the window at 5:30 PM in November: dusk blue over a band of orange, the roofline across the street, two lit windows, a streetlamp; o.open (0..1) raises the lower sash */
 function windowView(lt, side, o = {}) {
@@ -225,15 +221,16 @@ function drawRoom(lt, side, o = {}) {
   /* the plaque: ROOM 3 (hero when big enough on screen and wholly in this half; otherwise the board alone) */
   { const [px0, py0] = P2(PLQ.x0, PLQ.y1, zb), [px1, py1] = P2(PLQ.x1, PLQ.y0, zb), bx = [px0, py0, px1 - px0, py1 - py0], sz = (py1 - py0) * .5;
     const sb = boxScreen(px0, py0, px1, py1), txt = insideHalf(sb, 14) && sb[0] > 40 && sb[2] < W - 40 && sb[1] > 250 && sb[3] < 1370;
-    if (txt) UI.sign(bx, 'ROOM 3', { fill: '#2f5f8f', stroke: '#e8eef6', lw: 3, r: 6, pad: 6, size: sz, ink: '#ffffff', hero: sz * scrOf(ctx) >= 31, id: 'plaque3' });
+    if (txt) UI.sign(bx, 'ROOM 3', { fill: '#2f5f8f', stroke: '#e8eef6', lw: 3, r: 6, pad: 6, size: sz, ink: '#ffffff', hero: !!o.plaqueHero && sz * scrOf(ctx) >= 31, id: 'plaque3' });
     else { ctx.fillStyle = '#2f5f8f'; rr(bx[0], bx[1], bx[2], bx[3], 6); ctx.fill(); ctx.strokeStyle = '#e8eef6'; ctx.lineWidth = 3; ctx.stroke(); } }
   /* the clock above the nurse: on a normal night its hands whirl when she is asked how long the pass takes */
   const clk = clockFace(lt, { min: 30 + lt / 60 * (side === 'R' ? 1 : 1), sec: (lt * 1) % 60 * 1 + 12, spin: o.clockSpin || 0, ...(o.clockMin != null ? { min: o.clockMin } : {}) });
   /* the window above the bed (and what is outside it) */
   windowView(lt, side, { kids: o.windowKids });
   windowFrame(lt, { open: o.winOpen || 0 });
+  if (side === 'R') capeTail(lt);
   /* the privacy curtain, gathered against the wall at the head of the bed */
-  { const X = 70, z0 = 1690, z1 = zb - 6, top = RM.ch - 20, bot = 40;
+  { const X = 105, z0 = 1690, z1 = zb - 6, top = RM.ch - 20, bot = 40;
     ctx.strokeStyle = '#b9bec8'; ctx.lineWidth = 5 * k; { const a = P2(X, RM.ch - 6, 1180), b2 = P2(X, RM.ch - 6, zb); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b2); ctx.stroke(); }
     for (let i = 0; i < 6; i++) { const za = lerp(z0, z1, i / 6), zc = lerp(z0, z1, (i + 1) / 6), c = i % 2 ? '#9cc9c2' : '#b2d8d1';
       V2.poly([P2(X, bot, za), P2(X, bot, zc), P2(X, top, zc), P2(X, top, za)], c, 'rgba(40,70,70,.28)', 1); } }
@@ -244,8 +241,8 @@ function drawRoom(lt, side, o = {}) {
   S6.box3({ x0: B.x0 + 6, x1: B.x1 - 6, y0: 92, y1: B.top, z0: B.z0 + 8, z1: B.z1 - 8, color: '#e9eef4', top: '#f6f9fc', side: '#cfd8e2' });
   S6.box3({ x0: B.x0 + 40, x1: B.x1 - 40, y0: B.top, y1: B.top + 46, z0: 1690, z1: B.z1 - 14, color: '#ffffff', top: '#ffffff', side: '#e3e8ef', lw: 1.6 });
   /* the nightstand on the far side of the bed: a pitcher, a photo */
-  S6.box3({ x0: 478, x1: 548, y0: 0, y1: 176, z0: 1650, z1: 1770, color: '#b89668', top: '#d1b07e', side: '#8e7048' });
-  { const [nx, ny] = P2(512, 176, 1700), kk = kzP(1700); ctx.fillStyle = 'rgba(170,215,245,.92)'; ctx.strokeStyle = INK; ctx.lineWidth = 2.2; rr(nx - 13 * kk, ny - 52 * kk, 26 * kk, 50 * kk, 6 * kk); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#eef2f6'; rr(nx - 15 * kk, ny - 58 * kk, 30 * kk, 9 * kk, 4 * kk); ctx.fill(); ctx.stroke(); }
+  S6.box3({ x0: 482, x1: 552, y0: 0, y1: 176, z0: 1650, z1: 1770, color: '#b89668', top: '#d1b07e', side: '#8e7048' });
+  { const [nx, ny] = P2(516, 176, 1700), kk = kzP(1700); ctx.fillStyle = 'rgba(170,215,245,.92)'; ctx.strokeStyle = INK; ctx.lineWidth = 2.2; rr(nx - 13 * kk, ny - 52 * kk, 26 * kk, 50 * kk, 6 * kk); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#eef2f6'; rr(nx - 15 * kk, ny - 58 * kk, 30 * kk, 9 * kk, 4 * kk); ctx.fill(); ctx.stroke(); }
   return { clk };
 }
 /* the bed's near rail and the blanket over Mr. Pear's legs: drawn after him */
@@ -306,11 +303,11 @@ function medCart(X, Z, o = {}) {
   }
   /* the gel bottle in a wire holder on the near (left) corner: a pump head with a nozzle toward the nurse */
   const pm = c01(o.pump || 0);
-  ctx.strokeStyle = '#c0c7d2'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-92, -236); ctx.lineTo(-118, -236); ctx.lineTo(-118, -190); ctx.lineTo(-92, -190); ctx.stroke(); ctx.strokeStyle = INKD;
-  ctx.fillStyle = V2.grad(-132, 0, -104, 0, [[0, '#9fe6f0'], [1, '#5cc4d6']]); ctx.lineWidth = 2.4; rr(-132, -252, 28, 64, 7); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.55)'; rr(-128, -246, 6, 50, 3); ctx.fill();
-  ctx.fillStyle = '#eef2f6'; rr(-124, -262 + 5 * pm, 12, 12, 3); ctx.fill(); ctx.stroke();                        /* the pump head (pressed down by pm) */
-  ctx.fillStyle = '#eef2f6'; rr(-136, -260 + 5 * pm, 16, 5, 2); ctx.fill(); ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.strokeStyle = '#c0c7d2'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-82, -196); ctx.lineTo(-82, -176); ctx.lineTo(-52, -176); ctx.lineTo(-52, -196); ctx.stroke(); ctx.strokeStyle = INKD;
+  ctx.fillStyle = V2.grad(-82, 0, -52, 0, [[0, '#9fe6f0'], [1, '#5cc4d6']]); ctx.lineWidth = 2.4; rr(-81, -244, 28, 64, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.55)'; rr(-77, -238, 6, 50, 3); ctx.fill();
+  ctx.fillStyle = '#eef2f6'; rr(-73, -254 + 5 * pm, 12, 12, 3); ctx.fill(); ctx.stroke();                          /* the pump head (pressed down by pm) */
+  ctx.fillStyle = '#eef2f6'; rr(-88, -252 + 5 * pm, 18, 5, 2); ctx.fill(); ctx.lineWidth = 1.6; ctx.stroke();
   /* the top surface */
   ctx.fillStyle = '#e9eef5'; ctx.lineWidth = 3.4; rr(-104, -322, 208, 24, 8); ctx.fill(); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,.55)'; rr(-96, -319, 192, 5, 2.5); ctx.fill();
@@ -326,7 +323,7 @@ function medCart(X, Z, o = {}) {
     for (let i = 0; i < n; i++) { ctx.save(); ctx.translate(-14 + Math.sin(i * .9) * 3 + i * lean * 14, -336 - i * 16); cupShape(ctx, .72, lean * .6 + .08 * Math.sin(i * 2.3 + t * 2), 1); ctx.restore(); }
   }
   ctx.restore();
-  return { x, y, k: s, lock: L(-66, -285), nozzle: L(-136, -257), tray: L(-22, -336), top: L(0, -322), box: [L(-132, -330)[0], L(0, -380)[1], L(104, 0)[0], y] };
+  return { x, y, k: s, lock: L(-66, -285), nozzle: L(-88, -250), tray: L(-22, -336), top: L(0, -322), box: [L(-104, -330)[0], L(0, -380)[1], L(104, 0)[0], y] };
 }
 /* a held cup: hold: { r: 'fp21m_cup' }; o.cupScale, o.cupTip, o.cupN */
 EXT.prop.fp21m_cup = (side, o, t) => { cupShape(ctx, o.cupScale || 1, (o.cupTip || 0) - .06, o.cupN ?? 3); };
@@ -354,7 +351,7 @@ PROP_BOX.fp21m_pen = Object.assign([-8, -32, 8, 10], { nearFace: true });
 const SHL = [
   ['open', 0], ['ka1', bS('ka1') - .06], ['s1', bS('s1') - .06], ['hyg', bS('hygiene')], ['s2', bS('s2') - .06], ['pe1', bS('pe1') - .06], ['ka4', bS('ka4') - .06], ['s7', bS('s7') - .06],
   ['ka5', bS('ka5') - .06], ['s8', bS('s8') - .06], ['ka2', bS('ka2') - .06], ['s3', bS('s3') - .06], ['ka3', bS('ka3') - .06], ['s4', bS('s4') - .06], ['pe2', bS('pe2') - .06],
-  ['pe3', bS('pe3') - .06], ['pe4', bS('pe4') - .06], ['end', bS('end')],
+  ['s5', bS('s5') - .06], ['pe3', bS('pe3') - .06], ['s6', bS('s6') - .06], ['pe4', bS('pe4') - .06], ['end', bS('end')],
 ];
 const SH = SHL.map(([id, s], i) => ({ id, s: i ? snapT(s) : 0, e: i + 1 < SHL.length ? snapT(SHL[i + 1][1]) : DUR + 1 }));
 const shotAt = lt => { let r = SH[0]; for (const sh of SH) if (lt >= sh.s - 1e-6) r = sh; return r; };
@@ -392,7 +389,7 @@ function kaleOpts(lt, sh) {
   const expr = sat ? 'kale_satisfied' : writing ? 'kale_note' : raise ? 'kale_raise' : 'kale_neutral';
   const yaw = .42 + .05 * Math.sin(lt * .7);
   const point = lt >= wS('ka4', 3) - .2 && lt < bE('ka4') + .1;               /* "lock the cart?": the pen hand points at the cart */
-  const o = { x: p.x, y: p.y, s: p.s, t: lt, yaw, headYaw: yaw + (writing ? .05 : 0), expr, pose: writing ? 'write' : 'clip', cbPen: true, plant: true,
+  const o = { x: p.x, y: p.y, s: p.s, t: lt, yaw: writing ? .25 : yaw, headYaw: (writing ? .25 : yaw) + (writing ? .05 : 0), expr, pose: writing ? 'write' : 'clip', cbPen: true, plant: true, cbScale: writing ? .88 : 1,
     cbTicks: 3 + ss(lt, TICK_MED, TICK_MED + .3) };
   if (!writing) o.look = [.55, .04];
   if (expr === 'kale_raise') o.raiseK = ss(lt, lt < bS('ka3') ? raiseA : raiseB, (lt < bS('ka3') ? raiseA : raiseB) + .2);
@@ -400,7 +397,7 @@ function kaleOpts(lt, sh) {
   return { o: kaleCtor(o), z: POS.kale[1], name: 'kale' };
 }
 /* STRAWBERRY, LEFT (with the State): one spot between the doorway and the cart; she turns to Kale or to Mr. Pear, never hurries */
-const TO_KALE = [['ka1', -.06, .1], ['s1', 0, 0], ['ka4', -.1, 0], ['ka5', -.1, 0], ['ka2', -.1, 0], ['s3', 0, 0], ['ka3', -.1, 0], ['s4', 0, .1]];
+const TO_KALE = [['ka1', -.5, .1], ['s1', 0, 0], ['ka4', -.1, 0], ['ka5', -.1, 0], ['ka2', -.1, 0], ['s3', 0, 0], ['ka3', -.1, 0], ['s4', 0, .1]];
 function strawLYawT(t) {                                                      /* where she faces: Kale (screen left), the cart, or Mr. Pear (screen right) */
   if (TO_KALE.some(([b, a, e]) => t >= bS(b) + a && t < bE(b) + e + .15)) return -.42;
   if (t < 1.5 || (t >= 5.15 && t < 6.85) || (t >= bS('s7') - .1 && t < bE('s7') + .1)) return .38;
@@ -429,8 +426,8 @@ function strawLOpts(lt, sh) {
   if (lt >= bS('s8') - .06 && lt < bS('ka2') - .1) {                           /* "Always.": one pill held up for Mr. Pear */
     const u = ss(lt, bS('s8') - .05, bS('s8') + .2); gr = lerpP([56, 40], [86, -24], u); hold = { r: u > .4 ? 'fp21m_pill' : 'fp21m_cup' }; o.pillCol = '#f4a3b8'; expr = 'happy';
   }
-  if (lt >= bS('s4') - .06 && lt < bS('pe2') - .05) { expr = 'chill'; lid = .3; }
-  if (lt >= bS('pe2') - .06 && lt < bS('pe3') - .06) { rot = .06; look = [.6, .15]; if (lt >= bS('s5') - .05) { gl = toLocal(o, o.x + 28 * o.s, o.y - 236 * o.s); look = [-.6, .05]; } }   /* the whisper; "The State." with a hand beside her mouth, eyes on Kale */
+  if (lt >= bS('s4') - .12 && lt < bS('pe2') - .05) { expr = 'chill'; lid = .3; hold = {}; gl = [-22, 70]; gr = [20, 72]; }
+  if (lt >= bS('pe2') - .06 && lt < bS('pe3') - .06) { rot = .06; look = [.6, .15]; if (lt >= bS('s5') - .08) { gl = [-84, 6]; look = [-.7, .05]; rot = .03; } }   /* the whisper; "The State." with a hand beside her mouth, eyes on Kale */
   if (lt >= bS('s6') - .06 && lt < bS('pe4')) { expr = 'hopeful'; gl = [-14, 40]; gr = [14, 40]; hold = {}; }   /* "Please.": hands clasped */
   if (lt >= bS('pe4')) { expr = lt > wS('pe4', 2) ? 'happy' : 'neutral'; }
   o.grip = { l: reach(o, 'l', gl), r: reach(o, 'r', gr) }; o.hold = hold; o.look = look; o.expr = expr; if (lid != null) o.lid = lid; o.rot = rot;
@@ -444,7 +441,7 @@ const LOCKT = snapT(bS('s7') + .16);                                          /*
 function cartGeom(X, Z, o = {}) {
   const [x, y, k] = V2.proj(X, 0, Z), s = k * (o.s || 1), a = o.tilt || 0;
   const L = (lx, ly) => [x + s * (lx * Math.cos(a) - ly * Math.sin(a)), y + s * (lx * Math.sin(a) + ly * Math.cos(a))];
-  return { x, y, k: s, lock: L(-66, -285), nozzle: L(-136, -257), tray: L(-22, -336), top: L(0, -322) };
+  return { x, y, k: s, lock: L(-66, -285), nozzle: L(-88, -250), tray: L(-22, -336), top: L(0, -322) };
 }
 /* the left cart: neat, five cups on the tray, locked on "Always." (LOCKT) */
 function cartL(lt) {
@@ -461,7 +458,7 @@ function pearLOpts(lt, sh) {
   let gl = [-50, 96], gr = [44, 98], expr = 'neutral', look = [-.55, .05], hy = -.55, lid, rot = 0;
   if (lt >= bS('pe1') - .06 && lt < bS('ka4')) { lid = .42; hy = -.5 + .05 * Math.sin(lt * 3); }                                                     /* "The same as yesterday." patient, lids low */
   if (lt >= bS('s8') - .06 && lt < bS('ka2')) { const n = Math.sin((lt - bS('s8')) * 9.5); look = [-.5, .12 + .22 * Math.max(0, n)]; rot = .03 * n; }  /* nodding along to the pill */
-  if (lt >= bS('pe2') - .06 && lt < bS('pe3') - .06) { gr = [-6, 52]; look = [-1, -.05]; hy = -.7; rot = -.05; expr = 'neutral'; }                    /* "Who is that?" a hand by the mouth, eyes on Kale */
+  if (lt >= bS('pe2') - .06 && lt < bS('pe3') - .06) { gl = [-86, 44]; look = [-1, -.05]; hy = -.62; rot = -.05; expr = 'neutral'; }                    /* "Who is that?" a hand by the mouth, eyes on Kale */
   if (lt >= bS('pe3') - .06 && lt < bS('pe4') - .06) { expr = 'hopeful'; look = [-.6, -.1]; }
   if (lt >= bS('pe4') - .06) { const u = ss(lt, bS('pe4') - .06, bS('pe4') + .25); gl = lerpP(gl, [-16, 84], u); gr = lerpP(gr, [16, 84], u); expr = 'happy'; lid = .5 * u; look = [-.1, -.3]; hy = lerp(-.55, -.15, u); }
   Object.assign(o, { headYaw: hy, look, expr, rot, grip: { l: reach(o, 'l', gl), r: reach(o, 'r', gr) } }); if (lid != null) o.lid = lid;
@@ -479,15 +476,40 @@ function halo(o, lt) {
   V2.glow(cx, cy, 120 * s, '255,220,120', .35 * c01(k * 2), 'screen', .5);
   const gl = lt - HALO_T - .25; if (gl > 0 && gl < .5) { const g = Math.sin(PI * gl / .5), gx = cx + 46 * s, gy = cy - 6 * s; ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.fillStyle = 'rgba(255,248,210,' + .9 * g + ')'; ctx.fillRect(gx - 16 * g * s, gy - 1.5, 32 * g * s, 3); ctx.fillRect(gx - 1.5, gy - 16 * g * s, 3, 32 * g * s); ctx.restore(); }
 }
-/* the bedsheet cape (a normal night): white with a blue stripe, knotted at the neck; drawn behind him when he faces us, over his back when he does not. u 0..1 how far it is on */
+/* the bedsheet cape (a normal night): a hospital sheet, white with a blue stripe near the hem, knotted at the neck. Drawn behind him when he faces us (it shows at his sides and below), over his
+   back when he turns away (his head and cap stay clear above it). u 0..1 how far it is on; the hem waves (a function of t) */
 function cape(o, lt, u, back) {
   if (u <= .02) return;
-  const s = o.s, kd = KINDS.pear, legL = o.noLegs ? 0 : kd.leg, cy0 = o.y - (legL + kd.ry * .9) * s, top = cy0 - 70 * s, w0 = 62 * s, w1 = (150 + 20 * Math.sin(lt * 7)) * s * u, len = (210 + 30 * u) * s;
-  const fl = 18 * Math.sin(lt * 9.5) * s, dir = back ? 1 : -1;
-  ctx.save(); ctx.globalAlpha *= c01(u * 3);
-  ctx.fillStyle = V2.grad(o.x - w1, 0, o.x + w1, 0, [[0, '#dfe6ee'], [.5, '#ffffff'], [1, '#dfe6ee']]); ctx.strokeStyle = INKD; ctx.lineWidth = 2.6; ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.moveTo(o.x - w0, top); ctx.quadraticCurveTo(o.x - w1 * .9, top + len * .5, o.x - w1 + fl, top + len); ctx.lineTo(o.x + w1 + fl * .6, top + len + 10 * s); ctx.quadraticCurveTo(o.x + w1 * .9, top + len * .5, o.x + w0, top); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = '#5b8fd0'; ctx.lineWidth = 9 * s; ctx.beginPath(); ctx.moveTo(o.x - w1 * .8 + fl, top + len * .82); ctx.lineTo(o.x + w1 * .8 + fl * .6, top + len * .86); ctx.stroke();
+  const s = o.s, kd = KINDS.pear, legL = o.noLegs ? 0 : kd.leg, cy0 = o.y - (o.lift || 0) - (legL + kd.ry * .9) * s;
+  const top = cy0 - 46 * s, len = (back ? 196 : 176) * s * (.55 + .45 * u), w0 = 46 * s, w1 = (back ? 112 : 128) * s * (.6 + .4 * u);
+  const fl = lt * 9.5, x0 = o.x;
+  const hem = k => top + len + 9 * s * Math.sin(fl + k * 7);                        /* the wavy hem at k (0 left .. 1 right) */
+  ctx.save(); ctx.globalAlpha *= c01(u * 3); ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x0 - w0, top);
+  ctx.quadraticCurveTo(x0 - w1 * .86 + 6 * s * Math.sin(fl * .7), top + len * .55, x0 - w1, hem(0));
+  for (let i = 1; i <= 12; i++) { const k = i / 12; ctx.lineTo(x0 + lerp(-w1, w1, k), hem(k)); }
+  ctx.quadraticCurveTo(x0 + w1 * .86 + 6 * s * Math.sin(fl * .7 + 1), top + len * .55, x0 + w0, top);
+  ctx.closePath();
+  ctx.fillStyle = V2.grad(x0 - w1, 0, x0 + w1, 0, [[0, '#c9d3e0'], [.3, '#f4f7fb'], [.55, '#ffffff'], [1, '#bcc8d8']]); ctx.fill();
+  ctx.save(); ctx.clip();
+  ctx.strokeStyle = 'rgba(90,110,140,.28)'; ctx.lineWidth = 3 * s;                      /* folds hanging from the knot */
+  for (const f of [-.55, -.2, .2, .55]) { ctx.beginPath(); ctx.moveTo(x0 + f * w0, top + 8 * s); ctx.quadraticCurveTo(x0 + f * w1 * .7, top + len * .5, x0 + f * w1 * .92 + 4 * s * Math.sin(fl + f * 3), top + len); ctx.stroke(); }
+  ctx.strokeStyle = '#5b8fd0'; ctx.lineWidth = 10 * s;                                   /* the stripe near the hem */
+  ctx.beginPath(); for (let i = 0; i <= 12; i++) { const k = i / 12, x = x0 + lerp(-w1, w1, k), y = hem(k) - 26 * s; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = INKD; ctx.lineWidth = 2.6; ctx.stroke();
+  if (!back) { ctx.fillStyle = '#eef2f8'; ctx.strokeStyle = INKD; ctx.lineWidth = 2; for (const sd of [-1, 1]) { ell(x0 + sd * w0 * .9, top + 4 * s, 13 * s, 9 * s); ctx.fill(); ctx.stroke(); } }   /* the knotted corners at his shoulders */
+  ctx.restore();
+}
+/* the cape's tail whipping out over the sill after he has gone (end): a corner of the sheet that flicks and is pulled out of sight */
+function capeTail(lt) {
+  const k = sg(lt, ESC.hop + .45, ESC.hop + 1.25); if (k <= 0 || k >= 1) return;
+  const [x0, y0] = P2(WIN.x0 + 150, WIN.y0, RM.zb), [x1] = P2(WIN.x0 + 250, WIN.y0, RM.zb), w = x1 - x0, pull = ss(k, .45, 1), sw = Math.sin(lt * 16) * 8;
+  ctx.save(); ctx.beginPath(); quadPath(wallQuad(WIN.x0, WIN.y0 - 40, WIN.x1, WIN.y1)); ctx.clip();
+  ctx.fillStyle = '#f6f8fb'; ctx.strokeStyle = INKD; ctx.lineWidth = 2.4;
+  const yy = y0 + 4 + 120 * pull;
+  ctx.beginPath(); ctx.moveTo(x0, yy - 40 + sw); ctx.quadraticCurveTo(x0 + w * .5, yy - 70 - sw, x0 + w, yy - 34); ctx.lineTo(x0 + w * .8, yy + 6); ctx.quadraticCurveTo(x0 + w * .4, yy - 10 + sw, x0 + w * .05, yy + 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#5b8fd0'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x0 + w * .12, yy - 12); ctx.quadraticCurveTo(x0 + w * .45, yy - 26 + sw * .6, x0 + w * .78, yy - 10); ctx.stroke();
   ctx.restore();
 }
 
@@ -500,21 +522,25 @@ const route = keys => lt => {
 };
 function pathDist(fn, lt, t0 = 0) { let d = 0, p = fn(t0); for (let t = t0 + .02; ; t += .02) { const tt = Math.min(t, lt), q = fn(tt); d += Math.hypot(q[0] - p[0], q[1] - p[1]); p = q; if (tt >= lt) break; } return d; }
 const SPOT = POS.straw;                                                         /* her place at the cart (the same on both sides) */
-/* where she is on a normal night (world X, Z); the segments are cut to the shots (she is always running between them) */
+/* the shots of the right side that are in the HALL (a corridor set with the lens inside the hall); the others are in Room 3 */
+const HALLSH = { ka1: 1, s2: 1, ka5: 1, ka2: 1, ka3: 1 };
+const isHall = (side, sh) => side === 'R' && !!HALLSH[sh.id];
+/* where she is on a normal night: segments cut to the shots (she runs between them off screen). set: 'room' (Room 3 coordinates), 'hall' (hall coordinates), 'none' (somewhere else) */
+const T_ = id => snapT(bS(id) - .06);
 const RSEG = [
-  { a: 0, b: bS('ka1') - .07, path: route([[0, 450, 1430], [.95, 450, 1430], [1.55, 120, 1240, 'in']]), mode: 'bedR' },
-  { a: bS('ka1') - .07, b: bS('s1') - .07, path: route([[0, -360, 2320]]), mode: 'hallLoad' },
-  { a: bS('s1') - .07, b: bS('hygiene'), path: route([[bS('s1') - .07, -360, 2250], [4.18, -360, 1830, 'in'], [4.62, SPOT[0], SPOT[1], 'out']]), mode: 'rushIn' },
-  { a: bS('hygiene'), b: bS('s2') - .07, path: route([[0, SPOT[0], SPOT[1]]]), mode: 'juggle' },
-  { a: bS('s2') - .07, b: bS('pe1') - .07, path: route([[0, -360, 2560]]), mode: 'shout' },
-  { a: bS('pe1') - .07, b: bS('ka5') - .07, path: route([[0, -360, 3000]]), mode: 'away' },
-  { a: bS('ka5') - .07, b: bS('s8') - .07, path: route([[bS('ka5') - .07, 120, 1300], [13.05, 120, 1300], [13.5, -330, 1760, 'in'], [14.9, -360, 2700]]), mode: 'chase' },
-  { a: bS('s8') - .07, b: bS('ka2') - .07, path: route([[0, 70, 1500]]), mode: 'dispense' },
-  { a: bS('ka2') - .07, b: bS('s3') - .07, path: route([[bS('ka2') - .07, -470, 2300], [16.25, -260, 2480], [16.7, -470, 2700], [17.15, -260, 2880], [17.6, -470, 3060], [18.0, -300, 3200]]), mode: 'zigzag' },
-  { a: bS('s3') - .07, b: bS('ka3') - .07, path: route([[0, SPOT[0], SPOT[1]]]), mode: 'clock' },
-  { a: bS('ka3') - .07, b: bS('s4') - .07, path: route([[0, -268, 1772]]), mode: 'slump' },
-  { a: bS('s4') - .07, b: bS('end') + .35, path: route([[0, -360, 3400]]), mode: 'gone' },
-  { a: bS('end') + .35, b: DUR + 1, path: route([[bS('end') + .35, -150, 1500], [26.6, 200, 1700, 'out']]), mode: 'tooLate' },
+  { a: 0, b: T_('ka1'), set: 'room', path: route([[0, 405, 1430], [.95, 405, 1430], [1.55, 120, 1240, 'in']]), mode: 'bedR' },
+  { a: T_('ka1'), b: T_('s1'), set: 'hall', path: route([[0, -120, 1180]]), mode: 'hallLoad' },
+  { a: T_('s1'), b: snapT(bS('hygiene')), set: 'room', path: route([[T_('s1'), hallX(2900), 2900], [4.34, hallX(1830), 1830, 'in'], [4.7, SPOT[0], SPOT[1], 'out']]), mode: 'rushIn' },
+  { a: snapT(bS('hygiene')), b: T_('s2'), set: 'room', path: route([[0, SPOT[0], SPOT[1]]]), mode: 'juggle' },
+  { a: T_('s2'), b: T_('pe1'), set: 'hall', path: route([[0, 20, 1560]]), mode: 'shout' },
+  { a: T_('pe1'), b: T_('ka5'), set: 'none', path: route([[0, 0, 0]]), mode: 'away' },
+  { a: T_('ka5'), b: T_('s8'), set: 'hall', path: route([[T_('ka5'), -360, 1060], [13.12, -360, 1060], [13.5, -170, 1320], [14.95, 40, 2650]]), mode: 'chase' },
+  { a: T_('s8'), b: T_('ka2'), set: 'room', path: route([[0, 10, 1500]]), mode: 'dispense' },
+  { a: T_('ka2'), b: T_('s3'), set: 'hall', path: route([[T_('ka2'), -110, 1300], [16.2, 120, 1500], [16.7, -140, 1750], [17.2, 150, 2000], [17.7, -160, 2250], [18.0, -100, 2350]]), mode: 'zigzag' },
+  { a: T_('s3'), b: T_('ka3'), set: 'room', path: route([[0, SPOT[0], SPOT[1]]]), mode: 'clock' },
+  { a: T_('ka3'), b: T_('s4'), set: 'hall', path: route([[0, 190, 1120]]), mode: 'slump' },
+  { a: T_('s4'), b: snapT(bS('end') + .35), set: 'none', path: route([[0, 0, 0]]), mode: 'gone' },
+  { a: snapT(bS('end') + .35), b: DUR + 1, set: 'room', path: route([[snapT(bS('end') + .35), -150, 1460], [26.7, 230, 1640, 'out']]), mode: 'tooLate' },
 ];
 const rseg = lt => RSEG.find(g => lt >= g.a - 1e-6 && lt < g.b) || RSEG[RSEG.length - 1];
 function strawROpts(lt) {
@@ -535,8 +561,12 @@ function strawROpts(lt) {
     case 'juggle': { yaw = .1; look = [0, -.7]; const J = juggle(lt); gl = J.hl; gr = J.hr; o.juggle = J; expr = lt > CUE.clat1 && lt < CUE.clat1 + .5 ? 'shock' : 'panic'; break; }
     case 'shout': { yaw = 0; look = [0, .05]; o.who = 'straw'; expr = 'angry'; gl = [-34, 6]; gr = [34, 6]; o.mouthOpen = .35; break; }
     case 'away': { yaw = PI; break; }
-    case 'chase': { if (sp <= 30) { yaw = -.5; expr = 'shock'; gl = [-80, -40]; gr = [-20, 40]; } break; }
-    case 'dispense': { yaw = .55; look = [.7, .1]; hy = .5; const u = ss(lt, CUE.clat2 - .3, CUE.clat2 - .05) * (1 - ss(lt, CUE.clat2 + .45, CUE.clat2 + .7)); gr = [lerp(60, 112, u), lerp(40, -40, u)]; hold = { r: 'fp21m_cup' }; o.cupScale = 1.25; o.cupN = 6; o.cupTip = lerp(0, 2.1, u); expr = 'dead'; break; }
+    case 'chase': { o.transit = lt < 13.55; gl = [70, -60]; gr = [110, -40]; break; }
+    case 'dispense': {
+      yaw = .55; look = [.7, .1]; hy = .5; expr = 'dead'; hold = { r: 'fp21m_cup' }; o.cupScale = 1.7; o.cupN = 6;
+      const u = ss(lt, CUE.clat2 - .3, CUE.clat2 - .05) * (1 - ss(lt, CUE.clat2 + .45, CUE.clat2 + .7)), m = pearMouth(lt), tgt = toLocal(o, m[0] - 92 * m[2], m[1] - 34 * m[2]);
+      gr = lerpP([56, 40], tgt, u); o.cupTip = lerp(0, 1.9, u); break;
+    }
     case 'zigzag': { break; }
     case 'clock': { yaw = 0; look = [0, -1]; expr = 'panic'; gl = [-70, -10]; gr = [70, -10]; hy = 0; extra.sweat = true; break; }
     case 'slump': { yaw = -.2; expr = 'dead'; o.lid = .62; o.rot = -.16; gl = [-70, 20]; gr = [40, 70]; look = [0, .3]; break; }
@@ -545,46 +575,51 @@ function strawROpts(lt) {
   }
   Object.assign(o, extra, { yaw, headYaw: hy ?? yaw, look, expr, hold, grip: { l: reach(o, 'l', gl), r: reach(o, 'r', gr) } });
   if (extra.sweat) o.acc = ['steth', 'bandage7', 'perdiem9', 'sweat'];
-  return { o: A11.straw(o), z: Z, name: 'strawR', mode: g.mode };
+  return { o: A11.straw(o), z: Z, name: 'strawR', mode: g.mode, set: g.set };
 }
 /* the juggle (hygiene, a normal night): three cups on a cascade between her hands; on the clatter (5.60) two of them knock together and spill */
 function juggle(lt) {
-  const t0 = bS('hygiene'), per = .5, hl = [-62, 34], hr = [62, 34], cups = [];
+  const t0 = bS('hygiene'), per = .5, hl = [-78, -112], hr = [78, -112], cups = [];
   for (let i = 0; i < 3; i++) {
     const ph = ((lt - t0) / per + i / 3) % 1, fromL = Math.floor((lt - t0) / per + i / 3) % 2 === 0;
     const [x0, x1] = fromL ? [hl[0] + 10, hr[0] - 10] : [hr[0] - 10, hl[0] + 10];
-    cups.push({ x: lerp(x0, x1, ph), y: hl[1] - 8 - 230 * 4 * ph * (1 - ph), rot: (fromL ? 1 : -1) * ph * 4 });
+    cups.push({ x: lerp(x0, x1, ph), y: hl[1] - 14 - 190 * 4 * ph * (1 - ph), rot: (fromL ? 1 : -1) * ph * 4 });
   }
   const catchL = Math.sin((lt - t0) / per * PI * 2), hlD = [hl[0], hl[1] + 10 * catchL], hrD = [hr[0], hr[1] - 10 * catchL];
   return { cups, hl: hlD, hr: hrD };
 }
-/* the runaway cart (a normal night): in the hall while she loads it, rushed in, parked at its place, rolling off by itself on "Always." (cartroll), away down the hall */
-const RCART = route([[0, -360, 2420], [bS('s1') - .07, -360, 2380], [4.2, -360, 1830, 'in'], [4.55, CART.X, CART.Z, 'out'], [CUE.cartroll, CART.X, CART.Z], [CUE.cartroll + .7, -250, 1640, 'in'], [CUE.cartroll + 1.05, -350, 1830], [CUE.cartroll + 2.8, -350, 3150, 'out']]);
-function cartR(lt) {
-  const [X, Z] = RCART(lt), rolling = lt > CUE.cartroll && lt < CUE.cartroll + 2.9, rush = lt > 3.9 && lt < 4.7;
-  const wob = rolling ? .025 * Math.sin((lt - CUE.cartroll) * 13) * (1 - sg(lt, CUE.cartroll, CUE.cartroll + 2.8)) : rush ? .04 * Math.sin(lt * 30) : 0;
+/* the runaway cart (a normal night): loaded in the hall, rushed into Room 3 beside her, parked, rolling off by itself on "Always." (cartroll) out of the door, then away down the hall */
+const RCART_ROOM = route([[T_('s1'), hallX(2450), 2450], [4.2, hallX(1830), 1830, 'in'], [4.55, CART.X, CART.Z, 'out'], [CUE.cartroll, CART.X, CART.Z], [CUE.cartroll + .55, -230, 1660, 'in'], [CUE.cartroll + .8, hallX(1830), 1830], [CUE.cartroll + 2.4, hallX(3000), 3000, 'out']]);
+const RCART_HALL = route([[T_('ka5'), -240, 760], [13.25, -40, 1150], [14.85, 30, 3300, 'out']]);
+function cartR(lt, set) {
+  const hall = set === 'hall', [X, Z] = hall ? RCART_HALL(lt) : RCART_ROOM(lt), rolling = lt > CUE.cartroll && lt < 14.9, rush = lt > 3.9 && lt < 4.7;
+  const wob = rolling ? .025 * Math.sin((lt - CUE.cartroll) * 13) * (1 - sg(lt, CUE.cartroll, 14.8)) : rush ? .04 * Math.sin(lt * 30) : 0;
   const open = lt > 9 && lt < CUE.cartroll + .4 ? ss(lt, 9.2, 10.3) : 0;
-  const o = { t: lt, lock: 0, cups: 2, tower: lt < CUE.cartroll + .3 ? 1 : .3, mess: 1, drawers: [open, open * .7, open, open * .5], roll: pathDist(RCART, lt, Math.max(0, lt - 4)) / 15, tilt: wob, screen: 1 };
-  return Object.assign(cartGeom(X, Z, o), { X, Z, opts: o, inHall: Z > RM.zb - 4 });
+  const o = { t: lt, lock: 0, cups: 2, tower: lt < CUE.cartroll + .3 ? 1 : .3, mess: 1, drawers: [open, open * .7, open, open * .5], roll: (hall ? pathDist(RCART_HALL, lt, Math.max(T_('ka5'), lt - 3)) : pathDist(RCART_ROOM, lt, Math.max(0, lt - 4))) / 15, tilt: wob, screen: 1 };
+  const vis = hall ? (lt >= T_('ka5') - .01 || lt < T_('s1')) : (lt >= T_('s1') && lt < CUE.cartroll + 2.4);
+  const XH = hall && lt < T_('s1') ? 110 : X, ZH = hall && lt < T_('s1') ? 1230 : Z;
+  return Object.assign(cartGeom(XH, ZH, o), { X: XH, Z: ZH, opts: o, inHall: !hall && Z > RM.zb - 4, vis });
 }
+/* where Mr. Pear's mouth is in bed (screen, current camera): [x, y, scale] */
+function pearMouth(lt) { const b = pearBase(lt), hy = lt >= bS('s8') - .07 && lt < bS('ka2') - .07 ? -.4 : -.55; return [b.x - 112 * Math.sin(-hy) * b.s * .9, b.y - 65 * b.s, b.s]; }
 /* MR. PEAR, RIGHT: the call-light pendant, the shouted answer, the pills, then the sheet, the bed, the window */
-const ESC = { tie: [bS('pe2') + .1, bS('pe2') + 1.4], stand: snapT(bS('pe3') - .06), sill: snapT(bS('pe4') - .06), hop: snapT(wS('pe4', 1) + .2), gone: snapT(bS('end') + .2) };
+const ESC = { tie: [bS('pe2') + .1, bS('pe2') + 1.4], stand: snapT(bS('pe3') - .06), sill: snapT(bS('pe4') - .06), hop: snapT(wE('pe4', 2) - .12), gone: snapT(bS('end') + .2) };
 function pearROpts(lt) {
   const b = pearBase(lt);
   let o = { kind: 'pear', x: b.x, y: b.y, s: b.s, t: lt, noLegs: true, noShadow: true, noReflect: true, plant: true, who: 'nobody', yaw: -.5, headYaw: -.55, look: [-.55, .05], expr: 'smug', arms: { l: 'hold', r: 'hold' } };
   let gl = [-50, 96], gr = [30, 60], hold = {}, capeU = 0, back = false, inside = true;
   if (lt < bS('pe1') - .07) { gr = [24, 40 + 6 * Math.sin(lt * 14)]; hold = { r: 'fp21m_bell' }; o.expr = 'sour'; }                                            /* thumbing the call-light pendant */
-  if (lt >= bS('pe1') - .07 && lt < bS('ka4') - .07) { o.who = 'pear'; o.mouthOpen = .5; o.expr = 'angry'; o.yaw = -.8; o.headYaw = -.95; o.look = [-1, -.1]; gr = [-40, 30]; }  /* shouting it back at the door */
-  if (lt >= bS('s8') - .07 && lt < bS('ka2') - .07) { o.mouthOpen = lt > CUE.clat2 - .35 ? 1 : .3; o.expr = 'shock'; o.look = [-.4, -.4]; o.headYaw = -.4; }      /* the pills go in */
+  if (lt >= bS('pe1') - .07 && lt < bS('ka4') - .07) { o.who = 'pear'; o.mouthOpen = .5; o.expr = 'angry'; o.yaw = -.6; o.headYaw = -.75; o.look = [-1, -.1]; gr = [96, -30 + 10 * Math.sin(lt * 16)]; o.hand = { r: 'fist' }; }  /* shouting it back at the door */
+  if (lt >= bS('s8') - .07 && lt < bS('ka2') - .07) { o.mouthOpen = lt > CUE.clat2 - .35 ? 1 : .3; o.expr = 'shock'; o.look = [-.7, -.35]; o.headYaw = -.4; }      /* the pills go in */
   if (lt >= bS('s4') - .07 && lt < bS('pe2') - .07) { o.expr = 'smug'; o.yaw = .2; o.headYaw = .5; o.look = [.8, -.6]; }                                     /* he eyes the window */
-  if (lt >= bS('pe2') - .07 && lt < ESC.stand) { capeU = ss(lt, ESC.tie[0], ESC.tie[1]); o.expr = 'smug'; o.yaw = .1; o.headYaw = .2; o.look = [.3, -.2]; gl = [-26, -26]; gr = [26, -26]; }   /* he knots the sheet round his neck */
+  if (lt >= bS('pe2') - .07 && lt < ESC.stand) { capeU = ss(lt, ESC.tie[0], ESC.tie[1]); o.expr = 'smug'; o.yaw = .1; o.headYaw = .2; o.look = [.3, -.2]; gl = [-36, -78 + 6 * Math.sin(lt * 12)]; gr = [36, -78 - 6 * Math.sin(lt * 12)]; }   /* he knots the sheet round his neck */
   if (lt >= ESC.stand && lt < ESC.sill) {                                                                                                         /* standing on the bed, caped, hands on hips */
     const p = at(POS.pear[0], 1600), y = P2(POS.pear[0], BED.top + 4, 1600)[1];
     o = Object.assign(o, { x: p.x, y, s: p.s, noLegs: false, yaw: .25, headYaw: .45, look: [.7, -.5], expr: 'smug', arms: { l: 'hips', r: 'hips' } }); capeU = 1; gl = null;
   }
   if (lt >= ESC.sill) {                                                                                                                           /* on the sill, back to us, a look over the shoulder; then out */
     const hop = ss(lt, ESC.hop, ESC.hop + .5), Zs = lerp(1786, 1900, hop), X = lerp(300, 300, hop), p = at(X, Zs), y = P2(X, WIN.y0 + lerp(0, 60, bump(hop, 0, .6)) - lerp(0, 380, ss(hop, .45, 1)), Zs)[1];
-    o = Object.assign(o, { x: p.x, y, s: p.s, noLegs: false, yaw: PI, headYaw: PI + 1.15 * (1 - hop), look: [-.6, 0], expr: 'smug', arms: { l: 'up', r: 'up' }, transit: hop > .02 }); capeU = 1; back = true; gl = null; inside = hop < .4;
+    o = Object.assign(o, { x: p.x, y, s: p.s, noLegs: false, yaw: PI, headYaw: PI + 1.75 * (1 - ss(hop, 0, .3)), look: [-.7, 0], expr: 'smug', arms: { l: 'up', r: 'up' }, transit: hop > .02 }); capeU = 1; back = true; gl = null; inside = hop < .4;
   }
   if (gl) o.grip = { l: reach(o, 'l', gl), r: reach(o, 'r', gr) };
   o.hold = hold;
@@ -599,60 +634,80 @@ EXT.prop.fp21m_bell = (side, o, t) => {
 };
 PROP_BOX.fp21m_bell = Object.assign([-12, -30, 12, 10], { nearFace: true });
 
-// ------------------------------------------------------------------ CAMERAS: each half frames the room with its own 2D camera { cx, cy (a point of the zoom-1 picture), z }, put at the half's anchor
-const AY = 850;                                                                /* the vertical anchor of every half (the middle of the picture between the chips and the captions) */
+// ------------------------------------------------------------------ CAMERAS: each half frames its set with its own 2D camera { cx, cy (a point of the zoom-1 picture), z }, put at the half's anchor (ax, AY)
+const AY = 900;                                                                /* the vertical anchor of every half */
 const fcOf = c => faceC(c.o);
 function framing(side, sh, lt, F) {
   const { kale, straw, pear, cart } = F, u = sg(lt, sh.s, sh.e);
-  const fk = kale ? fcOf(kale) : [249, 890], fs = fcOf(straw), fp = fcOf(pear);
-  const face = (f, z, up = 70) => ({ cx: f[0], cy: f[1] + up / z, z });
-  const two = (a, b, z, dy = 40) => ({ cx: (a[0] + b[0]) / 2, cy: (a[1] + b[1]) / 2 + dy, z });
+  const fk = kale ? fcOf(kale) : null, fs = fcOf(straw), fp = fcOf(pear);
+  const face = (f, z, fy) => ({ cx: f[0], cy: f[1] + (AY - fy) / z, z });                       /* a face put at screen height fy */
+  const two = (a, b, z, fy, dx = 0) => ({ cx: (a[0] + b[0]) / 2 + dx, cy: (a[1] + b[1]) / 2 + (AY - fy) / z, z });
   const id = sh.id, L = side === 'L';
-  const door = [P2(-350, 0, RM.zb)[0], 860];
+  /* the left side's people stand still: the right side reuses their places when the two halves frame the same thing */
+  const SL = REFL(), sF = SL.s, kF = SL.k, pF = SL.p;
   let f;
-  switch (id) {
-    case 'open': f = { cx: 540, cy: 905, z: .8 }; break;
-    case 'ka1': f = L ? two(fk, fs, 1.28, 50) : two([P2(POS.kale[0], 0, RM.zb)[0], fk[1]], [P2(SPOT[0], 0, SPOT[1])[0], fs[1]], 1.28, 50); break;
-    case 's1': f = face(L ? fs : [P2(SPOT[0], 0, SPOT[1])[0], fs[1]], 1.85); break;
-    case 'hyg': { const nz = cartL(lt).nozzle, sx = P2(SPOT[0], 0, SPOT[1])[0]; f = { cx: (sx + nz[0]) / 2 + 6, cy: fs[1] + (L ? 30 : -40), z: L ? 1.62 : 1.45 }; break; }
-    case 's2': f = L ? two(fs, fp, .98, 46) : face(fs, 1.7, 90); break;
-    case 'pe1': f = face(fp, 1.95, 60); break;
-    case 'ka4': f = L ? face(fk, 1.95) : { cx: cart.x + 6, cy: cart.y - 170 * cart.k, z: 1.42 }; break;
-    case 's7': { const c = cartL(lt), fl = L ? fs : faceC(strawLOpts(lt, sh).o); f = { cx: (fl[0] + c.lock[0]) / 2 + 30, cy: (fl[1] + c.lock[1]) / 2 + 30, z: 1.5 }; break; }
-    case 'ka5': f = L ? two(fk, fs, 1.16, 56) : { cx: door[0] + 16, cy: 860, z: 1.42 }; break;
-    case 's8': f = two(fs, fp, 1.06, 40); break;
-    case 'ka2': f = L ? face(fk, 1.72) : { cx: door[0] + 10, cy: 850, z: 1.4 }; break;
-    case 's3': { const clk = P2(CLK.X, CLK.Y, RM.zb), sx = L ? fs : [P2(SPOT[0], 0, SPOT[1])[0], fs[1]]; f = { cx: (clk[0] + sx[0]) / 2 + 4, cy: (clk[1] + sx[1]) / 2 + 46, z: 1.18 }; break; }
-    case 'ka3': f = L ? face(fk, 2.2) : face(fs, 1.8, 60); break;
-    case 's4': f = L ? { cx: 430, cy: 890, z: .98 } : face(fp, 1.65, 70); break;
-    case 'pe2': f = L ? two(fs, fp, 1.26, 34) : face(fp, 1.4, 40); break;
-    case 'pe3': f = L ? two(fs, fp, 1.32, 30) : { cx: P2(POS.pear[0], 0, 1700)[0] + 10, cy: 740, z: 1.15 }; break;
-    case 'pe4': f = L ? face(fp, 1.8, 120) : { cx: P2(300, 0, RM.zb)[0] - 10, cy: 690, z: 1.32 }; break;
-    case 'end': f = L ? { cx: 500, cy: 905, z: .8 } : { cx: 690, cy: 860, z: .92 }; break;
+  if (F.hall) switch (id) {                                                     /* the right side's hall shots (hall coordinates) */
+    case 'ka1': f = { cx: (fs[0] + cart.x) / 2 + 10, cy: fs[1] + (AY - 820) / 1.0, z: 1.0 }; break;
+    case 's2': f = face(fs, 1.32, 810); break;
+    case 'ka5': f = { cx: 560, cy: 830, z: .98 }; break;
+    case 'ka2': f = { cx: 540, cy: 850, z: 1.02 }; break;
+    case 'ka3': f = face(fs, 1.42, 820); break;
+  }
+  else switch (id) {
+    case 'open': f = { cx: 540, cy: 900, z: .98 }; break;
+    case 'ka1': f = { cx: 316, cy: (kF[1] + sF[1]) / 2 + (AY - 800) / 1.38, z: 1.38 }; break;
+    case 's1': f = face([sF[0] + 22, sF[1]], 1.95, 800); break;
+    case 'hyg': { const nz = cartL(lt).nozzle; f = { cx: (sF[0] + nz[0]) / 2 + 4, cy: sF[1] + (AY - (L ? 820 : 880)) / 1.62, z: 1.62 }; break; }
+    case 's2': f = { cx: 600, cy: (sF[1] + pF[1]) / 2 + (AY - 820) / 1.0, z: 1.0 }; break;
+    case 'pe1': f = face(pF, 1.95, 820); break;
+    case 'ka4': f = L ? face(kF, 1.95, 800) : { cx: (cart.x + pF[0]) / 2 - 10, cy: cart.y - 200 * cart.k + (AY - 820) / 1.25, z: 1.25 }; break;
+    case 's7': { const c = cartL(lt); f = { cx: (sF[0] + c.lock[0]) / 2 + 18, cy: (sF[1] + c.lock[1]) / 2 + (AY - 840) / 1.55, z: 1.55 }; break; }
+    case 'ka5': f = { cx: 318, cy: (kF[1] + sF[1]) / 2 + (AY - 812) / 1.36, z: 1.36 }; break;
+    case 's8': f = L ? { cx: 588, cy: (sF[1] + pF[1]) / 2 + (AY - 830) / 1.02, z: 1.02 } : { cx: 670, cy: (fs[1] + fp[1]) / 2 + (AY - 830) / 1.18, z: 1.18 }; break;
+    case 'ka2': f = face([kF[0] - 20, kF[1]], 2.0, 800); break;
+    case 's3': { const clk = P2(CLK.X, CLK.Y, RM.zb); f = { cx: L ? 330 : (clk[0] + sF[0]) / 2, cy: (clk[1] + sF[1]) / 2 + (AY - 700) / 1.28, z: 1.28 }; break; }
+    case 'ka3': f = face(kF, 2.2, 800); break;
+    case 's4': f = L ? { cx: 337, cy: sF[1] + (AY - 820) / 1.05, z: 1.05, ax: (SQX - GAP / 2) / 2 } : Object.assign(face(pF, 1.7, 820), { ax: (SQX + GAP / 2 + W) / 2 }); break;
+    case 'pe2': f = L ? face(pF, 1.62, 830) : face(pF, 1.45, 840); break;
+    case 's5': f = L ? face([sF[0] + 42, sF[1]], 1.7, 820) : face(pF, 1.45, 840); break;
+    case 'pe3': f = L ? face(pF, 1.75, 830) : face([fp[0], fp[1] + 40], 1.32, 820); break;
+    case 's6': f = L ? face([sF[0] + 30, sF[1]], 1.85, 820) : face([fp[0], fp[1] + 40], 1.32, 820); break;
+    case 'pe4': f = L ? face(pF, 1.85, 880) : { cx: P2(300, 0, RM.zb)[0] - 6, cy: 700, z: 1.3 }; break;
+    case 'end': f = L ? { cx: 490, cy: 925, z: .74 } : { cx: 700, cy: 860, z: .94 }; break;
     default: f = { cx: 540, cy: 900, z: 1 };
   }
   f.z *= 1 + .035 * easeIO(u);                                                  /* a slow push through every shot */
   return f;
 }
-/* the frame's cast and props for one side (built once per half per frame) */
-function castFor(side, lt) {
-  const sh = shotAt(lt);
-  if (side === 'L') return { sh, kale: kaleOpts(lt, sh), straw: strawLOpts(lt, sh), pear: pearLOpts(lt, sh), cart: cartL(lt) };
-  return { sh, kale: null, straw: strawROpts(lt), pear: pearROpts(lt), cart: cartR(lt) };
+/* the left side's faces (zoom-1 picture coordinates under the room camera), used to frame the same shot on both sides */
+function REFL() {
+  const P0 = Object.assign({}, V2.P); V2.setCam(PC);
+  const s = faceC(A11.straw(Object.assign(at(POS.straw[0], POS.straw[1]), { kind: 'straw' }))), kk = at(POS.kale[0], POS.kale[1]), b = pearBase(0), p = [b.x, b.y - 88 * b.s];
+  let k = [kk.x, kk.y - 214 * kk.s];
+  if (has('A21', 'faceBox')) { const ko = Object.assign(A21.kale({ t: 0 }), { x: kk.x, y: kk.y, s: kk.s }), fb = A21.faceBox(ko); k = [(fb[0] + fb[2]) / 2, (fb[1] + fb[3]) / 2]; }
+  Object.assign(V2.P, P0); return { s, k, p };
 }
-
+/* the frame's cast and props for one side (built once per half per frame, under the camera of the set it is in) */
+const HCAM = { f: 1400, cy: 360, hy: 800, cz: 0, cx: 0 };
+function castFor(side, lt) {
+  const sh = shotAt(lt), hall = isHall(side, sh);
+  V2.setCam(hall ? HCAM : PC);
+  if (side === 'L') return { sh, hall, kale: kaleOpts(lt, sh), straw: strawLOpts(lt, sh), pear: pearLOpts(lt, sh), cart: cartL(lt) };
+  return { sh, hall, kale: null, straw: strawROpts(lt), pear: pearROpts(lt), cart: cartR(lt, hall ? 'hall' : 'room') };
+}
 // ------------------------------------------------------------------ LIGHT: the left is soft, warm and clean; the right is fluorescent, cooler, and the call lights wash it red
-function lightFor(side, lt, G) {
+function lightFor(side, lt, hall) {
   if (side === 'L') {
     V2.setLight({ key: [.3, -.6], keyColor: '#fff1dc', keyA: .2, rim: '#ffd9a8', rimA: .35, shadow: '#3a2e40', shadowA: .3, bounce: '#ffe6c8', bounceA: .14, amb: '#fff4e6', ambA: .08 });
   } else {
     V2.setLight({ key: [-.2, -.7], keyColor: '#eafff2', keyA: .22, rim: '#ff8a7a', rimA: .42, shadow: '#1e2638', shadowA: .38, bounce: '#cfe8ff', bounceA: .1, amb: '#e0fff0', ambA: .06 });
-    const [dx, dy] = P2(-350, 470, RM.zb), lv = .5 + .5 * Math.sin(lt * 3.45);
-    V2.addLight({ x: dx, y: dy, r: 520, color: '255,90,80', a: .2 + .12 * lv });
+    const lv = .5 + .5 * Math.sin(lt * 3.45);
+    if (hall) V2.addLight({ x: 540, y: 700, r: 900, color: '255,90,80', a: .14 + .08 * lv });
+    else { const [dx, dy] = P2(-350, 470, RM.zb); V2.addLight({ x: dx, y: dy, r: 520, color: '255,90,80', a: .2 + .12 * lv }); }
   }
 }
 
-// ------------------------------------------------------------------ ONE HALF: the camera, the room, the cast in depth order, the effects; then the half's own audit
+// ------------------------------------------------------------------ ONE HALF: the camera, the set, the cast in depth order, the effects; then the half's own audit
 function camApply(f, ax, ay) { ctx.translate(ax, ay); ctx.scale(f.z, f.z); ctx.translate(-f.cx, -f.cy); }
 function drawChar21(o, box) {                                                  /* a character wholly outside this half is not drawn (nothing of it would show) */
   const k = KINDS[o.kind] || KINDS.straw, s = o.s || 1, leg = o.noLegs ? 0 : (k.leg || 90);
@@ -664,81 +719,109 @@ function panelCheck(n0, box, side, loose) {
   if (!REG.on) return;
   for (let i = n0; i < REG.items.length; i++) {
     const it = REG.items[i];
-    if (['face', 'head', 'prop'].includes(it.type) && !it.transit && !loose) {
-      const b = it.box;
-      if (b[0] < box[0] + 4 || b[2] > box[2] - 4) REG.errors.push(`${it.type}:${it.id || '?'} is cut by the divider (${side} half) [${b.map(Math.round)}]`);
-      else if (it.type === 'face' && b[1] < 336) REG.errors.push(`face:${it.id || '?'} runs under the half's chip [${b.map(Math.round)}]`);
+    const b = it.box, L_ = side === 'L', e = L_ ? box[2] : box[0], m = it.type === 'face' ? 4 : 1, cut = L_ ? (b[0] < e - m && b[2] > e - m) : (b[2] > e + m && b[0] < e + m);
+    if (['face', 'prop'].includes(it.type) && !it.transit && !loose) {
+      if (cut && e > 1 && e < W - 1) REG.errors.push(`${it.type}:${it.id || '?'} is cut by the divider (${side} half) [${b.map(Math.round)}]`);
+      else if (it.type === 'face' && b[1] < 336 && (L_ ? b[0] < e : b[2] > e)) REG.errors.push(`face:${it.id || '?'} runs under the half's chip [${b.map(Math.round)}]`);
     }
-    /* what is registered in a half can only be seen inside it: clip the box to the half so nothing in one world is said to cover something in the other */
-    it.box = [Math.max(it.box[0], box[0]), it.box[1], Math.min(it.box[2], box[2]), it.box[3]];
+    /* what is registered in a half can only be seen inside it: clip the box at the divider so nothing in one world is said to cover something in the other (the frame edges stay the engine's to check) */
+    if (e > 1 && e < W - 1) { if (L_) it.box = [it.box[0], it.box[1], Math.min(it.box[2], e), it.box[3]]; else it.box = [Math.max(it.box[0], e), it.box[1], it.box[2], it.box[3]]; }
     if (it.box[2] < it.box[0]) it.box[2] = it.box[0];
   }
 }
+/* the bloom layer is not clipped to a half: a glow whose halo would cross the divider keeps its picture but gives no bloom */
+function guardBloom(box, fn) {
+  const g0 = V2.glow, e0 = V2.emit;
+  const ok = (x, y, r) => { const m = ctx.getTransform(), sx = m.a * x + m.c * y + m.e, sc = Math.hypot(m.a, m.b), q = r * sc * .9; return sx - q > box[0] && sx + q < box[2]; };
+  V2.glow = (x, y, r, color, a, mode, bloom = .35) => g0(x, y, r, color, a, mode, ok(x, y, r) ? bloom : 0);
+  V2.emit = (x, y, r, color, a) => { if (ok(x, y, r)) e0(x, y, r, color, a); };
+  try { fn(); } finally { V2.glow = g0; V2.emit = e0; }
+}
 function drawHalf(side, lt, box, o = {}) {
   HALF = { side, box };
-  const F = castFor(side, lt), sh = F.sh, f = o.cam || framing(side, sh, lt, F), ax = o.ax ?? (box[0] + box[2]) / 2;
+  const F = castFor(side, lt), sh = F.sh, f = o.cam || framing(side, sh, lt, F), ax = o.ax ?? f.ax ?? (box[0] + box[2]) / 2;
   ctx.save();
   ctx.beginPath(); ctx.rect(box[0], box[1], box[2] - box[0], box[3] - box[1]); ctx.clip();
   camApply(f, ax, AY);
-  V2.setCam(PC); lightFor(side, lt); V2.opts.reflect = true;
-  const n0 = REG.items.length, R = side === 'R';
-  const c = F.cart, st = F.straw, pe = F.pear;
-  /* the room, with what is seen through the doorway (the runaway cart, a running nurse) and through the window (Mr. Pear, out) */
-  REG.suppress++;
-  const hallKids = () => {
-    if (R && c.inHall) medCart(c.X, c.Z, c.opts);
-    if (R && st.z > RM.zb - 6) drawChar21(st.o, box);
-  };
-  const windowKids = () => { if (R && pe.o && !pe.inside && !pe.gone) { cape(pe.o, lt, pe.capeU, true); drawChar(pe.o); cape(pe.o, lt, pe.capeU, true); } };
-  REG.suppress--;
-  REG.suppress++;
-  drawRoom(lt, side, { hallKids, windowKids, winOpen: R ? ss(lt, ESC.sill - .5, ESC.sill + .1) : 0, clockSpin: R ? bump(lt, bS('s3') - .1, bE('s3') + .45) : 0, clockMin: R && lt > bS('s3') - .1 ? 30 + 240 * ss(lt, bS('s3') - .1, bE('s3') + .45) : null });
-  REG.suppress--;
-  /* Mr. Pear (on the sill he stands in front of the frame; in bed he is between the mattress and the blanket) */
-  if (!(R && (lt >= ESC.sill))) {
-    if (R && lt >= ESC.stand) { cape(pe.o, lt, pe.capeU, false); drawChar21(pe.o, box); }
-    else { if (R) cape(pe.o, lt, pe.capeU, false); drawChar21(pe.o, box); }
-    if (!R && lt >= HALO_T) halo(pe.o, lt);
-  } else if (pe.inside) { drawChar21(pe.o, box); cape(pe.o, lt, pe.capeU, true); }
-  REG.suppress++; bedFront(lt, side, { ruck: R && lt >= bS('pe2') - .07 ? 1 : 0, noBlanket: false }); REG.suppress--;
-  if (!R) drawChar21(F.kale.o, box);
-  /* the nurse, then the cart in front of her (the cart's z is nearer) */
-  const items = [{ z: st.z, fn: () => { if (!(R && st.z > RM.zb - 6)) { drawChar21(st.o, box); if (R && st.o.juggle) juggleDraw(st.o, lt); } } }, { z: c.Z, fn: () => { if (!(R && c.inHall)) { REG.suppress++; medCart(c.X, c.Z, c.opts); REG.suppress--; } } }];
-  for (const it of items.sort((a, b) => b.z - a.z)) it.fn();
-  REG.suppress++; footboard(); REG.suppress--;
-  if (R) pillFx(lt, F);
+  V2.setCam(F.hall ? HCAM : PC); lightFor(side, lt, F.hall); V2.opts.reflect = true;
+  const n0 = REG.items.length;
+  guardBloom(box, () => { if (F.hall) hallSet(lt, F, box); else roomSet(side, lt, F, box); });
   panelCheck(n0, box, side, o.loose);
   /* the half's grade: the left warm and soft, the right cool and fluorescent */
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = R ? 'rgba(120,190,255,.22)' : 'rgba(255,214,160,.2)'; ctx.fillRect(box[0], 0, box[2] - box[0], H);
+  ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = side === 'R' ? 'rgba(120,190,255,.22)' : 'rgba(255,214,160,.2)'; ctx.fillRect(box[0], 0, box[2] - box[0], H);
   ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
   HALF = null;
   return F;
 }
-function footboard() { const B = BED; S6.box3({ x0: B.x0 - 6, x1: B.x1 + 6, y0: 40, y1: 212, z0: B.z0 - 12, z1: B.z0, color: '#86705e', top: '#97806c', side: '#6e5a4a' }); }
+function roomSet(side, lt, F, box) {
+  const R = side === 'R', c = F.cart, st = F.straw, pe = F.pear, stIn = !R || st.set === 'room', cIn = !R || c.vis;
+  const hallKids = () => {
+    REG.suppress++;
+    if (R && cIn && c.inHall) medCart(c.X, c.Z, c.opts);
+    if (R && stIn && st.z > RM.zb - 6) drawChar21(st.o, box);
+    REG.suppress--;
+  };
+  const windowKids = () => { if (R && pe.o && !pe.inside && !pe.gone) { REG.suppress++; cape(pe.o, lt, pe.capeU, true); drawChar(pe.o); cape(pe.o, lt, pe.capeU, true); REG.suppress--; } };
+  REG.suppress++;
+  drawRoom(lt, side, { plaqueHero: !R && F.sh.id === 's4', hallKids, windowKids, winOpen: R ? ss(lt, ESC.sill - .5, ESC.sill + .1) : 0, clockSpin: R ? bump(lt, bS('s3') - .1, bE('s3') + .45) : 0, clockMin: R && lt > bS('s3') - .1 ? 30 + 240 * ss(lt, bS('s3') - .1, bE('s3') + .45) : null });
+  REG.suppress--;
+  /* Mr. Pear (on the sill he stands in front of the frame; in bed he is between the mattress and the blanket) */
+  if (!(R && lt >= ESC.sill)) {
+    if (R) cape(pe.o, lt, pe.capeU, false);
+    drawChar21(pe.o, box);
+    if (!R && lt >= HALO_T) halo(pe.o, lt);
+  } else if (pe.inside) { drawChar21(pe.o, box); cape(pe.o, lt, pe.capeU, true); }
+  REG.suppress++; bedFront(lt, side, { ruck: R && lt >= bS('pe2') - .07 ? 1 : 0 }); REG.suppress--;
+  if (!R) drawChar21(F.kale.o, box);
+  /* the nurse and the cart in depth order */
+  const items = [];
+  if (stIn && !(st.z > RM.zb - 6)) items.push({ z: st.z, fn: () => { drawChar21(st.o, box); if (R && st.o.juggle) juggleDraw(st.o, lt); } });
+  if (cIn && !(R && c.inHall)) items.push({ z: c.Z, fn: () => { REG.suppress++; medCart(c.X, c.Z, c.opts); REG.suppress--; } });
+  for (const it of items.sort((a, b) => b.z - a.z)) it.fn();
+  REG.suppress++; footboard(); REG.suppress--;
+  if (R) pillFx(lt, F);
+}
+/* THE HALL (the right side's hall shots): the corridor seen from Room 3's door, its call lights, the runaway cart, the nurse */
+const HDOORS = Array.from({ length: 12 }, (_, i) => ({ side: i % 2 ? 1 : -1, z: 900 + i * 300, n: '', color: ['#9d6b74', '#6d8f88', '#a8744f', '#8e6f55'][i % 4] }));
+function hallSet(lt, F, box) {
+  const st = F.straw, c = F.cart;
+  const doors = HDOORS.map((d, i) => { const lv = domeLvl(i % 10, lt, 'R'); return Object.assign({}, d, { dome: lv > .02 ? ['255,92,84', lv] : null }); });
+  REG.suppress++;
+  S6.corridor({ doors, ch: 700, fog: '#c8d2e2', fogAmt: .3, wall: '#e9e3d3', wain: '#5c9298', lampOn: 1, bright: .95, signs: [], zFar: 4600, endDoors: false,
+    decor: [{ side: -1, z: 1350, c: '#e6a23c' }, { side: 1, z: 1950, c: '#6cc1d9' }, { side: -1, z: 2550, c: '#9bd96c' }] });
+  REG.suppress--;
+  const items = [];
+  if (st.set === 'hall') items.push({ z: st.z, fn: () => drawChar21(st.o, box) });
+  if (c.vis) items.push({ z: c.Z, fn: () => { REG.suppress++; medCart(c.X, c.Z, c.opts); REG.suppress--; } });
+  for (const it of items.sort((a, b) => b.z - a.z)) it.fn();
+}
+function footboard() {
+  const B = BED, f = S6.box3({ x0: B.x0 - 6, x1: B.x1 + 6, y0: 46, y1: 176, z0: B.z0 - 12, z1: B.z0, color: '#c9b49a', top: '#ddcbb2', side: '#a8927a', frontGrad: [[0, '#d8c6ad'], [1, '#b39d82']] });
+  const [a, b] = [f[3], f[2]]; ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(a[0] + 10, a[1] + 8); ctx.lineTo(b[0] - 10, b[1] + 8); ctx.stroke();
+}
 
 // ------------------------------------------------------------------ EFFECTS of a normal night: the juggled cups, the pills that fly at the clatter, the pills poured into Mr. Pear
 const bodyPt = (o, lx, ly) => { const k = KINDS[o.kind], s = o.s || 1, leg = o.noLegs ? 0 : (k.leg || 90); return [o.x + lx * s, o.y - (o.lift || 0) - (leg + k.ry * .9) * s + ly * s]; };
 function juggleDraw(o, lt) {
   const J = o.juggle, s = o.s;
-  for (const cp of J.cups) { const [x, y] = bodyPt(o, cp.x, cp.y); ctx.save(); ctx.translate(x, y); cupShape(ctx, s * 1.05, cp.rot, 2); ctx.restore(); }
+  for (const cp of J.cups) { const [x, y] = bodyPt(o, cp.x, cp.y); ctx.save(); ctx.translate(x, y); cupShape(ctx, s * 1.45, cp.rot, 3); ctx.restore(); }
   const k = lt - CUE.clat1;                                                     /* the clatter: a knock where two cups meet at the top, four pills thrown out */
   if (k > 0 && k < .7) {
-    const [x, y] = bodyPt(o, 0, -150);
+    const [x, y] = bodyPt(o, 0, -290);
     if (k < .18) { ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,' + (1 - k / .18) + ')'; ctx.lineWidth = 3 * s; for (let i = 0; i < 7; i++) { const a = i / 7 * TAU; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * 22 * s, y + Math.sin(a) * 22 * s); ctx.lineTo(x + Math.cos(a) * 44 * s, y + Math.sin(a) * 44 * s); ctx.stroke(); } ctx.restore(); }
-    for (let i = 0; i < 5; i++) { const vx = (sr(i, 31) - .5) * 520, vy = -260 - 200 * sr(i, 32); pillShape(ctx, x + vx * k * s, y + (vy * k + 900 * k * k) * s, s * 1.2, k * 9 + i, PILLC[i]); }
+    for (let i = 0; i < 6; i++) { const vx = (sr(i, 31) - .5) * 560, vy = -260 - 200 * sr(i, 32); pillShape(ctx, x + vx * k * s, y + (vy * k + 900 * k * k) * s, s * 2, k * 9 + i, PILLC[i]); }
   }
 }
 function pillFx(lt, F) {
   const st = F.straw, pe = F.pear, k = lt - (CUE.clat2 - .12);
   if (st.mode !== 'dispense' || k <= 0 || k > .7) return;
-  const o = st.o, s = o.s, g = o.grip && o.grip.r ? o.grip.r : [100, -30], [hx, hy] = bodyPt(o, g[0], g[1] - 30), po = pe.o, ps = po.s;
-  const [mx, my] = bodyPt(po, -18 * Math.sin(-(po.headYaw || 0)) - 6, 52);
+  const o = st.o, s = o.s, g = o.grip && o.grip.r ? o.grip.r : [100, -30], [hx, hy] = bodyPt(o, g[0] + 8, g[1] - 26), m = pearMouth(lt), mx = m[0], my = m[1];
   for (let i = 0; i < 9; i++) {
     const u = (k - i * .045) / .3; if (u <= 0 || u >= 1) continue;
     const x = lerp(hx, mx, u), y = lerp(hy, my, u) - 60 * s * Math.sin(PI * u);
-    pillShape(ctx, x, y, s * 1.15, u * 6 + i, PILLC[i % 6]);
+    pillShape(ctx, x, y, s * 2.1, u * 6 + i, PILLC[i % 6]);
   }
 }
 
@@ -759,7 +842,6 @@ function band(x, y0, y1, lt) {                                                  
   ctx.fillStyle = '#fbfbf7'; ctx.fillRect(x - GAP / 2, y0, GAP, y1 - y0);
   ctx.fillStyle = 'rgba(25,20,40,.35)'; ctx.fillRect(x - GAP / 2, y0, 1.5, y1 - y0); ctx.fillRect(x + GAP / 2 - 1.5, y0, 1.5, y1 - y0);
   if (y1 < H - 1) { V2.glow(x, y1, 60, '255,255,255', .7, 'screen', .4); }
-  reg('panel', [x - GAP / 2, y0, x + GAP / 2, y1], { id: 'divider' });
   ctx.restore();
 }
 function splitStand(c, o, dl, dr) {
@@ -777,10 +859,19 @@ function drawOpen(lt) {                                                         
   drawHalf('L', lt, [0, 0, W, H], { cam, ax: 540, loose: true });
   if (y > 1) { drawHalf('R', lt, [540 + GAP / 2, 0, W, y], { cam, ax: 540, loose: true }); band(540, 0, y, lt); }
 }
+const SQ = { a: snapT(bS('s4') - .06), b: snapT(bS('pe2') - .06) };
+const chipRA = lt => 1 - ss(lt, SQ.a - .02, SQ.a + .1) * (1 - ss(lt, SQ.b - .14, SQ.b - .02));
+function chipFade(lt, x, a) {                                                    /* the kit's chip style, drawn here only while it fades (dressing: it is going or coming) */
+  if (a <= .02) return;
+  const xR = x + GAP / 2, room = W - xR - 100, px = 34;
+  UI.pill(CHIP.R, (xR + W) / 2, 300, { size: px, font: 'Nunito', weight: 900, fill: CHIP.cR, ink: '#ffffff', stroke: '#ffffff', lw: 3, h: px * 1.66, padX: px * .62, hero: false, maxW: room, spacing: 1.2, id: 'medpassChipR', alpha: a });
+}
 function drawSplit(lt) {
-  const x = DIV(lt), o = { t: lt, x, angle: 0, gap: GAP, labelL: CHIP.L, labelR: CHIP.R, colorL: CHIP.cL, colorR: CHIP.cR };
-  const dl = (c, b) => drawHalf('L', lt, toBox(b)), dr = (c, b) => drawHalf('R', lt, toBox(b));
+  const x = DIV(lt), aR = chipRA(lt), o = { t: lt, x, angle: 0, gap: GAP, labelL: CHIP.L, labelR: aR >= .999 ? CHIP.R : undefined, colorL: CHIP.cL, colorR: CHIP.cR };
+  const op = shotAt(lt).id === 'open', oo = op ? { ax: 540, loose: true } : {};
+  const dl = (c, b) => drawHalf('L', lt, toBox(b), oo), dr = (c, b) => drawHalf('R', lt, toBox(b), oo);
   if (has('H21', 'split')) H21.split(ctx, o, dl, dr); else splitStand(ctx, o, dl, dr);
+  if (aR < .999) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); chipFade(lt, x, aR); ctx.restore(); }
 }
 const SC21 = {
   shot: lt => shotAt(lt).id,

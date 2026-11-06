@@ -31,7 +31,7 @@ const L = {
   grab: [-110, 1160],                 /* where Onion's hand would like to reach into the heap (world); she then stands 120 px left of the chosen binder's end */
   liftDx: -10, liftY: 990,            /* where she holds it up: its upper end, 10 px left of where she found it and beside her face (within reach of her shoulder) */
 };
-const T = { doors: 5.48, pour: 5.68, last: 7.30, pluck: 8.40, lift: .52, run: 11.0 };
+const T = { doors: 5.48, pour: 5.68, last: 7.30, pluck: 8.40, lift: .52, run: 10.2 };
 /* collision categories */
 const C = { FL: [2, 4, 8], BIN: [16, 32, 64], SHELF: 128, FACE: 256, CROWN: 512, LAST: 1024, WALL: 2048 };
 const ALLBIN = C.BIN[0] | C.BIN[1] | C.BIN[2] | C.LAST;
@@ -45,7 +45,8 @@ function layout() {
   /* a binder that sits behind his face in the picture is in the back slab: it passes behind him (it would start inside the face's collider); the bottom row under his face (the cave below his chin) is
    * short enough to clear the collider and is never in the back slab: it tumbles out over his feet and buries his legs */
   const F = L.radish.face, CAVE0 = F.x0, CAVE1 = F.x1;
-  const behindFace = (x, y, hw, hh) => x + hw > F.x0 - 10 && x - hw < F.x1 + 10 && y + hh > F.roof - 10 && y - hh < F.y1 + 4;
+  const behindFace = (x, y, hw, hh) => (x + hw > F.x0 - 10 && x - hw < F.x1 + 10 && y + hh > F.roof - 10 && y - hh < F.y1 + 4) ||
+    (x + hw > L.radish.x - 130 && x - hw < L.radish.x + 130 && y - hh > F.roof + 40);      /* behind his body's sides too: a front binder would pop in front of him when it is let go */
   for (let r = 0; r < 5; r++) {
     const y0 = L.shelves[r], gaps = r === 4 ? [[cl.ix0 + 1.5, L.lastX - 47], [L.lastX + 47, cl.ix1 - 1.5]] : (r === 0 ? [[cl.ix0 + 1.5, CAVE0 - 1], [CAVE1 + 1, cl.ix1 - 1.5]] : [[cl.ix0 + 1.5, cl.ix1 - 1.5]]);
     if (r === 0) {        /* the cave under his chin: a stack of binders lying flat on the closet floor, short ones standing either side (they clear the face's collider) */

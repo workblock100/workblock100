@@ -137,7 +137,7 @@ function labelStand(o) {
   ctx.restore();
   return [o.x - w / 2, o.y - h / 2, o.x + w / 2, o.y + h / 2];
 }
-const surveyLabel = o => has21('label') ? A21.label(ctx, o) : labelStand(o);
+const surveyLabel = o => { if (has21('label')) return A21.label(ctx, Object.assign({}, o, { s: (o.s || 1) * 236 / 250 })); if (o.t0 != null && (o.t ?? 0) < o.t0) return null; return labelStand(o); };
 /* a padlock (brass body, steel shackle): o = { x, y (centre of the body), s, shut 0..1, swing (radians about the shackle top), t } */
 function padlockStand(o) {
   const s = o.s || 1, sh = c01(o.shut ?? 1), lift = (1 - sh) * 46 * s;
@@ -151,7 +151,7 @@ function padlockStand(o) {
   ctx.fillStyle = '#3a2a10'; ctx.beginPath(); ctx.arc(0, 8 * s, 11 * s, 0, TAU); ctx.fill(); ctx.fillRect(-4.5 * s, 8 * s, 9 * s, 26 * s);
   ctx.restore();
 }
-const padlockP = o => has21('padlock') ? A21.padlock(ctx, o) : padlockStand(o);
+const padlockP = o => has21('padlock') ? A21.padlock(ctx, { x: o.x, y: o.y, s: (o.s || 1) * 1.72, rot: o.swing || 0, t: o.t, open: 1 - c01(o.shut ?? 1), t0: o.t0, color: 'brass' }) : padlockStand(o);
 /* the wall sanitizer dispenser: o = { x, y (centre), s, pump 0..1 (the bar pressed, a dollop leaves the nozzle), level 0..1, t } -> { nozzle: [x, y] } */
 function sanitizerStand(o) {
   const s = o.s || 1, p = c01(o.pump || 0), lv = c01(o.level ?? 1);
@@ -168,7 +168,7 @@ function sanitizerStand(o) {
   ctx.restore();
   return { nozzle: [o.x, o.y + 130 * s] };
 }
-const sanitizerP = o => has21('sanitizer') ? (A21.sanitizer(ctx, o) || { nozzle: [o.x, o.y + 130 * (o.s || 1)] }) : sanitizerStand(o);
+const sanitizerP = o => { if (has21('sanitizer')) { const k = (o.s || 1) * 1.17; A21.sanitizer(ctx, { x: o.x, y: o.y, s: k, t: o.t, pump: o.pump || 0, level: o.level ?? 1, t0: o.t0, label: o.label }); return { nozzle: [o.x, o.y + 113 * k] }; } return sanitizerStand(o); };
 /* the fridge thermometer: a round dial (blue too cold, green 36-46 F, red too warm), o = { x, y, s, deg, t, beep 0..1 } */
 const DEG_A = d => lerp(-2.2, 2.2, c01((d - 26) / 40)) - PI / 2;              /* 26 F at the lower left, 66 F at the lower right */
 function thermoStand(o) {
@@ -188,7 +188,8 @@ function thermoStand(o) {
   ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.ellipse(-50 * s, -70 * s, 70 * s, 34 * s, -.6, 0, TAU); ctx.fill();   /* the glass */
   ctx.restore();
 }
-const thermoP = o => has21('fridgeThermo') ? A21.fridgeThermo(ctx, o) : thermoStand(o);
+const thermoP = o => has21('fridgeThermo') ? A21.fridgeThermo(ctx, { x: o.x, y: o.y, s: (o.s || 1) * 2.07, deg: o.deg, t: o.t, wobble: o.wobble || 0, hero: o.hero }) : thermoStand(o);
+const SAFE_DEG = () => has21('fridgeThermo') ? 37 : 40, HOT_DEG = () => has21('fridgeThermo') ? 50 : 52;
 /* the crash cart (red, five drawers, a hasp on the top drawer with a numbered breakaway seal): o = { x, y (bottom centre), s, open 0..1 (the top drawer ajar), seal 0..1 (the tag on), tagSwing, t } */
 function crashCartStand(o) {
   const s = o.s || 1, w = 300 * s, h = 430 * s, x0 = o.x - w / 2, y0 = o.y - h - 26 * s, op = c01(o.open || 0);
@@ -212,29 +213,28 @@ function crashCartStand(o) {
   ctx.restore();
   return { x0, y0, x1: x0 + w, y1: o.y, hasp: [hx, hy] };
 }
-const crashCartP = o => has21('crashCart') ? (A21.crashCart(ctx, o) || crashCartBox(o)) : crashCartStand(o);
+const crashCartP = o => { if (has21('crashCart')) { const s = o.s || 1; A21.crashCart(ctx, { x: o.x, y: o.y, s, t: o.t, open: o.open || 0, sealed: (o.seal ?? 1) > .5, seal: '0042137', t0: o.sealT0 }); return { hasp: [o.x + 129 * s, o.y - 350 * s], kit: true }; } return crashCartStand(o); };
 const crashCartBox = o => { const s = o.s || 1; return { x0: o.x - 150 * s, y0: o.y - 456 * s, x1: o.x + 150 * s, y1: o.y, hasp: [o.x + 116 * s, o.y - 456 * s + 14 * s + 80 * s * .45] }; };
 /* one policy binder seen from its spine: o = { x, y (centre), w, h, rot, color, spine (text), t } */
 function binderStand(o) {
   const w = o.w || 60, h = o.h || 220, col = o.color || '#2f5fa8';
   ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot || 0); ctx.lineJoin = 'round';
   ctx.fillStyle = lg(-w / 2, 0, w / 2, 0, [[0, shade(col, 1.25)], [.5, col], [1, shade(col, .7)]]); rr(-w / 2, -h / 2, w, h, Math.min(10, w * .16)); ctx.fill(); ink(Math.max(1.5, w * .05));
-  ctx.fillStyle = '#f7f6f0'; rr(-w * .34, -h * .32, w * .68, h * .3, 3); ctx.fill();                                            /* the spine label window */
+  ctx.fillStyle = '#f7f6f0'; rr(-w * .38, -h * .34, w * .76, h * .32, 3); ctx.fill();                                            /* the spine label window */
   ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(-w * .42, -h * .46, w * .12, h * .92);
   ctx.fillStyle = shade(col, .5); ctx.beginPath(); ctx.arc(0, h * .3, w * .14, 0, TAU); ctx.fill();                           /* the finger hole */
-  if (o.spine) TXT(o.spine, 0, -h * .17, { size: Math.min(w * .34, 26), weight: 900, fill: '#1e2230', maxW: w * .6, hero: o.hero });
+  if (o.spine) TXT(o.spine, 0, -h * .18, { size: Math.min(w * .36, 44), weight: 900, fill: '#1e2230', maxW: w * .68, hero: o.hero });
   ctx.restore();
 }
 const binderP = o => has21('binder') ? A21.binder(ctx, o) : binderStand(o);
 /* the AGENCY sticker badge (accessory on the chest): A21.agencyBadge when it lands, else this stand-in. o.agNoText: no lettering (for the cached crowd sprites) */
 EXT.acc.fp21p_agency = (o, k, t, layer) => {
   if (layer !== 'front') return;
-  ctx.save(); ctx.translate(-k.rx * .34, k.ry * .42); ctx.rotate(-.12 + .02 * Math.sin(t * 2 + (o.seed || 0)));
-  ctx.fillStyle = 'rgba(30,20,30,.2)'; rr(-38, -20, 80, 46, 9); ctx.fill();
-  ctx.fillStyle = '#ffffff'; rr(-41, -24, 82, 46, 9); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.6; ctx.stroke();
-  ctx.save(); rr(-41, -24, 82, 46, 9); ctx.clip(); ctx.fillStyle = '#2b6cff'; ctx.fillRect(-41, -24, 82, 15); ctx.restore();
-  if (!o.agNoText) TXT('AGENCY', 0, 8, { size: 15, weight: 900, fill: '#1c2a5a', maxW: 70, hero: false });
-  else { ctx.strokeStyle = '#1c2a5a'; ctx.lineWidth = 3.4; ctx.beginPath(); ctx.moveTo(-26, 8); ctx.quadraticCurveTo(-8, -2, 4, 10); ctx.quadraticCurveTo(16, 2, 26, 7); ctx.stroke(); }
+  ctx.save(); ctx.translate(-k.rx * .44, k.ry * .26); ctx.rotate(-.1);
+  ctx.fillStyle = '#ffffff'; rr(-35, -15, 70, 30, 6); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 2.4; ctx.stroke();
+  ctx.save(); rr(-35, -15, 70, 30, 6); ctx.clip(); ctx.fillStyle = '#7a3fb0'; ctx.fillRect(-35, -15, 70, 7); ctx.restore();
+  if (!o.agNoText) TXT('AGENCY', 0, 3.5, { size: 14, weight: 900, fill: '#5a2a90', maxW: 62, hero: false });
+  else { ctx.fillStyle = 'rgba(90,42,144,.55)'; ctx.fillRect(-22, 1, 45, 5); }
   ctx.restore();
 };
 function agencyOn(o) {
@@ -277,7 +277,9 @@ function labelGunArt(fire) {
   if (fire > .02) { ctx.save(); ctx.translate(62, -16); ctx.rotate(.12 * (1 - fire)); ctx.fillStyle = '#ffffff'; rr(0, -9, 34 * fire, 18, 3); ctx.fill(); ctx.strokeStyle = 'rgba(40,40,60,.6)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.fillStyle = '#d4202c'; ctx.fillRect(0, -9, 34 * fire, 4); ctx.restore(); }
 }
 EXT.prop.fp21p_labelgun = (side, o, t) => { const S = o.lgScale || 1.15; ctx.save(); ctx.rotate((o.lgRot ?? -.2) * side); ctx.scale(S * side, S); labelGunArt(c01(o.lgFire || 0)); ctx.restore(); };
-PROP_BOX.fp21p_labelgun = Object.assign([-60, -90, 60, 50], { nearFace: true, mirror: true });
+/* where the label gun's nose is, relative to the holding LEFT hand (character units), for a gun angle lgRot and scale S (the prop rotates by lgRot * side and mirrors for side -1) */
+function gunNose(rot, S) { const X = -62 * S, Y = -16 * S, a = -rot; return [Math.cos(a) * X - Math.sin(a) * Y, Math.sin(a) * X + Math.cos(a) * Y]; }
+PROP_BOX.fp21p_labelgun = o => Object.assign(o && o.lgTight ? [-36, -40, 67, 4] : [-60, -90, 60, 50], { nearFace: true, mirror: true });   /* tight while it tags a forehead: the nose only touches the label above the face */
 /* the sandwich (two slices, lettuce, cheese, tomato; a bite out of the top right): origin = the middle of the bottom edge */
 function sandwichArt(bite = 1) {
   ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -332,7 +334,7 @@ const SHELF = { x0: 872, x1: 1176, y: 792 };                                    
 const CLOCKP = { x: 1030, y: 520, r: 50 }, SIGNP = { x: 880, y: 382, w: 420, h: 58 };
 const CLOSET = { x0: 1244, x1: 1416, y0: 712, win: [1294, 1010, 72, 124] };      /* Brenda's closet: the frame, the vision window [x, y, w, h] at the cast's eye level */
 const SAN = { x: 1520, y: 880, s: .42 };                                         /* the sanitizer dispenser in the hall */
-const STAND = { tom: [752, FL], onion: [968, FL], lemon: [1120, FL], mango: [1330, 1380], straw: [470, 1300], brenda: [1470, 1262] };
+const STAND = { tom: [752, FL], onion: [968, FL], lemon: [1120, FL], mango: [1330, 1380], straw: [348, 1312], brenda: [1490, 1262] };
 const SCL = { tom: .95, onion: .82, lemon: .86, mango: .9, straw: .84, brenda: .76, melon: 1.0 };
 /* the state of the station: what the montage has done by scene time lt */
 const ST = lt => ({
@@ -391,11 +393,11 @@ function posterFace(side, x, y, w, h, id) {
   if (side === 0) {
     ctx.fillStyle = lg(0, y, 0, y + h, [[0, '#f6e8ff'], [1, '#ffe9f4']]); rr(x, y, w, h, 8); ctx.fill(); ink(3);
     UI.container(id, 'sign', [x, y, x + w, y + h], 4);
+    ctx.save(); ctx.translate(x + w * .5, y + h * .88); ctx.rotate(-.18); partyHatArt(h * .0026, '#ffd23a', '#7b4bd6'); ctx.restore();
+    for (let i = 0; i < 14; i++) { ctx.fillStyle = ['#ff4d6d', '#ffd23a', '#3ec6e0', '#7ad94a'][i % 4]; ctx.fillRect(x + w * (.08 + .84 * rn(7, i)), y + h * (.6 + .3 * rn(8, i)), w * .028, h * .018); }
     TXT('FUN COMMITTEE', x + w / 2, y + h * .1, { size: h * .07, weight: 900, fill: '#6a3fb0', spacing: 1.2, cid: id, maxW: w * .86 });
     TXT('PARTY', x + w / 2, y + h * .27, { size: h * .2, font: 'Bangers', weight: 400, fill: '#e8406a', stroke: '#ffffff', lw: h * .028, spacing: 2, cid: id, maxW: w * .8 });
     TXT('TIME!', x + w / 2, y + h * .46, { size: h * .2, font: 'Bangers', weight: 400, fill: '#e8406a', stroke: '#ffffff', lw: h * .028, spacing: 2, cid: id, maxW: w * .8 });
-    ctx.save(); ctx.translate(x + w * .5, y + h * .82); ctx.rotate(-.18); partyHatArt(h * .0042, '#ffd23a', '#7b4bd6'); ctx.restore();
-    for (let i = 0; i < 14; i++) { ctx.fillStyle = ['#ff4d6d', '#ffd23a', '#3ec6e0', '#7ad94a'][i % 4]; ctx.fillRect(x + w * (.08 + .84 * rn(7, i)), y + h * (.56 + .38 * rn(8, i)), w * .028, h * .018); }
     TXT('MANDATORY FUN 3 PM', x + w / 2, y + h * .94, { size: h * .035, weight: 900, fill: '#6a3fb0', cid: id, maxW: w * .86, hero: false });
   } else {
     ctx.fillStyle = lg(0, y, 0, y + h, [[0, '#e6fbf1'], [1, '#d4f2ff']]); rr(x, y, w, h, 8); ctx.fill(); ink(3);
@@ -426,8 +428,9 @@ function stShelf(lt, st) {
   BIND.forEach(([col, sp], i) => {
     let x = S.x0 + 22 + i * (bw + 2) + bw / 2, rot = 0, y = S.y - bh / 2, h = bh;
     if (!st.aligned) { const mess = [[-6, -.06], [0, 0], [8, .14], [14, .17], [30, -.1], [36, 0], [44, .05], [62, -.17], [66, -.15]][i]; x += mess[0]; rot = mess[1]; if (i === 4) { rot = -PI / 2 + .02; x = S.x1 - 66; } }
-    const flat = Math.abs(rot) > .2;                                     /* a binder lying on its side carries no spine text (text never tilts past 12 degrees) */
-    binderP({ x, y: flat ? S.y - bw / 2 : S.y - Math.cos(rot) * bh / 2, w: bw, h, rot, color: col, spine: flat ? '' : sp, t: lt, hero: false });
+    const flat = Math.abs(rot) > .2, by = flat ? S.y - bw / 2 : S.y - Math.cos(rot) * bh / 2, sb = scrBox(x, by, bw / 2, bh / 2);   /* no spine text when lying flat, near the frame edge or under the clock pill */
+    const clear = sb.x0 > 46 && sb.x1 < W - 46 && sb.y0 > 46 && sb.y1 < H - 46 && !(sb.x0 < 506 && sb.y0 < 250);
+    binderP({ x, y: by, w: bw, h, rot, color: col, spine: flat || !clear ? false : sp, t: lt, hero: false });
   });
 }
 /* Brenda's closet: a plain door in a frame, a narrow vision window (dark inside: a shelf, a mop) that the NOT A CLOSET sign covers from the off-beat of shot 8 on; a crumb under the door */
@@ -460,7 +463,12 @@ function stCloset(lt, st, o = {}) {
   ctx.fillStyle = '#7a8090'; rr(dx0 + 44, dy0 + 270, 60, 18, 4); ctx.fill();                                                         /* a blank room plate */
   if (st.closetSign && o.sign !== false) notACloset(wx + ww / 2, wy + wh / 2 + 2, 1, -.035 + .03 * rattle, 'nac', o.hero);
   ctx.restore();
-  if (st.closetSign) { ctx.fillStyle = '#d9b57a'; ctx.beginPath(); ctx.ellipse(o.crumbX ?? 1352, FL + 3, 6, 3.4, .3, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(90,60,30,.6)'; ctx.lineWidth = 1.4; ctx.stroke(); }
+  if (st.closetSign) {
+    ctx.fillStyle = '#2a2230'; ctx.fillRect(CLOSET.x0 + 14, FL - 5, CLOSET.x1 - CLOSET.x0 - 28, 5);                                    /* the gap under the door */
+    const cx = o.crumbX ?? 1352, cy = FL + 4 - (o.crumbIn || 0) * 5; if ((o.crumbIn || 0) < 1) { ctx.fillStyle = '#e2bd84'; ctx.beginPath(); ctx.ellipse(cx, cy, 9, 5.5, .3, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(90,60,30,.7)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.fillStyle = '#5fbf4a'; ctx.beginPath(); ctx.ellipse(cx + 3, cy - 2, 3.4, 2, .4, 0, TAU); ctx.fill(); }
+    if (o.fingers > 0) { ctx.save(); ctx.beginPath(); ctx.rect(CLOSET.x0, FL - 4, CLOSET.x1 - CLOSET.x0, 60); ctx.clip(); ctx.translate(cx + 20, FL - 4 + 16 * o.fingers); ctx.scale(.55, .55);
+      for (let i = 0; i < 3; i++) { ctx.fillStyle = '#ffffff'; rr(-30 + i * 22, -40, 18, 46, 9); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 3.4; ctx.stroke(); } ctx.restore(); }
+  }
 }
 function stCart(lt, st) { crashCartP({ x: CART.x, y: CART.y, s: CART.s, open: st.sealed ? 0 : .7, seal: st.sealed ? 1 : 0, t: lt, hero: false }); }
 function stFridge(lt, st) {
@@ -471,7 +479,7 @@ function stFridge(lt, st) {
   ctx.fillStyle = lg(0, gy, 0, gy + gh, [[0, '#cfe6f5'], [1, '#a8c6dc']]); rr(gx, gy, gw, gh, 6); ctx.fill(); ctx.strokeStyle = 'rgba(40,60,90,.6)'; ctx.lineWidth = 2; ctx.stroke();
   for (let i = 1; i < 4; i++) { const sy = gy + gh * i / 4; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(gx + 4, sy, gw - 8, 4);
     for (let j = 0; j < 4; j++) { ctx.fillStyle = ['#f2a33a', '#e8e6de', '#5fa8e8', '#f2f2f2'][(i + j) % 4]; rr(gx + 10 + j * 31, sy - 30, 20, 30, 4); ctx.fill(); ctx.strokeStyle = 'rgba(40,40,60,.4)'; ctx.lineWidth = 1.4; ctx.stroke(); } }
-  ctx.save(); ctx.translate(gx + gw / 2, gy + 34); thermoP({ x: 0, y: 0, s: .14, deg: st.logged ? 40 : 52, t: lt, hero: false }); ctx.restore();
+  ctx.save(); ctx.translate(gx + gw / 2, gy + 34); thermoP({ x: 0, y: 0, s: .14, deg: st.logged ? SAFE_DEG() : HOT_DEG(), t: lt, hero: false }); ctx.restore();
   ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.beginPath(); ctx.moveTo(gx, gy + gh * .6); ctx.lineTo(gx + gw * .5, gy); ctx.lineTo(gx + gw * .8, gy); ctx.lineTo(gx, gy + gh); ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#9aa3b2'; rr(F.x1 - 26, gy + 40, 10, gh - 80, 5); ctx.fill();                                                      /* the handle */
   ctx.fillStyle = '#fbfaf2'; ctx.fillRect(F.x0 + 22, F.y1 - 50, w - 44, 36); ctx.strokeStyle = 'rgba(40,40,60,.5)'; ctx.lineWidth = 1.6; ctx.strokeRect(F.x0 + 22, F.y1 - 50, w - 44, 36);   /* the TEMP LOG */
@@ -547,10 +555,10 @@ function coffeeMakerP(x, y, s, lt, o = {}) {
 function stCounterTop(lt, st, o = {}) {
   const T = CTR.top;
   if (!st.coffeeGone && !o.noCoffee) coffeeMakerP(TOPX.coffee, T + 2, .5, lt);
-  if (!o.noBanana) bananaArt(TOPX.banana, T + 1, .7, st.bananaLab);
-  if (!o.noCup) cupArt(TOPX.cup, T + 1, .95, st.cupLab);
+  if (!o.noBanana) bananaArt(TOPX.banana - 6, T + 1, .95, st.bananaLab);
+  if (!o.noCup) cupArt(TOPX.cup + 4, T + 1, 1.2, st.cupLab);
   juiceCarton(TOPX.carton, T + 1, .62, st.labels ? 2 : 0);
-  laminatorArt(TOPX.lam, T + 2, .62, { run: o.lamRun || 0 });
+  laminatorArt(TOPX.lam, T + 2, .72, { run: o.lamRun || 0 });
   if (st.lam && !o.noFlatHat) flatHatArt(TOPX.lam + 4, T - 26, .5, -1.45, 0);
 }
 /* the hall to the right of the closet: the handrail, the sanitizer, a resident's door */
@@ -588,8 +596,8 @@ const hopAt = ag => ag < 0 || ag > .84 ? 0 : 30 * Math.abs(Math.sin(PI * ag / .4
 const pulseAt = (lt, t0, hz = 14, tau = .18) => lt < t0 ? 0 : Math.sin((lt - t0) * hz) * Math.exp(-(lt - t0) / tau);
 const T_HATIN = W_LAM + .02, T_HATOUT = W_LAMIT - .12;                       /* the hat goes into the laminator / the flat hat is out */
 const lamIn = lt => ss(lt, T_HATIN, T_HATIN + .34), lamOut = lt => ss(lt, T_HATOUT, T_HATOUT + .3);
-const ONION_STEP = lt => ss(lt, 3.02, 3.32) * (1 - ss(lt, 3.92, 4.18));      /* Onion sidesteps toward Tomato to label her forehead */
-function onionX(lt) { return lerp(STAND.onion[0], 896, ONION_STEP(lt)); }
+const ONION_STEP = lt => 0;                                                   /* Onion stays put: Tomato leans in to be labelled */
+function onionX(lt) { return lt >= 2.2 && lt < 4.19 ? 940 : STAND.onion[0]; }
 function castS(lt, shot) {
   const C = {}, id = shot ? shot.id : '';
   /* TOMATO: the label gun (open, t1), labelled on the forehead at "Initial" (3.43), the party hat until Onion takes it (5.90), the laminated hat after */
@@ -598,29 +606,32 @@ function castS(lt, shot) {
     const hatOn = lt < 5.9, endLine = lt >= 30.0;
     const gripR = inT1 ? K([[0, [112, 10]], [.9, [112, 10]], [1.12, [118, -96]], [W_EVERY - .05, [126, -112]], [W_EVERY + .06, [120, -88]], [2.2, [122, -104]]], lt) : [104, 40];
     const touch = lt >= W_FUN - .2 && lt < 5.75 ? ss(lt, W_FUN - .2, W_FUN + .1) * (1 - ss(lt, 5.5, 5.75)) : 0;
-    const gripL = touch > 0 ? [lerp(-104, -40, touch), lerp(40, -148, touch)] : [-104, 40];
+    const gripL = touch > 0 ? [lerp(-104, -64, touch), lerp(40, -92, touch)] : [-104, 40];
     let expr = 'happy', look = [0, 0], yaw = 0, head = 0;
     if (id === 'open') { expr = 'happy'; look = [.4 * Math.sin(lt * 7), -.2]; head = .15 * Math.sin(lt * 6); }
     if (id === 't1') { expr = 'happy'; look = [.35, -.5]; head = .12; }
-    if (id === 'o1') { expr = lt < W_INIT ? 'happy' : 'shock'; look = lt < W_INIT ? [.8, .1] : [.0, -.95 * lookUp]; yaw = .25; head = .3; }
+    if (id === 'o1') { expr = lt < W_INIT ? 'happy' : 'shock'; look = lt < W_INIT ? [.8, .1] : [.0, -.95 * lookUp]; yaw = .1; head = .16; }
     if (id === 't2') { expr = 'sad'; look = [.3, -.15]; head = .1 * Math.sin(lt * 2); }
     if (id === 'o1b') { expr = gasp > .5 ? 'shock' : 'sad'; look = [.8, .2]; yaw = .35; head = .35; }
     if (id === 'br1b') { expr = 'shock'; look = [.9, -.05]; yaw = .45 * ss(lt, 26.8, 27.1); head = .55 * ss(lt, 26.8, 27.1); }
     if (id === 'o2' || id === 'end') { expr = 'happy'; look = [0, 0]; }
-    const o = A15.tomato({ x: STAND.tom[0], y: FL - hopAt(lt - W_EVERY) * .6, s: SCL.tom, t: lt, tomPose: 'fruit', who: 'tom', expr, look, yaw, headYaw: head, plant: true, headset: false,
+    const lean = ss(lt, 2.98, 3.3) * (1 - ss(lt, 3.85, 4.12));
+    const o = A15.tomato({ x: STAND.tom[0] + 20 * lean, y: FL - hopAt(lt - W_EVERY) * .6, s: SCL.tom, t: lt, tomPose: 'fruit', who: 'tom', expr, look, yaw, headYaw: head, plant: true, headset: false,
       arms: { l: touch > 0 ? 'hold' : 'rest', r: (lt < 2.24) ? 'hold' : endLine ? 'hold' : 'rest' }, hold: {}, grip: { l: gripL, r: gripR }, lgFire: fk > 0 ? c01(fk) : (inT1 ? .2 : 0), lgRot: -.6 });
     if (lt < 2.24) o.hold.r = 'fp21p_labelgun';
+    if (endLine) { o.hold.r = 'fp21p_flathat'; o.grip.r = [96, -40]; o.expr = 'happy'; o.lid = .05; }
     o.acc = (o.acc || []).concat(['fp21p_flabel']).concat(hatOn ? ['fp21p_partyhat'] : []); o.flabel = labK; o.hat = { c1: '#ffd23a', c2: '#e8406a', rot: .2, dx: .12, dy: .92, s: .95 }; o.formsN = 0;
     if (lt >= W_INIT && lt < W_INIT + .3) o.squash = .05 * pulseAt(lt, W_INIT, 18, .1);
     C.tom = o; }
   /* ONION: the tablet clipboard; the label gun in the left hand for o1; the hat in the right hand for o1b; tears of joy whenever she speaks */
   { const sp = speaking('o1', lt) || speaking('o1b', lt) || speaking('o2', lt), x = onionX(lt);
-    const tgt = [[W_DATE, [TOPX.banana + 6, CTR.top - 10]], [W_TIME, [TOPX.cup, CTR.top - 58]], [W_INIT, [STAND.tom[0] + 34, FL - (84 + 95.4) * SCL.tom - 58 * SCL.tom]]];
+    const tgt = [[W_DATE, [TOPX.banana + 6, CTR.top - 10]], [W_TIME, [TOPX.cup, CTR.top - 58]], [W_INIT, [STAND.tom[0] + 20 + 18, FL - (84 + 95.4) * SCL.tom - 97 * SCL.tom]]];
     let gl = null; if (id === 'o1' || (lt >= 2.0 && lt < 4.3)) {   /* the label gun's nose goes to each target on its word, with a quick wind-up */
-      const toLocal = ([wx, wy]) => [(wx - x) / SCL.onion + 34, (wy - (FL - (78 + 111.6) * SCL.onion)) / SCL.onion + 6];
+      const up = lt >= W_TIME + .2, nose = gunNose(up ? 0 : .9, 1.05);   /* the gun points down-left at the banana and the cup, up-left at the forehead */
+      const toLocal = ([wx, wy]) => [(wx - x) / SCL.onion - nose[0], (wy - (FL - (78 + 111.6) * SCL.onion)) / SCL.onion - nose[1]];
       const rest = [-92, 44], keys = [[0, rest], [W_DATE - .22, toLocal([tgt[0][1][0] + 30, tgt[0][1][1] - 50])], [W_DATE, toLocal(tgt[0][1])], [W_DATE + .14, toLocal([tgt[0][1][0] + 10, tgt[0][1][1] - 30])],
         [W_TIME - .2, toLocal([tgt[1][1][0] + 20, tgt[1][1][1] - 40])], [W_TIME, toLocal(tgt[1][1])], [W_TIME + .14, toLocal([tgt[1][1][0] + 10, tgt[1][1][1] - 20])],
-        [W_INIT - .2, toLocal([tgt[2][1][0] + 40, tgt[2][1][1] - 30])], [W_INIT, toLocal(tgt[2][1])], [W_INIT + .2, toLocal([tgt[2][1][0] + 26, tgt[2][1][1] + 6])], [4.0, rest]];
+        [W_TIME + .2, toLocal([tgt[2][1][0] + 60, tgt[2][1][1] + 40])], [W_INIT - .2, toLocal([tgt[2][1][0] + 40, tgt[2][1][1] - 10])], [W_INIT, toLocal(tgt[2][1])], [W_INIT + .2, toLocal([tgt[2][1][0] + 62, tgt[2][1][1] - 24])], [3.95, toLocal([tgt[2][1][0] + 112, tgt[2][1][1] + 110])]];
       gl = K(keys, lt); }
     const hatHand = lt >= 5.88 && lt < T_HATIN + .36, feed = lamIn(lt);
     const gripR = hatHand ? K([[5.88, [96, 10]], [T_HATIN - .05, [150, -10]], [T_HATIN + .34, [190, 66]]], lt) : [92, 44];
@@ -630,20 +641,21 @@ function castS(lt, shot) {
     if (id === 'o1b') { look = [.9, .5]; yaw = .3; head = .25; }
     if (id === 'br1b') { look = [.95, -.05]; yaw = .35 * ss(lt, 26.76, 27.0); head = .6 * ss(lt, 26.76, 27.0); expr = 'shock'; }
     if (id === 'o2') { look = [0, -.1]; expr = 'onion_cry'; }
-    const cheer = id === 'o2' && lt >= W_READY - .1;
-    const o = A15.onion({ x, y: FL, s: SCL.onion, t: lt, pose: gl || hatHand ? 'free' : 'clip', who: 'onion', yaw, headYaw: head, look, expr, cry: sp ? .9 : .66, sob: sp ? .25 + .25 * Math.max(0, Math.sin(lt * 9)) : .1, plant: true,
+    const cheer = (id === 'o2' && lt >= W_READY - .1) || id === 'end';
+    const o = A15.onion({ x, y: FL, s: SCL.onion, t: lt, pose: gl || hatHand || cheer ? 'free' : 'clip', who: 'onion', yaw, headYaw: head, look, expr, cry: sp ? .9 : .66, sob: sp ? .25 + .25 * Math.max(0, Math.sin(lt * 9)) : .1, plant: true,
       arms: { l: gl ? 'hold' : cheer ? 'cheer' : 'hold', r: hatHand ? 'hold' : cheer ? 'cheer' : 'rest' }, hold: {}, grip: { l: gl || [-74, 104], r: gripR } });
-    if (gl) { o.hold.l = 'fp21p_labelgun'; o.lgRot = .5; o.lgScale = 1.05; o.lgFire = [W_DATE, W_TIME, W_INIT].some(t0 => lt >= t0 && lt < t0 + .12) ? .9 : 0; }
+    if (gl) { const up = lt >= W_TIME + .2; o.hold.l = 'fp21p_labelgun'; o.lgRot = up ? 0 : .9; o.lgScale = 1.05; o.lgFire = [W_DATE, W_TIME, W_INIT].some(t0 => lt >= t0 && lt < t0 + .12) ? .9 : 0; o.lgTight = up; o.armScale = 1.12 + .3 * ss(lt, W_INIT - .3, W_INIT - .1) * (1 - ss(lt, W_INIT + .3, W_INIT + .6)); }
     else if (!cheer) o.hold.l = 'fp15_tabletclip';
     if (ONION_STEP(lt) > 0 && ONION_STEP(lt) < 1) { o.gait = Math.abs(x - STAND.onion[0]); o.dir = -1; o.stride = 30; }
     C.onion = o; }
   /* LEMON (the open: carrying a stack of binders across the front), MANGO (the open: mopping at a run), STRAWBERRY (frozen by the fridge with a med cup), BRENDA (on her chair, mid-sandwich) */
-  { const x = lerp(240, 560, ss(lt, 0, 1.1));
-    C.lemon = A7.lemon({ x, y: 1348, s: SCL.lemon * 1.04, t: lt, who: 'lemon', expr: 'neutral', lid: .45, look: [.6, .1], yaw: .5, headYaw: .3, gait: x * 1.2, dir: 1, stride: 34, vx: 300,
-      arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp21p_binders' }, grip: { l: [-30, 30], r: [40, 34] }, plant: true }); }
-  { const x = lerp(1430, 1150, ss(lt, 0, 1.1)), sw = Math.sin(lt * 11);
-    C.mango = A7.mango({ x, y: 1392, s: SCL.mango, t: lt, who: 'mango', expr: 'panic', look: [-.5, .3], yaw: -.45, headYaw: -.3, gait: (1430 - x) * 1.3, dir: -1, stride: 34, vx: -260,
-      arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp21p_mop' }, grip: { l: [-90 + 30 * sw, 70], r: [-40 + 30 * sw, 20] }, mopSwing: sw, plant: true }); }
+  if (id === 'end') C.lemon = A7.lemon({ x: 1150, y: FL, s: SCL.lemon, t: lt, who: 'lemon', expr: 'happy', lid: .1, look: [0, 0], plant: true, noBob: true, acc: ['readers', 'lanyard7'], arms: { l: 'rest', r: 'rest' } });
+  else { const x = lerp(640, 500, ss(lt, 0, 1.0));
+    C.lemon = A7.lemon({ x, y: 1348, s: SCL.lemon * 1.04, t: lt, who: 'lemon', expr: 'panic', lid: .1, look: [-.6, .1], yaw: -.45, headYaw: -.3, gait: (640 - x) * 1.6, dir: -1, stride: 34, vx: -220,
+      arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp21p_binders' }, grip: { l: [-40, 30], r: [30, 34] }, plant: true }); }
+  { const x = lerp(1400, 1230, ss(lt, 0, 1.0)), sw = Math.sin(lt * 14);
+    C.mango = A7.mango({ x, y: 1392, s: SCL.mango, t: lt, who: 'mango', expr: 'panic', look: [-.5, .3], yaw: -.3, headYaw: -.25, gait: (1400 - x) * 1.3, dir: -1, stride: 34, vx: -260,
+      arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp21p_mop' }, grip: { l: [-100 + 24 * sw, 60], r: [-10 + 24 * sw, 40] }, mopSwing: sw, plant: true }); }
   { C.straw = A11.straw({ x: STAND.straw[0], y: STAND.straw[1], s: SCL.straw, t: lt, who: 'straw', expr: 'dead', lid: .5, look: [.5, 0], yaw: .25, headYaw: .2, plant: true,
       arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp18_medcup' }, grip: { l: [-104, 36] }, cupScale: 1.2 }); }
   { const bite = (lt % 2.2) < .3;
@@ -684,11 +696,11 @@ const handAt = (o, side) => { const k = KINDS[o.kind], s = o.s, g = o.grip[side]
 
 // ------------------------------------------------------------------ the shots (scene-local seconds; every start is snapped to a frame; the boundary frame is the NEW shot)
 const SH = [
-  { id: 'open', s: 0, set: 'st', k: 'wide', x: 880, y: 1030, z: [.66, .7], show: ['straw', 'lemon', 'tom', 'onion', 'mango', 'brenda'] },
+  { id: 'open', s: 0, set: 'st', k: 'wide', x: 920, y: 1050, z: [.74, .77], show: ['straw', 'lemon', 'tom', 'onion', 'mango', 'brenda'] },
   { id: 't1', s: 1.03, set: 'st', k: 'face', foc: 'tom', z: [2.0, 2.14], up: 150, dx: -40, show: ['tom'] },
   { id: 'o1', s: 2.24, set: 'st', k: 'wide', x: 858, y: 1060, z: [1.42, 1.5], show: ['tom', 'onion'] },
   { id: 't2', s: 4.19, set: 'st', k: 'face', foc: 'tom', z: [2.2, 2.34], up: 130, dx: 20, show: ['tom'] },
-  { id: 'o1b', s: 5.90, set: 'st', k: 'wide', x: 955, y: 1070, z: [1.3, 1.36], show: ['tom', 'onion'] },
+  { id: 'o1b', s: 5.90, set: 'st', k: 'wide', x: 985, y: 1066, z: [1.2, 1.25], show: ['tom', 'onion'] },
   ...MCUE.map((c, k) => ({ id: 'm' + (k + 1), cue: c, s: 7.211 + k, set: 'ins', ins: k })),
   { id: 'me1', s: 19.211, set: 'hall', k: 'melon' },
   { id: 'agency', s: 20.36, set: 'hall', k: 'agency' },
@@ -696,10 +708,10 @@ const SH = [
   { id: 's1', s: 22.68, set: 'hall', k: 'straw' },
   { id: 'l1', s: 23.48, set: 'hall', k: 'lemon' },
   { id: 'br1a', s: 25.26, set: 'st', k: 'pt', x: 1330, y: 1078, z: [2.08, 2.2], obj: 'closet', show: [] },
-  { id: 'br1b', s: 26.72, set: 'st', k: 'wide', x: 858, y: 1050, z: [1.48, 1.52], show: ['tom', 'onion'] },
-  { id: 'br1c', s: 27.62, set: 'st', k: 'pt', x: 1338, y: 1150, z: [3.3, 3.45], obj: 'crumb', show: [] },
+  { id: 'br1b', s: 26.72, set: 'st', k: 'wide', x: 862, y: 1070, z: [1.6, 1.7], show: ['tom', 'onion'] },
+  { id: 'br1c', s: 27.62, set: 'st', k: 'pt', x: 1348, y: 1196, z: [3.5, 3.7], obj: 'crumb', show: [] },
   { id: 'o2', s: 28.72, set: 'st', k: 'face', foc: 'onion', z: [2.0, 2.16], up: 140, dx: 0, show: ['onion'] },
-  { id: 'end', s: 30.19, set: 'st', k: 'wide', x: 900, y: 1040, z: [.72, .76], show: [], lineup: true },
+  { id: 'end', s: 30.19, set: 'st', k: 'wide', x: 960, y: 1070, z: [.78, .81], show: ['tom', 'onion', 'lemon'], lineup: true },
 ];
 for (const sh of SH) sh.s = sh.s === 0 ? 0 : TP.snapT(sh.s);
 SH.forEach((sh, i) => { sh.e = i + 1 < SH.length ? SH[i + 1].s : TP.SCN.dur; });
@@ -723,7 +735,7 @@ function drawS(lt) {
   V2.setLight({ key: [-.4, -.65], keyColor: '#fff6e6', keyA: .2, rim: '#d8e6ff', rimA: .3, shadow: '#2a2038', shadowA: .28, bounce: '#ffeccc', bounceA: .1, amb: '#ffffff', ambA: .06, frontDark: .02 }); V2.opts.reflect = false;
   HEROMODE = !!sh.obj;
   const closetO = { hero: sh.obj === 'closet' || sh.obj === 'crumb' ? undefined : false, rattle: sh.obj === 'closet' || sh.obj === 'crumb' ? (voice('br1', lt) * .9) * Math.sin(lt * 47) : 0 };
-  if (sh.obj === 'crumb') closetO.crumbX = lerp(1352, 1362, ss(lt, 27.86, 28.06));
+  if (sh.obj === 'crumb') { const tf = TP.snapT(TP.wS('br1', 6)) + .12; closetO.fingers = ss(lt, tf, tf + .16) * (1 - ss(lt, tf + .5, tf + .66)); closetO.crumbX = lerp(1352, 1366, ss(lt, tf + .22, tf + .5)); closetO.crumbIn = ss(lt, tf + .4, tf + .52); }
   roomS(lt, st, { closet: closetO });
   HEROMODE = false;
   const order = sh.show.map(n => [n, C[n]]).filter(([n, o]) => o).sort((a, b) => a[1].y - b[1].y);
@@ -736,10 +748,14 @@ function drawS(lt) {
   for (const [n, o] of front) { const f = inFrame(o, 6); if (f.whole) drawChar(o); }
   if (sh.lineup) drawLineup(lt, st);
   if (st.gleam > 0 && (sh.id === 'o2' || sh.id === 'end')) gleams(lt, sh);
+  if (sh.id === 'o2') { const a = lt - CUE.sparkle2, o = C.onion, [fx, fy] = faceC(Object.assign({}, o, { y: FL })); twinkle(fx + 30 * o.s, fy - 14 * o.s, 46, a, .5); twinkle(fx - 30 * o.s, fy - 14 * o.s, 30, a - .06, .45);
+    [[SHELF.x0 + 60, SHELF.y - 120], [SHELF.x0 + 200, SHELF.y - 60], [CTR.x0 + 260, CTR.top - 2], [CTR.x1 - 80, CTR.top - 4], [1110, CTR.top - 60]].forEach(([x, y], i) => twinkle(x, y, 34, a - .05 - i * .05, .5)); }
+  if (sh.id === 'end') { const a = lt - CUE.sting; [[CTR.x0 + 80, CTR.top], [CTR.x1 - 60, CTR.top], [SIGNP.x, SIGNP.y - 30], [SHELF.x1 - 40, SHELF.y - 150], [CART.x, CART.y - 400], [CLOSET.x1 - 30, CLOSET.y0 + 30], [POSTER.x + 30, POSTER.y + 20]].forEach(([x, y], i) => twinkle(x, y, 44, a - i * .04, .55)); }
+  if (sh.id === 'open') panicPapers(lt);
 }
 /* the hat in Onion's right hand goes into the laminator's slot; the flat, shiny hat slides out of the right side and lies on the counter */
 function drawLaminate(lt, C) {
-  const o = C.onion, feed = lamIn(lt), out = lamOut(lt), slotY = CTR.top + 2 - 40 * .62;
+  const o = C.onion, feed = lamIn(lt), out = lamOut(lt), slotY = CTR.top + 2 - 40 * .72;
   if (lt < T_HATIN + .36 && feed < .98) {
     const [hx, hy] = handAt(o, 'r');
     ctx.save(); ctx.beginPath(); ctx.rect(hx - 200, slotY - 400, 400, 400); ctx.clip();
@@ -759,11 +775,32 @@ function labelBurst(lt, o) {
     ctx.fillStyle = '#ffffff'; rr(-16, -7, 32, 14, 3); ctx.fill(); ctx.strokeStyle = 'rgba(40,40,60,.6)'; ctx.lineWidth = 1.4; ctx.stroke(); ctx.fillStyle = '#d4202c'; ctx.fillRect(-16, -7, 32, 3.5); ctx.restore();
   }
 }
+/* the open: the station in a panic: sheets of paper and stray labels fly across (pure functions of time) */
+function panicPapers(lt) {
+  ctx.save();
+  for (let i = 0; i < 9; i++) {
+    const a = lt + .9 * rn(211, i) - .2; if (a < 0) continue;
+    const x = 560 + 900 * rn(212, i) - (i % 2 ? 1 : -1) * 520 * a, y = 980 - 260 * rn(213, i) + 90 * Math.sin(a * 4 + i) + 160 * a * a, rot = a * (4 + 4 * rn(214, i)) + i, lab = i % 3 === 0;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, .35 + .65 * Math.abs(Math.cos(a * 5 + i)));
+    if (lab) { ctx.fillStyle = '#ffffff'; rr(-18, -8, 36, 16, 3); ctx.fill(); ctx.strokeStyle = 'rgba(40,40,60,.6)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.fillStyle = '#d4202c'; ctx.fillRect(-18, -8, 36, 4); }
+    else { ctx.fillStyle = '#fbfaf2'; ctx.strokeStyle = 'rgba(40,40,60,.55)'; ctx.lineWidth = 2; ctx.fillRect(-26, -34, 52, 68); ctx.strokeRect(-26, -34, 52, 68); ctx.fillStyle = 'rgba(60,70,100,.4)'; for (let j = 0; j < 5; j++) ctx.fillRect(-19, -24 + j * 11, 38 - (j % 2) * 9, 3); }
+    ctx.restore();
+  }
+  ctx.restore();
+}
 function gleams(lt, sh) {                                                      /* the station gleams: twinkles on its edges (the shelf, the counter, the sign, the cart) */
   const pts = [[SHELF.x0 + 30, SHELF.y - 140], [CTR.x0 + 40, CTR.top], [CTR.x1 - 30, CTR.top - 2], [SIGNP.x + 190, SIGNP.y - 24], [CART.x + 100, CART.y - 360], [CLOCKP.x + 40, CLOCKP.y - 40], [FRIDGE.x1 - 20, FRIDGE.y0 + 20], [POSTER.x + POSTER.w - 10, POSTER.y + 10]];
   pts.forEach(([x, y], i) => { const per = 1.3 + .3 * rn(51, i), ph = rn(52, i) * per, ag = ((lt + ph) % per); twinkle(x, y, 22 + 10 * rn(53, i), ag, .55); });
 }
-function drawLineup(lt, st) { }
+/* the end: the terrifyingly clean station; Lemon and Strawberry at attention on the left, Mango by the hall on the right (Tomato and Onion behind the counter); rigid smiles, nobody moves */
+EXT.prop.fp21p_flathat = (side, o, t) => { flatHatArt(0, 0, .62, -.08, ss(t, CUE.sting + .05, CUE.sting + .4)); };
+PROP_BOX.fp21p_flathat = Object.assign([-36, -76, 36, 10], { nearFace: false });
+function drawLineup(lt, st) {
+  const still = { noBob: true };
+  const S = A11.straw(Object.assign({ x: 470, y: 1338, s: .84, t: lt, who: 'straw', expr: 'dead', lid: .5, look: [0, 0], plant: true, arms: { l: 'rest', r: 'rest' } }, still));
+  const M = A7.mango(Object.assign({ x: 1500, y: 1342, s: .9, t: lt, who: 'mango', expr: 'happy', lid: .05, look: [0, 0], plant: true, arms: { l: 'rest', r: 'rest' } }, still));
+  for (const o of [S, M]) if (inFrame(o, 6).whole) drawChar(o);
+}
 
 const PREP = {
   shot: lt => shotAt(lt).id,
@@ -771,7 +808,7 @@ const PREP = {
   draw(lt) { const sh = FR.sh; if (sh.set === 'ins') drawIns(lt); else if (sh.set === 'hall') drawHallShot(lt); else drawS(lt); },
   fx: lt => ({ bloom: .38, vignette: .26, grain: .04, contrast: .1, sat: .12, tint: [['#fff1d8', .05, 'soft-light']] }),
   blur: lt => 1,
-  over(lt) { const sh = shotAt(lt); if (sh.set === 'ins' && sh.ins === 11) wipeOver(lt, lt - MT[11]); },
+  over(lt) { const sh = shotAt(lt); if (sh.set === 'ins' && sh.ins === 11) wipeOver(lt, lt - MT[11]); if (sh.id === 'o2') wipeOver(lt, lt - CUE.sparkle2); if (sh.id === 'end') wipeOver(lt, lt - CUE.sting); },
   clock: () => TP.SCN.clock, label: () => TP.SCN.label,
 };
 window.__EP21_SCENES = window.__EP21_SCENES || {}; window.__EP21_SCENES.prep = PREP;
@@ -808,17 +845,17 @@ function ins1(lt, a, b) {
   ctx.save(); ctx.translate(540, 1262); ctx.scale(1 + (1 - sq) * .6, sq); ctx.translate(-540, -1262); juiceCarton(540, 1262, S, 0); ctx.restore();
   const l1 = 1 + .08 * hitK(a, .05), l2 = b >= 0 ? 1 + .1 * hitK(b, .05) : 0;
   const y1 = 1262 - 55 * S * sq, y2 = 1262 - 20 * S * sq;
-  surveyLabel({ x: 540, y: y1, s: 1.32 * l1, rot: -.03, text: 'OPENED 11/6 3:05P', t: lt });
-  if (b >= 0) surveyLabel({ x: 548, y: y2, s: 1.12 * l2, rot: .05, text: 'DISCARD 11/9', t: lt });
-  burst(540, y1, a, 240, 10, 'rgba(255,255,255,.9)', 8, .2);
-  if (b >= 0) burst(548, y2, b, 190, 8, 'rgba(255,255,255,.85)', 6, .18);
+  surveyLabel({ x: 540, y: y1, s: 1.32 * l1, rot: -.03, text: 'OPENED 11/6 3:05P', t: lt, hero: true });                 /* the slap is a uniform pop of ours (the kit's t0 pop squashes the lettering for a frame) */
+  if (b >= 0) surveyLabel({ x: 548, y: y2, s: 1.12 * l2, rot: .05, text: 'DISCARD 11/9', t: lt, hero: true });
+  burst(540, y1, a, 380, 12, 'rgba(255,255,255,.9)', 8, .2);
+  if (b >= 0) burst(548, y2, b, 340, 10, 'rgba(255,255,255,.85)', 6, .18);
   /* the gun: its nose on the label's right edge at the cut, recoils up and right, comes back for the off-beat, leaves */
-  const gx = K([[0, 700], [.05, 702], [.2, 900], [.4, 760], [.5, 708], [.56, 708], [.72, 980], [1, 1400]], a), gy = K([[0, y1], [.05, y1], [.2, y1 - 160], [.4, y2 - 60], [.5, y2], [.56, y2], [.72, y2 - 140], [1, y2 - 300]], a);
+  const gx = K([[0, 728], [.05, 730], [.2, 920], [.4, 770], [.5, 712], [.56, 712], [.72, 990], [1, 1400]], a), gy = K([[0, y1 - 30], [.05, y1 - 30], [.2, y1 - 180], [.4, y2 - 60], [.5, y2 - 14], [.56, y2 - 14], [.72, y2 - 140], [1, y2 - 300]], a);
   const ga = K([[0, 0], [.2, -.3], [.45, 0], [.5, 0], [.7, -.35], [1, -.5]], a), GS = 3.1;
   const gpx = (lx, ly) => [gx - Math.cos(ga) * (lx - 62) * GS - Math.sin(ga) * (ly + 16) * GS, gy - Math.sin(ga) * (lx - 62) * GS + Math.cos(ga) * (ly + 16) * GS];
   const [wx, wy] = gpx(4, 40);
   glove(wx, wy, -PI / 2 - .25 + ga, 3.5, 'grip', false, 1100);
-  ctx.save(); ctx.translate(gx, gy); ctx.rotate(ga); ctx.scale(-GS, GS); ctx.translate(-62, 16); labelGunArt(c01(1 - a * 6)); ctx.restore();
+  ctx.save(); ctx.translate(gx, gy); ctx.rotate(ga); ctx.scale(-GS, GS); ctx.translate(-62, 16); labelGunArt(0); ctx.restore();
   speedLines(gx + 120, gy, a - .01, PI, 6, 220, 160, 'rgba(255,255,255,.8)', .12);
   if (a > .2 && a < .7) twinkle(400, y1 - 70, 44, a - .2, .5);
 }
@@ -835,16 +872,16 @@ function ins2(lt, a, b) {
   ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(-156, -54, 312, 16); TXT('SNACKS', 0, -2, { size: 62, font: 'Lucky', weight: 400, fill: '#3a2a1a', spacing: 3, maxW: 280 }); ctx.restore();
   for (const [hx, hy] of [[540, 880], [800, 900]]) { ctx.fillStyle = '#c3c8d2'; rr(hx - 70, hy - 60, 140, 120, 14); ctx.fill(); ink(4); ctx.fillStyle = '#e8ebf0'; rr(hx - 22, hy - 30, 44, 60, 12); ctx.fill(); ink(3.4); ctx.fillStyle = '#2a2f3a'; rr(hx - 9, hy - 14, 18, 28, 6); ctx.fill(); }
   const sw1 = .26 * wob(a, 13, .3) - .2 * hitK(a, .04), sh1 = c01(a / .02);
-  padlockP({ x: 540, y: 1068, s: 1.75, shut: a < 0 ? 0 : .8 + .2 * sh1, swing: sw1, t: lt });
+  padlockP({ x: 540, y: 1068, s: 1.75, shut: a < 0 ? 0 : .8 + .2 * sh1, swing: sw1, t: lt, t0: MT[1] });
   burst(540, 920, a, 170, 9, 'rgba(255,255,255,.9)', 7, .2);
-  if (b >= 0) { const pop = eb(c01(b / .1)); if (pop > .02) padlockP({ x: 800, y: 1082, s: 1.35 * pop, shut: c01(b / .03), swing: .3 * wob(b, 14, .3), t: lt }); burst(800, 935, b, 130, 8, 'rgba(255,255,255,.85)', 5, .18); }
+  if (b >= 0) { const pop = eb(c01(b / .1)); if (pop > .02) padlockP({ x: 800, y: 1082, s: 1.35 * pop, shut: c01(b / .03), swing: .3 * wob(b, 14, .3), t: lt, t0: MOFF[1] }); burst(800, 935, b, 130, 8, 'rgba(255,255,255,.85)', 5, .18); }
   if (a > .25 && a < .8) twinkle(480, 1010, 36, a - .25, .5);
 }
 /* 3 SPRAY: top-down on the counter: the mist bursts on the cut; a cloth wipes a gleaming lane on the off-beat */
 function ins3(lt, a, b) {
   ctx.fillStyle = lg(0, 0, W, H, [[0, '#f5e8cf'], [1, '#e0c9a2']]); ctx.fillRect(-300, -300, W + 600, H + 600);
   ctx.fillStyle = 'rgba(120,90,50,.07)'; for (let i = 0; i < 160; i++) { ctx.beginPath(); ctx.arc(rn(91, i) * W, rn(92, i) * 1500, 2 + 3 * rn(93, i), 0, TAU); ctx.fill(); }
-  const wipeX = b < 0 ? -400 : lerp(-300, 1500, eo3(c01(b / .2))), lane = [700, 1110];
+  const wipeX = b < 0 ? -400 : lerp(-260, 1420, ss(b, 0, .34)), lane = [700, 1110];
   ctx.save(); ctx.beginPath(); ctx.rect(-300, -300, W + 600, H + 600); ctx.rect(-300, lane[0], wipeX + 300, lane[1] - lane[0]); ctx.clip('evenodd');   /* the mess, minus the wiped lane */
   for (const [x, y, r] of [[300, 820, 90], [720, 940, 70], [520, 1040, 56], [860, 760, 60], [200, 560, 80], [820, 1260, 70]]) { ctx.strokeStyle = 'rgba(120,70,30,.35)'; ctx.lineWidth = 12; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); }
   ctx.fillStyle = 'rgba(160,110,60,.55)'; for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.ellipse(120 + rn(94, i) * 840, 650 + rn(95, i) * 560, 5 + 6 * rn(96, i), 3 + 4 * rn(97, i), rn(98, i) * 3, 0, TAU); ctx.fill(); }
@@ -853,11 +890,12 @@ function ins3(lt, a, b) {
   ctx.restore();
   if (b >= 0) {                                                                                                     /* the wiped lane gleams */
     ctx.save(); ctx.beginPath(); ctx.rect(-300, lane[0], wipeX + 300, lane[1] - lane[0]); ctx.clip();
-    ctx.fillStyle = lg(0, lane[0], 0, lane[1], [[0, 'rgba(255,255,255,.1)'], [.45, 'rgba(255,255,255,.6)'], [.55, 'rgba(255,255,255,.6)'], [1, 'rgba(255,255,255,.1)']]); ctx.fillRect(-300, lane[0], W + 600, lane[1] - lane[0]); ctx.restore();
+    ctx.fillStyle = lg(0, lane[0], 0, lane[1], [[0, 'rgba(255,255,255,.25)'], [.4, 'rgba(255,255,255,.8)'], [.6, 'rgba(255,255,255,.8)'], [1, 'rgba(255,255,255,.25)']]); ctx.fillRect(-300, lane[0], W + 600, lane[1] - lane[0]);
+    ctx.fillStyle = 'rgba(255,255,255,.9)'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(120 + i * 210, lane[0] + 70 + 50 * rn(107, i), 70, 9, -.05, 0, TAU); ctx.fill(); } ctx.restore();
     if (b > .12) for (let i = 0; i < 4; i++) twinkle(180 + i * 230, 820 + 160 * rn(103, i), 46, b - .12 - i * .05, .45);
   }
   /* the bottle: held top right, the nozzle to the lower left; the trigger squeezed on the cut */
-  const sq = a < .12 ? 1 : 0, bx = 790 + 10 * hitK(a, .05), by = 380 - 12 * hitK(a, .05);
+  const sq = a < .12 ? 1 : 0, away = ss(a, .3, .55), bx = 790 + 10 * hitK(a, .05) + 520 * away, by = 380 - 12 * hitK(a, .05) - 420 * away;
   ctx.save(); ctx.translate(bx, by); ctx.rotate(.55); ctx.scale(1.5, 1.5); ctx.lineJoin = 'round';
   ctx.fillStyle = lg(-70, 0, 70, 0, [[0, '#a8dcff'], [.5, '#5fb8f2'], [1, '#2f86c8']]); rr(-70, 40, 140, 300, 40); ctx.fill(); ink(5);
   ctx.fillStyle = 'rgba(255,255,255,.35)'; rr(-52, 70, 26, 240, 13); ctx.fill();
@@ -875,36 +913,36 @@ function ins3(lt, a, b) {
     const cx = wipeX - 60, cy = (lane[0] + lane[1]) / 2;
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(-.08); ctx.fillStyle = lg(0, -170, 0, 170, [[0, '#4c8fe8'], [1, '#2a62c0']]); rr(-150, -175, 300, 350, 40); ctx.fill(); ink(5);
     ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 4; for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(-130, i * 44); ctx.lineTo(130, i * 44 + 10); ctx.stroke(); } ctx.restore();
-    glove(cx - 10, cy - 30, -.2, 4.2, 'flat', false, 900);
+    glove(cx - 10, cy - 30, -.45, 4.2, 'flat', false, 500);
   }
 }
 /* 4 THERMOBEEP: the fridge thermometer's needle snaps from the red into the green on the cut (a green LED); the log is signed on the off-beat */
 function ins4(lt, a, b) {
   ctx.fillStyle = lg(0, 0, W, 0, [[0, '#ffffff'], [1, '#dfe4ec']]); ctx.fillRect(-300, -300, W + 600, H + 600);     /* the fridge door */
   ctx.fillStyle = lg(0, 140, 0, 1240, [[0, '#d8ecf8'], [1, '#b8d4e8']]); rr(90, 160, 900, 1100, 30); ctx.fill(); ctx.strokeStyle = 'rgba(40,60,90,.55)'; ctx.lineWidth = 5; ctx.stroke();
-  ctx.save(); rr(90, 160, 900, 1100, 30); ctx.clip(); V2.dof(8, () => { for (let i = 0; i < 6; i++) { ctx.fillStyle = ['#f2a33a', '#e8e6de', '#5fa8e8', '#f2f2f2', '#e8406a', '#7ad94a'][i]; rr(140 + i * 140, 980, 90, 150, 16); ctx.fill(); } ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(90, 1130, 900, 14); }); ctx.restore();
-  const deg = a < 0 ? 52 : 40 + 3.2 * wob(a, 26, .16) + 12 * hitK(a, .025);
-  ctx.save(); ctx.translate(540, 600); thermoP({ x: 0, y: 0, s: 2.05, deg, t: lt, hero: true }); ctx.restore();
-  if (a >= 0 && a < .12) { const R = 150 * 2.05 - 30 * 2.05; ctx.save(); ctx.translate(540, 600); ctx.strokeStyle = 'rgba(212,32,44,.35)'; ctx.lineWidth = 30; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, 0, R * .7, DEG_A(40), DEG_A(52)); ctx.stroke(); ctx.restore(); }
+  ctx.save(); rr(90, 160, 900, 1100, 30); ctx.clip(); SOFT++; V2.dof(8, () => { for (let i = 0; i < 6; i++) { ctx.fillStyle = ['#f2a33a', '#e8e6de', '#5fa8e8', '#f2f2f2', '#e8406a', '#7ad94a'][i]; rr(140 + i * 140, 980, 90, 150, 16); ctx.fill(); } ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(90, 1130, 900, 14); }); SOFT--; ctx.restore();
+  const safe = SAFE_DEG(), hot = HOT_DEG(), deg = a < 0 ? hot : safe + 2.4 * wob(a, 26, .16) + (hot - safe) * hitK(a, .025);
+  ctx.save(); ctx.translate(540, 590); thermoP({ x: 0, y: 0, s: 2.05, deg, t: lt, hero: false }); ctx.restore();
+  if (a >= 0 && a < .12 && !has21('fridgeThermo')) { const R = 150 * 2.05 - 30 * 2.05; ctx.save(); ctx.translate(540, 590); ctx.strokeStyle = 'rgba(212,32,44,.35)'; ctx.lineWidth = 30; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, 0, R * .7, DEG_A(40), DEG_A(52)); ctx.stroke(); ctx.restore(); }
   const led = a >= 0 && a < .5 ? 1 : .25;                                                                           /* the green LED beside the dial */
-  ctx.fillStyle = '#2a2f3a'; rr(866, 300, 70, 70, 16); ctx.fill(); ctx.fillStyle = led > .5 ? '#3cff7a' : '#1d6a36'; ctx.beginPath(); ctx.arc(901, 335, 22, 0, TAU); ctx.fill(); if (led > .5) glow(901, 335, 110, '#3cff7a', .55, .5);
+  ctx.fillStyle = '#2a2f3a'; rr(880, 210, 70, 70, 16); ctx.fill(); ctx.fillStyle = led > .5 ? '#3cff7a' : '#1d6a36'; ctx.beginPath(); ctx.arc(915, 245, 22, 0, TAU); ctx.fill(); if (led > .5) glow(915, 245, 110, '#3cff7a', .55, .5);
   /* the TEMP LOG, taped below the dial */
   ctx.save(); ctx.translate(540, 1150); ctx.rotate(-.025);
   ctx.fillStyle = 'rgba(30,20,30,.18)'; ctx.fillRect(-384, -146, 780, 300); ctx.fillStyle = '#fffdf6'; ctx.fillRect(-390, -152, 780, 296); ctx.strokeStyle = 'rgba(60,50,40,.45)'; ctx.lineWidth = 2; ctx.strokeRect(-390, -152, 780, 296);
   UI.container('tlog', 'sign', [-390, -152, 390, 144], 6);
   TXT('TEMP LOG', 0, -118, { size: 36, weight: 900, fill: '#1e2230', spacing: 2, cid: 'tlog', maxW: 400 });
-  const rows = [['11/4', '41', 'SB'], ['11/5', '39', 'LM'], ['11/6', '', '']];
+  const rows = [['11/4', '38', 'SB'], ['11/5', '37', 'LM'], ['11/6', '', '']];
   ctx.strokeStyle = 'rgba(40,40,60,.35)'; ctx.lineWidth = 2; for (let i = 0; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(-360, -84 + i * 66); ctx.lineTo(360, -84 + i * 66); ctx.stroke(); }
   for (const xx of [-140, 100]) { ctx.beginPath(); ctx.moveTo(xx, -84); ctx.lineTo(xx, 114); ctx.stroke(); }
   rows.forEach((r, i) => { const y = -51 + i * 66; TXT(r[0], -250, y, { size: 34, weight: 800, fill: '#2a3550', cid: 'tlog' }); if (r[1]) TXT(r[1], -20, y, { size: 36, font: 'Lucky', weight: 400, fill: '#2a3550', cid: 'tlog' }); if (r[2]) TXT(r[2], 230, y, { size: 36, font: 'Lucky', weight: 400, fill: '#2a3550', cid: 'tlog' }); });
-  if (b >= 0) { const w1 = c01(b / .14), w2 = c01((b - .12) / .14), y = -51 + 2 * 66;
-    TXT('40', -20, y, { size: 36, font: 'Lucky', weight: 400, fill: '#1e8e5a', cid: 'tlog', reveal: w1 });
+  if (b >= 0) { const w1 = c01(b / .1), w2 = c01((b - .16) / .1), y = -51 + 2 * 66;
+    TXT(String(safe), -20, y, { size: 36, font: 'Lucky', weight: 400, fill: '#1e8e5a', cid: 'tlog', reveal: w1 });
     if (w2 > 0) TXT('ON', 230, y, { size: 36, font: 'Lucky', weight: 400, fill: '#1e8e5a', cid: 'tlog', reveal: w2 }); }
   ctx.restore();
-  if (b >= -.12 && b < .5) { const k = c01((b + .12) / .4), px = lerp(470, 820, k), py = 1150 + 81 + 18 * Math.sin(k * 20) - 10;   /* the pen */
-    ctx.save(); ctx.translate(px, py); ctx.rotate(-.9); ctx.fillStyle = '#2b6cff'; rr(-9, -150, 18, 140, 8); ctx.fill(); ink(3); ctx.fillStyle = '#e8ebf0'; poly([[-9, -10], [9, -10], [0, 8]], '#e8ebf0', INKC, 2.6); ctx.restore();
-    glove(px + 120, py - 70, PI + .75, 3.2, 'grip', false, 700); }
-  burst(540, 600, a, 360, 12, 'rgba(60,255,140,.55)', 6, .2);
+  if (b >= -.1 && b < .42) { const k = c01((b + .1) / .36), px = lerp(470, 990, k), py = 1150 + 81 + 10 * Math.sin(k * 20) - 8;   /* the pen runs just ahead of the ink, its hand below the row */
+    ctx.save(); ctx.translate(px, py); ctx.rotate(PI - .7); ctx.fillStyle = '#2b6cff'; rr(-9, -150, 18, 140, 8); ctx.fill(); ink(3); ctx.fillStyle = '#e8ebf0'; poly([[-9, -10], [9, -10], [0, 8]], '#e8ebf0', INKC, 2.6); ctx.restore();
+    glove(px + 110, py + 130, PI + .9, 3.2, 'grip', false, 700); }
+  burst(540, 590, a, 380, 12, 'rgba(60,255,140,.55)', 6, .2);
 }
 /* 5 BINDERSLAM: a low, tilted look along the shelf: the row of policy binders slammed tight on the cut (dust jumps out); the proud 7.4 is tapped flush on the off-beat */
 function ins5(lt, a, b) {
@@ -923,8 +961,9 @@ function ins5(lt, a, b) {
   for (let i = 1; i < n; i += 2) puff(x0 + i * bw, sy - bh - 10, 60, lt, MT[4] + .01, { life: .5, seed: 7 + i, color: '#f4efe4', flat: .3 });
   glove(x0 + n * bw + 70 + push, sy - 300, PI, 4.8, 'flat', true, 900);
   speedLines(x0 + n * bw + 120, sy - 300, a - .005, PI, 7, 300, 380, 'rgba(255,255,255,.85)', .14);
-  if (b >= -.1 && b < .45) { const k = b < 0 ? 0 : 1, fx = x0 + 6 * bw + bw / 2, fy = sy - bh - 46 * (1 - eo3(c01(b / .07))) - 40 + 30 * (1 - c01((b + .1) / .1));
-    glove(fx + 10, fy - 10 - 40 * (1 - k), PI / 2 + .1, 4.2, 'point', false, 1100); burst(fx, sy - bh, b, 120, 8, 'rgba(255,255,255,.9)', 5, .18); }
+  if (b >= -.1 && b < .26) { const fx = x0 + 6 * bw + bw / 2, topY = sy - bh - (b < 0 ? 46 : 46 * (1 - eo3(c01(b / .07)))), lift = b < 0 ? 60 * (1 - c01((b + .1) / .1)) : 90 * ss(b, .12, .26);
+    glove(fx + 8, topY - 192 - lift, PI / 2 + .04, 4.2, 'point', false, 1100); }
+  if (b >= 0) burst(x0 + 6 * bw + bw / 2, sy - bh, b, 120, 8, 'rgba(255,255,255,.9)', 5, .18);
 }
 /* 6 MOP: the floor at mop height: the mop swipes a wet, shining band on the cut; the WET FLOOR sign pops up on the off-beat */
 function ins6(lt, a, b) {
@@ -978,36 +1017,42 @@ function ins7(lt, a, b) {
     burst(px, py, b, 70, 8, 'rgba(255,255,255,.9)', 5, .16); }
   if (a > .22 && a < .8) twinkle(P.x + P.w * .78, P.y + 120, 40, a - .22, .5);
 }
-/* 9 COFFEEHIDE: the big drawer slams shut on the cut, rebounds open (the coffee maker inside, its clock still lit); a palm slaps it shut on the off-beat; a wisp of steam escapes */
+/* 9 COFFEEHIDE: the big drawer slams shut on the cut and bounces open (the coffee maker inside, its clock still lit, the pot sloshing); a palm slaps it shut on the off-beat; steam escapes the seam */
 function ins9(lt, a, b) {
   ctx.fillStyle = lg(0, 0, 0, 520, [[0, '#f7ecd8'], [1, '#e2cfaa']]); ctx.fillRect(-300, -300, W + 600, 820);           /* the counter front above */
   ctx.fillStyle = lg(0, 440, 0, 520, [[0, '#f7ecd8'], [1, '#d9c3a0']]); ctx.fillRect(-300, 440, W + 600, 80); ctx.fillStyle = 'rgba(30,20,30,.25)'; ctx.fillRect(-300, 516, W + 600, 10);
-  const open = b >= 0 ? 150 * (1 - eo3(c01(b / .06))) : a < 0 ? 0 : 150 * eo(c01((a - .02) / .16)) * (1 - .1 * Math.sin(c01((a - .18) / .3) * PI)), gapY = 526;
-  if (open > 2) {                                                                                                     /* inside the drawer: the coffee maker on its side */
+  ctx.fillStyle = '#9aa3b2'; rr(390, 300, 300, 34, 17); ctx.fill(); ink(4);                                          /* the pull of the drawer above */
+  const gapY = 526, open = b >= 0 ? 260 * (1 - eo3(c01(b / .06))) : a < .03 ? 0 : 260 * eo(c01((a - .03) / .14)) * (1 - .06 * Math.sin(c01((a - .17) / .3) * PI));
+  if (open > 2) {                                                                                                     /* inside the drawer: the coffee maker, seen from above */
     ctx.save(); ctx.beginPath(); ctx.rect(-300, gapY, W + 600, open); ctx.clip();
-    ctx.fillStyle = '#3a3240'; ctx.fillRect(-300, gapY, W + 600, open);
-    ctx.save(); ctx.translate(540, gapY + open + 40); ctx.scale(1.35, 1.35); ctx.fillStyle = '#2a2f3a'; rr(-200, -110, 400, 120, 18); ctx.fill(); ink(4);
-    ctx.fillStyle = '#16233a'; rr(-60, -90, 120, 44, 8); ctx.fill(); ctx.fillStyle = '#5effa0'; for (let i = 0; i < 4; i++) { if (i === 1) continue; rr(-48 + i * 26, -80, 18, 24, 3); ctx.fill(); } ctx.beginPath(); ctx.arc(-6, -74, 3, 0, TAU); ctx.arc(-6, -62, 3, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(200,225,245,.8)'; rr(110, -100, 140, 90, 30); ctx.fill(); ink(3); ctx.fillStyle = '#6a3a1a'; rr(118, -50, 124, 34, 14); ctx.fill();
-    ctx.restore(); glow(540, gapY + open * .5, 140, '#5effa0', .25 * c01(open / 80), .3); ctx.restore();
+    ctx.fillStyle = lg(0, gapY, 0, gapY + 260, [[0, '#4a4252'], [1, '#6a6070']]); ctx.fillRect(-300, gapY, W + 600, open);
+    const cy = gapY + open - 20, sl = Math.sin(lt * 18) * Math.exp(-Math.max(0, a - .05) * 5);
+    ctx.save(); ctx.translate(500, cy); ctx.scale(1.7, 1.7);
+    ctx.fillStyle = lg(0, -120, 0, 0, [[0, '#3a404c'], [1, '#22262e']]); rr(-210, -128, 300, 128, 18); ctx.fill(); ink(4);      /* the body, lying in the drawer */
+    ctx.fillStyle = '#16233a'; rr(-170, -100, 120, 46, 8); ctx.fill(); ctx.fillStyle = '#5effa0'; for (let i = 0; i < 4; i++) { if (i === 1) continue; rr(-158 + i * 26, -90, 18, 26, 3); ctx.fill(); } ctx.beginPath(); ctx.arc(-117, -84, 3, 0, TAU); ctx.arc(-117, -70, 3, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ff5a3a'; ctx.beginPath(); ctx.arc(-20, -76, 8, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(205,230,250,.85)'; rr(100, -120, 120, 110, 34); ctx.fill(); ink(3.4);                                 /* the glass pot */
+    ctx.fillStyle = '#6a3a1a'; ctx.beginPath(); ctx.moveTo(106, -60 + 6 * sl); ctx.quadraticCurveTo(160, -70 - 8 * sl, 214, -60 - 6 * sl); ctx.lineTo(214, -26); ctx.quadraticCurveTo(160, -10, 106, -26); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#22262e'; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(232, -66, 22, -1.2, 1.2); ctx.stroke();
+    ctx.restore(); glow(500 - 190, cy - 130, 160, '#5effa0', .3 * c01(open / 120), .3); ctx.restore();
   }
-  const fy = gapY + open, sq = 1 - .02 * hitK(a, .05);
+  const fy = gapY + open;
   ctx.fillStyle = lg(0, fy, 0, fy + 1500, [[0, '#f3e3c6'], [1, '#d6bd93']]); rr(-40, fy, W + 80, 1600, 10); ctx.fill(); ink(5);
   ctx.strokeStyle = 'rgba(120,90,50,.16)'; ctx.lineWidth = 3; for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(-40, fy + 90 + i * 80); ctx.bezierCurveTo(300, fy + 70 + i * 80, 700, fy + 110 + i * 80, W + 40, fy + 80 + i * 80); ctx.stroke(); }
   ctx.fillStyle = '#9aa3b2'; rr(380, fy + 150, 320, 40, 20); ctx.fill(); ink(4);
-  burst(540, gapY + 20, a, 260, 10, 'rgba(255,255,255,.9)', 7, .18);
-  if (b >= -.06 && b < .3) { const k = c01((b + .06) / .06); glove(lerp(300, 420, k), fy + 420 - 60 * k, -PI / 2 - .1, 5.0, 'flat', false, 1200); }
-  if (b >= 0) burst(420, fy + 300, b, 200, 8, 'rgba(255,255,255,.85)', 6, .16);
-  if (b > .08 && b < .9) { ctx.save(); for (let i = 0; i < 3; i++) { const ag = b - .08 - i * .08; if (ag < 0) continue; const x = 600 + i * 60 + 40 * Math.sin(ag * 5 + i), y = gapY - 30 - ag * 380, r = 30 + ag * 90;
-    ctx.globalAlpha = .55 * Math.sin(PI * c01(ag / .8)); ctx.fillStyle = rg(x, y, 2, r, [[0, 'rgba(255,255,255,.95)'], [1, 'rgba(255,255,255,0)']]); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
-    ctx.globalAlpha *= .6; ctx.strokeStyle = 'rgba(120,110,120,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r * .8, 0, TAU); ctx.stroke(); } ctx.restore(); }
+  burst(540, gapY + 20, a, 280, 10, 'rgba(255,255,255,.9)', 7, .18);
+  if (b >= -.07 && b < .28) { const k = c01((b + .07) / .07), back = ss(b, .1, .28); glove(lerp(860, 760, k) + 200 * back, fy + 300 - 40 * k + 160 * back, -PI * .78, 5.0, 'flat', true, 700); }
+  if (b >= 0) burst(720, fy + 240, b, 230, 9, 'rgba(255,255,255,.85)', 6, .16);
+  if (b > .05 && b < 1) { ctx.save(); for (let i = 0; i < 4; i++) { const ag = b - .05 - i * .07; if (ag < 0) continue; const x = 420 + i * 90 + 50 * Math.sin(ag * 5 + i), y = gapY - 20 - ag * 420, r = 40 + ag * 120;
+    ctx.globalAlpha = .85 * Math.sin(PI * c01(ag / .8)); ctx.fillStyle = rg(x, y, 2, r, [[0, 'rgba(255,255,255,1)'], [.7, 'rgba(240,244,250,.8)'], [1, 'rgba(200,210,230,0)']]); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(110,100,120,.55)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y, r * .8, 0, TAU); ctx.stroke(); } ctx.restore(); }
 }
 /* 10 SANITIZER: the wall dispenser, freshly refilled: the bar is pumped on the cut (foam into a palm); a REFILLED label slaps on on the off-beat */
 function ins10(lt, a, b) {
   insWall(1200);
   ctx.fillStyle = lg(0, 1150, 0, 1190, [[0, '#d8b98a'], [1, '#a48056']]); rr(-300, 1150, W + 600, 42, 20); ctx.fill(); ink(4);   /* the handrail */
   const pump = a < 0 ? 0 : a < .04 ? 1 : 1 - ss(a, .1, .3);
-  const r = sanitizerP({ x: 540, y: 560, s: 2.5, pump, level: 1, t: lt });
+  const r = sanitizerP({ x: 540, y: 560, s: 2.5, pump: has21('sanitizer') ? pump * (1 - ss(a, .1, .16)) : pump, level: 1, t: lt, label: false });
   const [nx, ny] = r.nozzle || [540, 885];
   glove(780, 760 + 26 * pump, PI + .05, 4.0, 'flat', true, 900);                                                  /* the hand that pumps the bar */
   const palmY = 1210; glove(380, palmY + 40, -.12, 4.4, 'open', true, 900);                                         /* the palm that catches it */
@@ -1015,32 +1060,32 @@ function ins10(lt, a, b) {
   if (a >= 0) { ctx.fillStyle = rg(nx - 10, dy - 12, 4, 56, [[0, '#ffffff'], [1, '#e6f4ff']]); ctx.beginPath(); ctx.ellipse(nx, dy, 46 * blob, 34 / blob, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(120,150,200,.6)'; ctx.lineWidth = 3; ctx.stroke();
     for (let i = 0; i < 5; i++) { ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(nx - 30 + 15 * i, dy - 26 - 8 * rn(131, i), 9 + 5 * rn(132, i), 0, TAU); ctx.fill(); } }
   burst(540, ny - 40, a, 200, 9, 'rgba(255,255,255,.9)', 6, .18);
-  if (b >= 0) { const l = 1 + .1 * hitK(b, .05); surveyLabel({ x: 540, y: 330, s: .95 * l, rot: -.04, text: 'REFILLED 11/6 3:06P', t: lt }); burst(540, 330, b, 170, 9, 'rgba(255,255,255,.9)', 5, .18); }
+  if (b >= 0) { const l = 1 + .1 * hitK(b, .05); surveyLabel({ x: 540, y: 470, s: 1.3 * l, rot: -.04, text: 'REFILLED 11/6 3:06P', t: lt, hero: true }); burst(540, 470, b, 380, 10, 'rgba(255,255,255,.9)', 5, .18); }
   if (a > .3 && a < .8) twinkle(600, 470, 40, a - .3, .5);
 }
-/* 11 CRASHCART: the red cart, close and tilted: the numbered seal is pulled tight through the hasp on the cut; the defibrillator on top flashes READY on the off-beat */
+/* 11 CRASHCART: the red cart, close and tilted: the numbered seal is pulled tight through the hasp on the cut (the tag swings); the defibrillator lights READY on the off-beat */
 function ins11(lt, a, b) {
   ctx.fillStyle = lg(0, 0, 0, H, [[0, '#f6efe1'], [1, '#e6d8bb']]); ctx.fillRect(-300, -300, W + 600, H + 600);
-  const cx = 540, top = 560;
-  ctx.fillStyle = lg(0, 260, 0, 520, [[0, '#4a505e'], [1, '#2a2e38']]); rr(140, 250, 800, 290, 30); ctx.fill(); ink(5);   /* the defibrillator on the top tray */
-  ctx.fillStyle = '#16233a'; rr(200, 300, 380, 190, 16); ctx.fill(); ctx.strokeStyle = 'rgba(60,255,160,.7)'; ctx.lineWidth = 6; ctx.beginPath(); for (let i = 0; i <= 40; i++) { const x = 220 + i * 8.5, ph = (i + lt * 30) % 40; ctx.lineTo(x, 400 - (ph > 18 && ph < 22 ? 60 * Math.sin((ph - 18) / 4 * PI) : 0)); } ctx.stroke();
-  const ready = b >= 0 && b < .45 ? 1 : b >= .45 ? .7 : 0;
-  ctx.fillStyle = ready ? '#3cff7a' : '#1d4a2e'; rr(640, 320, 240, 120, 20); ctx.fill(); ink(4); if (ready) glow(760, 380, 220, '#3cff7a', .4 * ready, .4);
-  UI.container('ready', 'sign', [640, 320, 880, 440], 8); TXT('READY', 760, 380, { size: 50, font: 'Bangers', weight: 400, fill: ready ? '#0c3a1c' : '#3a6a4a', spacing: 2, cid: 'ready', maxW: 200 });
-  ctx.fillStyle = '#d7dbe3'; rr(60, top - 30, 960, 50, 14); ctx.fill(); ink(5);                                          /* the tray rim */
-  const cs = 3.0, r = crashCartP({ x: cx, y: top + 456 * cs - 26 * cs + 40, s: cs, open: 0, seal: a < 0 ? 0 : 1, tagSwing: .5 * wob(a, 12, .35) + .25 * wob(b, 12, .3), t: lt });
-  const [hx, hy] = r.hasp || [cx + 350, top + 200];
-  if (a >= 0 && a < .3) { const k = c01(a / .1); glove(lerp(hx + 120, hx + 420, eo(k)), hy + 140 + 60 * k, PI + .4, 3.8, 'grip', true, 900);
-    ctx.strokeStyle = '#ffd21f'; ctx.lineWidth = 14; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx, hy + 30); ctx.quadraticCurveTo(hx + 100, hy + 150, lerp(hx + 110, hx + 390, eo(k)), hy + 130 + 60 * k); ctx.stroke(); }
+  ctx.fillStyle = lg(0, 1100, 0, H, [[0, '#5f9a96'], [1, '#467a76']]); ctx.fillRect(-300, 1100, W + 600, H); ctx.fillStyle = '#faf6ec'; ctx.fillRect(-300, 1086, W + 600, 20);
+  const cs = 3.0, cx = 470, fy = 1850;
+  const r = crashCartP({ x: cx, y: fy, s: cs, open: 0, seal: a < 0 ? 0 : 1, tagSwing: .5 * wob(a, 12, .35) + .25 * wob(b, 12, .3), t: lt });
+  const [hx, hy] = r.hasp;
+  /* READY: a lit chip on the defibrillator's front, under its screen (the kit's defib sits at local x 20..136, y -502..-430) */
+  const ready = b >= 0 ? (b < .45 ? 1 : .75) : 0, rx0 = cx + 30 * cs, ry0 = fy - 458 * cs, rw = 96 * cs, rh = 24 * cs;
+  ctx.fillStyle = ready ? '#3cff7a' : '#1d4a2e'; rr(rx0, ry0, rw, rh, 10); ctx.fill(); ink(3.4); if (ready) glow(rx0 + rw / 2, ry0 + rh / 2, 200, '#3cff7a', .45 * ready, .4);
+  UI.container('ready', 'sign', [rx0, ry0, rx0 + rw, ry0 + rh], 6); TXT('READY', rx0 + rw / 2, ry0 + rh / 2, { size: 46, font: 'Bangers', weight: 400, fill: ready ? '#0c3a1c' : '#3a6a4a', spacing: 2, cid: 'ready', maxW: rw - 30 });
+  if (a >= 0 && a < .3) { const k = c01(a / .1); glove(lerp(hx + 130, hx + 400, eo(k)), hy + 150 + 60 * k, PI + .4, 3.8, 'grip', true, 900);
+    ctx.strokeStyle = '#d3203a'; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx, hy + 20); ctx.quadraticCurveTo(hx + 100, hy + 150, lerp(hx + 120, hx + 380, eo(k)), hy + 140 + 60 * k); ctx.stroke(); }
   burst(hx, hy + 40, a, 150, 9, 'rgba(255,255,255,.95)', 6, .18);
-  if (a > .3 && a < .9) twinkle(hx - 40, hy - 30, 44, a - .3, .55);
+  if (b >= 0) burst(rx0 + rw / 2, ry0 + rh / 2, b, 330, 12, 'rgba(120,255,170,.8)', 5, .18);
+  if (a > .3 && a < .9) twinkle(hx - 50, hy - 40, 44, a - .3, .55);
 }
 /* 8 CLOSETSLAM (the station camera): Mango has just pushed Brenda in: the door slams on the cut (Brenda, mid-bite, wide-eyed in the window); Mango slaps NOT A CLOSET over the window on the off-beat */
 const MANGO8 = { x: 1180, y: 1352 };
 function mango8(lt, a, b) {
-  const slap = b >= -.12 ? c01((b + .12) / .12) : 0, back = ss(b, .12, .4);
-  const push = [lerp(96, 102, hitK(a, .08)), -54], sign = [lerp(96, 152, slap) - 40 * back, lerp(-54, -100, slap) + 70 * back];
-  return A7.mango({ x: MANGO8.x - 18 * back, y: MANGO8.y, s: .9, t: lt, who: 'mango', expr: b >= 0 ? 'happy' : 'smug', look: b >= .3 ? [-.6, 0] : [.8, -.2], yaw: b >= .3 ? -.1 : .55, headYaw: b >= .3 ? -.3 : .45, plant: true,
+  const slap = b >= -.12 ? c01((b + .12) / .12) : 0, back = ss(b, .03, .15);
+  const push = [lerp(96, 102, hitK(a, .08)), -54], sign = [lerp(96, 104, slap) - 50 * back, lerp(-54, -96, slap) + 80 * back];
+  return A7.mango({ x: MANGO8.x - 18 * back, y: MANGO8.y, s: .9, t: lt, who: 'mango', expr: b >= 0 ? 'happy' : 'smug', look: b >= .3 ? [-.6, 0] : [.8, -.2], yaw: b >= .3 ? -.05 : .25, headYaw: b >= .3 ? -.3 : .45, plant: true,
     arms: { l: 'rest', r: 'hold' }, hand: { r: 'flat' }, grip: { r: b >= -.12 ? sign : push }, squash: .03 * hitK(a, .08) });
 }
 function brendaIn(lt, a) {                                                     /* Brenda inside the closet, seen through the window: mid-bite, eyes wide */
@@ -1062,7 +1107,7 @@ function draw8(lt, a, b) {
   puff(CLOSET.x0 + 14, FL - 10, 70, lt, MT[7] + .005, { life: .5, seed: 41, flat: .5, color: '#efe8da' }); puff(CLOSET.x1 - 14, FL - 10, 70, lt, MT[7] + .005, { life: .5, seed: 42, flat: .5, color: '#efe8da' });
   burst(CLOSET.x1 - 20, 960, a, 110, 8, 'rgba(255,255,255,.9)', 4, .18);
   drawChar(mango8(lt, a, b));
-  if (b >= 0) { burst(wx + ww / 2, wy + wh / 2, b, 90, 8, 'rgba(255,255,255,.9)', 3.4, .16); if (b > .3) { const ag = b - .3; ctx.fillStyle = '#d9b57a'; ctx.beginPath(); ctx.ellipse(1356 + 4 * ag, Math.min(FL + 3, 1150 + 900 * ag * ag), 6, 3.6, .3, 0, TAU); ctx.fill(); } }
+  if (b >= 0) { burst(wx + ww / 2, wy + wh / 2, b, 150, 10, 'rgba(255,255,255,.9)', 3.4, .16); if (b > .3) { const ag = b - .3; ctx.fillStyle = '#d9b57a'; ctx.beginPath(); ctx.ellipse(1356 + 4 * ag, Math.min(FL + 3, 1150 + 900 * ag * ag), 6, 3.6, .3, 0, TAU); ctx.fill(); } }
 }
 /* 12 SPARKLE (the station camera): the empty station, gleaming; a sparkle wipe crosses the frame on the cut; a big twinkle on the counter on the off-beat */
 function draw12(lt, a, b) {
@@ -1071,7 +1116,7 @@ function draw12(lt, a, b) {
   roomS(lt, st, {}); stCounterFront(lt, st); stCounterTop(lt, st);
   const pts = [[SHELF.x0 + 40, SHELF.y - 150, 0], [CTR.x0 + 60, CTR.top - 4, .05], [CTR.x1 - 40, CTR.top - 4, .1], [SIGNP.x + 160, SIGNP.y - 26, .02], [CART.x + 90, CART.y - 350, .08], [CLOCKP.x + 34, CLOCKP.y - 34, .12],
     [FRIDGE.x1 - 24, FRIDGE.y0 + 24, .06], [POSTER.x + POSTER.w - 14, POSTER.y + 14, .03], [CLOSET.x1 - 20, CLOSET.y0 + 20, .14], [SAN.x + 20, SAN.y - 40, .1], [TOPX.carton, CTR.top - 90, .16], [TOPX.lam + 40, CTR.top - 30, .18]];
-  pts.forEach(([x, y, d], i) => twinkle(x, y, 30 + 12 * rn(141, i), a - d, .55));
+  pts.forEach(([x, y, d], i) => { twinkle(x, y, 40 + 16 * rn(141, i), a - d, .6); twinkle(x + 30, y - 20, 22, a - d - .3, .5); });
   if (b >= 0) { twinkle(895, CTR.top - 40, 120, b, .5); glow(895, CTR.top - 40, 300, '#fffbe8', .25 * (1 - c01(b / .5)), .3); }
 }
 function wipeOver(lt, a) {                                                      /* the sparkle wipe of shot 12: a soft diagonal band of light that sweeps the frame (screen space, additive, never a flash) */
@@ -1080,8 +1125,8 @@ function wipeOver(lt, a) {                                                      
   ctx.fillStyle = lg(-160, 0, 160, 0, [[0, 'rgba(255,250,230,0)'], [.5, 'rgba(255,250,230,' + (.32 * Math.sin(PI * k)) + ')'], [1, 'rgba(255,250,230,0)']]); ctx.fillRect(-160, -1400, 320, 2800); ctx.restore();
 }
 const INS = [ins1, ins2, ins3, ins4, ins5, ins6, ins7, draw8, ins9, ins10, ins11, draw12];
-const INSCAM = { 7: { x: 1262, y: 1062, z: [1.86, 1.92] }, 11: { x: 900, y: 1000, z: [1.0, 1.04] } };
-const INSROLL = [0, .03, 0, -.02, -.06, 0, 0, 0, .025, 0, .05, 0];             /* a dutch angle or two */
+const INSCAM = { 7: { x: 1258, y: 1110, z: [2.2, 2.26] }, 11: { x: 900, y: 1000, z: [1.0, 1.04] } };
+const INSROLL = [0, .03, 0, -.02, -.06, 0, 0, 0, .025, 0, .03, 0];             /* a dutch angle or two */
 function camIns(lt, sh) {
   const k = sh.ins, a = lt - MT[k], b = lt - MOFF[k], u = c01(a / 1.0), c = INSCAM[k];
   if (c) { zoomTo(c.x, c.y, lerp(c.z[0], c.z[1], u)); FR = { sh, C: {} }; }
@@ -1115,8 +1160,8 @@ function hallSet(lt) {
 const CROWD = (() => {
   const L = [], rows = [[1500, 6, 3], [1820, 5, 2], [2160, 5, 2], [2560, 6, 2], [3000, 6, 1], [3560, 6, 1], [4250, 6, 1]];
   rows.forEach(([Z, n, wave], r) => { for (let i = 0; i < n; i++) {
-    const u = (i + .5) / n, X = r === 0 ? lerp(-262, 262, i / (n - 1)) : lerp(-270, 270, u) + (rn(150 + r, i) - .5) * 30 + (r % 2 ? 14 : -14), h = rn(160 + r, i);
-    L.push({ X, Z: Z + (r ? (rn(170 + r, i) - .5) * 60 : 0), wave, front: r === 0, yaw: r === 0 ? [.35, .2, .08, -.08, -.2, -.35][i] : (h < .45 ? 0 : h < .72 ? 1 : 2), ph: rn(180 + r, i) * TAU, d: Math.round(rn(190 + r, i) * 3), r, i }); } });
+    const u = (i + .5) / n, X = r === 0 ? lerp(-280, 280, i / (n - 1)) : lerp(-270, 270, u) + (rn(150 + r, i) - .5) * 30 + (r % 2 ? 14 : -14), h = rn(160 + r, i);
+    L.push({ X, Z: Z + (r ? (rn(170 + r, i) - .5) * 60 : 0), wave, front: r === 0, yaw: r === 0 ? [.18, .1, .04, -.04, -.1, -.18][i] : (h < .45 ? 0 : h < .72 ? 1 : 2), ph: rn(180 + r, i) * TAU, d: Math.round(rn(190 + r, i) * 3), r, i }); } });
   L.forEach((c, k) => { c.k = k; c.pop = CUE.poof[3 - c.wave] + (c.front ? c.i * .012 : rn(200, k) * .07); });
   return L;
 })();
@@ -1132,8 +1177,8 @@ function cloneSprite(yi, mouth, cheer, lod) {
   const s0 = lod ? .42 : 1, cv = document.createElement('canvas'); cv.width = Math.ceil(SP_W * s0); cv.height = Math.ceil(SP_H * s0); cv.__txOK = true;
   const g = cv.getContext('2d'), prev = ctx; ctx = g; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
   REG.suppress++;
-  try { const o = agencyOn(A11.straw({ x: SP_FX * s0, y: SP_FY * s0, s: s0, t: 0, yaw: YAWS[yi], headYaw: YAWS[yi], talk: mouth / 3, noBob: true, noShadow: true, noReflect: true, who: undefined, look: [yi === 1 ? .3 : yi === 2 ? -.3 : 0, .05],
-      expr: 'happy', arms: { l: cheer ? 'cheer' : 'rest', r: cheer ? 'cheer' : 'rest' } })); o.agNoText = true; drawChar(o); }
+  try { const o = A11.straw({ x: SP_FX * s0, y: SP_FY * s0, s: s0, t: 0, yaw: YAWS[yi], headYaw: YAWS[yi], talk: mouth / 3, noBob: true, noShadow: true, noReflect: true, who: undefined, look: [yi === 1 ? .3 : yi === 2 ? -.3 : 0, .05],
+      expr: 'happy', arms: { l: cheer ? 'cheer' : 'rest', r: cheer ? 'cheer' : 'rest' } }); o.acc = (o.acc || []).filter(a => a !== 'perdiem9').concat(['fp21p_agency']); o.agNoText = true; drawChar(o); }
   finally { REG.suppress--; ctx = prev; }
   SPR.set(key, cv); return cv;
 }
@@ -1182,14 +1227,14 @@ function lemonH(lt, X, Z, o = {}) {
     arms: { l: 'rest', r: one ? 'hold' : 'rest' }, hand: { r: one ? 'point' : 'open' }, grip: { r: [96, -60] } });
 }
 /* the hall shots: where the speakers stand (X, Z) and the 2D framing on top of the perspective (z = zoom; the frame centre follows the speaker's face) */
-const HPOS = { melon: [0, 1180], strawA: [-232, 1080], melonA: [232, 1080], strawS: [170, 980], lemonL: [-170, 980] };
+const HPOS = { melon: [0, 1180], strawA: [-226, 1080], melonA: [204, 1080], strawS: [170, 980], lemonL: [-170, 980] };
 const faceH = o => faceC(o);
 function camHall(lt, sh) {
   V2.setCam(HALLC);
   const u = c01((lt - sh.s) / Math.max(.1, sh.e - sh.s)), e = easeIO(u);
   let cx = 540, cy = 1000, z = 1;
   if (sh.k === 'melon') { const [fx, fy] = faceH(melonH(lt, ...HPOS.melon)); cx = fx; cy = fy + 70; z = lerp(1.52, 1.6, e); }
-  if (sh.k === 'agency') { cx = 540; cy = 1070; z = lerp(1.16, 1.2, e); }
+  if (sh.k === 'agency') { cx = 540; cy = 1070; z = lerp(1.14, 1.17, e); }
   if (sh.k === 'front') { cx = 540; cy = 1040; z = lerp(1.46, 1.5, e); }
   if (sh.k === 'straw') { const [fx, fy] = faceH(strawH(lt, ...HPOS.strawS)); cx = fx - 110; cy = fy + 70; z = lerp(1.28, 1.34, e); }
   if (sh.k === 'lemon') { const [fx, fy] = faceH(lemonH(lt, ...HPOS.lemonL)); cx = fx + 110; cy = fy + 70; z = lerp(1.28, 1.36, e); }
@@ -1203,7 +1248,7 @@ function drawHallShot(lt) {
   if (sh.k === 'melon') drawChar(melonH(lt, ...HPOS.melon));
   if (sh.k === 'agency') {
     drawCrowd(lt); bgSix({}); poofs(lt);
-    const s = strawH(lt, ...HPOS.strawA, { look: [.6, -.15], yaw: .75 }), m = melonH(lt, ...HPOS.melonA, { yaw: -.75, lx: -.5 });
+    const s = strawH(lt, ...HPOS.strawA, { look: [.6, -.15], yaw: .6 }), m = melonH(lt, ...HPOS.melonA, { yaw: -.35, lx: -.6 });
     for (const o of [s, m]) if (inFrame(o, 6).whole) drawChar(o);
   }
   if (sh.k === 'front') { drawCrowd(lt); for (const o of frontSix(lt, {})) if (inFrame(o, 6).whole) drawChar(o); }

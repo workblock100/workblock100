@@ -262,7 +262,7 @@ function labelBlank(o) {
   ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2 - 14 * pl, -h / 2); ctx.lineTo(w / 2, -h / 2 + 12 * pl); ctx.lineTo(w / 2, h / 2); ctx.lineTo(-w / 2, h / 2); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(40,40,60,.45)'; ctx.lineWidth = 1.4; ctx.stroke();
   if (pl > .02) { ctx.fillStyle = '#e4e6ec'; ctx.beginPath(); ctx.moveTo(w / 2 - 14 * pl, -h / 2); ctx.lineTo(w / 2 - 20 * pl, -h / 2 - 9 * pl); ctx.lineTo(w / 2 + 6 * pl, -h / 2 + 6 * pl); ctx.lineTo(w / 2, -h / 2 + 12 * pl); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  ctx.fillStyle = '#c2272d'; ctx.fillRect(-w / 2 + 4, -h / 2 + 4, w * .5, 3.5);
+  ctx.fillStyle = '#e8542e'; ctx.fillRect(-w / 2 + 4, -h / 2 + 4, w * .5, 3.5);
   ctx.fillStyle = 'rgba(40,40,60,.55)'; ctx.fillRect(-w / 2 + 4, -h / 2 + 11, w - 12, 2.6); ctx.fillRect(-w / 2 + 4, -h / 2 + 17, w * .6, 2.6);
   ctx.restore();
 }
@@ -481,6 +481,7 @@ function sSet(st, o = {}) {
   sWall(st); sWallDecor(st); sCloset(st); sHall(st); sFloor(st);
   sSun(st, o.figs || []);
   st.between = o.between || null; sDoors(st); st.between = null;
+  if (o.behind) o.behind();
   sCounter(st, o.skipLap);
 }
 
@@ -490,7 +491,7 @@ for (const k in AC) AC[k] = TA.snapT(AC[k]);
 const SCA = { straw: .86, mango: .88, lemon: .86, tom: .88, onion: .86, kale: .92, radish: .9 };
 const CHAIN = { straw: 700, mango: 1180, lemon: 1440, tom: 1700, onion: 1960 };          /* the open and the whisper chain */
 const GROUP = { mango: 520, lemon: 730, straw: 940, tom: 1150, onion: 1360 };             /* gathered at the station (ra0b, the scatter) */
-const YESX = { mango: 610, lemon: 772, straw: 940, tom: 1110, onion: 1272 };              /* the "Yes!" shot: a front row of three, Lemon and Tomato squeezing in between */
+const YESX = { mango: 600, lemon: 768, straw: 940, tom: 1114, onion: 1294 };              /* the "Yes!" shot: a front row of three, Lemon and Tomato squeezing in between */
 const YESB = { lemon: 1, tom: 1 };
 const T_FREEZE = AC.doorchime, T_SCAT = TA.snapT(TA.wS('me1', 4) - .02);                  /* "All" staff to your stations: the burst */
 /* the surveyors' routes: in the doorway, then a step into the light (feet a little lower and nearer: scale grows) */
@@ -546,8 +547,8 @@ function strawA(lt, sh) {
 function yesPose(o, n, lt) {
   const u = eb(sg(lt, 20.6, 20.86)) * (1 - .25 * ss(lt, 21.3, 21.64)), dx = YESX[n] - 940, back = !!YESB[n];
   const jump = back ? eb(sg(lt, 20.58, 20.8)) : 0;
-  o.s = (back ? .9 : 1.0) * lerp(.95, 1.03, u); o.y = back ? FL + 12 : FL + 72 + 10 * u; o.lift = back ? 168 * jump + 6 * Math.sin(lt * 9) * jump : 0;
-  o.rot = -dx / 7000 * u; o.yaw = -dx / 1100 * u; o.headYaw = o.yaw; o.look = [-dx / 500, .12];
+  o.s = (back ? .85 : 1.0) * lerp(.95, 1.03, u); o.y = back ? FL + 12 : FL + 72 + 10 * u; o.lift = back ? 132 * jump + 6 * Math.sin(lt * 9) * jump : 0;
+  o.rot = back ? 0 : -dx / 7000 * u; o.yaw = back ? 0 : -dx / 1100 * u; o.headYaw = o.yaw; o.look = back ? [0, .15] : [-dx / 500, .12];
   o.expr = 'panic'; o.lid = 0; o.arms = { l: 'reach', r: 'reach' }; o.who = 'staff';
 }
 function mangoA(lt, sh) {
@@ -805,4 +806,403 @@ const ARRIVE = {
   clock: () => TA.SCN.clock, label: () => TA.SCN.label,
 };
 window.__EP21_SCENES = window.__EP21_SCENES || {}; window.__EP21_SCENES.arrive = ARRIVE;
+
+// ================================================================== EXIT: the conference room at night (a flat stage, floor FLC 1300), then the station at night
+const EC = { gasp: 3.0, sniffle: 12.489, tick1: 13.274, chairsit: 15.183, exhale: 15.883, tick2: 17.983, shiftbell: 18.383, stamp: 19.633, doorclose: 20.746, poof: 21.246, closetopen: 21.646,
+  coffeemaker: 22.146, labelpeel: 22.546, doorchime: 22.796, sting: 31.01 };
+for (const k in EC) EC[k] = TE.snapT(EC[k]);
+const FLC = 1300;
+const TBL = { x0: 470, x1: 1650, far: 1078, near: 1110 };                         /* the long table */
+const SEAT = { melon: 590, onion: 790, lemon: 990, mango: 1190, tom: 1390, straw: 1570 };  /* seated behind it, facing us */
+const SEATY = 1084;                                                                /* noLegs: y is the bottom of the body (hidden by the table) */
+const SCE = { melon: .92, onion: .84, lemon: .84, mango: .86, tom: .86, straw: .86, kale: .92, radish: .9 };
+const CHAIR = { x: 2080, seat: 1168 };                                              /* the armchair in the corner */
+const LAMP = { x: 2268, y: 812 };                                                  /* the floor lamp's shade */
+const CLK = { x: 1890, y: 742, r: 112 };                                           /* the wall clock over the armchair */
+/* the clock's time at scene time lt, in seconds after 10:00:00 PM: 10:58 and running until the tick at 13.27 (10:59:00), then the minute runs; the break shot opens on 10:59:44 (the cut hides the jump)
+ * and the second hand reaches the twelve on the second tick (17.98): 11:00 */
+function clockSec(lt) {
+  if (lt < EC.tick1) return 58 * 60 + 2 + lt * .9;
+  if (lt < 15.08) return 59 * 60 + (lt - EC.tick1);
+  if (lt < EC.tick2) return 59 * 60 + 44 + 16 * ss(lt, 15.08, EC.tick2) * .25 + 16 * sg(lt, 15.08, EC.tick2) * .75;
+  return 60 * 60 + (lt - EC.tick2) * .2;
+}
+function cWall(lt) {
+  const top = '#c9d0de', bot = '#aab4c8', wain = '#5d5a6e';
+  ctx.fillStyle = lg(0, -400, 0, FLC, [[0, '#d4dbe8'], [.35, top], [1, bot]]); ctx.fillRect(-1600, -600, 5200, FLC + 600);
+  ctx.fillStyle = lg(0, 1040, 0, FLC, [[0, wain], [1, shade(wain, .84)]]); ctx.fillRect(-1600, 1040, 5200, FLC - 1040);
+  ctx.fillStyle = '#e4e8f0'; ctx.fillRect(-1600, 1032, 5200, 12); ctx.fillStyle = 'rgba(30,20,40,.28)'; ctx.fillRect(-1600, 1044, 5200, 4);
+  ctx.fillStyle = '#b3bccd'; ctx.fillRect(-1600, -600, 5200, 930); ctx.fillStyle = 'rgba(30,20,40,.2)'; ctx.fillRect(-1600, 326, 5200, 6);
+  const VX = 1000, VY = 980, sc = y => (VY - y) / (VY - 326), px = (x, y) => VX + (x - VX) * sc(y);
+  ctx.strokeStyle = 'rgba(255,255,255,.26)'; ctx.lineWidth = 3;
+  for (let x = -2000; x <= 4000; x += 220) { ctx.beginPath(); ctx.moveTo(x, 326); ctx.lineTo(px(x, -700), -700); ctx.stroke(); }
+  for (let j = 1; j <= 9; j++) { const y = 326 - 38 * j * (1 + j * .2); ctx.beginPath(); ctx.moveTo(-2400, y); ctx.lineTo(4400, y); ctx.stroke(); }
+  for (const lx of [300, 1000, 1700]) for (const [ya, yb] of [[250, 288], [96, 168]]) {
+    poly([[px(lx - 110, yb), yb], [px(lx + 110, yb), yb], [px(lx + 110, ya), ya], [px(lx - 110, ya), ya]], 'rgba(244,250,255,.95)', INKC, 2.4);
+    glow(lx, yb + 30, 320, '#eef4ff', ya > 200 ? .22 : .12, .1);
+  }
+}
+/* the window: night, deep blue, snow, the lot lamp; blinds half up */
+function cWindow(lt) {
+  const x0 = 520, x1 = 1000, y0 = 470, y1 = 900;
+  ctx.fillStyle = '#e8ecf3'; rr(x0 - 16, y0 - 16, x1 - x0 + 32, y1 - y0 + 32, 6); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+  ctx.fillStyle = lg(0, y0, 0, y1, [[0, '#14244a'], [.7, '#2a3e6e'], [1, '#4a5e8e']]); ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+  ctx.fillStyle = '#dfe8f6'; ctx.beginPath(); ctx.moveTo(x0, y1); for (let i = 0; i <= 12; i++) ctx.lineTo(x0 + (x1 - x0) * i / 12, y1 - 40 - 10 * Math.sin(i * 1.7)); ctx.lineTo(x1, y1); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#39456a'; ctx.fillRect(x0 + 330, y0 + 140, 7, 260); glow(x0 + 333, y0 + 138, 70, '#ffe2a6', .5, .6);
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  for (let i = 0; i < 40; i++) { const r1 = rnd(41, i), r2 = rnd(42, i), r3 = rnd(43, i), xx = x0 + ((r1 * (x1 - x0) + lt * 18 * Math.sin(r2 * 6) + 9999) % (x1 - x0)), yy = y0 + ((r2 * (y1 - y0) + lt * (40 + 70 * r3)) % (y1 - y0)); ctx.beginPath(); ctx.arc(xx, yy, 1.8 + 2.6 * r3, 0, TAU); ctx.fill(); }
+  ctx.restore();
+  ctx.fillStyle = '#eef1f6'; for (let i = 0; i < 6; i++) { ctx.fillRect(x0, y0 + i * 18, x1 - x0, 13); } ctx.fillStyle = 'rgba(40,40,60,.25)'; for (let i = 0; i < 6; i++) ctx.fillRect(x0, y0 + i * 18 + 13, x1 - x0, 3);
+  ctx.strokeStyle = '#e8ecf3'; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo((x0 + x1) / 2, y0); ctx.lineTo((x0 + x1) / 2, y1); ctx.stroke();
+  ctx.fillStyle = '#e8ecf3'; rr(x0 - 26, y1 + 8, x1 - x0 + 52, 16, 4); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.4; ctx.stroke();
+}
+/* the whiteboard: EXIT CONFERENCE in marker (dressing) */
+function cBoard(lt) {
+  const x0 = 1100, x1 = 1500, y0 = 540, y1 = 860;
+  ctx.fillStyle = '#9aa3b2'; rr(x0 - 10, y0 - 10, x1 - x0 + 20, y1 - y0 + 20, 6); ctx.fill(); ctx.fillStyle = '#fbfcfe'; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+  ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; ctx.strokeRect(x0 - 10, y0 - 10, x1 - x0 + 20, y1 - y0 + 20);
+  TXT('EXIT CONFERENCE', (x0 + x1) / 2, y0 + 46, { size: 34, fill: '#1f3f8a', weight: 900, spacing: 1, maxW: x1 - x0 - 40, hero: false });
+  ctx.strokeStyle = 'rgba(31,63,138,.55)'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  for (let i = 0; i < 4; i++) { const y = y0 + 110 + i * 46; ctx.beginPath(); ctx.moveTo(x0 + 40, y); ctx.lineTo(x0 + 40 + (i === 3 ? 140 : 260 - i * 30), y); ctx.stroke(); }
+  ctx.fillStyle = '#c2272d'; ctx.fillRect(x0 + 20, y1 + 6, 46, 10); ctx.fillStyle = '#1f3f8a'; ctx.fillRect(x0 + 74, y1 + 6, 46, 10);
+}
+/* the wall clock: a big school clock; numerals through the UI kit (hero when the clock is big on screen) */
+function cClock(lt) {
+  const { x, y, r } = CLK, sec = clockSec(lt), h = 10 + sec / 3600, m = (sec / 60) % 60, sx = sec % 60;
+  ctx.fillStyle = 'rgba(20,20,40,.22)'; ctx.beginPath(); ctx.arc(x + 6, y + 10, r + 14, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#1f2433'; ctx.beginPath(); ctx.arc(x, y, r + 14, 0, TAU); ctx.fill();
+  ctx.fillStyle = rg(x - r * .3, y - r * .3, 10, r * 1.2, [[0, '#ffffff'], [1, '#e9edf3']]); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.strokeStyle = '#2b2f3a'; for (let i = 0; i < 60; i++) { const a = i / 60 * TAU, L = i % 5 ? .04 : .07; ctx.lineWidth = i % 5 ? 1.6 : 4; ctx.beginPath(); ctx.moveTo(x + Math.sin(a) * r * (.95 - L), y - Math.cos(a) * r * (.95 - L)); ctx.lineTo(x + Math.sin(a) * r * .95, y - Math.cos(a) * r * .95); ctx.stroke(); }
+  UI.container('fp21a_clock', 'board', [x - r, y - r, x + r, y + r], 2);
+  for (let i = 1; i <= 12; i++) { const a = i / 12 * TAU; TXT(String(i), x + Math.sin(a) * r * .74, y - Math.cos(a) * r * .74, { size: 24, fill: '#1f2433', weight: 900, cid: 'fp21a_clock' }); }
+  const hand = (a, L, w, c, tail) => { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x - Math.sin(a) * (tail || 0), y + Math.cos(a) * (tail || 0)); ctx.lineTo(x + Math.sin(a) * L, y - Math.cos(a) * L); ctx.stroke(); };
+  const mSnap = Math.floor(m) + ss(m - Math.floor(m), .985, 1) + pulse(lt, EC.tick2, 40, .05) * .004;
+  hand((h % 12) / 12 * TAU, r * .38, 10, '#1f2433'); hand(mSnap / 60 * TAU, r * .54, 7, '#1f2433');
+  hand(sx / 60 * TAU, r * .56, 3, '#d6202c', r * .16); ctx.fillStyle = '#d6202c'; ctx.beginPath(); ctx.arc(x, y, 8, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.beginPath(); ctx.ellipse(x - r * .3, y - r * .45, r * .5, r * .2, -.5, 0, TAU); ctx.fill();
+}
+/* the corner: a floor lamp (warm), the armchair (empty or taken), a side table with a mug */
+function cCorner(lt) {
+  const { x, seat } = CHAIR;
+  glow(LAMP.x - 40, LAMP.y + 160, 520, '#ffd28a', .34, .2);
+  ctx.strokeStyle = '#3a3440'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(LAMP.x, LAMP.y + 40); ctx.lineTo(LAMP.x, FLC - 12); ctx.stroke(); ctx.fillStyle = '#3a3440'; ctx.beginPath(); ctx.ellipse(LAMP.x, FLC - 8, 50, 12, 0, 0, TAU); ctx.fill();
+  poly([[LAMP.x - 64, LAMP.y + 60], [LAMP.x + 64, LAMP.y + 60], [LAMP.x + 40, LAMP.y - 30], [LAMP.x - 40, LAMP.y - 30]], lg(0, LAMP.y - 30, 0, LAMP.y + 60, [[0, '#ffe7b8'], [1, '#f5c56e']]), INKC, 2.6);
+  glow(LAMP.x, LAMP.y + 70, 180, '#ffd796', .55, .5);
+  /* the side table and a mug */
+  ctx.fillStyle = '#7a5a44'; rr(x + 150, 1150, 110, 16, 4); ctx.fill(); ctx.fillRect(x + 196, 1166, 16, FLC - 1170);
+}
+function cArmchairBack() {
+  const { x, seat } = CHAIR;
+  ctx.fillStyle = lg(0, 900, 0, seat, [[0, '#a0465a'], [1, '#7a3044']]); rr(x - 150, 905, 300, seat - 905 + 20, 60); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.stroke();
+  ctx.strokeStyle = 'rgba(40,10,20,.25)'; ctx.lineWidth = 3; for (const dx of [-60, 0, 60]) { ctx.beginPath(); ctx.moveTo(x + dx, 940); ctx.lineTo(x + dx, seat - 10); ctx.stroke(); }
+}
+function cArmchairFront(sit) {
+  const { x, seat } = CHAIR;
+  ctx.fillStyle = lg(0, seat, 0, seat + 60, [[0, '#b45468'], [1, '#8a3a4e']]); rr(x - 150, seat - 10 + 6 * sit, 300, 62, 22); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.stroke();
+  for (const sd of [-1, 1]) { ctx.fillStyle = lg(0, seat - 70, 0, seat + 60, [[0, '#b85a6e'], [1, '#86364a']]); rr(x + sd * 150 - 34, seat - 70, 68, 150, 28); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.stroke(); }
+  ctx.fillStyle = '#7a3044'; ctx.fillRect(x - 140, seat + 50, 280, 40); ctx.fillStyle = '#3a2a2a'; for (const dx of [-120, 110]) ctx.fillRect(x + dx, seat + 88, 14, FLC - seat - 92);
+}
+/* the table: the top (a light edge toward us), the apron, the legs; on it: Onion's stack of binders, mugs, a pizza box, papers */
+function cTable(lt, st) {
+  const { x0, x1, far, near } = TBL;
+  ctx.fillStyle = lg(0, far, 0, near, [[0, '#a07850'], [1, '#c69a68']]); ctx.fillRect(x0, far, x1 - x0, near - far);
+  ctx.fillStyle = '#6e4e34'; ctx.fillRect(x0 - 8, near, x1 - x0 + 16, 40); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.strokeRect(x0 - 8, near, x1 - x0 + 16, 40); ctx.strokeRect(x0, far, x1 - x0, near - far);
+  ctx.fillStyle = '#5a3e2a'; for (const lx of [x0 + 30, x1 - 54]) { ctx.fillRect(lx, near + 40, 24, FLC - near - 44); ctx.strokeRect(lx, near + 40, 24, FLC - near - 44); }
+  ctx.fillStyle = 'rgba(0,0,0,.16)'; ctx.fillRect(x0 + 54, near + 40, x1 - x0 - 108, 12);
+  /* on the table */
+  const mug = (mx, col) => { ctx.fillStyle = col; rr(mx - 16, far - 30, 32, 34, 5); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2; ctx.stroke(); ctx.beginPath(); ctx.arc(mx + 18, far - 14, 8, -1.3, 1.3); ctx.stroke(); };
+  mug(1080, '#e8eef4'); mug(1300, '#c2272d'); mug(1490, '#2f6fc4');
+  ctx.fillStyle = '#fbfaf2'; for (const [px, r] of [[700, -.06], [1180, .05], [1420, -.03]]) { ctx.save(); ctx.translate(px, far + 12); ctx.rotate(r); ctx.fillRect(-40, -6, 80, 12); ctx.restore(); }
+  if (window.F19 && typeof F19.dish === 'function') F19.dish(ctx, 'pizzaBox', { x: 520, y: far + 6, s: .42, open: 0, seed: 2 });
+  binderStack(far, st.clutch || 0);
+}
+const STACKX = 890;
+function binderStack(far, bk) {
+  const cols = ['#1f3166', '#c2272d', '#2f7a4a'];
+  for (let i = 0; i < 3; i++) { const x = STACKX - 48 + Math.sin(i * 2.1) * 5 - bk * 10, y = far - 10 - i * 22 - bk * 3; ctx.fillStyle = cols[i]; rr(x, y, 96, 22, 3); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.2; ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(x + 14, y + 7, 34, 6); }
+}
+/* the chair backs of the seated staff (behind them) */
+function cChairs() {
+  for (const n in SEAT) { const x = SEAT[n]; ctx.fillStyle = lg(0, 880, 0, 1080, [[0, '#2e3e66'], [1, '#22304e']]); rr(x - 96, 890, 192, 200, 26); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; ctx.stroke(); }
+}
+
+// ------------------------------------------------------------------ EXIT: the cast in the conference room (seated staff: noLegs, the table covers the bottom of the body)
+const GASP = lt => ss(lt, EC.gasp - .04, EC.gasp + .08) * (1 - ss(lt, EC.gasp + .5, EC.gasp + .9));
+const T_TURN = TE.snapT(TE.wS('ra1', 6) - .05);                                    /* every head turns to Strawberry on "break." */
+const turnK = lt => ss(lt, T_TURN, T_TURN + .18);
+/* where the seated look: at the surveyors (left), then at Strawberry (right), at Onion on her outburst, at the clock */
+function seatLook(n, lt) {
+  const me = SEAT[n], toS = turnK(lt), atOnion = ss(lt, TE.ls('o1') - .1, TE.ls('o1') + .15) * (1 - ss(lt, TE.le('o1') + .2, TE.le('o1') + .5));
+  let tx = lerp(240, SEAT.straw, toS); if (n === 'straw') tx = lerp(240, 240, toS);
+  if (lt > TE.ls('ka2') && lt < TE.ls('o1')) tx = lerp(tx, CHAIR.x, ss(lt, TE.wS('ka2', 4), TE.wS('ka2', 4) + .3));
+  if (n !== 'onion') tx = lerp(tx, SEAT.onion, atOnion);
+  const dx = tx - me; return { head: Math.max(-.62, Math.min(.62, dx / 520)), look: [Math.max(-1, Math.min(1, dx / 300)), .02] };
+}
+function seated(o, n, lt) {
+  const g = seatLook(n, lt), gs = GASP(lt);
+  Object.assign(o, { x: SEAT[n], y: SEATY - 26 * gs * 0, noLegs: true, s: SCE[n], t: lt, headYaw: g.head, yaw: g.head * .35, look: g.look, plant: false });
+  o.lift = 14 * gs; o.squash = -.05 * gs;
+  return o;
+}
+function eMelon(lt) {
+  const o = seated(window.A9 ? A9.melon({}) : { kind: 'melon', id: 'melon', who: 'melon', acc: ['suit'] }, 'melon', lt), sp = talking(TE, 'me1', lt);
+  o.acc = ['suit', 'sweat']; o.who = 'melon'; o.expr = GASP(lt) > .3 ? 'shock' : sp ? 'panic' : 'sad'; o.arms = { l: 'rest', r: 'rest' };
+  if (sp) { o.arms = { l: 'rest', r: 'shrug' }; }
+  return o;
+}
+function eOnion(lt) {
+  const o = seated(A15.onion({ t: lt, who: 'onion', pose: 'rest', cry: .6 }), 'onion', lt), gs = GASP(lt), sp = talking(TE, 'o1', lt, .1, .35), sob = Math.max(0, 1 - Math.abs(lt - EC.sniffle - .08) / .3);
+  const clutch = ss(lt, EC.gasp - .04, EC.gasp + .1) * (1 - ss(lt, 4.6, 5.2));
+  o.expr = gs > .3 ? 'shock' : sp ? 'happy' : 'onion_cry'; o.cry = sp ? 1 : .62; o.sob = sob + (sp ? .2 : 0);
+  if (clutch > .01) { o.arms = { l: 'hold', r: 'hold' }; o.grip = { l: [-30, 52], r: [lerp(70, 104, clutch), 104] }; o.hand = { l: 'open', r: 'grip' }; }
+  if (sp) { o.arms = { l: 'cheer', r: 'cheer' }; o.look = [0, -.25]; o.headYaw = .05; o.yaw = 0; o.lift = 18 * Math.abs(Math.sin((lt - TE.ls('o1')) * 7)) * Math.exp(-(lt - TE.ls('o1')) * 1.5); o.joy = 1; }
+  return o;
+}
+function eLemon(lt) { const o = seated(A7.lemon({ t: lt, who: 'lemon', lid: .3 }), 'lemon', lt); o.expr = GASP(lt) > .3 ? 'shock' : 'neutral'; return o; }
+function eMango(lt) { const o = seated(A7.mango({ t: lt, who: 'mango' }), 'mango', lt); o.expr = GASP(lt) > .3 ? 'shock' : 'sad'; return o; }
+function eTom(lt) { const o = seated(A15.tomato({ t: lt, who: 'tom', tomPose: 'fruit', hold: {}, arms: { l: 'rest', r: 'rest' } }), 'tom', lt); o.expr = GASP(lt) > .3 ? 'shock' : 'tom_fruit'; return o; }
+/* Strawberry: at the far end of the table, then in the armchair for the break */
+function eStraw(lt) {
+  if (lt >= 15.08 && lt < 20.65) {
+    const sit = ss(lt, 15.0, EC.chairsit), cush = pulse(lt, EC.chairsit, 22, .12), ex = ss(lt, EC.exhale - .1, EC.exhale + .5), br = Math.sin((lt - EC.exhale) * 2.1) * (lt > EC.exhale ? 1 : 0);
+    const shut = ss(lt, 15.35, 15.9) * (1 - ss(lt, EC.shiftbell + .05, EC.shiftbell + .3) * .45);
+    const o = A11.straw({ x: CHAIR.x, y: CHAIR.seat - 30 + lerp(-30, 0, sit) + 4 * cush, s: .88, t: lt, who: 'straw', noLegs: true, expr: lt > EC.exhale + .2 ? 'chill' : 'dead', lid: lerp(.45, 1, shut),
+      look: [0, .1], yaw: 0, headYaw: .06 * ex, arms: { l: 'rest', r: 'rest' } });
+    o.squash = .05 * cush + .025 * ex * (1 - Math.abs(br) * .5) - .012 * br; o.rot = -.02 * ex; o.lid = lerp(.45, 1, shut);
+    return o;
+  }
+  const o = seated(A11.straw({ t: lt, who: 'straw', expr: 'dead', lid: .5 }), 'straw', lt);
+  const blink = Math.max(0, 1 - Math.abs(lt - (TE.ls('ra2') + .45)) / .16), okay = talking(TE, 's2', lt);
+  o.expr = talking(TE, 's1', lt) ? 'neutral' : 'dead'; o.lid = lerp(.45, 1, blink); o.headYaw = -.2; o.yaw = -.08; o.look = [-.5, .02];
+  if (lt > 13.0 && lt < 15.08) { o.headYaw = lerp(-.2, .4, ss(lt, 13.1, 13.5)); o.look = [lerp(-.5, .8, ss(lt, 13.1, 13.5)), -.3]; }
+  if (okay) { o.expr = 'neutral'; o.lid = .35; o.headYaw = .2; o.look = [.4, -.1]; }
+  return o;
+}
+function eKale(lt) {
+  const sp = talking(TE, 'ka1', lt) || talking(TE, 'ka2', lt) || talking(TE, 'ka3', lt), point = ss(lt, TE.wS('ka2', 2) - .1, TE.wS('ka2', 2) + .2) * (1 - ss(lt, TE.le('ka2') + .1, TE.le('ka2') + .4));
+  const note = lt > TE.ls('ka3') - .1 && lt < 20.65;
+  const o = { x: 150, y: FLC, s: SCE.kale, t: lt, who: 'kale', expr: note ? 'kale_note' : lt > TE.le('ka3') ? 'kale_satisfied' : 'kale_neutral', pose: 'clip', yaw: .35, headYaw: .3, look: note ? undefined : [.5, .02], plant: true };
+  if (point > .01) { o.cbPen = true; o.arms = { l: 'hold', r: 'point' }; o.hold = { l: 'fp21_clipboard' }; o.yaw = .45; o.headYaw = .5; o.look = [.9, -.05]; }
+  if (turnK(lt) > 0 && lt < TE.ls('ka2')) { o.look = [.95, .02]; o.headYaw = .45; }
+  return kaleO(o);
+}
+function eRadish(lt) {
+  const o = { x: 330, y: FLC, s: SCE.radish, t: lt, who: 'radish', expr: 'radish_flat', pose: 'tablet', yaw: .3, headYaw: lt > T_TURN ? .55 : .3, look: lt > T_TURN ? [.9, .02] : [.4, .02], plant: true };
+  if (talking(TE, 'ra2', lt)) { o.arms = { l: 'hold', r: 'point' }; o.look = [1, .02]; o.headYaw = .6; }
+  return radishO(o);
+}
+function castC(lt) {
+  return { kale: eKale(lt), radish: eRadish(lt), melon: eMelon(lt), onion: eOnion(lt), lemon: eLemon(lt), mango: eMango(lt), tom: eTom(lt), straw: eStraw(lt) };
+}
+
+// ------------------------------------------------------------------ EXIT: the station at night: the revert, Eggplant
+const T_REV = 20.65;
+const AGF = [815, 950, 1085, 1220], AGB = [];                                        /* agency Strawberries: one row in front of the counter */
+function stE(lt) {
+  const open = lt < EC.doorclose ? 1 - ss(lt, T_REV, EC.doorclose) : lt < EC.doorchime ? 0 : ss(lt, EC.doorchime, EC.doorchime + .3) * (1 - ss(lt, 24.6, 25.4));
+  return { night: 1, open, sun: 0, survey: lt < EC.labelpeel + 2 ? 1 : 0, peel: lt >= EC.labelpeel ? lt - EC.labelpeel : -1, poster: 1 - sg(lt, EC.labelpeel, EC.labelpeel + .12),
+    coffee: lt >= EC.coffeemaker ? c01((lt - EC.coffeemaker) / .22) : 0, coffeePop: true, closet: ss(lt, EC.closetopen, EC.closetopen + .3), t: lt };
+}
+const POOF = lt => lt >= EC.poof;
+function agencyAll(lt) {
+  const out = [], k = lt < EC.poof - .06 ? 1 : 1 - sg(lt, EC.poof - .06, EC.poof + .02);
+  if (k <= .02) return out;
+  AGB.forEach((x, i) => out.push(Object.assign(agencyO({ t: lt + i * .3, who: 'none', expr: 'neutral', lid: .4, plant: true, look: [-.3 + .15 * i, 0], arms: { l: 'rest', r: 'rest' } }), { id: 'ag' + i, x, y: FL - 36, s: .7 * k, behind: true })));
+  AGF.forEach((x, i) => out.push(Object.assign(agencyO({ t: lt + 2 + i * .4, who: 'none', expr: 'neutral', lid: .4, plant: true, look: [-.5, 0], headYaw: -.15, arms: { l: 'rest', r: 'rest' } }), { id: 'agf' + i, x, y: FL + 14, s: .78 * k, squash: .2 * (1 - k) })));
+  return out;
+}
+/* Brenda strolls out of the closet with her sandwich */
+function brendaE(lt) {
+  if (lt < EC.closetopen + .1 || !window.A13) return null;
+  const u = ss(lt, EC.closetopen + .1, EC.closetopen + 1.6), x = lerp(1300, 1180, u), walking = u > 0 && u < 1;
+  const o = A13.brenda({ x, y: FL + 6, s: .8, t: lt, who: 'brenda', expr: A13.expr('relief'), lid: .3, look: [-.6, .05], yaw: walking ? -.7 : -.35, headYaw: -.4, dust: .7, specsDrop: .6, plant: true,
+    arms: { l: 'rest', r: 'hold' }, grip: { r: [70, 10] }, hold: EXT.prop.fp19b_sandwich ? { r: 'fp19b_sandwich' } : {}, sandScale: .9 });
+  if (walking) { o.gait = (1300 - x) / o.s; o.dir = -1; o.stride = 22; }
+  return o;
+}
+/* the surveyors leave through the front doors (backs to us), then they are two shapes in the snow going away */
+function survOut(lt) {
+  if (lt >= T_REV + .9) return [];
+  const u = sg(lt, T_REV - .2, T_REV + .9), k = 1 - u * .25, fade = 1 - ss(lt, T_REV + .55, T_REV + .9);
+  if (fade <= .02) return [];
+  const mk = (ctor, x, n) => { const o = ctor({ x, y: FL - 30 * u, s: .9 * k, t: lt, who: 'none', yaw: PI, headYaw: PI, pose: 'clip', plant: true }); o.gait = 160 * u / o.s; o.stride = 30; o.id = n + 'out'; return o; };
+  return [mk(kaleO, 300 - 30 * u, 'kale'), mk(radishO, 150 + 10 * u, 'radish')].map(o => Object.assign(o, { alpha: fade }));
+}
+function eggE(lt) {
+  const u = ss(lt, EC.doorchime + .05, EC.doorchime + .42), x = lerp(230, 432, u), sp = talking(TE, 'eg1', lt) || talking(TE, 'eg2', lt) || talking(TE, 'eg3', lt);
+  const reading = lt > 27.1, hand = ss(lt, 26.9, 27.25), cosy = lt > 30.95;
+  const o = A20.eggplant({ t: lt, pose: 'rest', expr: cosy ? 'egg_cosy' : talking(TE, 'eg2', lt, .1, .5) ? 'egg_calm' : 'egg_stuck', gear: { snow: .85, wind: .3 * (1 - u) } });
+  Object.assign(o, { x, y: FL + 20, s: .9, plant: true, look: [.6, 0], yaw: lerp(.9, .35, u), headYaw: lerp(.9, .4, u), arms: { l: 'hold', r: 'rest' }, grip: { l: [-118, 58] }, hold: { l: 'fp21a_pizza' }, pizzaScale: .6, pizzaOpen: cosy ? ss(lt, 31.0, 31.5) : 0 });
+  if (u > 0 && u < 1) { o.gait = (x - 230) / o.s; o.dir = 1; o.stride = 44; o.lift = 8 * Math.abs(Math.sin(u * 9)); }
+  if (u < 1) o.transit = true;
+  if (lt >= 23.0 && lt < 23.9) { o.arms.r = 'cheer'; }
+  if (hand > 0) { o.arms.r = 'hold'; o.grip.r = [lerp(118, 84, hand), lerp(96, 70, hand)]; o.hold.r = 'fp21a_report'; o.repScale = .9; o.repRot = -.1; o.look = reading && lt < 29.6 ? [.3, .65] : [.6, 0]; }
+  return o;
+}
+function strawE(lt) {
+  const giving = ss(lt, TE.ls('s4') - .1, TE.ls('s4') + .3), gave = lt > 27.0, smile = ss(lt, TE.ls('s5') + .25, TE.ls('s5') + .7);
+  const watch = lt < 22.7 ? K([[20.65, -.6], [21.15, -.6], [21.3, .5], [21.7, .7], [22.2, .4], [22.6, .3]], lt) : -.55;
+  const o = A11.straw({ x: 650, y: FL + 10, s: .86, t: lt, who: 'straw', expr: 'neutral', lid: lerp(.42, .26, smile), plant: true, headYaw: watch, yaw: watch * .5, look: [watch > 0 ? .7 : -.7, .02], arms: { l: 'rest', r: 'rest' } });
+  if (lt > 22.7) { const hk = 1 - ss(lt, 26.3, 26.6) * (1 - ss(lt, 27.4, 27.8)); o.headYaw = -.45 * hk; o.yaw = -.3 * hk; o.look = [-.8, 0]; }
+  if (giving > 0 && !gave) { o.arms = { l: 'hold', r: 'rest' }; o.grip = { l: [lerp(-112, -150, giving), lerp(60, 92, giving)] }; o.hold = { l: 'fp21a_report' }; o.repScale = .9; }
+  if (smile > 0) { o.face = { curve: .1 + .32 * smile }; o.headYaw = lerp(o.headYaw, -.2, smile); }
+  return o;
+}
+
+// ------------------------------------------------------------------ EXIT: the shots (set 'conf' = the conference room, 'stn' = the station at night)
+const ALLC = ['kale', 'radish', 'melon', 'onion', 'lemon', 'mango', 'tom', 'straw'];
+const ESH = [
+  { id: 'open', s: 0, set: 'conf', k: 'pan', xk: [560, 1180], y: 1010, z: [.96, .98], show: ALLC, pan: true },
+  { id: 'ka1', s: 1.50, set: 'conf', k: 'pt', x: 248, y: 1168, z: [1.42, 1.48], show: ['kale', 'radish'], bg: ['melon'], dof: 6 },
+  { id: 'gasp', s: 3.00, set: 'conf', k: 'pt', x: 1078, y: 1065, z: [.86, .88], show: ['melon', 'onion', 'lemon', 'mango', 'tom', 'straw'] },
+  { id: 'me1', s: 3.61, set: 'conf', k: 'face', foc: 'melon', z: [1.85, 1.92], up: 120, dof: 7, show: ['melon'], bg: ['onion'] },
+  { id: 'ra1a', s: 4.41, set: 'conf', k: 'face', foc: 'radish', z: [1.62, 1.7], up: 110, dx: -40, dof: 7, show: ['radish'], bg: ['kale', 'melon'] },
+  { id: 'ra1b', s: 5.95, set: 'conf', k: 'pt', x: 1276, y: 1065, z: [.95, .97], show: ['onion', 'lemon', 'mango', 'tom', 'straw'] },
+  { id: 's1', s: 7.19, set: 'conf', k: 'face', foc: 'straw', z: [2.0, 2.16], up: 110, dof: 7, show: ['straw'], bg: ['tom'] },
+  { id: 'ka2a', s: 9.21, set: 'conf', k: 'pt', x: 268, y: 1168, z: [1.42, 1.46], show: ['kale', 'radish'], bg: ['melon'], dof: 6 },
+  { id: 'ka2b', s: 10.45, set: 'conf', k: 'pt', x: 2124, y: 1010, z: [1.2, 1.26], show: [], corner: true },
+  { id: 'o1', s: 11.59, set: 'conf', k: 'face', foc: 'onion', z: [1.9, 2.0], up: 120, dof: 7, show: ['onion'], bg: ['lemon', 'melon'] },
+  { id: 'clock', s: 13.07, set: 'conf', k: 'pt', x: CLK.x, y: CLK.y + 40, z: [2.5, 2.62], show: [], hero: true, corner: true },
+  { id: 's2', s: 14.32, set: 'conf', k: 'face', foc: 'straw', z: [2.1, 2.16], up: 110, dof: 7, show: ['straw'], bg: ['tom'] },
+  { id: 'break', s: 15.08, set: 'conf', k: 'pt', x: 2010, y: 960, z: [1.5, 1.72], yk: [960, 942], show: ['straw'], hero: true, corner: true },
+  { id: 'ka3a', s: 18.68, set: 'conf', k: 'pt', x: 248, y: 1168, z: [1.5, 1.55], show: ['kale', 'radish'], bg: ['melon'], dof: 6 },
+  { id: 'ka3b', s: 19.45, set: 'conf', k: 'ins', x: 248, y: 1168, z: [1.55, 1.56], show: [], dof: 12 },
+  { id: 'revert', s: 20.65, set: 'stn', k: 'pt', x: 470, y: 1110, z: [.9, .9], show: ['straw'], revPan: true },
+  { id: 'eg1', s: 22.80, set: 'stn', k: 'pt', x: 500, y: 1232, z: [1.32, 1.36], show: ['egg', 'straw'] },
+  { id: 's3', s: 24.07, set: 'stn', k: 'face', foc: 'straw', z: [2.0, 2.08], up: 110, dx: 30, dof: 7, show: ['straw'], bg: ['egg'] },
+  { id: 'eg2', s: 24.91, set: 'stn', k: 'face', foc: 'egg', z: [1.9, 2.0], up: 110, dx: -30, dof: 7, show: ['egg'], bg: ['straw'] },
+  { id: 's4', s: 26.55, set: 'stn', k: 'pt', x: 560, y: 1180, z: [1.42, 1.48], show: ['egg', 'straw'] },
+  { id: 'eg3', s: 28.24, set: 'stn', k: 'face', foc: 'egg', z: [1.8, 1.86], up: 120, dx: -30, dof: 7, show: ['egg'], bg: ['straw'] },
+  { id: 's5', s: 29.66, set: 'stn', k: 'face', foc: 'straw', z: [2.15, 2.3], up: 110, dx: 30, dof: 8, show: ['straw'], bg: ['egg'] },
+  { id: 'end', s: 30.91, set: 'stn', k: 'pt', x: 560, y: 1175, z: [1.28, 1.36], show: ['egg', 'straw'] },
+];
+for (const sh of ESH) sh.s = sh.s === 0 ? 0 : TE.snapT(sh.s);
+ESH.forEach((sh, i) => { sh.e = i + 1 < ESH.length ? ESH[i + 1].s : TE.SCN.dur; });
+const eShot = lt => { let r = ESH[0]; for (const sh of ESH) if (lt >= sh.s - 1e-6) r = sh; return r; };
+function castE(lt, sh) {
+  if (sh.set === 'conf') return castC(lt);
+  return { straw: strawE(lt), egg: eggE(lt) };
+}
+let EFR = null;
+function camE(lt) {
+  const sh = eShot(lt), C = castE(lt, sh), dur = sh.e - sh.s, u = c01((lt - sh.s) / dur), z = lerp(sh.z[0], sh.z[1], easeIO(u));
+  let cx = sh.xk ? lerp(sh.xk[0], sh.xk[1], u) : sh.x, cy = sh.yk ? lerp(sh.yk[0], sh.yk[1], easeIO(u)) : sh.y;
+  if (sh.revPan) cx = 470 + 540 * easeIO(sg(lt, 20.65, 22.0)) + 20 * sg(lt, 22.0, 22.75);
+  if (sh.k === 'face') { const [fx, fy] = faceC(C[sh.foc]); cx = fx - (sh.dx || 0) / z; cy = fy + sh.up / z; }
+  zoomTo(cx, cy, z);
+  const calm = sh.id === 'break' ? .25 : 1;
+  CAM.x += 2 * hn(lt, 1.3, 4) * calm; CAM.y += 1.5 * hn(lt, 1.1, 5) * calm; CAM.r += .001 * hn(lt, .9, 6) * calm;
+  if (sh.id === 'gasp') CAM.shake = 3 * Math.exp(-Math.max(0, lt - EC.gasp) * 6) * (lt >= EC.gasp ? 1 : 0);
+  EFR = { C, sh };
+}
+function confRoom(lt, sh, C, bgCast) {
+  cWall(lt); cWindow(lt); cBoard(lt);
+  HEROMODE = !!sh.hero; cClock(lt); HEROMODE = false;
+  cCorner(lt); cArmchairBack();
+  const fl = '#8f97a8'; ctx.fillStyle = lg(0, FLC, 0, 2400, [[0, '#9aa2b4'], [1, '#7c8496']]); ctx.fillRect(-1600, FLC, 5200, 1300);
+  ctx.strokeStyle = 'rgba(40,40,60,.14)'; ctx.lineWidth = 2.4; for (let i = 0; i < 9; i++) { const y = FLC + 10 + Math.pow(i / 8, 1.7) * 900; ctx.beginPath(); ctx.moveTo(-1600, y); ctx.lineTo(3600, y); ctx.stroke(); }
+  ctx.fillStyle = lg(0, FLC, 0, FLC + 70, [[0, 'rgba(30,20,40,.22)'], [1, 'rgba(30,20,40,0)']]); ctx.fillRect(-1600, FLC, 5200, 70);
+  cChairs();
+  if (bgCast) bgCast();
+}
+function drawE(lt) {
+  const { C, sh } = EFR;
+  V2.opts.reflect = false;
+  if (sh.set === 'conf') {
+    const warm = sh.corner ? 1 : 0;
+    V2.setLight({ key: [-.4, -.65], keyColor: warm ? '#ffe2b8' : '#f2f6ff', keyA: .2, rim: warm ? '#ffcf8a' : '#a9c4ff', rimA: .32, shadow: '#1a1830', shadowA: .3, bounce: '#ffe0b0', bounceA: .1 + .08 * warm, amb: '#e6ecff', ambA: .05, frontDark: .02 });
+    const seatedN = ['melon', 'onion', 'lemon', 'mango', 'tom', 'straw'], standN = ['kale', 'radish'];
+    const inBreak = lt >= 15.08;
+    const bgCast = () => { if (!sh.bg) return; REG.suppress++; for (const n of sh.bg) if (inFrame(C[n], 20).inter) drawChar(C[n]); REG.suppress--; };
+    const world = () => {
+      confRoom(lt, sh, C, null);
+      SOFT += sh.dof ? 0 : 0;
+      if (sh.dof) bgCast();
+      /* the seated characters behind the table (sharp only if listed), the table, Onion's binders */
+      for (const n of seatedN) if (sh.show.includes(n) && !(n === 'straw' && inBreak)) drawIn(C[n]);
+      cTable(lt, { clutch: C.onion && C.onion.arms && C.onion.arms.r === 'hold' ? 1 : 0 });
+      if (inBreak && sh.show.includes('straw')) { drawIn(C.straw); }
+      cArmchairFront(inBreak && lt >= EC.chairsit ? 1 : 0);
+      for (const n of standN) if (sh.show.includes(n)) drawIn(C[n]);
+    };
+    if (sh.dof) {   /* the room (and the silent neighbours) soft; the subject sharp, drawn again after the blur */
+      SOFT++; V2.dof(sh.dof, () => { confRoom(lt, sh, C, bgCast); cTable(lt, { clutch: 0 }); cArmchairFront(0); }); SOFT--;
+      for (const n of sh.show) { const o = C[n]; if (seatedN.includes(n)) { drawIn(o); cTableFront(lt, o); } else drawIn(o); }
+    } else world();
+    if (sh.id === 'o1' && C.onion.joy) sparkles(C.onion, 1, lt, 9);
+    if (sh.id === 'break') breakFx(lt);
+    return;
+  }
+  /* the station at night */
+  V2.setLight({ key: [-.5, -.6], keyColor: '#f4f6ff', keyA: .2, rim: '#9fc0ff', rimA: .36, shadow: '#1a1830', shadowA: .3, bounce: '#e6e0ff', bounceA: .1, amb: '#e8eeff', ambA: .06, frontDark: .02 });
+  const st = stE(lt), ag = sh.id === 'revert' ? agencyAll(lt) : [], out = sh.id === 'revert' ? survOut(lt) : [];
+  const between = out.length ? () => { for (const o of out) { ctx.save(); ctx.globalAlpha *= o.alpha; drawChar(Object.assign({}, o, { transit: true })); ctx.restore(); } } : null;
+  const behind = ag.length ? () => { for (const o of ag) if (o.behind) drawIn(o); } : null;
+  const bgCast = () => { if (!sh.bg) return; REG.suppress++; for (const n of sh.bg) if (inFrame(C[n], 20).inter) drawChar(C[n]); REG.suppress--; };
+  const room = () => sSet(st, { between, behind, skipLap: false });
+  if (sh.dof) { SOFT++; V2.dof(sh.dof, () => { room(); bgCast(); }); SOFT--; } else room();
+  if (sh.id === 'revert') {
+    for (const o of ag) if (!o.behind) drawIn(o);
+    for (const x of AGF) puff(x, FL - 140, 120, lt, EC.poof, { life: .7, flat: .1, seed: x, color: '#f4f0ff' });
+    const b = brendaE(lt); if (b) drawIn(b);
+    if (lt >= EC.coffeemaker && lt < EC.coffeemaker + .5) sparkles({ kind: 'cherry', x: COF.x, y: CT.top + 60, s: .5 }, 1 - sg(lt, EC.coffeemaker, EC.coffeemaker + .5), lt, 3);
+  }
+  if (lt >= EC.doorchime - .05 && lt < EC.doorchime + 1.2 && (sh.id === 'eg1')) { ctx.save(); ctx.globalAlpha *= 1 - sg(lt, EC.doorchime + .5, EC.doorchime + 1.2); snowGust(lt); ctx.restore(); }
+  HEROMODE = !!sh.hero;
+  for (const o of sorted(sh.show.map(n => C[n]))) drawIn(o);
+  HEROMODE = false;
+}
+/* the front of the table drawn over a seated subject in a soft shot (its top edge and apron, sharp: the subject sits behind it) */
+function cTableFront(lt, o) {
+  const { x0, x1, far, near } = TBL, a = Math.max(x0, o.x - 260), b = Math.min(x1, o.x + 260);
+  ctx.fillStyle = lg(0, far, 0, near, [[0, '#a07850'], [1, '#c69a68']]); ctx.fillRect(a, far, b - a, near - far);
+  ctx.fillStyle = '#6e4e34'; ctx.fillRect(a, near, b - a, 40); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(a, far); ctx.lineTo(b, far); ctx.moveTo(a, near); ctx.lineTo(b, near); ctx.moveTo(a, near + 40); ctx.lineTo(b, near + 40); ctx.stroke();
+  if (o.kind === 'onion' || o.kind === 'lemon') binderStack(far, o.kind === 'onion' && o.arms && o.arms.r === 'hold' ? 1 : 0);
+}
+/* the break: the room holds still; the lamp breathes warm on her; dust in the lamp light; at 11:00 a soft ring of light from the clock */
+function breakFx(lt) {
+  glow(CHAIR.x + 40, CHAIR.seat - 160, 300, '#ffd9a0', .18 + .04 * Math.sin(lt * 1.2), .2);
+  if (V2.dust) V2.dust(CHAIR.x - 240, 700, CHAIR.x + 260, 1200, lt, { n: 22, color: '255,226,180', alpha: .45, seed: 21, speed: 6 });
+  if (lt >= EC.shiftbell) V2.ring(CLK.x, CLK.y, sg(lt, EC.shiftbell, EC.shiftbell + .8), { r0: CLK.r + 10, r1: CLK.r + 120, color: '255,236,190', lw: 8, alpha: .7, bloom: .3 });
+}
+/* snow blowing in through the open doors */
+function snowGust(lt) {
+  ctx.fillStyle = 'rgba(255,255,255,.9)';
+  for (let i = 0; i < 60; i++) { const a = (lt - EC.doorchime) * (1 + rnd(51, i)) * 1.2, x = DOOR.x0 + 60 + rnd(52, i) * 300 + a * (300 + 500 * rnd(53, i)), y = DOOR.y0 + 100 + rnd(54, i) * 560 + Math.sin(a * 6 + i) * 30 + a * 120; if (a < 0) continue; ctx.beginPath(); ctx.arc(x, y, 2 + 3 * rnd(55, i), 0, TAU); ctx.fill(); }
+}
+
+/* the clipboard insert: Ms. Kale's checklist, BREAKS failed (a red X), then the CORRECTED stamp lands on it (stamp 19.63) */
+function insClip(lt, sh) {
+  const k = eo(sg(lt, sh.s, sh.s + .25));
+  ctx.fillStyle = 'rgba(14,18,30,.34)'; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.translate(540, 760 + 60 * (1 - k)); ctx.rotate(-.03); ctx.scale(lerp(.9, 1, k), lerp(.9, 1, k)); ctx.translate(-540, -760);
+  const items = ['FRONT DOOR', 'STAFFING', 'LABELS', 'MED PASS', 'BREAKS'];
+  let rows = null;
+  if (hasA('clipboard')) { const r = A21.clipboard(ctx, { x: 540, y: 770, w: 700, rot: 0, items, ticks: 4, fail: 4, failK: 1, t: lt, hero: true }); rows = r && r.rows; }
+  else {
+    ctx.fillStyle = '#b98a55'; rr(230, 300, 620, 860, 24); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 5; ctx.stroke(); ctx.fillStyle = '#fbf9f2'; ctx.fillRect(262, 360, 556, 770);
+    UI.container('fp21a_cbins', 'board', [262, 360, 818, 1130], 10);
+    TXT('DEPARTMENT OF HEALTH', 540, 410, { size: 34, fill: '#1f3166', weight: 900, maxW: 500, hero: true, cid: 'fp21a_cbins' });
+    rows = items.map((t, i) => ({ text: [330, 520 + i * 120], cy: 520 + i * 120, box: [282, 500 + i * 120, 318, 536 + i * 120], size: 40 }));
+    items.forEach((t, i) => TXT(t, 340, 520 + i * 120, { size: 40, fill: '#22262b', weight: 900, align: 'left', maxW: 440, hero: true, cid: 'fp21a_cbins' }));
+  }
+  ctx.restore();
+  /* the stamp lands over the failed row: CORRECTED */
+  const row = rows && rows[4];
+  let sx = 640, sy = 1020;
+  if (row && row.text) { const tw = UI.sizeOf('BREAKS', { size: row.size || 40, weight: 900 }).w; sx = Math.min(700, row.text[0] + tw + 150); sy = row.cy != null ? row.cy : row.text[1]; }
+  stampAt(sx, sy + 4, { t: lt, t0: EC.stamp, text: 'CORRECTED', size: 46, rot: -.12, s: 1, color: '#d6203a' });
+  if (lt >= EC.stamp && lt < EC.stamp + .5) V2.ring(sx, sy + 4, sg(lt, EC.stamp, EC.stamp + .5), { r0: 60, r1: 300, color: '214,32,58', lw: 10, alpha: .5, squash: .5, bloom: 0 });
+}
+const EXIT = {
+  shot: lt => eShot(lt).id,
+  cam: camE,
+  draw: drawE,
+  fx: lt => { const sh = eShot(lt), warm = sh.id === 'break' ? 1 : sh.corner ? .6 : 0; return { bloom: .32 + .18 * warm, vignette: .3 + .08 * warm, grain: .045, contrast: .08, sat: .06 + .06 * warm, tint: [[warm ? '#ffcf8a' : '#a8c0ff', .05 + .06 * warm, 'soft-light']] }; },
+  blur: lt => { const sh = eShot(lt); if (lt - sh.s < .04) return 1; return sh.id === 'eg1' && lt > EC.doorchime && lt < EC.doorchime + .5 ? 4 : 1; },
+  over(lt) { const sh = EFR ? EFR.sh : eShot(lt); if (sh.id === 'ka3b') insClip(lt, sh); },
+  clock: () => TE.SCN.clock, label: () => TE.SCN.label,
+};
+window.__EP21_SCENES.exit = EXIT;
 })();

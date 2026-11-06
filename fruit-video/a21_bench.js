@@ -1,7 +1,7 @@
 // a21_bench.js: the test bench and determinism harness of the Episode 21 kits (ep21_art.js: window.A21, ep21_hud.js: window.H21). NOT loaded by index.html.
 //   node a21_bench.js <view>[&k=v...][@x,y,w,h][#name] ...   renders a view of the bench page to build/ep21_art/out/<name>.png (the crop is in canvas px)
 //   node a21_bench.js det                                    the determinism check: every view drawn twice in one page and once in a second page, pixels compared; Math.random and Date are trapped while drawing
-//   node a21_bench.js list                                   the views
+//   node a21_bench.js list                                   the views (det runs them all); also 'cost' (the cost per call, printed), 'prof', 'splitreg' (the split helper's audit trimming with REG on)
 // The page loads exactly the scripts of index.html (except main.js) and a stand-in v2 episode with no timeline lines (mouths are set by hand). Bench captions are plain canvas text (bench only, not part of any sprite).
 const http = require('http'), fs = require('fs'), path = require('path');
 const ROOT = __dirname, OUT = path.join(ROOT, 'build', 'ep21_art', 'out');
@@ -83,13 +83,130 @@ window.drawView = (v, q) => {
 };
 window.VIEW_LIST = ['turn', 'expr', 'speak', 'wide', 'clip'];
 `;
+/* the HUD, split-screen, props, cost and audit-trim views (also run in the page) */
+const VIEWS2 = String.raw`
+/* extra bench views for a21_bench.js (HUD, split screen, props); loaded by the bench page after the main views */
+window.drawView2 = (v, q, t) => {
+  const P2 = (k, d) => q[k] != null ? +q[k] : d;
+  if (v === 'hud') {   /* reticle at lock 0, .35, .7, 1 (+ the pulse), a tracked box; the scan; the frame in each mode; the stamp's phases */
+    cells(2, 3, [
+      { cap: 'reticle lock 0 / .5', bg: 'dark', draw: (x0, y0, w, h) => { V2.setLight(LIGHTS.office); H21.reticle(ctx, { x: x0 + 140, y: y0 + 330, w: 110, h: 150, t, lock: 0, label: 'CLOSET' }); H21.reticle(ctx, { x: x0 + 400, y: y0 + 330, w: 110, h: 150, t, lock: .5, label: 'CLOSET' }); } },
+      { cap: 'reticle lock .8 / 1 red', bg: 'wall', draw: (x0, y0, w, h) => { H21.reticle(ctx, { x: x0 + 140, y: y0 + 330, w: 110, h: 150, t, lock: .8, label: 'CLOSET', color: H21.RED }); H21.reticle(ctx, { x: x0 + 400, y: y0 + 330, w: 110, h: 150, t, lock: 1, label: 'OCCUPIED', color: H21.RED, sub: 'SINCE 2019' }); } },
+      { cap: 'scan down (screen)', bg: 'dark', draw: (x0, y0, w, h) => { ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, w, h); ctx.clip(); H21.scan(ctx, { t: P2('scanT', .5), t0: 0, dur: 1.2 }); ctx.restore(); } },
+      { cap: 'stamp: descent, impact, rest', bg: 'warm', draw: (x0, y0, w, h) => { H21.stamp(ctx, { x: x0 + 150, y: y0 + 200, t: -.06, t0: 0, s: .7, text: 'SURVEYED' }); H21.stamp(ctx, { x: x0 + 390, y: y0 + 200, t: .04, t0: 0, s: .7, text: 'SURVEYED' }); H21.stamp(ctx, { x: x0 + 270, y: y0 + 450, t: 1, t0: 0, s: .9, text: 'CORRECTED', rot: .1 }); } },
+      { cap: 'hudFrame scan (whole frame below)', bg: 'dark', draw: () => {} },
+      { cap: 'track', bg: 'wall', draw: (x0, y0, w, h) => { const bx = tt => [x0 + 200 + 120 * Math.sin(tt * 2), y0 + 250, x0 + 300 + 120 * Math.sin(tt * 2), y0 + 400]; const b = bx(t); ctx.strokeStyle = '#888'; ctx.strokeRect(b[0], b[1], b[2] - b[0], b[3] - b[1]); H21.reticle(ctx, Object.assign(H21.track({ id: 'x', boxAt: bx }, t), { t, lock: 1, label: 'TRACK' })); } },
+    ], { light: 'office' });
+    if (q.frame) H21.hudFrame(ctx, { t, mode: q.frame, count: q.count != null ? +q.count : undefined });
+  } else if (v === 'frame') {
+    cells(1, 1, [{ bg: q.bg || 'dark', draw: () => {} }], { light: 'office', floor: 0 });
+    H21.hudFrame(ctx, { t, mode: q.mode || 'scan', count: q.count != null ? +q.count : undefined, chyron: q.chyron !== '0' });
+    if (q.scan) H21.scan(ctx, { t: +q.scan, t0: 0, dur: 1.2, dir: q.dir || 'down' });
+  } else if (v === 'split') {   /* the split screen: the same pair on both sides, through two cameras; a tilted divider at x */
+    ctx = mainCtx; ctx.setTransform(1, 0, 0, 1, 0, 0); V2.setLight(LIGHTS.warm); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    const scene = (calm) => (c, B) => {
+      H21.halfCam(c, B, 540, 1000, P2('z', .95));
+      const g = c.createLinearGradient(0, 300, 0, 1500); g.addColorStop(0, calm ? '#cdd8e2' : '#e6b48c'); g.addColorStop(1, calm ? '#9fb0c2' : '#b0704c'); c.fillStyle = g; c.fillRect(-400, -200, 1900, 2300);
+      c.fillStyle = calm ? '#dfe5ea' : '#d9b896'; c.fillRect(-400, 1260, 1900, 900);
+      drawChar(Object.assign(A21.kale({ t, expr: calm ? 'kale_note' : 'kale_raise', pose: 'write' }), { x: 380, y: 1260, s: .62 }));
+      drawChar(Object.assign(A7.straw({ t }), { x: 700, y: 1260, s: .62, expr: calm ? 'neutral' : 'panic' }));
+    };
+    H21.split(ctx, { t, x: P2('x', 540), angle: P2('ang', .06), gap: P2('gap', 14), labelL: 'WITH THE STATE', labelR: 'A NORMAL NIGHT' }, scene(true), scene(false));
+  } else if (v === 'cost') {   /* the cost per call (ms, headless, mean of 40 after one warm-up) */
+    cells(1, 1, [{ bg: 'dark', draw: () => {} }], { light: 'office' });
+    const N = 40, res = [];
+    const flush = () => mainCtx.getImageData(0, 0, 1, 1); const time = (name, fn) => { fn(0); flush(); const t0 = performance.now(); for (let i = 1; i <= N; i++) { ctx.save(); fn(i); ctx.restore(); flush(); } res.push(name.padEnd(34) + ((performance.now() - t0) / N).toFixed(2) + ' ms'); };
+    time('H21.reticle (lock anim + tag)', i => H21.reticle(ctx, { x: 540, y: 900, w: 200, h: 300, t: i * .02, t0: 0, label: 'CLOSET' }));
+    time('H21.track (boxAt, 5 samples)', i => H21.track({ id: 'a', boxAt: tt => [100 + tt * 10, 200, 300, 400] }, i * .03));
+    time('H21.scan', i => H21.scan(ctx, { t: .2 + i * .02, t0: 0 }));
+    time('H21.hudFrame', i => H21.hudFrame(ctx, { t: i * .03, mode: 'deficiency', count: 1 }));
+    time('H21.stamp (landed)', i => H21.stamp(ctx, { x: 540, y: 900, t: 1 + i * .01, t0: 0, text: 'SURVEYED' }));
+    time('H21.split (empty halves, labels)', i => H21.split(ctx, { x: 540, angle: .05, labelL: 'WITH THE STATE', labelR: 'A NORMAL NIGHT' }, () => {}, () => {}));
+    time('A21.kale s1', i => drawChar(Object.assign(A21.kale({ t: i * .03 }), { x: 300, y: 1300, s: 1 })));
+    time('A21.kale s1 yaw .6', i => drawChar(Object.assign(A21.kale({ t: i * .03, yaw: .6 }), { x: 300, y: 1300, s: 1 })));
+    time('A21.radish s1 scanner', i => drawChar(Object.assign(A21.radish({ t: i * .03, scanner: 1 }), { x: 700, y: 1300, s: 1 })));
+    time('A21.radish s1 yaw -.6', i => drawChar(Object.assign(A21.radish({ t: i * .03, yaw: -.6 }), { x: 700, y: 1300, s: 1 })));
+    time('A21.clipboard w600', i => A21.clipboard(ctx, { x: 540, y: 900, w: 600, ticks: 2.5, t: i * .03 }));
+    time('A7.straw s1 (reference)', i => drawChar(Object.assign(A7.straw({ t: i * .03 }), { x: 500, y: 1300, s: 1 })));
+    if (window.drawCost3) drawCost3(time);
+    log('COST\n' + res.join('\n'));
+  } else log('unknown view', v);
+};
+window.VIEW_LIST.push('hud', 'frame', 'split');
+window.drawCost3 = time => {
+  time('A21.label', i => A21.label(ctx, { x: 300, y: 300, t: i * .03 }));
+  time('A21.padlock', i => A21.padlock(ctx, { x: 300, y: 300, t: i * .03 }));
+  time('A21.sanitizer', i => A21.sanitizer(ctx, { x: 300, y: 300, t: i * .03, pump: .5 }));
+  time('A21.fridgeThermo', i => A21.fridgeThermo(ctx, { x: 300, y: 300, t: i * .03 }));
+  time('A21.crashCart', i => A21.crashCart(ctx, { x: 300, y: 900, t: i * .03, open: .5 }));
+  time('A21.binder (cover, text)', i => A21.binder(ctx, { x: 300, y: 300, w: 90, h: 120, t: i * .03, spine: 'POLICY 7.4' }));
+  time('A21.binder x40 (tumbling)', i => { for (let j = 0; j < 40; j++) A21.binder(ctx, { x: 100 + j * 20, y: 300, w: 60, h: 80, rot: j * .4 + i * .01, seed: j }); });
+  time('A21.policyCloset closed', i => A21.policyCloset(ctx, { x: 540, y: 1300, t: i * .03, strain: .5 }));
+  time('A21.policyCloset open (all binders)', i => A21.policyCloset(ctx, { x: 540, y: 1300, t: i * .03, open: 1 }));
+};
+const _dv2 = window.drawView2;
+window.drawView2 = (v, q, t) => {
+  if (v !== 'prof') return _dv2(v, q, t);
+  cells(1, 1, [{ bg: 'dark', draw: () => {} }], { light: 'office' });
+  const N = 20, res = [];
+  const time = (name, fn) => { fn(0); const t0 = performance.now(); for (let i = 1; i <= N; i++) { ctx.save(); fn(i); ctx.restore(); } res.push(name.padEnd(40) + ((performance.now() - t0) / N).toFixed(2) + ' ms'); };
+  const K = (extra) => i => drawChar(Object.assign(A21.kale(Object.assign({ t: i * .03, yaw: .6 }, extra)), { x: 300, y: 1300, s: 1 }));
+  time('kale yaw all', K({}));
+  time('kale yaw no frill', K({ frill: false }));
+  time('kale yaw no glasses', K({ glasses: false }));
+  time('kale yaw no badge', K({ badge21: false }));
+  time('kale yaw no suit', K({ suit21: false }));
+  time('kale yaw acc none', i => drawChar(Object.assign(A21.kale({ t: i * .03, yaw: .6 }), { x: 300, y: 1300, s: 1, acc: [] })));
+  time('kale yaw pose rest', K({ pose: 'rest' }));
+  time('kale front pose rest', i => drawChar(Object.assign(A21.kale({ t: i * .03, pose: 'rest' }), { x: 300, y: 1300, s: 1 })));
+  time('clipboard no text (textMin 999)', i => A21.clipboard(ctx, { x: 540, y: 900, w: 600, ticks: 2.5, textMin: 999 }));
+  time('clipboard text', i => A21.clipboard(ctx, { x: 540, y: 900, w: 600, ticks: 2.5 }));
+  time('UI.label 40px plain', i => UI.label('FRONT DOORS', 300, 300, { size: 40 }));
+  time('UI.label 40px maxW', i => UI.label('FRONT DOORS', 300, 300, { size: 40, maxW: 380 }));
+  time('UI.label 40px align left maxW', i => UI.label('FRONT DOORS', 300, 300, { size: 40, maxW: 380, align: 'left' }));
+  time('reticle no label', i => H21.reticle(ctx, { x: 540, y: 900, w: 200, h: 300, t: i * .02, t0: 0 }));
+  time('reticle label', i => H21.reticle(ctx, { x: 540, y: 900, w: 200, h: 300, t: i * .02, t0: 0, label: 'CLOSET' }));
+  log('COST\n' + res.join('\n'));
+};
+const _dv3 = window.drawView2;
+window.drawView2 = (v, q, t) => {
+  if (v === 'props') {
+    cells(3, 4, [
+      { cap: 'label: slap / peel .3 / .8', bg: 'wall', draw: (x0, y0) => { A21.label(ctx, { x: x0 + 180, y: y0 + 140, t: .05, t0: 0, rot: -.04 }); A21.label(ctx, { x: x0 + 180, y: y0 + 280, t, peel: .3, text: 'DATED 11/6 3:05P' }); A21.label(ctx, { x: x0 + 180, y: y0 + 420, t, peel: .8 }); } },
+      { cap: 'padlock shut / open', bg: 'wall', draw: (x0, y0) => { A21.padlock(ctx, { x: x0 + 110, y: y0 + 300, s: 1.4, t }); A21.padlock(ctx, { x: x0 + 260, y: y0 + 300, s: 1.4, t, open: 1, color: 'steel' }); } },
+      { cap: 'sanitizer pump 0 / .8', bg: 'wall', draw: (x0, y0) => { A21.sanitizer(ctx, { x: x0 + 100, y: y0 + 280, s: .9, t }); A21.sanitizer(ctx, { x: x0 + 260, y: y0 + 280, s: .9, t, pump: .8, level: .3 }); } },
+      { cap: 'fridgeThermo 38 / 46', bg: 'wall', draw: (x0, y0) => { A21.fridgeThermo(ctx, { x: x0 + 100, y: y0 + 300, s: 1, deg: 38, t }); A21.fridgeThermo(ctx, { x: x0 + 270, y: y0 + 300, s: .8, deg: 46, t }); } },
+      { cap: 'crashCart sealed', bg: 'wall', draw: (x0, y0, w, h, fy) => A21.crashCart(ctx, { x: x0 + w / 2, y: fy, s: .72, t }) },
+      { cap: 'crashCart open', bg: 'wall', draw: (x0, y0, w, h, fy) => A21.crashCart(ctx, { x: x0 + w / 2, y: fy, s: .72, t, open: 1, restock: .7 }) },
+      { cap: 'binders: cover, spine, tumbling', bg: 'wall', draw: (x0, y0) => { A21.binder(ctx, { x: x0 + 100, y: y0 + 200, w: 120, h: 160, spine: 'POLICY 7.4', seed: 0 }); A21.binder(ctx, { x: x0 + 260, y: y0 + 200, w: 46, h: 160, spine: '7.4', seed: 1 }); for (let i = 0; i < 4; i++) A21.binder(ctx, { x: x0 + 70 + i * 75, y: y0 + 420, w: 70, h: 92, rot: -.6 + i * .5, seed: i + 2, spine: 'BREAKS' }); } },
+      { cap: 'closet: strain', bg: 'wall', draw: (x0, y0, w, h, fy) => A21.policyCloset(ctx, { x: x0 + w / 2, y: fy, s: .7, t, strain: 1 }) },
+      { cap: 'closet: open .7, packed .6', bg: 'wall', draw: (x0, y0, w, h, fy) => { const R = A21.policyCloset(ctx, { x: x0 + w / 2, y: fy, s: .7, t, open: .7, packed: .6 }); } },
+      { cap: 'agency strawberries', bg: 'wall', draw: (x0, y0, w, h, fy) => { for (let i = 0; i < 3; i++) drawChar(Object.assign(A21.agencyBadge(A11.straw({ t: t + i })), { x: x0 + 70 + i * 110, y: fy, s: .38 + i * .08, yaw: (i - 1) * .5, expr: 'neutral' })); } },
+      { cap: 'closet open 1, full', bg: 'wall', draw: (x0, y0, w, h, fy) => A21.policyCloset(ctx, { x: x0 + w / 2, y: fy, s: .7, t, open: 1 }) },
+      { cap: 'agency close', bg: 'wall', draw: (x0, y0, w, h, fy) => drawChar(Object.assign(A21.agencyBadge(A11.straw({ t })), { x: x0 + w / 2, y: fy + 40, s: 1.1, expr: 'neutral' })) },
+    ], { light: 'office', floor: 60 });
+  } else return _dv3(v, q, t);
+};
+window.VIEW_LIST.push('props');
+const _dv4 = window.drawView2;
+window.drawView2 = (v, q, t) => {
+  if (v !== 'splitreg') return _dv4(v, q, t);
+  ctx = mainCtx; ctx.setTransform(1, 0, 0, 1, 0, 0); V2.setLight(LIGHTS.warm); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  REG.on = true; REG.items = []; REG.errors = []; REG.order = 0;
+  const half = x => (c, B) => { H21.halfCam(c, B, 540, 1000, 1); c.fillStyle = '#9fb0c2'; c.fillRect(-400, -200, 1900, 2300); drawChar(Object.assign(A7.straw({ t }), { x, y: 1260, s: .7, id: 'straw' + x })); };
+  H21.split(ctx, { t, x: 540, angle: .06, labelL: 'LEFT', labelR: 'RIGHT' }, half(+q.lx || 540), half(+q.rx || 300));
+  log('REG items', REG.items.length, REG.items.filter(i => i.type === 'face').map(i => i.id + ' ' + i.box.map(Math.round).join(',')).join(' | '));
+  log('REG errors: ' + JSON.stringify(REG.errors));
+  REG.on = false;
+};
+`;
 
 function serve() {
   return new Promise(resolve => {
     const srv = http.createServer((req, res) => {
       const rel = decodeURIComponent(req.url.split('?')[0]);
       if (rel === '/__a21_bench.html') { res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' }); return res.end(PAGE); }
-      if (rel === '/__a21_views.js') { const extra = fs.existsSync(path.join(ROOT, 'build', 'ep21_art', 'views2.js')) ? fs.readFileSync(path.join(ROOT, 'build', 'ep21_art', 'views2.js'), 'utf8') : ''; res.writeHead(200, { 'Content-Type': 'text/javascript', 'Cache-Control': 'no-store' }); return res.end(VIEWS + '\n' + extra); }
+      if (rel === '/__a21_views.js') { res.writeHead(200, { 'Content-Type': 'text/javascript', 'Cache-Control': 'no-store' }); return res.end(VIEWS + '\n' + VIEWS2); }
       const p = path.join(ROOT, rel);
       if (!p.startsWith(ROOT) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': TYPES[path.extname(p)] || 'application/octet-stream', 'Cache-Control': 'no-store' });

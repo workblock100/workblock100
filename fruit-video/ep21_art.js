@@ -12,6 +12,12 @@
  *   Held props: fp21_clipboard (cbTicks, cbItems, cbFail, cbHeader), fp21_pen (penAng), fp21_tablet (tabLit, tabRows, tabTick).  Accessories: fp21_badge (the lanyard and photo badge), fp21_suit,
  *                    fp21_kale_frill, fp21_kale_brows, fp21_kale_glasses, fp21_scanner.
  *   A21.centre(o), A21.faceBox(o): helpers for framing (body centre and the face box in the CURRENT canvas coordinates, after the constructor and the x, y, s merge).
+ *   BATCH 3 (survey props; each draws in the current transform and returns its box [x0, y0, x1, y1]):
+ *   A21.label(ctx, { x, y, s, rot, text, t, t0 (slap), peel 0..1, band, w, h, hero })   A21.padlock(ctx, { x, y, s, rot, t, open 0..1, t0 (snap), color })
+ *   A21.sanitizer(ctx, { x, y, s, t, pump 0..1, level, t0 (refill), label })        A21.fridgeThermo(ctx, { x, y, s, deg, t, wobble, hero })
+ *   A21.crashCart(ctx, { x, y (floor), s, t, open 0..1, restock 0..1, sealed, seal, t0 })   A21.binder(ctx, { x, y (centre), w, h, rot, color, spine, view, seed, hero, grp })
+ *   A21.policyCloset(ctx, { x, y (floor), s, t, open 0..1, packed 0..1, strain 0..1, label, hero }) -> { box, inside, shelves[{ y, x0, x1, slots[] }], seam }
+ *   A21.agencyBadge(o) -> o with the accessory fp21_agency (A21.AGENCY); A21.BINDER_COLORS.
  */
 (() => {
 if (typeof KINDS === 'undefined' || typeof EXT === 'undefined' || typeof V2 === 'undefined' || typeof V2C === 'undefined') return;
@@ -605,5 +611,275 @@ A.faceBox = o => {
   V2C.YAW_TOP.radish = (o, k, t, layer) => EXT.top.radish(o, k, t, layer);
   /* @@A21-TURN */
 })();
-/* @@A21-PART5 */
+// ================================================================== BATCH 3: the survey props. All draw in the CURRENT transform (world or screen), save and restore the context, and return their box [x0, y0, x1, y1].
+const tf = (c, o) => { c.translate(o.x || 0, o.y || 0); if (o.rot) c.rotate(o.rot); const s = o.s ?? 1; if (s !== 1) c.scale(s, s); };
+const bbox = (o, x0, y0, x1, y1) => {   /* the axis-aligned box of a local rectangle after the prop's own x, y, s, rot */
+  const s = o.s ?? 1, r = o.rot || 0, cs = Math.cos(r), sn = Math.sin(r), P2 = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(([x, y]) => [(o.x || 0) + s * (x * cs - y * sn), (o.y || 0) + s * (x * sn + y * cs)]);
+  return [Math.min(...P2.map(p => p[0])), Math.min(...P2.map(p => p[1])), Math.max(...P2.map(p => p[0])), Math.max(...P2.map(p => p[1]))];
+};
+const screenAng = c => { const m = c.getTransform(); return Math.atan2(m.b, m.a); };
+const pop = (t, t0, dur = .14) => { if (t0 == null || t < t0) return 1; const u = (t - t0) / dur; return u >= 1 ? 1 : 1 + .25 * Math.sin(u * PI) * (1 - u); };
+
+/* A21.label(ctx, o): a white survey label that goes on everything. o = { x, y (centre), s (1 = 250 x 82), rot, text ('OPENED 11/6 3:04P SB'), t, t0 (slapped on: a quick pop), peel (0..1: the corner lifts, then it comes off),
+ * band (colour of the date band, '#e8542e'), hero (false), w, h } -> box */
+A.label = (c, o = {}) => {
+  const t = o.t ?? 0, w = o.w ?? 250, h = o.h ?? 82, pk = clamp(o.peel ?? 0), band = o.band || '#e8542e', text = o.text ?? 'OPENED 11/6 3:04P SB';
+  if (o.t0 != null && t < o.t0) return null;
+  const pp = pop(t, o.t0), lift = sm(.6, 1, pk);
+  c.save(); tf(c, o); c.scale(pp, 2 - pp);
+  if (lift > 0) { c.translate(w * .2 * lift, -h * 1.4 * lift * lift); c.rotate(.5 * lift); c.globalAlpha *= 1 - sm(.75, 1, pk); }
+  c.lineJoin = 'round';
+  const fold = w * .62 * sm(0, .6, pk), xf = w / 2 - fold;   /* the right end curls back from xf */
+  c.fillStyle = 'rgba(20,24,40,.22)'; rr(-w / 2 + 3, -h / 2 + 4, w - fold, h, 7); c.fill();
+  c.save(); c.beginPath(); c.rect(-w / 2 - 2, -h / 2 - 2, w - fold + 2, h + 4); c.clip();
+  c.fillStyle = '#fdfdfb'; rr(-w / 2, -h / 2, w, h, 7); c.fill();
+  c.fillStyle = band; c.save(); rr(-w / 2, -h / 2, w, h, 7); c.clip(); c.fillRect(-w / 2, -h / 2, w * .1, h); c.restore();
+  c.strokeStyle = 'rgba(40,50,80,.55)'; c.lineWidth = 2; rr(-w / 2, -h / 2, w, h, 7); c.stroke();
+  c.strokeStyle = 'rgba(80,100,150,.25)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-w * .34, h * .28); c.lineTo(w * .44, h * .28); c.stroke();
+  c.restore();
+  if (fold > 1) {   /* the curled flap: its back, lit, with a soft shadow under the curl */
+    c.fillStyle = V2.grad(xf, 0, xf - fold * .7, 0, [[0, '#d9dce4'], [1, '#f6f7fa']]); c.beginPath(); c.moveTo(xf, -h / 2); c.quadraticCurveTo(xf - fold * .2, -h * .2, xf - fold * .62, h * .42); c.lineTo(xf, h / 2); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(40,50,80,.5)'; c.lineWidth = 1.8; c.stroke();
+  }
+  const ta = 1 - sm(.06, .2, pk);
+  if (ta > .02 && window.UI && text) UI.para(text, [-w / 2 + w * .14, -h / 2 + h * .1, w * .8, h * .8], { size: h * .36, min: h * .2, align: 'left', valign: 'middle', fill: '#1d2a6b', weight: 800, italic: true, hero: !!o.hero, alpha: ta, grp: o.grp || 'fp21_label', lh: 1.08 });
+  c.restore();
+  return bbox(o, -w / 2, -h / 2, w / 2, h / 2);
+};
+
+/* A21.padlock(ctx, o): o = { x, y (centre of the body), s (1 = 70 x 60 body), rot, t, open (0..1: the shackle lifts and swings), t0 (snapped shut: a small bounce), color ('brass' | 'steel' | hex) } -> box */
+A.padlock = (c, o = {}) => {
+  const t = o.t ?? 0, op = clamp(o.open ?? 0), col = o.color === 'steel' ? ['#eef2f6', '#a9b2bf', '#6d7684'] : o.color && o.color[0] === '#' ? [mixc(o.color, '#fff', .45), o.color, mixc(o.color, '#000', .4)] : ['#ffe6a0', '#d4a43a', '#8a6420'];
+  const age = o.t0 != null ? t - o.t0 : 9, bounce = age >= 0 && age < .3 ? Math.sin(age / .3 * PI * 2) * Math.exp(-age * 9) * 6 : 0;
+  c.save(); tf(c, o); c.translate(0, bounce * .4); c.lineJoin = 'round'; c.lineCap = 'round';
+  /* the shackle: a thick steel U; open lifts it 22 px and swings it about its left leg */
+  c.save(); c.translate(-20, -22 - 22 * op + bounce * -.3); c.rotate(-.5 * sm(.4, 1, op));
+  c.strokeStyle = OUT; c.lineWidth = 15; c.beginPath(); c.moveTo(0, 14); c.lineTo(0, -12); c.arc(20, -12, 20, PI, 0); c.lineTo(40, op > .3 ? 4 : 14); c.stroke();
+  c.strokeStyle = V2.grad(-10, 0, 50, 0, [[0, '#f3f6fa'], [.5, '#a7b0bd'], [1, '#6a7380']]); c.lineWidth = 9; c.stroke();
+  c.restore();
+  c.fillStyle = V2.grad(-35, 0, 35, 0, [[0, col[0]], [.45, col[1]], [1, col[2]]]); c.strokeStyle = OUT; c.lineWidth = 3.6; rr(-35, -26, 70, 60, 10); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.35)'; rr(-28, -21, 12, 48, 5); c.fill();
+  c.fillStyle = '#2a2116'; c.beginPath(); c.arc(0, 0, 7, 0, TAU); c.fill(); c.beginPath(); c.moveTo(-3.5, 2); c.lineTo(3.5, 2); c.lineTo(2, 16); c.lineTo(-2, 16); c.closePath(); c.fill();
+  c.restore();
+  return bbox(o, -36, -60 - 22 * op, 36, 36);
+};
+
+/* A21.sanitizer(ctx, o): a wall dispenser of hand sanitizer. o = { x, y (centre), s (1 = 128 x 226), t, pump (0..1: the push bar goes in, a dollop of foam grows under the nozzle), level (0..1 the gel in the window, default .7),
+ * label ('SANITIZER', dressing; false: none), t0 (a refill: the level rises from 0 over .5 s) } -> box */
+A.sanitizer = (c, o = {}) => {
+  const t = o.t ?? 0, pu = clamp(o.pump ?? 0), lv = o.t0 != null ? clamp(o.level ?? .9) * sm(o.t0, o.t0 + .5, t) : clamp(o.level ?? .7), W2 = 64, H2 = 113;
+  c.save(); tf(c, o); c.lineJoin = 'round'; c.lineCap = 'round';
+  c.fillStyle = 'rgba(20,24,40,.18)'; rr(-W2 + 6, -H2 + 8, W2 * 2, H2 * 2, 18); c.fill();
+  c.fillStyle = V2.grad(-W2, 0, W2, 0, [[0, '#ffffff'], [.6, '#eef1f5'], [1, '#c9cfd8']]); c.strokeStyle = OUT; c.lineWidth = 3.4; rr(-W2, -H2, W2 * 2, H2 * 2, 18); c.fill(); c.stroke();
+  /* the window and the gel */
+  const wx = -W2 * .55, wy = -H2 * .72, ww = W2 * 1.1, wh = H2 * .7;
+  c.fillStyle = '#e6eef6'; rr(wx, wy, ww, wh, 8); c.fill();
+  c.save(); rr(wx, wy, ww, wh, 8); c.clip(); const gy = wy + wh * (1 - lv);
+  c.fillStyle = V2.grad(0, gy, 0, wy + wh, [[0, 'rgba(120,200,255,.85)'], [1, 'rgba(60,140,230,.9)']]); c.fillRect(wx, gy, ww, wh); c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(wx, gy, ww, 3);
+  c.restore(); c.strokeStyle = 'rgba(40,50,70,.6)'; c.lineWidth = 2.4; rr(wx, wy, ww, wh, 8); c.stroke();
+  /* the push bar (goes in with the pump) and the nozzle */
+  const by = H2 * .2 + 8 * pu;
+  c.fillStyle = V2.grad(0, by, 0, by + 46, [[0, '#9aa3b0'], [1, '#6c7584']]); c.strokeStyle = OUT; c.lineWidth = 3; rr(-W2 * .78, by, W2 * 1.56, 46 - 4 * pu, 10); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.4)'; rr(-W2 * .7, by + 5, W2 * 1.4, 7, 4); c.fill();
+  c.fillStyle = '#5b6370'; rr(-9, H2 - 8, 18, 18, 4); c.fill(); c.stroke();
+  /* the dollop: grows under the nozzle with the pump, then hangs */
+  const fk = sm(.25, .9, pu);
+  if (fk > .02) { c.fillStyle = '#f4fbff'; c.strokeStyle = 'rgba(120,150,190,.7)'; c.lineWidth = 2; for (const [dx, dy, r] of [[0, 18, 11], [-7, 14, 8], [7, 15, 8], [0, 26, 8]]) { c.beginPath(); c.arc(dx * fk, H2 + 10 + dy * fk, r * fk, 0, TAU); c.fill(); c.stroke(); } }
+  if (o.label !== false && window.UI) { const px = 15 * scrScale(); if (px >= 8) UI.label(o.label || 'SANITIZER', 0, -H2 * .86, { size: 15, fill: '#1f6fd6', hero: false, grp: 'fp21_san', maxW: W2 * 1.6 }); }
+  c.restore();
+  return bbox(o, -W2, -H2, W2, H2 + 40 * fk);
+};
+
+/* A21.fridgeThermo(ctx, o): a dial fridge thermometer on its hook. o = { x, y (dial centre), s (1 = 160 px dial), deg (F, 38), t, wobble (0..1 the needle shivers), hero (false: the numbers are dressing) } -> box */
+A.fridgeThermo = (c, o = {}) => {
+  const t = o.t ?? 0, R = 80, deg = (o.deg ?? 38) + (o.wobble ? o.wobble * 1.6 * Math.sin(t * 23) : 0), ang = d => (135 + (clamp(d, -20, 80) + 20) / 100 * 270) * PI / 180;
+  c.save(); tf(c, o); c.lineCap = 'round'; c.lineJoin = 'round';
+  c.strokeStyle = '#8d96a3'; c.lineWidth = 5; c.beginPath(); c.moveTo(0, -R - 2); c.lineTo(0, -R - 22); c.quadraticCurveTo(0, -R - 40, 16, -R - 38); c.stroke();
+  c.fillStyle = 'rgba(20,24,40,.25)'; c.beginPath(); c.arc(5, 7, R + 6, 0, TAU); c.fill();
+  c.fillStyle = V2.grad(-R, -R, R, R, [[0, '#ffffff'], [.4, '#b7c0cc'], [1, '#6a7482']]); c.strokeStyle = OUT; c.lineWidth = 3.2; c.beginPath(); c.arc(0, 0, R + 6, 0, TAU); c.fill(); c.stroke();
+  c.fillStyle = '#fbfcfd'; c.beginPath(); c.arc(0, 0, R - 4, 0, TAU); c.fill();
+  /* bands: cold blue, the SAFE green 33 to 41 F, warm red */
+  const arc = (d0, d1, col, r0 = R - 16) => { c.strokeStyle = col; c.lineWidth = 12; c.lineCap = 'butt'; c.beginPath(); c.arc(0, 0, r0, ang(d0), ang(d1)); c.stroke(); };
+  arc(-20, 32, '#8cc6ff'); arc(33, 41, '#2fb35a'); arc(41.5, 80, '#e8433c');
+  c.strokeStyle = '#2a2f3a'; c.lineCap = 'round';
+  for (let d = -20; d <= 80; d += 5) { const a = ang(d), big = d % 10 === 0, r1 = R - 24, r2 = r1 - (big ? 12 : 6); c.lineWidth = big ? 2.6 : 1.4; c.beginPath(); c.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); c.lineTo(Math.cos(a) * r2, Math.sin(a) * r2); c.stroke(); }
+  if (window.UI && 15 * scrScale() >= 8) {
+    for (const d of [-20, 0, 20, 40, 60, 80]) { const a = ang(d); UI.label(String(d), Math.cos(a) * (R - 48), Math.sin(a) * (R - 48), { size: 13, fill: '#20242e', hero: !!o.hero, grp: 'fp21_thermo' }); }
+    UI.label('°F', 0, R * .42, { size: 14, fill: '#20242e', hero: !!o.hero, grp: 'fp21_thermo' });
+  }
+  const a = ang(deg);
+  c.strokeStyle = '#d3203a'; c.lineWidth = 4.4; c.beginPath(); c.moveTo(-Math.cos(a) * 12, -Math.sin(a) * 12); c.lineTo(Math.cos(a) * (R - 20), Math.sin(a) * (R - 20)); c.stroke();
+  c.fillStyle = '#2a2f3a'; c.beginPath(); c.arc(0, 0, 7, 0, TAU); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(-R * .3, -R * .38, R * .4, R * .16, -.6, 0, TAU); c.fill();
+  c.restore();
+  return bbox(o, -R - 6, -R - 42, R + 11, R + 13);
+};
+
+/* A21.crashCart(ctx, o): the red crash cart, front view. o = { x, y (floor centre), s (1 = 300 wide, about 560 tall with the board), t, open (0..1: the top drawer slides out, the seal breaks), sealed (true), seal ('0042137'),
+ * restock (0..1: supplies pop into the open drawer), t0 (resealed: the new tag swings) } -> box */
+A.crashCart = (c, o = {}) => {
+  const t = o.t ?? 0, op = clamp(o.open ?? 0), sealed = o.sealed !== false && op < .35;
+  c.save(); tf(c, o); c.lineJoin = 'round'; c.lineCap = 'round';
+  c.fillStyle = 'rgba(15,18,30,.25)'; c.beginPath(); c.ellipse(0, 0, 170, 18, 0, 0, TAU); c.fill();
+  /* the backboard and the oxygen tank behind the top */
+  c.fillStyle = V2.grad(-90, 0, 90, 0, [[0, '#f0b04a'], [1, '#c98a2a']]); c.strokeStyle = OUT; c.lineWidth = 3.4; rr(-92, -560, 184, 190, 14); c.fill(); c.stroke();
+  for (const hx of [-50, 50]) { c.fillStyle = '#8a5a14'; rr(hx - 18, -546, 36, 12, 6); c.fill(); }
+  c.fillStyle = V2.grad(-170, 0, -128, 0, [[0, '#7fd08a'], [1, '#2f8a44']]); rr(-172, -520, 40, 170, 16); c.fill(); c.stroke();
+  c.fillStyle = '#c9ced8'; rr(-162, -536, 20, 20, 4); c.fill(); c.stroke();
+  /* the cabinet */
+  c.fillStyle = V2.grad(-150, 0, 150, 0, [[0, '#ff5a5f'], [.5, '#e0262f'], [1, '#a5121c']]); rr(-150, -420, 300, 380, 12); c.fill(); c.stroke();
+  c.fillStyle = '#d7dbe2'; rr(-160, -432, 320, 22, 8); c.fill(); c.stroke();   /* the work surface */
+  /* the defibrillator on top */
+  c.fillStyle = V2.grad(0, -500, 0, -432, [[0, '#5d6573'], [1, '#353b46']]); rr(20, -502, 116, 72, 8); c.fill(); c.stroke();
+  c.fillStyle = '#9fe0a8'; rr(32, -492, 52, 30, 3); c.fill(); c.strokeStyle = '#2a8a3a'; c.lineWidth = 2; c.beginPath(); for (let i = 0; i <= 12; i++) { const x = 34 + i * 4, y = -477 + (i === 6 ? -12 : i === 7 ? 8 : 0); i ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
+  c.fillStyle = '#ff4a5a'; c.beginPath(); c.moveTo(110, -462); c.bezierCurveTo(98, -474, 96, -486, 106, -488); c.bezierCurveTo(110, -489, 112, -484, 112, -482); c.bezierCurveTo(112, -484, 114, -489, 118, -488); c.bezierCurveTo(128, -486, 126, -474, 114, -462); c.closePath(); c.fill();
+  /* the drawers: five, the top one slides out toward us when open */
+  const rows = [[-404, 54], [-344, 54], [-284, 64], [-214, 78], [-130, 84]], stripe = ['#ffd84a', '#4fb3ff', '#7ad37a', '#ff9f40', '#c08bff'];
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const [y0, h0] = rows[i], out = i === 0 ? op : 0, dy = 30 * out, sc = 1 + .07 * out;
+    if (out > .02) {   /* the drawer's inside, seen from above as it comes out: a tray of supplies */
+      c.fillStyle = '#3a1418'; rr(-136, y0 - 6, 272, 18 + dy, 6); c.fill();
+      const rs = clamp(o.restock ?? 1);
+      c.save(); c.beginPath(); c.rect(-136, y0 - 8, 272, 20 + dy); c.clip();
+      for (let j = 0; j < 9; j++) { const k2 = clamp(rs * 9 - j); if (k2 <= 0) continue; const x = -118 + j * 29, col = ['#ffffff', '#9fd4ff', '#ffe28a'][j % 3]; c.fillStyle = col; c.strokeStyle = OUT; c.lineWidth = 1.8; rr(x, y0 + dy * .4 - 14 * k2, 18, 22, 4); c.fill(); c.stroke(); }
+      c.restore();
+    }
+    c.save(); c.translate(0, y0 + h0 / 2 + dy); c.scale(sc, sc);
+    c.fillStyle = V2.grad(-140, 0, 140, 0, [[0, '#ff6b70'], [.5, '#e8323b'], [1, '#b0161f']]); c.strokeStyle = 'rgba(60,5,10,.85)'; c.lineWidth = 2.6; rr(-140, -h0 / 2 + 3, 280, h0 - 6, 6); c.fill(); c.stroke();
+    c.fillStyle = '#2b2f38'; rr(-48, -6, 96, 12, 6); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; rr(-44, -5, 88, 3, 2); c.fill();
+    c.fillStyle = stripe[i]; rr(-126, -h0 / 2 + 10, 34, 9, 3); c.fill();
+    c.restore();
+  }
+  /* the lock hasp and the breakaway seal (a numbered red plastic tag); broken and hanging in two pieces when open */
+  c.fillStyle = '#c9ced8'; c.strokeStyle = OUT; c.lineWidth = 2.4; rr(118, -404, 22, 70, 5); c.fill(); c.stroke();
+  const sw = Math.sin(t * 2.3) * .08 + (o.t0 != null && t >= o.t0 ? Math.sin((t - o.t0) * 9) * Math.exp(-(t - o.t0) * 3) * .5 : 0);
+  if (sealed) {
+    c.save(); c.translate(129, -350); c.rotate(sw);
+    c.strokeStyle = '#d3203a'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 22); c.stroke();
+    c.fillStyle = '#e8323b'; c.strokeStyle = OUT; c.lineWidth = 2; rr(-17, 22, 34, 46, 5); c.fill(); c.stroke();
+    if (window.UI && 10 * scrScale() >= 8) UI.label(String(o.seal ?? '0042137').slice(0, 7), 0, 45, { size: 8.5, fill: '#ffffff', hero: false, grp: 'fp21_cart', maxW: 30 });
+    c.restore();
+  } else if (o.sealed !== false) {
+    c.strokeStyle = '#d3203a'; c.lineWidth = 4; c.beginPath(); c.moveTo(129, -350); c.quadraticCurveTo(136, -330, 131, -316); c.moveTo(146, -338); c.quadraticCurveTo(152, -318, 148, -300); c.stroke();
+  }
+  /* the casters */
+  for (const wx of [-118, 118]) { c.fillStyle = '#4a4f5a'; c.strokeStyle = OUT; c.lineWidth = 2.6; rr(wx - 7, -42, 14, 16, 3); c.fill(); c.stroke(); c.fillStyle = '#23262d'; c.beginPath(); c.arc(wx, -14, 15, 0, TAU); c.fill(); c.stroke(); c.fillStyle = '#9aa1ad'; c.beginPath(); c.arc(wx, -14, 5, 0, TAU); c.fill(); }
+  c.restore();
+  return bbox(o, -175, -562, 165, 4);
+};
+
+/* A21.binder(ctx, o): ONE policy binder, the same drawing the closet's physics bodies use. o = { x, y (centre), w (60), h (80), rot, color (A21.BINDER_COLORS[seed % n] by default), spine (the label text: '7.4'; false: none),
+ * view ('auto' | 'cover' | 'spine': auto is a spine when w < .45 h), t, seed, hero (false), grp } -> box. The label is drawn only while the binder is within about 20 degrees of upright on screen
+ * (it fades out past that, so a tumbling binder never shows tilted or upside-down text) and is at least 8 px tall; it fills exactly the w x h rectangle of its body. */
+const BCOL = ['#24407a', '#7d1f2e', '#2d6a3f', '#25262c', '#c8283c', '#1d7f86', '#c8962a', '#5a3a8a', '#6b7280', '#e4e5ea'];
+A.BINDER_COLORS = BCOL;
+function upText(c, str, x, y, size, maxW, o, col) {
+  if (!window.UI || str == null || str === false) return;
+  const a0 = screenAng(c), sa = Math.abs(((a0 + PI) % TAU + TAU) % TAU - PI), al = 1 - sm(.24, .36, sa);
+  if (al <= .01 || size * scrScale() < 8) return;
+  UI.label(String(str), x, y, { size, fill: col || '#1d2236', hero: !!o.hero, alpha: al, grp: o.grp || 'fp21_binder', tilt: .4, maxW });
+}
+A.binder = (c, o = {}) => {
+  const w = o.w ?? 60, h = o.h ?? 80, view = o.view && o.view !== 'auto' ? o.view : (w < h * .45 ? 'spine' : 'cover');
+  const col = o.color || BCOL[Math.abs(Math.round(o.seed || 0)) % BCOL.length], lt = mixc(col, '#ffffff', .24), dk = mixc(col, '#000008', .38), lw = Math.max(1.4, Math.min(w, h) * .045), rad = Math.min(w, h) * (view === 'spine' ? .12 : .06);
+  c.save(); c.translate(o.x || 0, o.y || 0); if (o.rot) c.rotate(o.rot); c.lineJoin = 'round';
+  if (view === 'cover') {
+    c.fillStyle = V2.grad(-w / 2, 0, w / 2, 0, [[0, dk], [.17, col], [.6, lt], [1, col]]); rr(-w / 2, -h / 2, w, h, rad); c.fill();
+    c.fillStyle = '#f3efe2'; c.fillRect(w / 2 - w * .08, -h / 2 + h * .04, w * .055, h * .92);
+    c.strokeStyle = 'rgba(120,110,90,.45)'; c.lineWidth = lw * .35; for (let i = 1; i < 4; i++) { const x = w / 2 - w * .08 + i * w * .013; c.beginPath(); c.moveTo(x, -h / 2 + h * .05); c.lineTo(x, h / 2 - h * .05); c.stroke(); }
+    c.fillStyle = dk; c.fillRect(-w / 2 + lw * .5, -h / 2 + lw * .5, w * .16, h - lw);
+    c.fillStyle = 'rgba(255,255,255,.3)'; for (const v of [-.3, 0, .3]) { c.beginPath(); c.ellipse(-w / 2 + w * .08, v * h, w * .028, h * .034, 0, 0, TAU); c.fill(); }
+    c.strokeStyle = OUT; c.lineWidth = lw; rr(-w / 2, -h / 2, w, h, rad); c.stroke();
+    if (o.spine !== false) {
+      const lx = -w / 2 + w * .27, ly = -h * .18, lw2 = w * .58, lh = h * .26;
+      c.fillStyle = 'rgba(255,255,255,.93)'; rr(lx, ly - lh / 2, lw2, lh, 2); c.fill(); c.strokeStyle = 'rgba(30,30,50,.35)'; c.lineWidth = lw * .5; c.stroke();
+      upText(c, o.spine ?? 'POLICY', lx + lw2 / 2, ly, lh * .46, lw2 * .86, o);
+    }
+  } else {
+    c.fillStyle = V2.grad(-w / 2, 0, w / 2, 0, [[0, lt], [.5, col], [1, dk]]); rr(-w / 2, -h / 2, w, h, rad); c.fill();
+    c.strokeStyle = OUT; c.lineWidth = lw; c.stroke();
+    if (o.spine !== false) { const ly0 = -h / 2 + h * .08, lh = h * .3; c.fillStyle = 'rgba(255,255,255,.94)'; rr(-w * .36, ly0, w * .72, lh, 2); c.fill(); upText(c, o.spine ?? '7.4', 0, ly0 + lh / 2, Math.min(w * .3, lh * .42), w * .62, o); }
+    c.fillStyle = dk; c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = lw * .6; c.beginPath(); c.arc(0, h / 2 - h * .14, w * .17, 0, TAU); c.fill(); c.stroke();
+  }
+  c.restore();
+  return bbox({ x: o.x, y: o.y, rot: o.rot }, -w / 2, -h / 2, w / 2, h / 2);
+};
+
+/* A21.policyCloset(ctx, o): a tall policy closet with double doors. o = { x, y (floor centre), s (1 = 380 x 700), open (0..1: the doors swing out to about 95 degrees), t, packed (0..1: the share of binders still
+ * on the shelves; each slot has a fixed random rank), strain (0..1: closed doors tremble and bow, a binder corner and papers poke out of the gap), label ('POLICIES'; false: none), hero (false) }
+ * -> { box, inside, shelves: [{ y, x0, x1, slots: [{ x, y, w, h, color, spine, rank, shelf, i }] }], seam [x, y0, y1] } (current coordinates: give your physics bodies these slots). */
+const CL = { W: 380, H: 700, nS: 5 };
+const CL_SLOTS = (() => {
+  const ix0 = -CL.W / 2 + 24, ix1 = CL.W / 2 - 24, iy0 = -CL.H + 56, iy1 = -52, rowH = (iy1 - iy0) / CL.nS, out = [];
+  for (let i = 0; i < CL.nS; i++) {
+    const yB = iy0 + (i + 1) * rowH - 8, slots = []; let x = ix0 + 4, j = 0;
+    while (true) { const w = 30 + 15 * rnd(2401 + i, j), h = rowH * (.7 + .18 * rnd(2402 + i, j)); if (x + w > ix1 - 3) break; slots.push({ x: x + w / 2, y: yB - h / 2, w, h, color: BCOL[Math.floor(rnd(2403 + i, j) * BCOL.length)], spine: (i + 4) + '.' + (j + 1), rank: rnd(2404 + i, j), shelf: i, i: j }); x += w + 2; j++; }
+    out.push({ y: yB, x0: ix0, x1: ix1, slots });
+  }
+  return { ix0, ix1, iy0, iy1, rowH, shelves: out };
+})();
+A.policyCloset = (c, o = {}) => {
+  const t = o.t ?? 0, op = clamp(o.open ?? 0), pk = clamp(o.packed ?? 1), st = clamp(o.strain ?? 0), W5 = CL.W, H5 = CL.H, S2 = CL_SLOTS;
+  const jig = st * Math.sin(t * 31) * 1.6, s = o.s ?? 1, r = o.rot || 0, cs = Math.cos(r), sn = Math.sin(r), T2 = (x, y) => [(o.x || 0) + s * (x * cs - y * sn), (o.y || 0) + s * (x * sn + y * cs)];
+  c.save(); tf(c, o); c.lineJoin = 'round'; c.lineCap = 'round';
+  c.fillStyle = 'rgba(15,18,30,.25)'; c.beginPath(); c.ellipse(0, 0, W5 * .58, 20, 0, 0, TAU); c.fill();
+  /* the carcass: institutional beige metal, a crown, a plinth */
+  c.fillStyle = V2.grad(-W5 / 2, 0, W5 / 2, 0, [[0, '#d9cfbd'], [.5, '#c4b79f'], [1, '#9c8f78']]); c.strokeStyle = OUT; c.lineWidth = 4; rr(-W5 / 2, -H5, W5, H5, 8); c.fill(); c.stroke();
+  c.fillStyle = '#a99c84'; rr(-W5 / 2 - 8, -H5 - 14, W5 + 16, 20, 5); c.fill(); c.stroke(); rr(-W5 / 2 - 4, -24, W5 + 8, 24, 4); c.fill(); c.stroke();
+  /* the inside (only when a door is open): a dark back, the shelves, the binders that are still on them */
+  if (op > .01) {
+    c.fillStyle = V2.grad(0, S2.iy0, 0, S2.iy1, [[0, '#3b3328'], [1, '#2a241c']]); c.fillRect(S2.ix0 - 4, S2.iy0 - 6, S2.ix1 - S2.ix0 + 8, S2.iy1 - S2.iy0 + 12);
+    for (const sh of S2.shelves) {
+      for (const sl of sh.slots) if (sl.rank < pk) A.binder(c, { x: sl.x, y: sl.y, w: sl.w, h: sl.h, color: sl.color, spine: sl.spine, view: 'spine', hero: false, grp: 'fp21_closet' });
+      c.fillStyle = '#b8aa90'; c.strokeStyle = OUT; c.lineWidth = 2.6; rr(S2.ix0 - 6, sh.y, S2.ix1 - S2.ix0 + 12, 12, 2); c.fill(); c.stroke();
+    }
+  }
+  /* the doors: hinged at the outer edges; open swings them toward us (the free edge grows a little in perspective); past 90 degrees we see their inner face outside the carcass */
+  const hw = W5 / 2 - 8, yd0 = -H5 + 22, yd1 = -30, a = op * 1.66;
+  for (const sd of [-1, 1]) {
+    const xh = sd * (W5 / 2 - 6), cw = Math.cos(a), xf = xh - sd * hw * cw + (sd < 0 ? jig : -jig) * (1 - op), ex = 34 * Math.sin(a), bulge = st * 8 * (1 - op);
+    const face = cw >= 0, f0 = V2.grad(Math.min(xh, xf), 0, Math.max(xh, xf), 0, face ? [[0, '#e3dac9'], [.5 + sd * .2, '#d3c7b1'], [1, '#b9ab92']] : [[0, '#a5977f'], [1, '#8a7d66']]);
+    c.beginPath(); c.moveTo(xh, yd0); c.lineTo(xf, yd0 - ex * .5); c.quadraticCurveTo(xf - sd * bulge, (yd0 + yd1) / 2, xf, yd1 + ex * .25); c.lineTo(xh, yd1); c.closePath();
+    c.fillStyle = f0; c.fill(); c.strokeStyle = OUT; c.lineWidth = 4; c.stroke();
+    if (Math.abs(cw) > .2) {
+      const inX0 = lerp(xh, xf, .14), inX1 = lerp(xh, xf, .86);
+      c.strokeStyle = 'rgba(60,50,35,.45)'; c.lineWidth = 3; c.beginPath(); c.moveTo(inX0, yd0 + 40); c.lineTo(inX1, yd0 + 40 - ex * .4); c.lineTo(inX1, yd1 - 40 + ex * .2); c.lineTo(inX0, yd1 - 40); c.closePath(); c.stroke();
+      if (face) { c.fillStyle = '#6d6556'; rr(lerp(xh, xf, .88) - 5, -H5 * .5 - 30, 10, 60, 5); c.fill(); }
+      if (bulge > .5) { c.fillStyle = 'rgba(255,255,255,.22)'; c.beginPath(); c.ellipse(lerp(xh, xf, .6), (yd0 + yd1) / 2, Math.abs(xf - xh) * .14, (yd1 - yd0) * .36, 0, 0, TAU); c.fill(); }
+    }
+  }
+  /* closed and straining: a binder corner wedged in the seam, papers poking out at the bottom */
+  if (st > .01 && op < .2) {
+    const k2 = st * (1 - op / .2);
+    c.save(); c.translate(jig, -H5 * .46); c.rotate(-.5); c.globalAlpha *= sm(0, .3, k2);
+    c.fillStyle = '#c8283c'; c.strokeStyle = OUT; c.lineWidth = 3; rr(-6, -18 - 18 * k2, 46, 36, 4); c.fill(); c.stroke();
+    c.restore();
+    c.fillStyle = '#fbfaf4'; c.strokeStyle = 'rgba(40,40,60,.6)'; c.lineWidth = 2; for (const [dx, rt] of [[-10, .3], [8, -.2]]) { c.save(); c.translate(dx + jig, -70); c.rotate(rt); c.beginPath(); c.rect(-12, 0, 24, 26 * k2); c.fill(); c.stroke(); c.restore(); }
+  }
+  if (o.label !== false && window.UI && op < .5) {
+    const px = 22 * scrScale(); c.save(); c.globalAlpha *= 1 - sm(.2, .5, op);
+    c.fillStyle = '#f7f3e8'; c.strokeStyle = OUT; c.lineWidth = 2.4; rr(30, -H5 * .66 - 18, 120, 36, 4); c.fill(); c.stroke();
+    if (px >= 8) { UI.container('fp21_closetplate', 'plate', [30, -H5 * .66 - 18, 150, -H5 * .66 + 18], 4); UI.label(o.label || 'POLICIES', 90, -H5 * .66, { size: 20, fill: '#1d2236', hero: !!o.hero, maxW: 108, cid: 'fp21_closetplate', center: true }); }
+    c.restore();
+  }
+  c.restore();
+  const shelves = S2.shelves.map(sh => ({ y: T2(0, sh.y)[1], x0: T2(sh.x0, sh.y)[0], x1: T2(sh.x1, sh.y)[0], slots: sh.slots.map(sl => { const p = T2(sl.x, sl.y); return Object.assign({}, sl, { x: p[0], y: p[1], w: sl.w * s, h: sl.h * s, rot: r }); }) }));
+  return { box: bbox(o, -W5 / 2 - 8 - (op > .5 ? hw * .1 : 0), -H5 - 14, W5 / 2 + 8, 0), inside: [...T2(S2.ix0, S2.iy0), ...T2(S2.ix1, S2.iy1)], shelves, seam: [T2(0, 0)[0], T2(0, -H5)[1], T2(0, 0)[1]] };
+};
+
+/* the AGENCY sticker (accessory fp21_agency, a chest decal; A21.agencyBadge(o) adds it to any options object): a white sticker with a purple band, lettered when big enough */
+EXT.acc.fp21_agency = (o, k, t, layer) => {
+  if (layer !== 'front') return;
+  ctx.save(); ctx.translate(-k.rx * .44, k.ry * .26); ctx.rotate(-.1);
+  const w = 70, h = 30;
+  ctx.fillStyle = '#ffffff'; ctx.strokeStyle = OUT; ctx.lineWidth = 2.4; rr(-w / 2, -h / 2, w, h, 6); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#7a3fb0'; ctx.save(); rr(-w / 2, -h / 2, w, h, 6); ctx.clip(); ctx.fillRect(-w / 2, -h / 2, w, 7); ctx.restore();
+  if (window.UI && 14 * scrScale() >= 8) UI.label('AGENCY', 0, 3.5, { size: 14, fill: '#5a2a90', hero: false, grp: 'fp21_agency', maxW: w - 8 });
+  else { ctx.fillStyle = 'rgba(90,42,144,.55)'; ctx.fillRect(-w * .32, 1, w * .64, 5); }
+  ctx.restore();
+};
+A.agencyBadge = o => Object.assign({}, o, { acc: (o && o.acc || ['steth', 'badge', 'bandage']).filter(a => a !== 'fp21_agency').concat('fp21_agency') });
+A.AGENCY = 'fp21_agency';
+(() => { if (V2C.ACC_CLS) V2C.ACC_CLS.fp21_agency = 'decal'; if (V2C.ACC_W) V2C.ACC_W.fp21_agency = 70; })();
+/* @@A21-PART6 */
 })();

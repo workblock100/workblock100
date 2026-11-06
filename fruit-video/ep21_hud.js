@@ -5,7 +5,7 @@
  *
  * AS BUILT
  *   H21.reticle(c, o)   o = { x, y (CENTRE of the target), w, h (target box; omit for a point: 110 screen px), t, t0, lock (0..1; omitted: eased from t0 over lockDur .55 s), color, label, sub, alpha,
- *                       labelPx (32), lw (screen px, 3), hero, id, flash (true) } -> [x0, y0, x1, y1] the bracket box (current units).
+ *                       labelPx (32), lw (screen px, 3), hero, crop (the tag may be cut or overlap text: a tag riding a fast move), id, flash (true), reveal } -> [x0, y0, x1, y1] the bracket box (current units).
  *   H21.track(obj, t)   obj = { id, box [x0, y0, x1, y1] | boxAt(t) -> box, lag (.08 s), smooth (.1 s), jitter (screen px 1.2) } -> { x, y, w, h, box } (centre and size: feed it to reticle).
  *   H21.scan(c, o)      SCREEN. o = { t, t0, dur (1.2), dir 'down' | 'right' | 'up' | 'left', color, alpha, band (wake px 300), grid (true) } -> { pos, u } (the line's current y or x, progress) or null.
  *   H21.hudFrame(c, o)  SCREEN. o = { t, mode 'scan' | 'lock' | 'deficiency', count, alpha, color, chyron (true: stays clear of the clock pill and place label), text, wave (true) } -> { inner: [x0, y0, x1, y1] }.
@@ -73,9 +73,9 @@ HD.reticle = (c, o = {}) => {
     const px = o.labelPx ?? 32, size = px / S, rv = o.reveal ?? sm(.5, 1, k), hero = o.hero ?? (px >= 30 && rv >= 1);
     const ty = y0 - (12 + px * .9) / S;
     if (rv > .01) {
-      const P = UI.pill(o.label, x, ty, { size, font: 'Nunito', weight: 900, ink: col, fill: 'rgba(4,18,26,.82)', stroke: col, lw: 2.2 / S, h: px * 1.62 / S, padX: px * .55 / S, hero, alpha: al * sm(0, .25, rv), spacing: px * .04 / S, id: o.id, text: { reveal: rv } });
+      const P = UI.pill(o.label, x, ty, { size, font: 'Nunito', weight: 900, ink: col, fill: 'rgba(4,18,26,.82)', stroke: col, lw: 2.2 / S, h: px * 1.62 / S, padX: px * .55 / S, hero, alpha: al * sm(0, .25, rv), spacing: px * .04 / S, id: o.id, crop: o.crop, text: { reveal: rv } });
       if (rv < 1 && P) { const cxr = lp(P.x0 + px * .55 / S, P.x1 - px * .55 / S, rv); c.save(); c.globalAlpha *= al * (Math.floor(t * 6) % 2 ? .9 : .4); c.fillStyle = col; c.fillRect(cxr, ty - px * .36 / S, px * .32 / S, px * .72 / S); c.restore(); }
-      if (o.sub && rv >= 1) UI.label(o.sub, x, y1 + (14 + px * .5) / S, { size: size * .8, fill: col, stroke: 'rgba(0,18,28,.8)', lw: 5 / S, hero: o.subHero ?? (px * .8 >= 30), alpha: al });
+      if (o.sub && rv >= 1) UI.label(o.sub, x, y1 + (14 + px * .5) / S, { size: size * .8, fill: col, stroke: 'rgba(0,18,28,.8)', lw: 5 / S, hero: o.subHero ?? (px * .8 >= 30), alpha: al, crop: o.crop });
     }
   }
   return [x0, y0, x1, y1];

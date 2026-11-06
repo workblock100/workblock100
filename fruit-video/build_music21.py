@@ -9,7 +9,7 @@ typewriter's clacks, 150 bpm), the surveyors' procedure (arrive, on a bassoon), 
 
 THE SET PIECES
   PREP      the montage, CUT TO THE BEAT: 120 bpm, the downbeat on the montage's start (7.211 s scene-local), 24 beats in six bars: a kick and the bass on every cut (every 1.0 s, where every effect
-            lands), a snare on the off-cut (+0.5 s, the picture's second hit), hats on the off-eighths (the small ticks), a clavinet on the off-beats, a brass hook in the gaps, a fill in the last
+            lands), a snare on the off-cut (+0.5 s, the picture's second hit), hats on the off-eighths (the small ticks), a clavinet on the off-beats, a short brass hook on the 'and' of three in every other bar (done before the shot's off-beat hit), a fill in the last
             bar and a BUTTON on beat 25 (19.211 s). The count-in under the four lines before it is on the same grid.
   MEDPASS   THE SPLIT: two pieces at once in one key (F major) and one tempo (a quarter is 0.5 s): a polite string quartet minuet (3/4) on the LEFT (the State's half) and frantic ragtime piano
             (2/4, honky-tonk) on the RIGHT (a normal night). Their harmony moves together every three seconds (two minuet bars are three ragtime bars). When the divider squeezes a side, its
@@ -73,6 +73,14 @@ def typeclack(vel=1.0):
     t = tarr(d)
     x = bp(R21.uniform(-1, 1, len(t)), 1500, 5000) * np.exp(-t / .006) + np.sin(2 * np.pi * 2600 * t) * np.exp(-t / .01) * .3 + np.sin(2 * np.pi * 190 * t) * np.exp(-t / .012) * .4
     return x * ar(d, .0003, .02) * vel
+
+
+def mkick(vel=1.0, d=.22):
+    """The montage's kick: a tight sine that drops from 150 to 48 Hz in 60 ms and a soft felt beater (the click at a third of kick13's), so the cut's middle and top are left to the effect."""
+    t = tarr(d)
+    x = np.sin(2 * np.pi * np.cumsum(48 + 102 * np.exp(-t / .022)) / SR) * np.exp(-t / .08)
+    x += .1 * bp(R21.uniform(-1, 1, len(t)), 700, 2500) * np.exp(-t / .003)
+    return x * ar(d, .0004, .03) * (.5 + .5 * vel)
 
 
 def gliss(T, at, lo, hi, d, inst, g, pan=0.0, scale=(0, 2, 4, 5, 7, 9, 11), root=0, down=False):
@@ -162,30 +170,40 @@ def cue_title21(T, t0, d, beats, D):
     """The surveyor's clipboard (6.8 s). 0.2: a pizzicato pickup (A). Bars 1 and 2 (0.6 to 3.8): THE SURVEY MOTIF in D minor on pizzicato violins over a tick-tock pizzicato bass (D, A on every beat),
     the typewriter-like percussion (a clack on every eighth, a heavier one on 2 and 4) and a cello pedal; the pen's ticks fall inside it (1.8, 2.4, 3.0). 3.0 to 3.8: a snare roll and a riser as the
     reticle slides to the title. THE STAMP (3.8) is the downbeat: D major (a brass stab, a timpani, a bass drum, a cymbal, the strings), and bar 3 plays the motif again in D MAJOR on pizzicato and a
-    glockenspiel an octave up. THE TEXT DING (5.4): the last chord, D major ninth, strings, a horn and a celesta F-sharp on top, held to the cut."""
+    glockenspiel an octave up, and THE INSPECTION types itself in (eight soft keys from 4.35 s). THE TEXT DING (5.4): the last chord, D major ninth, strings, a horn and a celesta F-sharp on top, held to the cut."""
     a = t0 + .6
     T.put(pz(57, .3), t0 + .2, .1, -.1)
-    sm(T, a, BL_T, lambda m, dd: pz(m + 12, dd), .1, pan=.15)
-    sm(T, a, BL_T, lambda m, dd: spic(m, min(.09, dd)), .025, pan=-.2)
+    pen = [x for x in (cue_abs("penclick", "title"), *(cue_abs("checktick", "title", j) for j in range(3))) if x is not None]
+    near = lambda at: any(abs(at - p_) < .05 for p_ in pen)
+    TT = Track(T.N)
+    sm(TT, a, BL_T, lambda m, dd: pz(m + 12, dd), .1, pan=.15)
+    sm(TT, a, BL_T, lambda m, dd: spic(m, min(.09, dd)), .025, pan=-.2)
+    for p_ in pen:
+        TT.gate(p_ - .01, p_ + .12, .4, .01)
+    T.buf += TT.buf
     for k in range(8):
-        T.put(pz((38, 33)[k % 2], .35), a + k * BL_T, .12, -.1)
+        T.put(pz((38, 33)[k % 2], .35), a + k * BL_T, .12 * (.5 if near(a + k * BL_T) else 1.0), -.1)
     for k in range(16):
-        D.put(typeclack(1.0 if k % 4 == 2 else .55), a + k * BL_T / 2, .03 if k % 4 == 2 else .018, .25 if k % 2 else -.15)
+        at = a + k * BL_T / 2
+        if not near(at):
+            D.put(typeclack(1.0 if k % 4 == 2 else .55), at, .03 if k % 4 == 2 else .018, .25 if k % 2 else -.15)
     T.put(cello(38, 1.7, .7, a=.3, r=.4), a, .05, 0)
     T.put(cello(33, 1.5, .7, a=.3, r=.3), a + 4 * BL_T, .05, 0)
     land = t0 + 3.8
     for j in range(16):
         D.put(snare(.1), land - .8 + j * .05, .008 + .03 * (j / 15) ** 1.5, .1 * np.sin(j))
     T.put(riser(.8, 500, 5000, .4), land - .8, .025, 0)
-    T.put(brass([50, 54, 57, 62], .45, .01, .2, 2400), land, .06, 0)
+    T.put(brass([50, 54, 57, 62], .45, .01, .2, 2400), land + .02, .06, 0)
     D.put(timp(73.4, 1.2), land, .1, 0)
     D.put(bdrum(.9, 1.0), land, .1, 0)
-    D.put(crash(1.4), land, .04, .15)
+    D.put(crash(1.4), land + .02, .04, .15)
     T.put(strings([38, 50, 54, 57, 62, 66], 1.6, .03, .9, 5.0, 2600), land, .1, 0)
     sm(T, land, BL_T, lambda m, dd: pz(m + 12, dd), .08, major=True, pan=.15, bars=(0,))
     sm(T, land, BL_T, lambda m, dd: bell(midi(m + 24), .6) * .5, .035, major=True, pan=.3, bars=(0,))
     for k in range(4):
         T.put(pz((38, 45)[k % 2], .35), land + k * BL_T, .1, -.1)
+    for j in range(8):                                                          # THE INSPECTION types in (4.0 to 4.95 s in the picture)
+        D.put(typeclack(.7 + .3 * (j % 3 == 0)), t0 + 4.35 + j * .075 + .01 * (j % 2), .02, .2 - .05 * j)
     fin = t0 + 5.4
     T.put(strings([38, 45, 50, 57, 61, 64, 66], 1.4, .1, .8, 5.0, 2600), fin, .12, 0)
     T.put(horn(57, 1.2, .55, a=.08, r=.5), fin, .05, .1)
@@ -276,9 +294,9 @@ def montage(T, D, m0, lvl=1.0):
         for beat in range(4):
             at = b0 + beat * bl
             if beat in (0, 2):
-                D.put(kick13(1.0), at, .16 * lvl, 0)
-                T.put(ubass(root + (0 if beat == 0 else 7), .4, .9), at, .16 * lvl, -.05)
-                T.put(sub_bass(midi(root - 12), .35), at, .05 * lvl, 0)
+                D.put(mkick(1.0), at, .2 * lvl, 0)
+                T.put(lp(ubass(root + (0 if beat == 0 else 7), .4, .9), 700, 2), at + .012, .13 * lvl, -.05)
+                T.put(sub_bass(midi(root - 12), .35), at, .07 * lvl, 0)
             else:
                 D.put(snare13(.9), at, .1 * lvl, .05)
                 D.put(clap(.15), at + .004, .025 * lvl, -.1)
@@ -292,17 +310,17 @@ def montage(T, D, m0, lvl=1.0):
                 T.put(clav(CH21[ch][0], .08, .5, mute=True), at + bl / 2, .025 * lvl, .35)
             if beat == 1:
                 T.put(ubass(root + 12, .2, .7), at + bl / 2, .09 * lvl, -.05)
-        if bar % 2 == 0 and bar < 5:
+        if bar % 2 == 0 and bar < 5:                                             # the brass hook 'ba-dap' on the and of three, done before the shot's off-beat hit
             for q, m in enumerate(CH21[ch][:3]):
-                T.put(brass([m + 12], .16, .006, .06, 2600), b0 + 3.5 * bl + .25 * 0, .022 * lvl, .1 * q - .1)
-                T.put(brass([m + 12], .22, .006, .08, 2600), b0 + 3.5 * bl + .25, .026 * lvl, .1 * q - .1)
+                T.put(brass([m + 12], .1, .005, .04, 2600), b0 + 2.5 * bl, .02 * lvl, .1 * q - .1)
+                T.put(brass([m + 12], .12, .005, .05, 2600), b0 + 2.75 * bl, .024 * lvl, .1 * q - .1)
     f0 = m0 + 5 * 4 * bl + 2 * bl
     for j in range(8):
         D.put(snare13(.6 + .4 * j / 7, ghost=j % 2 == 1), f0 + j * bl / 4, (.04 + .06 * j / 7) * lvl, .2 * np.sin(j))
     btn = m0 + 24 * bl
     T.put(brass([50, 57, 62, 66, 69, 71], .32, .005, .12, 2800), btn, .09 * lvl, 0)
     T.put(ubass(38, .5, .9), btn, .18 * lvl, 0)
-    D.put(kick13(1.0), btn, .18 * lvl, 0)
+    D.put(mkick(1.0), btn, .2 * lvl, 0)
     D.put(crash(.7) * np.exp(-tarr(.7) / .15), btn, .05 * lvl, .1)
     D.put(timp(73.4, .7), btn, .08 * lvl, 0)
     T.put(glass(98, .6, .01, .4), btn, .02 * lvl, .3)
@@ -341,13 +359,12 @@ def cue_prep21(T, t0, d, beats, D):
     for j in range(16):
         D.put(snare(.1), m0 - 1.0 + j * .0625, .006 + .035 * (j / 15) ** 1.6, .1 * np.sin(j))
     T.put(riser(1.0, 400, 6000, .4), m0 - 1.0, .02, 0)
-    btn = montage(T, D, m0, lvl=1.8)
+    btn = montage(T, D, m0, lvl=1.35)
     T.gate(btn + .35, me1[1] + .1, 0.0, .05)
     D.gate(btn + .35, me1[1] + .1, 0.0, .05)
     for j in range(3):
         at = cue_abs("poof", "prep", j) or ag[0] + .1 + .25 * j
-        T.put(pz((74, 78, 81)[j] + 12, .25), at + .02, .08, -.3 + .3 * j)
-    gliss(T, ag[0] + .1, 62, 86, .9, harpn, .04, 0, root=2)
+        T.put(pz((74, 78, 81)[j] + 12, .25), at + .16, .05, -.3 + .3 * j)
     T.put(brass([62, 66, 69, 74], .3, .006, .12, 2600), ch1[0] - .02, .07, 0)
     D.put(timp(73.4, .7), ch1[0] - .02, .07, 0)
     T.put(bassoon(45, .35, .8), s1[0] + .05, .06, -.1)
@@ -385,7 +402,7 @@ MIN_MEL = ((72, 77, 81), (79, 77, 76), (76, 79, 82), (79, None, 76), (77, 81, 84
 MIN_LOW = {"F": (41, (57, 60)), "C7": (36, (55, 58)), "Bb": (34, (53, 58)), "D7": (38, (54, 60)), "Gm7": (43, (58, 62))}
 
 
-def minuet21(T, a, bl, lvl=1.0, pan=-.65):
+def minuet21(T, a, bl, lvl=1.0, pan=-.65, side=True):
     """The State's minuet (3/4, a quarter is `bl`): violin I on the tune (MIN_MEL, a light vibrato: polite), the cello on every downbeat, the viola and violin II on beats two and three (the
     'pah-pah'), a soft pizzicato under the cello. Sixteen bars from `a`; the harmony is SPLIT_CH (a chord per two bars). Placed on the left."""
     for bar in range(16):
@@ -401,23 +418,23 @@ def minuet21(T, a, bl, lvl=1.0, pan=-.65):
             du = 1
             while k + du < 3 and mel[k + du] is None:
                 du += 1
-            g = _side(b0 + k * bl, "L")
+            g = _side(b0 + k * bl, "L") if side else 1.0
             T.put(violin(m, du * bl * .92, vib=.003, a=.03, r=.08), b0 + k * bl, .045 * lvl * g, pan)
         root, inner = MIN_LOW[ch]
-        g0 = _side(b0, "L")
+        g0 = _side(b0, "L") if side else 1.0
         T.put(cello(root, bl * 1.5, .7, a=.04, r=.15), b0, .05 * lvl * g0, pan + .15)
         T.put(pz(root + 12, .25), b0, .03 * lvl * g0, pan + .15)
         for k in (1, 2):
             for q, m in enumerate(inner):
-                T.put(spic(m, bl * .45), b0 + k * bl, .028 * lvl * _side(b0 + k * bl, "L"), pan - .15 + .1 * q)
+                T.put(spic(m, bl * .45), b0 + k * bl, .028 * lvl * (_side(b0 + k * bl, "L") if side else 1.0), pan - .15 + .1 * q)
 
 
-def rag_bar(T, b0, bl, ch, lvl=1.0, pan=.65, fill=False):
+def rag_bar(T, b0, bl, ch, lvl=1.0, pan=.65, fill=False, side=True):
     """One bar of the ragtime (2/4, a quarter is `bl`): the stride left hand (a low root on beat one, the chord on its 'and', the fifth on beat two, the chord again) and a frantic right hand in
     sixteenths (the chord's tones climbing and turning, accented 3 + 3 + 2, a chromatic lower neighbour into the top), all on a honky-tonk upright."""
     root = RAG_ROOT[ch]
     tones = sorted(set(m % 12 for m in CH21[ch]))
-    g = lvl * _side(b0, "R")
+    g = lvl * (_side(b0, "R") if side else 1.0)
     T.put(honky(root, .3, .9), b0, .07 * g, pan + .1)
     T.put(honky(root + 7, .3, .8), b0 + bl, .06 * g, pan + .1)
     for k in (.5, 1.5):
@@ -437,15 +454,22 @@ def rag_bar(T, b0, bl, ch, lvl=1.0, pan=.65, fill=False):
 def cue_medpass21(T, t0, d, beats, D):
     """5:30 PM, the observation (27.3 s). From 1.0 s, when the divider has landed, TWO PIECES AT ONCE in F major with a quarter of 0.5 s (120 bpm): on the LEFT the State's string-quartet minuet
     (sixteen bars of 3/4: minuet21), on the RIGHT a normal night's frantic ragtime on a honky-tonk upright (twenty-four bars of 2/4: rag_bar); their chords change together every 3 s (two minuet bars
-    are three ragtime bars). The divider's squeeze ducks the side it squeezes (Split.gain: under 'Six.' the ragtime falls about 5 dB). The cart rolling away (12.23) is a piano glissando down on
+    are three ragtime bars). Each piece is rendered on its own track and multiplied, sample by sample, by the divider's gain for its side (Split.gain: under 'Six.' the ragtime falls about 10 dB
+    while the right half is squeezed). The cart rolling away (12.23) is a piano glissando down on
     the right; both pieces stop on the dominant (C7) at 25.0 s and the sting is the tonic."""
     a = t0 + 1.0
     bl = .5
-    minuet21(T, a, bl)
+    ML, MR = Track(T.N), Track(T.N)
+    minuet21(ML, a, bl, side=False)
     for seg in range(8):
         for k in range(3):
             b0 = a + seg * 3.0 + k * 1.0
-            rag_bar(T, b0, bl, RAG_CH[seg][k], lvl=1.25, fill=(seg == 7 and k == 2))
+            rag_bar(MR, b0, bl, RAG_CH[seg][k], lvl=1.25, fill=(seg == 7 and k == 2), side=False)
+    i0, i1 = int(t0 * SR), min(T.N, int((t0 + d + 1.0) * SR))
+    tt = np.arange(i0, i1) / SR
+    gl = SPLIT.gain("L", tt) if SPLIT is not None else np.ones(len(tt))
+    gr = SPLIT.gain("R", tt) if SPLIT is not None else np.ones(len(tt))
+    T.buf[:, i0:i1] += ML.buf[:, i0:i1] * gl[None, :] + MR.buf[:, i0:i1] * gr[None, :]
     cr = cue_abs("cartroll", "medpass") or t0 + 12.23
     for j, m in enumerate(range(96, 59, -1)):
         if m % 12 in (0, 2, 4, 5, 7, 9, 11):
@@ -492,9 +516,9 @@ def cue_closet21(T, t0, d, beats, D):
         if at > bk - .04:
             break
         inst = (lambda mm, dd: xylo(mm, .2, .8)) if m > 74 else (lambda mm, dd: pz(mm, .2))
-        T.put(inst(m, .2), at, .05, -.5 + 1.0 * ((j * 7) % 11) / 10)
+        T.put(inst(m, .2), at, .035, -.5 + 1.0 * ((j * 7) % 11) / 10)
         if j % 3 == 0:
-            T.put(harpn(m - 12), at, .025, .2)
+            T.put(harpn(m - 12), at, .018, .2)
     D.put(woodblock(), bk, .07, .05)
     D.put(timp(73.4, .9), bk, .1, 0)
     D.put(crash(.4) * np.exp(-tarr(.4) / .06), bk, .05, .1)
@@ -527,7 +551,7 @@ def cue_closet21(T, t0, d, beats, D):
         LT.buf = np.stack([lp(LT.buf[0], 1300, 2), lp(LT.buf[1], 1300, 2)])
         T.buf += LT.buf
     T.gate(hb_end, o3[0] - .02, 0.0, .05)
-    sad_trombone(T, o3[0] + .02, [(55, .3), (54, .3), (53, .3), (52, .75)], .07, .1)
+    sad_trombone(T, o3[0] + .02, [(55, .28), (54, .28), (53, .28), (52, .48)], .07, .1)
     T.fade(t0 + d - .5, t0 + d, 1, 0)
     D.fade(t0 + d - .5, t0 + d, 1, 0)
     INFO["closet"] = "suspense 0.2 to %.2f; silence %.2f to %.2f; the avalanche lands on the bonk at %.3f s (%s); scanner pulse %.2f to %.2f, the lock %.2f; heartbeat to %.2f; sad trombone %.2f" % (
@@ -541,7 +565,7 @@ def cue_exit21(T, t0, d, beats, D):
     regulation, she takes one now.': the harmony turns to the major (a soft D major pad); 'Per regulation!' Onion's choir. The clock (13.07) and 'Okay.' have no music. THE BREAK (15.08 to
     18.68): silence for the chair and the exhale, then ONE WARM HELD CHORD (D major with an added ninth on soft strings and a pad, pianissimo) that swells into the shift bell (18.38) and fades
     under 'Deficiency corrected.'; the stamp (19.63) is a pizzicato and a timpani. THE SNAP BACK (20.65 to 23.05): the ragtime of a normal night bursts back for two bars with a hit on every
-    cue (a slide whistle on the poof, a bassoon on the closet, a xylophone run on the coffee maker, a harp falling with the labels), cut on the door chime; a brass 'ta-da' for Eggplant; sleigh bells
+    cue (0.12 s after each effect: a slide whistle after the poof, a bassoon after the closet, a xylophone run after the coffee maker, a harp falling after the labels), cut on the door chime; a brass 'ta-da' for Eggplant; sleigh bells
     and the snow-day tune's first notes for 'Spring came early.'; under the report a warm D major bed and on 'I took a break.' the series' theme on a felt piano and a celesta, resolved."""
     op, ka1, me1, ra1, s1, ra2, ka2, o1, clk, s2, brk, ka3, rv, eg1, s3, eg2, s4, eg3, s5, en = (beats[k] for k in (
         "open", "ka1", "me1", "ra1", "s1", "ra2", "ka2", "o1", "clock", "s2", "break", "ka3", "revert", "eg1", "s3", "eg2", "s4", "eg3", "s5", "end"))
@@ -563,8 +587,8 @@ def cue_exit21(T, t0, d, beats, D):
     bell_t = cue_abs("shiftbell", "exit") or brk[1] - .3
     ca = ex + .5
     cd = (ka3[0] + .6) - ca
-    held = strings([38, 45, 50, 54, 57, 64], cd, cd * .75, .7, 4.5, 1500) + pad([50, 57, 62, 66, 69, 76], cd, cd * .7, .7, 1100) * .7
-    T.put(held, ca, .025, 0)
+    held = strings([38, 45, 50, 54, 57, 64], cd, cd * .4, .7, 4.5, 1500) + pad([50, 57, 62, 66, 69, 76], cd, cd * .4, .7, 1100) * .7
+    T.put(held, ca, .016, 0)
     st = cue_abs("stamp", "exit") or ka3[0] + .9
     T.put(pz(50, .3), st, .08, 0)
     D.put(timp(73.4, .8), st, .07, 0)
@@ -574,21 +598,22 @@ def cue_exit21(T, t0, d, beats, D):
         b0 = dc + .08 + k * 1.0
         if b0 > ch_t - .3:
             break
-        rag_bar(T, b0, .5, ch, lvl=1.55, pan=.2)
+        rag_bar(T, b0, .5, ch, lvl=1.0, pan=.2)
     T.gate(ch_t - .02, ch_t + 3.0, 0.0, .03)
+    ans = .12                                                                     # the music answers each effect a beat after it lands
     pf = cue_abs("poof", "exit")
     if pf:
-        T.put(slide_whistle(84, 72, .35), pf, .03, -.2)
+        T.put(slide_whistle(84, 72, .35), pf + ans, .03, -.2)
     co = cue_abs("closetopen", "exit")
     if co:
-        T.put(bassoon(31, .3, .9), co, .08, .3)
+        T.put(bassoon(31, .3, .9), co + ans, .08, .3)
     cm = cue_abs("coffeemaker", "exit")
     if cm:
         for j, m in enumerate((74, 77, 81, 84, 88)):
-            T.put(xylo(m, .15, .8), cm + .03 + j * .05, .04, -.2)
+            T.put(xylo(m, .15, .8), cm + ans + j * .05, .04, -.2)
     lp_ = cue_abs("labelpeel", "exit")
     if lp_:
-        gliss(T, lp_, 70, 94, .4, harpn, .03, .2, root=5, down=True)
+        gliss(T, lp_ + ans, 70, 94, .4, harpn, .03, .2, root=5, down=True)
     T.put(brass([62, 66, 69, 74], .14, .005, .06, 2600), ch_t + .02, .06, 0)
     T.put(brass([66, 69, 74, 78], .3, .005, .12, 2800), ch_t + .17, .07, 0)
     D.put(timp(73.4, .6), ch_t + .17, .06, 0)
@@ -604,7 +629,9 @@ def cue_exit21(T, t0, d, beats, D):
     T.put(strings([38, 50, 54, 57, 62, 66, 69], en[0] + .3 - fin, .2, .6, 4.5, 1700), fin, .07, 0)
     T.put(felt(50, 1.5, .5), fin, .06, -.1)
     T.put(horn(57, 1.0, .5, a=.15, r=.5), fin + .05, .035, .1)
-    T.gate(en[0] + .2, t0 + d + 1, 0.0, .15)
+    sg_ = cue_abs("sting", "exit") or en[0] + .1
+    T.fade(sg_ - .45, sg_ + .05, 1, 0)
+    T.gate(sg_ + .05, t0 + d + 1, 0.0, .02)
     T.fade(t0 + d - .6, t0 + d, 1, 0)
     D.fade(t0 + d - .6, t0 + d, 1, 0)
     INFO["exit"] = "tension 0.2 to %.2f; the break silent until %.2f, then one held D major add9 to %.2f (the bell %.2f); revert ragtime %.2f to %.2f; warm resolution from %.2f" % (
@@ -617,12 +644,12 @@ def cue_end21(T, t0, d, beats, D):
     clack on the eighths) at 123 bpm; THE STAMP (4.0) is the downbeat: CORRECTED: a D major ninth (strings and a horn, a brass stab, a timpani and a bass drum), held and unresolved to the cut, a
     celesta F-sharp on top; the text ding (5.1) sits inside it."""
     a = t0 + .1
-    sm(T, a, BL_E, lambda m, dd: pz(m + 12, dd), .09, major=True, pan=.15)
-    sm(T, a, BL_E, lambda m, dd: bell(midi(m + 24), .5) * .5, .025, major=True, pan=.3)
+    sm(T, a, BL_E, lambda m, dd: pz(m + 12, dd), .07, major=True, pan=.15)
+    sm(T, a, BL_E, lambda m, dd: bell(midi(m + 24), .5) * .5, .02, major=True, pan=.3)
     for k in range(8):
-        T.put(pz((38, 45)[k % 2], .35), a + k * BL_E, .11, -.1)
-    for k in range(16):
-        D.put(typeclack(.9 if k % 4 == 2 else .5), a + k * BL_E / 2, .022 if k % 4 == 2 else .013, .2 if k % 2 else -.2)
+        T.put(pz((38, 45)[k % 2], .35), a + k * BL_E, .1, -.1)
+    D.put(brush(.3), a + 2 * BL_E, .02, .2)
+    D.put(brush(.3), a + 6 * BL_E, .02, .2)
     land = t0 + 4.0
     T.put(strings([38, 50, 57, 61, 64, 66, 69], 3.4, .05, 1.6, 5.0, 2400), land, .14, 0)
     T.put(horn(54, 2.8, .6, a=.08, r=1.0), land, .07, .1)
@@ -643,10 +670,11 @@ LEVEL21 = {"title": 1.8, "arrive": 2.2, "prep": 2.2, "medpass": 2.8, "closet": 2
 TAIL21 = {"title": .5, "arrive": .4, "prep": .4, "medpass": .4, "closet": .4, "exit": .5, "end": .3}
 DIP21 = {"title": 1.0, "arrive": .62, "prep": .62, "medpass": .75, "closet": .62, "exit": .62, "end": 1.0}
 REVERB21 = {"title": (.3, 1.0), "arrive": (.3, 1.1), "prep": (.22, .8), "medpass": (.25, .9), "closet": (.3, 1.0), "exit": (.35, 1.2), "end": (.35, 1.3)}
-DIPS21 = {"stamp": (4, .3, .3), "textding": (3, .2, .2), "dramatic": (4, .6, .4), "closetopen": (3, .3, .2), "binderavalanche": (3, 1.2, .6), "scanlock": (3, .3, .2), "gasp": (3, .3, .2),
-          "doorclose": (3, .2, .2), "labelgun": (2.5, .15, .15), "padlock": (2.5, .15, .15), "spray": (2.5, .15, .15), "thermobeep": (2.5, .15, .15), "binderslam": (2.5, .15, .15),
-          "mop": (2.5, .15, .15), "posterflip": (2.5, .15, .15), "closetslam": (2.5, .15, .15), "coffeehide": (2.5, .15, .15), "sanitizer": (2.5, .15, .15), "crashcart": (2.5, .15, .15),
-          "sparkle": (2.5, .2, .2), "binderpop": (2, .2, .2), "pachime": (3, .6, .3), "splitwipe": (2, .3, .2), "cartroll": (2, .6, .4), "shiftbell": (3, .8, .5)}
+DIPS21 = {"stamp": (4, .3, .3), "textding": (3, .2, .2), "dramatic": (4, .6, .4), "closetopen": (4, .3, .2), "binderavalanche": (3, 1.2, .6), "scanlock": (3, .3, .2), "gasp": (3, .3, .2),
+          "doorclose": (4, .2, .2), "labelgun": (3.5, .12, .15), "padlock": (3.5, .12, .15), "spray": (3.5, .12, .15), "thermobeep": (3.5, .12, .15), "binderslam": (3.5, .12, .15),
+          "mop": (3.5, .12, .15), "posterflip": (3.5, .12, .15), "closetslam": (3.5, .12, .15), "coffeehide": (3.5, .12, .15), "sanitizer": (3, .12, .15), "crashcart": (3.5, .12, .15),
+          "sparkle": (2.5, .2, .2), "binderpop": (2, .2, .2), "pachime": (3, .6, .3), "splitwipe": (2, .3, .2), "cartroll": (2, .6, .4), "shiftbell": (3, .8, .5),
+          "poof": (4, .15, .2), "coffeemaker": (4, .3, .3), "labelpeel": (4, .3, .3), "cupclatter": (3, .3, .3), "penclick": (3, .1, .1), "checktick": (3, .1, .1), "typing": (3, 2.4, .4)}
 
 
 def score(script, scenes, lines, N):
