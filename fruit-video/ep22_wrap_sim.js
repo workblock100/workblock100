@@ -113,13 +113,13 @@ function balPhase(t, C = BALCUE) {
 function knotPath(b, t, C = BALCUE, CUEB = CUEB0) {
   const k = b.i >> 1, c = C[k], d = pairDur(k, C), rel = c + d, s = b.s * BALW, sd = b.side;
   if (t < c) { const u = sm(c01((t - (c - .3)) / .3)); const w0 = [600 + 46 * b.i, 1560]; return { x: w0[0] + (BOX_B[0] - w0[0]) * u, y: w0[1] + (BOX_B[1] - w0[1]) * u, rot: 0, puff: 0, s, held: true, vis: false }; }
-  if (t < rel) { const h = balPhase(t, C).hand, puff = t < c + d * .34 ? .3 * c01((t - c) / (d * .34)) : .3 + .7 * sm(c01((t - c - d * .34) / (d * .66))); return { x: h[0] + sd * 14, y: h[1] - 6, rot: -.85 + sd * .38, puff, s, held: true, vis: true }; }
+  if (t < rel) { const h = balPhase(t, C).hand, puff = t < c + d * .34 ? .3 * c01((t - c) / (d * .34)) : .3 + .7 * sm(c01((t - c - d * .34) / (d * .66))); return { x: h[0] + sd * 10, y: h[1] - 6, rot: -1.15 + sd * .2, puff, s, held: true, vis: true }; }
   const tau = t - rel, yc = CEIL_Y() + CEIL_TOP * s - 6, tr = b.i === 4 ? Math.max(.3, CUEB.bonk - rel) : (b.i === 2 || b.i === 3) ? Math.max(.3, CUEB.squeak - rel) : .62;
   const x0 = UP_B[0] + sd * 14, y0 = UP_B[1] - 6;
   let y = y0 + (yc - y0) * sm(c01(tau / tr)), x = x0 + (b.x1 - x0) * sm(c01(tau / Math.max(tr, 1.5)));
   if (b.i === 2 || b.i === 3) { const m = Math.sin(Math.PI * c01((t - CUEB.squeak + .25) / .7)); x = x + (425 + sd * 70 - x) * .6 * m; }
   if (b.i === 8) { const xe = t < CUEB.end ? x0 + (1188 - x0) * sm(c01(tau / 1.5)) : 1188 + 72 * sm(c01((t - CUEB.end) / (CUEB.still - .1 - CUEB.end))); x = t >= CUEB.still ? 1260 : xe; }
-  return { x, y, rot: -.85 + sd * .38 + (.14 * Math.sin(b.seed) + .85 - sd * .38) * sm(c01(tau / .8)), puff: 1, s, held: false, vis: true, arrive: rel + tr, free: b.i !== 8 && tau > tr + .02 };
+  return { x, y, rot: -1.15 + sd * .2 + (.14 * Math.sin(b.seed) + 1.15 - sd * .2) * sm(c01(tau / .8)), puff: 1, s, held: false, vis: true, arrive: rel + tr, free: b.i !== 8 && tau > tr + .02 };
 }
 let CEIL_Y = () => L.CEIL;
 
@@ -236,8 +236,8 @@ function buildBalloons(opts = {}) {
     const pr = t => { const tt = t + TB0; return tt < c ? 0 : 1.05 * (tt < c + d * .34 ? .3 * c01((tt - c) / (d * .34)) : .3 + .7 * sm(c01((tt - c - d * .34) / (d * .66)))); };
     const p0 = path(0), rel = c + d - TB0;
     const bl = w.balloon({ x: p0[0], y: p0[1] - 90 * b.s * BALW, outline: 'glove', scale: b.s * BALW, segments: 34, pressure: pr, buoyancy: 1900, mat: 'nitrile', tag: 'glove', softCollide: true });
-    holdShape(S, w, bl.id, t => { const q = knotPath(b, t + TB0, C, CUEB); return { x: q.x, y: q.y, rot: q.rot, f: q.vis ? Math.min(1, q.puff * 1.1) : 0, sc: q.vis ? .7 + .3 * q.puff : .35 }; }, 0, rel);
-    w.pin(bl.id, 0, path, { from: rel, until });
+    holdShape(S, w, bl.id, t => { const q = knotPath(b, t + TB0, C, CUEB); return { x: q.x, y: q.y, rot: q.rot, f: q.vis ? Math.min(1, q.puff * 1.1) : 0, sc: q.vis ? .5 + .32 * q.puff : .3 }; }, 0, rel);
+    /* let go: buoyancy lifts it knot-down, softCollide spreads the dozen along the ceiling */
     ids.push(bl.id);
   }
   w.warmup(.3);
