@@ -1,53 +1,43 @@
-"""Episode 20 score: THE SNOW DAY. A cosy winter chamber-jazz trio (an upright bass, brushes, a vibraphone and a celesta with sleigh-bell colours), warm and slightly wry.
+"""Episode 21 score: THE INSPECTION. Light but real: the series' orchestra (pizzicato strings, a bassoon, a bass clarinet, a felt piano, a celesta) and three set pieces.
 
-build_audio20 (a fresh copy of build_audio19's wrapper) calls score(script, scenes, lines, N) through --music build_music20; the mixer ducks the bed under every voice (and so does this file:
-_speech_dip). Instruments and helpers come from build_music6 to build_music19 (the series' orchestra); the shape of the score is Episode 15 to 19's: every scene is rendered on two tracks (U through
-the room's reverb, D dry), muted spans are applied after the reverb. New here: a bass clarinet (Onion's instrument), sleigh bells, a hold-music bed that is a telephone's, a tempo that follows the
-time-lapse's speed (build_audio20 hands the lapse's curve in as LAPSE).
+build_audio21 (a fresh copy of build_audio20's wrapper) calls score(script, scenes, lines, N) through --music build_music21; the mixer ducks the bed under every voice (and so does this file:
+_speech_dip). Instruments and helpers come from build_music6 to build_music20 (the series' orchestra); the shape of the score is Episode 15 to 20's: every scene is rendered on two tracks (U through
+the room's reverb, D dry), muted spans are applied after the reverb. build_audio21 hands in SPLIT (the medpass divider: the side it squeezes is ducked) and BONK (when the last binder lands).
 
-THE SNOW-DAY TUNE (SDT), one motif in three moods. Four bars of 4/4 in C: G E G A C6 A | G E D C | A F A B D6 B | A G F E (the first phrase leaps up and falls home, the second says it a step higher
-and stops one note short of home, so that it is always asking for the next bar). It is written once (SDT) and played three ways:
-  THE SNOW DAY   bright and major (C, 120 bpm): glockenspiel and marimba, a ukulele on the off-beats, sleigh bells, an upright bass: Tomato's mood (forecast).
-  THE POLICY     its deadpan minor-mode twin (the third, sixth and seventh lowered), two octaves down, on a bass clarinet with no vibrato and no hurry: Onion's mood. It answers every Onion line.
-  THE LULLABY    the tune on a music box and a celesta over soft strings, in F, slow: Brenda's flashlight (blackout) and the day room.
+THE SURVEY MOTIF (SM): the State at work, two bars of 4/4 in D minor: D D F D A - G F | E E G E C-sharp - D - (clipped, fussy, counting). It is the title's tick-tock (pizzicato strings and a
+typewriter's clacks, 150 bpm), the surveyors' procedure (arrive, on a bassoon), and the end card's form typing itself (D major, 123 bpm). The stamp turns it to D major.
 
-MOTIFS AND SCENES
-  TITLE     the series' theme in G major as a music box (the arpeggio rocks 0.2 to 3.2 s at 80 bpm on a music box and a felt piano, a warm pad, a sleigh-bell shimmer when the snow settles at 3.2 s), the
-            tune on a celesta (3.2 to 5.45 s), and the last chord, G major seventh, held under the text ding.
-  FORECAST  the TV's own weather bed (1.6 to 4.0 s, a soft synth pad through a small speaker), the bright march on Tomato's two 'Snow day!' (4.2 and 26.2 s: a sleigh-bell shake, a glockenspiel run, a ukulele
-            strum on the party popper), the bass clarinet on every Onion line (5.17, 21.46, 24.57 s: the policy, with a sob on the sniffle), a hold-music bed from the speakerphone's click (8.2 to 15.9 s,
-            band-limited, plastic), the slow tiptoe of a pizzicato to the door and a bass drum and a timpani on the snow.
-  LOT       wind-led: a lonely trudging bass (one note a bar, 8.3 to 18.7 s), a far drone, a three-note flourish for Tomato, the policy on Onion's fall risk, a falling pizzicato on the slip; the call-out is a dry
-            comic pizzicato (A DITCH is two notes falling, WHICH DITCH? three rising, SPRING a pluck and a bell).
-  BLACKOUT  no music in the dark but a very low drone (0.2 to 12.3 s); the generator's catch is the first bar (13.13 s, a warm chord and a bass); a stumbling pizzicato for the candles (one note on each
-            click); the bass clarinet on Onion; a flat waltz for 'Coffee is not life safety.' (24.1 to 27.0 s); Brenda's music box for the flashlight (the lullaby); the two dead clicks are silence;
-            the scene ends on one held note.
-  DAYROOM   a candlelit lullaby: the snow-day tune slowed and softened (F, 56 bpm) on a celesta and a music box over soft strings; a celesta drop for 'Water.'; the plow's amber light is a slow swell; the Moon
-            is left almost alone (a single high note, the weather).
-  NIGHT     a sparse felt piano under the report (D minor, one chord a line, a low D and a cello pedal), the lapse (a glockenspiel and vibraphone ostinato whose RATE FOLLOWS THE PICTURE'S SPEED, a rising
-            string and a held shimmer), the Moon over a warm G major pad (the title's key) with three falling bells, the dawn (a G major chord that opens with bells and a horn), the callbacks almost unscored.
-  END       the news-weather sting in full (a synth marimba, a ukulele, a bass and sleigh bells at 123 bpm, 0.1 to 4.0 s), the stamp as a downbeat (a bass drum, a timpani, the strings) and a held C major
-            seventh for the teaser.
+THE SET PIECES
+  PREP      the montage, CUT TO THE BEAT: 120 bpm, the downbeat on the montage's start (7.211 s scene-local), 24 beats in six bars: a kick and the bass on every cut (every 1.0 s, where every effect
+            lands), a snare on the off-cut (+0.5 s, the picture's second hit), hats on the off-eighths (the small ticks), a clavinet on the off-beats, a brass hook in the gaps, a fill in the last
+            bar and a BUTTON on beat 25 (19.211 s). The count-in under the four lines before it is on the same grid.
+  MEDPASS   THE SPLIT: two pieces at once in one key (F major) and one tempo (a quarter is 0.5 s): a polite string quartet minuet (3/4) on the LEFT (the State's half) and frantic ragtime piano
+            (2/4, honky-tonk) on the RIGHT (a normal night). Their harmony moves together every three seconds (two minuet bars are three ragtime bars). When the divider squeezes a side, its
+            piece ducks (SPLIT.gain). Both stop on the dominant: the sting is the tonic.
+  CLOSET    a suspense bed, a beat of nothing when the doors open, THE AVALANCHE (a timpani roll and a falling cascade of xylophone, harp and pizzicato that lands exactly on the last binder's bonk),
+            the scanner's synth pulse (16ths that open as the sweep goes, a stab on the lock), a heartbeat under the questions, Brenda's music box from Episode 20 through the door, a sad trombone.
+  EXIT      tension strings under the deficiency, silence for the break and then one warm held chord (D major) into the shift bell, the comic revert collage (the ragtime of a normal night is back
+            for two bars, a hit on every cue), a fanfare for Eggplant, sleigh bells for spring, and a warm resolution under 'I took a break.' (the series' theme on a felt piano).
 """
-import os
-
 import numpy as np
 
-from build_audio import SR, tarr, ar, lp, hp, bp, midi, osc, expdecay
-from build_music6 import Track, hall, pizz, marimba, bell, sub_bass, pad, strings, brass, hat, timp, shaker, riser, epiano, MUSIC_GAIN
-from build_music7 import woodblock, music_box
+from build_audio import SR, tarr, osc, ar, lp, hp, bp, midi, expdecay
+from build_music6 import Track, hall, pizz, marimba, bell, sub_bass, pad, strings, brass, hat, timp, shaker, riser, epiano, kick, snare, clap, tick, crash, roll, MUSIC_GAIN
+from build_music7 import woodblock, music_box, choir, slide_brass
 import build_music10 as M10
-from build_music10 import clarinet, brush, ride, cue_dips, _fit_rms, _fit_peak
-from build_music9 import uke, rising
-from build_music13 import _mute, _speech_dip, glass, ubass, vib, cello
-from build_music14 import horn, celesta, bassoon, bdrum, xylo
-from build_music15 import sob_clar, comp, MT_ARP, TP_MAJ, TP_MIN, callfx
-from build_music19 import felt
+from build_music10 import brush, cue_dips, _fit_rms, _fit_peak, piano, violin, oboe, tuba, slide_whistle
+from build_music9 import uke, rising, spic, snap
+from build_music13 import _mute, _speech_dip, glass, ubass, vib, cello, clav, kick13, snare13, clack_hi, clack_lo
+from build_music14 import horn, celesta, bassoon, bdrum, xylo, trem_strings, harp
+from build_music15 import sob_clar, comp, MT_ARP, TP_MAJ, TP_MIN
+from build_music19 import felt, sad_trombone
+from build_music20 import bassclar, sleigh, SDT
 
 MUTES = []
-R20 = np.random.default_rng(2720)
-INFO = {}            # what the score decided, for build_audio20's cue report
-LAPSE = None         # the time-lapse's curve (an object with .u_at(t), .a, .b, .active), handed in by build_audio20
+R21 = np.random.default_rng(2721)
+INFO = {}            # what the score decided, for build_audio21's cue report
+SPLIT = None         # the medpass divider (an object with .gain(side, t)), handed in by build_audio21
+BONK = None          # when the last binder lands on Mr. Radish (absolute s), handed in by build_audio21
 
 
 def _n(d):
@@ -55,94 +45,72 @@ def _n(d):
 
 
 # ================================================================ new instruments
-def bassclar(m, d=1.0, vel=.8, a=.05, r=.15, sag=0.0):
-    """A bass clarinet in its low register: hollow and woody (odd harmonics 1/k^0.7 with a trace of the even ones, closed off at 1.8 kHz, a body formant between 380 and 700 Hz), the click of the reed at
-    the start, a breath of air, NO vibrato at all: deadpan. `sag`: the number of semitones the note droops by its end (a deflating note)."""
-    t = tarr(d)
-    f0 = midi(m)
-    f = f0 * 2 ** (-sag * (t / d) ** 2 / 12)
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    x = sum((1 / k ** .7 if k % 2 else .1 / k) * np.sin(k * ph) for k in range(1, 14) if f0 * k < 5000)
-    y = lp(x, 1800, 2) + .6 * bp(x, 380, 700, 1)
-    y = y + bp(R20.uniform(-1, 1, len(t)), 700, 2400, 1) * np.exp(-t / .05) * .06 + bp(R20.uniform(-1, 1, len(t)), 500, 3000, 1) * .012
-    return _fit_rms(y * ar(d, a, min(r, d * .45))) * (.45 + .55 * vel)
+def honky(m, d=.3, vel=.8):
+    """A honky-tonk upright: the piano note and a second string 14 cents sharp (the tuner has not been in since 2019), a little brighter, a short ring."""
+    x = piano(m, d, vel) + .7 * piano(m + .14, d, vel)
+    return hp(x, 90) * .6
 
 
-def sleigh(d=.5, n=24, lo=3200, hi=9000, shape=1.0):
-    """Sleigh bells shaken (mono): `n` tiny jingles over `d` seconds, each a small metal ping near `lo` to `hi` Hz with the inharmonic partials of a crotal bell and a burst of rattle, swelling and fading
-    like a shake. The colour of the winter."""
-    out = np.zeros(_n(d))
-    for i in range(n):
-        at = R20.uniform() ** shape * max(.01, d - .12)
-        f = R20.uniform(lo, hi)
-        t = tarr(.14)
-        c = sum(a_ * np.sin(2 * np.pi * f * k * t + R20.uniform(0, 6.28)) * np.exp(-t / (.05 / k)) for k, a_ in ((1, 1.0), (1.51, .5), (2.31, .3))) + bp(R20.uniform(-1, 1, len(t)), 4500, 10500) * np.exp(-t / .004) * .6
-        j = int(at * SR)
-        m = min(len(c), len(out) - j)
-        if m > 0:
-            out[j:j + m] += c[:m] * R20.uniform(.3, 1.0) * np.sin(np.pi * min(1.0, at / max(d, .01))) ** .5
-    return out * .4
-
-
-def synmar(m, d=.25):
-    """A bright synth marimba, the news station's: a marimba's sine with a hard 4x partial, a short xylophone click and a square pulse at the front."""
+def synpulse(m, d=.11, fc=1200.0, vel=.8):
+    """The scanner's synth: a square and a detuned saw through a resonant low-pass at `fc`, a fast pluck envelope: a cyan, clinical blip."""
     t = tarr(d)
     f = midi(m)
-    x = marimba(f, d) + .35 * xylo(m + 12, d, .8)[:len(t)] * np.exp(-t / .05) + .12 * np.sign(np.sin(2 * np.pi * f * t)) * np.exp(-t / .03)
-    return x
+    x = np.sign(np.sin(2 * np.pi * f * t)) * .5 + osc("saw", f * 1.006, d) * .5
+    y = lp(x, fc, 2) + .5 * bp(x, fc * .8, fc * 1.25, 2)
+    return y * np.minimum(1, t / .002) * np.exp(-t / (d * .45)) * ar(d, .001, min(.02, d * .3)) * (.5 + .5 * vel)
 
 
-def stab(notes, d=.3):
-    """A synth stab (the news sting's chord): saws through a 3 kHz low-pass, short."""
+def synstab(notes, d=.6, fc=2200.0):
+    """A synth stab (saws, a filter that closes): the scanner locking on."""
     t = tarr(d)
-    x = sum(osc("saw", midi(m), d) + .6 * osc("square", midi(m) * 1.004, d) for m in notes) / max(1, len(notes))
-    return lp(x, 3000, 2) * np.minimum(1, t / .004) * np.exp(-t / (d * .4)) * ar(d, .002, min(.05, d * .4))
+    x = sum(osc("saw", midi(m), d) + osc("saw", midi(m) * 1.008, d) for m in notes) / (2 * max(1, len(notes)))
+    return lp(x, fc, 2) * np.minimum(1, t / .003) * np.exp(-t / (d * .35)) * ar(d, .002, .1)
 
 
-def holdlead(m, d=.4):
-    """The hold music's lead: a plastic synth flute (a square through a 2.6 kHz low-pass, a fast shallow vibrato, a hint of chorus), a bland, sustained, well-meaning sound."""
+def typeclack(vel=1.0):
+    """The title's typewriter-like percussion: a type bar's clack (a band of noise rung at 2.6 kHz) over a small platen thud."""
+    d = .07
     t = tarr(d)
-    f = midi(m) * (1 + .004 * np.sin(2 * np.pi * 6.2 * t))
-    x = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * .5 + np.sin(2 * np.pi * np.cumsum(f * 1.004) / SR) * .5
-    return _fit_rms(lp(x, 2600, 2) * ar(d, .03, min(.1, d * .4)), .22)
+    x = bp(R21.uniform(-1, 1, len(t)), 1500, 5000) * np.exp(-t / .006) + np.sin(2 * np.pi * 2600 * t) * np.exp(-t / .01) * .3 + np.sin(2 * np.pi * 190 * t) * np.exp(-t / .012) * .4
+    return x * ar(d, .0003, .02) * vel
 
 
-# ================================================================ the tune
-# (beat, midi in C major, beats) of the four bars; the same notes in every mood
-SDT = ((0, 79, .5), (.5, 76, .5), (1, 79, .5), (1.5, 81, .5), (2, 84, 1.5), (3.5, 81, .5),
-       (4, 79, 1), (5, 76, .5), (5.5, 74, .5), (6, 72, 2),
-       (8, 81, .5), (8.5, 77, .5), (9, 81, .5), (9.5, 83, .5), (10, 86, 1.5), (11.5, 83, .5),
-       (12, 81, 1), (13, 79, .5), (13.5, 77, .5), (14, 76, 2))
-SDT_CH = (("C", 36), ("C", 36), ("F", 41), ("G", 43))        # chord and bass root per bar
-CHORDS = {"C": (60, 64, 67), "F": (60, 65, 69), "G": (59, 62, 67), "Cm": (60, 63, 67), "Fm": (60, 65, 68), "Am": (57, 60, 64), "Dm": (57, 62, 65)}
-MINOR_PC = (4, 9, 11)       # the third, the sixth and the seventh of C: lowered in the twin
+def gliss(T, at, lo, hi, d, inst, g, pan=0.0, scale=(0, 2, 4, 5, 7, 9, 11), root=0, down=False):
+    """A glissando up (or down) the scale from midi lo to hi in d seconds on inst(midi, duration)."""
+    notes = [m for m in range(lo, hi + 1) if (m - root) % 12 in scale]
+    if down:
+        notes = notes[::-1]
+    for j, m in enumerate(notes):
+        T.put(inst(m, .4), at + d * j / max(1, len(notes)), g * (.7 + .3 * j / max(1, len(notes))), pan)
 
 
-def sdt(T, at, bl, inst, g, bars=(0, 1, 2, 3), tr=0, minor=False, octave=0, pan=0.0, tail=1.0, stretch=1.0, gains=None):
-    """Play the snow-day tune from `at`: `bars` picks the bars (0 to 3), `bl` is a beat in seconds, `tr` transposes (semitones), `minor` lowers the third, sixth and seventh, `octave` moves it (octaves),
-    `inst(midi, duration)` makes a note. Returns the time at which the last chosen bar ends."""
-    t0 = None
+def harpn(m, d=.4):
+    return harp(m, max(d, .9), .6)
+
+
+# ================================================================ the motifs
+# THE SURVEY MOTIF: (beat, midi, beats), two bars of 4/4 in D minor
+SM = ((0, 62, .5), (.5, 62, .5), (1, 65, .5), (1.5, 62, .5), (2, 69, 1), (3, 67, .5), (3.5, 65, .5),
+      (4, 64, .5), (4.5, 64, .5), (5, 67, .5), (5.5, 64, .5), (6, 61, 1), (7, 62, 1))
+
+
+def sm(T, at, bl, inst, g, major=False, octave=0, pan=0.0, bars=(0, 1), tail=.9):
+    """Play the survey motif from `at` (the first chosen bar's downbeat), `bl` a beat in seconds; `major` raises the F to F-sharp (the stamp has landed). Returns the end time."""
+    t0 = min(bars) * 4
     end = at
-    for k, (b, m, du) in enumerate(SDT):
-        bar = int(b // 4)
-        if bar not in bars:
+    for b, m, du in SM:
+        if int(b // 4) not in bars:
             continue
-        if t0 is None:
-            t0 = bar * 4
-        mm = m - 1 if (minor and m % 12 in MINOR_PC) else m
-        t = at + (b - t0) * bl * stretch
-        d_ = du * bl * stretch * .93 * tail
-        T.put(inst(mm + tr + 12 * octave, d_), t, g * (1.0 if gains is None else gains[k % len(gains)]), pan)
-        end = max(end, t + du * bl * stretch)
+        mm = m + 1 if (major and m % 12 == 5) else m
+        t = at + (b - t0) * bl
+        T.put(inst(mm + 12 * octave, du * bl * tail), t, g, pan)
+        end = max(end, t + du * bl)
     return end
 
 
-def chord_u(T, at, name, g=.07, tr=0, pan=.3, minor=False):
-    """A ukulele strum of a chord of the march (the minor mode lowers the third)."""
-    ch = list(CHORDS[name])
-    if minor:
-        ch = [m - 1 if m % 12 in (4, 9, 11) else m for m in ch]
-    uke(T, at, [m + tr for m in ch], g, pan)
+def pz(m, d=.3):
+    """A pizzicato note by midi number."""
+    return pizz(midi(m), max(.12, min(d, .5)))
 
 
 # ================================================================ context: the cue table (absolute times of the script's cues) and the lines
@@ -169,501 +137,516 @@ def cue_abs(name, scene=None, k=0):
     return None
 
 
-def LN(scene, line):
-    """The finished line (absolute s, e, words) of a spoken beat."""
-    return M10._CTX["lines"][(scene, line)]
-
-
 def W(line, word, k=0):
     """Absolute time of a word in a line of the current scene (the same proportional word times the captions use)."""
-    return M10.wt(line, word, k)
+    try:
+        return M10.wt(line, word, k)
+    except Exception:
+        ln = M10._CTX["lines"].get((M10._CTX["scene"], line))
+        return ln["s"] if ln else 0.0
 
 
-def lapse_u(t):
-    """The time-lapse's intensity u (0 in real time, 1 at the picture's top speed) at absolute times t: build_audio20's curve (lapse.json), or the fixed ease in (0.7 s), hold, ease out (0.9 s)."""
-    t = np.asarray(t, dtype=float)
-    if LAPSE is not None and getattr(LAPSE, "active", False):
-        return LAPSE.u_at(t)
-    sc = next((s for s in CTX["scenes"] if s["id"] == "night"), None)
-    if sc is None:
-        return np.zeros_like(t)
-    a, b = sc["start"] + sc["beats"]["lapse"]["s"], sc["start"] + sc["beats"]["lapse"]["e"]
-    x = lambda v: np.clip(v, 0, 1) ** 2 * (3 - 2 * np.clip(v, 0, 1))
-    return np.minimum(x((t - a) / .7), x((b - t) / .9)) * ((t >= a) & (t <= b))
+def _side(t, side):
+    """The divider's gain for a side at absolute time t (1.0 when build_audio21 has not handed SPLIT in)."""
+    if SPLIT is None:
+        return 1.0
+    return float(SPLIT.gain(side, np.asarray([t]))[0])
 
 
-# ================================================================ title and end: the globe in G major and the news in C
-TR_TITLE = 7                       # G major
-BL_T = .75                         # a beat of the title's theme (80 bpm): the bar is 3.0 s, 0.2 to 3.2 s, and the landing is the snow settling
-BL_E = .4875                       # a beat of the end card's (123 bpm): 0.1 to 4.0 s is eight beats and the stamp is the downbeat
+# ================================================================ title: the checklist, the tick-tock and the stamp
+BL_T = .4                          # the title's beat (150 bpm); the bars start at 0.6 s, the pickup at 0.2; the stamp is the downbeat of bar 3 (3.8 s) and the text ding of bar 4 (5.4 s)
+BL_E = .4875                       # the end card's (123 bpm): 0.1 to 4.0 s is two bars and the stamp is the downbeat of the third
 
 
-def tomato20(T, at, g=.08, minor=False):
-    """Tomato's pizzicato: a rising chord on pizzicato strings, major (it is a party) or minor (it is not)."""
-    for q, m in enumerate(TP_MIN if minor else TP_MAJ):
-        T.put(pizz(midi(m + 12), .16), at + q * .05, g, .3)
-
-
-def cue_title20(T, t0, d, beats, D):
-    """The snow globe (6.8 s). 0.2 to 3.2: the series' theme's arpeggio in G major at 80 bpm on a felt piano with a music box over it (the sfx's tines are the sparkle), a warm pad that breathes, an
-    upright bass on 1 and 3 and a brush on 2 and 4 (the globe's shake at 1.1 s is a brush too); the last beat is the subdominant. THE SNOW SETTLES at 3.2 s: the landing is a soft G add-ninth on strings,
-    a horn and a timpani, a sleigh-bell shimmer; then the tune's first notes (B A G) on a celesta over a felt piano (3.2 to 5.45). Under the text ding (5.4 s, G and D) the last chord: G major seventh
-    (G D F-sharp B), strings, a horn on the third, a celesta on the F-sharp on top, held to the cut."""
-    a = t0 + .2
-    st = BL_T / 2
-    land = a + 4 * BL_T
-    for i, m in enumerate(MT_ARP):
-        lv = .55 + .45 * i / 7
-        n = m + TR_TITLE
-        T.put(felt(n - 12, 1.0, .5), a + i * st, .1 * lv, -.2 + .05 * i)
-        T.put(music_box(midi(n + 12), 1.0) * .5, a + i * st + .004, .03 * lv, .3)
-    root = 36 + TR_TITLE + 12
-    for k, (r_, g) in enumerate(((0, .16), (7, .12))):
-        T.put(ubass(root + r_, BL_T * 1.6, .6), a + 2 * k * BL_T, g, -.1)
-    T.put(pad([48 + TR_TITLE, 52 + TR_TITLE, 55 + TR_TITLE, 60 + TR_TITLE], 3 * BL_T, .6, .4, 1400), a, .085)
-    T.put(pad([53 + TR_TITLE, 57 + TR_TITLE, 60 + TR_TITLE, 65 + TR_TITLE], BL_T + .1, .15, .3, 1500), a + 3 * BL_T, .085)
-    for k in (1, 3):
-        D.put(brush(.3), a + k * BL_T, .05, .2)
-    D.put(brush(.4), t0 + 1.1, .045, 0)
-    T.put(riser(2.6, 500, 4200, .3), a + .3, .02, 0)
-    T.put(strings([43, 50, 55, 59, 62, 69], 2.4, .12, 1.2, 5.0, 2200), land, .1, 0)
-    T.put(horn(55, 1.6, .55, a=.08, r=.7), land, .06, .1)
-    D.put(timp(98.0, 1.0), land, .07, 0)
-    D.put(sleigh(1.5, 26, 3400, 8800) * .6, land - .05, .04, .1)
-    for off, m, dd in ((0, 83, 1.5), (1.5, 81, .5), (2, 79, 1)):                         # B5 A5 G5: the tune's first notes in G
-        at = land + off * BL_T
-        T.put(celesta(m, dd * BL_T * .95 + .3, .7), at, .08, .15)
-        T.put(felt(m - 12, 1.2, .55), at, .06, -.1)
-    for k, m in enumerate((43, 50, 43)):
-        T.put(ubass(m, .5, .6), land + k * 1.5 * BL_T, .14, -.1)
-    fin = t0 + 5.45
-    T.put(strings([43, 50, 54, 59, 62, 66, 74], 1.9, .12, .9, 5.0, 2600), fin, .13, 0)
-    T.put(horn(59, 1.6, .55, a=.08, r=.6), fin, .06, .1)
-    T.put(felt(55, 2.0, .5), fin, .08, -.1)
-    T.put(felt(62, 2.0, .45), fin + .02, .06, 0)
-    T.put(felt(66, 2.0, .45), fin + .04, .06, .1)
-    T.put(celesta(90, 1.6, .6), fin + .06, .05, .3)
-    T.put(ubass(43, 1.4, .6), fin, .15, -.1)
-    D.put(timp(98.0, 1.2), fin, .09, 0)
-    T.fade(t0 + d - .8, t0 + d, 1, 0)
-    D.fade(t0 + d - .8, t0 + d, 1, 0)
-
-
-def cue_end20(T, t0, d, beats, D):
-    """The closings (7.5 s). 0.1 to 4.0 s: THE NEWS-WEATHER STING IN FULL, eight beats at 123 bpm in C: a synth marimba climbs the arpeggio of each chord in sixteenths and lands on a held note and a
-    turn (C, Am, F, G), under a ukulele on the off-beats, an upright bass on every beat, sleigh bells on 2 and 4, a woodblock and a rising riser into THE STAMP (4.0 s), the downbeat on which the
-    chord arrives: C major seventh (C G B E), strings and a horn, a stab, a bass drum and a timpani, then held and unresolved to the cut (a celesta B on top; the text ding at 5.1 s is C and G, inside
-    it)."""
-    a = t0 + .1
-    land = t0 + 4.0
-    bars = ((72, 76, 79, 84, 88, 86, "C", 36), (69, 72, 76, 81, 84, 83, "Am", 33), (65, 69, 72, 77, 81, 79, "F", 29), (67, 71, 74, 79, 83, 81, "G", 31))
-    for q, (m0, m1, m2, m3, m4, m5, ch, rt) in enumerate(bars):
-        b0 = a + q * 2 * BL_E
-        for j, m in enumerate((m0, m1, m2, m3)):
-            T.put(synmar(m, .2), b0 + j * BL_E / 4, .085, -.15 + .1 * j)
-        T.put(synmar(m4, .45), b0 + BL_E, .09, .15)
-        T.put(synmar(m5, .2), b0 + 1.5 * BL_E, .07, .2)
-        for k in range(2):
-            T.put(ubass(rt + 12 + (0 if k == 0 else 7), BL_E * .9, .7), b0 + k * BL_E, .15, -.1)
-            comp(T, b0 + k * BL_E + BL_E / 2, list(CHORDS[ch]), .3, .05, .35)
-        D.put(woodblock(), b0 + BL_E, .025, .3)
-        D.put(woodblock(), b0 + 2 * BL_E - .01, .02, -.3)
-        D.put(sleigh(.3, 10), b0 + BL_E, .035, .2)
-    T.put(riser(.9, 800, 6200, .4), land - .9, .03, 0)
-    chm = [36, 43, 47, 52, 55, 59]
-    T.put(strings(chm + [64, 71], 3.4, .08, 1.7, 5.0, 2400), land, .15, 0)
-    T.put(horn(52, 2.8, .6, a=.08, r=1.0), land, .08, .1)
-    T.put(stab([60, 64, 67, 71, 76], .5), land, .06, 0)
-    D.put(timp(65.4, 1.4), land, .09, 0)
-    D.put(bdrum(.7, .8), land, .09, 0)
-    T.put(ubass(36, 2.4, .6), land, .15, -.1)
-    T.put(felt(59, 3.0, .5), land + .02, .07, -.1)
-    T.put(celesta(95, 2.4, .6), land + .8, .04, .3)
-    T.put(celesta(88, 2.0, .6), land + .3, .035, .2)
-    T.fade(t0 + 6.4, t0 + 7.35, 1, 0)
-    D.fade(t0 + 6.4, t0 + 7.35, 1, 0)
-
-
-# ================================================================ forecast: the snow day, the policy and the hold music
-def hold_music(N, a, b):
-    """The speakerphone's hold music from a to b (absolute seconds), a stereo clip the length of the whole mix: a corporate loop at 96 bpm in C (Cmaj7, Am7, Dm7, G7, two beats of a bar each, a thin
-    electric piano on the chords, a bland synth flute on a tune that goes nowhere, a drum machine's hat and a rim click), closed off like a telephone (350 Hz to 3.4 kHz with a little grit), very low. It
-    stops dead at b, as when someone is taken off hold."""
-    H = Track(N)
-    bl = 60 / 96.0
-    prog = ((48, 52, 55, 59), (45, 48, 52, 55), (50, 53, 57, 60), (43, 47, 50, 53))
-    mel = ((76, 2), (79, 1), (81, 1), (79, 2), (76, 1), (74, 1), (72, 2), (74, 1), (76, 1), (74, 4))
-    t = a
-    k = 0
-    while t < b - .05:
-        ch = prog[k % 4]
-        for q, m in enumerate(ch):
-            H.put(epiano(midi(m + 12), 2.0 * bl, .5), t + .012 * q, .045, -.1 + .08 * q)
-        H.put(sub_bass(midi(ch[0] - 12), 1.8 * bl), t, .05, 0)
-        t += 2 * bl
-        k += 1
-    t = a + bl
-    for m, n in mel * 2:
-        if t > b - .05:
-            break
-        H.put(holdlead(m, n * bl * .9), t, .05, .2)
-        t += n * bl
-    for i in range(int((b - a) / (bl / 2))):
-        at = a + i * bl / 2
-        if at < b - .02:
-            H.put(hat(.04), at, .02 if i % 2 else .03, .3)
-            if i % 4 == 2:
-                H.put(woodblock(), at, .018, -.2)
-    H.fade(b - .03, b, 1, 0)
-    H.gate(0, a, 0.0, .005)
-    H.gate(b, b + 3.0, 0.0, .005)
-    H.buf = callfx(H.buf, 350, 3400)
-    return H.buf
-
-
-def cue_forecast20(T, t0, d, beats, D):
-    """2:00 PM, the station (28.8 s). THE TV'S BED (1.5 to 4.1): the weather channel's soft synth chords (F major seventh, G) through a small speaker under the anchor. TOMATO'S 'SNOW DAY!' (4.2): a
-    sleigh-bell shake, then on the popper (4.6) a ukulele strum and the bright tune's first notes on a glockenspiel (G E G A, fast) and a C that Onion's line cuts. THE POLICY (5.17 to 7.6): on Onion's
-    'Per policy, healthcare is essential.' the tune's minor twin, a bass clarinet two octaves down at 97 bpm, one bar (G E-flat G A-flat C A-flat), whose last note lands with her sniffle (7.27: a
-    sob); 'Essential.' (7.46) a pedal C. THE HOLD MUSIC (8.2 to 15.95) is the speakerphone's, band-limited and plastic, under the Artichoke, Strawberry and Melon; it is cut dead after 'There is pizza.'.
-    'Of course.' has no music. THE TIPTOE (16.95 to 20.5): a pizzicato pendulum on A and E under the day shift that cannot leave and the night shift that cannot arrive, a cello pedal, a vibraphone note
-    on 'arrive'. 'You are.' (21.46): the policy, two notes (G, E-flat, sagging) on the words. THE DOOR (22.52): a rising pizzicato tiptoe, silence on the gust (22.82), a bass drum, a timpani and a
-    low string swell on the snow (23.02). 'The entrance is blocked.' (24.57): one bass clarinet note that deflates. TOMATO AGAIN (26.2): the shake, the strum on the popper (26.55) and the bar's first
-    notes, the C held to the sting."""
-    w1, t1, o1, l1, ar1, s1, me1, s2, m1, l2, s3, o2, door, o3, t2, en = (beats[k] for k in ("w1", "t1", "o1", "l1", "ar1", "s1", "me1", "s2", "m1", "l2", "s3", "o2", "door", "o3", "t2", "end"))
-    clar = lambda m, dd: bassclar(m, dd, .8, a=.05, r=.12)
-    # the TV's bed
-    tv = hall(callfx(pad([53, 57, 60, 64], 1.5, .3, .4, 1300), 300, 3600), wet=.1, rt=.4) * .5
-    T.put(tv, w1[0] - .1, .05, .3)
-    T.put(callfx(pad([55, 59, 62, 65], 1.5, .3, .5, 1300), 300, 3600), w1[0] + 1.3, .05, .3)
-    # Tomato: the bright tune, interrupted
-    pop1 = cue_abs("popper", "forecast", 0) or t1[0] + .4
-    T.put(sleigh(.45, 22), t1[0], .06, .2)
-    chord_u(T, pop1, "C", .1, 12, .35)
-    for j, m in enumerate((79, 76, 79, 81)):
-        T.put(bell(midi(m + 12), .9) * .5, pop1 + j * .125, .07, .25)
-        T.put(marimba(midi(m), .2), pop1 + j * .125, .07, -.1)
-    T.put(bell(midi(96), .5) * .5, pop1 + .5, .06, .25)
-    T.put(pizz(midi(36), .25), pop1, .16, -.1)
-    T.put(pizz(midi(43), .25), pop1 + .25, .12, -.1)
-    # Onion: the policy
-    end = sdt(T, o1[0], .62, clar, .1, bars=(0,), tr=0, minor=True, octave=-2, pan=-.1)
-    sn = cue_abs("sniffle", "forecast", 0)
-    if sn:
-        T.put(sob_clar(70, 62, .55, .6), sn - .05, .05, -.3)
-    T.put(clar(48, 1.2), l1[0] + .05, .06, 0)
-    # the hold music
-    pc1, pc2 = cue_abs("phoneclick", "forecast", 0) or ar1[0] - .25, cue_abs("phoneclick", "forecast", 1) or me1[0] - .2
-    hm = hold_music(T.N, pc1 + .1, me1[1] + .1)
-    T.buf += hm * .8
-    # the tiptoe under the day shift and the night shift
-    for k in range(7):
-        at = m1[0] + .05 + k * .86
-        if at > s3[0] - .3:
-            break
-        T.put(pizz(midi((45, 52)[k % 2]), .3), at, .07, -.2 if k % 2 else .2)
-    T.put(cello(33, l2[1] - m1[0] + .4, .8, a=.8, r=.6), m1[0] - .05, .06, 0)
-    T.put(vib(81, 1.6, .6), l2[1] - .3, .06, .3)
-    T.put(timp(55.0, 1.2), s3[1] - .3, .06, 0)
-    # 'You are.'
-    y, a_ = W("o2", "you"), W("o2", "are")
-    T.put(clar(55, .5), y - .02, .1, -.1)
-    T.put(bassclar(51, 1.0, .8, a=.05, r=.2, sag=1.2), a_ - .02, .1, -.1)
-    # the door
-    for k, m in enumerate((43, 45, 47, 48, 50)):
-        T.put(pizz(midi(m), .2), door[0] + .03 + k * .09, .07, -.3 + .1 * k)
-    dg = cue_abs("doorgust", "forecast", 0) or door[0] + .3
-    sd = cue_abs("snowdump", "forecast", 0) or dg + .2
-    MUTES.append((dg - .02, sd - .05, .01))
-    D.put(bdrum(.8, 1.4), sd, .12, 0)
-    D.put(timp(49.0, 1.6), sd + .02, .07, 0)
-    T.put(strings([36, 43, 48], 1.8, .15, 1.2, 5.0, 900), sd, .06, 0)
-    # 'The entrance is blocked.'
-    T.put(bassclar(51, o3[1] - o3[0] + .2, .8, a=.1, r=.3, sag=1.6), o3[0] + .05, .1, -.2)
-    # Tomato again
-    pop2 = cue_abs("popper", "forecast", 1) or t2[0] + .35
-    T.put(sleigh(.45, 22), t2[0] - .05, .06, .2)
-    chord_u(T, pop2, "C", .1, 12, .35)
-    for j, m in enumerate((79, 76, 79, 81)):
-        T.put(bell(midi(m + 12), .9) * .5, pop2 + j * .125, .07, .25)
-        T.put(marimba(midi(m), .2), pop2 + j * .125, .07, -.1)
-    T.put(bell(midi(96), .9) * .5, pop2 + .5, .07, .25)
-    T.put(marimba(midi(84), .6), pop2 + .5, .07, -.1)
-    T.put(pizz(midi(36), .25), pop2, .16, -.1)
-    T.fade(t0 + d - .3, t0 + d, 1, 0)
-    D.fade(t0 + d - .3, t0 + d, 1, 0)
-    INFO["forecast"] = "tv bed 1.5 to 4.1; policy (bass clarinet, 97 bpm) from 5.17; hold music %.2f to %.2f s; tiptoe 17.0 to 20.5" % (pc1 + .1 - t0, me1[1] + .1 - t0)
-
-
-# ================================================================ lot: the trudge and the call-out
-def cue_lot20(T, t0, d, beats, D):
-    """4:30 PM, the parking lot (28.1 s): wind-led, almost no music. A FAR DRONE (a bowed A at 55 Hz and a sub under it, 3.4 s to the end, so low it is more a weight) is the plow somewhere else; A
-    LONELY TRUDGING BASS (an upright, a note a second and a tenth, 8.35 to 18.7 s: C G C G B-flat F B-flat G C). TOMATO (14.56): a five-note bright flourish on a glockenspiel (G E G A C) and a
-    ukulele. ONION'S FALL RISK (15.81): the policy, a bass clarinet (G E-flat D C, minor, two octaves down); THE SLIP (16.71): six falling pizzicato notes (A F D B G E); THE THUD (17.11): a bass
-    clarinet C, short and low (the oof); 'Incident report.' a held E-flat that sags, and a sob on the sniffle (17.98). THE CALL-OUT (19.03 to 26.1) is a dry comic pizzicato: the ring a double pluck
-    and a tick, 'I am stuck.' a bass pluck, 'Where?' one woodblock, A DITCH two notes falling (G then D, F then C the second time), WHICH DITCH? three rising (C D E), 'When will you be here?' a
-    held bass, SPRING a pluck, a bell and a shake of sleigh bells. The last held bass note (26.5 s) is the lot's."""
-    tu1, m1, tu2, lv, s1, l1, s2, dig, t1, o1, o2, ring, e1, s3, e2, m2, e3, s4, e4, en = (beats[k] for k in ("tu1", "m1", "tu2", "leave", "s1", "l1", "s2", "dig", "t1", "o1", "o2", "ring", "e1", "s3", "e2", "m2", "e3", "s4", "e4", "end"))
-    clar = lambda m, dd: bassclar(m, dd, .8, a=.05, r=.12)
-    T.put(cello(33, t0 + d - tu1[0] - .6, .7, a=2.0, r=1.5), tu1[0] - .2, .045, 0)
-    T.put(sub_bass(midi(33), min(24.0, d - 3.4)), tu1[0] - .2, .06, 0)
-    for k, m in enumerate((36, 43, 36, 43, 34, 41, 34, 43, 36)):
-        at = lv[0] + .05 + k * 1.1
-        T.put(ubass(m + 12, .95, .5), at, .1 - .004 * k, -.1)
-    # Tomato's flourish
-    for j, m in enumerate((79, 76, 79, 81, 84)):
-        at = t1[0] + .08 + j * .2
-        T.put(bell(midi(m + 12), .9) * .5, at, .08, .25)
-        T.put(marimba(midi(m), .25), at, .07, -.1)
-    chord_u(T, t1[0] + .08, "C", .08, 12, .35)
-    # Onion falls
-    sdt(T, o1[0] + .03, .45, clar, .1, bars=(1,), tr=0, minor=True, octave=-2, pan=-.2)
-    sl = cue_abs("slip", "lot", 0) or o1[0] + .9
-    th = cue_abs("thud", "lot", 0) or sl + .4
-    for j, m in enumerate((93, 89, 86, 83, 79, 76)):
-        T.put(pizz(midi(m), .18), sl + j * .055, .09, -.3)
-    T.put(bassclar(36, .5, .9, a=.01, r=.2), th - .02, .1, -.3)
-    T.put(bassclar(51, o2[1] - o2[0] + .1, .8, a=.1, r=.3, sag=.8), o2[0] + .02, .08, -.2)
-    sn = cue_abs("sniffle", "lot", 0)
-    if sn:
-        T.put(sob_clar(70, 62, .5, .6), sn - .05, .05, -.3)
-    # the call-out
-    for q, f in enumerate((72, 79)):
-        T.put(pizz(midi(f), .2), ring[0] + .05 + q * .22, .09, .3)
-    D.put(woodblock(), ring[0] + .55, .04, .3)
-    for k, at in enumerate((e1[0] + .02, e1[0] + .55)):
-        T.put(ubass(36 + 12 * (k == 0), .4, .8), at, .12, .2)
-    D.put(woodblock(), s3[0] + .02, .045, -.3)
-    for lid, (m_a, m_b), g in (("e2", (55, 50), .1), ("e3", (53, 48), .1)):
-        T.put(pizz(midi(m_a), .25), W(lid, "a"), g, .25)
-        T.put(pizz(midi(m_b), .35), W(lid, "ditch"), g, .25)
-    for j, m in enumerate((48, 50, 52)):
-        T.put(pizz(midi(m), .2), m2[0] + .08 + j * .17, .09, .3)
-    T.put(ubass(36, 1.2, .6), s4[0] + .1, .09, .1)
-    sp = W("e4", "spring")
-    T.put(pizz(midi(48), .4), sp, .12, .2)
-    T.put(bell(midi(91), 1.2) * .5, sp + .22, .06, .3)
-    T.put(sleigh(.7, 16), sp + .2, .04, .25)
-    T.put(ubass(36, 1.8, .6), en[0] + .05, .09, 0)
+def cue_title21(T, t0, d, beats, D):
+    """The surveyor's clipboard (6.8 s). 0.2: a pizzicato pickup (A). Bars 1 and 2 (0.6 to 3.8): THE SURVEY MOTIF in D minor on pizzicato violins over a tick-tock pizzicato bass (D, A on every beat),
+    the typewriter-like percussion (a clack on every eighth, a heavier one on 2 and 4) and a cello pedal; the pen's ticks fall inside it (1.8, 2.4, 3.0). 3.0 to 3.8: a snare roll and a riser as the
+    reticle slides to the title. THE STAMP (3.8) is the downbeat: D major (a brass stab, a timpani, a bass drum, a cymbal, the strings), and bar 3 plays the motif again in D MAJOR on pizzicato and a
+    glockenspiel an octave up. THE TEXT DING (5.4): the last chord, D major ninth, strings, a horn and a celesta F-sharp on top, held to the cut."""
+    a = t0 + .6
+    T.put(pz(57, .3), t0 + .2, .1, -.1)
+    sm(T, a, BL_T, lambda m, dd: pz(m + 12, dd), .1, pan=.15)
+    sm(T, a, BL_T, lambda m, dd: spic(m, min(.09, dd)), .025, pan=-.2)
+    for k in range(8):
+        T.put(pz((38, 33)[k % 2], .35), a + k * BL_T, .12, -.1)
+    for k in range(16):
+        D.put(typeclack(1.0 if k % 4 == 2 else .55), a + k * BL_T / 2, .03 if k % 4 == 2 else .018, .25 if k % 2 else -.15)
+    T.put(cello(38, 1.7, .7, a=.3, r=.4), a, .05, 0)
+    T.put(cello(33, 1.5, .7, a=.3, r=.3), a + 4 * BL_T, .05, 0)
+    land = t0 + 3.8
+    for j in range(16):
+        D.put(snare(.1), land - .8 + j * .05, .008 + .03 * (j / 15) ** 1.5, .1 * np.sin(j))
+    T.put(riser(.8, 500, 5000, .4), land - .8, .025, 0)
+    T.put(brass([50, 54, 57, 62], .45, .01, .2, 2400), land, .06, 0)
+    D.put(timp(73.4, 1.2), land, .1, 0)
+    D.put(bdrum(.9, 1.0), land, .1, 0)
+    D.put(crash(1.4), land, .04, .15)
+    T.put(strings([38, 50, 54, 57, 62, 66], 1.6, .03, .9, 5.0, 2600), land, .1, 0)
+    sm(T, land, BL_T, lambda m, dd: pz(m + 12, dd), .08, major=True, pan=.15, bars=(0,))
+    sm(T, land, BL_T, lambda m, dd: bell(midi(m + 24), .6) * .5, .035, major=True, pan=.3, bars=(0,))
+    for k in range(4):
+        T.put(pz((38, 45)[k % 2], .35), land + k * BL_T, .1, -.1)
+    fin = t0 + 5.4
+    T.put(strings([38, 45, 50, 57, 61, 64, 66], 1.4, .1, .8, 5.0, 2600), fin, .12, 0)
+    T.put(horn(57, 1.2, .55, a=.08, r=.5), fin, .05, .1)
+    T.put(celesta(90, 1.2, .6), fin + .04, .045, .3)
+    T.put(felt(50, 1.3, .5), fin, .06, -.1)
+    D.put(timp(73.4, 1.0), fin, .06, 0)
     T.fade(t0 + d - .6, t0 + d, 1, 0)
     D.fade(t0 + d - .6, t0 + d, 1, 0)
-    INFO["lot"] = "wind-led: far drone from 3.2 s, trudging bass 8.4 to 18.7 s, call-out pizzicato 19.0 to 26.1 s"
+    INFO["title"] = "the survey motif in D minor at 150 bpm (bars from 0.6 s), the stamp the downbeat of bar 3 (3.8 s, D major), the last chord on the ding (5.4 s)"
 
 
-# ================================================================ blackout: the ten seconds and what comes after
-def cue_blackout20(T, t0, d, beats, D):
-    """6:12 PM, the blackout (36.9 s). NO MUSIC IN THE DARK: a very low drone (C at 65 Hz and G below it, swelling from 0.4 to 12.2 s, cut on the crank at 12.3). THE GENERATOR'S CATCH is the first bar
-    (13.13 s, the transfer switch, at 100 bpm): a C major ninth on strings that swells from the catch, an upright bass walking C E G A, a brush, and a vibraphone arpeggio (C E G B); 'Within code.'
-    (13.98) is the bass clarinet, two notes (G, E-flat). 'CANDLE PARTY!' (15.33): A STUMBLING PIZZICATO, one note on each candle's click (C5 15.68, E5 15.93, G5 late by 60 ms, then a tripping C B C
-    figure), a woodblock out of step; 'Open flames are prohibited.' the policy (a bass clarinet, G E-flat D C); 'They are LED.' Tomato's major pizzicato; 'Approved.' a pizzicato chord and a bell, tidy.
-    Mango's outlet (20.88): a pad and one electric piano chord. 'COFFEE IS NOT LIFE SAFETY.' (24.26): a flat waltz (3/4 at 100 bpm: a bass on one, a felt piano on two and three, a brush; no tune,
-    no dynamics) that stops dead after 'It is to me.' BRENDA'S FLASHLIGHT (27.15): the lullaby, the tune in F on a music box and a celesta (66 bpm), under her first two lines; it stops for the two dead
-    clicks (31.29, 31.74: silence); under 'It was a good flashlight.' the phrase falls home (C A G F) and the scene ends on ONE HELD NOTE (F on a cello, a celesta over it), the sting's chord after it."""
-    lo, o1, b1, s1, b2, cnt, l1, gen, o1b, t1, o3, t2, o4, m1, s2, o2, s3, br1, br2, br3, en = (beats[k] for k in ("lightsout", "o1", "b1", "s1", "b2", "count", "l1", "gen", "o1b", "t1", "o3", "t2", "o4", "m1", "s2", "o2", "s3", "br1", "br2", "br3", "end"))
-    clar = lambda m, dd: bassclar(m, dd, .8, a=.05, r=.12)
-    crank = gen[0] - .03
-    dl = crank - lo[0] - .4
-    ramp = np.minimum(np.minimum(1.0, tarr(dl) / 1.5), np.minimum(1.0, (dl - tarr(dl)) / .12)) * np.interp(tarr(dl), [0, dl], [.7, 1.3])
-    T.put((sub_bass(midi(36), dl) + .7 * sub_bass(midi(31), dl)) * ramp, lo[0] + .3, .022, 0)
-    # the first bar
-    rl = cue_abs("relay", "blackout", 3) or gen[0] + .8
+# ================================================================ arrive: the silhouettes, the whisper chain, the best day, the PA, 'Yes!'
+def cue_arrive21(T, t0, d, beats, D):
+    """3:02 PM, the arrival (24.7 s). THE SILHOUETTES (the sting is the sfx's, 0.7 s): from 0.75 s a low tense drone (a cello D and a sub), a high string cluster in tremolo, so quiet it is more a
+    held breath, and a soft timpani heartbeat (every 0.8 s) under Ms. Kale's line. THE WHISPER CHAIN (5.12 to 8.57): a tense whisper of pizzicato eighths in D minor (140 bpm, pianissimo) that
+    travels from left to right with the camera, a brush under it. ONION'S JOY (8.67): a choir 'aah' on D major that swells under both her lines, a harp glissando up on 'The State is here!' and a
+    celesta on 'best' and 'life'. RADISH (12.45): the procedure, the survey motif on a dry bassoon (100 bpm). THE PA (15.11 to 18.19): a drum roll (a snare and a timpani) that climbs under the
+    page, choked on 'stations' as everyone scatters. BINDER (18.39): his four rising notes (D E F-sharp A) on a marimba and a glockenspiel, a pizzicato bass. 'YES!' (20.72): a cartoon hit (a brass
+    chord, a timpani, a cymbal) on the word. 'Great! I'll hide everything.': a sneaky descending pizzicato (D C B-flat A) and a low bassoon A under the grin. The sting is the sfx's."""
+    op, ka1, m1, l1, t1, o1, o2, ra0, me1, b1, st1, b2, en = (beats[k] for k in ("open", "ka1", "m1", "l1", "t1", "o1", "o2", "ra0", "me1", "b1", "st1", "b2", "end"))
+    dr = t0 + .75
+    dl = m1[0] - dr + .3
+    T.put(cello(38, dl, .8, a=.6, r=.5), dr, .06, 0)
+    T.put(sub_bass(midi(26), dl) * np.minimum(1, tarr(dl) / .4), dr, .035, 0)
+    T.put(trem_strings([88, 89], dl, 12.0, .8, .6, 4200), dr, .012, .2)
+    k = 0
+    while ka1[0] + k * .8 < ka1[1] + .3:
+        D.put(timp(73.4, .6), ka1[0] + k * .8, .035 if k % 2 == 0 else .022, 0)
+        k += 1
+    a, b = m1[0] - .05, t1[1] + .05
+    pat = (62, 64, 65, 64, 62, 61, 62, 57)
+    n = int((b - a) / .214)
+    for j in range(n):
+        at = a + j * .214
+        T.put(pz(pat[j % 8] + 12, .16), at, .08, -.6 + 1.2 * j / max(1, n - 1))
+        if j % 2 == 0:
+            D.put(brush(.18), at, .025, -.6 + 1.2 * j / max(1, n - 1))
+    jd = o2[1] + .3 - o1[0]
+    ch = choir([62, 66, 69, 74], jd, "a", a=.6, r=.9)
+    T.put(ch, o1[0] - .1, .07, 0)
+    gliss(T, o1[0], 62, 86, .5, harpn, .05, .2, root=2, scale=(0, 2, 4, 5, 7, 9, 11))
+    T.put(celesta(86, 1.2, .6), W("o2", "best") + .02, .05, .3)
+    T.put(celesta(90, 1.6, .6), W("o2", "life") + .02, .05, .3)
     bl = .6
-    T.put(strings([36, 43, 48, 52, 55, 59, 62], 2.6, .45, 1.0, 5.0, 1800), rl - .2, .075, 0)
-    for k, m in enumerate((36, 40, 43, 45)):
-        T.put(ubass(m + 12, bl * .9, .7), rl + k * bl, .15, -.1)
-    for k in (1, 3):
-        D.put(brush(.25), rl + k * bl, .045, .2)
-    for k, m in enumerate((72, 76, 79, 83)):
-        T.put(vib(m, 1.2, .6), rl + k * bl * .5, .05, .1 + .1 * k)
-    T.put(bassclar(55, .6, .8, a=.05, r=.1), o1b[0] + .05, .09, -.1)
-    T.put(bassclar(51, .9, .8, a=.05, r=.2, sag=.8), o1b[0] + .55, .09, -.1)
-    # the candles: a stumble
-    cc = [cue_abs("candleclick", "blackout", k) for k in range(3)]
-    D.put(woodblock(), t1[0] + .04, .03, .3)
-    D.put(woodblock(), t1[0] + .3, .025, -.3)
-    for k, (m, late) in enumerate(((72, 0.0), (76, 0.0), (79, .06))):
-        if cc[k]:
-            T.put(pizz(midi(m), .2), cc[k] + late, .11, .2 + .1 * k)
-    if cc[2]:
-        for j, m in enumerate((72, 71, 72)):
-            T.put(pizz(midi(m), .12), cc[2] + .22 + j * .09, .08, .3)
-    sdt(T, o3[0] + .05, .5, clar, .1, bars=(1,), tr=0, minor=True, octave=-2, pan=-.1)
-    tomato20(T, t2[0] + .08, .09)
-    chord_u(T, o4[0] + .15, "C", .09, 12, .3)
-    T.put(bell(midi(96), 1.0) * .5, o4[0] + .18, .06, .3)
-    # Mango's outlet
-    T.put(pad([48, 55, 59, 64], m1[1] - m1[0], .8, .8, 1100), m1[0], .035)
-    T.put(epiano(midi(60), 2.4, .5), m1[0] + .15, .035, .1)
-    # the flat waltz
-    wb = .6
-    w0 = o2[0]
-    w_end = s3[1] + .02
-    WT, WD = Track(T.N), Track(T.N)
-    for k in range(int((w_end - w0) / wb)):
-        at = w0 + k * wb
-        bar, beat = divmod(k, 3)
-        if beat == 0:
-            WT.put(ubass((36, 41)[bar % 2] + 12, wb * 1.4, .6), at, .13, -.1)
-        else:
-            for q, m in enumerate(CHORDS["Cm" if bar % 2 == 0 else "Fm"]):
-                WT.put(felt(m, wb * .8, .45), at + .012 * q, .04, .05 + .06 * q)
-            WD.put(brush(.2), at, .03, .2)
-    WT.gate(w_end, w_end + 6.0, 0.0, .03)
-    WD.gate(w_end, w_end + 6.0, 0.0, .03)
-    T.buf += WT.buf
-    D.buf += WD.buf
-    # Brenda's flashlight: the lullaby
-    ck = [cue_abs("clickdead", "blackout", k) for k in range(2)]
-    fl = cue_abs("flashlight", "blackout", 1) or br1[0] - .25
+    sm(T, ra0[0] + .05, bl, lambda m, dd: bassoon(m - 24, dd * .7, .8), .09, pan=-.1, bars=(0,))
+    for j in range(4):
+        T.put(pz((50, 57)[j % 2], .2), ra0[0] + .05 + j * bl + bl / 2, .035, .25)
+    ra, rb = me1[0], me1[1] - .04
+    t = ra
+    while t < rb:
+        u = (t - ra) / (rb - ra)
+        D.put(snare(.1), t, .006 + .03 * u ** 1.6, .15 * np.sin(t * 40))
+        t += 1 / (14 + 10 * u ** 1.5)
+    D.put(roll(55, rb - ra, int((rb - ra) * 9)) * np.interp(tarr(rb - ra + .6), [0, rb - ra, rb - ra + .6], [.3, 1, 0]), ra, .04, 0)
+    D.put(crash(.5) * np.exp(-tarr(.5) / .12), rb, .06, .1)
+    D.put(bdrum(.8, .5), rb, .08, 0)
+    for j, m in enumerate((62, 64, 66, 69)):
+        T.put(marimba(midi(m), .25), b1[0] + .05 + j * .12, .07, -.1)
+        T.put(bell(midi(m + 12), .6) * .5, b1[0] + .05 + j * .12, .045, .25)
+    for j in range(4):
+        T.put(ubass((38, 45)[j % 2], .35, .7), b1[0] + .05 + j * .5, .1, -.1)
+        if j % 2:
+            comp(T, b1[0] + .05 + j * .5, [62, 66, 69], .3, .04, .35)
+    hit = st1[0] - .03
+    T.put(brass([50, 54, 57, 62, 66], .3, .006, .12, 2600), hit, .08, 0)
+    D.put(timp(73.4, .8), hit, .1, 0)
+    D.put(crash(.9) * np.exp(-tarr(.9) / .2), hit, .04, .15)
+    for j, m in enumerate((62, 60, 58, 57)):
+        T.put(pz(m, .18), b2[0] + .1 + j * .2, .06, .2 - .1 * j)
+    T.put(bassoon(33, .9, .8), (cue_abs("grin", "arrive") or b2[1] - .3), .07, -.1)
+    T.fade(t0 + d - .5, t0 + d, 1, 0)
+    D.fade(t0 + d - .5, t0 + d, 1, 0)
+    INFO["arrive"] = "drone and heartbeat 0.75 to %.2f; whisper pizzicato %.2f to %.2f (pan -0.6 to 0.6); choir from %.2f; PA roll %.2f to %.2f; 'Yes!' hit %.2f" % (
+        m1[0] - t0, a - t0, b - t0, o1[0] - .1 - t0, ra - t0, rb - t0, hit - t0)
+
+
+# ================================================================ prep: the count-in, THE MONTAGE (120 bpm, cut to the beat), the agency, Brenda's closet
+MONT_PROG = (("Dm7", 38), ("G7", 43), ("Bbmaj7", 46), ("A7", 45), ("Dm7", 38), ("A7", 45))
+CH21 = {"Dm7": (62, 65, 69, 72), "G7": (59, 62, 65, 67), "Bbmaj7": (58, 62, 65, 69), "A7": (61, 64, 67, 69), "D": (62, 66, 69, 74), "F": (60, 65, 69), "C7": (58, 60, 64, 67),
+        "Bb": (58, 62, 65), "D7": (60, 62, 66, 69), "Gm7": (58, 62, 65, 67)}
+
+
+def montage(T, D, m0, lvl=1.0):
+    """THE MONTAGE from m0 (the downbeat, absolute s): six bars of 4/4 at 120 bpm (a beat is 0.5 s). Returns the button's time (beat 25)."""
+    bl = .5
+    for bar, (ch, root) in enumerate(MONT_PROG):
+        b0 = m0 + bar * 4 * bl
+        for beat in range(4):
+            at = b0 + beat * bl
+            if beat in (0, 2):
+                D.put(kick13(1.0), at, .16 * lvl, 0)
+                T.put(ubass(root + (0 if beat == 0 else 7), .4, .9), at, .16 * lvl, -.05)
+                T.put(sub_bass(midi(root - 12), .35), at, .05 * lvl, 0)
+            else:
+                D.put(snare13(.9), at, .1 * lvl, .05)
+                D.put(clap(.15), at + .004, .025 * lvl, -.1)
+            D.put(hat(.04), at + bl / 2, .045 * lvl, .3)
+            D.put(hat(.03), at + bl / 4, .015 * lvl, -.25)
+            D.put(hat(.03), at + 3 * bl / 4, .015 * lvl, -.25)
+            if beat in (1, 3):
+                for q, m in enumerate(CH21[ch]):
+                    T.put(clav(m, .12, .8), at + bl / 2 + .006 * q, .03 * lvl, .35 - .08 * q)
+            else:
+                T.put(clav(CH21[ch][0], .08, .5, mute=True), at + bl / 2, .025 * lvl, .35)
+            if beat == 1:
+                T.put(ubass(root + 12, .2, .7), at + bl / 2, .09 * lvl, -.05)
+        if bar % 2 == 0 and bar < 5:
+            for q, m in enumerate(CH21[ch][:3]):
+                T.put(brass([m + 12], .16, .006, .06, 2600), b0 + 3.5 * bl + .25 * 0, .022 * lvl, .1 * q - .1)
+                T.put(brass([m + 12], .22, .006, .08, 2600), b0 + 3.5 * bl + .25, .026 * lvl, .1 * q - .1)
+    f0 = m0 + 5 * 4 * bl + 2 * bl
+    for j in range(8):
+        D.put(snare13(.6 + .4 * j / 7, ghost=j % 2 == 1), f0 + j * bl / 4, (.04 + .06 * j / 7) * lvl, .2 * np.sin(j))
+    btn = m0 + 24 * bl
+    T.put(brass([50, 57, 62, 66, 69, 71], .32, .005, .12, 2800), btn, .09 * lvl, 0)
+    T.put(ubass(38, .5, .9), btn, .18 * lvl, 0)
+    D.put(kick13(1.0), btn, .18 * lvl, 0)
+    D.put(crash(.7) * np.exp(-tarr(.7) / .15), btn, .05 * lvl, .1)
+    D.put(timp(73.4, .7), btn, .08 * lvl, 0)
+    T.put(glass(98, .6, .01, .4), btn, .02 * lvl, .3)
+    return btn
+
+
+def cue_prep21(T, t0, d, beats, D):
+    """3:05 PM, survey mode (31.6 s). THE COUNT-IN (0.3 s to the montage) is on the montage's own grid: a soft nervous hat on the off-eighths and a muted bass tick on the beat, growing; Tomato's lines
+    get his rising pizzicato (major for 'Label everything!', minor for the Fun Committee), Onion's 'Date it. Time it. Initial it.' three bass-clarinet notes on the three 'it's and 'Laminate it.' a
+    little rising zip; a snare roll and a riser lift into THE MONTAGE (see montage: 120 bpm, the downbeat at 7.211 s, the BUTTON at 19.211 s). Then the gleaming station is silent; the agency
+    arrives as three rising pizzicato pops on the poofs (D, F-sharp, A) and a harp; 'Agency!' a brass 'ta-da'; 'Who are they?' a bassoon that asks; BRENDA'S CLOSET (25.33): her lullaby from
+    Episode 20 (the snow-day tune on a music box, in F, slow) heard through the door; 'Survey ready.' a bright D major chord with a celesta glitter held to the sting."""
+    t1, o1, t2, o1b, mt, me1, ag, ch1, s1, l1, br1, o2, en = (beats[k] for k in ("t1", "o1", "t2", "o1b", "montage", "me1", "agency", "ch1", "s1", "l1", "br1", "o2", "end"))
+    m0 = mt[0]
+    k = 1
+    while m0 - k * .25 > t0 + .3:
+        at = m0 - k * .25
+        u = 1 - (m0 - at) / (m0 - t0 - .3)
+        if k % 2 == 1:
+            D.put(hat(.035), at, .016 + .026 * u, .3)
+        if k % 2 == 0 and (k // 2) % 2 == 0:
+            T.put(ubass(38, .18, .5), at, .045 + .06 * u, -.1)
+        k += 1
+    for q, m in enumerate(TP_MAJ):
+        T.put(pz(m + 12, .16), t1[0] + .05 + q * .05, .07, .3)
+    for q, m in enumerate(TP_MIN):
+        T.put(pz(m + 12, .2), t2[1] - .2 + q * .07, .06, .3)
+    for j in range(3):
+        try:
+            at = W("o1", "it", j)
+        except Exception:
+            at = o1[0] + .5 * j
+        T.put(bassclar((50, 53, 57)[j], .3, .8, a=.03, r=.08), at, .08, -.2)
+    for j, m in enumerate((62, 64, 66, 67, 69, 71, 73, 74)):
+        T.put(pz(m + 12, .1), o1b[1] - .2 + j * .025, .035, .2)
+    for j in range(16):
+        D.put(snare(.1), m0 - 1.0 + j * .0625, .006 + .035 * (j / 15) ** 1.6, .1 * np.sin(j))
+    T.put(riser(1.0, 400, 6000, .4), m0 - 1.0, .02, 0)
+    btn = montage(T, D, m0, lvl=1.8)
+    T.gate(btn + .35, me1[1] + .1, 0.0, .05)
+    D.gate(btn + .35, me1[1] + .1, 0.0, .05)
+    for j in range(3):
+        at = cue_abs("poof", "prep", j) or ag[0] + .1 + .25 * j
+        T.put(pz((74, 78, 81)[j] + 12, .25), at + .02, .08, -.3 + .3 * j)
+    gliss(T, ag[0] + .1, 62, 86, .9, harpn, .04, 0, root=2)
+    T.put(brass([62, 66, 69, 74], .3, .006, .12, 2600), ch1[0] - .02, .07, 0)
+    D.put(timp(73.4, .7), ch1[0] - .02, .07, 0)
+    T.put(bassoon(45, .35, .8), s1[0] + .05, .06, -.1)
+    T.put(bassoon(50, .45, .8), s1[0] + .4, .06, -.1)
+    for j, m in enumerate((62, 57)):
+        T.put(pz(m, .25), l1[0] + .1 + .45 * j, .05, .2)
     lb = .9
-    stop = (ck[0] - .12) if ck[0] else br2[1] - 1.0
+    LT = Track(T.N)
     for j, (b, m, du) in enumerate(SDT):
         if b >= 8:
             continue
-        at = fl + .12 + b * lb
-        if at > stop:
-            continue
-        T.put(music_box(midi(m + 5), min(du * lb * 2 + .4, 1.6)), at, .05, .25)
-        T.put(celesta(m + 5 - 12, du * lb + .5, .5), at, .035, .1)
-    T.put(strings([41, 48, 53, 57, 60], stop - fl + .3, .8, .9, 4.8, 1400), fl, .035)
-    T.gate(stop, br3[0] - .25, 0.0, .1)
-    pre = br3[0] - .12
-    T.put(strings([41, 48, 53, 57, 60, 64], t0 + d - pre - .9, .9, 1.4, 4.8, 1500), pre, .05)
-    for k, (m, off) in enumerate(((84, 0.0), (81, 1.0), (79, 1.5), (77, 2.0))):
-        T.put(music_box(midi(m), 1.6), br3[0] + off, .06, .3)
-    held = br3[1] + .25
-    T.put(cello(41, t0 + d - held - .3, .9, a=.5, r=.6), held, .1, 0)
-    T.put(celesta(89, 3.0, .6), held + .05, .04, .3)
-    T.fade(t0 + d - .9, t0 + d, 1, 0)
-    D.fade(t0 + d - .9, t0 + d, 1, 0)
-    INFO["blackout"] = "no music 0.2 to 12.3 s but a sub drone; first bar at the transfer switch %.2f s; flat waltz %.2f to %.2f s; lullaby stops %.2f s" % (rl - t0, w0 - t0, w_end - t0, stop - t0)
-
-
-# ================================================================ dayroom: a lullaby by candlelight
-def cue_dayroom20(T, t0, d, beats, D):
-    """8:40 PM, the day room (20.9 s): A CANDLELIT LULLABY. The snow-day tune slowed and softened (F, 57 bpm), four bars from 0.2 s to the Moon (17.0 s): a celesta on the tune with a music box an octave
-    over it, soft strings that swell on each bar's chord (F, F, B-flat, C), a felt bass note on each bar and one tiny shake of sleigh bells at its start; nothing is flat, nothing is loud. 'Water.' (go2)
-    is a single high celesta drop. The plow's amber light (15.55 to 16.95) is a slow swell of strings that rises over the last bar and is gone when the Moon speaks. THE MOON (17.0 to 19.1) is left almost
-    alone: one high harmonic (F6) over the weather, no pad."""
-    go2, pl, mo1, en = (beats[k] for k in ("go2", "plowlight", "mo1", "end"))
-    bl = 1.05
-    a = t0 + .2
-    L = Track(T.N)
-    for j, (b, m, du) in enumerate(SDT):
-        at = a + b * bl
-        if at > mo1[0] - .1:
-            continue
-        L.put(celesta(m + 5 - 12, du * bl * 1.3 + .4, .55), at, .06, .15)
-        L.put(music_box(midi(m + 5), min(du * bl * 1.5 + .3, 1.5)) * .5, at + .004, .03, .3)
-    for bar, (ch, rt) in enumerate((("F", 29), ("F", 29), ("B", 34), ("C", 36))):
-        at = a + bar * 4 * bl
-        if at > mo1[0] - .6:
+        at = br1[0] + .1 + b * lb
+        if at > br1[1] + .3:
             break
-        vs = {"F": (41, 48, 53, 57, 60), "B": (46, 53, 58, 62, 65), "C": (48, 55, 60, 64, 67)}[ch]
-        L.put(strings(list(vs), 4 * bl + .5, .9, 1.2, 4.8, 1400), at, .045, 0)
-        L.put(felt(rt + 12, 4 * bl * .9, .5), at, .07, -.1)
-        L.put(sleigh(.5, 10, 3400, 8000), at, .02, .3)
-    L.put(celesta(101, 1.6, .6), W("go2", "water") + .12, .045, .3)
-    L.put(strings([41, 48, 53, 57, 60, 64, 67, 72], pl[1] - pl[0] + .4, 1.0, .6, 5.0, 1700), pl[0] - .1, .05, 0)
-    L.gate(mo1[0] - .12, mo1[0] + 8.0, 0.0, .25)
-    T.buf += L.buf
-    T.put(glass(89, 2.4, .8, 1.2), mo1[0] + .1, .03, .2)
-    T.fade(t0 + d - .8, t0 + d, 1, 0)
-    D.fade(t0 + d - .8, t0 + d, 1, 0)
-    INFO["dayroom"] = "lullaby in F at 57 bpm from 0.2 s; amber swell 15.45 to 17.0; the Moon alone from 17.0 s"
+        LT.put(music_box(midi(m + 5), min(du * lb * 2 + .4, 1.6)), at, .07, .3)
+    LT.put(strings([41, 48, 53, 57], br1[1] - br1[0] + .4, .8, .6, 4.8, 1200), br1[0], .025, .2)
+    LT.buf = np.stack([lp(LT.buf[0], 1400, 2), lp(LT.buf[1], 1400, 2)])
+    T.buf += LT.buf
+    T.put(strings([50, 57, 62, 66, 69, 74], en[0] + .2 - o2[0], .3, .4, 5.0, 2800), o2[0] + .05, .07, 0)
+    T.put(celesta(93, 1.0, .6), W("o2", "ready") + .05, .05, .3)
+    T.put(celesta(98, .9, .6), W("o2", "ready") + .2, .035, -.2)
+    T.gate(en[0] + .1, t0 + d + 1, 0.0, .1)
+    T.fade(t0 + d - .4, t0 + d, 1, 0)
+    D.fade(t0 + d - .4, t0 + d, 1, 0)
+    INFO["prep"] = "count-in from 0.3 s on the montage's grid; montage downbeat %.3f s scene-local, 120 bpm, 24 beats, kick and bass on every cut, the button at %.3f s; Brenda's lullaby (music box, through the door) from %.2f" % (
+        m0 - t0, btn - t0, br1[0] - t0)
 
 
-# ================================================================ night: the report, the lapse, the dawn
-def lapse_ostinato(T, D, a, b):
-    """The time-lapse's engine: a rising ostinato of vibraphone and glockenspiel notes whose RATE FOLLOWS THE PICTURE'S SPEED (from 1.6 notes a second at real time to about 12.6 at the top speed, the
-    phase of the pattern integrated at 200 Hz so a note falls whenever the pattern turns over), climbing the D minor pentatonic across three octaves as the lapse goes on (D F G A C), louder as it
-    speeds up, and a last G on the glockenspiel at the end (the first note of the day). Returns the number of notes."""
-    pent = (0, 3, 5, 7, 10)
-    dt = 1 / 200.0
-    t = a
-    ph = 0.0
-    n = 0
-    while t < b:
-        u = float(lapse_u(t))
-        ph += (1.6 + 11.0 * u) * dt
-        if ph >= 1.0:
-            ph -= 1.0
-            prog = (t - a) / (b - a)
-            idx = (n % 5) + 5 * int(min(2, prog * 2.4 + (n // 5 % 2) * .3))
-            m = 62 + pent[idx % 5] + 12 * (idx // 5) + (0 if prog < .8 else 0)
-            g = (.03 + .045 * u) * .55
-            if m < 86:
-                T.put(vib(m, .5, .55 + .3 * u), t, g, -.25 + .5 * ((n % 7) / 6.0))
-            else:
-                T.put(bell(midi(m), .5) * .5, t, g * .8, .2)
-            if n % 3 == 0:
-                T.put(bell(midi(m + 12), .6) * .4, t + .01, g * .5, .3)
-            n += 1
-        t += dt
-    T.put(bell(midi(91), 1.6) * .6, b, .06, .2)
-    return n
+# ================================================================ medpass: THE SPLIT (a minuet on the left, ragtime on the right, one key, one tempo)
+SPLIT_CH = ("F", "C7", "F", "Bb", "F", "D7", "C7", "C7")            # the harmony of each 3 s segment (two minuet bars = three ragtime bars)
+RAG_CH = (("F", "F", "F"), ("C7", "C7", "C7"), ("F", "F", "F"), ("Bb", "Bb", "F"), ("F", "F", "F"), ("D7", "D7", "Gm7"), ("C7", "C7", "C7"), ("C7", "C7", "C7"))
+RAG_ROOT = {"F": 29, "C7": 36, "Bb": 34, "D7": 38, "Gm7": 31}
+MIN_MEL = ((72, 77, 81), (79, 77, 76), (76, 79, 82), (79, None, 76), (77, 81, 84), (82, 81, 79), (74, 77, 82), (81, 79, 77),
+           (72, 77, 81), (79, 81, 82), (81, 78, 74), (82, 81, 79), (79, 76, 72), (70, 72, 76), (79, None, None), (76, 74, 72))
+MIN_LOW = {"F": (41, (57, 60)), "C7": (36, (55, 58)), "Bb": (34, (53, 58)), "D7": (38, (54, 60)), "Gm7": (43, (58, 62))}
 
 
-def cue_night20(T, t0, d, beats, D):
-    """10:59 PM, the long night (34.4 s). THE REPORT: a felt piano that says as little as it can (a low D at 0.2 s; 'I am the oncoming nurse.' one A; then one chord a line for the twin shot, each a few
-    notes rolled slowly: D minor ninth on 'Report.', B-flat major seventh on 'Any concerns?', G minor seventh on 'I am tired.', A seventh on 'Noted.') over a cello's D; the wait (3.3 to 4.8 s) is
-    nothing but the clock and the wind. THE LAPSE (10.65 to 18.65): lapse_ostinato (a vibraphone and glockenspiel pattern whose rate follows the picture's world speed), a string that rises from D to D an
-    octave up (and a fifth above it) over the eight seconds and a held high shimmer (D7 on glass); at 18.65 the last glockenspiel note is G, the first of the day. THE MOON (18.70): the title's key, G
-    major: a warm pad of strings and a soft low pad under him, a bell on 'Seven.', three falling bells on his first line (G D B), a rising G major arpeggio on 'Okay.'. THE DAWN (25.69): the chord opens
-    (G D G B D F-sharp A D on strings, a horn on G, a celesta cascade up the G major scale, a shimmer of sleigh bells, a glass harmonic). The callbacks (27.74 to 32.0) are almost unscored: the held
-    G and, under 'blocked', one bass clarinet note that sags. The sting (32.5 s) is the sfx's."""
-    op, s1, wait, s2, s3, s4, s5, s6, lap, mo1, s7, mo2, s8, mo3, s9, dawn, tu3, o5, s10, en = (beats[k] for k in ("open", "s1", "wait", "s2", "s3", "s4", "s5", "s6", "lapse", "mo1", "s7", "mo2", "s8", "mo3", "s9", "dawn", "tu3", "o5", "s10", "end"))
-    # the report
-    T.put(felt(38, 3.2, .5), op[0], .08, -.1)
-    T.put(celesta(81, 1.6, .5), op[0] + .8, .025, .2)
-    T.put(felt(57, 1.5, .5), W("s2", "oncoming"), .05, .05)
-    chords = ((s3, (38, 45, 53, 60, 64)), (s4, (34, 41, 45, 50)), (s5, (31, 38, 41, 46)), (s6, (33, 40, 43, 49)))
-    for (bt, vs) in chords:
-        for q, m in enumerate(vs):
-            T.put(felt(m, 2.0, .5), bt[0] + .02 + .09 * q, .06 - .004 * q, -.2 + .1 * q)
-    T.put(cello(38, s6[1] - s3[0] + .5, .9, a=.8, r=.5), s3[0] - .1, .05, 0)
-    # the lapse
-    a, b = lap
-    n = lapse_ostinato(T, D, a, b)
-    T.put(rising(50, 62, b - a + .2), a, .03, -.2)
-    T.put(rising(57, 69, b - a + .2) * .8, a, .024, .25)
-    T.put(glass(98, b - a + 1.0, 2.5, 1.2), a, .016, .1)
-    T.put(sub_bass(midi(26), b - a) * .5, a, .025, 0)
-    # the Moon
-    mo = mo1[0] - .25
-    pad_len = s9[1] + .8 - mo
-    T.put(strings([43, 50, 55, 59, 62], pad_len, 1.0, 1.4, 4.8, 1500), mo, .08, 0)
-    T.put(pad([43, 50, 55, 59, 62], pad_len, 1.2, 1.6, 1100), mo, .05, 0)
-    T.put(sub_bass(midi(31), min(4.0, pad_len)) * .6, mo + .1, .04, 0)
-    for k, m in enumerate((91, 86, 83)):
-        T.put(bell(midi(m), 1.4) * .6, mo1[0] + .05 + k * .32, .055, .3 - .15 * k)
-    T.put(bell(midi(91), 1.6) * .6, W("mo2", "seven") + .03, .05, .3)
-    for k, m in enumerate((55, 59, 62, 67, 71)):
-        T.put(felt(m, 1.6, .5), s9[0] + .02 + k * .1, .05, -.2 + .1 * k)
-    # the dawn
-    dw = dawn[0]
-    T.put(strings([43, 50, 55, 59, 62, 66, 69, 74], dawn[1] - dw + 2.4, 1.1, 1.5, 4.8, 2600), dw, .1, 0)
-    T.put(horn(55, 2.6, .6, a=.2, r=.9), dw + .1, .07, .1)
-    for k, m in enumerate((79, 83, 86, 91, 95, 98)):
-        T.put(celesta(m, 1.8, .6), dw + .1 + .13 * k, .05, -.3 + .12 * k)
-    T.put(sleigh(1.6, 28, 3400, 8800), dw + .2, .05, .1)
-    T.put(glass(91, 3.0, .6, 1.4), dw + .2, .035, .2)
-    # the callbacks
-    T.put(bassclar(43, 1.4, .8, a=.1, r=.4, sag=1.5), W("o5", "blocked") - .1, .08, -.1)
-    T.fade(t0 + d - 1.4, t0 + d, 1, 0)
-    D.fade(t0 + d - 1.4, t0 + d, 1, 0)
-    INFO["night"] = "lapse ostinato: %d notes (rate 1.6 + 11 u a second, u from %s); Moon pad G major from 18.45; dawn chord 25.69" % (n, "lapse.json" if (LAPSE is not None and not getattr(LAPSE, "fixed", True)) else "the fixed curve")
+def minuet21(T, a, bl, lvl=1.0, pan=-.65):
+    """The State's minuet (3/4, a quarter is `bl`): violin I on the tune (MIN_MEL, a light vibrato: polite), the cello on every downbeat, the viola and violin II on beats two and three (the
+    'pah-pah'), a soft pizzicato under the cello. Sixteen bars from `a`; the harmony is SPLIT_CH (a chord per two bars). Placed on the left."""
+    for bar in range(16):
+        ch = SPLIT_CH[bar // 2] if bar < 14 else "C7"
+        if bar == 11:
+            ch = "Gm7"
+        b0 = a + bar * 3 * bl
+        mel = MIN_MEL[bar]
+        for k in range(3):
+            m = mel[k]
+            if m is None:
+                continue
+            du = 1
+            while k + du < 3 and mel[k + du] is None:
+                du += 1
+            g = _side(b0 + k * bl, "L")
+            T.put(violin(m, du * bl * .92, vib=.003, a=.03, r=.08), b0 + k * bl, .045 * lvl * g, pan)
+        root, inner = MIN_LOW[ch]
+        g0 = _side(b0, "L")
+        T.put(cello(root, bl * 1.5, .7, a=.04, r=.15), b0, .05 * lvl * g0, pan + .15)
+        T.put(pz(root + 12, .25), b0, .03 * lvl * g0, pan + .15)
+        for k in (1, 2):
+            for q, m in enumerate(inner):
+                T.put(spic(m, bl * .45), b0 + k * bl, .028 * lvl * _side(b0 + k * bl, "L"), pan - .15 + .1 * q)
+
+
+def rag_bar(T, b0, bl, ch, lvl=1.0, pan=.65, fill=False):
+    """One bar of the ragtime (2/4, a quarter is `bl`): the stride left hand (a low root on beat one, the chord on its 'and', the fifth on beat two, the chord again) and a frantic right hand in
+    sixteenths (the chord's tones climbing and turning, accented 3 + 3 + 2, a chromatic lower neighbour into the top), all on a honky-tonk upright."""
+    root = RAG_ROOT[ch]
+    tones = sorted(set(m % 12 for m in CH21[ch]))
+    g = lvl * _side(b0, "R")
+    T.put(honky(root, .3, .9), b0, .07 * g, pan + .1)
+    T.put(honky(root + 7, .3, .8), b0 + bl, .06 * g, pan + .1)
+    for k in (.5, 1.5):
+        for q, m in enumerate(CH21[ch][:3]):
+            T.put(honky(m - 12, .18, .6), b0 + k * bl + .004 * q, .035 * g, pan - .05)
+    ladder = [m for m in range(77, 98) if m % 12 in tones]
+    pat = (0, 2, 1, 3, 2, 4, 3, 5) if not fill else (5, 4, 3, 2, 1, 0, 1, 2)
+    st = bl / 4
+    for j, p in enumerate(pat):
+        m = ladder[min(len(ladder) - 1, p)]
+        acc = j in (0, 3, 6)
+        if j == 6 and not fill:
+            T.put(honky(m - 1, st * .8, .6), b0 + j * st - st / 2, .02 * g, pan)
+        T.put(honky(m, st * 1.2, .9 if acc else .6), b0 + j * st, (.05 if acc else .032) * g, pan - .1)
+
+
+def cue_medpass21(T, t0, d, beats, D):
+    """5:30 PM, the observation (27.3 s). From 1.0 s, when the divider has landed, TWO PIECES AT ONCE in F major with a quarter of 0.5 s (120 bpm): on the LEFT the State's string-quartet minuet
+    (sixteen bars of 3/4: minuet21), on the RIGHT a normal night's frantic ragtime on a honky-tonk upright (twenty-four bars of 2/4: rag_bar); their chords change together every 3 s (two minuet bars
+    are three ragtime bars). The divider's squeeze ducks the side it squeezes (Split.gain: under 'Six.' the ragtime falls about 5 dB). The cart rolling away (12.23) is a piano glissando down on
+    the right; both pieces stop on the dominant (C7) at 25.0 s and the sting is the tonic."""
+    a = t0 + 1.0
+    bl = .5
+    minuet21(T, a, bl)
+    for seg in range(8):
+        for k in range(3):
+            b0 = a + seg * 3.0 + k * 1.0
+            rag_bar(T, b0, bl, RAG_CH[seg][k], lvl=1.25, fill=(seg == 7 and k == 2))
+    cr = cue_abs("cartroll", "medpass") or t0 + 12.23
+    for j, m in enumerate(range(96, 59, -1)):
+        if m % 12 in (0, 2, 4, 5, 7, 9, 11):
+            T.put(honky(m, .12, .7), cr + .02 + j * .011, .025 * _side(cr, "R"), .8)
+    end = a + 24.0
+    T.gate(end + .25, t0 + d + 1.0, 0.0, .2)
+    D.gate(end + .25, t0 + d + 1.0, 0.0, .2)
+    T.fade(t0 + d - .3, t0 + d, 1, 0)
+    sq = SPLIT.source if SPLIT is not None else "none"
+    INFO["medpass"] = "minuet (left, 3/4) and ragtime (right, 2/4) in F at 120 bpm from 1.0 to 25.0 s, chords together every 3 s; ducked by the divider (%s)" % sq
+
+
+# ================================================================ closet: the suspense, THE AVALANCHE, the scanner, the questions, 'Not Brenda.'
+def cue_closet21(T, t0, d, beats, D):
+    """7:10 PM, the policy closet (27.2 s). THE SUSPENSE (0.2 to 5.4): a low string drone (D and A), a high tremolo, a pizzicato D that ticks every 0.6 s; 'Of course.' two notes of Onion's bass
+    clarinet. A BEAT OF NOTHING from just before the doors open to the pour (MUTES). THE AVALANCHE: a timpani roll that climbs from the pour to the bonk, a cascade that falls from D7 to D3 (a
+    xylophone, a harp and pizzicato in sixteenths, faster as it goes) over a cymbal swell, and on THE LAST BINDER'S BONK (BONK, from the simulation) a woodblock, a timpani and a choked cymbal: the
+    music lands on it, then silence. 'Policy seven point four. Revised Tuesday.' (8.03): a harp glissando up and Onion's policy (the survey motif's first bar on the bass clarinet, in D MAJOR: she is
+    proud) and a glockenspiel on 'Tuesday'. 'Impressive.' one dry low bassoon D. THE SCANNER (12.28 to 14.48): the synth pulse (sixteenths on D F A C, 0.12 s, a filter that opens with the sweep),
+    a synth stab and a sub drop on the lock (13.68). THE QUESTIONS (14.5 to 23.6): a heartbeat (a low synth D a second) and a high harmonic; through the closet door on Brenda's lines her music box
+    (two notes each). The bed stops on the pen (23.6). 'Not Brenda.' (24.16): a sad trombone, the last 'waaah' after her line."""
+    op, ra1, o1, av, o2, ra2, scn, ra3, br1, ra4, br2, ra5, o3, en = (beats[k] for k in ("open", "ra1", "o1", "avalanche", "o2", "ra2", "scan", "ra3", "br1", "ra4", "br2", "ra5", "o3", "end"))
+    op_t = cue_abs("closetopen", "closet") or av[0] + .1
+    pour = cue_abs("binderavalanche", "closet") or op_t + .2
+    bk = BONK if (BONK is not None and pour + .6 < BONK < o2[0]) else t0 + 7.65
+    sd = op_t - .05 - (t0 + .2)
+    T.put(cello(38, sd, .8, a=.8, r=.3), t0 + .2, .05, 0)
+    T.put(cello(45, sd, .7, a=1.0, r=.3), t0 + .25, .035, .1)
+    T.put(trem_strings([86, 87], sd, 12.0, 1.0, .3, 4000), t0 + .3, .01, .2)
+    k = 0
+    while t0 + .4 + k * .6 < op_t - .1:
+        T.put(pz(62, .2), t0 + .4 + k * .6, .04, -.2)
+        k += 1
+    T.put(bassclar(57, .35, .8, a=.03, r=.08), o1[0] + .05, .07, -.2)
+    T.put(bassclar(62, .5, .8, a=.03, r=.12), o1[0] + .45, .07, -.2)
+    MUTES.append((op_t - .08, pour - .02, .02))
+    span = bk - pour
+    D.put(roll(55, span, max(8, int(span * 14))) * np.interp(tarr(span + .6), [0, span, span + .6], [.2, 1, 0]), pour, .05, 0)
+    D.put(riser(span, 3000, 9000, .5), pour, .02, 0)
+    notes = [m for m in range(98, 49, -1) if m % 12 in (2, 4, 5, 7, 9, 10, 0)]
+    for j, m in enumerate(notes):
+        u = j / max(1, len(notes) - 1)
+        at = pour + span * (1 - (1 - u) ** 1.35) * .96
+        if at > bk - .04:
+            break
+        inst = (lambda mm, dd: xylo(mm, .2, .8)) if m > 74 else (lambda mm, dd: pz(mm, .2))
+        T.put(inst(m, .2), at, .05, -.5 + 1.0 * ((j * 7) % 11) / 10)
+        if j % 3 == 0:
+            T.put(harpn(m - 12), at, .025, .2)
+    D.put(woodblock(), bk, .07, .05)
+    D.put(timp(73.4, .9), bk, .1, 0)
+    D.put(crash(.4) * np.exp(-tarr(.4) / .06), bk, .05, .1)
+    T.gate(bk + .05, o2[0] - .02, 0.0, .03)
+    gliss(T, o2[0], 62, 86, .45, harpn, .045, .2, root=2)
+    sm(T, o2[0] + .5, .42, lambda m, dd: bassclar(m - 12, dd * .9, .8, a=.03, r=.1), .08, major=True, pan=-.2, bars=(0,))
+    T.put(bell(midi(93), 1.0) * .5, W("o2", "tuesday") + .1, .05, .3)
+    T.put(bassoon(26, .6, .8), ra2[1] + .02, .07, 0)
+    a, lock = scn[0], (cue_abs("scanlock", "closet") or scn[0] + 1.4)
+    arp = (50, 53, 57, 60)
+    j = 0
+    while a + j * .12 < lock - .02:
+        u = j * .12 / max(.1, lock - a)
+        T.put(synpulse(arp[j % 4] + 12 * ((j // 4) % 2), .11, 600 + 2400 * u, .8), a + j * .12, .05 + .02 * u, -.4 + .8 * u)
+        j += 1
+    T.put(synstab([50, 53, 56, 62], .7, 2600), lock, .07, .2)
+    T.put(sub_bass(midi(26), .6) * np.exp(-tarr(.6) / .2), lock, .06, 0)
+    hb_end = (cue_abs("penscratch", "closet") or ra5[0] + .5)
+    k = 0
+    while scn[1] + .1 + k * 1.0 < hb_end - .1:
+        at = scn[1] + .1 + k * 1.0
+        T.put(synpulse(38, .3, 500, .9) * 1.0, at, .12, 0)
+        T.put(synpulse(38, .25, 420, .6), at + .22, .075, 0)
+        k += 1
+    T.put(glass(86, hb_end - scn[1], .8, .6), scn[1] + .1, .012, .3)
+    for ln, (m1_, m2_) in ((br1, (77, 76)), (br2, (79, 77))):
+        LT = Track(T.N)
+        LT.put(music_box(midi(m1_ + 5), 1.4), ln[0] + .1, .04, .4)
+        LT.put(music_box(midi(m2_ + 5), 1.4), ln[0] + .55, .035, .4)
+        LT.buf = np.stack([lp(LT.buf[0], 1300, 2), lp(LT.buf[1], 1300, 2)])
+        T.buf += LT.buf
+    T.gate(hb_end, o3[0] - .02, 0.0, .05)
+    sad_trombone(T, o3[0] + .02, [(55, .3), (54, .3), (53, .3), (52, .75)], .07, .1)
+    T.fade(t0 + d - .5, t0 + d, 1, 0)
+    D.fade(t0 + d - .5, t0 + d, 1, 0)
+    INFO["closet"] = "suspense 0.2 to %.2f; silence %.2f to %.2f; the avalanche lands on the bonk at %.3f s (%s); scanner pulse %.2f to %.2f, the lock %.2f; heartbeat to %.2f; sad trombone %.2f" % (
+        op_t - t0, op_t - .08 - t0, pour - t0, bk - t0, "build_audio21's bonk" if (BONK is not None and abs(bk - BONK) < 1e-6) else "the default 7.65 s", scn[0] - t0, lock - t0, lock - t0, hb_end - t0, o3[0] - t0)
+
+
+# ================================================================ exit: the deficiency, THE BREAK, the snap back, Eggplant, 'I took a break.'
+def cue_exit21(T, t0, d, beats, D):
+    """10:45 PM, the exit interview (32.9 s). TENSION STRINGS under the deficiency (a D minor cluster in tremolo that swells into 'We found one deficiency.'), a sforzando and a timpani on the gasp
+    (3.0), a cello that sinks under 'Your nurse has not taken a break.', a pizzicato question on 'Which nurse?', and under 'The one.' a single low D and a high harmonic held over the beat. 'Per
+    regulation, she takes one now.': the harmony turns to the major (a soft D major pad); 'Per regulation!' Onion's choir. The clock (13.07) and 'Okay.' have no music. THE BREAK (15.08 to
+    18.68): silence for the chair and the exhale, then ONE WARM HELD CHORD (D major with an added ninth on soft strings and a pad, pianissimo) that swells into the shift bell (18.38) and fades
+    under 'Deficiency corrected.'; the stamp (19.63) is a pizzicato and a timpani. THE SNAP BACK (20.65 to 23.05): the ragtime of a normal night bursts back for two bars with a hit on every
+    cue (a slide whistle on the poof, a bassoon on the closet, a xylophone run on the coffee maker, a harp falling with the labels), cut on the door chime; a brass 'ta-da' for Eggplant; sleigh bells
+    and the snow-day tune's first notes for 'Spring came early.'; under the report a warm D major bed and on 'I took a break.' the series' theme on a felt piano and a celesta, resolved."""
+    op, ka1, me1, ra1, s1, ra2, ka2, o1, clk, s2, brk, ka3, rv, eg1, s3, eg2, s4, eg3, s5, en = (beats[k] for k in (
+        "open", "ka1", "me1", "ra1", "s1", "ra2", "ka2", "o1", "clock", "s2", "break", "ka3", "revert", "eg1", "s3", "eg2", "s4", "eg3", "s5", "end"))
+    gp = cue_abs("gasp", "exit") or ka1[0] + 1.5
+    T.put(trem_strings([50, 53, 57, 64], gp - (t0 + .2) + .1, 10.0, 1.0, .15, 2600), t0 + .2, .04, 0)
+    T.put(strings([38, 50, 53, 57, 61], .5, .01, .3, 5.0, 3000), gp, .09, 0)
+    D.put(timp(73.4, 1.0), gp, .09, 0)
+    T.put(cello(50, ra1[1] - ra1[0], .8, a=.3, r=.3), ra1[0], .05, 0)
+    T.put(cello(49, s1[0] - ra1[1] + .3, .7, a=.2, r=.2), ra1[1] - .05, .04, 0)
+    for j, m in enumerate((57, 62)):
+        T.put(pz(m, .25), s1[0] + .1 + .25 * j, .05, .2)
+    hold = ka2[0] - .1 - ra2[0]
+    T.put(cello(26, hold, .8, a=.4, r=.5), ra2[0], .05, 0)
+    T.put(glass(86, hold, .5, .6), ra2[0] + .1, .015, .3)
+    T.put(pad([50, 54, 57, 62, 66], ka2[1] - ka2[0] + 1.0, .9, .8, 1400), ka2[0] + .6, .05, 0)
+    T.put(choir([62, 66, 69, 74], o1[1] - o1[0] + .5, "a", a=.2, r=.5), o1[0], .06, 0)
+    T.put(celesta(90, 1.0, .6), o1[0] + .3, .04, .3)
+    ex = cue_abs("exhale", "exit") or brk[0] + .8
+    bell_t = cue_abs("shiftbell", "exit") or brk[1] - .3
+    ca = ex + .5
+    cd = (ka3[0] + .6) - ca
+    held = strings([38, 45, 50, 54, 57, 64], cd, cd * .75, .7, 4.5, 1500) + pad([50, 57, 62, 66, 69, 76], cd, cd * .7, .7, 1100) * .7
+    T.put(held, ca, .025, 0)
+    st = cue_abs("stamp", "exit") or ka3[0] + .9
+    T.put(pz(50, .3), st, .08, 0)
+    D.put(timp(73.4, .8), st, .07, 0)
+    dc = cue_abs("doorclose", "exit") or rv[0] + .1
+    ch_t = cue_abs("doorchime", "exit") or eg1[0] - .3
+    for k, ch in enumerate(("F", "C7", "F", "C7")):
+        b0 = dc + .08 + k * 1.0
+        if b0 > ch_t - .3:
+            break
+        rag_bar(T, b0, .5, ch, lvl=1.55, pan=.2)
+    T.gate(ch_t - .02, ch_t + 3.0, 0.0, .03)
+    pf = cue_abs("poof", "exit")
+    if pf:
+        T.put(slide_whistle(84, 72, .35), pf, .03, -.2)
+    co = cue_abs("closetopen", "exit")
+    if co:
+        T.put(bassoon(31, .3, .9), co, .08, .3)
+    cm = cue_abs("coffeemaker", "exit")
+    if cm:
+        for j, m in enumerate((74, 77, 81, 84, 88)):
+            T.put(xylo(m, .15, .8), cm + .03 + j * .05, .04, -.2)
+    lp_ = cue_abs("labelpeel", "exit")
+    if lp_:
+        gliss(T, lp_, 70, 94, .4, harpn, .03, .2, root=5, down=True)
+    T.put(brass([62, 66, 69, 74], .14, .005, .06, 2600), ch_t + .02, .06, 0)
+    T.put(brass([66, 69, 74, 78], .3, .005, .12, 2800), ch_t + .17, .07, 0)
+    D.put(timp(73.4, .6), ch_t + .17, .06, 0)
+    T.put(sleigh(.6, 22, 3400, 8800), W("eg2", "spring"), .05, .3)
+    for j, m in enumerate((81, 78, 81, 83)):
+        T.put(celesta(m + 12, .5, .6), W("eg2", "spring") + .1 + j * .2, .035, .25)
+    wa = s4[0] - .1
+    T.put(strings([38, 50, 54, 57, 62], s5[0] - wa + .2, 1.2, .8, 4.5, 1500), wa, .04, 0)
+    for i, m in enumerate(MT_ARP):
+        T.put(felt(m + 2 - 12, 1.2, .5), s5[0] + .05 + i * .2, .05 * (.6 + .4 * i / 7), -.2 + .05 * i)
+    T.put(celesta(86, 1.4, .6), W("s5", "break") + .05, .045, .3)
+    fin = s5[1] + .05
+    T.put(strings([38, 50, 54, 57, 62, 66, 69], en[0] + .3 - fin, .2, .6, 4.5, 1700), fin, .07, 0)
+    T.put(felt(50, 1.5, .5), fin, .06, -.1)
+    T.put(horn(57, 1.0, .5, a=.15, r=.5), fin + .05, .035, .1)
+    T.gate(en[0] + .2, t0 + d + 1, 0.0, .15)
+    T.fade(t0 + d - .6, t0 + d, 1, 0)
+    D.fade(t0 + d - .6, t0 + d, 1, 0)
+    INFO["exit"] = "tension 0.2 to %.2f; the break silent until %.2f, then one held D major add9 to %.2f (the bell %.2f); revert ragtime %.2f to %.2f; warm resolution from %.2f" % (
+        gp - t0, ca - t0, ca + cd - t0, bell_t - t0, dc + .08 - t0, ch_t - t0, wa - t0)
+
+
+# ================================================================ end: the statement of deficiencies
+def cue_end21(T, t0, d, beats, D):
+    """The end card (7.5 s). 0.1 to 4.0 s: the survey motif in D MAJOR, the form typing itself (pizzicato violins, a glockenspiel an octave up, a pizzicato bass on every beat, the typewriter's
+    clack on the eighths) at 123 bpm; THE STAMP (4.0) is the downbeat: CORRECTED: a D major ninth (strings and a horn, a brass stab, a timpani and a bass drum), held and unresolved to the cut, a
+    celesta F-sharp on top; the text ding (5.1) sits inside it."""
+    a = t0 + .1
+    sm(T, a, BL_E, lambda m, dd: pz(m + 12, dd), .09, major=True, pan=.15)
+    sm(T, a, BL_E, lambda m, dd: bell(midi(m + 24), .5) * .5, .025, major=True, pan=.3)
+    for k in range(8):
+        T.put(pz((38, 45)[k % 2], .35), a + k * BL_E, .11, -.1)
+    for k in range(16):
+        D.put(typeclack(.9 if k % 4 == 2 else .5), a + k * BL_E / 2, .022 if k % 4 == 2 else .013, .2 if k % 2 else -.2)
+    land = t0 + 4.0
+    T.put(strings([38, 50, 57, 61, 64, 66, 69], 3.4, .05, 1.6, 5.0, 2400), land, .14, 0)
+    T.put(horn(54, 2.8, .6, a=.08, r=1.0), land, .07, .1)
+    T.put(brass([50, 57, 62, 66], .45, .01, .18, 2400), land, .06, 0)
+    D.put(timp(73.4, 1.4), land, .09, 0)
+    D.put(bdrum(.7, .8), land, .09, 0)
+    T.put(ubass(38, 2.4, .6), land, .14, -.1)
+    T.put(felt(61, 3.0, .5), land + .02, .06, -.1)
+    T.put(celesta(90, 2.4, .6), land + .7, .04, .3)
+    T.fade(t0 + 6.4, t0 + 7.35, 1, 0)
+    D.fade(t0 + 6.4, t0 + 7.35, 1, 0)
+    INFO["end"] = "the survey motif in D major at 123 bpm 0.1 to 4.0 s; the stamp the downbeat (4.0 s), D major ninth held"
 
 
 # ================================================================ the cue table, levels and the score
-CUES = {"title": cue_title20, "forecast": cue_forecast20, "lot": cue_lot20, "blackout": cue_blackout20, "dayroom": cue_dayroom20, "night": cue_night20, "end": cue_end20}
-LEVEL20 = {"title": 1.6, "forecast": 2.0, "lot": 1.7, "blackout": 1.9, "dayroom": 2.2, "night": 2.1, "end": 1.7}
-TAIL20 = {"title": .5, "forecast": .4, "lot": .4, "blackout": .5, "dayroom": .5, "night": .6, "end": .3}
-DIP20 = {"title": 1.0, "forecast": .62, "lot": .6, "blackout": .6, "dayroom": .7, "night": .7, "end": 1.0}
-REVERB20 = {"title": (.4, 1.0), "forecast": (.25, .8), "lot": (.06, .5), "blackout": (.3, 1.0), "dayroom": (.45, 1.6), "night": (.35, 1.2), "end": (.4, 1.4)}
-DIPS20 = {"stamp": (4, .3, .3), "textding": (3, .2, .2), "powerdown": (8, 1.2, .6), "genstart": (6, 1.5, .5), "relay": (3, .2, .2), "doorgust": (5, .8, .4), "snowdump": (4, .6, .4),
-          "plowdump": (4, .4, .3), "plowscrape": (3, .5, .3), "popper": (3, .2, .15), "boardflip": (3, .3, .2), "thud": (3, .3, .2), "slip": (3, .2, .2), "lowbattery": (4, .6, .3),
-          "phonering": (3, .4, .2), "lapsewhoosh": (4, .5, .4), "binderpop": (2, .2, .2), "stopwatchticks": (3, 1.0, .5), "globeshake": (2, .4, .3), "tvjingle": (3, .8, .3)}
+CUES = {"title": cue_title21, "arrive": cue_arrive21, "prep": cue_prep21, "medpass": cue_medpass21, "closet": cue_closet21, "exit": cue_exit21, "end": cue_end21}
+LEVEL21 = {"title": 1.8, "arrive": 2.2, "prep": 2.2, "medpass": 2.8, "closet": 2.2, "exit": 2.2, "end": 1.8}
+TAIL21 = {"title": .5, "arrive": .4, "prep": .4, "medpass": .4, "closet": .4, "exit": .5, "end": .3}
+DIP21 = {"title": 1.0, "arrive": .62, "prep": .62, "medpass": .75, "closet": .62, "exit": .62, "end": 1.0}
+REVERB21 = {"title": (.3, 1.0), "arrive": (.3, 1.1), "prep": (.22, .8), "medpass": (.25, .9), "closet": (.3, 1.0), "exit": (.35, 1.2), "end": (.35, 1.3)}
+DIPS21 = {"stamp": (4, .3, .3), "textding": (3, .2, .2), "dramatic": (4, .6, .4), "closetopen": (3, .3, .2), "binderavalanche": (3, 1.2, .6), "scanlock": (3, .3, .2), "gasp": (3, .3, .2),
+          "doorclose": (3, .2, .2), "labelgun": (2.5, .15, .15), "padlock": (2.5, .15, .15), "spray": (2.5, .15, .15), "thermobeep": (2.5, .15, .15), "binderslam": (2.5, .15, .15),
+          "mop": (2.5, .15, .15), "posterflip": (2.5, .15, .15), "closetslam": (2.5, .15, .15), "coffeehide": (2.5, .15, .15), "sanitizer": (2.5, .15, .15), "crashcart": (2.5, .15, .15),
+          "sparkle": (2.5, .2, .2), "binderpop": (2, .2, .2), "pachime": (3, .6, .3), "splitwipe": (2, .3, .2), "cartroll": (2, .6, .4), "shiftbell": (3, .8, .5)}
 
 
 def score(script, scenes, lines, N):
@@ -686,19 +669,19 @@ def score(script, scenes, lines, N):
         for X in (U, D):
             X.gate(t0 + sc["dur"], t0 + sc["dur"] + 3.2, 0.0, .15)             # a cue's dry tail never bleeds into the next scene
         a, b = max(0, int((t0 - .05) * SR)), min(N, int((t0 + sc["dur"] + 3.2) * SR))
-        wet, rt = REVERB20.get(sc["id"], (.3, 1.0))
+        wet, rt = REVERB21.get(sc["id"], (.3, 1.0))
         seg = hall(U.buf[:, a:b], wet=wet, rt=rt) + D.buf[:, a:b]
         e = int((t0 + sc["dur"]) * SR) - a                                      # the scene's last frame: the room's tail may ring on for a moment, then it is gone
-        k = int(TAIL20.get(sc["id"], .3) * SR)
+        k = int(TAIL21.get(sc["id"], .3) * SR)
         if 0 < e < seg.shape[1]:
             seg[:, e:e + k] *= np.linspace(1, 0, min(k, seg.shape[1] - e))[None, :]
             seg[:, e + k:] = 0.0
-        key = DIP20.get(sc["id"], .6)
+        key = DIP21.get(sc["id"], .6)
         dips = DIPCACHE.setdefault(key, None)
         if dips is None:
             dips = DIPCACHE[key] = _speech_dip(lines, N, key)
-        out[:, a:b] += seg * LEVEL20.get(sc["id"], 1.0) * dips[a:b][None, :]
-    out = out * MUSIC_GAIN * cue_dips(script, scenes, N, DIPS20)[None, :]
+        out[:, a:b] += seg * LEVEL21.get(sc["id"], 1.0) * dips[a:b][None, :]
+    out = out * MUSIC_GAIN * cue_dips(script, scenes, N, DIPS21)[None, :]
     for m in MUTES:
         out = _mute(out, *m)
     return out

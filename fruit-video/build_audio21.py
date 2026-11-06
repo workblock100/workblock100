@@ -1,23 +1,25 @@
-"""Episode 20 audio: THE SNOW DAY. A fresh copy of the Episode 15 to 19 mixer wrapper (build_audio19.py, the final one) mapped to this episode: its own paths, scene ids, voices, rooms, effects and score.
+"""Episode 21 audio: THE INSPECTION. A fresh copy of the Episode 15 to 20 mixer wrapper (build_audio20.py, the final one) mapped to this episode: its own paths, scene ids, voices, rooms, effects and score.
 
 Everything build_audio15 explains applies unchanged: the per-line voice cache under <out>/voice/, the dip of every cue under dialogue (DUCK_DB), the footsteps from the animation
-(build/ep21/events.json), the loudness trim, peak limiter, the timeline comparison against the frozen build/ep21/timeline.json and the dialogue margin of every line.
+(build/ep21/events.json), the collision foley (build/ep21/phys_events.json), the loudness trim, peak limiter, the timeline comparison against the frozen build/ep21/timeline.json and the dialogue
+margin of every line.
 
-WHAT IS NEW IN EPISODE 20 (scene ids: title, forecast, lot, blackout, dayroom, night, end)
-  THE WEATHER   `wind` is a designed blizzard bed (a low rumble, a tonal howl that rises with the gusts, a hush of falling snow). The lot is outdoors: no room reverb at all, every voice dry and thin, gusts
-                at the plow's cues and a slow independent swell, boots that creak and crunch in snow (every footstep of the lot in events.json becomes a snow crunch). The indoor scenes leak the same wind through
-                the wall (low-passed, quiet). The glass-door gust (`doorgust`) is a brief wideband rush.
-  THE TEN       `blackout` is a building losing power (`powerdown`: the ballast buzz of six rooms dying left to right, fans and compressors spinning down, the HVAC sigh), a thick hush with breaths, the
-  SECONDS       stopwatch's ticks (a designed tick per second from the moment Onion starts it), a dying battery, then `genstart` (the starter, two coughs, the catch, the transfer switch) and the emergency
-                lights' buzz over the generator's drone as the new room tone.
-  THE TIME-LAPSE `night` 10.65 to 18.65 s: build/ep21/lapse.json (10 Hz, absolute seconds: {t, worldMin, speed, sun, moonX}; a fixed curve when it does not exist, and the build says so) drives the room
-                tone and wind (varispeed with the picture's world speed), the clock's ratchet (`clockspin`), the rounds' whooshes, the rising wind swell, and the bed decelerates into real time where the Moon speaks.
-  THE DEVICES   every voice that comes out of a device is a device: the speakerphone (arti, melon), the TV (wx), the truck cab (turnip), the phone (egg, with a packet dropout), Onion buried in the snow, the Moon
-                behind the weather and the Moon close, Binder's dying battery, two Strawberries (the oncoming one a semitone lower and 4 percent slower).
-  THE GUARD     the AAC guard encodes with /usr/bin/ffmpeg (the encoder the publish step uses) and measures the DECODED m4a with `-af ebur128=peak=true`; the wav is dipped until it passes -1.5 dBTP.
+WHAT IS NEW IN EPISODE 21 (scene ids: title, arrive, prep, medpass, closet, exit, end)
+  THE VOICES    Ms. Kale (crisp, precise, a little dry: a close microphone, 60 percent of her kept out of the room) and Mr. Radish (low, flat and slow: a chest, a level held flat by a compressor);
+                the whisper chain (arrive m1, l1, t1: the voice re-synthesised from noise through its own spectral envelope, breathy and unvoiced, a hiss on the S's, close and dry, panned left,
+                centre, right with the camera); the overhead PA (arrive me1: a ceiling speaker, band-limited, a little distortion, a hall); Brenda inside a closet (boxy, muffled, close); Mr. Radish
+                under a pile of binders (muffled, damped); the whole 3-11 at once (`staff`: five voices, tight and ragged) and the forty Strawberries (`chor`: six voices doubled into twelve, wide).
+  THE MONTAGE   prep `montage` 7.21 to 19.21: the score is a 120 bpm grid with its downbeat on the montage start; every effect of the montage lands on a cut (every 1.0 s) and carries its own small
+                second hit on the off-beat 0.5 s later (designed events), the grid's ticks are in the score, the button on beat 25.
+  THE SPLIT     medpass: the stereo splits with the picture: the left half (the State's) is a soft, quiet room on the left, the right half (a normal night) a busy hallway on the right (call bells, a
+                rattling cart, a phone, running feet, a TV); every line is spoken on the left. The room's reverb is split the same way (the left channel through a soft room, the right through the
+                hallway). The divider's position (build/ep21/split.json when it exists, else the brief's schedule) ducks the side it squeezes.
+  THE AVALANCHE closet: `closetopen`, a beat of stillness, the designed `binderavalanche` roar and the collision foley of every binder from phys_events.json (cardboard and plastic, rings that rattle).
+  THE SCANNER   `scanbeep`, `scanlock`, the sweep's hum and the data ticks of the tags typing in (designed events).
+  THE BREAK     exit `break` 15.08 to 18.68: the room tone falls to almost nothing, the clock's second hand, her exhale, one warm held chord in the score, the shift bell at 11:00 as a soft chime.
 
-Usage: python3 build_audio20.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--out build/ep21_sound] [--events build/ep21/events.json] [--lapse build/ep21/lapse.json]
-                                [--doors build/ep21/door_events.json] [--phys build/ep21/phys_events.json] [--keep-stems] [--publish]
+Usage: python3 build_audio21.py --model kokoro-v1.0.onnx --voices voices-v1.0.bin [--out build/ep21_sound] [--events build/ep21/events.json] [--phys build/ep21/phys_events.json]
+                                [--split build/ep21/split.json] [--keep-stems] [--publish]
   --publish     after the timeline matches build/ep21/timeline.json: copy audio.wav into build/ep21/ and encode audio.m4a (and check the decoded m4a's true peak)
   --keep-stems  keep stem_voice.wav, stem_sfx.wav and stem_music.wav in the output folder (they are removed otherwise)
 """
@@ -41,7 +43,7 @@ import build_audio9 as A9
 import build_audio10 as A10
 import build_audio13 as A13
 import build_audio14 as A14   # importing it registers every earlier effect (Episodes 6 to 14) in build_audio.SFX
-import build_music21 as M20   # the score
+import build_music21 as M21   # the score
 from build_audio import SR, tarr, osc, ar, midi, expdecay
 from build_audio6 import norm6, rng6, noise6
 from build_audio7 import _smooth_rand, _sum
@@ -52,7 +54,7 @@ from build_audio14 import _res, _band, _unit, _key
 HERE = A6.HERE
 SCRIPT = "script_ep21.json"
 EPD = "build/ep21"       # the lead's folder (the frozen timeline and the event files)
-FXV = "20.2"             # bump to rebuild every treated voice line
+FXV = "21.1"             # bump to rebuild every treated voice line
 
 
 def _n(d):
@@ -165,11 +167,15 @@ def _env10(x, hop=480):
 
 
 def _match_active_rms(y, ref):
-    """Scale y so that its active-speech RMS equals that of ref (the mixer's own measure: frames above a tenth of the loudest frame)."""
+    """Scale y so that its active-speech RMS equals that of ref (the mixer's own measure: frames above a tenth of the loudest frame). A stereo y is matched on its POWER against the same
+    clip panned to the centre by the mixer (each ear gets 0.707 of it), so a chorus spread across the field is exactly as loud as a single voice."""
     def act(x):
-        e = _env10(x, 960)
+        if x.ndim == 2:
+            e = np.sqrt((_env10(x[0], 960) ** 2 + _env10(x[1], 960) ** 2) / 2)
+        else:
+            e = _env10(x, 960)
         return np.sqrt(np.mean(e[e > .1 * e.max()] ** 2))
-    a, b = act(y), act(ref)
+    a, b = act(y), act(ref) * (0.7071 if y.ndim == 2 else 1.0)
     return y * (b / a) if a > 0 else y
 
 
@@ -255,7 +261,7 @@ def _wsola(x, f, win_s=.030, search_s=.007):
     return (out / wsum)[:nout]
 
 
-# ---------------------------------------------------------------- the cast, as Episode 19 left them
+# ---------------------------------------------------------------- the cast, as Episode 20 left them
 def fx_bind(x, menace=False):
     """Binder: a bright, cheerful assistant, slightly synthetic: a lift at 2.2 to 7.5 kHz, a faint detuned double (a 6 ms delay that flutters at 5.5 Hz: a plastic sheen) and a 10-bit grain."""
     y = x + .24 * _bp4(x, 2200, 7500, 2)
@@ -266,23 +272,6 @@ def fx_bind(x, menace=False):
         y = _wobble(y, .0004, 3.1)
     return _match_active_rms(y, x)
 
-
-def fx_bind_dying(x, seed):
-    """Binder on 'Great! I'll...' as his battery goes: the cheerful voice for the first half, then a tape-stop (the read speed falls to a third over the last 45 percent while the top is closed off and
-    the grain coarsens), so the 'I'll' sags and stops. The length is unchanged."""
-    y = fx_bind(x)
-    n = len(y)
-    t = np.arange(n) / SR
-    T = n / SR
-    t0 = .52 * T
-    u = np.clip((t - t0) / (T - t0), 0, 1)
-    s = 1 - .68 * u ** 1.25
-    pos = np.cumsum(s) - s[0]
-    y = np.interp(pos, np.arange(n), y)
-    y = _tv_filter(y, 9000 * (1 - u) ** 1.5 + 500, .8, "lp")
-    q = 700 * (1 - .93 * u ** 1.5)
-    y = np.round(y * q) / q * (1 - .55 * u ** 1.4)
-    return _match_active_rms(y, x)
 
 
 def fx_onion(x, seed):
@@ -309,225 +298,242 @@ def fx_brenda(x, seed):
     return _match_active_rms(y, x)
 
 
-def fx_moon(x, seed, close=False):
-    """The Moon at the window (am_onyx, plus the series' own echoes baked in): warm, slightly distant, a little air. A warm shelf (+2.5 dB under 200 Hz), the top rolled off above 6.5 kHz (-3 dB:
-    glass between him and us), a window's reflections (a 0.7 s tail closed to 3 kHz at -15 dB) and air (-33 dB of 4 to 10 kHz riding the voice). `close` (the night's setting Moon): nearer, the
-    reflections at -21 dB, the top only -1.5 dB, a little more warmth (+3.5 dB under 200 Hz) and a breath of proximity."""
-    n = len(x)
-    y = x + (.42 if close else .3) * _lp4(x, 200, 2) - (.15 if close else .3) * _hp4(x, 6500)
-    r = rng6(seed + 23)
-    nir = int(.7 * SR)
-    t = np.arange(nir) / SR
-    ir = _lp4(r.uniform(-1, 1, nir), 3000, 2) * np.exp(-6.9 * t / .7)
-    ir[:int(.02 * SR)] = 0
-    ir /= np.sqrt(np.sum(ir ** 2))
-    y = y + (.09 if close else .17) * signal.fftconvolve(y, ir)[:n]
-    env = np.interp(np.arange(n), np.arange(len(_env10(x))) * 480 + 240, _env10(x))
-    y = y + _bp4(r.uniform(-1, 1, n), 4000, 10000, 1) * env * (.03 if close else .022)
-    return _match_active_rms(y, x)
-
-
 def fx_res(x):
     """The residents (Pear, Banana, Cranberry, Goji): the day room's warmth on the voice itself, +2 dB under 260 Hz and the top eased (-2.5 dB above 5 kHz), so four old voices sit in lamp light."""
     y = x + .26 * _lp4(x, 260, 2) - .26 * _hp4(x, 5000)
     return _match_active_rms(y, x)
 
 
-# ---------------------------------------------------------------- the devices and the weather (new in Episode 20)
-def fx_speakerphone(x, seed):
-    """Artichoke and Melon on the conference speakerphone: band-limited to 350 to 3400 Hz (a 24 dB/oct low-pass, a 18 dB/oct high-pass), the plastic horn's boxy mid (+3 dB at 1.25 kHz), a little
-    speaker distortion, a touch of compression (3:1 over -26 dBFS), the far end's small hollow conference room (0.3 s, 450 to 2800 Hz, three hard early reflections of a glass table, -13 dB) and a
-    faint digital artefact at the start of every line (the first 70 ms through a 6 kHz sample-and-hold and a 5-bit quantiser that fades into the clean voice, and a 2.3 kHz codec blip at -32 dB)."""
-    n = len(x)
-    y = _lp4(_hp4(x, 350, 3), 3400, 4)
-    y = y + .4 * _res(y, 1250, 2.0)
-    y = _softclip(y, 1.5)
-    y = _comp(y, -26.0, 3.0, .003, .09, 3.0)
-    ir = _small_ir(seed + 3, rt=.3, pre=.004, lo=450, hi=2800, taps=((.0053, .6), (.0097, .5), (.0143, .4)))
-    y = y + .22 * signal.fftconvolve(y, ir)[:n]
-    y = _lp4(_hp4(y, 330, 2), 3500, 2)
-    k = min(n, int(.07 * SR))
-    seg = y[:k].copy()
-    sh = np.repeat(seg[::8], 8)[:k]
-    sh = np.round(sh * 20) / 20
-    w = np.linspace(1, 0, k) ** .8
-    y[:k] = sh * w + seg * (1 - w)
-    kb = min(n, int(.025 * SR))
-    y[:kb] += np.sin(2 * np.pi * 2300 * np.arange(kb) / SR) * np.exp(-np.arange(kb) / (.006 * SR)) * .025 * (np.max(np.abs(y)) + 1e-9)
+
+# ---------------------------------------------------------------- the State (new in Episode 21)
+def fx_kale(x):
+    """Ms. Kale (bf_alice, 0.98): crisp, precise, a little dry: a clean close microphone. The lows under 110 Hz trimmed (12 dB/oct), the boxy 300 Hz eased (-1.5 dB), a presence lift at 3 to
+    6.5 kHz (+2.5 dB) and air above 9 kHz (+1.5 dB), a gentle compressor (2:1 over -26 dBFS, fast) so every word lands at the same level. The mixer keeps 60 percent of her out of the room."""
+    y = _hp4(x, 110, 2)
+    y = y - .16 * _bp4(y, 220, 420, 1)
+    y = y + .33 * _bp4(y, 3000, 6500, 2) + .19 * _hp4(y, 9000, 2)
+    y = _comp(y, -26.0, 2.0, .003, .06, 1.5)
     return _match_active_rms(y, x)
 
 
-def fx_tv(x, seed):
-    """The weather anchor on the wall TV: bright, squashed and a little over-eager. A small speaker (a 190 Hz 18 dB/oct high-pass, closed at 7.5 kHz), a nasal lift at 1.5 kHz and a presence lift at
-    3 kHz (+3 dB), broadcast compression (4:1 over -28 dBFS, fast), a gentle saturation, a faint studio (0.16 s, bright, -20 dB) and the TV's own hiss (-48 dB)."""
+def fx_radish(x):
+    """Mr. Radish (am_echo, 0.92, two semitones down): low, flat and slow. A chest under the voice (+3 dB under 180 Hz), the top dulled (-2 dB above 4.5 kHz) and a compressor that holds
+    the level flat (4:1 over -30 dBFS, a slow release): no word is louder than another."""
+    y = x + .41 * _lp4(x, 180, 2)
+    y = y - .21 * _hp4(y, 4500, 2)
+    y = _comp(y, -30.0, 4.0, .006, .22, 4.0)
+    return _match_active_rms(y, x)
+
+
+# ---------------------------------------------------------------- the whisper chain, the PA, the closet, the pile
+def _whisperise(x, seed, smooth_hz=380.0, nfft=1024, hop=256):
+    """The voice re-synthesised as a whisper: its short-time spectrum is smoothed across frequency (so the harmonics of the voice are gone and only the vocal tract's envelope is left) and
+    imposed on white noise of the same length, frame by frame (the voice's own timing, formants and fricatives, no pitch at all)."""
+    x = np.asarray(x, dtype=float)
+    _, _, X = signal.stft(x, SR, nperseg=nfft, noverlap=nfft - hop)
+    mag = np.abs(X)
+    k = max(3, int(round(smooth_hz / (SR / nfft))))
+    env = uniform_filter1d(mag, k, axis=0, mode="nearest")
+    _, _, Z = signal.stft(rng6(seed).standard_normal(len(x)), SR, nperseg=nfft, noverlap=nfft - hop)
+    Z = Z[:, :env.shape[1]] / (np.abs(Z[:, :env.shape[1]]) + 1e-12)
+    _, y = signal.istft(env * Z, SR, nperseg=nfft, noverlap=nfft - hop)
+    y = np.asarray(y[:len(x)], dtype=float)
+    return np.pad(y, (0, len(x) - len(y))) if len(y) < len(x) else y
+
+
+def fx_whisper(x, seed, voiced=0.0):
+    """THE WHISPER CHAIN (arrive m1, l1, t1): breathy, unvoiced, close. The voice whispered (_whisperise), the chest gone (a 280 Hz high-pass: a whisper has no lows), the formants brightened
+    (+3 dB above 1.8 kHz), A HISS ON THE S'S (the frames whose energy is mostly above 4.5 kHz are lifted a further 5 dB at 4.5 to 10 kHz: the sibilants hiss), the breath of a mouth at the ear
+    (a soft 700 to 2400 Hz air at -24 dB riding the words) and no room (the mixer keeps it dry). `voiced` keeps that much of the plain voice under it (a stage whisper)."""
     n = len(x)
-    y = _lp4(_hp4(x, 190, 3), 7500, 3)
-    y = y + .25 * _res(y, 1500, 1.5) + .45 * _res(y, 3000, 1.2)
-    y = _softclip(y, 2.0)
-    y = _comp(y, -28.0, 4.0, .002, .06, 4.0)
-    ir = _small_ir(seed + 5, rt=.16, pre=.003, lo=500, hi=7000, taps=((.0061, .5), (.0112, .4)))
-    y = y + .1 * signal.fftconvolve(y, ir)[:n]
+    w = _whisperise(x, seed)
+    w = _hp4(w, 280, 3)
+    w = w + .41 * _hp4(w, 1800, 2)
+    hi = _bp4(w, 4500, 10000, 2)
+    eh, ea = _env10(hi, 480), _env10(w, 480)
+    sib = np.clip((eh / (ea + 1e-9) - .35) / .3, 0, 1)
+    sib = np.interp(np.arange(n), np.arange(len(sib)) * 480 + 240, uniform_filter1d(sib, 3))
+    w = w + hi * .78 * sib
     env = np.interp(np.arange(n), np.arange(len(_env10(x))) * 480 + 240, _env10(x))
-    y = y + _bp4(rng6(seed + 8).uniform(-1, 1, n), 2500, 9000, 1) * (.004 + .01 * env / (env.max() + 1e-9)) * np.max(np.abs(x))
-    return _match_active_rms(y, x)
+    w = w + _bp4(rng6(seed + 3).uniform(-1, 1, n), 700, 2400, 1) * env * .1
+    if voiced:
+        w = _match_active_rms(w, x) * (1 - voiced) + _hp4(x, 160, 2) * voiced
+    return _match_active_rms(w, x) * .97
 
 
-def fx_cab(x, seed):
-    """Turnip (am_onyx, 0.9, two semitones down: deep and flat) heard through a truck cab window: low-passed at 4 kHz (24 dB/oct), the lows under 85 Hz trimmed, the cab's two boxy resonances
-    (230 Hz and 650 Hz, +2.5 dB) and a touch of cab reverb (0.11 s, hard metal walls: three reflections at 2.2, 3.8 and 6.1 ms, -9 dB). The engine is not here (it is the cue's, `plowengine`)."""
+def fx_pa21(x, seed):
+    """The overhead PA (arrive me1): a ceiling speaker in a lobby. Band-limited to 350 Hz to 3.4 kHz (a cheap horn driver), its two cone resonances (1.15 and 2.7 kHz), a little distortion (the
+    amplifier), a slap off the far wall 95 ms behind and a fainter one at 190 ms, the lobby's own hall (1.1 s, darker than the voice, -12 dB) whose tail rings on for half a second after the
+    last word, and the faint hiss of an open line. The mixer keeps it out of the scene's room (the hall is baked in)."""
     n = len(x)
-    y = _lp4(_hp4(x, 85, 2), 4000, 4)
-    y = y + .3 * _res(y, 230, 1.5) + .25 * _res(y, 650, 2.0)
-    ir = _small_ir(seed + 7, rt=.11, pre=.002, lo=250, hi=3200, taps=((.0022, .6), (.0038, .5), (.0061, .4)))
+    tail = int(.55 * SR)
+    xx = np.concatenate([np.asarray(x, dtype=float), np.zeros(tail)])
+    y = _bp4(xx, 350, 3400, 2)
+    y = y + .3 * _res(y, 1150, 3.0) + .14 * _res(y, 2700, 4.0)
+    pk = np.max(np.abs(y)) + 1e-9
+    y = np.tanh(1.9 * y / pk) * pk / 1.3
+    y = _bp4(y, 330, 3500, 1)
+    side = _bp4(y, 420, 2600, 1)
+    y = y + _delay(side, 95, .28) + _delay(side, 190, .11)
+    r = rng6(seed + 5)
+    nir = int(1.3 * SR)
+    t = np.arange(nir) / SR
+    ir = _bp4(r.uniform(-1, 1, nir) * np.exp(-6.9 * t / 1.1), 300, 3000, 1)
+    ir[:int(.016 * SR)] = 0
+    ir /= np.sqrt(np.sum(ir ** 2))
+    y = y + signal.fftconvolve(y, ir)[:len(y)] * .25
+    env = np.interp(np.arange(len(y)), np.arange(len(_env10(xx))) * 480 + 240, _env10(xx))
+    on = np.clip(uniform_filter1d((env > .02 * env.max()).astype(float), int(.3 * SR) | 1) * 3.0, 0, 1)
+    y = y + _bp4(r.uniform(-1, 1, len(y)), 2500, 7000, 1) * on * .004 * pk
+    k = int(.12 * SR)
+    y[-k:] *= np.linspace(1, 0, k) ** 2
+    return _match_active_rms(y, xx) * 1.05
+
+
+def fx_closet(x, seed):
+    """Brenda inside a closet (prep br1, closet br1 and br2): her frail voice (fx_brenda) through a closed door. Muffled (a 24 dB/oct low-pass at 1.9 kHz, the air above it leaking at -22 dB),
+    boxy (the closet's two modes: +4 dB at 420 Hz, +2 dB at 950 Hz), a tiny hard box around her (0.09 s, reflections at 1.1, 2.3 and 3.6 ms) and close (+2 dB under 200 Hz). No room."""
+    n = len(x)
+    y = fx_brenda(x, seed)
+    lo = _lp4(y, 1900, 4)
+    y = lo + .08 * _bp4(y, 2000, 5000, 1)
+    y = y + .58 * _res(y, 420, 2.0) + .26 * _res(y, 950, 2.5)
+    ir = _small_ir(seed + 13, rt=.09, pre=.0008, lo=150, hi=2400, taps=((.0011, .7), (.0023, .55), (.0036, .4)))
     y = y + .35 * signal.fftconvolve(y, ir)[:n]
-    return _match_active_rms(y, x)
+    y = y + .26 * _lp4(y, 200, 2)
+    return _match_active_rms(y, x) * 10 ** (-.5 / 20)
 
 
-def fx_window_far(x, seed):
-    """Turnip outside the window glass at dawn: heavily filtered (a high-pass at 140 Hz, a 24 dB/oct low-pass at 1.4 kHz), the glass pane's own thump (a resonance at 520 Hz), smeared by distance (a
-    45 ms low-passed echo at -9 dB) and 5 dB quieter."""
-    y = _lp4(_hp4(x, 140, 2), 1400, 4)
-    y = y + .5 * _res(y, 520, 2.5)
-    y = y * .85 + .35 * _lp4(_delay(y, 45, 1.0), 1000, 2)
-    return _match_active_rms(y, x) * 10 ** (-5 / 20)
-
-
-def fx_phone(x, seed):
-    """Eggplant on Strawberry's phone, on speaker, from a ditch: 300 to 3400 Hz, mild compression (2.5:1), a thin tail (a tiny bright speaker room, 0.12 s, 900 to 3200 Hz, -19 dB) and one tiny packet
-    dropout at a word boundary (28 ms of the next word's first sound lost, a few milliseconds of codec hiss in the hole) if the line has a word boundary in it, never more than one."""
+def fx_buried21(x, seed):
+    """Mr. Radish under a pile of binders (closet ra2 'Impressive.'): his flat voice (fx_radish) through cardboard: a 24 dB/oct low-pass at 1.3 kHz, a damped cavity (+3 dB at 300 Hz, no
+    reflections at all), pages shifting on him as he speaks (a 1.5 to 5 kHz paper rustle at -28 dB that follows the words), 1.5 dB quieter. No room."""
     n = len(x)
-    y = _lp4(_hp4(x, 300, 3), 3400, 4)
-    y = _softclip(y, 1.4)
-    y = _comp(y, -26.0, 2.5, .004, .07, 2.0)
-    ir = _small_ir(seed + 9, rt=.12, pre=.002, lo=900, hi=3200, taps=((.0031, .5), (.0058, .4)))
-    y = y + .11 * signal.fftconvolve(y, ir)[:n]
-    hop = 240
-    env = _env10(y, hop)
-    pk = env.max()
-    lo_, hi_ = int(.18 * len(env)), int(.88 * len(env))
-    gap = 0
-    for i in range(lo_, hi_):
-        if env[i] < .25 * pk:
-            gap += 1
-            continue
-        if gap >= 6 and env[i] > .5 * pk:               # a word begins after at least 30 ms of near silence
-            a = i * hop - int(.004 * SR)
-            L = int(.028 * SR)
-            if 0 < a and a + L < n:
-                fade = np.minimum(1, np.minimum(np.arange(L), L - np.arange(L)) / (.003 * SR))
-                hole = _bp4(rng6(seed + 31).uniform(-1, 1, L), 1200, 3400, 1) * .12 * pk
-                y[a:a + L] = y[a:a + L] * (1 - fade) + hole * fade
-            break
-        gap = 0
-    return _match_active_rms(y, x)
-
-
-def fx_outdoor(x):
-    """A voice in falling snow: nothing to bounce off, everything absorbed. Thin and dry and close: the low shelf cut (-2 dB under 300 Hz), a high-pass at 130 Hz, the very top soaked up (-2 dB above
-    6.5 kHz), 1 dB down. No room is added by the mixer (the lot has no reverb)."""
-    y = x - .25 * _lp4(x, 300, 2)
-    y = _hp4(y, 130, 2)
-    y = y - .22 * _hp4(y, 6500, 2)
-    return _match_active_rms(y, x) * 10 ** (-1 / 20)
-
-
-def fx_buried(x, seed):
-    """Onion with her head and her clipboard hand out of a wall of snow (`forecast` o3): her usual tremble, then everything above 900 Hz gone (a 24 dB/oct low-pass: a head in a drift), the chest
-    of a close cavity (+4 dB at 380 Hz), no room at all and a faint breathy cold riding the words (a band of 400 to 1800 Hz air at -26 dB, shivering at 7 Hz). Slightly quieter: snow eats sound."""
-    n = len(x)
-    y = fx_onion(x, seed)
-    y = _lp4(y, 900, 4)
-    y = y + .5 * _res(y, 380, 2.0)
+    y = fx_radish(x)
+    y = _lp4(y, 1300, 4)
+    y = y + .41 * _res(y, 300, 1.6)
     env = np.interp(np.arange(n), np.arange(len(_env10(x))) * 480 + 240, _env10(x))
     t = np.arange(n) / SR
-    y = y + _bp4(rng6(seed + 41).uniform(-1, 1, n), 400, 1800, 1) * env * .06 * (.6 + .4 * np.sin(2 * np.pi * 7 * t))
+    rus = _bp4(rng6(seed + 17).uniform(-1, 1, n), 1500, 5000, 1) * (.6 + .4 * np.abs(np.sin(2 * np.pi * 3.1 * t)))
+    y = y + rus * env * .05
     return _match_active_rms(y, x) * 10 ** (-1.5 / 20)
 
 
-def fx_moon_weather(x, seed):
-    """The Moon behind the weather (`dayroom` mo1): distant, closed at 2.5 kHz (24 dB/oct), smeared (a 60 ms echo at -17 dB), a little wind going through him (a howl band that wanders around 520 Hz
-    at -17 dB under the voice) and 3 dB quieter. No warm pad (the score leaves him alone)."""
-    n = len(x)
-    t = np.arange(n) / SR
-    y = _lp4(x, 2500, 4)
-    y = y * .85 + .14 * _lp4(_delay(y, 60, 1.0), 1200, 2)
-    fc = 520 * (1 + .22 * np.sin(2 * np.pi * .9 * t) + .1 * _smooth_rand(n / SR, seed + 51, .6))
-    howl = _tv_filter(rng6(seed + 52).uniform(-1, 1, n), fc, 9.0, "bp") * (.55 + .45 * np.sin(2 * np.pi * .37 * t + 1))
-    howl = howl * (np.sqrt(np.mean(y ** 2)) / (np.sqrt(np.mean(howl ** 2)) + 1e-12)) * 10 ** (-17 / 20)
-    return _match_active_rms(y + howl, x) * 10 ** (-3 / 20)
+# ---------------------------------------------------------------- the choruses (the staff's 'Yes!' and the forty Strawberries' 'Agency!')
+def fx_chor(kokoro, v, say, mono, tag, pans, delays, double=False, tail=.1):
+    """A chorus of the script's own voice list: each voice speaks the line (a little detuned in speed, as the plain chorus is), is placed at its own spot in the field and comes in its own few
+    milliseconds late, as a crowd does; `double`: every voice is heard twice (the second take read 2.5 to 4 percent faster or slower, a varispeed, and 11 to 29 ms later, at the mirror position),
+    so six voices become twelve. Trimmed exactly as the plain clip was, plus `tail` seconds (faded) so the late voices keep their last consonant. Returns a (2, n) clip."""
+    names = v["chorus"]
+    parts = []
+    for i, name in enumerate(names):
+        detune = 1 + .03 * (i % 3 - 1)
+        key = hashlib.sha1(json.dumps([name, v["speed"] * detune, v["lang"], say, "p"]).encode()).hexdigest()[:16]
+
+        def make(name=name, detune=detune):
+            samples, sr = kokoro.create(say, voice=name, speed=v["speed"] * detune, lang=v["lang"])
+            return signal.resample_poly(np.asarray(samples, dtype=float), SR // 1000, sr // 1000)
+        parts.append(_vox_cache(f"{tag}.p{i}", key, make))
+    takes = []
+    for i, p in enumerate(parts):
+        q = p / np.max(np.abs(p))
+        takes.append((q, pans[i % len(pans)], delays[i % len(delays)], 1.0))
+        if double:
+            rate = (1.035, .972, 1.025, .965, 1.04, .975)[i % 6]
+            q2 = np.interp(np.arange(0, len(q) - 1, rate), np.arange(len(q)), q)
+            takes.append((q2, -pans[i % len(pans)] * .85, delays[i % len(delays)] + (11, 23, 17, 29, 14, 20)[i % 6], .8))
+    L = max(len(q) for q, *_ in takes)
+    dmax = max(int(d * SR / 1000) for _, _, d, _ in takes)
+    summ = np.zeros(L)
+    st = np.zeros((2, L + dmax + 2400))
+    for q, pan, dl, g in takes:
+        summ[:len(q)] += q
+        th = (np.clip(pan, -1, 1) + 1) * np.pi / 4
+        d = int(dl * SR / 1000)
+        st[0, d:d + len(q)] += q * np.cos(th) * g
+        st[1, d:d + len(q)] += q * np.sin(th) * g
+    a = np.abs(BA.semis_resample(summ, v.get("semis", 0)))
+    idx = np.where(a > .01 * a.max())[0]
+    lo = max(0, idx[0] - 800)
+    n = len(mono)
+    m = n + int(tail * SR)
+    out = st[:, lo:lo + m]
+    if out.shape[1] < m:
+        out = np.pad(out, ((0, 0), (0, m - out.shape[1])))
+    k = int(tail * SR)
+    if k:
+        out[:, n:] *= np.linspace(1, 0, m - n)[None, :]
+    return _match_active_rms(out, mono)
 
 
-def fx_oncoming(x, seed):
-    """The oncoming Strawberry (`night` s4, s6): the same voice one semitone lower and 4 percent slower, so the twin shot reads as two women. The pitch is a varispeed drop of one semitone (which is
-    5.9 percent slower) followed by a waveform-similarity time-compression of 1.8 percent (so the finished line is 4.0 percent longer than the original at the new pitch)."""
-    y = BA.semis_resample(np.asarray(x, dtype=float), -1)
-    y = _wsola(y, 1.04 * len(x) / len(y))
-    return _match_active_rms(y, x)
+def fx_staff(kokoro, v, say, mono, tag):
+    """THE WHOLE 3-11 AT ONCE ('Yes!', arrive st1): the five voices of the script's list, tight (they lean into one shot: a narrow arc, -0.5 to 0.5) and slightly ragged (0 to 25 ms apart),
+    loud and desperate: driven into a soft saturation, a push at 2 to 4 kHz (+2 dB), 1.5 dB over a single voice."""
+    c = fx_chor(kokoro, v, say, mono, tag, pans=(-.5, -.22, .05, .28, .5), delays=(0, 16, 7, 25, 11), tail=.08)
+    pk = np.max(np.abs(c)) + 1e-9
+    c = np.tanh(1.7 * c / pk) * pk
+    c = c + .26 * np.stack([_bp4(c[0], 2000, 4000, 2), _bp4(c[1], 2000, 4000, 2)])
+    return _match_active_rms(c, mono) * 10 ** (1.5 / 20)
+
+
+def fx_agency(kokoro, v, say, mono, tag):
+    """THE FORTY STRAWBERRIES ('Agency!', prep ch1): the six voices of the script's list, doubled into twelve, wide (from -0.9 to 0.9), 0 to 45 ms apart: a corridor full of the same nurse. A
+    little of the corridor baked into the crowd (a 0.35 s room at -16 dB, so the back rows are further away than the front) and 1 dB over a single voice."""
+    c = fx_chor(kokoro, v, say, mono, tag, pans=(-.9, -.55, -.2, .2, .55, .9), delays=(0, 9, 4, 15, 6, 12), double=True, tail=.14)
+    ir = _small_ir(int(len(mono)) % 997 + 31, rt=.35, pre=.012, lo=200, hi=4500, taps=((.013, .4), (.024, .3)))
+    c = c + .16 * np.stack([signal.fftconvolve(c[ch], ir)[:c.shape[1]] for ch in range(2)])
+    return _match_active_rms(c, mono) * 10 ** (1.0 / 20)
 
 
 # ---------------------------------------------------------------- which treatment does each line get? (scene, line id) first, then the speaker
+PREP_PA = False          # prep me1 'Where is our staffing?': the Administrator on the PA (True) or in person (False); the picture decides
 LINE_KIND = {
-    ("forecast", "o3"): "onion_buried",
-    ("blackout", "b2"): "bind_dying",
-    ("dayroom", "mo1"): "moon_weather",
-    ("night", "mo1"): "moon_close", ("night", "mo2"): "moon_close", ("night", "mo3"): "moon_close",
-    ("night", "tu3"): "window",
-    ("night", "s4"): "oncoming", ("night", "s6"): "oncoming",
+    ("arrive", "m1"): "whisper", ("arrive", "l1"): "whisper", ("arrive", "t1"): "whisper",
+    ("arrive", "me1"): "pa",
+    ("arrive", "b2"): "bind_menace",
+    ("prep", "br1"): "closet", ("closet", "br1"): "closet", ("closet", "br2"): "closet",
+    ("closet", "ra2"): "buried",
+    ("medpass", "pe2"): "stage_whisper",
 }
-WHO_KIND = {"bind": "bind", "onion": "onion", "brenda": "brenda", "moon": "moon", "pear": "res", "banana": "res", "cran": "res", "goji": "res",
-            "arti": "speaker", "melon": "speaker", "wx": "tv", "egg": "phone"}
-KIND_V = {"speaker": "1", "tv": "1", "cab": "1", "phone": "1", "window": "1", "outdoor": "1", "onion_buried": "1", "moon_weather": "1", "oncoming": "1", "bind_dying": "1", "moon_close": "1", "onion_outdoor": "1"}
+if PREP_PA:
+    LINE_KIND[("prep", "me1")] = "pa"
+WHO_KIND = {"bind": "bind", "onion": "onion", "brenda": "brenda", "pear": "res", "kale": "kale", "radish": "radish", "staff": "staff", "chor": "agency"}
+KIND_V = {"whisper": "1", "stage_whisper": "1", "pa": "1", "closet": "1", "buried": "1", "kale": "1", "radish": "1", "staff": "1", "agency": "1", "bind_menace": "1"}
 
 
 def line_kind(scene, lid, who):
-    """The treatment of a line: the special cases first (keyed by scene and line id), then the lot (every voice outdoors, Turnip in his cab, Eggplant on her phone), then the speaker's own."""
-    k = LINE_KIND.get((scene, lid))
-    if k:
-        return k
-    if scene == "lot":
-        if who == "turnip":
-            return "cab"
-        if who == "egg":
-            return "phone"
-        return "onion_outdoor" if who == "onion" else "outdoor"
-    return WHO_KIND.get(who, "plain")
+    """The treatment of a line: the special cases first (keyed by scene and line id), then the speaker's own."""
+    return LINE_KIND.get((scene, lid)) or WHO_KIND.get(who, "plain")
 
 
-def apply_kind(kind, mono, seed):
+def apply_kind(kind, mono, seed, kokoro=None, v=None, say=None, tag=None):
     if kind == "bind":
         return fx_bind(mono)
-    if kind == "bind_dying":
-        return fx_bind_dying(mono, seed)
+    if kind == "bind_menace":
+        return fx_bind(mono, menace=True)
     if kind == "onion":
         return fx_onion(mono, seed)
-    if kind == "onion_outdoor":
-        return fx_outdoor(fx_onion(mono, seed))
-    if kind == "onion_buried":
-        return fx_buried(mono, seed)
     if kind == "brenda":
         return fx_brenda(mono, seed)
-    if kind == "moon":
-        return fx_moon(mono, seed)
-    if kind == "moon_close":
-        return fx_moon(mono, seed, close=True)
-    if kind == "moon_weather":
-        return fx_moon_weather(mono, seed)
     if kind == "res":
         return fx_res(mono)
-    if kind == "speaker":
-        return fx_speakerphone(mono, seed)
-    if kind == "tv":
-        return fx_tv(mono, seed)
-    if kind == "cab":
-        return fx_cab(mono, seed)
-    if kind == "window":
-        return fx_window_far(mono, seed)
-    if kind == "phone":
-        return fx_phone(mono, seed)
-    if kind == "outdoor":
-        return fx_outdoor(mono)
-    if kind == "oncoming":
-        return fx_oncoming(mono, seed)
+    if kind == "kale":
+        return fx_kale(mono)
+    if kind == "radish":
+        return fx_radish(mono)
+    if kind == "whisper":
+        return fx_whisper(mono, seed)
+    if kind == "stage_whisper":
+        return fx_res(fx_whisper(mono, seed, voiced=.45))
+    if kind == "pa":
+        return fx_pa21(mono, seed)
+    if kind == "closet":
+        return fx_closet(mono, seed)
+    if kind == "buried":
+        return fx_buried21(mono, seed)
+    if kind == "staff":
+        return fx_staff(kokoro, v, say, mono, tag)
+    if kind == "agency":
+        return fx_agency(kokoro, v, say, mono, tag)
     return mono
 
 
@@ -561,8 +567,9 @@ def _load_speech():
     _SPEECH[:] = [(sc["id"], b) for sc in script["scenes"] for b in sc["beats"] if "pause" not in b]
 
 
-def tts20(kokoro, v, say):
-    """The mixer's tts6, replaced: the plain line (cached per line, the Episode 19 keys), plus the treated version that is placed in the mix (cached under the treatment's name). The _Vox carries who is speaking."""
+def tts21(kokoro, v, say):
+    """The mixer's tts6, replaced: the plain line (cached per line, the same keys as the trial build that produced the frozen timeline), plus the treated version that is placed in the mix
+    (cached under the treatment's name; a chorus caches each of its voices too). The _Vox carries who is speaking and the line's tag."""
     k = _TTS_K[0]
     _TTS_K[0] += 1
     sc, b = _SPEECH[k] if k < len(_SPEECH) else (None, None)
@@ -578,27 +585,28 @@ def tts20(kokoro, v, say):
         return _Vox(mono, None, who, tag)
     key = hashlib.sha1(json.dumps([raw_key, kind, FXV, KIND_V.get(kind, "")]).encode()).hexdigest()[:16]
     seed = int(hashlib.sha1(tag.encode()).hexdigest()[:6], 16)
-    return _Vox(mono, _vox_cache(tag + ".fx", key, lambda: apply_kind(kind, mono, seed)), who, tag)
+    return _Vox(mono, _vox_cache(tag + ".fx", key, lambda: apply_kind(kind, mono, seed, kokoro, v, say, tag)), who, tag)
 
 
 # ---------------------------------------------------------------- the rooms (impulse responses) and the reverb
-ROOM20 = {   # rt: reverb time (s); wet: level of the tail against the dry sound; damp: where the tail is closed off; pre: pre-delay; taps: early reflections (s, gain)
-    "title":    dict(rt=.42, wet=.14, damp=6500, pre=.006, taps=((.011, .5), (.019, .4), (.031, .3))),      # a study desk at night: small, wooden
-    "forecast": dict(rt=.50, wet=.13, damp=5200, pre=.008, taps=((.014, .4), (.027, .3), (.041, .2))),      # the nurses' station: ceiling tile, carpet, glass doors
-    "blackout": dict(rt=.55, wet=.14, damp=4200, pre=.008),                                                  # the same station in the dark: nothing has changed but it feels bigger
-    "dayroom":  dict(rt=.62, wet=.16, damp=3400, pre=.014, taps=((.019, .3), (.033, .22))),                  # carpet, curtains, lamp light, as in Episode 19
-    "night":    dict(rt=.52, wet=.12, damp=4400, pre=.010),                                                  # the station on the generator
-    "end":      dict(rt=.40, wet=.10, damp=5200, pre=.006),                                                  # a TV room
+ROOM21 = {   # rt: reverb time (s); wet: level of the tail against the dry sound; damp: where the tail is closed off; pre: pre-delay; taps: early reflections (s, gain)
+    "title":     dict(rt=.36, wet=.10, damp=6000, pre=.005, taps=((.009, .5), (.016, .4), (.027, .3))),     # a desk under a cold office light
+    "arrive":    dict(rt=.72, wet=.15, damp=5600, pre=.012, taps=((.017, .45), (.031, .35), (.047, .25))),   # the lobby and the station: glass doors, a hard floor
+    "prep":      dict(rt=.50, wet=.13, damp=5200, pre=.008, taps=((.014, .4), (.027, .3), (.041, .2))),      # the nurses' station
+    "medpass_l": dict(rt=.30, wet=.075, damp=3600, pre=.006, taps=((.008, .35), (.015, .25))),               # the State's half: a resident's room, curtains, carpet, quiet
+    "medpass_r": dict(rt=.85, wet=.19, damp=5800, pre=.014, taps=((.021, .5), (.037, .4), (.058, .3))),      # a normal night: the long hard hallway
+    "closet":    dict(rt=.55, wet=.13, damp=4800, pre=.009, taps=((.015, .4), (.028, .3), (.044, .2))),      # the corridor by the station, evening
+    "exit":      dict(rt=.42, wet=.10, damp=4400, pre=.007, taps=((.010, .45), (.019, .35), (.030, .25))),   # the conference room: a long table, carpet, a low ceiling
+    "end":       dict(rt=.38, wet=.08, damp=5200, pre=.006),                                                 # an office
 }
-OUTDOORS = ("lot",)       # no reverb at all
 _IRS = {}
 
 
 def _room_ir(name):
-    """The stereo impulse response of a room in ROOM20 (cached): decaying noise closed off at `damp`, early reflections, normalised to unit energy as the series' rooms are."""
+    """The stereo impulse response of a room in ROOM21 (cached): decaying noise closed off at `damp`, early reflections, normalised to unit energy as the series' rooms are."""
     if name in _IRS:
         return _IRS[name]
-    sp = ROOM20[name]
+    sp = ROOM21[name]
     rt, pre = sp["rt"], sp.get("pre", .01)
     n = int((rt * 1.3 + pre) * SR)
     t = np.arange(n) / SR
@@ -618,37 +626,44 @@ def _room_ir(name):
 def _rev(seg, name):
     """The tail of `seg` (2, n) in room `name`: the full convolution, scaled by the room's wet level."""
     ir = _room_ir(name)
-    return np.stack([signal.fftconvolve(seg[c], ir[c], mode="full") for c in range(2)]) * ROOM20[name]["wet"]
+    return np.stack([signal.fftconvolve(seg[c], ir[c], mode="full") for c in range(2)]) * ROOM21[name]["wet"]
 
 
 def scene_reverb(sid, seg, a):
-    """The reverb of scene `sid`'s dry signal `seg` (2, n) whose first sample is sample `a` of the film. The lot is outdoors in falling snow: no reverb at all (zeros)."""
-    if sid in OUTDOORS:
-        return np.zeros_like(seg)
-    if sid in ROOM20:
+    """The reverb of scene `sid`'s dry signal `seg` (2, n) whose first sample is sample `a` of the film. THE SPLIT (medpass): the left channel goes through the State's soft room and its tail
+    stays on the left (75 percent of it in the left ear), the right channel through the long hallway, its tail on the right."""
+    if sid == "medpass":
+        L = _rev(np.stack([seg[0], seg[0]]), "medpass_l")
+        R = _rev(np.stack([seg[1], seg[1]]), "medpass_r")
+        n = max(L.shape[1], R.shape[1])
+        L, R = np.pad(L, ((0, 0), (0, n - L.shape[1]))), np.pad(R, ((0, 0), (0, n - R.shape[1])))
+        return np.stack([L[0] * 1.2 + R[0] * .4, L[1] * .4 + R[1] * 1.2])
+    if sid in ROOM21:
         return _rev(seg, sid)
     return None
 
 
-# ---------------------------------------------------------------- place2, patched: voices place their treated version; cues dip under speech
+# ---------------------------------------------------------------- place2, patched: voices place their treated version where they are; cues dip under speech
 DUCK_DB = {   # how far a cue is dipped (dB) while a voice speaks, by effect name; anything missing here is not dipped. The hits the picture lands on are never dipped.
-    "sniffle": 4, "typing": 6, "step": 7, "snowstep": 7, "plowengine": 5, "plowdist": 6, "windswell": 5, "windgust": 3, "stopwatchticks": 3, "swtick": 3, "slurp": 3, "cupset": 2,
-    "clockspin": 4, "breath": 2, "shovel": 4, "flashlight": 3, "lapsewhoosh": 3, "whoosh_s": 3, "rustle": 3, "plowrumble": 6, "genstart": 9, "relay": 6, "powerdown": 6, "snowdump": 6, "doorgust": 4,
-    "plowdump": 5, "plowscrape": 3, "thud": 3, "hum_on": 3,
-    "bed_title": 3, "bed_forecast": 4, "bed_lot": 9, "bed_blackout": 3, "bed_dayroom": 4, "bed_night": 4, "bed_end": 2,
+    "sniffle": 4, "typing": 6, "step": 7, "clocktick": 2, "gasp": 3, "pachime": 3, "grin": 3, "cupclatter": 4, "cartroll": 5, "penscratch": 4, "shiftbell": 4, "labelpeel": 4,
+    "doorchime": 3, "sparkle": 4, "binderavalanche": 6, "scanhum": 4, "dataticks": 3, "chaos": 6, "callbell": 5, "secondhand": 2, "scatter": 4, "crowdmurmur": 6, "offhit": 3,
+    "bed_title": 3, "bed_arrive": 4, "bed_prep": 4, "bed_medpass": 5, "bed_closet": 4, "bed_exit": 3, "bed_end": 2,
 }
-NOREV = ("bed_title", "bed_forecast", "bed_lot", "bed_blackout", "bed_dayroom", "bed_night", "bed_end", "genstart", "lapsewhoosh", "clockspin", "windswell", "whoosh_s", "rustle", "glint", "plowrumble")
-DRY_WHO = ("brenda",)                                  # voices that skip the room: close and dry
-DRY_TAGS = ("forecast_o3", "night_tu3")                # lines that skip the room: a head in a snow drift, a voice outside the glass
-LINE_PAN = {"night_s3": -.30, "night_s5": -.30, "night_s4": .30, "night_s6": .30}      # the twin shot: the outgoing Strawberry on the left, the oncoming one on the right
-PHONE_TAGS = ("lot_e1", "lot_e2", "lot_e3", "lot_e4")
+NOREV = ("bed_title", "bed_arrive", "bed_prep", "bed_medpass", "bed_closet", "bed_exit", "bed_end", "chaos", "scanhum", "dataticks", "secondhand", "crowdmurmur")
+DRY_WHO = ()                                                                   # voices that skip the room entirely
+DRY_TAGS = ("arrive_m1", "arrive_l1", "arrive_t1", "arrive_me1", "prep_br1", "closet_br1", "closet_br2", "closet_ra2")   # whispers at the ear, the PA (its hall is its own), a closet, a pile
+DRY_PART = {"kale": .6}                                                        # this much of the voice is kept out of the room (a little dry)
+LINE_PAN = {"arrive_m1": -.55, "arrive_l1": 0.0, "arrive_t1": .55}            # the whisper chain follows the camera down the hall
+MEDPASS_PAN = {"kale": -.52, "straw": -.42, "pear": -.34}                       # THE SPLIT: every line is spoken in the State's half, on the left
 _DRY = [None, None]                # [the mixer's dry buffer (the first buffer place2 is given), a buffer of the same size that holds only the NOREV cues and the dry voices]
 _WIN = {}
 _SM = [None]
 
 
-def _dry_vox(clip):
-    return clip.who in DRY_WHO or clip.tag in DRY_TAGS
+def _dry_part(clip):
+    if clip.who in DRY_WHO or clip.tag in DRY_TAGS:
+        return 1.0
+    return DRY_PART.get(clip.who, 0.0)
 
 
 def _speech_gate(N):
@@ -663,21 +678,19 @@ def _speech_gate(N):
 
 _PLACE2 = A6.place2
 _REVERB6 = A6.reverb
-PHONE = {"t": None, "pan": None, "source": "none"}
 
 
-def _phone_pan(at, n):
-    """Eggplant's pan over a line: where the phone is in Strawberry's hand. From build/ep21/phone_path.json (absolute seconds, {t, pan} -1..1 or {t, x} in px of a 1080 px frame) when it exists; else
-    Strawberry's own side of the frame (-0.14) with the small drift of a hand holding a phone."""
-    t = at + np.arange(n) / SR
-    if PHONE["t"] is not None:
-        return np.interp(t, PHONE["t"], PHONE["pan"])
-    return -.14 + .05 * np.sin(2 * np.pi * .35 * t) + .02 * np.sin(2 * np.pi * 1.3 * t + 1)
+def _line_pan(clip, pan):
+    if clip.tag in LINE_PAN:
+        return LINE_PAN[clip.tag]
+    if str(clip.tag).startswith("medpass_"):
+        return MEDPASS_PAN.get(clip.who, -.4)
+    return pan
 
 
-def reverb_20(seg, room):
-    """The mixer's per-scene room (A6.reverb), replaced: each scene has its own room (ROOM20; the lot has none), minus the cues and voices that must stay dry. `seg` is a view of the mixer's dry buffer,
-    so its offset in that buffer (the scene's first sample) is read from the memory address; the scene is the one that starts there."""
+def reverb_21(seg, room):
+    """The mixer's per-scene room (A6.reverb), replaced: each scene has its own room (ROOM21; the medpass is split in two), minus the cues and voices that must stay dry. `seg` is a view of the
+    mixer's dry buffer, so its offset in that buffer (the scene's first sample) is read from the memory address; the scene is the one that starts there."""
     dry, nr = _DRY
     if dry is not None and seg.base is dry:
         a = (seg.__array_interface__["data"][0] - dry.__array_interface__["data"][0]) // dry.itemsize
@@ -691,7 +704,7 @@ def reverb_20(seg, room):
     return _REVERB6(seg, room)
 
 
-def place2_20(buf, clip, at, gain=1.0, pan=0.0):
+def place2_21(buf, clip, at, gain=1.0, pan=0.0):
     if _DRY[0] is None:                                  # the mixer places the voices into `dry` first
         _DRY[0] = buf
         _DRY[1] = np.zeros_like(buf)
@@ -699,14 +712,11 @@ def place2_20(buf, clip, at, gain=1.0, pan=0.0):
         _WIN[round(float(at), 4)] = (float(at), len(clip) / SR)
         alt = clip.alt
         v = np.asarray(clip) if alt is None else alt
-        pan = LINE_PAN.get(clip.tag, pan)
-        if clip.tag in PHONE_TAGS and v.ndim == 1:
-            pc = np.clip(_phone_pan(at, len(v)), -1, 1)
-            th = (pc + 1) * np.pi / 4
-            v, pan = np.stack([v * np.cos(th), v * np.sin(th)]), 0.0
+        pan = _line_pan(clip, pan)
         _PLACE2(buf, v, at, gain, pan)
-        if _dry_vox(clip) and buf is _DRY[0]:
-            _PLACE2(_DRY[1], v, at, gain, pan)
+        dp = _dry_part(clip)
+        if dp and buf is _DRY[0]:
+            _PLACE2(_DRY[1], v, at, gain * dp, pan)
         return
     name = getattr(clip, "sfx", None) or "step"
     db = DUCK_DB.get(name)
@@ -836,895 +846,194 @@ def _smoothstep(x):
     return x * x * (3 - 2 * x)
 
 
-class Lapse:
-    """The time-lapse of `night` as the sound needs it: u(t) (0 in real time, 1 at the picture's fastest world speed), 10 Hz, absolute seconds.
-    Read from build/ep21/lapse.json ({t, worldMin, speed, sun, moonX}; `speed` is world minutes per second, 1/60 outside the lapse) when it exists; else the fixed curve of the brief (an ease in over 0.7 s,
-    a hold, an ease out over 0.9 s, across the `lapse` beat), and the build says which."""
+
+def _put2(out, clip, at, g=1.0, pan=0.0):
+    """Add a mono (n,) or stereo (2, n) clip into a stereo buffer (2, N) at `at` seconds (equal power)."""
+    clip = np.asarray(clip, dtype=float)
+    if clip.ndim == 1:
+        clip = _ctr(clip, pan)
+    i = int(round(at * SR))
+    if i < 0:
+        clip, i = clip[:, -i:], 0
+    m = min(clip.shape[1], out.shape[1] - i)
+    if m > 0:
+        out[:, i:i + m] += clip[:, :m] * g
+
+
+def _scrape(seed, d, lo, hi, rough=60.0, shape=None):
+    """A pen or a fingernail on paper: a band of noise roughened at `rough` Hz (the fibres), in an envelope `shape` (a sine arch by default)."""
+    t = tarr(d)
+    env = np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.2 if shape is None else shape
+    return _band(seed, d, lo, hi) * (.6 + .4 * np.abs(np.sin(2 * np.pi * rough * t + seed % 7))) * env
+
+
+def _click(seed, f=3200.0, tau=.004, d=.03, q=6.0):
+    """A small hard click: a burst of noise rung through one resonance (a plastic or metal part)."""
+    t = tarr(d)
+    return _res(_band(seed, d, 1500, 9000) * np.exp(-t / (tau * .5)), f, q) * 2.0 + _band(seed + 1, d, 3000, 10000) * np.exp(-t / (tau * .25)) * .5
+
+
+# ================================================================ THE SPLIT: the divider's position over the medpass (who is squeezed, and how much)
+class Split:
+    """Where the divider of the split screen is (screen px of the 1080 px frame, 540 is the middle), 20 Hz, absolute seconds. From build/ep21/split.json ([{t, x}] absolute or scene-local seconds,
+    or [{t, pan}] -1..1) when it exists; else the picture's own schedule (ep21_medpass.js DIV): the middle, except under 'Six.' (s4) where it slides to squeeze the right half for a beat (to 760 px
+    over s4 + 0.04 to + 0.34 s, held, back over the 0.3 s before pe2). gain(side, t): the level of a side, 1 at half the frame, falling as its half shrinks (a half of 320 px is about -5 dB)."""
 
     def __init__(self):
+        self.ts = self.x = None
         self.source = "none"
-        self.a = self.b = None
-        self.ts = self.u = self.sun = self.wm = None
-        self.fixed = True
 
     def setup(self, path=None):
-        bt = _beat_abs("night", "lapse")
-        sc = _scene_info("night")
-        if not bt or not sc:
+        sc = _scene_info("medpass")
+        if not sc:
             return
-        self.a, self.b = bt
-        rows = None
-        if path and os.path.exists(path):
-            try:
-                rows = json.load(open(path))
-            except (OSError, ValueError):
-                rows = None
+        rows = _load_json(path) if path else []
         if isinstance(rows, dict):
-            rows = rows.get("samples") or rows.get("rows") or rows.get("lapse")
-        if rows and len(rows) > 20 and all("speed" in r for r in rows):
+            rows = rows.get("samples") or rows.get("rows") or []
+        if rows and len(rows) > 3 and all(("x" in r or "pan" in r) and "t" in r for r in rows):
             rows = sorted(rows, key=lambda r: r["t"])
-            shift = sc["start"] if rows[0]["t"] < sc["start"] - 1.0 else 0.0            # the brief says absolute seconds; a scene-local file is shifted
-            ts = np.array([r["t"] + shift for r in rows], dtype=float)
-            sp = np.array([float(r["speed"]) for r in rows], dtype=float)
-            s0, s1 = sp.min(), sp.max()
-            if s1 - s0 > 1.0:
-                self.ts = ts
-                self.u = uniform_filter1d(np.clip((sp - s0) / (s1 - s0), 0, 1), 3, mode="nearest")
-                self.sun = np.array([float(r.get("sun", 0.0)) for r in rows], dtype=float)
-                wm = np.array([float(r.get("worldMin", np.nan)) for r in rows], dtype=float)
-                self.wm = wm if np.isfinite(wm).all() else None
-                self.fixed = False
-                self.source = f"{os.path.relpath(path, HERE)} ({len(rows)} samples, {ts[0]:.2f} to {ts[-1]:.2f} s, speed {s0:.3f} to {s1:.1f} min/s)"
-                return
-        ts = np.arange(sc["start"], sc["start"] + sc["dur"] + .05, .1)
-        u = np.minimum(_smoothstep((ts - self.a) / .7), _smoothstep((self.b - ts) / .9)) * ((ts >= self.a) & (ts <= self.b))
-        self.ts, self.u, self.sun = ts, u, np.clip((ts - self.a) / (self.b - self.a), 0, 1) ** 2
-        self.fixed = True
-        self.source = f"the fixed curve (ease in 0.7 s, hold, ease out 0.9 s across {self.a:.2f} to {self.b:.2f} s; lapse.json not found)"
+            shift = sc["start"] if rows[-1]["t"] < sc["start"] else 0.0
+            self.ts = np.array([r["t"] + shift for r in rows], dtype=float)
+            self.x = np.array([float(r["x"]) if "x" in r else 540.0 + 540.0 * float(r["pan"]) for r in rows], dtype=float)
+            self.source = f"{os.path.relpath(path, HERE)} ({len(rows)} samples)"
+            return
+        a = sc["start"]
+        s4, pe2 = _beat_abs("medpass", "s4"), _beat_abs("medpass", "pe2")
+        ts = np.arange(a, a + sc["dur"] + .05, .05)
+        x = np.full(len(ts), 540.0)
+        if s4 and pe2:
+            k0, k1, k2, k3 = s4[0] + .04, s4[0] + .34, pe2[0] - .3, pe2[0] - .02
+            x = 540.0 + 220.0 * np.clip(np.minimum(_smoothstep((ts - k0) / (k1 - k0)), 1 - _smoothstep((ts - k2) / (k3 - k2))), 0, 1)
+        self.ts, self.x = ts, x
+        self.source = "the picture's schedule (ep21_medpass.js DIV: the middle; 760 px from s4 + 0.04 s to pe2; no split.json)"
 
-    @property
-    def active(self):
-        return self.ts is not None
+    def x_at(self, t):
+        if self.ts is None:
+            return np.full(np.shape(t), 540.0)
+        return np.interp(t, self.ts, self.x, left=540.0, right=540.0)
 
-    def u_at(self, t):
-        return np.interp(t, self.ts, self.u, left=0.0, right=0.0)
-
-
-LAPSE = Lapse()
+    def gain(self, side, t):
+        x = self.x_at(np.asarray(t, dtype=float))
+        w = (1080.0 - x) if side == "R" else x
+        return np.clip(w / 540.0, .2, 1.0) ** 1.3
 
 
-def warp(src, t0, n_out, rmax):
-    """Read `src` (mono (n,) or (2, n)) as a tape whose speed follows the time-lapse: from absolute time t0, n_out output samples; the playback rate is 1 + (rmax - 1) u(t), so the sound
-    speeds up and rises in pitch with the picture's world speed, then comes back down to real time. src sample 0 is read at t0. Returns the same shape as src with n_out samples."""
-    t = t0 + np.arange(n_out) / SR
-    r = 1.0 + (rmax - 1.0) * (LAPSE.u_at(t) if LAPSE.active else 0.0)
-    pos = np.cumsum(r) - r[0]
-    L = src.shape[-1]
-    pos = np.minimum(pos, L - 1.001)
-    i0 = pos.astype(np.int64)
-    fr = pos - i0
-    return src[..., i0] * (1 - fr) + src[..., i0 + 1] * fr
+SPLIT = Split()
 
 
-# ---------------------------------------------------------------- the wind
-def _gust_shape(t, t0, dur):
-    """One gust: rises over 30 percent of `dur`, dies away over about the rest (0..1)."""
-    x = (t - t0) / dur
-    return np.where(x < 0, 0.0, np.where(x < .3, (np.clip(x, 0, .3) / .3) ** 1.5, np.exp(-(x - .3) / .38)))
+# ================================================================ title and end: the clipboard, the pen, the stamp, the typewriter
+KEY21 = 2                          # the bookends are in D: the title's tick-tock is D minor, the stamp turns it to D major; the end card stays in D major
+TITLE_BEAT = .4                    # the title's grid (150 bpm, bars from 0.6 s): the pen click, the first and third ticks, the stamp (bar 3) and the text ding (bar 4) are on the beat
+END_BEAT = .4875                   # the end card's: 0.1 to 4.0 s is two bars (123 bpm) and the stamp is the downbeat of the third
 
 
-def _gust_env(d, seed, gusts=(), base=.5, var=.26):
-    """The strength of the wind over `d` seconds, 0.08 to 1.7: a slow independent swell (two incommensurate wanders) plus the scripted gusts [(t0, duration, amplitude), ...]."""
-    t = tarr(d)
-    g = base + var * _smooth_rand(d, seed + 1, .11) + .5 * var * _smooth_rand(d, seed + 2, .37)
-    for t0, dur, amp in gusts:
-        g = g + amp * _gust_shape(t, t0, dur)
-    return np.clip(g, .08, 1.7)
-
-
-def wind(d, seed, gusts=(), wall=None, howl=1.0, rumble=1.0, hiss=1.0, base=.5, var=.26, env=None):
-    """A blizzard (2, n), at unit RMS: a low rumble (noise under 110 Hz), the roar of the body (140 to 900 Hz), a tonal howl whose pitch and strength follow the gusts (a narrow resonance
-    around 360 Hz that climbs to about 560 as the wind picks up, and a quieter one at 2.3 times that), and the hush of falling snow (a very soft 2.8 to 8 kHz). `gusts`: [(t0, duration, amplitude)];
-    `wall`: a low-pass (Hz) that the wind is heard through (an indoor leak: the howl is thin and low); `env`: a ready-made strength curve instead of the random one."""
-    n = _n(d)
-    g = env if env is not None else _gust_env(d, seed, gusts, base, var)
-    chans = []
-    for c in range(2):
-        s = seed + 100 * c
-        rum = _rms(_lp4(noise6(d, s + 1), 110, 3)) * g ** 1.2 * rumble
-        body = _rms(_bp4(noise6(d, s + 2), 140, 900, 2)) * g * .75
-        hs = _rms(_bp4(noise6(d, s + 3), 2800, 8000, 1)) * (.35 + .65 * g) * .1 * hiss
-        chans.append(rum + body + hs)
-    wander = _smooth_rand(d, seed + 7, .18)
-    fc = 360 * (.75 + .55 * np.clip(g, 0, 1.6)) * (1 + .12 * wander)
-    h1 = _rms(_tv_filter(noise6(d, seed + 8), fc, 14.0, "bp")) * g ** 2.0 * .42 * howl
-    h2 = _rms(_tv_filter(noise6(d, seed + 9), fc * 2.27, 10.0, "bp")) * g ** 2.4 * .17 * howl
-    pan = .3 * _smooth_rand(d, seed + 10, .09)
-    th = (pan + 1) * np.pi / 4
-    chans[0] = chans[0] + (h1 + h2) * np.cos(th)
-    chans[1] = chans[1] + (h1 + h2) * np.sin(th)
-    out = np.stack(chans)
-    if wall:
-        out = _lp4(out, wall, 3)
-    return _rms(out)
-
-
-# ---------------------------------------------------------------- engines
-def _diesel(d, fire, seed, knock=1.0, rumble=1.0, lp=700):
-    """A diesel engine (mono): `fire` is the firing frequency in Hz (a number or one per sample). Each firing is a sharp rise and a long exponential die-away (the chug), low-passed at `lp`, over
-    the knock of the combustion (a click of noise at 0.9 to 3.8 kHz on every firing, a little different each time) and the exhaust's rumble (noise under 150 Hz)."""
-    n = _n(d)
-    f = np.broadcast_to(np.asarray(fire, dtype=float), (n,))
-    r = rng6(seed)
-    jit = 1 + .012 * _smooth_rand(d, seed + 3, 9.0)
-    ph = np.cumsum(f * jit) / SR
-    frac = ph % 1.0
-    pulse = np.exp(-frac * 8.0) * (1 - np.exp(-frac * 90.0))
-    pulse = pulse - np.mean(pulse)
-    body = _lp4(pulse, lp, 4)
-    cyc = np.floor(ph).astype(np.int64)
-    amp = r.uniform(.55, 1.0, int(cyc.max()) + 2)[cyc]
-    kn = _bp4(noise6(d, seed + 1), 900, 3800, 2) * np.exp(-frac * 20.0) * (1 - np.exp(-frac * 300.0)) * amp
-    rum = _lp4(noise6(d, seed + 2), 150, 2)
-    return _rms(body) * 1.0 + _rms(kn) * .16 * knock + _rms(rum) * .30 * rumble
-
-
-def _sleigh(d, seed, n_bells=40, lo=3200, hi=9000, density=1.0, tau=.07, tail=None):
-    """Sleigh bells shaken (mono): `n_bells` tiny jingles spread over `d` seconds (a swell then a fade), each a small metal ping near 3 to 9 kHz with the inharmonic partials of a crotal bell and a
-    burst of rattle. The colour of the winter."""
-    r = rng6(seed)
-    out = np.zeros(_n(d))
-    for i in range(int(n_bells * density)):
-        u = r.uniform() ** 1.2
-        at = u * max(.01, d - .15)
-        env = np.sin(np.pi * np.clip(at / d, 0, 1)) ** .7
-        f = r.uniform(lo, hi)
-        c = _sum(_ping(f, .18, tau * r.uniform(.5, 1.3), (1.0, 1.51, 2.31, 3.7), (1.0, .5, .3, .15), (1.0, .7, .5, .3)), _band(int(seed + i * 7), .02, 4500, 10500) * expdecay(.02, .002) * .5)
-        _place(out, c, at, env * r.uniform(.25, 1.0))
-    return out
-
-
-def _mbox(f, d=1.0):
-    """A music-box tine: the fundamental rings (tau 0.45 s), a faint octave, the clamped bar's high 6.27x partial that is gone in 30 ms, and the comb's pluck (a 3 ms click at 2 to 6 kHz)."""
-    t = tarr(d)
-    x = np.sin(2 * np.pi * f * t) * np.exp(-t / .45) + .1 * np.sin(4 * np.pi * f * t) * np.exp(-t / .2) + .16 * np.sin(2 * np.pi * f * 6.27 * t) * np.exp(-t / .03)
-    x = x * np.minimum(1, t / .0015)
-    x[:int(.004 * SR)] += _band(int(f), .004, 2000, 6000) * np.hanning(int(.004 * SR)) * .12
-    return x
-
-
-# ================================================================ title: the snow globe
-KEY20 = {0: 7, 1: 0}               # the series' theme in G major in the title (a music box) and in C major on the end card
-STEP21 = {0: .375, 1: .4875}       # one eighth of the bar: the title's (80 bpm, 0.2 to 3.2 s) lands as the snow settles, the end card's (61.5 bpm, 0.1 to 4.0 s) on the stamp
-
-
-def sfx_theme20():
-    """The series' theme as a sparkle layer, in a new key each time. TITLE (G major, a music box at 80 bpm): the eight eighths of the arpeggio on music-box tines (a comb's pluck, the fundamental and
-    its faint octave, the body an octave under at -9 dB) over a breath of rising air; at 3.0 s (the snow settles into the title) a G major bloom on glass and a sleigh-bell shimmer; at 5.25 s a soft G
-    major seventh under the text ding. END CARD (C major, 61.5 bpm, 3.9 s of arpeggio on glass): on the stamp's downbeat a held C major seventh (C E G B and an E above), which does not resolve."""
-    k = _nth("theme20")
-    kk = 1 if k > 0 else 0
-    key, step = KEY20[kk], STEP21[kk]
-    L = 8 * step
-    d = L + (3.3 if kk == 0 else 3.3)
-    x = np.zeros(_n(d + .2))
-    arp = tuple(m + key for m in (72, 76, 79, 84, 79, 76, 79, 84))
-    for i, m in enumerate(arp):
-        g = .3 + .45 * i / 7
-        if kk == 0:
-            _place(x, _mbox(midi(m + 12), 1.0), i * step, g * 1.0)
-            _place(x, _mbox(midi(m), 1.0) * .35, i * step + .003, g * .6)
-        else:
-            _place(x, _glass(midi(m + 12), .8, .22, .002) * .5, i * step, g * .8)
-            _place(x, _note(midi(m + 12), .6, .18, ((1, 1.0), (4, .25), (10, .06))) * .5, i * step, g * .45)
-    t = tarr(L)
-    _place(x, _tv_filter(noise6(L, 3000 + k), _glide(500, 6500, L), 1.2, "bp") * (t / L) ** 2 * .1, 0.0, 1.0)
-    if kk == 0:
-        for m, g_, tau in ((79, 1.0, 1.5), (83, .8, 1.4), (86, .7, 1.3), (91, .6, 1.2)):         # G major: G5 B5 D6 G6
-            _place(x, _glass(midi(m), 3.0, tau, .008), L, g_ * .3)
-        _place(x, _lp4(_sleigh(1.9, 3010, 34, 3400, 8800, tau=.09), 9000, 2), L - .05, .42)
-        for m, g_ in ((79, 1.0), (83, .8), (86, .7), (90, .6)):                                  # G major seventh: G B D F-sharp
-            _place(x, _glass(midi(m + 12), 1.6, .8, .004), 5.25, g_ * .13)
+def sfx_theme21():
+    """The series' theme as a sparkle layer, in D. TITLE (the cue at 0.2 s; the clip is laid out on the title's grid): under the checklist, the quiet escapement of a desk clock on every beat
+    (a tick at 1.9 kHz and a tock at 1.35 kHz, 0.2 to 3.4 s); ON THE STAMP (3.8 s) the theme's arpeggio in D major on a glockenspiel and glass in eighths (3.8 to 5.4 s, D F-sharp A D A F-sharp A D)
+    and on the text ding (5.4 s) a D major seventh bloom on glass that rings to the cut. END CARD (0.1 s): the arpeggio on glass in eight beats (123 bpm) from 0.1 to 4.0 s over a rising air, and on
+    the stamp a held D major ninth (D A C-sharp E F-sharp) that does not resolve."""
+    k = _nth("theme21")
+    x = np.zeros(_n(7.0))
+    arp = tuple(m + KEY21 for m in (72, 76, 79, 84, 79, 76, 79, 84))
+    if k == 0:
+        t0 = .2
+        for j in range(9):
+            at = .2 + j * TITLE_BEAT - t0
+            tt = tarr(.05)
+            f = 1900.0 if j % 2 == 0 else 1350.0
+            c = np.sin(2 * np.pi * f * tt) * np.exp(-tt / .005) * .5 + _band(3100 + j % 3, .05, 1500, 6000) * np.exp(-tt / .002) * .5
+            _place(x, c, at, .16 if j % 2 == 0 else .12)
+        st = 3.8 - t0
+        for i, m in enumerate(arp):
+            g = .35 + .4 * i / 7
+            _place(x, _glass(midi(m + 12), .9, .3, .002) * .55 + _note(midi(m + 12), .5, .12, ((1, 1.0), (4, .3), (10, .08))) * .45, st + i * .2, g)
+        bl = 5.4 - t0
+        for m, g_ in ((86, 1.0), (90, .8), (93, .7), (97, .55)):
+            _place(x, _glass(midi(m), 1.6, .9, .006), bl, g_ * .28)
+        x = x[:_n(6.4)]
     else:
-        for m, g_, tau in ((72, 1.0, 1.4), (76, .8, 1.3), (79, .75, 1.2), (83, .6, 1.2), (88, .45, 1.1)):     # C major seventh: C5 E5 G5 B5 E6
-            _place(x, _glass(midi(m), 3.2, tau, .004), L, g_ * .4)
-        _place(x, _glass(midi(95), .9, .3, .001), L + .05, .12)
-    x = x[:_n(d)]
-    return norm6(_edge(x, .0004, .5), .55)
+        step = END_BEAT
+        for i, m in enumerate(arp):
+            g = .3 + .45 * i / 7
+            _place(x, _glass(midi(m + 12), 1.0, .26, .002) * .5, i * step, g * .8)
+        L = 8 * step
+        t = tarr(L)
+        _place(x, _tv_filter(noise6(L, 3105), _glide(500, 6000, L), 1.2, "bp") * (t / L) ** 2 * .08, 0.0, 1.0)
+        for m, g_, tau in ((74, 1.0, 1.6), (81, .8, 1.5), (85, .7, 1.4), (88, .6, 1.3), (90, .5, 1.2)):
+            _place(x, _glass(midi(m), 3.3, tau, .004), L, g_ * .38)
+        x = x[:_n(L + 3.3)]
+    return norm6(_edge(x, .0004, .4), .55)
 
 
-def sfx_globeshake():
-    """A glass snow globe grabbed and shaken (1.9 s): the base meets the wooden desk (a 120 Hz thunk and a ring of glass at 2.35 kHz), five jolts of the shake (each a slosh of liquid, a band of noise that
-    climbs from 260 to 1100 Hz in 0.28 s, the glass inside knocking), a glitter of ninety tiny flakes (5 to 12 kHz ticks, densest in the middle of the shake) and a few bubbles rising, then the liquid
-    settling (a slow wobble at 3 Hz that dies in a second)."""
-    d = 1.9
-    r = rng6(2020)
-    x = np.zeros(_n(d))
-    _place(x, _thump(120, 58, .16, .035) + _band(2021, .05, 600, 3000) * expdecay(.05, .008) * .6, 0.0, .8)
-    _place(x, _glass(2350, .5, .11, .001) * .3, .01, 1.0)
-    for j, (at, g) in enumerate(((.10, 1.0), (.27, .9), (.43, 1.0), (.60, .8), (.78, .6))):
-        dd = .28
-        t = tarr(dd)
-        slosh = _tv_filter(noise6(dd, 2030 + j), _glide(260, 1100, dd), 1.6, "bp") * np.sin(np.pi * np.clip(t / dd, 0, 1)) ** 1.3
-        _place(x, slosh, at, .55 * g)
-        _place(x, _thump(140, 70, .1, .02) * .5 + _ping(1900 + 60 * j, .3, .05, (1.0, 2.3, 3.7), (1.0, .4, .2), (1.0, .5, .3)) * .4, at - .005, .5 * g)
-    for i in range(90):
-        at = .05 + 1.5 * r.beta(2.0, 3.0)
-        f = r.uniform(5000, 9000)
-        c = _band(2050 + i, .012, 6000, 12000) * expdecay(.012, .0025) + _ping(f, .06, .008, (1.0, 1.7), (.3, .1), (1.0, .6))
-        _place(x, c, at, r.uniform(.05, .22))
-    for i in range(7):
-        dd = r.uniform(.02, .045)
-        tt = tarr(dd)
-        _place(x, np.sin(2 * np.pi * r.uniform(600, 1500) * tt * (1 + 2.2 * tt / dd)) * np.exp(-tt / (dd * .4)), r.uniform(.4, 1.3), r.uniform(.1, .25))
-    tt = tarr(1.0)
-    _place(x, _lp4(noise6(1.0, 2040), 700, 2) * (.5 + .5 * np.sin(2 * np.pi * 3.0 * tt)) * np.exp(-tt / .3), .8, .2)
-    return norm6(_edge(x, .001, .2), .6)
+def sfx_penclick():
+    """A retractable ballpoint clicked (0.3 s): the plunger's sharp plastic click (a burst rung at 3.2 kHz), the spring's faint ring (4.6 kHz, 50 ms), and 45 ms later the cam settling (a smaller,
+    lower click at 2.4 kHz)."""
+    x = np.zeros(_n(.3))
+    _place(x, _click(3120, 3200, .004), 0.0, 1.0)
+    tt = tarr(.06)
+    _place(x, np.sin(2 * np.pi * 4600 * tt) * np.exp(-tt / .012) * .08, .002, 1.0)
+    _place(x, _click(3121, 2400, .003) * .45, .045, 1.0)
+    return norm6(_edge(x, .0003, .05), .6)
 
 
-def sfx_snowsettle():
-    """The snow settling in the globe (2.4 s): a soft shimmering descent. Eleven glass notes fall down a G pentatonic scale from G7 to G5, quickly at first and then more slowly and more softly, over
-    a sleigh-bell glitter that thins out, and a long soft 'shhh' of flakes coming to rest that swells at the end and fades."""
-    d = 2.4
-    x = np.zeros(_n(d))
-    scale = (103, 100, 98, 95, 93, 91, 88, 86, 83, 81, 79)
-    for i, m in enumerate(scale):
-        at = 1.45 * (i / 10) ** 1.5
-        g = .75 - .5 * i / 10
-        _place(x, _glass(midi(m), .9, .35 + .03 * i, .003) * .5, at, g)
-        _place(x, _mbox(midi(m), .6) * .25, at, g * .5)
-    _place(x, _lp4(_sleigh(1.7, 2060, 36, 3000, 9000, tau=.08), 9500, 2), .05, .35)
-    t = tarr(2.1)
-    _place(x, _tv_filter(noise6(2.1, 2061), _glide(3200, 1500, 2.1), 1.0, "bp") * np.interp(t, [0, .6, 1.3, 2.1], [.15, .5, 1.0, 0]) * .1, .2, 1.0)
-    return norm6(_edge(x, .003, .4), .5)
+def sfx_checktick():
+    """An ink tick on paper (0.3 s), three times: the pen meets the paper (a soft 700 Hz tock of the clipboard), the short down-stroke (a 30 ms scratch at 1.5 to 6 kHz) and the long up-stroke that
+    lifts away (70 ms, brighter, fading out). Each tick is a little different (the hand is quick but not a machine)."""
+    k = _nth("checktick")
+    r = rng6(3130 + k)
+    x = np.zeros(_n(.3))
+    tt = tarr(.04)
+    _place(x, np.sin(2 * np.pi * (700 + 40 * k) * tt) * np.exp(-tt / .008) * .5 + _band(3131 + k, .04, 800, 3500) * np.exp(-tt / .003) * .4, 0.0, 1.0)
+    d1 = .03 * r.uniform(.85, 1.15)
+    _place(x, _scrape(3132 + k, d1, 1500, 6000, 70), .004, .8)
+    d2 = .07 * r.uniform(.85, 1.2)
+    t2 = tarr(d2)
+    _place(x, _scrape(3134 + k, d2, 2200, 8000, 90, np.minimum(1, t2 / .008) * np.exp(-t2 / (d2 * .5))), .004 + d1 + .008, .9)
+    return norm6(_edge(x, .0004, .04), .6)
 
 
-# ================================================================ forecast: the station, the TV, the speakerphone, the board, the door
-def _tv_small(x):
-    """What a small flat-panel TV does to a sound: no lows, a nasal lift, the top closed at 6.5 kHz."""
-    y = _lp4(_hp4(x, 230, 3), 6500, 3)
-    return y + .3 * _res(y, 1500, 1.5) + .25 * _res(y, 3000, 1.2)
+def sfx_stamp():
+    """A rubber stamp brought down hard (0.6 s): the handle's rush of air (20 ms), the impact (a deep thump that sags from 95 to 58 Hz), the rubber's flat slap on paper (a 300 to 2500 Hz burst) and
+    the surface knocked: TITLE and END CARD a desk (a wooden knock at 180 and 520 Hz, a little room), EXIT a clipboard held in the hand (a lighter, higher plastic knock at 760 Hz, no thump); then
+    the inked rubber's tacky lift (a short 'tchk' at 1 to 4 kHz, 0.13 s later)."""
+    k, scene, i = _ctx("stamp")
+    x = np.zeros(_n(.6))
+    light = scene == "exit"
+    _place(x, _band(3140 + k, .02, 800, 5000) * np.linspace(0, 1, _n(.02)) ** 2 * .25, 0.0, 1.0)
+    at = .02
+    tt = tarr(.25)
+    if not light:
+        _place(x, _sin_of(58 + 37 * np.exp(-tt / .03)) * np.exp(-tt / .06) * 1.0, at, 1.0)
+        _place(x, (np.sin(2 * np.pi * 180 * tt) * np.exp(-tt / .03) * .6 + np.sin(2 * np.pi * 520 * tt) * np.exp(-tt / .012) * .35), at, 1.0)
+    else:
+        _place(x, (np.sin(2 * np.pi * 760 * tt) * np.exp(-tt / .015) * .55 + _sin_of(140 + 60 * np.exp(-tt / .02)) * np.exp(-tt / .04) * .35), at, 1.0)
+    _place(x, _band(3141 + k, .06, 300, 2500) * expdecay(.06, .012) * 1.1, at, 1.0)
+    _place(x, _band(3142 + k, .05, 1000, 4000) * expdecay(.05, .006) * (.25 if light else .3), at + .13, 1.0)
+    if not light:
+        x = x + .12 * signal.fftconvolve(x, _small_ir(3143, rt=.25, pre=.004, lo=150, hi=4000))[:len(x)]
+    return norm6(_edge(x, .0003, .1), .8 if not light else .7)
 
 
-def sfx_tvjingle():
-    """The local news weather sting, parodied (1.25 s): a bright synth marimba runs up the C major arpeggio in sixteenths (C5 E5 G5 C6 E6), turns back (D6) and lands on a stab (G6) over a rising 'swish' of
-    the graphic wiping in, and a last chord stab (C6 E6 G6 C7: a saw through a 3 kHz low-pass, 0.3 s) with a sparkle; everything played through the TV's small speaker."""
-    x = np.zeros(_n(1.5))
-    seq = ((0.00, 72), (.09, 76), (.18, 79), (.27, 84), (.36, 88), (.50, 86), (.61, 91))
-    for at, m in seq:
-        f = midi(m)
-        t = tarr(.22)
-        mar = (np.sin(2 * np.pi * f * t) + .5 * np.sin(2 * np.pi * 4 * f * t) * np.exp(-t / .05) + .22 * np.sin(2 * np.pi * 10.1 * f * t) * np.exp(-t / .012)) * np.exp(-t / .09) * np.minimum(1, t / .001)
-        _place(x, mar, at, .6)
-    d = .5
-    t = tarr(d)
-    _place(x, _tv_filter(noise6(d, 2070), _glide(600, 5200, d), 1.4, "bp") * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.5 * .5, 0.15, 1.0)
-    for m in (84, 88, 91, 96):
-        dd = .38
-        tt = tarr(dd)
-        stab = _lp4(osc("saw", midi(m), dd) + .6 * osc("square", midi(m) * 1.004, dd), 3200, 2) * np.minimum(1, tt / .004) * np.exp(-tt / .12)
-        _place(x, stab, .78, .16)
-    _place(x, _glass(midi(103), .6, .2, .001) * .5, .8, .25)
-    return norm6(_edge(_tv_small(x), .001, .12), .6)
-
-
-def sfx_popper(seed_offset=0):
-    """A party popper (1.2 s). A hard pop (a 15 ms burst of noise from 0.8 to 8 kHz over a 220 Hz thump that sags to 90 Hz, and a second crack as the case answers), the streamers: a rustle of
-    paper ribbons unfurling (2 to 9 kHz noise fluttering at 55 Hz for 0.6 s) and forty confetti ticks (2 to 6 kHz, 6 to 15 ms) falling over 0.8 s, thinning out. The second one is a little
-    deeper and a little longer (Tomato is the only one smiling)."""
-    k = _nth("popper") % 2
-    r = rng6(2080 + k)
-    x = np.zeros(_n(1.3))
-    _place(x, _band(2081 + k, .05, 800, 8500) * expdecay(.05, .006) * 1.1 + _thump(220 - 30 * k, 90, .09, .02) * .9, 0.0, 1.0)
-    _place(x, _band(2083 + k, .03, 1500, 6000) * expdecay(.03, .004) * .6, .018, 1.0)
-    d = .7
-    t = tarr(d)
-    rus = _band(2084 + k, d, 2000, 9000) * (.5 + .5 * np.sign(np.sin(2 * np.pi * (55 + 8 * k) * t))) * np.interp(t, [0, .04, .3, d], [0, 1, .5, 0])
-    _place(x, rus, .03, .42)
-    for i in range(40 + 12 * k):
-        u = r.uniform() ** 1.5
-        dd = r.uniform(.006, .015)
-        _place(x, _band(2090 + i + 100 * k, dd, 2000, 6000) * expdecay(dd, dd * .35), .08 + .85 * u, r.uniform(.1, .35) * (1 - .6 * u))
-    return norm6(_edge(x, .0005, .2), .65)
-
-
-def sfx_phoneclick():
-    """The conference speakerphone joining or switching (0.4 s). A plastic button pressed (a 300 Hz tock of 25 ms and a click at 3.2 kHz), the relay of the line opening 60 ms later, a tiny two-tone
-    'join' chirp (1.2 then 1.8 kHz, 40 ms each, soft) on the first and the line's hiss (600 to 3400 Hz) swelling and fading. The second (Melon's) is only the click and the hiss."""
-    k = _nth("phoneclick") % 2
-    x = np.zeros(_n(.42))
-    t = tarr(.04)
-    _place(x, np.sin(2 * np.pi * 300 * t) * np.exp(-t / .01) * .7 + _band(2100 + k, .04, 1500, 6500) * expdecay(.04, .0025) * .8, 0.0, 1.0)
-    _place(x, _band(2102 + k, .01, 3000, 7000) * expdecay(.01, .0015) * .5, .06, 1.0)
-    if k == 0:
-        for j, f in enumerate((1200.0, 1800.0)):
-            tt = tarr(.045)
-            _place(x, np.sin(2 * np.pi * f * tt) * np.sin(np.pi * np.clip(tt / .045, 0, 1)) * .22, .1 + .06 * j, 1.0)
-    d = .26
-    tt = tarr(d)
-    _place(x, _band(2104 + k, d, 600, 3400) * np.interp(tt, [0, .04, .12, d], [0, 1, .6, 0]) * .1, .08, 1.0)
-    return norm6(_edge(_lp4(x, 7000, 2), .0004, .08), .55)
-
-
-def sfx_boardflip():
-    """The staffing board flipping to ONE NURSE (0.95 s): a wall of plastic leaves clacking over like a flip clock (sixteen clacks that speed up from 70 to 22 ms apart and slow again, each a bright
-    plastic tick near 2.4 to 3.4 kHz with a hollow knock under it), then the whole panel falling flat with a heavy 'whap' (a 400 Hz knock, a slap of 1 to 5 kHz and the rattle of the marker tray)."""
+def sfx_textding():
+    """A text ding (1.0 s): a soft two-note bell, the tonic and the fifth of D: D6 then A6, the second 90 ms after the first (the title and the end card)."""
     x = np.zeros(_n(1.0))
-    r = rng6(2110)
-    t_ = .0
-    gaps = np.concatenate([np.linspace(.07, .022, 9), np.linspace(.022, .06, 8)])
-    for i, gp in enumerate(gaps):
-        f = r.uniform(2400, 3400)
-        tt = tarr(.035)
-        c = np.sin(2 * np.pi * f * tt) * np.exp(-tt / .006) * .5 + _band(2111 + i, .035, 1200, 6000) * expdecay(.035, .004) * .6 + np.sin(2 * np.pi * 520 * tt) * np.exp(-tt / .012) * .3
-        _place(x, c, t_, .55 + .3 * r.uniform())
-        t_ += gp
-    at = t_ + .03
-    tt = tarr(.25)
-    _place(x, np.sin(2 * np.pi * 400 * tt) * np.exp(-tt / .03) * .9 + _band(2130, .25, 800, 5000) * expdecay(.25, .01) * .8 + _thump(150, 70, .2, .04) * .5, at, .9)
-    for j in range(7):
-        _place(x, _ping(r.uniform(1800, 3200), .12, .02, (1.0, 2.4), (1.0, .4), (1.0, .5)), at + .05 + .035 * j + r.uniform(0, .02), .22 - .02 * j)
-    return norm6(_edge(x, .0004, .1), .7)
+    _place(x, _call_ding(1174.7, .22), 0.0, .9)
+    _place(x, _call_ding(1760.0, .3), .09, .8)
+    return norm6(_edge(x, .0004, .2), .7)
 
 
-def sfx_doorgust():
-    """The glass doors flung open into a gale (1.9 s). The push bar meets its stop (a 110 Hz thump that sags to 45 Hz, a clank of steel) and the glass rings and rattles (a 1.95 kHz plate ring, five
-    rattles), then a wideband rush of wind that comes in with a bang (a 25 ms attack, a low-pass that closes from 9 kHz to 1.2 kHz as it passes), a howl that sweeps 700 to 1500 Hz and back, and a
-    flurry of blown snow hissing on the floor (4 to 9 kHz) that fades by 1.7 s."""
-    d = 1.9
-    x = np.zeros(_n(d))
+def _typebar(seed, g=1.0, space=False):
+    """One key of a manual typewriter: the key's knock (a 1.2 to 4 kHz clack), the type bar striking the platen (a short 2.6 kHz metal ring and a 180 Hz thud of the rubber roller) and, for the
+    space bar, a softer, lower knock with no strike."""
+    d = .09
     t = tarr(d)
-    _place(x, _thump(110, 45, .35, .07) * 1.1 + _ping(520, .3, .06, (1.0, 2.7, 4.8), (.8, .4, .2), (1.0, .6, .4)) * .5 + _band(2140, .05, 400, 4000) * expdecay(.05, .006) * .8, 0.0, .9)
-    _place(x, _ping(1950, .7, .12, (1.0, 2.33, 3.9), (1.0, .5, .3), (1.0, .6, .4)) * .4, .01, 1.0)
-    r = rng6(2141)
-    for j in range(5):
-        _place(x, _ping(r.uniform(1500, 2600), .15, .03, (1.0, 2.5), (1.0, .4), (1.0, .5)), .12 + .09 * j, .22 - .03 * j)
-    rush = _tv_filter(noise6(d, 2142), _glide(9000, 1200, d), .8, "lp") * np.interp(t, [0, .025, .25, .8, d], [0, 1, .85, .3, 0])
-    _place(x, rush * .9, 0.0, 1.0)
-    howl = _tv_filter(noise6(d, 2143), 700 + 800 * np.sin(np.pi * np.clip(t / 1.4, 0, 1)), 11.0, "bp") * np.interp(t, [0, .1, .6, 1.4, d], [0, .6, 1, .3, 0])
-    _place(x, _rms(howl) * .45 * (np.interp(t, [0, .1, .6, 1.4, d], [0, .6, 1, .3, 0])), 0.0, 1.0)
-    _place(x, _band(2144, 1.5, 4000, 9000) * np.interp(tarr(1.5), [0, .15, .6, 1.5], [0, 1, .5, 0]) * .1, .05, 1.0)
-    return norm6(_edge(x, .0004, .3), .8)
+    if space:
+        return (_band(seed, d, 300, 1500) * np.exp(-t / .01) + np.sin(2 * np.pi * 150 * t) * np.exp(-t / .02) * .4) * g * .6
+    clack = _band(seed, d, 1200, 4000) * np.exp(-t / .006)
+    strike = _ping(2600 * (1 + .03 * (seed % 5 - 2)), d, .012, (1.0, 2.3), (1.0, .3), (1.0, .5)) * .35 + np.sin(2 * np.pi * 180 * t) * np.exp(-t / .015) * .5
+    return (clack + strike) * g
 
 
-def sfx_snowdump():
-    """A heap of snow collapsing. The first (forecast, 2.4 s): the wall of snow behind the glass doors slumps into the lobby onto Onion: a heavy soft WHUMP (a 70 Hz thump that sags to 32 Hz, a 400 Hz
-    cushion of noise), the clipboard's papers fluttering in the gust (a 25 Hz flutter of 2 to 7 kHz), the sandwich-board sign toppling (three hollow plastic knocks at 0.45, 0.6 and 0.72 s) and a long slide
-    and crumble (a 900 Hz low-passed hush for 1.6 s and 150 granular ticks, thinning out). The second (lot, 1.6 s): the block of snow sliding out of the car's open door onto Strawberry's knees: a
-    softer whump, a shorter slide, fewer crumbs."""
-    k = _nth("snowdump") % 2
-    big = k == 0
-    d = 2.4 if big else 1.6
-    r = rng6(2150 + k)
-    x = np.zeros(_n(d))
-    t = tarr(d)
-    _place(x, _thump(70 if big else 60, 32 if big else 36, .6, .13 if big else .1) * 1.2 + _lp4(noise6(.4, 2151 + k), 400, 2) * expdecay(.4, .1) * 1.0, 0.0, 1.0 if big else .8)
-    _place(x, _lp4(noise6(d, 2152 + k), 900, 2) * np.interp(t, [0, .08, .5, d - .1, d], [0, 1, .6, .12, 0]) * .8, .02, 1.0)
-    nt = 150 if big else 70
-    for i in range(nt):
-        u = r.uniform() ** 1.6
-        dd = r.uniform(.004, .012)
-        _place(x, _band(2160 + i + 300 * k, dd, 500, 3500) * expdecay(dd, dd * .4), .05 + (d - .35) * u, r.uniform(.1, .5) * (1 - .7 * u))
-    if big:
-        tt = tarr(.55)
-        _place(x, _band(2153, .55, 2000, 7000) * (.5 + .5 * np.sign(np.sin(2 * np.pi * 25 * tt))) * np.interp(tt, [0, .05, .25, .55], [0, 1, .5, 0]) * .2, .25, 1.0)
-        for j, at in enumerate((.45, .6, .72)):
-            _place(x, _ping(r.uniform(300, 520), .2, .035, (1.0, 2.2, 3.6), (1.0, .5, .3), (1.0, .6, .4)) * .35 + _band(2154 + j, .03, 600, 3000) * expdecay(.03, .006) * .4, at, 1.0)
-    return norm6(_edge(x, .001, .35), .8 if big else .65)
-
-
-# ================================================================ lot: the plow, the shovel, the ice, the phone
-def _pan_curve(x, pan):
-    """A mono clip placed with a pan that moves (one value per sample, -1..1): (2, n)."""
-    th = (np.clip(pan, -1, 1) + 1) * np.pi / 4
-    return np.stack([x * np.cos(th), x * np.sin(th)])
-
-
-def sfx_plowengine():
-    """A diesel pickup with a plow on the front, twice. The first (7.4 s, with the cue at 0.3 s): the truck comes in from the left (a pass: the engine revs from an idle at 26 Hz firing to 44 Hz and the level swells,
-    the tyre chains jingle, the pan sweeps from -0.8 to +0.5), works under load as the blade bites (1.6 to 2.6 s, heavier knock) and settles into an idle at 27 Hz firing in the cab-window shot: a close,
-    lumpy diesel bed that stays under Turnip's two lines. The second (5.6 s, the cue at 7.14 s): a rev to 78 Hz, a gear change, and the truck drives off to the right: the level falls away over four seconds
-    and the top is closed off as the distance grows."""
-    k = _nth("plowengine") % 2
-    if k == 0:
-        d = 7.4
-        t = tarr(d)
-        fire = np.interp(t, [0, 1.0, 1.6, 2.6, 3.3, 4.5, d], [26, 44, 40, 36, 27, 28.5, 27]) * (1 + .02 * _smooth_rand(d, 2171, .8))
-        eng = _diesel(d, fire, 2170, knock=1.0, rumble=1.0, lp=650)
-        lvl = np.interp(t, [0, 1.2, 2.4, 3.3, 3.6, 5.0, d - .4, d], [.15, 1.0, 1.0, .7, .62, .62, .55, 0])
-        x = eng * lvl
-        r = rng6(2172)
-        for i in range(16):                                          # the chains
-            at = .5 + 2.3 * r.uniform()
-            _place(x, _ping(r.uniform(2200, 4200), .1, .02, (1.0, 2.6), (1.0, .4), (1.0, .5)) * .09, at, 1.0)
-        pan = np.interp(t, [0, 2.6, 3.4, d], [-.8, .5, .3, .3])
-        return norm6(_edge(_pan_curve(x, pan), .02, .4), .75)
-    d = 5.6
-    t = tarr(d)
-    fire = np.interp(t, [0, .5, 1.0, 1.25, 2.0, 3.5, d], [27, 62, 78, 58, 68, 52, 40])
-    eng = _diesel(d, fire, 2175, knock=1.2, rumble=1.0, lp=800)
-    lvl = np.interp(t, [0, .6, 1.2, 2.5, 4.0, d], [.6, 1.0, 1.0, .5, .15, 0])
-    eng = _tv_filter(eng, np.interp(t, [0, .8, 5.0, d], [4000, 2500, 400, 300]), .7, "lp")
-    pan = np.interp(t, [0, 2.5, d], [.3, .5, .7])
-    return norm6(_edge(_pan_curve(eng * lvl, pan), .005, .5), .75)
-
-
-def sfx_plowscrape():
-    """A steel blade dragged along the lot under the snow (1.9 s): a long grind that rises. A band of noise whose centre climbs from 500 to 2400 Hz (a resonance of 3) chattering at 35 Hz that speeds up to
-    75 Hz, a squeal of the steel (a sine from 900 to 1700 Hz at -18 dB, shivering at 30 Hz), the roar of the berm being pushed (noise under 500 Hz), grit (a crackle of 2 to 7 kHz ticks) and four soft
-    pillow thumps as the berm reaches the cars (0.3, 0.55, 0.8 and 1.05 s: one car every quarter second)."""
-    d = 1.9
-    t = tarr(d)
-    env = np.interp(t, [0, .25, 1.3, 1.7, d], [0, .75, 1.0, .6, 0])
-    chat = (.6 + .4 * np.sign(np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, d], [35, 75])) / SR)))
-    grind = _rms(_tv_filter(noise6(d, 2190), 500 * (2400 / 500) ** (t / d), 3.0, "bp")) * chat * env
-    squeal = _sin_of(np.interp(t, [0, d], [900, 1700])) * (.6 + .4 * np.sin(2 * np.pi * 30 * t)) * env * .12
-    roar = _rms(_lp4(noise6(d, 2191), 500, 2)) * env * .6
-    r = rng6(2192)
-    grit = np.zeros(len(t))
-    for i in range(70):
-        _place(grit, _band(2200 + i, .008, 2000, 7000) * expdecay(.008, .002), r.uniform(.1, 1.7), r.uniform(.1, .5))
-    x = grind * .55 + squeal + roar * .45 + grit * .25
-    for at in (.3, .55, .8, 1.05):
-        _place(x, _thump(80, 40, .25, .07) * .5 + _lp4(noise6(.2, int(at * 100) + 2210), 400, 2) * expdecay(.2, .06) * .6, at, 1.0)
-    return norm6(_edge(x, .01, .25), .7)
-
-
-def sfx_plowdump():
-    """The berm landing on the last car (1.8 s): a heavy WHUMP (a 55 Hz thump that sags to 30 Hz over 0.6 s and a 300 Hz cushion of noise), the snow crumbling over the roof (200 to 1800 Hz, 0.35 s),
-    the car's body flexing under the weight (a stick-slip creak, a sine from 420 to 380 Hz with a 23 Hz roughness, 0.45 s, through a 400 Hz resonance, and a dull 150 Hz 'tonk' of a panel), the antenna
-    shivering (a quiet 2.6 kHz wobble) and a last long settling hush."""
-    d = 1.8
-    x = np.zeros(_n(d))
-    _place(x, _thump(55, 30, .7, .16) * 1.3 + _lp4(noise6(.4, 2220), 300, 2) * expdecay(.4, .09) * 1.0, 0.0, 1.0)
-    _place(x, _band(2221, .5, 200, 1800) * expdecay(.5, .12) * .7, .04, 1.0)
-    dd = .5
-    tt = tarr(dd)
-    cr = _sin_of(np.interp(tt, [0, dd], [420, 380])) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 23 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** .8
-    _place(x, _res(cr, 400, 4.0) * .9, .12, .3)
-    _place(x, _sin_of(np.full(int(.2 * SR), 150.0)) * np.exp(-tarr(.2) / .05) * .6, .1, .5)
-    _place(x, np.sin(2 * np.pi * 2600 * tarr(.6)) * (1 + .4 * np.sin(2 * np.pi * 18 * tarr(.6))) * np.exp(-tarr(.6) / .18) * .05, .15, 1.0)
-    tt = tarr(1.3)
-    _place(x, _lp4(noise6(1.3, 2222), 600, 2) * np.exp(-tt / .45) * .25, .4, 1.0)
-    return norm6(_edge(x, .001, .3), .8)
-
-
-def sfx_partywhistle():
-    """Tomato's party horn (1.0 s): a blow-out whistle. A reed (a square, a sine and its octave through a 3 kHz low-pass) that scoops up from 480 to 1080 Hz in half a second, holds, and sags, fluttering
-    at 22 Hz like a paper tongue, over a breath of air, and the paper tube unrolling at the end (a feathery 'frrp', 1.5 to 5.5 kHz rising, 0.3 s)."""
-    d = 1.0
-    t = tarr(d)
-    f = np.interp(t, [0, .1, .55, .72, d], [480, 540, 1080, 1080, 900])
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    reed = np.sign(np.sin(ph)) * .5 + np.sin(ph) * .6 + np.sin(2 * ph) * .2
-    reed = _lp4(reed, 3000, 2) * (1 + .25 * np.sin(2 * np.pi * 22 * t))
-    env = np.interp(t, [0, .03, .6, .8, .9, d], [0, 1, 1, .5, .1, 0])
-    x = reed * env + _band(2230, d, 2500, 7000) * env * .08
-    tt = tarr(.3)
-    _place(x, _tv_filter(noise6(.3, 2231), _glide(1500, 5500, .3), 2.0, "bp") * np.sin(np.pi * np.clip(tt / .3, 0, 1)) * .5, .45, 1.0)
-    return norm6(_edge(x, .002, .12), .6)
-
-
-def sfx_slip():
-    """A boot on ice (0.55 s): the squeak-slide of rubber on a glaze (a sine that climbs 1100 to 2400 Hz and falls back to 1700, stick-slipping at 55 Hz, through a 1.8 kHz resonance, 0.36 s), three scrabbles of
-    the other boot (rubber scuffs, 700 to 3000 Hz), the swish of an arm flung out and the clipboard leaving a hand (a plastic clack and the clip's ring at 3.1 kHz). No gasp: the sound is all boot."""
-    d = .6
-    x = np.zeros(_n(d))
-    dd = .36
-    t = tarr(dd)
-    f = np.interp(t, [0, .2, dd], [1100, 2400, 1700])
-    sq = _sin_of(f) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 55 * t))) * np.sin(np.pi * np.clip(t / dd, 0, 1)) ** .6
-    _place(x, _res(sq, 1800, 2.5) * .8 + sq * .3, 0.0, .5)
-    for j, at in enumerate((.1, .19, .28)):
-        _place(x, _band(2240 + j, .07, 700, 3000) * np.sin(np.pi * np.clip(tarr(.07) / .07, 0, 1)) * .5, at, .6)
-    tt = tarr(.25)
-    _place(x, _tv_filter(noise6(.25, 2243), _glide(500, 2500, .25), 1.2, "bp") * np.sin(np.pi * np.clip(tt / .25, 0, 1)) * .3, .12, 1.0)
-    _place(x, _ping(1500, .2, .03, (1.0, 2.5), (1.0, .4), (1.0, .5)) * .4 + _ping(3100, .3, .06, (1.0, 2.7), (1.0, .4), (1.0, .5)) * .25, .38, 1.0)
-    return norm6(_edge(x, .003, .08), .6)
-
-
-def sfx_thud():
-    """A body landing on packed snow and sliding (1.5 s): soft. The landing (a 75 Hz thump that sags to 45 Hz, a muffled slap of noise under 700 Hz, the snow packing: a squeak and a crunch of grains, 600 to
-    2500 Hz), the slide across the lot (a hush of 500 to 3000 Hz noise fading over 0.8 s with a flutter of crystals and a spray of snow), the clipboard coming down (two plastic clacks) and the snowman's
-    head tumbling after her (three soft thumps that get quieter: 0.62, 0.86 and 1.06 s)."""
-    d = 1.5
-    x = np.zeros(_n(d))
-    r = rng6(2250)
-    t = tarr(.3)
-    _place(x, _thump(75, 45, .3, .06) * 1.0 + _lp4(noise6(.3, 2251), 700, 2) * expdecay(.3, .035) * .9, 0.0, 1.0)
-    for i in range(18):
-        _place(x, _band(2252 + i, .008, 600, 2500) * expdecay(.008, .003), r.uniform(.0, .14), r.uniform(.15, .45))
-    tt = tarr(.8)
-    _place(x, _band(2253, .8, 500, 3000) * np.interp(tt, [0, .05, .3, .8], [0, 1, .6, 0]) * (1 + .3 * np.sin(2 * np.pi * 9 * tt)) * .35, .08, 1.0)
-    for i in range(30):
-        _place(x, _band(2260 + i, .01, 1500, 6000) * expdecay(.01, .003), .1 + .8 * r.uniform() ** 1.4, r.uniform(.05, .2))
-    for at, f in ((.3, 1700), (.4, 2300)):
-        _place(x, _ping(f, .15, .02, (1.0, 2.4), (1.0, .4), (1.0, .5)) * .3, at, 1.0)
-    for at, g in ((.62, .7), (.86, .5), (1.06, .32)):
-        _place(x, _thump(90, 52, .22, .045) * .8 + _lp4(noise6(.2, int(at * 100) + 2290), 500, 2) * expdecay(.2, .04) * .6, at, g)
-    return norm6(_edge(x, .001, .25), .7)
-
-
-def sfx_shovel():
-    """A shovel biting snow and throwing it (0.7 s), three times, each a little different and a little more tired. The blade meeting a crust (a 'shk' of steel on ice, 2 to 6 kHz, 30 ms), the bite (a crunch
-    of fourteen grains in 90 ms, 500 to 3500 Hz, and the squeak of dry snow), the lift (a low slide of 300 to 800 Hz noise swelling over 0.12 s) and the throw (a feathery 'fwp' of snow flying, 1 to 5 kHz,
-    80 ms) landing as a soft patter of a dozen grains over the next 0.25 s."""
-    k = _nth("shovel") % 3
-    r = rng6(2300 + k)
-    x = np.zeros(_n(.75))
-    g_ = (1.0, .9, 1.1)[k]
-    _place(x, _band(2301 + k, .03, 2000, 6000) * expdecay(.03, .005) * .7, 0.0, 1.0)
-    for i in range(14):
-        _place(x, _band(2310 + 20 * k + i, .01, 500, 3500) * expdecay(.01, .0035), .01 + .09 * r.uniform() ** 1.3, r.uniform(.2, .7) * g_)
-    if r.uniform() < .8:
-        dd = .05
-        tt = tarr(dd)
-        _place(x, _sin_of(np.linspace(r.uniform(1800, 2600), r.uniform(2800, 3400), int(dd * SR))) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 90 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .1, .06, 1.0)
-    tt = tarr(.14)
-    _place(x, _tv_filter(noise6(.14, 2302 + k), _glide(300, 800, .14), 1.5, "bp") * np.sin(np.pi * np.clip(tt / .14, 0, 1)) * .4, .12, 1.0)
-    tt = tarr(.1)
-    _place(x, _tv_filter(noise6(.1, 2303 + k), _glide(1000, 5000, .1), 1.2, "bp") * np.sin(np.pi * np.clip(tt / .1, 0, 1)) * .5, .27, 1.0)
-    for i in range(12):
-        _place(x, _band(2330 + 20 * k + i, .008, 700, 3200) * expdecay(.008, .003), .36 + .27 * r.uniform() ** 1.4, r.uniform(.1, .35))
-    return norm6(_edge(x, .001, .12), .55)
-
-
-def sfx_phonering():
-    """A modern phone ring in a mitten (0.95 s): a bright two-operator bell (a sine and a 2x modulator that dies in 70 ms: a soft marimba-bell) playing a five-note figure (A5 E6 C-sharp6 E6 A6, 0.11 s
-    apart) and a three-note answer (A6 E6 A5, 0.55 s on), over a soft pad of the A major triad; the speaker is small and the phone is in a thick mitten: closed off at 5 kHz."""
-    d = .95
-    x = np.zeros(_n(d))
-    for fig, t0 in (((81, 88, 85, 88, 93), 0.0), ((93, 88, 81), .56)):
-        for j, m in enumerate(fig):
-            f = midi(m)
-            tt = tarr(.4)
-            idx = 1.8 * np.exp(-tt / .07)
-            bell = np.sin(2 * np.pi * f * tt + idx * np.sin(2 * np.pi * 2 * f * tt)) * np.exp(-tt / .16) * np.minimum(1, tt / .002)
-            _place(x, bell, t0 + j * .11, .55)
-    tt = tarr(.9)
-    pad = sum(np.sin(2 * np.pi * midi(m) * tt) for m in (69, 73, 76)) * np.interp(tt, [0, .05, .5, .9], [0, 1, .6, 0]) * .1
-    x[:len(pad)] += pad
-    return norm6(_edge(_lp4(_hp4(x, 300, 2), 5000, 3), .002, .1), .6)
-
-
-def sfx_plowdist():
-    """A plow far away (3.2 s), the first heard from the day room through the walls and the second at dawn through the window glass: a diesel at 29 Hz firing, low-passed at 260 Hz, that swells and passes
-    (a Doppler of -3 percent); a long scrape of steel on road (noise from 500 to 1500 Hz at 18 Hz, -22 dB); and an amber hum, the beacon's motor (a 190 Hz triangle that glides 190 -> 210 -> 180 with a slow
-    pulse) so faint that it is more a colour than a sound. The dawn one (3.6 s) is clearer and a little quieter: the snow has stopped and the world is silent."""
-    k = _nth("plowdist") % 2
-    d = 3.2 if k == 0 else 3.6
-    t = tarr(d)
-    fire = 29 * np.interp(t, [0, d * .45, d], [1.02, 1.0, .97])
-    eng = _lp4(_diesel(d, fire, 2350 + k, knock=.4, rumble=1.0, lp=300), 260 if k == 0 else 380, 3)
-    env = np.interp(t, [0, d * .45, d], [0, 1, 0]) ** 1.3
-    x = _rms(eng) * env
-    scr = _band(2352 + k, d, 500, 1500) * (.5 + .5 * np.sign(np.sin(2 * np.pi * 18 * t))) * env ** 1.5
-    x = x + _rms(scr) * .12 * env
-    f = 190 * np.interp(t, [0, d * .5, d], [1.0, 1.1, .95])
-    ph = np.cumsum(f) / SR
-    hum = (2 * np.abs(2 * (ph % 1) - 1) - 1) * (.7 + .3 * np.sin(2 * np.pi * .8 * t)) * env
-    x = x + hum * .04
-    x = _lp4(x, 1100 if k == 0 else 1800, 2)
-    return norm6(_edge(x, .3, .6), .45 if k == 0 else .35)
-
-
-def sfx_snowstep():
-    """One step in snow (0.22 s), the boots of the lot (every footstep of the lot in events.json): the crust giving way as a crunch of fourteen to twenty-three ice grains (500 to 7500 Hz, 3 to 9 ms),
-    the soft 'fump' of the snow packing under the weight (a 80 Hz thump and a 380 Hz cushion) and, about one step in three, the squeak of dry cold snow (1.8 to 3.4 kHz, 40 ms). Each step is different."""
-    k = _nth("snowstep")
-    r = rng6(2400 + k)
-    foot = k % 2
-    x = np.zeros(_n(.22))
-    for i in range(int(r.integers(14, 24))):
-        u = r.uniform() ** 1.3
-        dd = r.uniform(.003, .009)
-        lo = r.uniform(500, 1800)
-        _place(x, _band(2410 + 31 * k + i, dd, lo, min(lo + r.uniform(1200, 2800), 7500)) * expdecay(dd, dd * .4), .004 + .12 * u, r.uniform(.15, .6) * (1 - .5 * u))
-    t = tarr(.1)
-    x[:len(t)] += _lp4(noise6(.1, 2401 + k), 380, 2) * np.exp(-t / .03) * .5 + np.sin(2 * np.pi * (80 + 15 * foot) * t) * np.exp(-t / .03) * .3
-    if r.uniform() < .35:
-        dd = .045
-        tt = tarr(dd)
-        _place(x, _sin_of(np.linspace(r.uniform(1800, 3000), r.uniform(2200, 3400), int(dd * SR))) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 90 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .1, .05, 1.0)
-    return norm6(_edge(x, .0005, .04), .5)
-
-
-# ================================================================ blackout: the ten seconds
-def _whine(f0, f1, dur, amp, harm=((1, 1.0), (2, .4), (3, .2)), curve=1.0):
-    """A rotating machine spinning down (mono): a tone that falls from f0 to f1 along an exponential path (curve > 1 holds the pitch longer and drops late), with its harmonics, a soft attack and a
-    long fade; the pitch of a fan or a compressor losing power."""
-    tt = tarr(dur)
-    f = f0 * (f1 / f0) ** ((tt / dur) ** curve)
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    x = sum(a * np.sin(h * ph) for h, a in harm if h * f0 < SR * .45)
-    return x * np.interp(tt, [0, .06, dur * .45, dur], [0, 1, .75, 0]) * amp
-
-
-def _ballasts(d, alive=False):
-    """The fluorescent ballast buzz of the six rooms (stereo (2, n), each room in its own place from -0.85 to +0.85): 120 Hz and its harmonics to 960 Hz, a faint arc hiss at 2.5 to 6.5 kHz and the flicker of the
-    tubes. With `alive` they simply run; otherwise room i is dimmed over 0.15 s from 0.25 i s (the cutaway's cascade: a room every quarter second): two quick 20 ms flickers as it starts to go, a sag in
-    pitch as it dies and a small tick at the end."""
-    n = _n(d)
-    t = tarr(d)
-    out = np.zeros((2, n))
-    for i in range(6):
-        td = .25 * i + .15
-        f0 = 120.0 + .35 * (i - 2.5)
-        pitch = np.ones(n) if alive else np.interp(t, [td - .12, td + .03], [1.0, .86])
-        ph = 2 * np.pi * np.cumsum(f0 * pitch) / SR
-        buzz = sum(a * np.sin(h * ph + h * i) for h, a in ((1, 1.0), (2, .6), (3, .5), (4, .32), (5, .22), (6, .18), (7, .1), (8, .08)))
-        buzz = buzz * (1 + .12 * np.sin(2 * np.pi * 7.1 * t + i)) + _band(2501 + i, d, 2500, 6500) * .12
-        env = np.ones(n) if alive else np.interp(t, [0, td - .15, td, d], [1, 1, 0, 0])
-        if not alive:
-            for fl in (td - .13, td - .06):
-                env = env * (1 - .7 * np.exp(-.5 * ((t - fl) / .01) ** 2))
-        y = buzz * env * .22
-        if not alive:
-            _place(y, _band(2510 + i, .02, 1500, 6000) * expdecay(.02, .003) * .8, td, 1.0)
-        out += _ctr(y, -.85 + .34 * i)
-    return out
-
-
-def sfx_powerdown():
-    """The whole building losing power (stereo, 2.9 s from the cue at 0.2 s). SIX ROOMS, left to right, a room every quarter second as the cutaway shows (see _ballasts): each room's ballast buzz flickers
-    twice and sags as it dies over 0.15 s, with a small tick, in its own place from -0.85 to +0.85; the buzz comes in out of the lead-in hum (`hum_on`, 0.0 to 0.2 s) at a third of its level and surges to
-    full in 0.12 s, as a failing ballast does. Under them the machines run down: a fan's whine from 900 to 70 Hz over 1.5 s, a compressor from 118 to 24 Hz over 1.6 s, a bearing from 2.6 kHz to 320 Hz,
-    the HVAC's sigh (air that closes from 3.2 kHz to 180 Hz over 1.4 s, wide) and the main breaker's thunk at the start. Then a thick hush: only a 38 Hz hum that fades by 2.5 s."""
-    d = 2.9
-    n = _n(d)
-    t = tarr(d)
-    out = _ballasts(d) * np.interp(t, [0, .12], [.33, 1.0])
-    fan = np.zeros(n)
-    _place(fan, _whine(900, 70, 1.5, .34, ((1, 1.0), (2, .5), (3, .25)), 1.3), .3, 1.0)
-    comp = np.zeros(n)
-    _place(comp, _whine(118, 24, 1.6, .5, ((1, 1.0), (2, .6), (3, .4), (4, .25)), 1.2), .25, 1.0)
-    brg = np.zeros(n)
-    _place(brg, _whine(2600, 320, 1.2, .12, ((1, 1.0), (2, .3)), 1.4), .35, 1.0)
-    out += _ctr(fan, -.3) + _ctr(comp, .4) + _ctr(brg, .7)
-    dd = 1.5
-    tt = tarr(dd)
-    for c in range(2):
-        sigh = _tv_filter(noise6(dd, 2530 + c), _glide(3200, 180, dd), .9, "lp") * np.interp(tt, [0, .1, .6, dd], [0, 1, .55, 0])
-        _place(out[c], _rms(sigh) * .3 * np.interp(tt, [0, .1, .6, dd], [0, 1, .55, 0]), .2, 1.0)
-    br = np.zeros(n)
-    _place(br, _thump(75, 38, .3, .06) + _band(2540, .02, 600, 4500) * expdecay(.02, .003) * .7, 0.0, 1.0)
-    out += _ctr(br, 0.0) * .9
-    hum = np.sin(2 * np.pi * np.cumsum(np.interp(t, [0, 2.5], [38, 30])) / SR) * np.interp(t, [0, .4, 1.4, 2.5], [0, 1, .5, 0]) * .1
-    out += _ctr(hum, 0.0)
-    pk = np.max(np.abs(out))
-    sfx_powerdown.k = .8 / pk                                                      # the lead-in hum is scaled by the same factor
-    return norm6(_edge(out, .006, .3), .8)
-
-
-def sfx_hum_on():
-    """The building's lights humming before the failure (designed event, 0.25 s, at the start of the scene): the six ballasts alive at a third of the level they have when `powerdown` begins (0.2 s), crossfaded
-    into it over 15 ms, so the loss of power comes out of the room tone and not out of nothing."""
-    if not hasattr(sfx_powerdown, "k"):
-        sfx_powerdown()
-    d = .25
-    x = _ballasts(d, alive=True) * .33 * sfx_powerdown.k
-    t = tarr(d)
-    return x * np.interp(t, [0, .004, .19, .215], [0, 1, 1, 0])
-
-
-def sfx_relay():
-    """A heavy relay, four times. The first three (0.75 s, panned across the building from the left to the right): the contactor of an exit sign's emergency supply (a 165 Hz thump that sags to 58 Hz, a
-    320 Hz knock and a clack of steel from 0.5 to 3.2 kHz, a faint ring of the housing) and, 38 ms later, the sign lighting (a bright tick and the first buzz of its ballast, 120 Hz). Each is a little
-    different (pitch 1.0, 0.93, 1.08). The fourth (1.5 s, the generator's TRANSFER SWITCH): two strokes, the contacts breaking (a hard clack and a ring at 1.1 kHz) and, 95 ms later, making (a 110 Hz thump that
-    sags to 38 Hz, a heavy CHUNK of noise from 0.2 to 2.5 kHz, the cabinet's ring at 300 and 640 Hz), then the load coming on: a hum at 60, 120 and 180 Hz that swells to a steady level."""
-    k = _nth("relay") % 4
-    if k < 3:
-        ps = (1.0, .93, 1.08)[k]
-        x = np.zeros(_n(.75))
-        tt = tarr(.25)
-        clunk = _thump(165 * ps, 58, .25, .04) + np.sin(2 * np.pi * 320 * ps * tt) * np.exp(-tt / .03) * .4 + _band(2550 + k, .25, 500, 3200) * expdecay(.25, .007) * .8
-        _place(x, clunk + _ping(780 * ps, .4, .06, (1.0, 2.76, 5.4), (.5, .3, .15), (1.0, .6, .4)) * .25, 0.0, 1.0)
-        t2 = tarr(.03)
-        _place(x, _band(2560 + k, .03, 3000, 8000) * expdecay(.03, .0015) * .6 + np.sin(2 * np.pi * 2900 * t2) * np.exp(-t2 / .004) * .3, .038, 1.0)
-        t3 = tarr(.6)
-        _place(x, (np.sin(2 * np.pi * 120 * t3) + .5 * np.sin(2 * np.pi * 240 * t3 + 1)) * np.interp(t3, [0, .12, .6], [0, 1, .5]) * .08, .05, 1.0)
-        return _ctr(norm6(_edge(x, .0006, .15), .7), (-.6, .05, .6)[k])
-    d = 1.5
-    x = np.zeros(_n(d))
-    _place(x, _band(2570, .1, 600, 5000) * expdecay(.1, .008) * .9 + _ping(1100, .3, .05, (1.0, 2.7, 4.6), (.8, .4, .2), (1.0, .6, .4)) * .4, 0.0, 1.0)
-    tt = tarr(.5)
-    _place(x, _thump(110, 38, .5, .09) * 1.3 + _band(2571, .5, 200, 2500) * expdecay(.5, .02) * .9 + _ping(560, .5, .1, (1.0, 2.3, 4.1), (1.0, .5, .3), (1.0, .6, .4)) * .4, .095, 1.0)
-    _place(x, _ping(300, 1.0, .25, (1.0, 2.13), (.6, .3), (1.0, .6)) * .3 + _ping(640, .8, .18, (1.0, 2.4), (.4, .2), (1.0, .6)) * .2, .1, 1.0)
-    t3 = tarr(1.3)
-    hum = (np.sin(2 * np.pi * 60 * t3) + .7 * np.sin(2 * np.pi * 120 * t3 + 1) + .35 * np.sin(2 * np.pi * 180 * t3 + 2)) * np.interp(t3, [0, .12, .5, 1.3], [0, .5, 1, .8]) * .22
-    _place(x, hum, .1, 1.0)
-    return norm6(_edge(x, .0006, .2), .8)
-
-
-def sfx_flashlight():
-    """A flashlight switched on, twice. The first (0.7 s, the staff's torch): a rubber button pressed (a soft 'tk' of 1.1 kHz closed off at 5 kHz) and released 75 ms later, and a quiet hum of the LED driver (a
-    4.3 kHz whine shivering at 37 Hz at -29 dB and a 150 Hz hum). The second (0.8 s, Brenda's from twenty nineteen): a metal slide switch ('clack', a 640 Hz barrel with inharmonic partials and a click of
-    0.8 to 4.5 kHz) and a tired filament's hum (100 Hz and 200 Hz wobbling at 11 Hz)."""
-    k = _nth("flashlight") % 2
-    if k == 0:
-        x = np.zeros(_n(.75))
-        t = tarr(.03)
-        tk = _lp4(_band(2580, .03, 600, 3500) * expdecay(.03, .005) + np.sin(2 * np.pi * 1100 * t) * np.exp(-t / .006) * .4, 5000, 2)
-        _place(x, tk, 0.0, 1.0)
-        _place(x, tk, .075, .5)
-        tt = tarr(.6)
-        whine = np.sin(2 * np.pi * 4300 * tt + 2 * np.sin(2 * np.pi * 37 * tt)) * np.interp(tt, [0, .08, .3, .6], [0, 1, .7, 0]) * .035
-        hum = np.sin(2 * np.pi * 150 * tt) * np.interp(tt, [0, .08, .3, .6], [0, 1, .7, 0]) * .05
-        _place(x, whine + hum, .09, 1.0)
-        return norm6(_edge(x, .0004, .12), .5)
-    x = np.zeros(_n(.85))
-    _place(x, _ping(640, .3, .04, (1.0, 2.5, 4.4), (1.0, .5, .3), (1.0, .6, .4)) * .8 + _band(2581, .02, 800, 4500) * expdecay(.02, .003) * .8, 0.0, 1.0)
-    _place(x, _band(2582, .01, 1500, 5000) * expdecay(.01, .002) * .4, .034, 1.0)
-    tt = tarr(.7)
-    hum = (np.sin(2 * np.pi * 100 * tt) + .5 * np.sin(2 * np.pi * 200 * tt + 1)) * np.interp(tt, [0, .06, .4, .7], [0, 1, .8, 0]) * (1 + .3 * np.sin(2 * np.pi * 11 * tt)) * .05
-    _place(x, hum, .06, 1.0)
-    return norm6(_edge(x, .0004, .15), .5)
-
-
-def _swtick(k=0, g=1.0):
-    """One tick of the stopwatch (0.05 s): a tiny 'tk' of the case, a 2.8 kHz ping of 5 ms and a 1.3 kHz body under it."""
-    tt = tarr(.05)
-    return (np.sin(2 * np.pi * 2800 * tt) * np.exp(-tt / .005) * .5 + _band(2590 + k, .05, 3000, 8500) * expdecay(.05, .0012) * .55 + np.sin(2 * np.pi * 1300 * tt) * np.exp(-tt / .01) * .25) * g
-
-
-def sfx_swtick():
-    """One quiet tick of Onion's stopwatch (designed event, one per whole second it shows, from 3.4 s to 8.4 s of the blackout)."""
-    k = _nth("swtick")
-    return norm6(_edge(_swtick(k, 1.0), .0004, .01), .4)
-
-
-def sfx_stopwatchticks():
-    """The count (3.7 s from the cue at 9.02 s, while the stopwatch reads 6.6 to 10.0): a quiet digital tick on every whole second it shows (9.40, 10.40, 11.40 and 12.40 s of the scene, each a bit stronger and
-    the last one doubled) over a tension pad that is NOT music: a low rumble under 200 Hz swelling with a sine that creeps from 62 to 118 Hz (and its octave) and a faint whine that climbs 3.1 to 4.4 kHz, all
-    chopped by a tremolo that accelerates from 1.2 to 7 Hz (a heartbeat that speeds up without ever being a beat), gone before the generator's crank (the pad ends at 3.3 s)."""
-    d = 3.7
-    n = _n(d)
-    t = tarr(d)
-    x = np.zeros(n)
-    for j, g in enumerate((.8, .9, 1.0, 1.15)):
-        _place(x, _swtick(10 + j, g), .381 + j, 1.0)
-    _place(x, _swtick(14, .8), .381 + 3 + .09, 1.0)
-    u = np.clip(t / 3.3, 0, 1)
-    f = np.interp(t, [0, 3.3], [62, 118])
-    low = _sin_of(f) + .5 * _sin_of(2 * f)
-    pad = _rms(low) * .7 + _rms(_lp4(noise6(d, 2595), 200, 2)) * .5
-    rate = 1.2 + (7.0 - 1.2) * u ** 2
-    trem = 1 - .35 * (.5 + .5 * np.sin(2 * np.pi * np.cumsum(rate) / SR))
-    env = u ** 2 * np.interp(t, [3.0, 3.3, d], [1, 0, 0])
-    whine = _sin_of(np.interp(t, [0, 3.3], [3100, 4400])) * u ** 3 * .02
-    x = x + (pad * trem * env * .55 + whine * np.interp(t, [3.0, 3.3, d], [1, 0, 0]))
-    return norm6(_edge(x, .003, .1), .5)
-
-
-def sfx_genstart():
-    """The generator starting (2.8 s from the cue at 12.33 s). 0 to 0.58 s: the starter motor (a whine from 190 to 360 Hz through a 1.5 kHz low-pass) turning the engine over (compression strokes
-    at 6 Hz that speed up to 11 Hz: 'rurr, rurr'); COUGH ONE at 0.12 s (a pop-thump of 130 Hz that sags to 55 Hz, with a puff of noise from 150 to 1500 Hz: this is the 2 px shudder of the picture),
-    COUGH TWO at 0.38 s (smaller); THE CATCH at 0.58 s, the diesel fires on every stroke (the firing frequency climbs from 14 to 60 Hz in 0.9 s, the knock and the exhaust) and settles into a steady deep
-    rumble at 60 Hz that fills the building, low-passed at 380 Hz as it is through the walls. The transfer switch is the next cue (`relay`, 0.8 s later)."""
-    d = 2.8
-    n = _n(d)
-    t = tarr(d)
-    x = np.zeros(n)
-    ts = np.interp(t, [0, .62, .66], [1, 1, 0])
-    rate = np.interp(t, [0, .6, d], [6, 11, 11])
-    chug = _diesel(d, rate, 2600, knock=.3, rumble=.6, lp=260) * ts
-    st = _lp4(osc("saw", np.interp(t, [0, .6, d], [190, 360, 360]), d) + .5 * osc("square", np.interp(t, [0, .6, d], [95, 180, 180]), d), 1500, 2) * np.interp(t, [0, .04, .55, .64], [0, 1, .9, 0])
-    x += _rms(chug) * ts * .8 + _rms(st) * .22 * np.interp(t, [0, .04, .55, .64], [0, 1, .9, 0])
-    for at, g in ((.12, 1.0), (.38, .6)):
-        _place(x, _thump(130, 55, .18, .035) * 1.1 + _tv_filter(noise6(.25, int(at * 100) + 2610), _glide(1500, 150, .25), 1.0, "bp") * expdecay(.25, .05) * .9, at, g)
-    fire = np.interp(t, [0, .58, 1.5, d], [14, 14, 60, 60])
-    eng = _diesel(d, fire, 2620, knock=.6, rumble=1.2, lp=420)
-    envc = np.interp(t, [.56, .75, 1.3, 1.8, 2.3, d], [0, .5, 1.0, .8, .25, 0])
-    eng = _lp4(eng, 380, 3) * envc
-    x += _rms(eng) * envc * 1.1
-    return norm6(_edge(x, .0006, .4), .8)
-
-
-def sfx_lowbattery():
-    """Binder's low battery (1.3 s): a descending two-tone device chime (E6 then B5, a bright sine with its octave, 0.2 s apart), the click of the screen going off and the power-down whine (a sine that falls
-    from 2.9 kHz to 180 Hz in 0.7 s while it dies, with its octave at a third of the level)."""
-    d = 1.3
-    x = np.zeros(_n(d))
-    for j, f in enumerate((1318.5, 987.8)):
-        tt = tarr(.22)
-        _place(x, (np.sin(2 * np.pi * f * tt) + .3 * np.sin(4 * np.pi * f * tt) * np.exp(-tt / .05)) * np.exp(-tt / .09) * np.minimum(1, tt / .003), .2 * j, .7)
-    dd = .7
-    tt = tarr(dd)
-    f = _glide(2900, 180, dd)
-    wh = _sin_of(f) * np.exp(-tt / .28) * np.minimum(1, tt / .004) + .3 * _sin_of(f * 2.01) * np.exp(-tt / .15)
-    _place(x, wh, .45, .5)
-    _place(x, _band(2630, .02, 1500, 6500) * expdecay(.02, .003) * .5, .42, 1.0)
-    return norm6(_edge(_lp4(x, 8000, 2), .0006, .1), .55)
-
-
-def sfx_candleclick():
-    """A tiny LED candle's switch (0.12 s), three times (Tomato's three candles): a small plastic slide-switch click (a 2 to 6 kHz burst of 10 ms, a 1.6 kHz tick) and a faint glass tink on the lens at
-    4.2 kHz, each a little different."""
-    k = _nth("candleclick")
-    ps = (1.0, 1.06, .95)[k % 3]
-    x = np.zeros(_n(.14))
-    t = tarr(.04)
-    _place(x, _band(2640 + k, .04, 2000, 6500) * expdecay(.04, .003) * .7 + np.sin(2 * np.pi * 1600 * ps * t) * np.exp(-t / .004) * .3, 0.0, 1.0)
-    _place(x, _ping(4200 * ps, .1, .02, (1.0, 2.4), (1.0, .3), (1.0, .5)) * .2, .012, 1.0)
-    return norm6(_edge(x, .0003, .03), .45)
-
-
-def sfx_clickdead():
-    """Brenda's flashlight clicking with nothing happening (0.3 s), twice: a hollow click of the switch (a 520 Hz body of a plastic case that dies in 12 ms, a click of 0.9 to 3 kHz) and nothing after it. The
-    second is a double tap (the click, 70 ms later, softer)."""
-    k = _nth("clickdead") % 2
-    x = np.zeros(_n(.3))
-    t = tarr(.06)
-    c = np.sin(2 * np.pi * 520 * t) * np.exp(-t / .012) * .6 + _band(2650, .06, 900, 3000) * expdecay(.06, .005) * .6
-    _place(x, c, 0.0, 1.0)
-    if k == 1:
-        _place(x, c, .07, .55)
-    return norm6(_edge(x, .0004, .06), .5)
-
-
-def sfx_breath():
-    """A person breathing in the dark (designed event, 0.8 s): an inhale through the nose (a band of noise that rises through two soft formants, 500 and 1.4 kHz, over 0.3 s) and a longer, softer exhale
-    (0.4 s), a little different each time."""
-    k = _nth("breath")
-    r = rng6(2660 + k)
-    x = np.zeros(_n(.9))
-    for at, dd, g, f2 in ((0.0, .3, .6, 1400), (.32, .5, .9, 1100)):
-        tt = tarr(dd)
-        nz = noise6(dd, 2661 + 3 * k + int(at * 10))
-        b = (_res(nz, 500 * r.uniform(.9, 1.1), 2.0) * .9 + _res(nz, f2 * r.uniform(.9, 1.1), 2.5) * .5 + _lp4(nz, 3000, 2) * .25) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** 1.4
-        _place(x, _lp4(b, 2800, 2), at, g)
-    return norm6(_edge(x, .02, .2), .35)
-
-
-# ================================================================ dayroom: cups of snow
-def sfx_cupset():
-    """A paper cup set down on wood (0.3 s), four times (Mango's scoop from the sill, then the line of cups): a soft hollow tock (a 500 to 2600 Hz burst of 10 ms, a 1.05 kHz body and a 300 Hz knock), the
-    cup's paper creaking as it takes the weight and three grains of snow shifting in it. Each is a little different."""
-    k = _nth("cupset")
-    r = rng6(2700 + k)
-    ps = (1.0, 1.07, .94, 1.03)[k % 4]
-    x = np.zeros(_n(.3))
-    t = tarr(.1)
-    _place(x, _band(2701 + k, .1, 500, 2600) * expdecay(.1, .01) * .8 + np.sin(2 * np.pi * 1050 * ps * t) * np.exp(-t / .014) * .35 + np.sin(2 * np.pi * 300 * t) * np.exp(-t / .02) * .25, 0.0, 1.0)
-    _place(x, _band(2702 + k, .08, 2500, 7000) * np.sin(np.pi * np.clip(tarr(.08) / .08, 0, 1)) * .12, .03, 1.0)
-    for j in range(3):
-        _place(x, _band(2710 + 5 * k + j, .008, 1500, 5000) * expdecay(.008, .003), .045 + .05 * j + r.uniform(0, .02), r.uniform(.1, .3))
-    return norm6(_edge(x, .0005, .07), .5)
-
-
-def sfx_slurp():
-    """Water from a paper cup drunk with real pleasure (0.8 s), twice per resident: the suction (a band of noise that climbs from 480 to 1700 Hz in 0.38 s, bubbling at 30 Hz), the gurgle of six small bubbles
-    (12 to 25 ms blips, 700 to 1800 Hz), the swallow (a low 'glk', a sine that falls from 190 to 105 Hz in 90 ms, with a throat click) and a satisfied breath out (a soft formant at 600 Hz, 0.25 s)."""
-    k = _nth("slurp")
-    r = rng6(2720 + k)
-    x = np.zeros(_n(.85))
-    dd = .38
-    t = tarr(dd)
-    suck = _tv_filter(noise6(dd, 2721 + k), _glide(480, 1700, dd), 3.5, "bp") * (1 + .5 * np.sin(2 * np.pi * (30 + 4 * (k % 3)) * t)) * np.interp(t, [0, .05, .25, dd], [0, 1, .9, 0])
-    _place(x, suck, 0.0, .7)
-    for i in range(6):
-        dd2 = r.uniform(.012, .025)
-        tt = tarr(dd2)
-        _place(x, np.sin(2 * np.pi * r.uniform(700, 1800) * tt * (1 + 1.5 * tt / dd2)) * np.exp(-tt / (dd2 * .4)), r.uniform(.04, .34), r.uniform(.15, .4))
-    tt = tarr(.09)
-    _place(x, _sin_of(_glide(190, 105, .09)) * np.exp(-tt / .035) * .8 + _band(2722 + k, .09, 300, 1500) * expdecay(.09, .01) * .3, .44, .7)
-    tt = tarr(.25)
-    _place(x, _res(noise6(.25, 2723 + k), 600, 2.0) * np.sin(np.pi * np.clip(tt / .25, 0, 1)) * .35, .56, 1.0)
-    return norm6(_edge(x, .01, .1), .5)
-
-
-def sfx_pentick():
-    """Lemon ticking the clipboard (0.3 s): the scratch of a ballpoint making a check mark (a 70 ms swell of 2 to 8 kHz noise, a down stroke and an up stroke) and the firm tap of the pen on the plastic board
-    (a 900 Hz tk)."""
-    x = np.zeros(_n(.32))
-    tt = tarr(.07)
-    _place(x, _band(2730, .07, 2000, 8000) * (np.sin(np.pi * np.clip(tt / .07, 0, 1)) ** 1.2) * (1 + .5 * np.sin(2 * np.pi * 70 * tt)) * .45, 0.0, 1.0)
-    t = tarr(.05)
-    _place(x, np.sin(2 * np.pi * 900 * t) * np.exp(-t / .008) * .5 + _band(2731, .05, 1000, 5000) * expdecay(.05, .004) * .7, .1, 1.0)
-    return norm6(_edge(x, .0005, .05), .5)
-
-
-# ================================================================ night: the clock, the wind, the time-lapse
 def _bell(f, d, tau, a=.002):
     """The series' call-light bell at any length: a sine with the 2.76x and 5.4x partials dying faster, a soft attack."""
     t = tarr(d)
@@ -1732,237 +1041,99 @@ def _bell(f, d, tau, a=.002):
     return x * np.minimum(1, t / a)
 
 
-def sfx_clocktick():
-    """The big wall clock of the station (a school-room regulator with a loud escapement). The first (1.7 s, the open): tick (a sharp click at 0.9 to 4.5 kHz over a hollow case at 1.45 kHz and 470 Hz) and,
-    a second later, tock (lower, 1.15 kHz). The second (2.0 s, the wait): tick, tock and at 1.12 s the minute hand dropping to 11:00 with a heavier 'ka-chunk' (a 220 Hz clunk, a steel clack at 700 Hz and the
-    spring of the movement)."""
-    k = _nth("clocktick") % 2
-    x = np.zeros(_n(2.0 if k else 1.7))
+def sfx_typing():
+    """The state form typing itself in (2.7 s): a manual typewriter, words of four to seven keys at about 85 ms with a space bar between, and at the end of each of the two rows the carriage bell (a
+    small bell at 2.1 kHz) and the carriage return (a ratcheting zip of 0.2 s and the carriage's thump)."""
+    k = _nth("typing")
+    r = rng6(3150 + k)
+    d = 2.7
+    x = np.zeros(_n(d + .2))
+    t = .03
+    j = 0
+    rows = (1.15, 2.4)
+    row = 0
+    while t < d - .1:
+        if row < len(rows) and t >= rows[row]:
+            _place(x, _bell(2100.0, .6, .25) * .35, t, 1.0)
+            dd = .2
+            tt = tarr(dd)
+            rat = _band(3151 + row, dd, 1000, 5000) * (.5 + .5 * np.sign(np.sin(2 * np.pi * 55 * tt))) * np.interp(tt, [0, .03, dd], [0, 1, .3])
+            _place(x, rat, t + .12, .5)
+            _place(x, _thump(160, 90, .12, .03), t + .33, .6)
+            t += .5
+            row += 1
+            continue
+        space = j % 6 == 5
+        _place(x, _typebar(3160 + 7 * k + j, r.uniform(.55, 1.0), space), t, 1.0)
+        t += .085 * r.uniform(.75, 1.3) + (.05 if space else 0)
+        j += 1
+    return norm6(_edge(_lp4(x, 6000, 2), .001, .08), .6)
 
-    def tk(freq, g):
-        tt = tarr(.12)
-        return (_band(2740, .12, 900, 4500) * expdecay(.12, .004) * .8 + np.sin(2 * np.pi * freq * tt) * np.exp(-tt / .018) * .6 + np.sin(2 * np.pi * (freq / 3.1) * tt) * np.exp(-tt / .035) * .4) * g
-    _place(x, tk(1450, 1.0), 0.0, 1.0)
-    _place(x, tk(1150, .85), 1.0, 1.0)
-    if k == 1:
+
+# ================================================================ arrive: the doors, the silhouettes, the PA, Binder
+def sfx_doorchime():
+    """The front doors' entry chime (1.4 s): the shop-door 'ding-dong' of an automatic door, two soft electronic bells a major third apart (E6 then C6, 0.3 s apart, pure sines with a faint 3x
+    partial and a slow decay). ARRIVE: the glass doors swing open under it (a hush of outside air through the doorway, the weather strip brushing the floor). EXIT (Eggplant bursts in): the same
+    chime, the glass doors flung open (a push of air, both leaves banging their stops, the glass shivering) and the snowy night blowing in for a moment (a cold rush of wind)."""
+    k, scene, i = _ctx("doorchime")
+    x = np.zeros(_n(1.5))
+    for at, f, g in ((0.0, 1318.5, 1.0), (.3, 1046.5, .85)):
+        d = 1.1
+        t = tarr(d)
+        tone = (np.sin(2 * np.pi * f * t) + .12 * np.sin(2 * np.pi * 3 * f * t) * np.exp(-t / .08)) * np.exp(-t / .42) * np.minimum(1, t / .006)
+        _place(x, tone, at, g)
+    if scene == "exit":
         tt = tarr(.3)
-        _place(x, np.sin(2 * np.pi * 220 * tt) * np.exp(-tt / .04) * .9 + _band(2741, .3, 400, 3500) * expdecay(.3, .01) * .8 + _ping(700, .4, .07, (1.0, 2.5, 4.4), (.8, .4, .2), (1.0, .6, .4)) * .35, 1.12, 1.0)
-        _place(x, tk(1700, .6), 1.2, 1.0)
-    return norm6(_edge(x, .0004, .25), .55)
+        _place(x, _lp4(noise6(.3, 3170), 900, 2) * np.interp(tt, [0, .2, .3], [0, 1, .4]) * .3, 0.0, 1.0)
+        for j, at in enumerate((.22, .27)):
+            _place(x, _thump(150, 95, .14, .025) * .7 + _band(3171 + j, .1, 400, 2500) * expdecay(.1, .01) * .45 + _glass(2350 + 140 * j, .3, .05, .001) * .12, at, 1.0 - .2 * j)
+        d = 1.2
+        t = tarr(d)
+        _place(x, _bp4(noise6(d, 3172), 200, 2600, 2) * np.interp(t, [0, .25, .5, d], [0, 1, .45, 0]) * .2, .2, 1.0)
+        _place(x, _band(3173, .9, 2500, 8000) * np.interp(tarr(.9), [0, .3, .9], [0, 1, 0]) * .04, .25, 1.0)
+    else:
+        d = 1.3
+        t = tarr(d)
+        _place(x, _lp4(noise6(d, 3173), 1800, 2) * np.interp(t, [0, .15, .6, d], [0, 1, .5, 0]) * .12, 0.0, 1.0)
+        _place(x, _band(3174, .35, 1200, 5000) * np.sin(np.pi * np.clip(tarr(.35) / .35, 0, 1)) * .06, .05, 1.0)
+    return norm6(_edge(x, .001, .3), .55)
 
 
-def sfx_windgust():
-    """A gust against the glass (2.0 s, indoors): the building takes it (a roar closed at 520 Hz that swells in 0.25 s and falls away), a howl through the frame (a resonance that climbs from 380 to 630 Hz and
-    back), the pane shivering (small ticks near 1.65 kHz) and the snow that comes with it hissing on the glass (4 to 9 kHz, 1.2 s)."""
-    d = 2.0
-    t = tarr(d)
-    env = np.interp(t, [0, .25, .7, d], [0, 1, .55, 0]) ** 1.2
-    roar = _rms(_lp4(noise6(d, 2750), 520, 3)) * env
-    howl = _rms(_tv_filter(noise6(d, 2751), 380 + 250 * env, 12.0, "bp")) * env ** 2 * .6
-    r = rng6(2752)
-    x = roar + howl
-    for i in range(14):
-        _place(x, _ping(r.uniform(1500, 1800), .08, .015, (1.0, 2.4), (1.0, .4), (1.0, .5)) * .05, r.uniform(.1, 1.2), 1.0)
-    x = x + _band(2753, d, 4000, 9000) * np.interp(t, [0, .35, .9, d], [0, 1, .5, 0]) * .1
-    return norm6(_edge(x, .02, .4), .5)
-
-
-def sfx_badgepeel():
-    """A sticker peeled off a badge and pressed on again (0.9 s): the lifting (a paper rasp from 2 to 5 kHz roughened at 110 Hz as the glue lets go, 0.2 s), the pat of the sticker on the plastic (a 200 Hz thump
-    and a 1.5 kHz tick) and the thumb smoothing it down (a 1 to 4 kHz rub fluttering at 14 Hz for 0.25 s, with one small squeak)."""
-    x = np.zeros(_n(.95))
-    d = .2
-    t = tarr(d)
-    _place(x, _tv_filter(noise6(d, 2760), _glide(2000, 5000, d), 1.4, "bp") * (.55 + .45 * np.sign(np.sin(2 * np.pi * 110 * t))) * np.minimum(1, t / .02) * np.interp(t, [0, d * .8, d], [1, 1, 0]), 0.0, .9)
-    tt = tarr(.1)
-    _place(x, np.sin(2 * np.pi * 200 * tt) * np.exp(-tt / .025) * .6 + _band(2761, .1, 1000, 4500) * expdecay(.1, .008) * .6, .27, 1.0)
-    dd = .25
-    t2 = tarr(dd)
-    _place(x, _band(2762, dd, 1000, 4000) * (.6 + .4 * np.sin(2 * np.pi * 14 * t2)) * np.sin(np.pi * np.clip(t2 / dd, 0, 1)) * .2, .38, 1.0)
-    _place(x, _sin_of(_glide(1900, 2500, .06)) * np.sin(np.pi * np.clip(tarr(.06) / .06, 0, 1)) * .06, .5, 1.0)
-    return norm6(_edge(x, .003, .12), .6)
-
-
-def sfx_lapsewhoosh():
-    """The time-lapse begins (1.9 s, stereo): a big whoosh like a tape winding up. A band of air that climbs from 250 Hz to 7 kHz (a different noise in each ear, a resonance of 1.6) swelling to a peak at 0.6 s and
-    falling away by 1.9 s, a sine that winds up from 90 to 1400 Hz under it, a hard 'thwip' at the start and a soft low whump of displaced air."""
+def sfx_dramatic():
+    """A mock-thriller sting for the two silhouettes in the doorway (1.9 s, stereo): a huge low brass 'BRAAAM' (saws on D1, D2, A2 and D3, a filter that opens from 300 Hz to 2 kHz in 0.3 s and
+    closes again, driven into a soft distortion), a timpani and a bass drum on the hit, a high string screech over it (a cluster of B6, C7 and C-sharp7 in tremolo, 0.9 s) and a sub that drops from
+    55 to 32 Hz. It dies before Kale's first word (1.0 s after the hit it is 20 dB down)."""
     d = 1.9
     t = tarr(d)
-    env = np.interp(t, [0, .05, .6, 1.2, d], [0, .6, 1.0, .5, 0])
+    env = np.minimum(1, t / .025) * np.exp(-t / .42)
+    fc = 300 + 1700 * np.interp(t, [0, .3, 1.0, d], [0, 1, .3, 0])
+    br = sum(osc("saw", midi(m) * (1 + .002 * j), d) for j, m in enumerate((26, 38, 45, 50)))
+    br = _tv_filter(br, fc, .9, "lp")
+    br = np.tanh(2.2 * br / (np.max(np.abs(br)) + 1e-9)) * env
     out = np.zeros((2, _n(d)))
-    for c in range(2):
-        out[c] = _rms(_tv_filter(noise6(d, 2770 + c), 250 * (7000 / 250) ** (np.clip(t / 1.4, 0, 1)), 1.6, "bp")) * env * .6
-    wind_up = _sin_of(90 * (1400 / 90) ** (np.clip(t / 1.3, 0, 1))) * env * .1
-    out += np.stack([wind_up, wind_up])
-    for c in range(2):
-        _place(out[c], _band(2772 + c, .03, 2500, 9000) * expdecay(.03, .004) * .8 + _lp4(noise6(.2, 2774 + c), 300, 2) * expdecay(.2, .05) * .5, 0.0, 1.0)
-    return norm6(_edge(out, .003, .4), .7)
+    out += _ctr(br, -.15) * .8 + _ctr(_wobble(br, .0008, 5.5), .15) * .8
+    tm = osc("sine", np.linspace(70, 55, _n(d)), d) * np.exp(-t / .5) + _lp4(noise6(d, 3180), 300, 2) * np.exp(-t / .08) * .6
+    out += _ctr(tm * .9, 0.0)
+    sc = sum(np.sin(2 * np.pi * midi(m) * t + m) for m in (95, 96, 97)) * (.6 + .4 * np.sin(2 * np.pi * 13 * t)) * np.interp(t, [0, .05, .9, 1.1], [0, 1, .3, 0], right=0)
+    out += np.stack([sc, np.roll(sc, 300)]) * .06
+    out += _ctr(_sin_of(55 * (32 / 55) ** np.clip(t / 1.2, 0, 1)) * np.exp(-t / .6) * .7, 0.0)
+    return norm6(_edge(out, .0005, .5), .85)
 
 
-def sfx_whoosh_s():
-    """A small whoosh (0.55 s, stereo; designed event): the rounds, or a sleeper changing pose, in the time-lapse. A soft band of air (1.6 kHz sliding down to 800 Hz), a fast pan from one side to the other
-    (the side alternates from one to the next), a soft attack."""
-    k = _nth("whoosh_s")
-    d = .55
-    t = tarr(d)
-    nz = _tv_filter(noise6(d, 2780 + k), _glide(1600, 800, d), 1.8, "bp") * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.6
-    side = 1 if k % 2 else -1
-    pan = side * np.interp(t, [0, d], [-.8, .8])
-    return norm6(_edge(_pan_curve(nz, pan), .01, .15), .35)
+def sfx_pachime():
+    """The page's two-tone ceiling chime (1.3 s), a major third down: E5 and C5, each a soft tubular bell (a sine and its 2.76x partial that fades quickly, a faint octave), 0.42 s apart, through
+    the same cheap driver as the voice that follows it (350 Hz to 3.6 kHz, a little saturation) and a small slap echo (110 ms). Ding, dong: CODE SURVEY."""
+    x = np.zeros(_n(1.5))
+    for at, f, g in ((0.0, 659.25, 1.0), (.42, 523.25, .9)):
+        d = .95
+        t = tarr(d)
+        bell = (np.sin(2 * np.pi * f * t) + .22 * np.sin(2 * np.pi * 2.76 * f * t) * np.exp(-t / .12) + .1 * np.sin(4 * np.pi * f * t) * np.exp(-t / .25)) * np.exp(-t / .38)
+        _place(x, bell * np.minimum(1, t / .004), at, g)
+    y = np.tanh(1.5 * _bp4(x, 350, 3600, 2) / (np.max(np.abs(x)) + 1e-9)) * .7
+    y = y + _delay(_bp4(y, 400, 2800, 1), 110, .22)
+    return norm6(_edge(y, .002, .2), .6)
 
 
-def sfx_rustle():
-    """A sleeper turning over under a grey blanket (0.5 s; designed event): the cloth (noise from 200 to 2500 Hz in three irregular swells) and the creak of the cot's frame (a 380 Hz squeak of 0.15 s)."""
-    k = _nth("rustle")
-    r = rng6(2790 + k)
-    x = np.zeros(_n(.55))
-    for j, (at, dd) in enumerate(((0.0, .22), (.17, .18), (.33, .15))):
-        tt = tarr(dd)
-        _place(x, _band(2791 + 3 * k + j, dd, 200, 2500) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** 1.2, at, r.uniform(.5, 1.0))
-    dd = .15
-    tt = tarr(dd)
-    _place(x, _sin_of(_glide(360, 400, dd)) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 30 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .1, .05, 1.0)
-    return norm6(_edge(x, .01, .1), .3)
-
-
-def sfx_glint():
-    """A single tiny glint tone for the sunrise (designed event, 1.4 s): G7 on glass with its faint 2.76x partial, which rings and goes."""
-    return norm6(_edge(_glass(midi(103), 1.4, .45, .002) * .8 + _glass(midi(115), .5, .12, .001) * .12, .001, .3), .25)
-
-
-def sfx_clockspin():
-    """The clock in the time-lapse (from the cue to the end of the lapse and a hair past it): the wall clock's ratchet speeds up with the picture's world speed, from one tick a second to sixty, so the ticks run
-    together into a flutter, under a whir of gears whose pitch follows the rate (120 Hz plus 6 Hz for every tick a second); as the speed eases out it falls back to single ticks and a last, heavier tock at the
-    end of the lapse (7:00). Reads the lapse's curve (build/ep21/lapse.json, or the fixed curve)."""
-    cue = (_cue_times("clockspin") or [LAPSE.a + .2])[0]
-    end = LAPSE.b
-    d = (end - cue) + .5
-    t = tarr(d)
-    ta = cue + t
-    u = LAPSE.u_at(ta)
-    rate = 60.0 ** u
-    ph = np.cumsum(rate) / SR
-    cross = np.where(np.diff(np.floor(ph)) > 0)[0] + 1
-    x = np.zeros(_n(d))
-    r = rng6(2800)
-    for j, i in enumerate(cross):
-        if ta[i] > end - .02:
-            break
-        uu = u[i]
-        f = 1450 - 250 * (j % 2) + 350 * uu
-        tt = tarr(.04)
-        c = _band(2801 + j % 16, .04, 900, 4500) * expdecay(.04, .004) * .8 + np.sin(2 * np.pi * f * tt) * np.exp(-tt / .008) * .6
-        _place(x, c, i / SR, (1.0 / (1 + 4 * uu)) * (.85 + .3 * r.uniform()))
-    mh = np.cumsum(1.1 * u) / SR                                                    # the minute hand: 66 minutes a second is 1.1 turns a second, once round per sweep of the whir
-    whir = _sin_of(120 + 6 * rate * (1 + .04 * u * np.sin(2 * np.pi * .37 * t))) * (.65 + .35 * np.sin(2 * np.pi * mh)) * u ** 1.5
-    x = x + _lp4(whir, 2500, 2) * .18
-    ti = int((end - cue) * SR)
-    tt = tarr(.16)
-    _place(x, (np.sin(2 * np.pi * 1000 * tt) * np.exp(-tt / .03) * .8 + _band(2820, .16, 600, 4000) * expdecay(.16, .006)) * 1.0, ti / SR, 1.0)
-    return norm6(_edge(x, .003, .15), .5)
-
-
-def sfx_windswell():
-    """The wind rises with the time-lapse (from the cue at 11.65 s to the Moon's first word at 18.70 s): a blizzard (see wind) whose strength follows the picture's world speed (0.35 + 0.9 u), speeded up like a
-    tape by the same curve (a rate of 1 to 2.1, so its gusts flutter and its howl climbs), rising slowly to the peak at 16.9 s and falling away to nothing as the lapse ends and the snow's silence arrives."""
-    cue = (_cue_times("windswell") or [LAPSE.a + 1.0])[0]
-    end = LAPSE.b
-    d = (end + .4) - cue
-    n = _n(d)
-    src_d = d * 2.3 + 1.0
-    ta = cue + np.arange(_n(src_d)) / SR
-    u = LAPSE.u_at(np.minimum(ta, end + 5))
-    g = np.clip(.35 + .9 * np.interp(np.arange(_n(src_d)) / SR, np.arange(n) / SR, LAPSE.u_at(cue + np.arange(n) / SR), right=0.0), .08, 1.7)
-    w = wind(src_d, 2830, env=g, howl=1.3)
-    w = warp(w, cue, n, 2.1)
-    t = tarr(d)
-    amp = np.interp(t, [0, .8, 2.5, d - 2.0, d - .9, d], [0, .12, .5, 1.0, .35, 0])
-    return norm6(_edge(w * amp, .02, .25), .55)
-
-
-def sfx_plowrumble():
-    """The plow passes the window at dawn, close (3.4 s; designed event): a diesel at 27 to 33 Hz firing that swells as it passes (peak at 1.1 s), low-passed at 520 Hz, the blade's scrape (steel on the road,
-    500 to 1500 Hz at 16 Hz, -20 dB), the amber beacon's motor hum (a triangle at 190 Hz) and the glass shivering in its frame at the peak (a faint resonance at 190 Hz). Stereo: it passes from left to right."""
-    d = 3.4
-    t = tarr(d)
-    fire = np.interp(t, [0, 1.1, d], [27, 33, 29])
-    eng = _lp4(_diesel(d, fire, 2840, knock=.5, rumble=1.0, lp=420), 520, 3)
-    env = np.interp(t, [0, 1.1, d], [0, 1, 0]) ** 1.2
-    scr = _band(2841, d, 500, 1500) * (.5 + .5 * np.sign(np.sin(2 * np.pi * 16 * t))) * env
-    hum = (2 * np.abs(2 * ((np.cumsum(np.full(len(t), 190.0)) / SR) % 1) - 1) - 1) * env * .03
-    glass = _res(noise6(d, 2842), 190, 6.0) * env ** 2 * .05
-    x = _rms(eng) * env + _rms(scr) * .12 * env + hum + glass
-    return norm6(_edge(_pan_curve(x, np.interp(t, [0, d], [-.7, .7])), .3, .6), .5)
-
-
-# ================================================================ the text ding, the stings
-def sfx_textding():
-    """A text ding (1.0 s): a soft two-note bell, the tonic and the fifth of the key of the scene that finishes typing itself: G6 then D7 in the title (G major), C6 then G6 on the end card (C major), the
-    second 90 ms after the first."""
-    k, scene, i = _ctx("textding")
-    f1, f2 = (1046.5, 1568.0) if scene == "end" else (1568.0, 2349.3)
-    x = np.zeros(_n(1.0))
-    _place(x, _call_ding(f1, .22), 0.0, .9)
-    _place(x, _call_ding(f2, .3), .09, .8)
-    return norm6(_edge(x, .0004, .2), .7)
-
-
-def _soft(notes, d, a=.04, tau=None, lp=1800, saw=.5):
-    """A warm chord for the stings: sines and a little saw, a slow attack, closed off at `lp`."""
-    t = tarr(d)
-    tau = tau or d * .6
-    x = sum(np.sin(2 * np.pi * midi(m) * t) + saw * osc("saw", midi(m) * 1.002, d) * .4 for m in notes) / max(1, len(notes))
-    return _lp4(x, lp, 2) * np.minimum(1, t / a) * np.exp(-t / tau)
-
-
-def sfx_sting():
-    """The series' stings, one fitted to each scene (1.0 to 1.55 s).
-    forecast (after Tomato's second 'Snow day!', Onion in her snow pile): a bright glass 'ding-ding' (C6 then E6) that the bass clarinet answers with a flat low E-flat that sags: the party, and the policy.
-    lot (the five in a row): a shake of sleigh bells that thins out and two plucked notes falling (G3, D3: plink, plonk) over a breath of wind.
-    blackout (after 'It was a good flashlight.'): warm. An F major chord on soft strings and a cello (the key of the lullaby), a music-box glint on top, and, at the end, so quiet that it is more a feeling,
-    the hollow click of a switch with nothing behind it.
-    dayroom (after the Moon): the celesta's four falling notes (C7 A6 F6 C6) over a warm F major pad, and a breath of the weather that the Moon could not see through.
-    night (the held beat of the sunrise): G major, the title's own key: soft strings, a glass chord, a sleigh-bell shimmer and one low, tired pizzicato at the end."""
-    k, scene, i = _ctx("sting")
-    x = np.zeros(_n(1.6))
-    if scene == "forecast":
-        _place(x, _bell(1046.5, .7, .3), 0.0, .5)
-        _place(x, _bell(1318.5, .8, .35), .13, .55)
-        _place(x, _glass(midi(100), .5, .15, .001) * .3, .13, .6)
-        _place(x, M20.bassclar(51, 1.0, .85) * 1.0, .42, .55)
-        _place(x, _soft((39,), .9, .05, .5, 500), .42, .35)
-    elif scene == "lot":
-        _place(x, _lp4(_sleigh(.9, 2860, 26, 3200, 8500, tau=.08), 9000, 2), 0.0, .6)
-        for at, m in ((.18, 55), (.62, 50)):
-            _place(x, M20.pizz(midi(m), .5), at, .9)
-        t = tarr(1.4)
-        _place(x, _tv_filter(noise6(1.4, 2861), 420 + 100 * np.sin(2 * np.pi * .5 * t), 8.0, "bp") * np.interp(t, [0, .5, 1.4], [0, 1, 0]) * .08, 0.0, 1.0)
-    elif scene == "blackout":
-        d = 1.5
-        _place(x, _soft((41, 48, 53, 57, 60, 64), d, .12, .8, 1700), 0.0, 1.0)
-        _place(x, _soft((29,), d, .1, .8, 600), 0.0, 1.0)
-        _place(x, _mbox(midi(89), 1.2) * .5, .22, 1.0)
-        _place(x, _mbox(midi(93), 1.2) * .4, .42, 1.0)
-        tt = tarr(.06)
-        _place(x, np.sin(2 * np.pi * 520 * tt) * np.exp(-tt / .012) * .12 + _band(2862, .06, 900, 3000) * expdecay(.06, .005) * .1, 1.2, 1.0)
-    elif scene == "dayroom":
-        for j, m in enumerate((96, 93, 89, 84)):
-            _place(x, M20.celesta(m, 1.0, .6) * .8, .1 + .22 * j, .6)
-        _place(x, _soft((41, 48, 53, 57, 60, 64), 1.5, .12, .7, 1500, .3), 0.0, .9)
-        t = tarr(1.5)
-        _place(x, _tv_filter(noise6(1.5, 2863), 480 + 140 * np.sin(2 * np.pi * .6 * t), 9.0, "bp") * np.interp(t, [0, .6, 1.5], [0, 1, 0]) * .06, 0.0, 1.0)
-    else:                                                                                     # night
-        d = 1.55
-        _place(x, _soft((43, 50, 55, 59, 62, 67), d, .1, .85, 1900), 0.0, 1.0)
-        for j, m in enumerate((79, 83, 86)):
-            _place(x, _glass(midi(m + 12), 1.2, .6, .002) * .4, .08 + .06 * j, .7)
-        _place(x, _lp4(_sleigh(1.2, 2864, 22, 3400, 8800, tau=.1), 9000, 2), .05, .35)
-        _place(x, M20.pizz(midi(38), .6), 1.0, .8)
-    x = x[:_n(1.55)]
-    return norm6(_edge(x, .0005, .3), .75)
-
-
-# ---------------------------------------------------------------- reused from Episode 19, verbatim: the room tones' parts, Binder's pop, Onion's sniffle, the typing, the physics foley family
 def sfx_binderpop():
     """Binder appears (0.4 s): a cartoon pop (a sine that jumps from 300 to 1500 Hz in 25 ms, plus a bright tick) and the springy boing of a wire handle (a sine at 330 Hz that sags to 240
     with a 16 Hz wobble that dies in 0.3 s, a hair of twang under the pop)."""
@@ -1994,171 +1165,720 @@ def sfx_sniffle():
     return norm6(_edge(x, .003, .08), .55)
 
 
-def _hit_train(seed, d, n, lo, hi, tau, g0, g1, t0=0.0, t1=None, shape=1.0):
-    """n small noise ticks scattered between t0 and t1 (denser early when shape > 1), each a band lo..hi that dies in tau: gravel, splinters, strands, debris. Returns (2, samples)."""
-    r = rng6(seed)
-    out = np.zeros((2, _n(d)))
-    t1 = d if t1 is None else t1
-    for i in range(n):
-        u = r.uniform() ** shape
-        at = t0 + (t1 - t0) * u
-        dd = min(.08, max(.01, tau * 6))
-        c = _band(seed + 1 + i, dd, r.uniform(lo, lo * 1.4), r.uniform(hi * .7, hi)) * expdecay(dd, tau * r.uniform(.6, 1.4))
-        pan = r.uniform(-.9, .9)
-        th = (pan + 1) * np.pi / 4
-        g = (g0 + (g1 - g0) * u) * r.uniform(.4, 1.0)
-        j = int(at * SR)
-        m = min(len(c), out.shape[1] - j)
-        if m > 0:
-            out[0, j:j + m] += c[:m] * np.cos(th) * g
-            out[1, j:j + m] += c[:m] * np.sin(th) * g
-    return out
-
-
-PHYS_EVENTS = []
-
-
-LOUD = {"tile": .9, "metal": 1.0, "glass": .9, "ceramic": .85, "concrete": 1.0, "wood": 1.0, "plastic": .75, "rubber": .7, "cardboard": .6, "paper": .5, "leaf": .45, "soil": .55, "fabric": .4}
-
-
-HARD = ("metal", "glass", "ceramic", "tile", "concrete", "wood", "plastic", "rubber", "cardboard", "paper", "leaf", "soil", "fabric")
-
-
-def _m_wood(ps, ds, seed):
-    d = .15 * ds
+def sfx_grin():
+    """A menacing glint (1.3 s): a tiny rising bell (E7 then B7, 70 ms apart, each with a little upward slide: loud enough to be heard first) and a low sustain that swells under it (A2
+    and B-flat2 saws, a minor second, through a 450 Hz low-pass, with their octave up at 220 Hz so a phone has it), the kind of sound a friendly assistant should not make."""
+    x = np.zeros(_n(1.4))
+    for j, f in enumerate((2637.0, 3951.0)):
+        d = .5
+        t = tarr(d)
+        fr = f * (.97 + .03 * np.minimum(1, t / .05))
+        _place(x, _sin_of(fr) * np.exp(-t / .2) * np.minimum(1, t / .002) + .25 * _sin_of(fr * 2.76) * np.exp(-t / .06), .07 * j, 1.5 - .3 * j)
+    d = 1.15
     t = tarr(d)
-    return np.sin(2 * np.pi * 360 * ps * t) * np.exp(-t / (.016 * ds)) + .5 * np.sin(2 * np.pi * 860 * ps * t) * np.exp(-t / (.008 * ds)) + _band(seed, d, 500, 2600) * np.exp(-t / (.006 * ds)) * .9
+    low = _lp4(osc("saw", 110.0, d) + osc("saw", 116.5, d) + .6 * osc("saw", 55.0, d), 450, 2) + .7 * _lp4(osc("saw", 220.0, d) + osc("saw", 233.0, d), 900, 2)
+    _place(x, low * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.6 * (1 + .12 * np.sin(2 * np.pi * 5 * t)), .05, .35)
+    return norm6(_edge(x, .0005, .25), .65)
 
 
-def _m_metal(ps, ds, seed):
-    d = .5 * ds
-    return _ping(820 * ps, d, .08 + .1 * ds, (1.0, 2.76, 5.4, 8.9), (1.0, .5, .25, .12), (1.0, .55, .3, .2)) + _band(seed, d, 3000, 9000) * expdecay(d, .002) * .4
+def sfx_scatter():
+    """'All staff to your stations.' (designed event, 1.1 s, stereo): everyone scatters at once in a comic burst: eight people's quick footsteps running off in every direction (each a run of five
+    or six steps, 90 to 120 ms apart, moving out from the middle to its own side and fading), three cartoon zips (a band of air that rushes up from 900 Hz to 5 kHz in 0.18 s, flung left, right and
+    left), a sheaf of papers flying and a desk chair left spinning."""
+    r = rng6(3190)
+    out = np.zeros((2, _n(1.2)))
+    for p in range(8):
+        side = (-1) ** p * r.uniform(.3, .95)
+        t = r.uniform(0, .12)
+        for s in range(int(r.integers(5, 7))):
+            tt = tarr(.06)
+            st = _band(3191 + 11 * p + s, .06, 300, 3500) * np.exp(-tt / .012) + np.sin(2 * np.pi * r.uniform(110, 160) * tt) * np.exp(-tt / .015) * .5
+            _put2(out, st, t, .5 * (1 - s / 7), side * min(1, .2 + s * .18))
+            t += r.uniform(.09, .12)
+    for j, (at, pan) in enumerate(((.02, -.7), (.09, .75), (.17, -.4))):
+        dd = .18
+        tt = tarr(dd)
+        z = _tv_filter(noise6(dd, 3200 + j), 900 * (5000 / 900) ** (tt / dd), 2.0, "bp") * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** 1.4
+        _put2(out, z, at, .55, pan)
+    _put2(out, _hit_train(3205, .5, 22, 1500, 7000, .006, .5, .1), .1, .35)
+    tt = tarr(.8)
+    _put2(out, _band(3206, .8, 400, 2000) * (.5 + .5 * np.sin(2 * np.pi * 9 * tt * (1 - .6 * tt / .8))) * np.exp(-tt / .35) * .2, .25, 1.0, .35)
+    return norm6(_edge(out, .002, .2), .55)
 
 
-def _m_plastic(ps, ds, seed):
-    d = .1 * ds
+def sfx_sting():
+    """The stings, one fitted to each scene (1.2 to 1.6 s).
+    arrive (the surveyors in the lobby, clipboards up, pens ready): the State's procedure in a nutshell: three dry pizzicato notes in D minor (D A D) and a bassoon that lands on a low D under a
+    woodblock (the pen) and a soft timpani; the pen's last tick.
+    prep (the perfect, terrifyingly clean station): a gleam: a glassy run up the D major scale, a 'too clean' choir chord (D major on 'ah') that is cut short, a high ting.
+    medpass (the two halves): both pieces end on the same chord at once: on the left a polite string cadence (F major, a curtsy of a trill), on the right the ragtime's two bits ('shave and a
+    haircut', the last two notes), the same F.
+    closet (after the sad trombone of 'Not Brenda.'): a button: a low pizzicato D, a muffled timpani and the soft thud of one more binder sliding off the pile.
+    exit (the last two-shot, after 'I took a break.'): warm: a D major ninth on soft strings and a felt piano (the score's last chord), the shift bell's chime once more, high and quiet."""
+    k, scene, i = _ctx("sting")
+    x = np.zeros(_n(1.7))
+    if scene == "arrive":
+        for at, m in ((0.0, 62), (.16, 69), (.32, 50)):
+            _place(x, M21.pizz(midi(m), .3), at, .8)
+        _place(x, M21.bassoon(38, .9, .8), .32, .55)
+        tt = tarr(.05)
+        _place(x, _res(_band(3210, .05, 1500, 6000) * np.exp(-tt / .003), 1900, 5) * 1.5, .32, .5)
+        _place(x, M21.timp(73.4, 1.0), .32, .35)
+        _place(x, _click(3211, 3000, .003), 1.05, .25)
+    elif scene == "prep":
+        for j, m in enumerate((86, 88, 90, 91, 93, 95, 97, 98)):
+            _place(x, _glass(midi(m), .5, .15, .001) * .5, j * .045, .45 + .05 * j)
+        ch = M21.choir([62, 66, 69, 74], .75, "a", a=.05, r=.2)
+        _place(x, ch[0] * .5 + ch[1] * .5, .38, .55)
+        _place(x, _glass(midi(105), 1.0, .3, .001), 1.13, .3)
+    elif scene == "medpass":
+        L = np.zeros(_n(1.7))
+        for at, ns, dd in ((0.0, (65, 72, 77), .25), (.3, (67, 72, 76), .25), (.6, (53, 65, 69, 72, 77), .9)):
+            for m in ns:
+                _place(L, M21.spic(m, dd), at, .3)
+        _place(L, M21.cello(41, .9, .8), .6, .25)
+        R = np.zeros(_n(1.7))
+        for at, ms in ((.3, (55, 59, 62)), (.6, (53, 57, 60, 65))):
+            for m in ms:
+                _place(R, M21.piano(m, .6, .8), at, .25)
+        _place(R, M21.piano(29, .9, .8), .6, .35)
+        out = np.stack([L * .95 + R * .3, L * .3 + R * .95])
+        return norm6(_edge(out, .0005, .3), .75)
+    elif scene == "closet":
+        _place(x, M21.pizz(midi(38), .5), 0.0, .9)
+        tt = tarr(.6)
+        _place(x, _lp4(M21.timp(73.4, .6), 600, 2) * .8, 0.0, .6)
+        _place(x, _unit(_m_binder(.8, 1.0, 3212)) * .35, .32, 1.0)
+    else:                                                                                   # exit
+        d = 1.6
+        _place(x, _soft((38, 45, 50, 54, 57, 64), d, .15, .9, 1800), 0.0, 1.0)
+        _place(x, M21.felt(50, 1.4, .5), .05, .35)
+        _place(x, M21.felt(66, 1.2, .45), .12, .25)
+        _place(x, _bell(1174.7, 1.4, .6) * .25, .2, 1.0)
+    x = x[:_n(1.6)]
+    return norm6(_edge(x, .0005, .3), .72)
+
+
+def _soft(notes, d, a=.04, tau=None, lp=1800, saw=.5):
+    """A warm chord for the stings: sines and a little saw, a slow attack, closed off at `lp`."""
     t = tarr(d)
-    return np.sin(2 * np.pi * 1150 * ps * t) * np.exp(-t / (.01 * ds)) + _band(seed, d, 2000, 6500) * np.exp(-t / .004) * .8
+    tau = tau or d * .6
+    x = sum(np.sin(2 * np.pi * midi(m) * t) + saw * osc("saw", midi(m) * 1.002, d) * .4 for m in notes) / max(1, len(notes))
+    return _lp4(x, lp, 2) * np.minimum(1, t / a) * np.exp(-t / tau)
 
 
-def _m_glass(ps, ds, seed):
-    d = .35 * ds
-    return _glass(2600 * ps, d, .05 + .05 * ds, .001) + _band(seed, d, 3000, 9000) * expdecay(d, .0015) * .3
+# ================================================================ prep: the montage, cut to the beat (each effect carries its own smaller second hit exactly 0.5 s after the cut: the off-beat)
+OFF = .5             # the off-beat of the montage's grid (120 bpm)
 
 
-def _m_ceramic(ps, ds, seed):
-    d = .25 * ds
-    return _ping(1900 * ps, d, .03 + .04 * ds, (1.0, 2.3, 4.1), (1.0, .45, .2), (1.0, .5, .3)) + _band(seed, d, 3000, 8000) * expdecay(d, .002) * .35
-
-
-def _m_cardboard(ps, ds, seed):
-    d = .13 * ds
+def _plastic_knock(seed, f=900.0, d=.12, body=150.0):
     t = tarr(d)
-    return _lp4(noise6(d, seed), 1300, 2) * np.exp(-t / (.02 * ds)) + np.sin(2 * np.pi * 170 * ps * t) * np.exp(-t / .02) * .5
+    return np.sin(2 * np.pi * f * t) * np.exp(-t / .012) * .6 + _band(seed, d, 700, 4000) * np.exp(-t / .006) * .7 + np.sin(2 * np.pi * body * t) * np.exp(-t / .03) * .5
 
 
-def _m_fabric(ps, ds, seed):
-    d = .16 * ds
+def _tacky(seed, d=.07, lo=2000, hi=6500):
+    """Something sticky letting go: a rasp of noise roughened at 110 Hz, a fast rise and a dying tail."""
     t = tarr(d)
-    return _lp4(noise6(d, seed), 380, 2) * np.exp(-t / (.035 * ds)) + np.sin(2 * np.pi * 85 * ps * t) * np.exp(-t / .03) * .6
+    return _band(seed, d, lo, hi) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 110 * t))) * np.minimum(1, t / .006) * np.exp(-t / (d * .45))
 
 
-def _m_concrete(ps, ds, seed):
-    d = .26 * ds
+def sfx_labelgun():
+    """A pricing label gun (0.8 s): the trigger squeezed (a plastic ratchet, three fast clicks in 50 ms), the applicator's 'ka-CHUNK' (a 900 Hz plastic knock over a 150 Hz thump), the label torn
+    off its backing (a tacky rasp) and slapped onto the carton (a flat pat); on the off-beat a second, quicker label (a smaller clack and pat)."""
+    x = np.zeros(_n(.85))
+    for j in range(3):
+        _place(x, _click(3220 + j, 2600 + 300 * j, .002), j * .017, .35)
+    _place(x, _plastic_knock(3223, 900, .12, 150), .055, 1.0)
+    _place(x, _tacky(3224), .1, .45)
+    tt = tarr(.06)
+    _place(x, _band(3225, .06, 300, 2500) * np.exp(-tt / .008) * .7, .17, 1.0)
+    _place(x, _plastic_knock(3226, 980, .1, 160) * .55 + _tacky(3227, .05) * .25, OFF, 1.0)
+    return norm6(_edge(x, .0003, .06), .75)
+
+
+def sfx_padlock():
+    """The snack drawer padlocked (0.85 s): the hasp swung over (a light metal rattle), the shackle snapped home (a hard steel clack: a 2.7 kHz ring with an inharmonic 4.8 kHz partial over a 600 Hz
+    body) and the lock's body swinging against the drawer front (a dull clank 80 ms later); on the off-beat the lock tugged once to check it (a short rattle and a tap)."""
+    x = np.zeros(_n(.9))
+    _place(x, _hit_train(3230, .08, 6, 2500, 7000, .003, .4, .2)[0], 0.0, .5)
+    clack = _ping(2700, .4, .05, (1.0, 1.78, 2.9), (1.0, .55, .3), (1.0, .5, .3)) + _band(3231, .05, 3000, 9000) * expdecay(.05, .002) * 1.2 + _thump(600, 420, .08, .012) * .5
+    _place(x, clack, .03, 1.0)
+    _place(x, _ping(1900, .25, .03, (1.0, 2.4), (1.0, .4), (1.0, .5)) * .4 + _thump(300, 200, .08, .015) * .4, .11, .7)
+    _place(x, _hit_train(3232, .1, 7, 2000, 6500, .003, .5, .2)[0] + _ping(2300, .2, .02, (1.0, 2.6), (1.0, .3), (1.0, .5)) * .3, OFF, .6)
+    return norm6(_edge(x, .0003, .08), .75)
+
+
+def sfx_spray():
+    """A spray bottle and a cloth (0.95 s): the trigger pulled twice (a plastic click and a fine mist, 'pssht', 1.8 to 9 kHz, 0.14 s, 0.13 s apart), then on the off-beat the cloth's quick squeaky
+    wipe (two strokes of a rubbery 1.1 kHz squeak) and the gleam: a small glass 'ting' at 3.5 kHz."""
+    x = np.zeros(_n(1.0))
+    for j in range(2):
+        at = j * .13
+        _place(x, _click(3240 + j, 2200, .003) * .4, at, 1.0)
+        dd = .14
+        tt = tarr(dd)
+        _place(x, _band(3242 + j, dd, 1800, 9000) * np.minimum(1, tt / .006) * np.exp(-tt / .05) * .9, at + .006, 1.0)
+    for j, (at, dd) in enumerate(((OFF - .12, .1), (OFF - .01, .09))):
+        tt = tarr(dd)
+        sq = _sin_of(_glide(1050 + 80 * j, 1250 + 80 * j, dd)) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 45 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1))
+        _place(x, _res(sq, 1150, 3.0) * .25 + _band(3244 + j, dd, 800, 3000) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .2, at, 1.0)
+    _place(x, _glass(3520, .45, .14, .001) * .45, OFF + .06, 1.0)
+    return norm6(_edge(x, .0004, .1), .7)
+
+
+def sfx_thermobeep():
+    """The fridge thermometer and its log (0.95 s): the digital thermometer's double beep (two short 3.9 kHz square-ish beeps, 70 ms each, 50 ms apart), and on the off-beat the temperature log
+    signed (a quick pen scribble of four strokes on paper on a clipboard)."""
+    x = np.zeros(_n(1.0))
+    for j in range(2):
+        dd = .07
+        tt = tarr(dd)
+        b = (np.sin(2 * np.pi * 3900 * tt) + .3 * np.sin(2 * np.pi * 11700 * tt)) * np.minimum(1, np.minimum(tt / .003, (dd - tt) / .004))
+        _place(x, b, j * .12, .45)
+    for j, dd in enumerate((.05, .04, .06, .08)):
+        _place(x, _scrape(3250 + j, dd, 1800, 7000, 80), OFF + .06 * j + .004 * (j % 2), .55 - .05 * j)
+    tt = tarr(.04)
+    _place(x, np.sin(2 * np.pi * 760 * tt) * np.exp(-tt / .008) * .3, OFF - .01, 1.0)
+    return norm6(_edge(x, .0003, .08), .7)
+
+
+def sfx_binderslam():
+    """A row of policy binders slammed into place (0.9 s): three binders shoved along the shelf in a fast 'thud-thud' (vinyl-covered board: a 160 Hz body, a cardboard slap) and the row slammed
+    home against the end of the shelf (a heavy wooden knock, the metal rings inside rattling); on the off-beat the last binder tipping upright against the row (a small slap and a ring tick)."""
+    x = np.zeros(_n(.95))
+    for j, (at, g) in enumerate(((0.0, .55), (.05, .7), (.1, .85))):
+        _place(x, _m_binder(.6 + .1 * j, .9, 3260 + j), at, g)
+    tt = tarr(.3)
+    _place(x, _sin_of(95 + 60 * np.exp(-tt / .02)) * np.exp(-tt / .05) * 1.0 + np.sin(2 * np.pi * 380 * tt) * np.exp(-tt / .018) * .5 + _band(3263, .3, 300, 2500) * np.exp(-tt / .012), .14, 1.0)
+    _place(x, _hit_train(3264, .2, 12, 2500, 6500, .004, .6, .1)[0], .15, .4)
+    _place(x, _m_binder(.35, .7, 3265) * .8 + _ping(2900, .15, .02, (1.0, 2.5), (1.0, .3), (1.0, .5)) * .2, OFF, .55)
+    return norm6(_edge(x, .0003, .08), .85)
+
+
+def sfx_mop():
+    """A wet mop swipe and the WET FLOOR sign (0.95 s): the mop's swipe across the floor (a wet, squelchy sweep: a band of noise from 500 Hz to 3 kHz with a 22 Hz slosh, sliding as it goes, and the
+    drips of the strings) and on the off-beat the yellow sign snapped open and set down (a plastic clack and a small hollow boing)."""
+    x = np.zeros(_n(1.0))
+    dd = .32
+    tt = tarr(dd)
+    sw = _tv_filter(noise6(dd, 3270), 700 + 1800 * np.sin(np.pi * np.clip(tt / dd, 0, 1)), 1.2, "bp") * (.6 + .4 * np.abs(np.sin(2 * np.pi * 22 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** .8
+    _place(x, sw, 0.0, 1.0)
+    _place(x, _lp4(noise6(dd, 3271), 600, 2) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .5, 0.0, 1.0)
+    r = rng6(3272)
+    for j in range(5):
+        d2 = .03
+        t2 = tarr(d2)
+        _place(x, np.sin(2 * np.pi * r.uniform(900, 1700) * t2 * (1 + 1.5 * t2 / d2)) * np.exp(-t2 / .008), .25 + r.uniform(0, .2), r.uniform(.05, .15))
+    _place(x, _plastic_knock(3273, 1100, .12, 200) * .8, OFF, 1.0)
+    d3 = .3
+    t3 = tarr(d3)
+    _place(x, _sin_of(330 * (1 - .25 * (1 - np.exp(-t3 / .1))) * (1 + .06 * np.sin(2 * np.pi * 14 * t3) * np.exp(-t3 / .1))) * np.exp(-t3 / .08) * .3, OFF + .02, 1.0)
+    return norm6(_edge(x, .002, .08), .7)
+
+
+def sfx_posterflip():
+    """The FUN COMMITTEE poster flipped to a hand-hygiene poster (0.85 s): a big sheet of paper whipped over (a fast 'fwip': a band of air that rises from 600 Hz to 4 kHz in 0.12 s, the paper's
+    flutter at 40 Hz) and slapped flat on the board, and on the off-beat a thumb tack pushed in (a small hard click into cork)."""
+    x = np.zeros(_n(.9))
+    dd = .16
+    tt = tarr(dd)
+    _place(x, _tv_filter(noise6(dd, 3280), 600 * (4000 / 600) ** (tt / dd), 1.6, "bp") * (.6 + .4 * np.sin(2 * np.pi * 40 * tt)) * np.sin(np.pi * np.clip(tt / dd, 0, 1)), 0.0, 1.0)
+    t2 = tarr(.08)
+    _place(x, _band(3281, .08, 400, 3500) * np.exp(-t2 / .01) * .8 + np.sin(2 * np.pi * 240 * t2) * np.exp(-t2 / .015) * .4, .15, 1.0)
+    _place(x, _click(3282, 2900, .003) * .6 + _thump(180, 120, .05, .01) * .2, OFF, 1.0)
+    return norm6(_edge(x, .001, .08), .7)
+
+
+def sfx_closetslam():
+    """A closet door slammed on Brenda (0.95 s): the door swung hard (a rush of air), its slam into the frame (a 110 Hz thud of a hollow-core door, a wooden knock at 420 Hz, the frame's rattle) and the
+    latch catching; on the off-beat the NOT A CLOSET sign swinging on its nail (two small taps) and, from inside, a muffled 'hm' (a 220 Hz hum through the door, 0.15 s)."""
+    x = np.zeros(_n(1.0))
+    dd = .12
+    tt = tarr(dd)
+    _place(x, _lp4(noise6(dd, 3290), 900, 2) * (tt / dd) ** 2 * .3, 0.0, 1.0)
+    t2 = tarr(.35)
+    _place(x, _sin_of(110 * (1 - .2 * (1 - np.exp(-t2 / .03)))) * np.exp(-t2 / .07) * 1.0 + np.sin(2 * np.pi * 420 * t2) * np.exp(-t2 / .02) * .55 + _band(3291, .35, 200, 2500) * np.exp(-t2 / .02) * .8, dd, 1.0)
+    _place(x, _hit_train(3292, .15, 8, 800, 3500, .004, .4, .1)[0] + _click(3293, 3100, .003) * .4, dd + .03, .5)
+    for j in range(2):
+        _place(x, _plastic_knock(3294 + j, 1300, .06, 300) * .25, OFF + .07 * j, 1.0)
+    t3 = tarr(.15)
+    hm = _lp4(osc("saw", 220 * (1 - .05 * t3 / .15), .15), 500, 2) * np.sin(np.pi * np.clip(t3 / .15, 0, 1))
+    _place(x, hm * .12, OFF + .1, 1.0)
+    return norm6(_edge(x, .001, .08), .85)
+
+
+def sfx_coffeehide():
+    """The coffee maker swept into a drawer (0.95 s): the machine dragged across the counter (a short scrape), the drawer slammed shut (a sliding rumble and a wooden bang) and the glass carafe clinking
+    inside it (a bright clink at 2.3 kHz, a smaller one after); on the off-beat the last of the rattle (a tiny clink and a slosh)."""
+    x = np.zeros(_n(1.0))
+    dd = .12
+    tt = tarr(dd)
+    _place(x, _band(3300, dd, 300, 2500) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 35 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) * .5, 0.0, 1.0)
+    _place(x, _lp4(noise6(.1, 3301), 800, 2) * np.interp(tarr(.1), [0, .1], [.2, 1]) * .5, .08, 1.0)
+    t2 = tarr(.3)
+    _place(x, _sin_of(120 + 70 * np.exp(-t2 / .02)) * np.exp(-t2 / .05) * .9 + np.sin(2 * np.pi * 510 * t2) * np.exp(-t2 / .015) * .4 + _band(3302, .3, 300, 2500) * np.exp(-t2 / .01) * .6, .18, 1.0)
+    _place(x, _glass(2300, .4, .08, .001) * .5 + _glass(3450, .3, .05, .001) * .2, .2, 1.0)
+    _place(x, _glass(2650, .3, .06, .001) * .25, .29, 1.0)
+    _place(x, _glass(2900, .25, .05, .001) * .18 + _lp4(noise6(.15, 3303), 1200, 2) * np.sin(np.pi * np.clip(tarr(.15) / .15, 0, 1)) * .12, OFF, 1.0)
+    return norm6(_edge(x, .001, .08), .8)
+
+
+def sfx_sanitizer():
+    """A wall dispenser of hand sanitizer. PREP (the montage): the refill bottle snapped into the dispenser (a plastic clack and a click) and on the off-beat one pump of foam (the piston's 'pshht-chk':
+    a short hiss of foam and the lever's return click). MEDPASS (the State's half, twice): one careful pump each time (the lever, the foam's soft squish, the click), a little quieter."""
+    k, scene, i = _ctx("sanitizer")
+    x = np.zeros(_n(.95))
+
+    def pump(seed, at, g):
+        dd = .16
+        tt = tarr(dd)
+        _place(x, _plastic_knock(seed, 760, .08, 180) * .4, at, g)
+        _place(x, _band(seed + 1, dd, 1200, 6000) * np.minimum(1, tt / .01) * np.exp(-tt / .05) * .55 + _lp4(noise6(dd, seed + 2), 900, 2) * np.exp(-tt / .04) * .4, at + .02, g)
+        _place(x, _click(seed + 3, 2500, .003) * .35, at + .19, g)
+    if scene == "prep":
+        _place(x, _plastic_knock(3310, 820, .12, 160) + _click(3311, 2700, .003) * .5, 0.0, 1.0)
+        pump(3312, OFF, .8)
+    else:
+        pump(3316 + 4 * k, 0.0, .8)
+    return norm6(_edge(x, .001, .08), .7 if scene == "prep" else .55)
+
+
+def sfx_crashcart():
+    """The crash cart sealed with a fresh red tag (0.85 s): the tag's plastic strap pulled through its lock (a ratcheting zip, 26 teeth in 0.16 s) and snapped tight (a crisp plastic snap), and on the
+    off-beat a flat pat on the cart's lid (a hollow metal 'tunk' at 520 Hz)."""
+    x = np.zeros(_n(.9))
+    dd = .16
+    n_t = 26
+    for j in range(n_t):
+        _place(x, _click(3320 + j % 5, 3000 + 40 * (j % 7), .0015, .012) * (.2 + .25 * j / n_t), j * dd / n_t, 1.0)
+    _place(x, _click(3330, 2200, .004) * .9 + _band(3331, .04, 2000, 8000) * expdecay(.04, .003) * .6, dd + .01, 1.0)
+    tt = tarr(.25)
+    _place(x, _ping(520, .25, .05, (1.0, 2.2, 3.9), (1.0, .4, .2), (1.0, .5, .3)) * .45 + _thump(200, 140, .1, .02) * .4, OFF, 1.0)
+    return norm6(_edge(x, .0003, .08), .7)
+
+
+def sfx_sparkle():
+    """A sparkle (1.2 s): a shimmering glissando of glass up the D major scale (twelve notes in 0.3 s from A6), a cluster of tiny high glints scattered over 0.6 s and, on the off-beat, one clear ting
+    (D8). PREP's second (the station gleams, 'Survey ready.'): the same, softer and a little slower."""
+    k, scene, i = _ctx("sparkle")
+    r = rng6(3340 + k)
+    x = np.zeros(_n(1.25))
+    sc = (93, 95, 97, 98, 100, 102, 103, 105, 107, 109, 110, 112)
+    sp = .025 if i == 0 else .035
+    for j, m in enumerate(sc):
+        _place(x, _glass(midi(m), .5, .12, .001), j * sp, .25 + .03 * j)
+    for j in range(18):
+        _place(x, _glass(r.uniform(5000, 9500), .2, .03, .001), r.uniform(.05, .65), r.uniform(.05, .15))
+    _place(x, _glass(midi(110), .7, .25, .001) * .6, OFF, 1.0)
+    return norm6(_edge(x, .0005, .2), .6 if i == 0 else .45)
+
+
+def _poof1(k):
+    """One cartoon smoke puff (Episode 15's, verbatim): the k-th has its own pitch for the 'foomp' (230, 170, 300, 140, 200 Hz), its own length and its own ending (a tiny sparkle, a pop or a
+    fading hiss)."""
+    v = k % 5
+    f0 = (230, 170, 300, 140, 200)[v]
+    d = (.42, .5, .34, .55, .45)[v]
+    x = np.zeros(_n(d + .15))
     t = tarr(d)
-    return _sin_of((62 + 78 * np.exp(-t / .03)) * ps) * np.exp(-t / (.05 * ds)) + _band(seed, d, 150, 1500) * np.exp(-t / .02) * .8 + _band(seed + 1, d, 2000, 7000) * np.exp(-t / .002) * .25
+    cut = 300 + 4200 * np.exp(-t / .07)
+    puff = _tv_filter(noise6(d, 1930 + k), cut, .9, "lp") * np.minimum(1, t / .006) * np.exp(-t / (d * .3))
+    x[:len(t)] += puff * 1.1
+    tt = tarr(.25)
+    x[:len(tt)] += _sin_of(f0 * (1 - .6 * (1 - np.exp(-tt / .06)))) * np.exp(-tt / .06) * .9
+    if v in (0, 3):
+        for j, fq in enumerate((3136.0, 4186.0, 3520.0)):
+            _place(x, _glass(fq, .25, .07, .001), .12 + .05 * j, .12)
+    elif v == 2:
+        _place(x, _band(1940, .02, 1500, 6000) * expdecay(.02, .003) * 1.1, .26, 1.0)
+    else:
+        _place(x, _band(1941 + k, .3, 3000, 8000) * np.exp(-tarr(.3) / .1) * .15, .1, 1.0)
+    return x
 
 
-def _m_rubber(ps, ds, seed):
-    d = .18 * ds
+def sfx_poof():
+    """A cartoon smoke puff (0.45 s): the prep's three waves of agency Strawberries are three different puffs (Episode 15's family). EXIT (all forty vanish at once, 0.9 s, stereo): five puffs in
+    35 ms across the field, a deep shared 'foomp' (a 110 Hz sine that sags) and a scatter of tiny glints as the badges go."""
+    k, scene, i = _ctx("poof")
+    if scene != "exit":
+        return norm6(_edge(_poof1(k), .001, .15), .65)
+    out = np.zeros((2, _n(.9)))
+    for j in range(5):
+        _put2(out, _poof1(j + 5), j * .009, .5, (-.7, .7, -.3, .35, 0.0)[j])
+    tt = tarr(.4)
+    _put2(out, _sin_of(110 * (1 - .5 * (1 - np.exp(-tt / .08)))) * np.exp(-tt / .1) * .8, 0.0, 1.0, 0.0)
+    r = rng6(1950)
+    for j in range(14):
+        _put2(out, _glass(r.uniform(3000, 6000), .2, .05, .001) * .3, r.uniform(.1, .5), r.uniform(.3, .7), r.uniform(-.8, .8))
+    return norm6(_edge(out, .001, .2), .7)
+
+
+# ================================================================ medpass: the split, the cups, the cart, the call bells
+def sfx_splitwipe():
+    """The frame splits (0.6 s, stereo): the divider is already falling when the cue comes (the picture's band falls from 0.28 to 0.66 s and its whoosh peaks at 0.50): a whoosh that bursts in at once
+    (an 8 ms attack) and falls from 5 kHz to 700 Hz as it dies (0.25 s, a different noise in each ear), a faint falling sine under it, and a soft glassy tick (2.4 kHz) 0.16 s after the cue, where
+    the band lands at the foot of the frame."""
+    d = .3
     t = tarr(d)
-    return _sin_of((210 + 120 * np.exp(-t / .03)) * ps) * np.exp(-t / .03) + _lp4(noise6(d, seed), 900, 2) * np.exp(-t / .01) * .4
+    out = np.zeros((2, _n(.6)))
+    env = np.minimum(1, t / .008) * np.exp(-t / .085)
+    for c in range(2):
+        out[c, :len(t)] += _tv_filter(noise6(d, 3350 + c), 5000 * (700 / 5000) ** np.clip(t / .25, 0, 1), 1.5, "bp") * env * .7
+    out[:, :len(t)] += _ctr(_sin_of(_glide(900, 350, d)) * env * .05, 0.0)
+    _put2(out, _glass(2400, .3, .05, .001) * .5 + _click(3352, 2400, .002) * .25, .16, 1.0, 0.0)
+    return norm6(_edge(out, .001, .1), .6)
 
 
-def _m_soil(ps, ds, seed):
-    d = .22 * ds
+def sfx_cupclatter():
+    """Med cups on a normal night (the right half). The first (1.0 s): three paper med cups juggled: hollow little tocks (1.2 to 2.4 kHz) as they knock together and are caught, the pills inside
+    rattling (a shaker of tiny ticks) and one cup bouncing on the cart. The second (1.0 s): a whole cup of pills tipped into Mr. Pear's mouth like a candy dispenser: a rattling cascade of pills
+    (forty tiny ticks in 0.45 s that thin out) and a satisfied 'gulp' (a 180 Hz glk)."""
+    k = _nth("cupclatter")
+    r = rng6(3360 + k)
+    x = np.zeros(_n(1.0))
+    if k == 0:
+        for j in range(7):
+            at = j * .1 + r.uniform(0, .04)
+            tt = tarr(.06)
+            f = r.uniform(1200, 2400)
+            _place(x, np.sin(2 * np.pi * f * tt) * np.exp(-tt / .008) * .6 + _band(3361 + j, .06, 900, 4500) * np.exp(-tt / .004) * .6, at, r.uniform(.5, 1.0))
+        _place(x, _hit_train(3370, .7, 34, 2500, 8000, .002, .35, .1)[0], .02, .6)
+        for j, at in enumerate((.72, .84, .9)):
+            _place(x, _plastic_knock(3371 + j, 1500, .05, 260) * (.4 - .1 * j), at, 1.0)
+    else:
+        _place(x, _hit_train(3375, .55, 44, 2800, 9000, .0018, .7, .1, shape=1.3)[0], 0.0, .8)
+        tt = tarr(.09)
+        _place(x, _sin_of(_glide(190, 110, .09)) * np.exp(-tt / .035) * .6 + _band(3376, .09, 300, 1500) * expdecay(.09, .01) * .3, .62, .8)
+    return norm6(_edge(x, .001, .1), .6)
+
+
+def sfx_cartroll():
+    """The med cart rolls away down the hall by itself (2.6 s, stereo, on the right): four casters rumbling (rolling noise under 300 Hz with the wheels' thump at 7 Hz, slowing), the bottles and cups
+    on top rattling, one caster's squeak (a 1.4 kHz squeal on every turn), all of it going away: the level falls, the top closes from 6 kHz to 1.3 kHz and it moves from 0.5 to 0.95 to the right;
+    far down the hall, at 2.2 s, it bumps into something (a soft distant clunk)."""
+    d = 2.6
     t = tarr(d)
-    return _lp4(noise6(d, seed), 800, 2) * np.exp(-t / (.05 * ds)) + _hit_train(seed + 5, d, 8, 400, 2500, .004, .2, .05)[0] * .5 + np.sin(2 * np.pi * 70 * ps * t) * np.exp(-t / .06) * .5
+    away = np.interp(t, [0, .2, d], [.6, 1.0, .05]) ** 1.2
+    rate = 7.0 * np.interp(t, [0, d], [1.0, .75])
+    ph = np.cumsum(rate) / SR
+    rum = _lp4(noise6(d, 3380), 300, 2) * (.7 + .3 * np.abs(np.sin(np.pi * ph)))
+    rat = _hit_train(3381, d, 60, 1500, 6000, .003, .5, .2)[0] * (.5 + .5 * np.abs(np.sin(np.pi * ph * 1.5)))
+    sq = _sin_of(1400 * (1 + .03 * np.sin(2 * np.pi * ph))) * np.clip(np.sin(2 * np.pi * ph) - .55, 0, 1) * 2.0
+    x = _rms(rum) * 1.0 + _rms(rat) * .35 + _rms(sq) * .12
+    x = _tv_filter(x * away, 6000 * (1300 / 6000) ** (t / d), .8, "lp")
+    _place(x, (_thump(140, 90, .2, .04) + _band(3382, .2, 300, 1500) * expdecay(.2, .02) * .5) * .12, 2.2, 1.0)
+    return norm6(_edge(_pan_curve(x, np.interp(t, [0, d], [.5, .95])), .02, .3), .55)
 
 
-def _m_paper(ps, ds, seed):
-    d = .14 * ds
-    t = tarr(d)
-    return _band(seed, d, 1500, 7500) * np.exp(-t / (.02 * ds)) * .9 + _lp4(noise6(d, seed + 3), 500, 2) * np.exp(-t / .012) * .3 + _band(seed + 5, d, 300, 1200) * np.exp(-t / (.04 * ds)) * .25
+def _pan_curve(x, pan):
+    th = (np.clip(pan, -1, 1) + 1) * np.pi / 4
+    return np.stack([x * np.cos(th), x * np.sin(th)])
 
 
-def _m_tile(ps, ds, seed):
-    """Vinyl tile over concrete (the corridor): a short dry 'tak' (a 1.3 kHz knock that dies in 8 ms, a click of 800 Hz to 3.5 kHz) over a dull slab thud (90 Hz) and a faint ring."""
+def sfx_callbell():
+    """A call light down the hall (designed event, the right half's normal night, 1.3 s): the series' chime (ding, dong: A5 and E5), a little far (closed off at 3 kHz) and a touch of the hallway."""
+    x = np.zeros(_n(1.3))
+    _place(x, _bell(880.0, .6, .3), 0.0, 1.0)
+    _place(x, _bell(659.26, .7, .34), .42, .9)
+    return norm6(_edge(_lp4(x, 3000, 2), .002, .2), .5)
+
+
+# ================================================================ closet: the doors, the avalanche, the scanner
+def sfx_closetopen():
+    """A closet opened. CLOSET (the policy closet, 1.1 s): the latch of a double door (a metal click), both doors swinging open (two hinge creaks: a stick-slip squeak that climbs from 300 to 420 Hz,
+    0.35 s, the second a little lower) and the air of the doorway. EXIT (Brenda's closet, 0.7 s): one door: the latch, one quick creak and a soft bump against the wall."""
+    k, scene, i = _ctx("closetopen")
+    x = np.zeros(_n(1.1))
+    _place(x, _click(3390 + k, 2600, .004) * .6 + _thump(180, 120, .05, .01) * .3, 0.0, 1.0)
+    creaks = ((.06, 300, .35, .45), (.18, 270, .3, .35)) if scene == "closet" else ((.05, 330, .22, .4),)
+    for at, f0, dd, g in creaks:
+        tt = tarr(dd)
+        f = _glide(f0, f0 * 1.4, dd)
+        sq = (_sin_of(f) + .4 * _sin_of(2 * f)) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 24 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** .8
+        _place(x, _res(sq, f0 * 1.2, 3.0) * .9, at, g)
+    dd = .5
+    _place(x, _lp4(noise6(dd, 3393 + k), 700, 2) * np.sin(np.pi * np.clip(tarr(dd) / dd, 0, 1)) * .2, .1, 1.0)
+    if scene != "closet":
+        _place(x, _thump(150, 100, .08, .015) * .3, .45, 1.0)
+        x = x[:_n(.7)]
+    return norm6(_edge(x, .001, .1), .6)
+
+
+def _m_binder(ps, ds, seed):
+    """One policy binder landing (the closet's foley voice): a vinyl-covered board slapping down flat (a 1.2 to 3 kHz slap and a 150 Hz board thump), the pages inside riffling (a short 2 to 7 kHz
+    flutter) and the three metal rings ticking (a small inharmonic ping at 2.9 kHz)."""
     d = .2 * ds
     t = tarr(d)
-    return np.sin(2 * np.pi * 1300 * ps * t) * np.exp(-t / .008) + _band(seed, d, 800, 3500) * np.exp(-t / .004) * .8 + _sin_of((50 + 50 * np.exp(-t / .03)) * ps) * np.exp(-t / .05) * .6
+    slap = _band(seed, d, 1200, 3000) * np.exp(-t / .006) * .8 + np.sin(2 * np.pi * 150 * ps * t) * np.exp(-t / (.025 * ds)) * .9 + _band(seed + 1, d, 250, 900) * np.exp(-t / .015) * .5
+    rif = _band(seed + 2, d, 2000, 7000) * (.5 + .5 * np.abs(np.sin(2 * np.pi * 60 * t))) * np.exp(-t / (.04 * ds)) * .3
+    ring = _ping(2900 * ps, d, .02, (1.0, 2.5, 4.1), (1.0, .3, .15), (1.0, .5, .3)) * .12
+    return slap + rif + ring
 
 
-_MV = {"tile": _m_tile, "paper": _m_paper, "leaf": _m_paper, "wood": _m_wood, "metal": _m_metal, "plastic": _m_plastic, "glass": _m_glass, "ceramic": _m_ceramic, "cardboard": _m_cardboard, "fabric": _m_fabric, "concrete": _m_concrete,
-       "rubber": _m_rubber, "soil": _m_soil}
+def sfx_binderavalanche():
+    """THE AVALANCHE (2.5 s, stereo): the shelves give way (a deep 'whoomp': a 70 Hz thump and a crack of boards) and binders pour out: a roar of a hundred landings (cardboard and vinyl slaps at 150 to
+    800 Hz, paper riffling, rings ticking) that builds in 0.3 s, peaks between 0.4 and 1.1 s and thins into single thumps by 2.0 s, spread across the pile (-0.6 to 0.6), a long slide of the pile
+    settling under it, and the last few slow, separate landings. The collision foley of the simulation (phys_events.json) rides on top of it, binder by binder."""
+    d = 2.5
+    t = tarr(d)
+    r = rng6(3400)
+    out = np.zeros((2, _n(d)))
+    tt = tarr(.4)
+    _put2(out, _sin_of(70 * (1 - .3 * (1 - np.exp(-tt / .06)))) * np.exp(-tt / .1) * 1.0 + _band(3401, .4, 200, 2500) * np.exp(-tt / .03) * .6, 0.0, .9)
+    for j in range(110):
+        u = r.beta(1.6, 3.2)
+        at = .05 + u * 2.1
+        ps = r.uniform(.75, 1.3)
+        c = _unit(_m_binder(ps, r.uniform(.8, 1.3), 3410 + j))
+        _put2(out, c, at, r.uniform(.15, .5) * (1.15 - .5 * u), r.uniform(-.6, .6))
+    env = np.interp(t, [0, .15, .45, 1.1, 2.0, d], [0, .6, 1.0, .8, .25, 0])
+    for c in range(2):
+        rum = _lp4(noise6(d, 3420 + c), 500, 2) * env
+        out[c] += _rms(rum) * .25 * np.max(np.abs(out[c]))
+        out[c] += _band(3422 + c, d, 1500, 6000) * env * .05 * np.max(np.abs(out[c]))
+    for at, pan in ((2.05, -.3), (2.25, .25)):
+        _put2(out, _unit(_m_binder(.85, 1.1, int(at * 100))), at, .35, pan)
+    return norm6(_edge(out, .0005, .2), .85)
 
 
-def sfx_phys():
-    """One collision from the simulation (build/ep21/phys_events.json), 0.1 to 0.5 s, by the pair of materials 'a+b': each material has its own short voice (wood a knock at 360 Hz, metal a
-    ring with inharmonic partials, plastic a tick, glass a ping, ceramic a clink, cardboard a dull flap, fabric a soft thump, concrete a heavy dull thud with grit, rubber a bwip, soil a
-    crunch); the harder of the two carries 60 percent. The magnitude sets the length (0.75 to 1.35 of the voice's), lowers the pitch (a heavy hit is lower: 1.35 down to 0.75 of the
-    voice's) and, through the event's own gain, the level; a seed from the event's index and time makes every repeat different. A 'slide' is a scrape."""
-    k = _nth("phys")
-    ev = PHYS_EVENTS[k] if k < len(PHYS_EVENTS) else {"mat": "plastic+plastic", "mag": .3, "t": k}
-    mag = float(np.clip(ev.get("mag", .3), 0, 1))
-    seed = 4000 + 3 * k + int(ev.get("t", 0) * 1000) % 997
-    r = rng6(seed)
-    if ev.get("k") == "slide":
-        d = .2 + .3 * mag
+def sfx_scanbeep():
+    """The scanner's soft two-tone beep (0.3 s): two clean sine tones a fourth apart (G6 then C7, 55 ms each, 15 ms between), each with a faint glassy partial and a 4 ms attack, and a tiny digital
+    sparkle after them (a 7 kHz blip)."""
+    k = _nth("scanbeep")
+    x = np.zeros(_n(.3))
+    for j, f in enumerate((1568.0, 2093.0) if k % 2 == 0 else (1760.0, 2349.3)):
+        dd = .055
+        tt = tarr(dd)
+        tone = (np.sin(2 * np.pi * f * tt) + .12 * np.sin(2 * np.pi * 2.76 * f * tt)) * np.minimum(1, np.minimum(tt / .004, (dd - tt) / .008))
+        _place(x, tone, j * .07, .5)
+    tt = tarr(.012)
+    _place(x, np.sin(2 * np.pi * 7000 * tt) * np.hanning(len(tt)) * .12, .15, 1.0)
+    return norm6(_edge(x, .0003, .05), .45)
+
+
+def sfx_scanlock():
+    """The scanner locks on (1.0 s): a locking chirp (a sine that rushes up from 800 Hz to 3.2 kHz in 90 ms through a resonant zip), the reticle's brackets closing (two sharp clicks, 'chk-chk'), and a
+    low thud under it (a 70 Hz sub thump and a 160 Hz body), then a two-note warning, low and red (E5 and C5, square-ish, quiet): UNKNOWN."""
+    x = np.zeros(_n(1.0))
+    dd = .09
+    tt = tarr(dd)
+    _place(x, _sin_of(800 * (3200 / 800) ** (tt / dd)) * np.minimum(1, tt / .005) * .5 + _tv_filter(noise6(dd, 3430), 800 * (3200 / 800) ** (tt / dd), 6.0, "bp") * .4, 0.0, 1.0)
+    for j in range(2):
+        _place(x, _click(3431 + j, 3400, .002) * .7, dd + j * .045, 1.0)
+    t2 = tarr(.35)
+    _place(x, _sin_of(70 * (1 - .2 * t2 / .35)) * np.exp(-t2 / .08) * 1.1 + np.sin(2 * np.pi * 160 * t2) * np.exp(-t2 / .03) * .5, dd + .045, 1.0)
+    for j, f in enumerate((659.25, 523.25)):
+        d3 = .12
+        t3 = tarr(d3)
+        sq = _lp4(np.sign(np.sin(2 * np.pi * f * t3)) * .5 + np.sin(2 * np.pi * f * t3) * .5, 3000, 2) * np.minimum(1, np.minimum(t3 / .004, (d3 - t3) / .01))
+        _place(x, sq, .42 + j * .16, .18)
+    return norm6(_edge(x, .0003, .1), .65)
+
+
+def sfx_scanhum():
+    """The scan's sweep (designed event over the `scan` beat, 2.2 s, stereo): a filtered synth hum (saws on A2 and A3 through a band-pass whose centre climbs from 400 Hz to 2.4 kHz as the scan line
+    moves, a 7 Hz shimmer) and a faint high whine (4.2 kHz), moving from left to right with the sweep, cut short where the scanner locks (1.4 s) to a short tail."""
+    d = 2.2
+    t = tarr(d)
+    src = osc("saw", 110.0, d) + .6 * osc("saw", 220.4, d)
+    fc = 400 * (2400 / 400) ** np.clip(t / 1.4, 0, 1)
+    hum = _tv_filter(src, fc, 3.0, "bp") * (.75 + .25 * np.sin(2 * np.pi * 7 * t))
+    wh = np.sin(2 * np.pi * 4200 * t) * .02
+    env = np.interp(t, [0, .2, 1.35, 1.45, d], [0, 1, 1, .25, 0])
+    x = (_rms(hum) * .3 + wh) * env
+    return norm6(_edge(_pan_curve(x, np.interp(t, [0, 1.4, d], [-.6, .6, .6])), .02, .2), .4)
+
+
+def sfx_dataticks():
+    """A tag typing itself into the HUD (designed event, 0.3 s): eight tiny digital ticks 25 ms apart (3 to 5 kHz blips of 6 ms, each a little different) and a soft confirm blip at the end."""
+    k = _nth("dataticks")
+    r = rng6(3440 + k)
+    x = np.zeros(_n(.32))
+    for j in range(8):
+        tt = tarr(.006)
+        _place(x, np.sin(2 * np.pi * r.uniform(3000, 5000) * tt) * np.hanning(len(tt)), j * .025, r.uniform(.25, .45))
+    tt = tarr(.04)
+    _place(x, np.sin(2 * np.pi * 2637 * tt) * np.minimum(1, np.minimum(tt / .003, (.04 - tt) / .01)) * .3, .22, 1.0)
+    return norm6(_edge(x, .0003, .03), .35)
+
+
+def sfx_penscratch():
+    """Mr. Radish writes it down (0.7 s): 'Noted.' A ballpoint on a clipboard: five quick strokes (scratches at 1.8 to 7 kHz, 40 to 90 ms, roughened by the paper) and the full stop (a firm tap)."""
+    r = rng6(3450)
+    x = np.zeros(_n(.7))
+    t = 0.0
+    for j in range(5):
+        dd = r.uniform(.04, .09)
+        _place(x, _scrape(3451 + j, dd, 1800, 7000, r.uniform(60, 95)), t, r.uniform(.5, .8))
+        t += dd + r.uniform(.02, .05)
+    tt = tarr(.04)
+    _place(x, np.sin(2 * np.pi * 820 * tt) * np.exp(-tt / .008) * .5 + _band(3458, .04, 900, 4000) * np.exp(-tt / .003) * .5, t + .05, 1.0)
+    return norm6(_edge(x, .0004, .05), .55)
+
+
+def sfx_bonk():
+    """The last binder lands on Mr. Radish's head (designed event, 0.5 s): a hollow cartoon 'bonk' (a woodblock-like knock at 520 Hz with a 1.3 kHz overtone over the binder's own slap) and a tiny
+    wobble after it (a sine that sags from 700 to 560 Hz)."""
+    x = np.zeros(_n(.5))
+    tt = tarr(.2)
+    _place(x, np.sin(2 * np.pi * 520 * tt) * np.exp(-tt / .03) + .4 * np.sin(2 * np.pi * 1310 * tt) * np.exp(-tt / .012) + _band(3460, .2, 600, 3000) * np.exp(-tt / .006) * .6, 0.0, 1.0)
+    _place(x, _unit(_m_binder(.9, 1.0, 3461)) * .5, 0.0, 1.0)
+    t2 = tarr(.3)
+    _place(x, _sin_of(_glide(700, 560, .3)) * np.exp(-t2 / .1) * (1 + .3 * np.sin(2 * np.pi * 11 * t2)) * .15, .08, 1.0)
+    return norm6(_edge(x, .0003, .1), .7)
+
+
+# ================================================================ exit: the gasp, the clock, the break, the snap back
+def sfx_gasp():
+    """The whole table gasps (0.75 s, stereo): eight people inhale sharply at once (each a rush of breath through two vocal formants that rise as the throat opens, 0.16 to 0.3 s, a voiced catch at the
+    end of a few), spread over 0.12 s and across the table, Onion's a little late and higher, and a chair creaking as somebody sits back."""
+    r = rng6(3470)
+    out = np.zeros((2, _n(.8)))
+    for p in range(8):
+        dd = r.uniform(.16, .3)
+        tt = tarr(dd)
+        nz = noise6(dd, 3471 + p)
+        f1, f2 = r.uniform(550, 900), r.uniform(1500, 2600)
+        g = _tv_filter(nz, f1 * (1 + .3 * tt / dd), 3.0, "bp") * .9 + _tv_filter(nz, f2 * (1 + .2 * tt / dd), 4.0, "bp") * .5 + _bp4(nz, 3000, 7000, 1) * .2
+        g = g * np.interp(tt, [0, .03, dd * .7, dd], [0, 1, .8, 0])
+        if p % 3 == 0:
+            _place(g, _lp4(osc("saw", r.uniform(150, 260), .04), 1500, 2) * np.hanning(_n(.04)) * .3, dd - .05, 1.0)
+        late = .1 if p == 7 else 0.0
+        _put2(out, g, r.uniform(0, .12) + late, r.uniform(.5, 1.0), np.linspace(-.8, .8, 8)[p])
+    dd = .3
+    tt = tarr(dd)
+    _put2(out, _res(_sin_of(_glide(480, 560, dd)) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 26 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)), 520, 4.0) * .12, .35, 1.0, .4)
+    return norm6(_edge(out, .002, .1), .6)
+
+
+def _qtick(seed, f=1700.0, g=1.0):
+    """The conference-room wall clock's tick (a quartz movement in a plastic case): a crisp click rung at `f`, a hollow case under it at a third of that, 40 ms."""
+    tt = tarr(.04)
+    return (np.sin(2 * np.pi * f * tt) * np.exp(-tt / .004) * .6 + _band(seed, .04, 900, 4500) * np.exp(-tt / .0025) * .8 + np.sin(2 * np.pi * f / 3.1 * tt) * np.exp(-tt / .01) * .35) * g
+
+
+def sfx_clocktick():
+    """The wall clock of the conference room. The first (13.27 s, the clock reads 10:59; 0.3 s): one clear tick of the second hand, a little louder than the room hears it (the camera is on it). The
+    second (17.98 s, inside the break; 0.75 s): the last second of the minute: a tick, and 0.4 s later, exactly with the shift bell, the minute hand stepping onto 11:00 (a heavier 'tchk', a 240 Hz
+    clunk of the movement)."""
+    k = _nth("clocktick") % 2
+    x = np.zeros(_n(.75 if k else .3))
+    _place(x, _qtick(3480 + k, 1700, 1.0), 0.0, 1.0)
+    if k == 1:
+        tt = tarr(.2)
+        _place(x, _qtick(3482, 1250, 1.1) + np.sin(2 * np.pi * 240 * tt[:_n(.04)]) * np.exp(-tt[:_n(.04)] / .012) * .5, .4, 1.0)
+        _place(x, _band(3483, .2, 300, 2000) * np.exp(-tt / .02) * .3, .4, 1.0)
+    return norm6(_edge(x, .0003, .1), .5)
+
+
+def sfx_secondhand():
+    """One soft tick of the second hand (designed event, every second from the clock's beat to the shift bell; 0.05 s): the same clock as `clocktick`, quieter, tick and tock alternating."""
+    k = _nth("secondhand")
+    x = _qtick(3490 + k % 5, 1700 if k % 2 == 0 else 1550, 1.0)
+    return norm6(_edge(x, .0003, .01), .3)
+
+
+def sfx_chairsit():
+    """She sits (1.2 s): a padded conference chair taking her weight: the gas lift's short sigh (a 0.25 s hiss of air at 1 to 5 kHz that sinks), the cushion's soft thump (a 75 Hz body and a muffled
+    slap), the frame's creak (a stick-slip squeak that climbs from 520 to 610 Hz with a 28 Hz roughness, 0.3 s) and a smaller one as she settles. No breath: the exhale is its own cue."""
+    d = 1.2
+    x = np.zeros(_n(d))
+    t = tarr(.3)
+    _place(x, _sin_of(75 * (1 - .2 * (1 - np.exp(-t / .05)))) * np.exp(-t / .08) * .6 + _lp4(noise6(.3, 3500), 450, 2) * np.exp(-t / .06) * .5, 0.0, 1.0)
+    dd = .25
+    tt = tarr(dd)
+    _place(x, _tv_filter(noise6(dd, 3501), 5000 * (1200 / 5000) ** (tt / dd), 1.2, "bp") * np.interp(tt, [0, .02, dd], [0, 1, 0]) * .25, .02, 1.0)
+    for at, f0, dd, g in ((.07, 520, .3, .28), (.55, 470, .2, .14)):
+        tt = tarr(dd)
+        f = _glide(f0, f0 * 1.17, dd) * (1 + .02 * np.sin(2 * np.pi * 5 * tt))
+        sq = (_sin_of(f) + .35 * _sin_of(2 * f)) * (.55 + .45 * np.sign(np.sin(2 * np.pi * 28 * tt))) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** .7
+        _place(x, _res(sq, f0 * 1.1, 4.0) * .8, at, g)
+    return norm6(_edge(x, .003, .2), .45)
+
+
+def sfx_exhale():
+    """Her exhale (2.0 s): the breath of someone who has not sat down all day, let go at last: air through the mouth (two soft formants, 520 Hz and 1.45 kHz, and a little of everything to 3 kHz)
+    that swells for 0.35 s and sighs out over 1.5 s, with the faintest voiced edge at its start (a breathy hum at 190 Hz, -24 dB) and the lips closing at the end (a tiny soft click)."""
+    d = 2.0
+    t = tarr(d)
+    br = noise6(d, 3510)
+    env = np.interp(t, [0, .35, .8, 1.85, d], [0, 1, .7, .05, 0]) ** 1.2
+    breath = (_res(br, 520, 2.0) * .9 + _res(br, 1450, 2.5) * .5 + _lp4(br, 3000, 2) * .25) * env * (1 + .08 * np.sin(2 * np.pi * 1.1 * t))
+    x = _lp4(breath, 2800, 2) * .6
+    hum = _lp4(osc("saw", 190 * (1 - .06 * t / d), d), 900, 2) * np.interp(t, [0, .1, .5, .9], [0, 1, .3, 0], right=0) * .06
+    x = x + hum * np.max(np.abs(x)) / (np.max(np.abs(hum)) + 1e-9) * .06
+    _place(x, _band(3511, .02, 1500, 5000) * np.hanning(_n(.02)) * .05, 1.88, 1.0)
+    return norm6(_edge(x, .01, .1), .4)
+
+
+def sfx_shiftbell():
+    """The shift bell at 11:00, as a soft chime (2.8 s): not the building's bell but a gentle three-tone chime that falls through the D major chord (A5, F-sharp5, D5, 0.28 s apart) on soft tubular
+    bells (a sine, a faint 2.76x partial, a long 1.3 s decay), a warm low D under the last one, rounded off above 3.5 kHz and given a little of the room."""
+    x = np.zeros(_n(2.8))
+    for j, (f, g) in enumerate(((880.0, .85), (739.99, .8), (587.33, 1.0))):
+        d = 2.2
         t = tarr(d)
-        x = _band(seed, d, 400, 2600) * (.6 + .4 * np.sign(np.sin(2 * np.pi * 38 * t))) * np.sin(np.pi * np.clip(t / d, 0, 1))
-        return norm6(_edge(x, .01, .05), .6)
-    ps = (1.35 - .6 * mag) * r.uniform(.94, 1.06)
-    ds = .75 + .6 * mag
-    if "can" in str(ev.get("tag", "")).split("+"):      # the extinguisher: a hollow steel can (a bong that rings, a buzz as it rattles on whatever it hit), whatever the other thing is
-        d = .6 * ds
-        t = tarr(d)
-        f0 = 360 * ps
-        x = sum(a_ * np.sin(2 * np.pi * f0 * r_ * t) * np.exp(-t / (.2 * s_)) for r_, a_, s_ in ((1.0, 1.0, 1.0), (2.4, .5, .55), (3.9, .3, .35), (5.6, .18, .25)))
-        x += _band(seed, d, 700, 4500) * np.exp(-t / .004) * .8
-        buzz = _band(seed + 9, .16, 400, 2200) * (.5 + .5 * np.sign(np.sin(2 * np.pi * 95 * tarr(.16)))) * np.exp(-tarr(.16) / .05) * .5
-        _place(x, buzz, .01, 1.0)
-        other = [m for m in str(ev.get("mat", "")).split("+") if m in _MV and m != "metal"]
-        if other:
-            _place(x, _unit(_MV[other[0]](ps, ds * .6, seed + 21)) * .5, 0.0, 1.0)
-        return norm6(_edge(x, .0003, .05), .7)
-    mats = [m for m in str(ev.get("mat", "plastic+plastic")).split("+") if m in _MV] or ["plastic"]
-    if len(mats) == 1:
-        mats = mats * 2
-    a, b = sorted(mats[:2], key=HARD.index)
-    ca = _unit(_MV[a](ps, ds, seed)) * .6
-    cb = _unit(_MV[b](ps * r.uniform(.9, 1.1), ds, seed + 17)) * .4
-    n = max(len(ca), len(cb))
-    x = np.zeros(n)
-    x[:len(ca)] += ca
-    x[:len(cb)] += cb
-    x *= (LOUD[a] + LOUD[b]) / 2
-    return norm6(_edge(x, .0003, .02), .7)
+        b = (np.sin(2 * np.pi * f * t) + .18 * np.sin(2 * np.pi * 2.76 * f * t) * np.exp(-t / .25) + .08 * np.sin(4 * np.pi * f * t) * np.exp(-t / .5)) * np.exp(-t / 1.3)
+        _place(x, b * np.minimum(1, t / .008), j * .28, g)
+    tt = tarr(2.0)
+    _place(x, np.sin(2 * np.pi * 146.83 * tt) * np.exp(-tt / 1.0) * np.minimum(1, tt / .05) * .3, .56, 1.0)
+    x = _lp4(x, 3500, 2)
+    x = x + .15 * signal.fftconvolve(x, _small_ir(3520, rt=.5, pre=.008, lo=200, hi=3000))[:len(x)]
+    return norm6(_edge(x, .002, .5), .5)
 
 
-def sfx_typing():
-    """The end card's rows typing themselves in (2.3 s): a soft keyboard, a thock and a click per stroke (closed off at 4.2 kHz), words of four to seven strokes at about 95 ms with a space between
-    and an Enter at the end of each of the six rows. Each stroke is a little different."""
-    k = _nth("typing")
-    r = rng6(1970 + k)
-    d = 2.3
-    x = np.zeros(_n(d + .1))
-    t = .03
-    j = 0
-    while t < d - .12:
-        g_ = r.uniform(.5, 1.0)
-        _place(x, _key(1971 + 11 * k + j, j % 6 == 5), t, g_)
-        _place(x, _band(2000 + 13 * k + j, .012, 2500, 7000) * expdecay(.012, .0015), t, g_ * .35)
-        t += .095 * r.uniform(.75, 1.3) + (.07 if j % 18 == 17 else 0)
-        j += 1
-    return norm6(_edge(_lp4(x, 4200, 2), .001, .06), .6)
+def sfx_doorclose():
+    """The surveyors walk out and the glass front doors close behind them (0.8 s): the two leaves swinging shut on their closers (a push of air), the rubber seal meeting (a soft 130 Hz thump, a
+    wooden-metal frame knock at 380 Hz), the glass shivering in its frame (two faint high rings) and the magnetic lock clunking home a hair after it: the State has left the building."""
+    x = np.zeros(_n(.8))
+    dd = .2
+    tt = tarr(dd)
+    _place(x, _lp4(noise6(dd, 3530), 800, 2) * (tt / dd) ** 1.5 * .35, 0.0, 1.0)
+    t2 = tarr(.4)
+    _place(x, _sin_of(130 * (1 - .15 * (1 - np.exp(-t2 / .04)))) * np.exp(-t2 / .07) + np.sin(2 * np.pi * 380 * t2) * np.exp(-t2 / .02) * .45 + _band(3531, .4, 200, 2000) * np.exp(-t2 / .015) * .55, dd, 1.0)
+    _place(x, _glass(2600, .35, .06, .001) * .1 + _glass(3350, .3, .04, .001) * .06, dd + .005, 1.0)
+    tt = tarr(.12)
+    _place(x, _click(3532, 1800, .005) * .4 + np.sin(2 * np.pi * 220 * tt) * np.exp(-tt / .02) * .3, dd + .06, 1.0)
+    return norm6(_edge(x, .002, .1), .75)
 
 
+def sfx_coffeemaker():
+    """The coffee maker is back (1.2 s): it gurgles (a percolator: bubbles of 150 to 600 Hz blips, faster and faster, over a steam hiss) and beeps twice, ready (2.4 kHz, 90 ms each)."""
+    r = rng6(3540)
+    x = np.zeros(_n(1.2))
+    t = 0.0
+    while t < .75:
+        dd = r.uniform(.02, .05)
+        tt = tarr(dd)
+        f = r.uniform(150, 600)
+        _place(x, np.sin(2 * np.pi * f * tt * (1 + 2.0 * tt / dd)) * np.exp(-tt / (dd * .4)), t, r.uniform(.3, .7))
+        t += r.uniform(.03, .09) * (1 - .5 * t)
+    dd = .8
+    tt = tarr(dd)
+    _place(x, _band(3541, dd, 2500, 8000) * np.interp(tt, [0, .2, .7, dd], [0, 1, .8, 0]) * .12, 0.0, 1.0)
+    for j in range(2):
+        d2 = .09
+        t2 = tarr(d2)
+        _place(x, np.sin(2 * np.pi * 2400 * t2) * np.minimum(1, np.minimum(t2 / .004, (d2 - t2) / .006)) * .35, .85 + j * .16, 1.0)
+    return norm6(_edge(x, .002, .1), .55)
+
+
+def sfx_labelpeel():
+    """The labels let go (1.0 s): five survey labels peeling off the wall one after another (tacky rasps at 2 to 6 kHz, 60 to 100 ms, staggered over 0.35 s, each a little different) and fluttering
+    down (soft paper flutters at 1 to 4 kHz that tumble at 12 to 20 Hz and fade as they fall)."""
+    r = rng6(3550)
+    x = np.zeros(_n(1.0))
+    for j in range(5):
+        at = j * .075 + r.uniform(0, .02)
+        _place(x, _tacky(3551 + j, r.uniform(.06, .1), 2000, 6000), at, r.uniform(.5, .9))
+        dd = r.uniform(.35, .55)
+        tt = tarr(dd)
+        fl = _band(3560 + j, dd, 1000, 4000) * (.5 + .5 * np.abs(np.sin(2 * np.pi * r.uniform(12, 20) * tt))) * np.interp(tt, [0, .05, dd], [0, 1, 0])
+        _place(x, fl * .25, at + .08, 1.0)
+    return norm6(_edge(x, .001, .1), .55)
+
+
+# ---------------------------------------------------------------- the room tones' parts (as Episode 20 left them)
 def _wob(d, seed, fc=.2, depth=.25):
     """A slow level wobble around 1."""
     return 1 + depth * _smooth_rand(d, seed, fc)
@@ -2282,17 +2002,315 @@ def _mix(parts, d):
     return out
 
 
-PHYS_BOOST = {}
+def _fluoro(d, seed, f0=120.0):
+    """Fluorescent tubes overhead: the ballast's buzz (120 Hz and its harmonics to 600 Hz, a slow shimmer in its level)."""
+    t = tarr(d)
+    b = sum(a * np.sin(2 * np.pi * f0 * h * t + h) for h, a in ((1, 1.0), (2, .45), (3, .3), (4, .16), (5, .1)))
+    return b * (1 + .06 * _smooth_rand(d, seed, 1.5))
+
+
+def _feet_far(d, seed, every=(1.5, 4.0), steps=(4, 9), rate=(.13, .2), lpf=2200):
+    """Somebody hurrying down a hall out of sight: runs of quick footsteps (tile under rubber soles), closed off as if around a corner."""
+    r = rng6(seed)
+    out = np.zeros(_n(d))
+    t = r.uniform(.2, 1.5)
+    while t < d - .8:
+        for s in range(int(r.integers(*steps))):
+            tt = tarr(.05)
+            _place(out, _band(int(seed + t * 13 + s), .05, 300, 3000) * np.exp(-tt / .01) + np.sin(2 * np.pi * 120 * tt) * np.exp(-tt / .015) * .5, t, r.uniform(.5, 1.0))
+            t += r.uniform(*rate)
+        t += r.uniform(*every)
+    return _lp4(out, lpf, 2)
+
+
+def _cart_rattle(d, seed):
+    """A med cart pushed fast somewhere on the floor: a rolling rumble and the rattle of what is on it, swelling past and away now and then."""
+    t = tarr(d)
+    sw = .5 + .5 * np.sin(2 * np.pi * .13 * t + seed % 5) ** 2
+    rum = _lp4(noise6(d, seed), 260, 2) * sw
+    rat = _hit_train(seed + 1, d, int(d * 9), 1500, 5500, .003, .5, .5)[0] * sw
+    return _rms(rum) + _rms(rat) * .5
+
+
+def room_title(d, seed=3600):
+    """A desk under a cold office light (6.8 s): the fluorescent tubes' thin buzz, the air handling's hush and, far off, a keyboard."""
+    air = _diffuse(lambda s: _rms(_hvac(d, s, 140.0, 320.0), 1.0), seed)
+    return _mix([(air, 1.0), (_ctr(_rms(_fluoro(d, seed + 3), .09), .2), 1.0), (_ctr(_rms(_typing_far(d, seed + 5, (2.5, 5.0)), .08), -.5), 1.0)], d)
+
+
+def room_arrive(d, seed=3700):
+    """The lobby and the nurses' station at 3:02 PM (24.7 s): the air handling, the staff's murmur and a keyboard, the call light far off, a phone. The front doors open at 0.4 s and the afternoon
+    comes in (traffic far away, a breeze) until they close (2.6 s). The murmur FREEZES on the silhouettes (0.7 s: gone in 0.15 s, the staff frozen mid-motion) and only comes back, thinner, after the
+    PA has sent everyone running (18.2 s)."""
+    t = tarr(d)
+    air = _diffuse(lambda s: _rms(_hvac(d, s, 150.0, 340.0), 1.0), seed)
+    bab = _diffuse(lambda s: _rms(_babble(d, s, 4), 1.0), seed + 11)
+    me = _beat_abs("arrive", "me1")
+    back = (me[1] - _scene_info("arrive")["start"]) if me else 18.2
+    frz = np.interp(t, [0, .7, .85, back, back + 1.5, d], [1, 1, 0, 0, .45, .45])
+    out_ = _diffuse(lambda s: _rms(_lp4(noise6(d, s), 1500, 2) + .3 * _band(s + 1, d, 2000, 6000), 1.0), seed + 21) * np.interp(t, [0, .4, .7, 2.0, 2.6, d], [0, 0, 1, .6, 0, 0])
+    parts = [(air, .9), (bab * frz, .32), (_ctr(_rms(_typing_far(d, seed + 31, (3.0, 7.0)), .2), -.5) * frz, 1.0), (_ctr(_rms(_chimes_far(d, seed + 41, (8.0, 12.0)), .1), .3), 1.0),
+             (_ctr(_rms(_phone(d, seed + 51, (11.0, 16.0)), .12), .55), 1.0), (out_, .35), (_ctr(_rms(_fluoro(d, seed + 61), .04), 0.0), 1.0)]
+    return _mix(parts, d)
+
+
+def room_prep(d, seed=3800):
+    """The station in survey mode (31.6 s). Before the montage: panic (a busier murmur, people hurrying past, a phone that nobody answers). THE MONTAGE (7.21 to 19.21 s): the room drops 12 dB
+    under the music and the hits. After it, the terrifyingly clean station: only the air and the lights, until forty Strawberries murmur among themselves (from the poofs, 20.5 s, fading by 25 s)."""
+    t = tarr(d)
+    mt = _beat_abs("prep", "montage")
+    a0 = _scene_info("prep")["start"]
+    ma, mb = (mt[0] - a0, mt[1] - a0) if mt else (7.21, 19.21)
+    air = _diffuse(lambda s: _rms(_hvac(d, s, 150.0, 340.0), 1.0), seed)
+    bab = _diffuse(lambda s: _rms(_babble(d, s, 5), 1.0), seed + 11)
+    busy = np.interp(t, [0, ma - .3, ma, mb, d], [1, 1, .25, 0, 0])
+    lvl = np.interp(t, [0, ma - .1, ma + .1, mb - .1, mb + .3, d], [1, 1, .25, .25, .6, .6])
+    crowd = _diffuse(lambda s: _rms(_babble(d, s, 9, 200, 3000), 1.0), seed + 21) * np.interp(t, [0, 20.4, 20.9, 22.6, 23.0, 25.0, 25.3, d], [0, 0, 1, 1, .5, .4, 0, 0])
+    parts = [(air * lvl, .9), (bab * busy, .4), (_ctr(_rms(_feet_far(d, seed + 31, (1.2, 3.0)), .25), .45) * busy, 1.0), (_ctr(_rms(_phone(d, seed + 41, (6.0, 9.0)), .12), -.5) * busy, 1.0),
+             (_ctr(_rms(_fluoro(d, seed + 51), .05), 0.0) * lvl, 1.0), (crowd, .45)]
+    return _mix(parts, d)
+
+
+def room_medpass(d, seed=3900):
+    """THE SPLIT (27.3 s). LEFT, with the State: a resident's room at its calmest (a soft hush of air, a wall clock ticking, the low pulse of an oxygen concentrator), quiet. RIGHT, a normal night: a busy
+    hallway (staff talking over each other, a television, running feet, a med cart rattling past, a phone, a door), panned hard right (the left ear gets it 14 dB down). Each side follows the
+    divider: the side it squeezes is turned down (Split.gain)."""
+    t = tarr(d)
+    a0 = _scene_info("medpass")["start"]
+    calm = _mix([(_diffuse(lambda s: _rms(_hvac(d, s, 120.0, 260.0), 1.0), seed), .5), (_ctr(_rms(_ticks(d, seed + 5, 1.0, .3, (1900, 1500)), .12), -.6), 1.0),
+                 (_ctr(_rms(_lp4(noise6(d, seed + 6), 400, 2) * (.6 + .4 * np.sin(2 * np.pi * .25 * t) ** 8), 1.0), -.45), .12)], d)
+    hall = (_rms(_babble(d, seed + 11, 5, 180, 3200), 1.0) * .45 + _rms(_tv_far(d, seed + 21, 1.0), 1.0) * .2 + _rms(_feet_far(d, seed + 31, (1.0, 2.5), (5, 10), (.11, .16), 3500), 1.0) * .35
+            + _rms(_cart_rattle(d, seed + 41), 1.0) * .3 + _rms(_phone(d, seed + 51, (7.0, 10.0), 2800), 1.0) * .18)
+    hall = _hp4(hall, 140, 2)
+    gl = SPLIT.gain("L", a0 + t)
+    gr = SPLIT.gain("R", a0 + t)
+    return _mix([(calm * gl[None, :], .55), (_ctr(hall * gr, .75), 1.0)], d)
+
+
+def room_closet(d, seed=4000):
+    """The corridor by the station at 7:10 PM (27.2 s): the air, the lights, a television in a room down the hall, the vending machine's compressor. Under his scanner's view (the `scan` beat) the
+    room falls back 6 dB: we hear what the HUD hears."""
+    t = tarr(d)
+    sc = _beat_abs("closet", "scan")
+    a0 = _scene_info("closet")["start"]
+    sa, sb = (sc[0] - a0, sc[1] - a0) if sc else (12.28, 14.48)
+    lvl = np.interp(t, [0, sa, sa + .2, sb, sb + .3, d], [1, 1, .5, .5, 1, 1])
+    air = _diffuse(lambda s: _rms(_hvac(d, s, 130.0, 300.0), 1.0), seed)
+    return _mix([(air * lvl, .9), (_ctr(_rms(_fluoro(d, seed + 3), .05), 0.0) * lvl, 1.0), (_ctr(_rms(_tv_far(d, seed + 5, 1.0), .14), .55) * lvl, 1.0),
+                 (_ctr(_rms(_hum(d, 98.0, ((1, 1.0), (2, .5), (3, .25))), .05), -.6) * lvl, 1.0)], d)
+
+
+def room_exit(d, seed=4100):
+    """The conference room at 10:45 PM (32.9 s): a low hum of air, the lights, the building asleep far away. THE BREAK (15.08 to 18.68 s): the room tone falls to almost nothing (-20 dB in 0.5 s from
+    the moment she sits) so that the clock's second hand and her breath are all there is, and comes back with the shift bell. The clock's own ticks are events (secondhand)."""
+    t = tarr(d)
+    bk = _beat_abs("exit", "break")
+    a0 = _scene_info("exit")["start"]
+    ba, bb = (bk[0] - a0, bk[1] - a0) if bk else (15.08, 18.68)
+    bell = _cue_local("exit", "shiftbell", 0) or bb - .3
+    lvl = np.interp(t, [0, ba, ba + .5, bell, bell + .6, d], [1, 1, .1, .1, 1, 1])
+    air = _diffuse(lambda s: _rms(_hvac(d, s, 120.0, 260.0), 1.0), seed)
+    return _mix([(air * lvl, .9), (_ctr(_rms(_fluoro(d, seed + 3), .05), .1) * lvl, 1.0), (_ctr(_rms(_tv_far(d, seed + 5, 1.0), .06), -.6) * lvl, 1.0)], d)
+
+
+def room_end(d, seed=4200):
+    """The end card: an office's hush so the held chord has a floor: air and the lights."""
+    air = _diffuse(lambda s: _rms(_hvac(d, s, 130.0, 280.0), 1.0), seed)
+    return _mix([(air, 1.0), (_ctr(_rms(_fluoro(d, seed + 3), .06)), 1.0)], d)
+
+
+BED_DB = {"title": -34, "arrive": -25, "prep": -25, "medpass": -17.5, "closet": -26, "exit": -27, "end": -40}
+BED_SCENE = {k: k for k in BED_DB}
+ROOM_FN = {"title": room_title, "arrive": room_arrive, "prep": room_prep, "medpass": room_medpass, "closet": room_closet, "exit": room_exit, "end": room_end}
+
+
+def _make_bed(name):
+    def run():
+        sid = BED_SCENE[name]
+        s = _scene_info(sid)
+        d = (s["dur"] if s else 10.0) + .3
+        x = _rms(ROOM_FN[name](d), 1.0)
+        fade = np.minimum(1, np.minimum(np.arange(x.shape[1]) / (.25 * SR), (x.shape[1] - np.arange(x.shape[1])) / (.3 * SR)))
+        return x * fade
+    run.__doc__ = f"The room tone of the {BED_SCENE[name]} scene (see room_*), at unit RMS."
+    return run
+
+
+for _bn in BED_SCENE:
+    globals()["sfx_bed_" + _bn] = _make_bed(_bn)
+
+
+def amb_hum21(d, ramp=None):
+    """The script's `hum` ambience (the mixer's own under-layer, very quiet): the building's air at about the level of the old hum."""
+    return _rms(_diffuse(lambda s: _rms(_hvac(d, s, 120.0, 300.0), 1.0), 4300), .006)
+
+
+A6.AMB["hum"] = amb_hum21
+
+
+# ================================================================ the physics foley family (as Episode 20 left it) and the binder
+def _hit_train(seed, d, n, lo, hi, tau, g0, g1, t0=0.0, t1=None, shape=1.0):
+    """n small noise ticks scattered between t0 and t1 (denser early when shape > 1), each a band lo..hi that dies in tau: gravel, splinters, strands, debris. Returns (2, samples)."""
+    r = rng6(seed)
+    out = np.zeros((2, _n(d)))
+    t1 = d if t1 is None else t1
+    for i in range(n):
+        u = r.uniform() ** shape
+        at = t0 + (t1 - t0) * u
+        dd = min(.08, max(.01, tau * 6))
+        c = _band(seed + 1 + i, dd, r.uniform(lo, lo * 1.4), r.uniform(hi * .7, hi)) * expdecay(dd, tau * r.uniform(.6, 1.4))
+        pan = r.uniform(-.9, .9)
+        th = (pan + 1) * np.pi / 4
+        g = (g0 + (g1 - g0) * u) * r.uniform(.4, 1.0)
+        j = int(at * SR)
+        m = min(len(c), out.shape[1] - j)
+        if m > 0:
+            out[0, j:j + m] += c[:m] * np.cos(th) * g
+            out[1, j:j + m] += c[:m] * np.sin(th) * g
+    return out
+
+
+PHYS_EVENTS = []
+
+
+LOUD = {"tile": .9, "metal": 1.0, "glass": .9, "ceramic": .85, "concrete": 1.0, "wood": 1.0, "plastic": .75, "rubber": .7, "cardboard": .6, "paper": .5, "leaf": .45, "soil": .55, "fabric": .4}
+
+
+HARD = ("metal", "glass", "ceramic", "tile", "concrete", "wood", "plastic", "rubber", "cardboard", "paper", "leaf", "soil", "fabric")
+
+
+def _m_wood(ps, ds, seed):
+    d = .15 * ds
+    t = tarr(d)
+    return np.sin(2 * np.pi * 360 * ps * t) * np.exp(-t / (.016 * ds)) + .5 * np.sin(2 * np.pi * 860 * ps * t) * np.exp(-t / (.008 * ds)) + _band(seed, d, 500, 2600) * np.exp(-t / (.006 * ds)) * .9
+
+
+def _m_metal(ps, ds, seed):
+    d = .5 * ds
+    return _ping(820 * ps, d, .08 + .1 * ds, (1.0, 2.76, 5.4, 8.9), (1.0, .5, .25, .12), (1.0, .55, .3, .2)) + _band(seed, d, 3000, 9000) * expdecay(d, .002) * .4
+
+
+def _m_plastic(ps, ds, seed):
+    d = .1 * ds
+    t = tarr(d)
+    return np.sin(2 * np.pi * 1150 * ps * t) * np.exp(-t / (.01 * ds)) + _band(seed, d, 2000, 6500) * np.exp(-t / .004) * .8
+
+
+def _m_glass(ps, ds, seed):
+    d = .35 * ds
+    return _glass(2600 * ps, d, .05 + .05 * ds, .001) + _band(seed, d, 3000, 9000) * expdecay(d, .0015) * .3
+
+
+def _m_ceramic(ps, ds, seed):
+    d = .25 * ds
+    return _ping(1900 * ps, d, .03 + .04 * ds, (1.0, 2.3, 4.1), (1.0, .45, .2), (1.0, .5, .3)) + _band(seed, d, 3000, 8000) * expdecay(d, .002) * .35
+
+
+def _m_cardboard(ps, ds, seed):
+    d = .13 * ds
+    t = tarr(d)
+    return _lp4(noise6(d, seed), 1300, 2) * np.exp(-t / (.02 * ds)) + np.sin(2 * np.pi * 170 * ps * t) * np.exp(-t / .02) * .5
+
+
+def _m_fabric(ps, ds, seed):
+    d = .16 * ds
+    t = tarr(d)
+    return _lp4(noise6(d, seed), 380, 2) * np.exp(-t / (.035 * ds)) + np.sin(2 * np.pi * 85 * ps * t) * np.exp(-t / .03) * .6
+
+
+def _m_concrete(ps, ds, seed):
+    d = .26 * ds
+    t = tarr(d)
+    return _sin_of((62 + 78 * np.exp(-t / .03)) * ps) * np.exp(-t / (.05 * ds)) + _band(seed, d, 150, 1500) * np.exp(-t / .02) * .8 + _band(seed + 1, d, 2000, 7000) * np.exp(-t / .002) * .25
+
+
+def _m_rubber(ps, ds, seed):
+    d = .18 * ds
+    t = tarr(d)
+    return _sin_of((210 + 120 * np.exp(-t / .03)) * ps) * np.exp(-t / .03) + _lp4(noise6(d, seed), 900, 2) * np.exp(-t / .01) * .4
+
+
+def _m_soil(ps, ds, seed):
+    d = .22 * ds
+    t = tarr(d)
+    return _lp4(noise6(d, seed), 800, 2) * np.exp(-t / (.05 * ds)) + _hit_train(seed + 5, d, 8, 400, 2500, .004, .2, .05)[0] * .5 + np.sin(2 * np.pi * 70 * ps * t) * np.exp(-t / .06) * .5
+
+
+def _m_paper(ps, ds, seed):
+    d = .14 * ds
+    t = tarr(d)
+    return _band(seed, d, 1500, 7500) * np.exp(-t / (.02 * ds)) * .9 + _lp4(noise6(d, seed + 3), 500, 2) * np.exp(-t / .012) * .3 + _band(seed + 5, d, 300, 1200) * np.exp(-t / (.04 * ds)) * .25
+
+
+def _m_tile(ps, ds, seed):
+    """Vinyl tile over concrete (the corridor): a short dry 'tak' (a 1.3 kHz knock that dies in 8 ms, a click of 800 Hz to 3.5 kHz) over a dull slab thud (90 Hz) and a faint ring."""
+    d = .2 * ds
+    t = tarr(d)
+    return np.sin(2 * np.pi * 1300 * ps * t) * np.exp(-t / .008) + _band(seed, d, 800, 3500) * np.exp(-t / .004) * .8 + _sin_of((50 + 50 * np.exp(-t / .03)) * ps) * np.exp(-t / .05) * .6
+
+
+_MV = {"tile": _m_tile, "paper": _m_paper, "leaf": _m_paper, "wood": _m_wood, "metal": _m_metal, "plastic": _m_plastic, "glass": _m_glass, "ceramic": _m_ceramic, "cardboard": _m_cardboard, "fabric": _m_fabric, "concrete": _m_concrete,
+       "rubber": _m_rubber, "soil": _m_soil}
+
+
+_MV["binder"] = lambda ps, ds, seed: _m_binder(ps, ds, seed)
+LOUD["binder"] = .7
+HARD = tuple(HARD) + ("binder",)
+
+
+def sfx_phys():
+    """One collision from the simulation (build/ep21/phys_events.json), 0.1 to 0.5 s, by the pair of materials 'a+b': each material has its own short voice (wood a knock at 360 Hz, metal a
+    ring with inharmonic partials, plastic a tick, glass a ping, ceramic a clink, cardboard a dull flap, fabric a soft thump, concrete a heavy dull thud with grit, rubber a bwip, soil a
+    crunch); the harder of the two carries 60 percent. A BINDER (an event whose tag names a binder) has its own voice (_m_binder: the vinyl board's slap, the pages, the rings) blended with the
+    other material's. The magnitude sets the length (0.75 to 1.35 of the voice's), lowers the pitch (a heavy hit is lower: 1.35 down to 0.75 of the voice's) and, through the event's own gain,
+    the level; a seed from the event's index and time makes every repeat different. A 'slide' is a scrape: for a binder, a board sliding on the pile."""
+    k = _nth("phys")
+    ev = PHYS_EVENTS[k] if k < len(PHYS_EVENTS) else {"mat": "plastic+plastic", "mag": .3, "t": k}
+    mag = float(np.clip(ev.get("mag", .3), 0, 1))
+    seed = 4000 + 3 * k + int(ev.get("t", 0) * 1000) % 997
+    r = rng6(seed)
+    tags = str(ev.get("tag", "")).split("+")
+    binder = any("binder" in s for s in tags)
+    if ev.get("k") == "slide":
+        d = .2 + .3 * mag
+        t = tarr(d)
+        lo, hi = (600, 3500) if binder else (400, 2600)
+        x = _band(seed, d, lo, hi) * (.6 + .4 * np.sign(np.sin(2 * np.pi * (52 if binder else 38) * t))) * np.sin(np.pi * np.clip(t / d, 0, 1))
+        return norm6(_edge(x, .01, .05), .6)
+    ps = (1.35 - .6 * mag) * r.uniform(.94, 1.06)
+    ds = .75 + .6 * mag
+    mats = [m for m in str(ev.get("mat", "plastic+plastic")).split("+") if m in _MV] or ["plastic"]
+    if len(mats) == 1:
+        mats = mats * 2
+    if binder:
+        other = [m for m in mats if m not in ("cardboard", "plastic", "paper")] or ["cardboard"]
+        ca = _unit(_m_binder(ps, ds, seed)) * .7
+        cb = _unit(_MV[other[0]](ps * r.uniform(.9, 1.1), ds, seed + 17)) * .3
+        loud = (.7 + LOUD.get(other[0], .6)) / 2
+    else:
+        a, b = sorted(mats[:2], key=HARD.index)
+        ca = _unit(_MV[a](ps, ds, seed)) * .6
+        cb = _unit(_MV[b](ps * r.uniform(.9, 1.1), ds, seed + 17)) * .4
+        loud = (LOUD[a] + LOUD[b]) / 2
+    n = max(len(ca), len(cb))
+    x = np.zeros(n)
+    x[:len(ca)] += ca
+    x[:len(cb)] += cb
+    return norm6(_edge(x * loud, .0003, .02), .7)
+
+
+PHYS_BOOST = {"binder": 1.0}
 
 
 def _tagkey(e):
-    """The first of the boosted names that the event's tag ('can+floor', 'easel+can' ...) contains, else ''."""
+    """The first of the boosted names that the event's tag ('binder+floor' ...) contains, else ''."""
     parts = str(e.get("tag", "")).split("+")
-    return next((k for k in PHYS_BOOST if k in parts), "")
+    return next((k for k in PHYS_BOOST if any(k in p for p in parts)), "")
 
 
 def _select_phys(phys, scripted):
-    """Choose the collisions that are heard: every first impact of a pair of objects, then the loudest, with the density cap and the 40 ms rule."""
+    """Choose the collisions that are heard: every first impact of a pair of objects, then the loudest, with the density cap (at most two within 50 ms, eighteen in any one second) and the 40 ms
+    rule (nothing within 40 ms of a scripted hit the picture lands on)."""
     ev = sorted((dict(e) for e in phys if e.get("name", "phys") == "phys"), key=lambda e: e["t"])
     seen, first = set(), set()
     for i, e in enumerate(ev):
@@ -2311,196 +2329,23 @@ def _select_phys(phys, scripted):
             continue
         near = [j for j in keep if abs(ev[j]["t"] - e["t"]) < .05]
         sec = [j for j in keep if int(ev[j]["t"]) == int(e["t"])]
-        if len(near) >= 2 or len(sec) >= 14:
+        if len(near) >= 2 or len(sec) >= 18:
             continue
         keep.append(i)
     out = []
     for i in sorted(keep, key=lambda j: ev[j]["t"]):
         e = ev[i]
         mag = float(e.get("mag", .3))
-        out.append({"t": round(e["t"] + (.0 if i in first else .0), 3), "name": "phys", "mat": e.get("mat", "plastic+plastic"), "mag": round(mag, 3), "k": e.get("k", "hit"), "tag": e.get("tag", ""),
+        out.append({"t": round(e["t"], 3), "name": "phys", "mat": e.get("mat", "plastic+plastic"), "mag": round(mag, 3), "k": e.get("k", "hit"), "tag": e.get("tag", ""),
                     "vol": round(min(.9, (.05 + .30 * mag ** 1.3) * (.6 if e.get("k") == "slide" else 1.0) * PHYS_BOOST.get(_tagkey(e), 1.0)), 4), "pan": float(np.clip(e.get("pan", 0), -1, 1)), "room": "hall"})
     return out
 
 
-
-
-# ================================================================ Episode 20: the room tone of every space (beds)
-# A bed is a designed event the script does not list (see _designed_events): a stereo texture that fills one scene. It is returned at unit RMS; the event's gain sets its level (BED_DB: dB under a
-# spoken line). Beds skip the scene's reverb (NOREV): each already has its room baked in (the lot has no room at all).
-BED_DB = {"title": -34, "forecast": -25, "lot": -8, "blackout": -19, "dayroom": -24, "night": -24, "end": -40}
-BED_SCENE = {"title": "title", "forecast": "forecast", "lot": "lot", "blackout": "blackout", "dayroom": "dayroom", "night": "night", "end": "end"}
-
-
-def _gen_drone(d, seed, lp=420, hunt=.07):
-    """The generator, heard through the walls (mono): a four-cylinder diesel on a 1800 rpm set fires 60 times a second, so the room tone is a 60 Hz chug with the alternator's hum (60, 120 and 180 Hz) over it,
-    closed off at `lp` Hz, with the slow hunting of the governor (a few percent, twice a second or so)."""
-    t = tarr(d)
-    f = 60.0 * (1 + .004 * _smooth_rand(d, seed + 1, .6))
-    eng = _diesel(d, f, seed, knock=.25, rumble=.6, lp=lp)
-    ph = 2 * np.pi * np.cumsum(f) / SR
-    hum = np.sin(ph) + .7 * np.sin(2 * ph + 1) + .35 * np.sin(3 * ph + 2)
-    x = (_rms(eng) * .8 + _rms(hum) * .5) * (1 + hunt * _smooth_rand(d, seed + 2, .5))
-    return _lp4(x, lp + 60, 2)
-
-
-def _emerg_buzz(d, seed):
-    """The emergency lights: the buzz of a small ballast (120 Hz and its harmonics to 600 Hz, a 7 Hz shimmer in its level) and the exit signs' thin 180 Hz hum."""
-    t = tarr(d)
-    buzz = sum(a * np.sin(2 * np.pi * 120 * h * t + h) for h, a in ((1, 1.0), (2, .5), (3, .35), (4, .2), (5, .12)))
-    buzz = buzz * (1 + .12 * np.sin(2 * np.pi * 7.1 * t + 1) + .05 * _smooth_rand(d, seed, 3.0))
-    return _rms(buzz) * 1.0 + _rms(np.sin(2 * np.pi * 180 * t)) * .22
-
-
-def _breaths_bed(d, seed, who=5, every=(2.2, 4.2), level=1.0):
-    """Cold breaths of `who` people standing in the snow (stereo): each is a soft exhale (a band of air through one formant at 700 Hz, 0.45 s) every few seconds, each person in their own place."""
-    r = rng6(seed)
-    out = np.zeros((2, _n(d)))
-    pans = np.linspace(-.6, .65, who)
-    for p in range(who):
-        t = r.uniform(.2, every[1])
-        while t < d - .6:
-            dd = r.uniform(.35, .55)
-            tt = tarr(dd)
-            nz = noise6(dd, int(seed + 31 * p + t * 10))
-            b = (_res(nz, r.uniform(600, 800), 2.0) * .9 + _lp4(nz, 2500, 2) * .3) * np.sin(np.pi * np.clip(tt / dd, 0, 1)) ** 1.6
-            seg = _ctr(_lp4(b, 2800, 2), pans[p] + r.uniform(-.08, .08)) * r.uniform(.5, 1.0) * level
-            i = int(t * SR)
-            m = min(seg.shape[1], out.shape[1] - i)
-            if m > 0:
-                out[:, i:i + m] += seg[:, :m]
-            t += dd + r.uniform(*every)
-    return out
-
-
-def room_title(d, seed=2000):
-    """A study desk at night (6.8 s): the room's hush, the wind outside the frosted window (heard through the glass, low and soft), a desk lamp's thin buzz and a small clock."""
-    air = _diffuse(lambda s: _rms(_hvac(d, s, 140.0, 300.0), 1.0), seed)
-    return _mix([(air, 1.0), (wind(d, seed + 5, wall=420, howl=.7, base=.45), .75), (_ctr(_rms(_hum(d, 100.0, ((1, 1.0), (2, .4))), .05), .35), 1.0),
-                 (_ctr(_rms(_ticks(d, seed + 9, 1.0, .41), .1), .4), 1.0)], d)
-
-
-def _door_env(d, t_open, rise=.04, fall=.9, rest=.35):
-    """0 before the door is flung open at `t_open`, then 1 and settling to `rest` (the doorway stays open onto the white)."""
-    t = tarr(d)
-    return np.where(t < t_open, 0.0, np.minimum(1.0, (t - t_open) / rise) * (rest + (1 - rest) * np.exp(-(t - t_open) / fall)))
-
-
-def room_forecast(d, seed=2100):
-    """The nurses' station at two in the afternoon: air handling, the murmur of a few staff, a telephone, a keyboard, the call light's chime far away, the wall TV's weather murmur, the hum of the monitors, and the
-    wind leaking round the glass doors and the window (low-passed by the wall at 520 Hz, a quiet howl that grows as the storm closes in). THE DOOR (`doorgust`): the wall opens for a moment, as Episode 18's
-    muffling did with its doors: the leak is replaced by the open wind (a full-band blizzard, brighter and louder) that settles to a lasting 35 percent of that, because the doorway stays open onto the white."""
-    air = _diffuse(lambda s: _rms(_hvac(d, s, 150.0, 340.0), 1.0), seed)
-    bab = _diffuse(lambda s: _rms(_babble(d, s, 3), 1.0), seed + 11)
-    leak = wind(d, seed + 20, wall=520, howl=1.0, base=.45, var=.22)
-    leak = leak * np.interp(tarr(d), [0, d], [.6, 1.0])
-    tdoor = _cue_local("forecast", "doorgust", 0)
-    parts = [(air, .8), (bab, .3), (_ctr(_rms(_phone(d, seed + 21, (9.0, 14.0)), .3), .5), 1.0), (_ctr(_rms(_typing_far(d, seed + 31, (3.0, 7.0)), .22), -.5), 1.0),
-             (_ctr(_rms(_chimes_far(d, seed + 41, (9.0, 14.0)), .12), .25), 1.0), (_ctr(_rms(_tv_far(d, seed + 5, 1.0), .16), .6), 1.0), (_ctr(_rms(_hum(d, 120.0, ((1, 1.0), (2, .3))), .05)), 1.0)]
-    if tdoor is not None:
-        env = uniform_filter1d(_door_env(d, tdoor), 480)
-        opened = _lp4(wind(d, seed + 25, howl=1.0, base=.6, var=.2), 4500, 2)
-        parts += [(leak * (1 - .7 * env), 1.4), (opened * env, 1.8)]
-    else:
-        parts += [(leak, 1.4)]
-    return _mix(parts, d)
-
-
-def room_lot(d, seed=2200):
-    """The parking lot in the blizzard (28.1 s), wind-led: a low rumble and the roar of the body with a tonal howl that climbs on every gust, the hush of falling snow, and gusts at the plow's cues (the blade
-    1.5 s, the berm 2.7 s, the car's snow 14.1 s, the slip 16.7 s) on top of a slow independent swell; the five of them breathing cold puffs, the far hum of a lamp post and the building's rooftop fans."""
-    g = []
-    for nm, k, dur, amp in (("plowscrape", 0, 2.2, .85), ("plowdump", 0, 1.6, .7), ("snowdump", 1, 1.4, .35), ("slip", 0, 1.6, .5)):
-        a = _cue_local("lot", nm, k)
-        if a is not None:
-            g.append((a - .15, dur, amp))
-    w = wind(d, seed, gusts=g, base=.5, var=.26)
-    return _mix([(w, 1.0), (_breaths_bed(d, seed + 50), .16), (_ctr(_rms(_hum(d, 60.0, ((1, 1.0), (2, .3))), .04), .6), 1.0), (_ctr(_rms(_lp4(noise6(d, seed + 60), 160, 2), .05), -.5), 1.0)], d)
-
-
-def room_blackout(d, seed=2300):
-    """The station for 36.9 s. 0 to 0.25 s: the lights' own hum (the ballasts, which `powerdown` then kills room by room). 0.3 to 12.9 s: a thick hush: only the wind leaking round the window (low and soft)
-    and a sub-bass of still air. From the generator's catch (12.9 s, fully in by 13.9) the new room tone: the generator's drone (60 Hz, through the walls), the emergency lights' buzz and the exit signs'
-    hum, with the same wind leak."""
-    t = tarr(d)
-    hum_on = _rms(sum(a * np.sin(2 * np.pi * 120 * h * t + h) for h, a in ((1, 1.0), (2, .6), (3, .5), (4, .3), (5, .2))), 1.0) * .5 + _rms(_lp4(noise6(d, seed), 300, 2), 1.0) * .3
-    hum_on = hum_on * np.interp(t, [0, .19, .225, d], [1, 1, 0, 0])
-    leak = wind(d, seed + 5, wall=480, howl=.9, base=.45, var=.22) * np.interp(t, [0, .35, .9, 12.9, 13.9, d], [0, 0, 1.0, 1.0, .75, .75])
-    sub = _ctr(_rms(_lp4(noise6(d, seed + 6), 55, 2), 1.0), 0.0) * np.interp(t, [0, .4, 1.2, 12.9, 13.9, d], [0, 0, .12, .12, .05, .05])
-    gen = _diffuse(lambda s: _gen_drone(d, s), seed + 10)
-    gen = gen * np.interp(t, [0, 12.8, 13.9, d], [0, 0, 1.0, 1.0])
-    em = _ctr(_emerg_buzz(d, seed + 20), .15) * np.interp(t, [0, 12.9, 13.9, d], [0, 0, .2, .2])
-    return _mix([(_st(hum_on), 1.0), (leak, 1.0), (sub, 1.0), (gen, .5), (em, 1.0)], d)
-
-
-def room_dayroom(d, seed=2400):
-    """The day room at night on the generator (20.9 s): the drone of the set at the other end of the building, the emergency lights' faint buzz, a soft hush of air, the wind at the big window (a quiet howl,
-    low-passed by the wall and the frost) and the snow's own silence."""
-    air = _diffuse(lambda s: _rms(_hvac(d, s, 110.0, 240.0), 1.0), seed)
-    gen = _diffuse(lambda s: _gen_drone(d, s, 330), seed + 10)
-    leak = wind(d, seed + 20, wall=460, howl=1.0, base=.45, var=.22)
-    return _mix([(air, .3), (gen, .35), (_ctr(_emerg_buzz(d, seed + 30), -.3), .08), (leak, 1.6)], d)
-
-
-def room_night(d, seed=2500):
-    """The station at night on the generator (34.4 s), and the time-lapse. The same elements as the day room (the drone, the emergency buzz, the hush of the heating that is not working, the wind leaking
-    round the window) are made longer than the scene, then played as a tape that follows the lapse (lapse.json, or the fixed curve): at the picture's top speed the drone is 2.4 times faster and a fifth
-    higher, the wind flutters and howls and rises with it (windswell), and the tape slows to 1x exactly where the Moon speaks (18.70 s). After the lapse the wind falls away to a hush in two seconds: the
-    snow has stopped."""
-    sc = _scene_info("night")
-    n = _n(d)
-    src_d = d * 2.5 + 2.0
-    base = _mix([(_diffuse(lambda s: _rms(_hvac(src_d, s, 120.0, 260.0), 1.0), seed), .3), (_diffuse(lambda s: _gen_drone(src_d, s, 340), seed + 10), .45),
-                 (_ctr(_emerg_buzz(src_d, seed + 20), -.2), .1)], src_d)
-    r_tone = warp(base, sc["start"], n, 2.4)
-    leak = warp(wind(src_d, seed + 30, wall=470, howl=1.0, base=.45, var=.22), sc["start"], n, 2.4)
-    t = tarr(d)
-    b = (LAPSE.b - sc["start"]) if LAPSE.active else 18.65
-    a = (LAPSE.a - sc["start"]) if LAPSE.active else 10.65
-    uu = LAPSE.u_at(sc["start"] + t) if LAPSE.active else np.zeros(len(t))
-    lvl = np.interp(t, [0, a, b, b + 1.8, d], [1.0, 1.0, 1.0, .1, .1]) * (1 + .9 * uu)
-    return _mix([(r_tone, 1.0), (leak * lvl, 1.6)], d)
-
-
-def room_end(d, seed=2600):
-    """The end card: a news room's hush so the held chord has a floor: air, the hum of a studio monitor (a faint 50 Hz and its harmonic) and a television in the next room."""
-    air = _diffuse(lambda s: _rms(_hvac(d, s, 130.0, 280.0), 1.0), seed)
-    return _mix([(air, 1.0), (_ctr(_rms(_hum(d, 50.0), .06)), 1.0), (_ctr(_rms(_tv_far(d, seed + 5, 1.0), .12), .5), 1.0)], d)
-
-
-ROOM_FN = {"title": room_title, "forecast": room_forecast, "lot": room_lot, "blackout": room_blackout, "dayroom": room_dayroom, "night": room_night, "end": room_end}
-
-
-def _make_bed(name):
-    def run():
-        sid = BED_SCENE[name]
-        s = _scene_info(sid)
-        d = (s["dur"] if s else 10.0) + .3
-        x = _rms(ROOM_FN[name](d), 1.0)
-        fade = np.minimum(1, np.minimum(np.arange(x.shape[1]) / (.25 * SR), (x.shape[1] - np.arange(x.shape[1])) / (.3 * SR)))
-        return x * fade
-    run.__doc__ = f"The room tone of the {BED_SCENE[name]} scene (see room_*), at unit RMS."
-    return run
-
-
-for _bn in BED_SCENE:
-    globals()["sfx_bed_" + _bn] = _make_bed(_bn)
-    BA.SFX["bed_" + _bn] = globals()["sfx_bed_" + _bn]
-
-
-def amb_wind(d, ramp=None):
-    """The script's `wind` ambience (the mixer's own under-layer, very quiet): a soft blizzard at about the level of the old hum."""
-    return _rms(wind(d, 2900, base=.5), .04)
-
-
-A6.AMB["wind"] = amb_wind
-
-
 # ================================================================ registration (keep this at the end of the sfx section)
-BOOST = {   # sustained textures that sat 15 to 20 dB under the voice at the script's gains: lifted so they register (the dialogue dip still takes them down under speech)
-    "sniffle": 1.6, "typing": 1.2, "partywhistle": .6, "powerdown": 1.25,
-    "cupset": 1.9, "slurp": 1.7, "pentick": 1.8, "candleclick": 1.8, "clickdead": 1.8, "flashlight": 1.5, "clocktick": 1.6, "phoneclick": 1.7, "boardflip": 1.4, "plowdist": 2.2, "shovel": 1.2,
-    "badgepeel": 1.2, "windgust": 1.3,
+BOOST = {   # textures that sat 15 to 20 dB under the voice at the script's gains: lifted so they register (the dialogue dip still takes them down under speech)
+    "sniffle": 1.6, "typing": 1.2, "clocktick": 1.6, "penclick": 1.5, "checktick": 1.6, "penscratch": 1.5, "scanbeep": 1.3, "dataticks": 1.0, "secondhand": 1.0, "exhale": 1.5, "chairsit": 1.4,
+    "labelpeel": 1.3, "sanitizer": 1.3, "cupclatter": 1.3, "coffeemaker": 1.2, "cartroll": 1.3, "callbell": 1.2,
+    "labelgun": 1.6, "padlock": 1.6, "spray": 1.6, "thermobeep": 1.6, "binderslam": 1.5, "mop": 1.6, "posterflip": 1.6, "closetslam": 1.5, "coffeehide": 1.6, "crashcart": 1.6,
 }
 
 
@@ -2518,20 +2363,7 @@ for _nm in list(BA.SFX):
     BA.SFX[_nm] = _tagged(_nm, BA.SFX[_nm])
 
 
-# ================================================================ the snow material for the physics foley (the lot's slide, if the animation writes one)
-def _m_snow(ps, ds, seed):
-    """Snow struck or landed on (a collision from phys_events.json): a soft low fump (a 85 Hz thump), a muffled cushion of noise under 600 Hz and a small crunch of grains."""
-    d = .24 * ds
-    t = tarr(d)
-    return np.sin(2 * np.pi * 85 * ps * t) * np.exp(-t / (.04 * ds)) * .8 + _lp4(noise6(d, seed), 600, 2) * np.exp(-t / (.03 * ds)) + _hit_train(seed + 5, d, 8, 700, 3000, .004, .25, .05)[0] * .5
-
-
-_MV["snow"] = _m_snow
-LOUD["snow"] = .5
-HARD = tuple(HARD) + ("snow",)
-
-
-# ================================================================ the animation's footsteps and the simulation's collisions, balanced for this mix
+# ================================================================ the animation's footsteps, the simulation's collisions and the designed events
 def _scene_table():
     if not os.path.exists(os.path.join(HERE, EPD, "timeline.json")):
         return []
@@ -2561,30 +2393,28 @@ def _scripted(tab):
     return out
 
 
-BIG_CUES = ("powerdown", "relay", "genstart", "doorgust", "snowdump", "plowdump", "plowscrape", "popper", "boardflip", "stamp", "thud", "slip", "shovel")      # scripted hits that a collision from a simulation must not double
-STEP_SCALE = {"title": 1.0, "forecast": .9, "lot": .85, "blackout": .7, "dayroom": .8, "night": .8, "end": 1.0}
+BIG_CUES = ("stamp", "closetslam", "binderslam", "closetopen", "doorclose", "padlock", "coffeehide", "crashcart", "labelgun")      # scripted hits that a collision from a simulation must not double
+STEP_SCALE = {"title": 1.0, "arrive": .9, "prep": .85, "medpass": .8, "closet": .85, "exit": .8, "end": 1.0}
 RUSH_AT = (0.0, .03, .055, .08)
 BED_VOL = {}        # bed name -> the event's gain (filled by _designed_events from BED_DB)
-SOURCES = {"steps": "none", "phys": "none", "lapse": "none", "doors": "none", "phone": "none"}
+SOURCES = {"steps": "none", "phys": "none", "split": "none"}
+BONK = {"t": None, "source": "none"}
 
 
 def _tune_steps(events, tab):
-    """The animation's footsteps, balanced for this mix: each scene's own scale; every step of the lot becomes a snow crunch (`snowstep`); the footsteps inside the time-lapse are dropped (the picture shows
-    the rounds as a ghost trail, the sound as whooshes); steps that land on the same instant are spread by a few milliseconds (a crowd is never one foot)."""
+    """The animation's footsteps, balanced for this mix: each scene's own scale; steps that land on the same instant are spread by a few milliseconds (a crowd is never one foot); in the break
+    nothing walks (dropped)."""
     out = []
-    la, lb = (LAPSE.a, LAPSE.b) if LAPSE.active else (None, None)
+    bk = _beat_abs("exit", "break")
     for ev in events:
         ev = dict(ev)
         if ev.get("name") == "step":
             sc = _scene_of(ev["t"], tab)
-            if sc == "night" and la is not None and la - .05 <= ev["t"] <= lb + .05:
+            if bk and bk[0] - .05 <= ev["t"] <= bk[1]:
                 continue
             ev["vol"] = round(ev.get("vol", .5) * STEP_SCALE.get(sc, 1.0), 4)
-            if sc == "lot":
-                ev["name"] = "snowstep"
-                ev["vol"] = round(ev["vol"] * 1.15, 4)
         out.append(ev)
-    steps = sorted((e for e in out if e.get("name") in ("step", "snowstep")), key=lambda e: e["t"])
+    steps = sorted((e for e in out if e.get("name") == "step"), key=lambda e: e["t"])
     for e in steps:
         same = [x for x in steps if abs(x["t"] - e["t"]) < .005 and x is not e]
         if same and all(e["t"] <= x["t"] for x in same):
@@ -2595,36 +2425,36 @@ def _tune_steps(events, tab):
     return out
 
 
-def _lapse_events(tab):
-    """The time-lapse's designed sounds: the rounds (a whoosh each time Strawberry's hour comes round: on every full world hour from midnight to 6 AM, from lapse.json's world time; evenly spaced when the file
-    has none), four sleepers turning over (rustles) and the sunrise glint at the end of the lapse (7:00)."""
-    sc = next((x for x in tab if x[0] == "night"), None)
-    if not sc or not LAPSE.active:
-        return []
-    a, b = LAPSE.a, LAPSE.b
-    ev = []
-    ts = None
-    if not LAPSE.fixed and LAPSE.wm is not None:
-        ts = []
-        for h in range(1440, 1860, 60):                                              # 24:00 to 6:00 in minutes since midnight of the first day
-            i = np.where(LAPSE.wm >= h)[0]
-            if len(i):
-                ts.append(float(LAPSE.ts[i[0]]))
-    if not ts:
-        ts = list(np.linspace(a + 1.0, b - 1.2, 7))
-    for j, t in enumerate(ts):
-        if a + .3 < t < b - .3:
-            ev.append({"t": round(t - .12, 3), "name": "whoosh_s", "vol": .5, "pan": 0.0, "room": "hall"})
-    r = rng6(2950)
-    for j in range(4):
-        ev.append({"t": round(a + 1.5 + (b - a - 3.0) * (j + r.uniform(.15, .85)) / 4, 3), "name": "rustle", "vol": .5, "pan": float(r.choice([-.7, -.35, .3, .7])), "room": "hall"})
-    ev.append({"t": round(b + .03, 3), "name": "glint", "vol": .5, "pan": .1, "room": "hall"})
-    return ev
+def _bonk_time(phys):
+    """When the last binder lands on Mr. Radish (absolute s): the last collision whose tag names him or a head, else the last heavy one (magnitude 0.25 or more) of the closet before Onion's
+    'Policy seven point four.', else the simulation's own schedule (ep21_closet_sim.js: the last binder drops at 7.17 s and lands flat on his crown at about 7.65 s)."""
+    av, o2 = _beat_abs("closet", "avalanche"), _beat_abs("closet", "o2")
+    if not av:
+        return None, "no closet"
+    a, b = av[0], (o2[0] if o2 else av[1] + .5)
+    ev = [e for e in phys if a <= e.get("t", -1) <= b]
+    head = [e for e in ev if any(w in str(e.get("tag", "")) for w in ("radish", "head", "surveyor"))]
+    if head:
+        return float(head[-1]["t"]), "the last collision tagged " + str(head[-1].get("tag"))
+    heavy = [e for e in ev if e.get("mag", 0) >= .25]
+    if heavy:
+        return float(heavy[-1]["t"]), f"the last heavy collision of the pile (mag {heavy[-1].get('mag')})"
+    sc = _scene_info("closet")
+    return sc["start"] + 7.65, "the simulation's schedule (7.65 s, ep21_closet_sim.js; no phys_events.json yet)"
 
 
-def _designed_events(tab, steps_in_lot):
-    """The events the script does not list: the room-tone beds (one per scene, a level in dB under a spoken line), the stopwatch's quiet ticks before the count, the breaths of the dark, the time-lapse's
-    whooshes, rustles and glint, the plow passing the window at dawn, the sleepers stirring at sunrise, Onion's steps to the ice when the animation wrote none."""
+def _word_abs(scene, lid, word, k=0):
+    """Absolute time of the k-th word of a line that starts with `word` (the frozen timeline's word times, the captions' own), or None."""
+    ln = next((x for x in _timeline()["lines"] if x["scene"] == scene and x["id"] == lid), None)
+    if not ln:
+        return None
+    ws = [w for w in ln["words"] if str(w[0]).strip(".,!?:;'\"").lower().startswith(word.lower())]
+    return ln["s"] + ws[k][1] if len(ws) > k else None
+
+
+def _designed_events(tab, phys):
+    """The events the script does not list: the room-tone beds (one per scene, a level in dB under a spoken line), the scatter after the PA, the call bells of the medpass's normal night (right),
+    the scanner's sweep and the tags' data ticks, the last binder's bonk, the second hand of the conference-room clock up to the shift bell."""
     ev = []
     by = {nm: (a, b) for nm, a, b, bt in tab}
     for nm, sid in BED_SCENE.items():
@@ -2632,26 +2462,31 @@ def _designed_events(tab, steps_in_lot):
             continue
         BED_VOL[nm] = round(.1 * 10 ** (BED_DB[nm] / 20) / .6, 5)
         ev.append({"t": round(by[sid][0], 3), "name": "bed_" + nm, "vol": BED_VOL[nm], "pan": 0.0, "room": "hall"})
-    if "blackout" in by:
-        a0 = by["blackout"][0]
-        ev.append({"t": round(a0, 3), "name": "hum_on", "vol": .7, "pan": 0.0, "room": "hall"})                # the lights' hum before the failure (crossfades into `powerdown` at 0.2 s)
-        for j in range(6):                                                           # the stopwatch shows 1.0 at 3.4 s, 2.0 at 4.4 ... 6.0 at 8.4 s (it started at 2.4 s)
-            ev.append({"t": round(a0 + 3.4 + j, 3), "name": "swtick", "vol": .8, "pan": -.2, "room": "hall"})
-        for t, p in ((9.55, -.25), (10.2, .3), (10.9, -.1)):
-            ev.append({"t": round(a0 + t, 3), "name": "breath", "vol": .3, "pan": p, "room": "hall"})
-    ev += _lapse_events(tab)
-    if "night" in by:
-        a0 = by["night"][0]
-        tu3 = _beat_abs("night", "tu3")
-        if tu3:
-            ev.append({"t": round(tu3[0] + .5, 3), "name": "plowrumble", "vol": .8, "pan": 0.0, "room": "hall"})
-        dawn = _beat_abs("night", "dawn")
-        if dawn:
-            for dt, p in ((.5, -.6), (1.3, .5)):
-                ev.append({"t": round(dawn[0] + dt, 3), "name": "rustle", "vol": .45, "pan": p, "room": "hall"})
-    if "lot" in by and not steps_in_lot:
-        for dt, p in ((16.05, -.35), (16.3, -.3), (16.55, -.32)):                    # Onion walks onto the ice (o1 starts at 15.81 s, the slip is at 16.71 s)
-            ev.append({"t": round(by["lot"][0] + dt, 3), "name": "snowstep", "vol": .5, "pan": p, "room": "hall"})
+    sc_t = _word_abs("arrive", "me1", "all")
+    if sc_t:
+        ev.append({"t": round(sc_t, 3), "name": "scatter", "vol": .5, "pan": 0.0, "room": "hall"})
+    if "medpass" in by:
+        a0 = by["medpass"][0]
+        for t, p in ((2.7, .8), (6.3, .7), (9.6, .9), (13.4, .75), (16.9, .85), (20.9, .7), (23.9, .9)):
+            ev.append({"t": round(a0 + t, 3), "name": "callbell", "vol": .32, "pan": p, "room": "hall"})
+    sc = _beat_abs("closet", "scan")
+    if sc:
+        ev.append({"t": round(sc[0], 3), "name": "scanhum", "vol": .4, "pan": 0.0, "room": "hall"})
+        lock = _cue_local("closet", "scanlock", 0)
+        a0 = by["closet"][0]
+        for j, dt in enumerate((.3, .58, .86, 1.14)):
+            ev.append({"t": round(sc[0] + dt, 3), "name": "dataticks", "vol": .35, "pan": round(-.5 + .33 * j, 2), "room": "hall"})
+        if lock is not None:
+            ev.append({"t": round(a0 + lock + .14, 3), "name": "dataticks", "vol": .38, "pan": .3, "room": "hall"})
+    bt, src = _bonk_time(phys)
+    BONK["t"], BONK["source"] = bt, src
+    if bt:
+        ev.append({"t": round(bt, 3), "name": "bonk", "vol": .45, "pan": .05, "room": "hall"})
+    ct = _cue_times("clocktick")
+    if len(ct) >= 2:
+        t1, t2 = ct[0], ct[1]
+        for j in range(1, 5):
+            ev.append({"t": round(t1 + (t2 - t1) * j / 5, 3), "name": "secondhand", "vol": .42, "pan": 0.0, "room": "hall"})
     return ev
 
 
@@ -2662,26 +2497,22 @@ def _load_json(path):
         return []
 
 
-def _make_events(src, phys_src, doors_src, out_dir):
-    """Write <out_dir>/events.tuned.json from the footsteps (src), the collisions (phys_src), the door events and the designed events; returns its path, or '' when there is nothing to place."""
+def _make_events(src, phys_src, out_dir):
+    """Write <out_dir>/events.tuned.json from the footsteps (src), the collisions (phys_src) and the designed events; returns its path, or '' when there is nothing to place."""
     tab = _scene_table()
     if not tab:
         return ""
     steps = _load_json(src)
     phys = _load_json(phys_src)
-    doors = _load_json(doors_src)
-    SOURCES["steps"] = f"{os.path.relpath(src, HERE)} ({len([e for e in steps if e.get('name') == 'step'])} steps)" if steps else "none (no events.json yet)"
-    SOURCES["phys"] = f"{os.path.relpath(phys_src, HERE)} ({len(phys)} events)" if phys else "none"
-    SOURCES["doors"] = f"{os.path.relpath(doors_src, HERE)} ({len(doors)} events)" if doors else "none"
-    tuned = _tune_steps(steps, tab)
-    lot = next((x for x in tab if x[0] == "lot"), None)
-    in_lot = [e for e in tuned if e.get("name") == "snowstep"]
+    if isinstance(phys, dict):
+        phys = phys.get("events", [])
+    SOURCES["steps"] = f"{os.path.relpath(src, HERE)} ({len([e for e in steps if e.get('name') == 'step'])} steps, {len(steps)} events)" if steps else "none (no events.json yet)"
+    SOURCES["phys"] = f"{os.path.relpath(phys_src, HERE)} ({len(phys)} events)" if phys else "none (no phys_events.json yet)"
+    tuned = _tune_steps([e for e in steps if e.get("name") != "phys"], tab)
     ev = tuned + _select_phys(phys, _scripted(tab))
     PHYS_EVENTS[:] = [e for e in ev if e.get("name") == "phys"]
-    for d_ in doors:                                                                 # door events from the picture (none expected): a gust at each door that is flung open
-        if d_.get("name") in ("doorgust", "dooropen"):
-            ev.append({"t": round(float(d_["t"]), 3), "name": "doorgust", "vol": float(d_.get("gain", .5)), "pan": float(d_.get("pan", 0)), "room": "hall"})
-    ev += _designed_events(tab, in_lot)
+    ev += _designed_events(tab, phys)
+    ev = [e for e in ev if e.get("name") in BA.SFX or str(e.get("name", "")).startswith("step")]
     dst = os.path.join(out_dir, "events.tuned.json")
     os.makedirs(out_dir, exist_ok=True)
     json.dump(ev, open(dst, "w"), indent=0)
@@ -2727,8 +2558,10 @@ def dialogue_margin(out_dir):
     voice, mixk = voice[:n].T, np.arctanh(np.clip(audio[:n].T / .92, -.9995, .9995))
     vw = voice.copy()
     for ln in tl["lines"]:
-        if ln["who"] in DRY_WHO or f"{ln['scene']}_{ln['id']}" in DRY_TAGS:                  # a dry voice (Brenda, a head in a drift) skips the room, so its reverb is not part of the line's level
-            vw[:, int(ln["s"] * SR):int(ln["e"] * SR) + 1] = 0.0
+        tag = f"{ln['scene']}_{ln['id']}"
+        dp = 1.0 if (ln["who"] in DRY_WHO or tag in DRY_TAGS) else DRY_PART.get(ln["who"], 0.0)
+        if dp:                                                                            # a dry voice (a whisper, the PA, a closet) skips the room; Kale is 60 percent dry
+            vw[:, int(ln["s"] * SR):int(ln["e"] * SR) + 1] *= (1.0 - dp)
     vt = voice.copy()
     for sc in tl["scenes"]:
         a, b = int(sc["start"] * SR), min(n, int((sc["start"] + sc["dur"]) * SR))
@@ -2779,7 +2612,8 @@ def _lra(path):
     return float(m[-1]) if m else float("nan")
 
 
-DELIBERATE = (("blackout", 8.9, 12.4), ("night", 3.2, 4.9), ("night", 10.5, 18.8))      # silences that are the joke (the dark count, the wait, the time-lapse's end): nothing is expected to be flagged there
+DELIBERATE = (("exit", 15.05, 18.75),)      # the break: the quiet is the point (the room tone falls to almost nothing; the clock, her breath and one held chord are all there is)
+SILENCE_MAX = 1.5                            # a silence longer than this inside a scene is flagged (the brief), except in the break
 
 
 def measure(out_dir):
@@ -2787,7 +2621,7 @@ def measure(out_dir):
     x, sr = sf.read(wav, dtype="float64")
     sp, tp = true_peak_db(x)
     tl = json.load(open(os.path.join(HERE, out_dir, "timeline.json")))
-    print(f"measure: {A9._lufs(wav):.2f} LUFS integrated, loudness range {_lra(wav):.1f} LU, sample peak {sp:.2f} dBFS, true peak {tp:.2f} dBTP, {len(x) / sr:.2f} s")
+    print(f"measure: {A9._lufs(wav):.2f} LUFS integrated, loudness range {_lra(wav):.1f} LU, sample peak {sp:.2f} dBFS, true peak {tp:.2f} dBTP (the wav), {len(x) / sr:.2f} s")
     mono = np.mean(x, axis=1) if x.ndim == 2 else x
     hop = int(.05 * sr)
     nf = len(mono) // hop
@@ -2799,41 +2633,43 @@ def measure(out_dir):
             j = i
             while j < nf and quiet[j]:
                 j += 1
-            if (j - i) * .05 > 1.0:
+            if (j - i) * .05 > .5:
                 runs.append((i * .05, j * .05))
             i = j
         else:
             i += 1
+    flagged = 0
     for a, b in runs:
         sc = next((s["id"] for s in tl["scenes"] if s["start"] <= a < s["start"] + s["dur"]), "?")
         local = a - next((s["start"] for s in tl["scenes"] if s["id"] == sc), 0)
-        print(f"  silence {a:7.2f} to {b:7.2f} s ({b - a:.2f} s) in {sc} at {local:.2f} s")
-    if not runs:
-        print("  no silence longer than 1.0 s anywhere (the quietest 50 ms block is "
-              f"{lv[:nf - 2].min():.1f} dB)")
+        delib = any(sc == s_ and a_ - .1 <= local <= b_ for s_, a_, b_ in DELIBERATE)
+        long_ = (b - a) > SILENCE_MAX
+        flagged += long_ and not delib
+        print(f"  quiet {a:7.2f} to {b:7.2f} s ({b - a:.2f} s) in {sc} at {local:.2f} s" + ("  <- OVER 1.5 s" if long_ and not delib else ("  (the break)" if delib else "")))
+    print(f"  silences over {SILENCE_MAX} s inside a scene (the break excepted): {flagged}; the quietest 50 ms block is {lv[:nf - 2].min():.1f} dBFS")
     win = int(.4 * sr)
     seg = mono[:len(mono) // win * win].reshape(-1, win)
     lm = 10 * np.log10(np.mean(seg ** 2, axis=1) + 1e-12)
     top = np.argsort(lm)[::-1][:3]
     print("  loudest 400 ms blocks: " + ", ".join(f"{(i * win) / sr:.1f}s {lm[i]:.1f} dB" for i in top))
-    # the room tone's floor in the deliberate quiet beats (so the silence is tender, not empty)
     for sid, a, b in DELIBERATE:
         s0 = next((s["start"] for s in tl["scenes"] if s["id"] == sid), None)
         if s0 is None:
             continue
         i0, i1 = int((s0 + a) * sr), int((s0 + b) * sr)
         seg_ = mono[i0:i1]
-        print(f"  quiet beat {sid} {a:.1f} to {b:.1f} s: RMS {20 * np.log10(np.sqrt(np.mean(seg_ ** 2)) + 1e-9):.1f} dBFS")
+        print(f"  the break ({sid} {a:.2f} to {b:.2f} s): RMS {20 * np.log10(np.sqrt(np.mean(seg_ ** 2)) + 1e-9):.1f} dBFS")
     return runs
 
 
 def write_cue_report(out_dir):
-    """The cue list as built (scene-local time, absolute time, name, gain, pan) for the script's cues, then the designed events the script does not list (the room-tone beds with their levels and
-    the others), the voice treatments, the lapse's source and the event files read."""
+    """The cue list as built (scene-local time, absolute time, name, gain, pan) for the script's cues (each checked against the registry), the montage's grid (each of the twelve cues against
+    its cut, 7.211 + k s), then the designed events the script does not list (the room-tone beds with their levels and the others), the voice treatments, the event files read and the score's
+    decisions."""
     tab = _scene_table()
     script = json.load(open(os.path.join(HERE, _arg("--script", SCRIPT))))
     by = {nm: (a, bt) for nm, a, b, bt in tab}
-    lines = ["scene  scene_time  abs_time  name  gain  pan"]
+    lines = ["scene      scene_time  abs_time  name            gain  pan"]
     names = set()
     for sc in script["scenes"]:
         a, bt = by[sc["id"]]
@@ -2841,43 +2677,53 @@ def write_cue_report(out_dir):
             for c in b.get("sfx", []):
                 s = bt[b["id"]]["e"] if c[1] == "end" else bt[b["id"]]["s"] + c[1]
                 names.add(c[0])
-                lines.append(f"{sc['id']:<10} {s:8.3f} {a + s:9.3f}  {c[0]:<14} {c[2]:<5} {c[3] if len(c) > 3 else 0}" + ("" if c[0] in BA.SFX else "   (missing sfx)"))
+                lines.append(f"{sc['id']:<10} {s:8.3f} {a + s:9.3f}  {c[0]:<15} {c[2]:<5} {c[3] if len(c) > 3 else 0}" + ("" if c[0] in BA.SFX else "   (missing sfx)"))
     lines.append("")
     lines.append(f"cue names in the script: {len(names)}; missing from the registry: {sorted(n for n in names if n not in BA.SFX) or 'none'}")
+    mt = _beat_abs("prep", "montage")
+    if mt:
+        a0 = by["prep"][0]
+        cs = [c for c in _scripted(tab) if mt[0] - .01 <= c[0] <= mt[1]]
+        off = [round(c[0] - (mt[0] + k), 4) for k, c in enumerate(cs)]
+        lines.append(f"the montage grid: {len(cs)} cues from {mt[0] - a0:.3f} s, each against its cut (7.211 + k): offsets {off} s; the score's downbeat at {mt[0] - a0:.3f} s, 120 bpm, "
+                     f"the button on beat 25 at {mt[0] - a0 + 12.0:.3f} s")
     lines.append("")
     lines.append("designed events (not in the script): the room-tone beds, one per scene, cue gain from BED_DB (dB under a spoken line)")
     for nm, sid in BED_SCENE.items():
         if sid in by:
             a = by[sid][0]
             s = _scene_info(sid)
-            lines.append(f"{sid:<10} {0:8.3f} {a:9.3f}  bed_{nm:<10} {BED_VOL.get(nm, 0):<8} 0.0   {BED_DB[nm]} dB, {s['dur'] + .3:.2f} s")
+            lines.append(f"{sid:<10} {0:8.3f} {a:9.3f}  bed_{nm:<11} {BED_VOL.get(nm, 0):<8} 0.0   {BED_DB[nm]} dB, {s['dur'] + .3:.2f} s")
     ev = _load_json(os.path.join(HERE, out_dir, "events.tuned.json"))
-    others = [e for e in ev if not str(e.get("name", "")).startswith(("bed_", "step", "snowstep", "phys"))]
+    others = [e for e in ev if not str(e.get("name", "")).startswith(("bed_", "step", "phys"))]
     for e in sorted(others, key=lambda e: e["t"]):
         sc = _scene_of(e["t"], tab)
         loc = e["t"] - by[sc][0] if sc in by else e["t"]
-        lines.append(f"{sc:<10} {loc:8.3f} {e['t']:9.3f}  {e['name']:<14} {e['vol']:<8} {e.get('pan', 0)}")
-    n_steps = {}
+        lines.append(f"{sc:<10} {loc:8.3f} {e['t']:9.3f}  {e['name']:<15} {e['vol']:<8} {e.get('pan', 0)}")
+    n_steps, n_phys = {}, {}
     for e in ev:
-        if e.get("name") in ("step", "snowstep"):
+        if str(e.get("name", "")).startswith("step"):
             n_steps[_scene_of(e["t"], tab)] = n_steps.get(_scene_of(e["t"], tab), 0) + 1
+        if e.get("name") == "phys":
+            n_phys[_scene_of(e["t"], tab)] = n_phys.get(_scene_of(e["t"], tab), 0) + 1
     lines.append(f"footsteps placed per scene: {n_steps or 'none'} ({SOURCES['steps']})")
+    lines.append(f"collisions placed per scene: {n_phys or 'none'} ({SOURCES['phys']}); the last binder's bonk: {BONK['t'] if BONK['t'] is None else round(BONK['t'], 3)} s ({BONK['source']})")
+    lines.append(f"the split's divider: {SPLIT.source}")
     lines.append("")
-    lines.append("voice treatments (scene_line: treatment):")
+    lines.append("voice treatments (scene_line: treatment; pans: the whisper chain " + ", ".join(f"{k} {v:+.2f}" for k, v in LINE_PAN.items()) + "; medpass " +
+                 ", ".join(f"{k} {v:+.2f}" for k, v in MEDPASS_PAN.items()) + "):")
     for tag, kind in KINDS.items():
         if kind != "plain":
-            lines.append(f"  {tag:<14} {kind}")
-    lines.append("")
-    lines.append("the time-lapse: " + LAPSE.source)
-    lines.append(f"phone pan: {PHONE['source']}; collisions: {SOURCES['phys']}; door events: {SOURCES['doors']}")
-    sn = M20.INFO
+            lines.append(f"  {tag:<14} {kind}" + ("  (dry)" if tag in DRY_TAGS else ""))
+    sn = M21.INFO
     if sn:
+        lines.append("")
         lines.append("the score: " + "; ".join(f"{k}: {v}" for k, v in sn.items()))
     open(os.path.join(HERE, out_dir, "cue_report.txt"), "w").write("\n".join(lines) + "\n")
 
 
-# ================================================================ the AAC guard (fixed in Episode 20)
-FF = "/usr/bin/ffmpeg" if os.path.exists("/usr/bin/ffmpeg") else (shutil.which("ffmpeg") or "ffmpeg")       # the encoder the publish step uses; Episode 18's guard encoded with the ffmpeg that imageio ships (7.0.2), whose AAC overshoots differently: -0.8 dBTP came out of a guard that passed
+# ================================================================ the AAC guard (as Episode 20)
+FF = "/usr/bin/ffmpeg" if os.path.exists("/usr/bin/ffmpeg") else (shutil.which("ffmpeg") or "ffmpeg")       # the encoder the publish step uses
 TP_LIMIT = -1.5              # dBTP of the DECODED m4a
 
 
@@ -2888,7 +2734,7 @@ def decoded_true_peak(m4a):
     return float(m[-1]) if m else float("nan")
 
 
-def aac_guard20(path, limit_db=TP_LIMIT, tries=8):
+def aac_guard21(path, limit_db=TP_LIMIT, tries=8):
     """Encode the wav as the release does (/usr/bin/ffmpeg, aac, 192k), measure the decoded m4a's true peak with ebur128=peak=true and, while it is over `limit_db` (with 0.05 dB in hand), dip the
     wav at every spot where the decoded signal's 4x-oversampled peak is over (a smooth 16 ms hann-shaped dip, as deep as the overshoot plus 4 percent) and try again. If `tries` rounds of dips
     have not done it, the whole file is lowered by what is left plus 0.1 dB, again and again, each time re-measured (an AAC encode is not linear: a quieter file can overshoot differently).
@@ -2943,14 +2789,13 @@ def aac_guard20(path, limit_db=TP_LIMIT, tries=8):
 
 
 def publish(out_dir):
-    import shutil
     src = os.path.join(HERE, out_dir, "audio.wav")
-    dst = os.path.join(HERE, "build/ep21/audio.wav")
-    m4a = os.path.join(HERE, "build/ep21/audio.m4a")
+    dst = os.path.join(HERE, EPD, "audio.wav")
+    m4a = os.path.join(HERE, EPD, "audio.m4a")
     shutil.copyfile(src, dst)
     subprocess.run([FF, "-y", "-loglevel", "error", "-i", dst, "-c:a", "aac", "-b:a", "192k", m4a], check=True)
     tp = decoded_true_peak(m4a)
-    print(f"published: build/ep21/audio.wav and build/ep21/audio.m4a; the decoded m4a's true peak is {tp:.2f} dBTP (limit {TP_LIMIT})")
+    print(f"published: {EPD}/audio.wav and {EPD}/audio.m4a; the decoded m4a's true peak is {tp:.2f} dBTP (limit {TP_LIMIT})")
     if not tp <= TP_LIMIT:
         print("TRUE PEAK OVER THE LIMIT: the guard did not pass")
         sys.exit(4)
@@ -2971,7 +2816,7 @@ def end_fade(wav, duration, fade=.18):
 
 
 def master(wav, duration=None):
-    """The loudness trim, peak limiter, end fade and AAC guard: the finished file measures -14.8 LUFS and the DECODED AAC stays under -1.5 dBTP (see aac_guard20)."""
+    """The loudness trim, peak limiter, end fade and AAC guard: the finished file measures -14.8 LUFS and the DECODED AAC stays under -1.5 dBTP (see aac_guard21)."""
     import shutil
     base = wav + ".pre"
     shutil.copyfile(wav, base)
@@ -2992,24 +2837,10 @@ def master(wav, duration=None):
     os.remove(base)
     if duration:
         end_fade(wav, duration)
-    dips, deep, tp = aac_guard20(wav)
+    dips, deep, tp = aac_guard21(wav)
     print(f"aac guard: {dips} dip(s), deepest {deep:.2f} dB; the decoded m4a's true peak is {tp:.2f} dBTP (limit {TP_LIMIT}, measured with /usr/bin/ffmpeg -af ebur128=peak=true)")
 
 
-
-
-def _load_phone(path):
-    """build/ep21/phone_path.json (optional, from the LOT scene): where Strawberry's phone is on screen over time, absolute seconds, {t, pan} (-1..1) or {t, x} (px of the 1080 px frame)."""
-    rows = _load_json(path)
-    if isinstance(rows, dict):
-        rows = rows.get("samples") or rows.get("rows") or []
-    if rows and len(rows) > 3:
-        rows = sorted(rows, key=lambda r: r["t"])
-        PHONE["t"] = np.array([r["t"] for r in rows], dtype=float)
-        PHONE["pan"] = np.array([float(r["pan"]) if "pan" in r else (float(r["x"]) - 540.0) / 540.0 for r in rows], dtype=float)
-        PHONE["source"] = f"{os.path.relpath(path, HERE)} ({len(rows)} samples)"
-    else:
-        PHONE["source"] = "Strawberry's side of the frame (-0.14) with a small drift (no phone_path.json)"
 
 
 def main():
@@ -3026,9 +2857,7 @@ def main():
             return v
         return default
     phys_src = take("--phys", os.path.join(HERE, EPD, "phys_events.json"))
-    lapse_src = take("--lapse", os.path.join(HERE, EPD, "lapse.json"))
-    doors_src = take("--doors", os.path.join(HERE, EPD, "door_events.json"))
-    phone_src = take("--phone", os.path.join(HERE, EPD, "phone_path.json"))
+    split_src = take("--split", os.path.join(HERE, EPD, "split.json"))
     keep_stems = "--keep-stems" in argv
     argv = [a for a in argv if a != "--keep-stems"]
     for k, v in (("--script", SCRIPT), ("--out", "build/ep21_sound"), ("--var", "TIMELINE_EP21"), ("--music", "build_music21")):
@@ -3040,29 +2869,27 @@ def main():
     src = argv[argv.index("--events") + 1] if "--events" in argv else ""
     if "--events" in argv:
         del argv[argv.index("--events"):argv.index("--events") + 2]
-    if not src:                                         # the animation's footsteps, if they are in the output folder or in build/ep21: they are always tuned first
-        for p in (os.path.join(out_dir, "events.json"), os.path.join(A6.HERE, EPD, "events.json")):
+    if not src:                                         # the animation's footsteps, if they are in build/ep21 (or the output folder): they are always tuned first
+        for p in (os.path.join(A6.HERE, EPD, "events.json"), os.path.join(out_dir, "events.json")):
             if os.path.exists(p):
                 src = p
                 break
-    LAPSE.setup(lapse_src)
-    M20.LAPSE = LAPSE                                    # the score's lapse ostinato follows the same curve
-    SOURCES["lapse"] = LAPSE.source
-    print(f"the time-lapse: {LAPSE.source}")
-    _load_phone(phone_src)
-    tuned = _make_events(src, phys_src, doors_src, out_dir)
-    print(f"events: footsteps {SOURCES['steps']}, collisions {SOURCES['phys']} ({len(PHYS_EVENTS)} placed), doors {SOURCES['doors']}, {len(BED_VOL)} room-tone beds")
+    SPLIT.setup(split_src)
+    SOURCES["split"] = SPLIT.source
+    M21.SPLIT = SPLIT                                    # the score's two pieces duck with the divider too
+    tuned = _make_events(src, phys_src, out_dir)
+    M21.BONK = BONK["t"]                                 # the score lands the avalanche on the last binder
+    print(f"events: footsteps {SOURCES['steps']}, collisions {SOURCES['phys']} ({len(PHYS_EVENTS)} placed), {len(BED_VOL)} room-tone beds; the split: {SPLIT.source}; the bonk: {BONK['source']}")
     if tuned:
         argv += ["--events", tuned]
     sys.argv = [sys.argv[0]] + argv
-    script = json.load(open(os.path.join(HERE, _arg("--script", SCRIPT))))
     VOX_DIR[0] = os.path.join(out_dir, "voice")
     os.makedirs(VOX_DIR[0], exist_ok=True)
     _load_speech()
     _TTS_ORIG[0] = A6.tts6
-    A6.tts6 = tts20
-    A6.place2 = place2_20
-    A6.reverb = reverb_20
+    A6.tts6 = tts21
+    A6.place2 = place2_21
+    A6.reverb = reverb_21
     A10._CALLS.clear()
     os.environ["STEMS"] = "1"
     A6.main()
@@ -3072,9 +2899,9 @@ def main():
         for b in bad[:20]:
             print("  ", b)
     else:
-        print("timeline: identical to build/ep21/timeline.json (scene starts, lengths, every line's start and end)")
+        print(f"timeline: identical to {EPD}/timeline.json (scene starts, lengths, every line's start and end)")
     write_cue_report(out)
-    json.dump(M20.INFO, open(os.path.join(out_dir, "score_info.json"), "w"), indent=1)
+    json.dump(M21.INFO, open(os.path.join(out_dir, "score_info.json"), "w"), indent=1)
     dialogue_margin(out)
     for nm in ("stem_voice.wav", "stem_sfx.wav", "stem_music.wav"):
         if keep_stems:
