@@ -25,9 +25,10 @@ Vertical 1080x1920, 30 fps, voiced, with captions. Made to be texted to a nurse.
 | 18: The Fire Drill | [`shift-happens-ep18.mp4`](shift-happens-ep18.mp4) | 2:54 |
 | 19: The Potluck | [`shift-happens-ep19.mp4`](shift-happens-ep19.mp4) | 2:40 |
 | 20: The Snow Day | [`shift-happens-ep20.mp4`](shift-happens-ep20.mp4) | 2:43 |
+| 21: The Inspection | [`shift-happens-ep21.mp4`](shift-happens-ep21.mp4) | 2:37 |
 
 To play an episode live in the browser, start a local server in this directory and open
-`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 20 for other episodes):
+`http://localhost:8000/index.html?ep=5` (change `ep` to 1 through 21 for other episodes):
 
 ```bash
 python3 -m http.server 8000
@@ -272,6 +273,18 @@ New in Episode 20:
 - A twin shot (one character twice in a frame, handing report to herself), a building cutaway that loses power room by room, and sound that treats the voices as devices (speakerphone, phone, a TV, a truck cab, a voice from inside a snowbank).
 - Two new checks (see the gate section below): a brightness gate and a flash check.
 
+## Episode 21: The Inspection
+
+A full-length episode (2:37) about the state survey. At 3:02 PM two silhouettes stand in the glass front doors, backlit: Ms. Kale and Mr. Radish of the Department of Health ("This is an unannounced survey."). "The State is here." travels down the hall as a whisper from ear to ear in one tracking shot until it reaches Compliance, who shouts it for joy ("This is the best day of my life."); the Administrator calls "Code Survey" on the overhead speaker, Binder offers to help and for once the whole staff says "Yes!" ("Great! I'll hide everything."). At 3:05 PM the station goes into survey mode: "Label everything!", a twelve-shot montage cut to the beat (labels, a padlocked snack drawer, a fridge thermometer, policy binders, a mop, the FUN COMMITTEE poster flipped to hand hygiene, Brenda shut in a closet, the coffee maker hidden, the crash cart sealed), and forty agency Strawberries pop in for one day. At 5:30 PM a split screen shows the same med pass twice: on the left with the State, slow and perfect; on the right a normal night, the cart rolling away by itself and Mr. Pear escaping through the window in a bedsheet cape ("How long does your med pass take?" "Two hours." "And today?" "Six."). At 7:10 PM Mr. Radish asks for the policy on breaks, Compliance opens the policy closet and an avalanche of binders buries him; she plucks Policy 7.4 out of the pile without looking ("Impressive."), and his scanner glasses sweep the station and lock on a warm figure in the other closet ("How long have you been on break?" "Since twenty nineteen." "Noted."). At 10:45 PM the exit interview finds one deficiency: the nurse has not taken a break. Per regulation she takes one now: at 10:59 she sits, the room goes quiet and the minute passes ("Deficiency corrected."). The surveyors walk out and everything snaps back at once: the agency nurses vanish, Brenda strolls out of the closet with her sandwich, the coffee maker returns and the labels peel off the walls. The night nurse (Eggplant) arrives with snow on her hat and a pizza ("Spring came early."), and Strawberry gives report: "I took a break." The title is a surveyor's checklist with a SURVEY stamp; the end card is a statement of deficiencies with its plan of correction (one minute at 10:59 PM) and a CORRECTED stamp.
+
+New in Episode 21:
+- Two new characters and their kit, `ep21_art.js` (`window.A21`, `GUIDE_ART21.md`): the surveyors Ms. Kale (badge, clipboard) and Mr. Radish (scanner glasses), and the survey props (labels, padlock, sanitizer, fridge thermometer, crash cart seal, policy binders, the policy closet, an agency badge).
+- A HUD kit, `ep21_hud.js` (`window.H21`): reticles and tags that stay locked on objects through a camera move, a scan sweep and a lock-on, a scanner view (tint and frame), a stamp, and the split-screen divider.
+- A montage cut to the beat: twelve one-second shots on a 120 bpm grid shared by the picture and the music, every action on a beat.
+- A split screen with a split score: a string minuet on the State's side and ragtime piano on the normal night's side, in one key and one tempo, each panned with its half of the picture; when the divider squeezes a side, its music ducks.
+- A binder avalanche, `ep21_closet_sim.js` (PHYS2D, DOM-free, shared with `tools_phys_events.js` for the collision foley).
+- A whisper chain in one tracking shot, with the voices turned into whispers that pan with the camera.
+
 ## The cast
 
 | Fruit | Role | The bit |
@@ -318,7 +331,7 @@ New in Episode 20:
 ## Layout audit
 
 `node render.js audit` checks every on-screen box (faces, hands, props, captions, HUD, cards) for anything covered, cut off
-or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 20 are checked at 30 frames per second and the command
+or colliding. Episodes 2 to 5 passed at 20 frames per second. Episodes 6 to 21 are checked at 30 frames per second and the command
 exits non-zero on any issue, so it works as a release gate (`EP=13 node render.js audit 0.0333333333`).
 
 ### The text gate (Episode 13 onward; Episode 12 after its repair)
@@ -336,14 +349,14 @@ test episode (`ep99.js`) that contains deliberate violations.
 
 Everything is generated from code, with no stock assets:
 
-- `script.json` and `script_ep2.json` to `script_ep20.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
+- `script.json` and `script_ep2.json` to `script_ep21.json` hold the scenes, dialogue, voices and sound cues. Episode 2's
   "previously on" clips are cut straight from Episode 1's audio and frames.
 - `build_audio.py` voices each line with [Kokoro](https://github.com/thewh1teagle/kokoro-onnx) TTS, synthesizes every sound effect and the music bed in numpy, mixes an episode's `audio.wav`, and writes its `timeline.js` with timings and lip-sync envelopes.
-  Episodes 6 to 20 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music20.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
+  Episodes 6 to 21 use `build_audio6.py`, which adds a stereo mix, a reverb room per scene, ambience, alarm sound design, a written score (`build_music6.py` to `build_music21.py`), footsteps placed from the animation, and lip-sync tracks derived from the recorded voice. Episode 7's own sounds (bingo cage, howl, taxi, sock phone call, the Q word) are in `build_audio7.py`; `build_audio8.py` is a thin wrapper on it for Episode 8, and `build_audio9.py` adds Episode 9's five new sounds (a small crowd cheering, a cash register, a sports car pulling away, tyres, a five-star chime) and a measured loudness trim. `build_audio10.py` adds Episode 10's sounds (door knocks, flyer tabs tearing off, pen scratches, a wooden rubber stamp, a coin pour, confetti, a gear whirr, a tote emptying, a card deal) and an AAC guard that dips a click a few hundredths of a second so the compressed file stays under -1 dBTP; `build_audio11.py` adds Episode 11's (a steel vault door, a gold avalanche, a moth, a punch clock, an LED clock tick and the 11:00:00 bell, a time-lapse, slow motion, a purse clasp).
 - `engine.js` draws every character, set and overlay on a canvas, including the panel-layout kit shared by
-  Episodes 2 to 5; `ep1.js` to `ep20.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
+  Episodes 2 to 5; `ep1.js` to `ep21.js` are the episodes (Episode 8's night scenes are `ep8_hall.js`, `ep8_break.js` and `ep8_dawn.js`; Episode 9's arrival, split-screen shift and exit are `ep9_arrival.js`, `ep9_floor.js` and `ep9_exit.js`, on the kit in `ep9_art.js`; Episode 10 is `ep10_title.js` (title and end card), `ep10_office.js` (office and exit interview), `ep10_days.js`, `ep10_party.js` and `ep10_door.js` (door and parking lot), on the Administrator's office set in `ep10_set.js` and the kit in `ep10_art.js`; Episode 11 is `ep11_title.js` (title and end card), `ep11_arrival.js`, `ep11_orient.js`, `ep11_floor.js`, `ep11_vault.js` and `ep11_exit.js` (exit and parking lot), on the kit in `ep11_art.js`). Episode 5's new art and sets live in
   `ep5_art.js` and `ep5_sets.js`.
-  Episodes 6 to 20 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
+  Episodes 6 to 21 draw through an opt-in second renderer (`v2_core.js` lighting, bloom, grade and motion blur; `v2_char.js` shaded characters
   with two-bone arms and real hands) that Episodes 1 to 5 never touch. An episode may raise the motion-blur sample cap (`EP.blurMax`, default 10; Episodes 14 and 15 set 24 so fast whips are smooth, not stepped). Episode 7's art, sets and inserts are `ep7_art.js`, `ep7_sets.js` and `ep7_ins.js`.
   `renderAt(t)` is a pure function of time, so the same code drives live playback and frame capture.
 - Episode 12 is `ep12_title.js` (title and end card), `ep12_room.js` (the conference room), `ep12_signin.js`, `ep12_slides.js`, `ep12_drill.js` and `ep12_award.js`. Episode 13 is
@@ -359,6 +372,7 @@ Everything is generated from code, with no stock assets:
   Episode 18 is `ep18_title.js` (title and end card), `ep18_station.js` (the notice and the all clear), `ep18_marshal.js` and `ep18_marshal_sim.js`, `ep18_alarm.js` and `ep18_alarm_sim.js`, `ep18_evac.js` and `ep18_evac_sim.js`, on the kits `ep18_fx.js` and `ep18_props.js`; `gen_script18.py` writes its script.
   Episode 19 is `ep19_title.js` (title and end card), `ep19_signup.js` (the sign-up and the last round), `ep19_kitchen.js` and `ep19_art.js`, `ep19_plate.js` and `ep19_plate_sim.js`, `ep19_break.js`, on the kit `ep19_food.js`; `gen_script19.py` writes its script.
   Episode 20 is `ep20_title.js` (title and end card), `ep20_forecast.js` (the forecast and the day room), `ep20_lot.js`, `ep20_blackout.js`, `ep20_night.js` and `ep20_lapse_sim.js`, on the kits `ep20_fx.js` (weather and light), `ep20_art.js` (winter gear, Turnip, Eggplant, the plow) and `ep20_props.js`; `gen_script20.py` writes its script.
+  Episode 21 is `ep21_title.js` (title and end card), `ep21_arrive.js` (the arrival and the exit interview), `ep21_prep.js`, `ep21_medpass.js`, `ep21_closet.js` and `ep21_closet_sim.js`, on the kits `ep21_art.js` (the surveyors and the survey props) and `ep21_hud.js` (the HUD and the split screen); `gen_script21.py` writes its script.
   `txaudit.js` is the text gate and `ui.js` the text layout kit (above).
 - `render.js` drives headless Chromium to capture frames and pipes them to ffmpeg.
 
@@ -544,3 +558,7 @@ Same steps as Episode 15 with `19` in place of `15` (`gen_script19.py`, `build_a
 ## Episode 20 build and release gate
 
 Same steps as Episode 15 with `20` in place of `15` (`gen_script20.py`, `build_audio20.py`, `build_music20.py`, `EP=20 node render.js audit 0.0333333333`, and so on); the audit steps on the renderer's own frame times (i / 30). Extra inputs for the sound: `node tools_lapse.js` (the time-lapse's world clock, `build/ep20/lapse.json`) and the footsteps from `EP=20 node render.js events`. Two checks are new in Episode 20: `python3 tools_luma.py 20 <scene> 0.5` renders frames of a scene and flags any whose mean luminance is under 0.20 or that are more than 45 percent near-black (the blackout's deliberate dark beat is exempt; `--mp4 FILE` runs it on a finished video), and `python3 tools_flashcheck.py FILE.mp4` counts opposing changes of frame-average luminance per second. The committed file is `shift-happens-ep20.mp4` (49.4 MiB), rendered at CRF 22.5 in 300-frame segments from an isolated snapshot of the sources.
+
+## Episode 21 build and release gate
+
+Same steps as Episode 20 with `21` in place of `20` (`gen_script21.py`, `build_audio21.py`, `build_music21.py`, `EP=21 node render.js audit 0.0333333333`, and so on); the audit steps on the renderer's own frame times (i / 30). Extra inputs for the sound: the binder avalanche's collision foley from `node tools_phys_events.js 21` (`build/ep21/phys_sims.json` names `ep21_closet_sim.js`) and the footsteps from `EP=21 node render.js events`. The brightness gate (`python3 tools_luma.py 21 <scene> 0.5`, no exempt beat in this episode) and the flash check (`python3 tools_flashcheck.py FILE.mp4`) run as in Episode 20. The committed file is `shift-happens-ep21.mp4` (43.4 MiB), rendered at CRF 22.5 in 300-frame segments from an isolated snapshot of the sources.
