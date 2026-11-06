@@ -636,7 +636,7 @@ function silDraw(objs, k) {
   const prev = ctx, m = prev.getTransform();
   SILX.setTransform(1, 0, 0, 1, 0, 0); SILX.clearRect(0, 0, W, H); SILX.setTransform(m); ctx = SILX;
   try { for (const o of objs) drawIn(o); } finally { ctx = prev; }
-  SILX.save(); SILX.setTransform(1, 0, 0, 1, 0, 0); SILX.globalCompositeOperation = 'source-atop'; SILX.globalAlpha = .93 * k; SILX.fillStyle = '#10121a'; SILX.fillRect(0, 0, W, H); SILX.restore();
+  SILX.save(); SILX.setTransform(1, 0, 0, 1, 0, 0); SILX.globalCompositeOperation = 'source-atop'; SILX.globalAlpha = .97 * k; SILX.fillStyle = '#0e1018'; SILX.fillRect(0, 0, W, H); SILX.restore();
   RIMX.setTransform(1, 0, 0, 1, 0, 0); RIMX.clearRect(0, 0, W, H); RIMX.drawImage(SILCV, 0, 0); RIMX.globalCompositeOperation = 'source-in'; RIMX.fillStyle = '#fff1cf'; RIMX.fillRect(0, 0, W, H); RIMX.globalCompositeOperation = 'source-over';
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.globalAlpha = k; ctx.filter = 'blur(9px)'; ctx.globalCompositeOperation = 'screen'; ctx.drawImage(RIMCV, 0, 0); ctx.drawImage(RIMCV, 0, 0); ctx.filter = 'none'; ctx.globalCompositeOperation = 'source-over';

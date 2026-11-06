@@ -5,29 +5,34 @@
  * the doorway (soft clean light, every step by the book). RIGHT, A NORMAL NIGHT: the same pass on any other evening (call lights in the hall, cups everywhere, the cart rolling off by itself, Mr. Pear
  * escaping). Each half is its own draw function with its own 2D camera and clip (drawHalf('L' | 'R', ...)), composed by H21.split (the kit) or, until it lands, by a stand-in of the same signature.
  *
- * THE ROOM (world units, X right, Y up, Z away from the lens; one perspective camera PC for both worlds): back wall at Z 1800 (half width 470, ceiling 760). In the back wall, left to right: the doorway to
- * the hall (X -450..-250; the hall runs straight away from it, doors and call-light domes on both sides), the ROOM 3 plaque, the wall clock above the nurse, the window above the bed. The bed is end-on, its head
- * against the wall (X 70..350); Mr. Pear sits up at its head. The med cart is parked at the left side of the bed; the nurse stands left of the cart; Ms. Kale stands in the doorway (left world only).
+ * THE ROOM (world units, X right, Y up, Z away from the lens; one perspective camera PC for both worlds): back wall at Z 1800 (half width 560, ceiling 760). In the back wall, left to right: the doorway to
+ * the hall (X -500..-300; through it a corridor runs along the line of sight, call-light domes on both walls), the ROOM 3 plaque, the wall clock above the nurse, the window above the bed. The bed is end-on,
+ * its head against the wall (X 145..425); Mr. Pear sits up at its head. The med cart (a gel pump and a push lock on its near corner) is parked at the left side of the bed; the nurse stands at its corner (drawn
+ * in front of it, so her hands on the pump and the lock read); Ms. Kale stands in the doorway (left world only). The right side's HALL shots (ka1, s2, ka5, ka2, ka3) use a corridor set (S6.corridor) with the lens
+ * inside the hall (HCAM). Each half has its own 2D camera (framing()), anchored at the centre of its region; faces stay clear of the divider (the half's own check) and of the chips.
  *
  * SHOTS (scene-local seconds, snapped to frames; both halves cut together; the table is SH below)
- *   open  0.00-1.60  one picture of the room (the same lens for both worlds), the divider wipes down from the top (splitwipe .50): above its front the right half is a normal night; the chips pop in
- *   ka1   1.60-3.98  L two-shot Kale (doorway) and Strawberry: "Please proceed as you normally would." | R the cart: she loads cups at triple speed, the hall's call lights blink behind
- *   s1    3.98-5.20  L Strawberry, serene: "I always do this." | R the same framing: she sprints through it with the cart, leaves flying
- *   hyg   5.20-6.85  L the pump on the cart: two careful pumps (sanitizer 5.40, 6.10), hands rubbed between | R she juggles three med cups (cupclatter 5.60)
- *   s2    6.85-8.55  L at Mr. Pear's bedside, polite: "What is your name and date of birth?" | R she shouts it down the hall from the doorway
- *   pe1   8.55-10.01 L Mr. Pear, patient: "The same as yesterday." | R he shouts it back from the bed
- *   ka4   10.01-11.93 L Kale: "Do you always lock the cart?" | R the cart, unattended, drawers open
- *   s7    11.93-12.75 L "Always." she locks it (the click) | R the same framing: the cart rolls away by itself (cartroll 12.23)
- *   ka5   12.75-14.94 L Kale writes: "And explain every medication?" | R down the hall: the cart rolling away, Strawberry running after it
- *   s8    14.94-15.77 L "Always." she holds up one pill, Mr. Pear nods | R she tips a whole cup of pills into his mouth (cupclatter 15.24)
- *   ka2   15.77-17.86 L Kale: "How long does your med pass take?" | R the hall: every call light lit, Strawberry zigzagging between doors
- *   s3    17.86-18.71 L the clock above her, ticking: "Two hours." | R the same clock, its hands spinning
- *   ka3   18.71-19.91 L Kale: "And today?" | R Strawberry slumped over the cart
- *   s4    19.91-20.70 L "Six." the divider slides right (the left side gets the room: still on Room 3) | R squeezed: a sliver of the chaos
- *   pe2   20.70-22.39 L Mr. Pear whispers, eyeing Kale: "Who is that?" "The State." | R he knots the bedsheet into a cape
- *   pe3   22.39-24.14 L "Should I behave?" "Please." | R he stands on the bed, caped
- *   pe4   24.14-25.61 L hands folded, a tiny halo: "I always behave." | R he climbs out of the window in the cape
- *   end   25.61-27.26 L the calm room, Kale's smallest smile (sting 25.71) | R the cape's tail leaves the window, Strawberry arrives too late
+ *   open  0.00-1.56  one picture of the room (the same lens for both worlds, a slow push); the band falls from the top 0.29-0.66 (splitwipe .50); above its front the right half is a normal night
+ *                    (Strawberry shoving cups at Mr. Pear); H21.split takes over at 0.66, the chips fade in
+ *   ka1   1.56-3.93  L two-shot Kale (doorway) and Strawberry, hands folded: "Please proceed as you normally would." | R the hall: she loads cups at triple speed, a tower of cups, call lights
+ *   s1    3.93-5.20  L Strawberry, serene: "I always do this." | R she bursts out of the doorway with the cart (4.1-4.7) and skids to her place
+ *   hyg   5.20-6.79  L the pump on the cart: two careful pumps (sanitizer 5.40, 6.10), hands rubbed between | R she juggles three cups over her head; two knock (cupclatter 5.60), pills fly
+ *   s2    6.79-8.49  L at Mr. Pear's bedside, polite, a cup held out: "What is your name and date of birth?" | R the hall: she shouts it down the hall
+ *   pe1   8.49-9.95  L Mr. Pear, patient: "The same as yesterday." | R he shouts it back, a fist up
+ *   ka4   9.95-11.87 L Kale, one eyebrow up, the pen pointing at the cart: "Do you always lock the cart?" | R the cart unattended, drawers open, Mr. Pear eyeing it
+ *   s7   11.87-12.69 L "Always." her hand pushes the lock in (click flash 12.09, the LED goes red) | R the same framing: the cart rolls off by itself (cartroll 12.23) toward the door
+ *   ka5  12.69-14.88 L Kale and Strawberry: "And explain every medication?" | R the hall: the cart rolling away, Strawberry running after it
+ *   s8   14.88-15.71 L "Always." one pill held up, Mr. Pear nods along | R she tips a whole cup into his open mouth, the pills arc in (cupclatter 15.24)
+ *   ka2  15.71-17.80 L Kale: "How long does your med pass take?" | R the hall: every call light on, Strawberry zigzagging door to door
+ *   s3   17.80-18.65 L the clock ticking over her (Kale beside her): "Two hours." | R the same clock, its hands whirling
+ *   ka3  18.65-19.85 L Kale: "And today?" | R the hall: Strawberry slumped against the wall
+ *   s4   19.85-20.64 L "Six." the divider slides to x 760 (the left side gets the room: still on Room 3); the right chip fades | R squeezed: Mr. Pear eyeing the window
+ *   pe2  20.64-21.56 L Mr. Pear whispers, a hand by his mouth, eyes on Kale: "Who is that?" | R he knots the bedsheet round his neck
+ *   s5   21.56-22.33 L Strawberry whispers back: "The State." | R (continues)
+ *   pe3  22.33-23.36 L "Should I behave?" | R he stands on the bed, hands on hips, the cape sweeping
+ *   s6   23.36-24.08 L "Please." hands clasped | R (continues)
+ *   pe4  24.08-25.61 L hands folded, lids low, a tiny halo pops on "behave" (24.71) | R on the sill, his back to us, a look over the shoulder; he hops out (25.19)
+ *   end  25.61-27.26 L hold: Kale ticks MED PASS on her form with the smallest smile (sting 25.71), Strawberry serene | R the cape's tail whips out over the sill, Strawberry arrives too late
  *
  * KITS: A21 (ep21_art.js: Ms. Kale) and H21 (ep21_hud.js: the split) are called when they exist; a stand-in of the same shape is drawn until then (checked at DRAW time). */
 (() => {
@@ -80,7 +85,6 @@ const lineNow = lt => { for (const id in LN) { const l = LN[id], a = l.s - START
 const PC = { f: 1400, cy: 380, hy: 760, cz: 0, cx: 0 };
 const RM = { zb: 1800, hw: 560, ch: 760 };
 const DOOR = { x0: -500, x1: -300, y1: 540 };                        /* the doorway in the back wall (the hall runs away from it) */
-const HALL = { x0: -560, x1: -140, ch: 640, z1: 3900 };               /* the hall beyond the doorway */
 const WIN = { x0: 175, x1: 470, y0: 372, y1: 680 };                   /* the window above the bed */
 const CLK = { X: -100, Y: 640, r: 50 };                               /* the wall clock (above the nurse) */
 const PLQ = { x0: -284, x1: -166, y0: 400, y1: 470 };                 /* the ROOM 3 plaque beside the doorway */
@@ -447,7 +451,7 @@ function cartGeom(X, Z, o = {}) {
 }
 /* the left cart: neat, five cups on the tray, locked on "Always." (LOCKT) */
 function cartL(lt) {
-  const o = { t: lt, lock: lt >= LOCKT ? 1 : 0, click: lt - LOCKT, cups: lt < bS('s2') ? 5 : 4, pump: Math.max(bump(lt, CUE.san1 - .06, CUE.san1 + .14), bump(lt, CUE.san2 - .06, CUE.san2 + .14)), screen: 1 };
+  const o = { t: lt, lock: lt >= LOCKT ? 1 : 0, click: lt - LOCKT, cups: lt < bS('s2') ? 5 : 4, pump: Math.max(bump(lt, CUE.san1 - .1, CUE.san1 + .1), bump(lt, CUE.san2 - .1, CUE.san2 + .1)), screen: 1 };
   return Object.assign(cartGeom(CART.X, CART.Z, o), { X: CART.X, Z: CART.Z, opts: o });
 }
 /* MR. PEAR, LEFT: sitting up in bed, patient; nods along to each pill; whispers about Kale; folds his hands and a tiny halo comes on for "I always behave." */
