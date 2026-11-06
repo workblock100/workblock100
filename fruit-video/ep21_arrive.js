@@ -253,7 +253,7 @@ function stampAt(x, y, o) {
 }
 /* a survey label (blank print lines, no text: it is safe to peel and flutter); o = { x, y, w, h, rot, peel 0..1 (the corner lifts), fall (seconds since it let go), seed } */
 function labelBlank(o) {
-  const w = o.w || 46, h = o.h || 26, f = o.fall ?? -1, sd = o.seed || 1;
+  const w = o.w || 64, h = o.h || 34, f = o.fall ?? -1, sd = o.seed || 1;
   ctx.save();
   if (f >= 0) { const dx = 60 * Math.sin(f * 3.1 + sd) * Math.min(1, f * 2) + (rnd(sd, 2) - .5) * 80 * f, dy = 240 * f * f + 60 * f; ctx.translate(o.x + dx, o.y + dy); ctx.rotate((o.rot || 0) + Math.sin(f * 7 + sd) * 1.1 * Math.min(1, f * 3)); ctx.scale(1, .55 + .45 * Math.abs(Math.cos(f * 6 + sd))); }
   else { ctx.translate(o.x, o.y); ctx.rotate(o.rot || 0); }
@@ -496,7 +496,7 @@ const YESB = { lemon: 1, tom: 1 };
 const T_FREEZE = AC.doorchime, T_SCAT = TA.snapT(TA.wS('me1', 4) - .02);                  /* "All" staff to your stations: the burst */
 /* the surveyors' routes: in the doorway, then a step into the light (feet a little lower and nearer: scale grows) */
 const kaleAt = lt => ({ x: K([[0, 300], [1.45, 300], [2.35, 330]], lt), y: K([[0, FL], [1.45, FL], [2.35, FL + 30]], lt), s: K([[0, .9], [1.45, .9], [2.35, .96]], lt) });
-const radAt = lt => ({ x: K([[0, 122], [1.6, 122], [2.6, 150], [11.0, 150], [12.2, 520]], lt), y: K([[0, FL], [1.6, FL], [2.6, FL + 12], [11.0, FL + 12], [12.2, FL + 40]], lt), s: K([[0, .88], [1.6, .88], [2.6, .9], [11.0, .9], [12.2, .94]], lt) });
+const radAt = lt => ({ x: K([[0, 118], [1.6, 118], [2.6, 124], [11.0, 124], [12.2, 520]], lt), y: K([[0, FL], [1.6, FL], [2.6, FL + 12], [11.0, FL + 12], [12.2, FL + 40]], lt), s: K([[0, .88], [1.6, .88], [2.6, .9], [11.0, .9], [12.2, .94]], lt) });
 const SILK = lt => 1 - ss(lt, 1.45, 1.86);                                                 /* how much of a silhouette they still are */
 /* the whisper chain: who whispers to whom and when (line id, whisperer, listener) */
 const WH = [['m1', 'mango', 'lemon'], ['l1', 'lemon', 'tom'], ['t1', 'tom', 'onion']];
@@ -509,23 +509,24 @@ function chainPose(n, lt) {
       if (lt > t0 - .22) { const u = ss(lt, t0 - .22, t0 + .08); r.yaw = lerp(r.yaw, .55, u); r.head = r.yaw; r.look = [lerp(r.look[0], -.75, u), .08]; }
       const lk = ss(lt, landT(id), landT(id) + .12); if (lk > 0) { r.shock = Math.max(r.shock, lk); r.look = [lerp(r.look[0], .1, lk), lerp(r.look[1], -.05, lk)]; }
       if (n !== 'onion') r.pale = Math.max(r.pale, ss(lt, landT(id), landT(id) + .4)); }
-    if (n === a) { const k = ss(lt, t0 - .3, t0 - .04) * (1 - ss(lt, t1 + .05, t1 + .4)); r.cup = Math.max(r.cup, k); r.dx += 28 * k; r.rot += .13 * k;
+    if (n === a) { const k = ss(lt, t0 - .3, t0 - .04) * (1 - ss(lt, t1 + .05, t1 + .4)); r.cup = Math.max(r.cup, k); r.dx += 28 * k; r.rot += .085 * k;
       if (lt > t0 - .34) { const u = ss(lt, t0 - .34, t0 - .08); r.yaw = lerp(r.yaw, .9, u); r.head = r.yaw; r.look = [lerp(r.look[0], .6, u), .06]; } }
   }
   if (n === 'mango') r.pale = Math.max(r.pale, .55 * ss(lt, 4.5, 5.0));
   return r;
 }
 /* a cupped hand at the mouth on the listener's side (screen-space body-local px, from the kind's mouth) */
-function cupGrip(o, k) { const kd = KINDS[o.kind], my = kd.mouthY, mx = kd.rx * Math.sin(o.yaw || 0) * .8; return [lerp(70, mx + 26, k), lerp(70, my - 4, k)]; }
+function cupGrip(o, k) { const kd = KINDS[o.kind], my = kd.mouthY, mx = kd.rx * Math.sin(o.yaw || 0) * .8; return [lerp(70, mx + 46, k), lerp(70, my - 8, k)]; }
 /* the whisper made visible: three small arcs leaving the cupped hand toward the listener's ear, pulsing with the voice */
 function wisps(o, lvl, lt) {
   if (!o || (o.whisper || 0) < .3) return;
-  const kd = KINDS[o.kind], [fx, fy] = faceC(o), s = o.s, x = fx + (kd.rx * Math.sin(o.yaw || 0) * .8 + 58) * s, y = fy + (kd.mouthY - (kd.eyeY + kd.mouthY) / 2 - 6) * s;
+  const kd = KINDS[o.kind], [fx, fy] = faceC(o), s = o.s, x = fx + (kd.rx * Math.sin(o.yaw || 0) * .8 + 70) * s, y = fy + (kd.mouthY - (kd.eyeY + kd.mouthY) / 2 - 10) * s;
   ctx.save(); ctx.lineCap = 'round';
   for (let i = 0; i < 3; i++) {
-    const ph = ((lt * 2.2 + i / 3) % 1), r = (14 + 42 * ph) * s, a = (.15 + .55 * lvl) * Math.sin(PI * ph) * c01((o.whisper - .3) / .4);
+    const ph = ((lt * 1.8 + i / 3) % 1), r = (18 + 62 * ph) * s, a = (.75 + .25 * lvl) * Math.sin(PI * ph) * c01((o.whisper - .3) / .4);
     if (a < .02) continue;
-    ctx.strokeStyle = `rgba(70,64,96,${a})`; ctx.lineWidth = 4.5 * s; ctx.beginPath(); ctx.arc(x, y, r, -.55, .55); ctx.stroke();
+    ctx.strokeStyle = `rgba(52,40,78,${a * .8})`; ctx.lineWidth = 9 * s; ctx.beginPath(); ctx.arc(x, y, r, -.62, .62); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,255,${a})`; ctx.lineWidth = 4.5 * s; ctx.beginPath(); ctx.arc(x, y, r, -.62, .62); ctx.stroke();
   }
   ctx.restore();
 }
@@ -615,7 +616,7 @@ function kaleA(lt, sh) {
   const p = kaleAt(lt), note = lt > 12.5 && lt < 15.0, cardUp = ss(lt, TA.wS('ka1', 2) - .2, TA.wS('ka1', 2) + .1) * (1 - ss(lt, TA.le('ka1') + .1, TA.le('ka1') + .4)), pen = lt > 22.9;
   const o = { x: p.x, y: p.y, s: p.s, t: lt, who: 'kale', expr: note ? 'kale_note' : lt > 23.2 ? 'kale_raise' : 'kale_neutral', pose: 'clip', cbPen: pen, cbTicks: lt > 14.2 ? 1 : 0,
     yaw: .3, headYaw: .25, look: note ? undefined : [.25, .04], plant: true };
-  if (cardUp > .01) { o.arms = { l: 'hold', r: 'hold' }; o.hold = { l: 'fp21_clipboard', r: 'fp21a_idcard' }; o.grip = { l: [-104, 128], r: [lerp(80, 150, cardUp), lerp(120, 40, cardUp)] }; o.gripSpace = 'body'; o.cardUp = cardUp; o.cardScale = .95; }
+  if (cardUp > .01) { o.yaw = .3 * (1 - cardUp); o.headYaw = lerp(.25, .12, cardUp); o.arms = { l: 'hold', r: 'hold' }; o.hold = { l: 'fp21_clipboard', r: 'fp21a_idcard' }; o.grip = { l: [-104, 128], r: [lerp(124, 146, cardUp), lerp(112, 108, cardUp)] }; o.gripSpace = 'body'; o.cardUp = cardUp; o.cardScale = .86; }
   if (!hasA('kale') && cardUp > .01) { o.gripSpace = 'screen'; o.grip.r = [lerp(70, 132, cardUp), lerp(60, 10, cardUp)]; }
   if (lt > 23.0) { const up = ss(lt, 23.0, 23.32); o.cbPen = true; o.look = [.1, -.05]; o.headYaw = .15; o.yaw = .2; o.raiseK = up; }
   return kaleO(o);
@@ -647,7 +648,7 @@ function silDraw(objs, k) {
 const ALLA = ['straw', 'mango', 'lemon', 'tom', 'onion'];
 const ASH = [
   { id: 'open', s: 0, k: 'pt', x: 640, y: 1000, z: [.8, .815], pos: 'chain', show: ['straw', 'mango'], sil: true },
-  { id: 'sil', s: .70, k: 'pt', x: 245, y: 1010, z: [1.12, 1.3], pos: 'chain', show: [], sil: true },
+  { id: 'sil', s: .70, k: 'pt', x: 222, y: 1060, z: [1.3, 1.52], pos: 'chain', show: [], sil: true },
   { id: 'ka1a', s: 1.70, k: 'pt', x: 270, y: 1160, z: [1.5, 1.56], pos: 'chain', show: ['kale', 'radish'], silTail: true },
   { id: 'ka1b', s: 3.30, k: 'face', foc: 'kale', z: [2.0, 2.12], up: 30, dx: -120, dof: 7, show: ['kale'], bg: ['radish'], hero: true, pos: 'chain' },
   { id: 'chain', s: 4.87, k: 'track', z: [1.5, 1.5], pos: 'chain', show: ALLA },
@@ -801,7 +802,7 @@ const ARRIVE = {
   cam: camA,
   draw: drawA,
   fx: lt => { const sil = lt < 1.9 ? 1 - ss(lt, 1.6, 1.9) : 0; return { bloom: .35 + .35 * sil, vignette: .28 + .1 * sil, grain: .04, contrast: .08 + .06 * sil, sat: .08, tint: [['#ffd9a8', .05 + .05 * sil, 'soft-light']] }; },
-  blur: lt => { const sh = aShot(lt); if (lt - sh.s < .04) return 1; return sh.id === 'scat' && lt > T_SCAT - .02 && lt < T_SCAT + .6 ? 4 : sh.id === 'st1' && lt < 20.9 ? 3 : 1; },
+  blur: lt => { const sh = aShot(lt); if (lt - sh.s < .04) return 1; return sh.id === 'scat' && lt > T_SCAT - .02 && lt < T_SCAT + .6 ? 4 : sh.id === 'st1' && lt < 20.9 ? 3 : sh.id === 'chain' ? 2 : 1; },
   over(lt) { const sh = AFR ? AFR.sh : aShot(lt); if (sh.ins === 'bubble') insBubble(lt, sh); else if (sh.ins === 'grin') insGrin(lt, sh); },
   clock: () => TA.SCN.clock, label: () => TA.SCN.label,
 };
@@ -822,7 +823,7 @@ const CLK = { x: 1890, y: 742, r: 112 };                                        
 /* the clock's time at scene time lt, in seconds after 10:00:00 PM: 10:58 and running until the tick at 13.27 (10:59:00), then the minute runs; the break shot opens on 10:59:44 (the cut hides the jump)
  * and the second hand reaches the twelve on the second tick (17.98): 11:00 */
 function clockSec(lt) {
-  if (lt < EC.tick1) return 58 * 60 + 2 + lt * .9;
+  if (lt < EC.tick1) return 59 * 60 - (EC.tick1 - lt);
   if (lt < 15.08) return 59 * 60 + (lt - EC.tick1);
   if (lt < EC.tick2) return 59 * 60 + 44 + 16 * ss(lt, 15.08, EC.tick2) * .25 + 16 * sg(lt, 15.08, EC.tick2) * .75;
   return 60 * 60 + (lt - EC.tick2) * .2;
@@ -982,13 +983,13 @@ function eStraw(lt) {
 function eKale(lt) {
   const sp = talking(TE, 'ka1', lt) || talking(TE, 'ka2', lt) || talking(TE, 'ka3', lt), point = ss(lt, TE.wS('ka2', 2) - .1, TE.wS('ka2', 2) + .2) * (1 - ss(lt, TE.le('ka2') + .1, TE.le('ka2') + .4));
   const note = lt > TE.ls('ka3') - .1 && lt < 20.65;
-  const o = { x: 150, y: FLC, s: SCE.kale, t: lt, who: 'kale', expr: note ? 'kale_note' : lt > TE.le('ka3') ? 'kale_satisfied' : 'kale_neutral', pose: 'clip', yaw: .35, headYaw: .3, look: note ? undefined : [.5, .02], plant: true };
-  if (point > .01) { o.cbPen = true; o.arms = { l: 'hold', r: 'point' }; o.hold = { l: 'fp21_clipboard' }; o.yaw = .45; o.headYaw = .5; o.look = [.9, -.05]; }
+  const o = { x: 330, y: FLC, s: SCE.kale, t: lt, who: 'kale', expr: note ? 'kale_note' : lt > TE.le('ka3') ? 'kale_satisfied' : 'kale_neutral', pose: 'clip', yaw: .35, headYaw: .3, look: note ? undefined : [.5, .02], plant: true };
+  if (point > .01) { o.arms = { l: 'hold', r: 'point' }; o.hold = { l: 'fp21_clipboard' }; o.yaw = .35 * (1 - point); o.headYaw = .45; o.look = [.9, -.05]; }
   if (turnK(lt) > 0 && lt < TE.ls('ka2')) { o.look = [.95, .02]; o.headYaw = .45; }
   return kaleO(o);
 }
 function eRadish(lt) {
-  const o = { x: 330, y: FLC, s: SCE.radish, t: lt, who: 'radish', expr: 'radish_flat', pose: 'tablet', yaw: .3, headYaw: lt > T_TURN ? .55 : .3, look: lt > T_TURN ? [.9, .02] : [.4, .02], plant: true };
+  const o = { x: 150, y: FLC, s: SCE.radish, t: lt, who: 'radish', expr: 'radish_flat', pose: 'tablet', yaw: .3, headYaw: lt > T_TURN ? .55 : .3, look: lt > T_TURN ? [.9, .02] : [.4, .02], plant: true };
   if (talking(TE, 'ra2', lt)) { o.arms = { l: 'hold', r: 'point' }; o.look = [1, .02]; o.headYaw = .6; }
   return radishO(o);
 }
@@ -1053,11 +1054,11 @@ function strawE(lt) {
 // ------------------------------------------------------------------ EXIT: the shots (set 'conf' = the conference room, 'stn' = the station at night)
 const ALLC = ['kale', 'radish', 'melon', 'onion', 'lemon', 'mango', 'tom', 'straw'];
 const ESH = [
-  { id: 'open', s: 0, set: 'conf', k: 'pan', xk: [560, 1180], y: 1010, z: [.96, .98], show: ALLC, pan: true },
+  { id: 'open', s: 0, set: 'conf', k: 'pt', x: 864, y: 930, z: [.645, .652], show: ALLC },
   { id: 'ka1', s: 1.50, set: 'conf', k: 'pt', x: 248, y: 1168, z: [1.42, 1.48], show: ['kale', 'radish'], bg: ['melon'], dof: 6 },
   { id: 'gasp', s: 3.00, set: 'conf', k: 'pt', x: 1078, y: 1065, z: [.86, .88], show: ['melon', 'onion', 'lemon', 'mango', 'tom', 'straw'] },
   { id: 'me1', s: 3.61, set: 'conf', k: 'face', foc: 'melon', z: [1.85, 1.92], up: 120, dof: 7, show: ['melon'], bg: ['onion'] },
-  { id: 'ra1a', s: 4.41, set: 'conf', k: 'face', foc: 'radish', z: [1.62, 1.7], up: 110, dx: -40, dof: 7, show: ['radish'], bg: ['kale', 'melon'] },
+  { id: 'ra1a', s: 4.41, set: 'conf', k: 'face', foc: 'radish', z: [1.62, 1.7], up: 110, dx: 60, dof: 7, show: ['radish'], bg: ['kale'] },
   { id: 'ra1b', s: 5.95, set: 'conf', k: 'pt', x: 1276, y: 1065, z: [.95, .97], show: ['onion', 'lemon', 'mango', 'tom', 'straw'] },
   { id: 's1', s: 7.19, set: 'conf', k: 'face', foc: 'straw', z: [2.0, 2.16], up: 110, dof: 7, show: ['straw'], bg: ['tom'] },
   { id: 'ka2a', s: 9.21, set: 'conf', k: 'pt', x: 268, y: 1168, z: [1.42, 1.46], show: ['kale', 'radish'], bg: ['melon'], dof: 6 },
@@ -1069,13 +1070,13 @@ const ESH = [
   { id: 'ka3a', s: 18.68, set: 'conf', k: 'pt', x: 248, y: 1168, z: [1.5, 1.55], show: ['kale', 'radish'], bg: ['melon'], dof: 6 },
   { id: 'ka3b', s: 19.45, set: 'conf', k: 'ins', x: 248, y: 1168, z: [1.55, 1.56], show: [], dof: 12 },
   { id: 'revert', s: 20.65, set: 'stn', k: 'pt', x: 470, y: 1110, z: [.9, .9], show: ['straw'], revPan: true },
-  { id: 'eg1', s: 22.80, set: 'stn', k: 'pt', x: 500, y: 1232, z: [1.32, 1.36], show: ['egg', 'straw'] },
+  { id: 'eg1', s: 22.80, set: 'stn', k: 'pt', x: 500, y: 1244, z: [1.32, 1.36], show: ['egg', 'straw'] },
   { id: 's3', s: 24.07, set: 'stn', k: 'face', foc: 'straw', z: [2.0, 2.08], up: 110, dx: 30, dof: 7, show: ['straw'], bg: ['egg'] },
   { id: 'eg2', s: 24.91, set: 'stn', k: 'face', foc: 'egg', z: [1.9, 2.0], up: 110, dx: -30, dof: 7, show: ['egg'], bg: ['straw'] },
-  { id: 's4', s: 26.55, set: 'stn', k: 'pt', x: 560, y: 1180, z: [1.42, 1.48], show: ['egg', 'straw'] },
+  { id: 's4', s: 26.55, set: 'stn', k: 'pt', x: 560, y: 1232, z: [1.42, 1.48], show: ['egg', 'straw'] },
   { id: 'eg3', s: 28.24, set: 'stn', k: 'face', foc: 'egg', z: [1.8, 1.86], up: 120, dx: -30, dof: 7, show: ['egg'], bg: ['straw'] },
   { id: 's5', s: 29.66, set: 'stn', k: 'face', foc: 'straw', z: [2.15, 2.3], up: 110, dx: 30, dof: 8, show: ['straw'], bg: ['egg'] },
-  { id: 'end', s: 30.91, set: 'stn', k: 'pt', x: 560, y: 1175, z: [1.28, 1.36], show: ['egg', 'straw'] },
+  { id: 'end', s: 30.91, set: 'stn', k: 'pt', x: 560, y: 1264, z: [1.28, 1.34], show: ['egg', 'straw'] },
 ];
 for (const sh of ESH) sh.s = sh.s === 0 ? 0 : TE.snapT(sh.s);
 ESH.forEach((sh, i) => { sh.e = i + 1 < ESH.length ? ESH[i + 1].s : TE.SCN.dur; });
@@ -1177,9 +1178,9 @@ function insClip(lt, sh) {
   const k = eo(sg(lt, sh.s, sh.s + .25));
   ctx.fillStyle = 'rgba(14,18,30,.34)'; ctx.fillRect(0, 0, W, H);
   ctx.save(); ctx.translate(540, 760 + 60 * (1 - k)); ctx.rotate(-.03); ctx.scale(lerp(.9, 1, k), lerp(.9, 1, k)); ctx.translate(-540, -760);
-  const items = ['FRONT DOOR', 'STAFFING', 'LABELS', 'MED PASS', 'BREAKS'];
+  const items = ['FRONT DOOR', 'STAFFING', 'LABELS', 'MED PASS', 'BREAKS', ''];
   let rows = null;
-  if (hasA('clipboard')) { const r = A21.clipboard(ctx, { x: 540, y: 770, w: 700, rot: 0, items, ticks: 4, fail: 4, failK: 1, t: lt, hero: true }); rows = r && r.rows; }
+  if (hasA('clipboard')) { const r = A21.clipboard(ctx, { x: 540, y: 770, w: 700, h: 1060, rot: 0, items, ticks: 4, fail: 4, failK: 1, rowAlpha: [1, 1, 1, 1, 1, 0], t: lt, hero: true }); rows = r && r.rows; }
   else {
     ctx.fillStyle = '#b98a55'; rr(230, 300, 620, 860, 24); ctx.fill(); ctx.strokeStyle = INKC; ctx.lineWidth = 5; ctx.stroke(); ctx.fillStyle = '#fbf9f2'; ctx.fillRect(262, 360, 556, 770);
     UI.container('fp21a_cbins', 'board', [262, 360, 818, 1130], 10);
@@ -1189,18 +1190,16 @@ function insClip(lt, sh) {
   }
   ctx.restore();
   /* the stamp lands over the failed row: CORRECTED */
-  const row = rows && rows[4];
-  let sx = 640, sy = 1020;
-  if (row && row.text) { const tw = UI.sizeOf('BREAKS', { size: row.size || 40, weight: 900 }).w; sx = Math.min(700, row.text[0] + tw + 150); sy = row.cy != null ? row.cy : row.text[1]; }
-  stampAt(sx, sy + 4, { t: lt, t0: EC.stamp, text: 'CORRECTED', size: 46, rot: -.12, s: 1, color: '#d6203a' });
-  if (lt >= EC.stamp && lt < EC.stamp + .5) V2.ring(sx, sy + 4, sg(lt, EC.stamp, EC.stamp + .5), { r0: 60, r1: 300, color: '214,32,58', lw: 10, alpha: .5, squash: .5, bloom: 0 });
+  /* the stamp lands in the blank space under the failed row: CORRECTED, big, a little crooked */
+  const row = rows && rows[5], sx = row ? row.cx + 30 : 556, sy = row ? row.cy : 1120;
+  stampAt(sx, sy, { t: lt, t0: EC.stamp, text: 'CORRECTED', size: 70, rot: -.1, s: 1, color: '#d6203a', pre: .1 });
 }
 const EXIT = {
   shot: lt => eShot(lt).id,
   cam: camE,
   draw: drawE,
   fx: lt => { const sh = eShot(lt), warm = sh.id === 'break' ? 1 : sh.corner ? .6 : 0; return { bloom: .32 + .18 * warm, vignette: .3 + .08 * warm, grain: .045, contrast: .08, sat: .06 + .06 * warm, tint: [[warm ? '#ffcf8a' : '#a8c0ff', .05 + .06 * warm, 'soft-light']] }; },
-  blur: lt => { const sh = eShot(lt); if (lt - sh.s < .04) return 1; return sh.id === 'eg1' && lt > EC.doorchime && lt < EC.doorchime + .5 ? 4 : 1; },
+  blur: lt => { const sh = eShot(lt); if (lt - sh.s < .04) return 1; return sh.id === 'eg1' && lt > EC.doorchime && lt < EC.doorchime + .5 ? 4 : sh.id === 'revert' && lt < 22.0 ? 2 : 1; },
   over(lt) { const sh = EFR ? EFR.sh : eShot(lt); if (sh.id === 'ka3b') insClip(lt, sh); },
   clock: () => TE.SCN.clock, label: () => TE.SCN.label,
 };

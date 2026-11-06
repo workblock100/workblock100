@@ -12,8 +12,7 @@ WHAT IS NEW IN EPISODE 21 (scene ids: title, arrive, prep, medpass, closet, exit
   THE MONTAGE   prep `montage` 7.21 to 19.21: the score is a 120 bpm grid with its downbeat on the montage start; every effect of the montage lands on a cut (every 1.0 s) and carries its own small
                 second hit on the off-beat 0.5 s later (designed events), the grid's ticks are in the score, the button on beat 25.
   THE SPLIT     medpass: the stereo splits with the picture: the left half (the State's) is a soft, quiet room on the left, the right half (a normal night) a busy hallway on the right (call bells, a
-                rattling cart, a phone, running feet, a TV); every line is spoken on the left. The room's reverb is split the same way (the left channel through a soft room, the right through the
-                hallway). The divider's position (build/ep21/split.json when it exists, else the brief's schedule) ducks the side it squeezes.
+                rattling cart, a phone, running feet, a TV); every line is spoken on the left. The room's reverb is split the same way (the voices and the left's cues in the State's soft room, the right half's cues sent to the long hallway, its tail on the right). The divider's position (build/ep21/split.json when it exists, else the brief's schedule) ducks the side it squeezes.
   THE AVALANCHE closet: `closetopen`, a beat of stillness, the designed `binderavalanche` roar and the collision foley of every binder from phys_events.json (cardboard and plastic, rings that rattle).
   THE SCANNER   `scanbeep`, `scanlock`, the sweep's hum and the data ticks of the tags typing in (designed events).
   THE BREAK     exit `break` 15.08 to 18.68: the room tone falls to almost nothing, the clock's second hand, her exhale, one warm held chord in the score, the shift bell at 11:00 as a soft chime.
@@ -629,15 +628,21 @@ def _rev(seg, name):
     return np.stack([signal.fftconvolve(seg[c], ir[c], mode="full") for c in range(2)]) * ROOM21[name]["wet"]
 
 
-def scene_reverb(sid, seg, a):
-    """The reverb of scene `sid`'s dry signal `seg` (2, n) whose first sample is sample `a` of the film. THE SPLIT (medpass): the left channel goes through the State's soft room and its tail
-    stays on the left (75 percent of it in the left ear), the right channel through the long hallway, its tail on the right."""
+def scene_reverb(sid, seg, a, hall=True):
+    """The reverb of scene `sid`'s dry signal `seg` (2, n) whose first sample is sample `a` of the film. THE SPLIT (medpass): everything of the State's half (every voice, the left's cues) is in
+    the State's soft room; the right half's cues (placed at pan 0.2 or more: the cups, the cart, the call bells) were sent instead to the long hallway (_HALL), whose tail stays on the right (the
+    left ear gets a third of it). `hall` False: the soft room only (the dialogue margin's voice)."""
     if sid == "medpass":
-        L = _rev(np.stack([seg[0], seg[0]]), "medpass_l")
-        R = _rev(np.stack([seg[1], seg[1]]), "medpass_r")
-        n = max(L.shape[1], R.shape[1])
-        L, R = np.pad(L, ((0, 0), (0, n - L.shape[1]))), np.pad(R, ((0, 0), (0, n - R.shape[1])))
-        return np.stack([L[0] * 1.2 + R[0] * .4, L[1] * .4 + R[1] * 1.2])
+        r = _rev(seg, "medpass_l")
+        h = _HALL[0]
+        if hall and h is not None:
+            hs = h[:, a:a + seg.shape[1]]
+            if hs.shape == seg.shape and np.any(hs):
+                R = _rev(hs, "medpass_r")
+                R = np.stack([R[0] * .35 + R[1] * .1, R[1] * 1.1])
+                n = max(r.shape[1], R.shape[1])
+                r = np.pad(r, ((0, 0), (0, n - r.shape[1]))) + np.pad(R, ((0, 0), (0, n - R.shape[1])))
+        return r
     if sid in ROOM21:
         return _rev(seg, sid)
     return None
@@ -656,8 +661,17 @@ DRY_PART = {"kale": .6}                                                        #
 LINE_PAN = {"arrive_m1": -.55, "arrive_l1": 0.0, "arrive_t1": .55}            # the whisper chain follows the camera down the hall
 MEDPASS_PAN = {"kale": -.52, "straw": -.42, "pear": -.34}                       # THE SPLIT: every line is spoken in the State's half, on the left
 _DRY = [None, None]                # [the mixer's dry buffer (the first buffer place2 is given), a buffer of the same size that holds only the NOREV cues and the dry voices]
+_HALL = [None]                     # the medpass's hallway send: the right half's cues (they skip the State's soft room and ring in the hallway instead)
+_MED = {}
 _WIN = {}
 _SM = [None]
+
+
+def _medpass_span():
+    if "a" not in _MED:
+        s = _scene_info("medpass")
+        _MED["a"], _MED["b"] = (s["start"], s["start"] + s["dur"]) if s else (None, None)
+    return _MED["a"], _MED["b"]
 
 
 def _dry_part(clip):
@@ -708,6 +722,7 @@ def place2_21(buf, clip, at, gain=1.0, pan=0.0):
     if _DRY[0] is None:                                  # the mixer places the voices into `dry` first
         _DRY[0] = buf
         _DRY[1] = np.zeros_like(buf)
+        _HALL[0] = np.zeros_like(buf)
     if isinstance(clip, _Vox):
         _WIN[round(float(at), 4)] = (float(at), len(clip) / SR)
         alt = clip.alt
@@ -726,8 +741,12 @@ def place2_21(buf, clip, at, gain=1.0, pan=0.0):
         if n > 0:
             sm = _speech_gate(buf.shape[1])[i:i + n]
             clip = np.asarray(clip)[..., :n] * (1 - (1 - 10 ** (-db / 20)) * sm)
-    if name in NOREV and buf is _DRY[0]:                  # the dry buffer holds the same (dipped) clip that the mix does, so that the reverb's input is exactly what is not dry
+    ma, mb = _medpass_span()
+    send = ma is not None and ma <= at < mb and pan >= .2 and name not in NOREV        # the right half's cues ring in the hallway, not in the State's room
+    if (name in NOREV or send) and buf is _DRY[0]:          # the dry buffer holds the same (dipped) clip that the mix does, so that the reverb's input is exactly what is not dry
         _PLACE2(_DRY[1], np.asarray(clip), at, gain, pan)
+    if send and buf is _DRY[0]:
+        _PLACE2(_HALL[0], np.asarray(clip), at, gain, pan)
     _PLACE2(buf, np.asarray(clip), at, gain, pan)
 
 
@@ -2656,7 +2675,7 @@ def dialogue_margin(out_dir):
     vt = voice.copy()
     for sc in tl["scenes"]:
         a, b = int(sc["start"] * SR), min(n, int((sc["start"] + sc["dur"]) * SR))
-        w = scene_reverb(sc["id"], vw[:, a:b], a)
+        w = scene_reverb(sc["id"], vw[:, a:b], a, hall=False)
         if w is None:
             w = _REVERB6(vw[:, a:b], room[sc["id"]])
         m = min(w.shape[1], n - a)

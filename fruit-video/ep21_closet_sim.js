@@ -9,8 +9,10 @@
  * Mr. Radish stands in front of the closet (feet x 300). He is not a body: only his FACE is, a static circle over a box (slabs 1 and 2 meet it; slab 0 passes behind him), so the pile can bury his legs and
  * body and the binders that fall on him bounce off his head, and no binder ever rests on his face. A small CROWN box on top of his head meets only the LAST binder.
  * THE SCRIPT (scene-local s): the doors burst at 5.48 (closetopen; the doors are the scene's drawing, not bodies); a beat of stillness; at 5.68 (binderavalanche) the rows let go from the bottom up
- * (5.68 .. 5.92 plus a jitter): each binder stops meeting the shelves and the other slabs and gets a shove out of the closet (outward from the closet's middle, a hop, a spin); the heap settles and sleeps.
- * One binder lies flat on the top shelf right above his head and stays there (it alone still meets the top shelf) until 7.17, when it drops: it lands flat on his crown at about 7.65 (the bonk on a beat).
+ * (5.68 .. 5.83 plus a jitter): each binder stops meeting the shelves and the other slabs and gets a shove out of the closet (outward from his middle, a hop, a spin); the heap is still by about 7.3.
+ * One binder lies flat on the top shelf right above his head and stays there (it alone still meets the top shelf) until 7.30, when it drops: it lands flat on his crown at 7.71 (the bonk on a beat).
+ * Numbers (as built): 96 binders (110 bodies with the floors, shelves, walls, face and crown), dt 1/240, world seed 21, layout seed 2107, g 2600 px/s^2, run 10.2 s (the scene clamps later times),
+ * about 585 raw contact events, 140 kept for the foley (5.72 .. the 7.71 bonk); build about 0.7 to 1.1 s in node. Tools: build/ep21_closet/simtest.js (report, determinism, pose dumps), draw_sim.py.
  * At 8.40 (Onion: "Policy seven point four.") the binder of slab 1 or 2 whose upper end is nearest Onion's reach on the left flank of the heap, and that has the least on top of it, is pulled out of the pile by a
  * soft drag (a mouse joint on its upper end, following a scripted path to the place beside her face where she holds it up); the binders it was holding slump. meta.pluck says which one.
  * Deterministic (no Math.random, no clock; PHYS2D's own sine and cosine; seeded rng). Built once (lazily) by the scene and sampled with world.at(lt); never stepped by a render. */

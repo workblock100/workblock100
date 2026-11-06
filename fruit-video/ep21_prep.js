@@ -189,7 +189,7 @@ function thermoStand(o) {
   ctx.restore();
 }
 const thermoP = o => has21('fridgeThermo') ? A21.fridgeThermo(ctx, { x: o.x, y: o.y, s: (o.s || 1) * 2.07, deg: o.deg, t: o.t, wobble: o.wobble || 0, hero: o.hero }) : thermoStand(o);
-const SAFE_DEG = () => has21('fridgeThermo') ? 37 : 40, HOT_DEG = () => has21('fridgeThermo') ? 50 : 52;
+const SAFE_DEG = () => has21('fridgeThermo') ? 33.8 : 40, HOT_DEG = () => has21('fridgeThermo') ? 50 : 52;
 /* the crash cart (red, five drawers, a hasp on the top drawer with a numbered breakaway seal): o = { x, y (bottom centre), s, open 0..1 (the top drawer ajar), seal 0..1 (the tag on), tagSwing, t } */
 function crashCartStand(o) {
   const s = o.s || 1, w = 300 * s, h = 430 * s, x0 = o.x - w / 2, y0 = o.y - h - 26 * s, op = c01(o.open || 0);
@@ -502,7 +502,7 @@ function stCounterFront(lt, st) {
   if (st.wiped) { ctx.save(); ctx.globalAlpha = .5 + .4 * st.gleam; ctx.fillStyle = lg(C.x0, 0, C.x1, 0, [[0, 'rgba(255,255,255,0)'], [.45, 'rgba(255,255,255,.85)'], [.55, 'rgba(255,255,255,.85)'], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(C.x0, C.top - 2, w, 6); ctx.restore(); }
 }
 /* the things on the counter top (drawn after the staff: they stand in front of their bodies, never their faces) */
-const TOPX = { coffee: 628, banana: 846, cup: 868, carton: 1054, lam: 1136 };
+const TOPX = { coffee: 628, banana: 846, cup: 868, carton: 1054, lam: 1104 };
 function juiceCarton(x, y, s, labs) {                                          /* a gable-top carton, bottom centre (x, y); labs: how many survey labels are on it */
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.lineJoin = 'round';
   ctx.fillStyle = 'rgba(30,20,30,.2)'; ctx.beginPath(); ctx.ellipse(4, 2, 34, 6, 0, 0, TAU); ctx.fill();
@@ -557,9 +557,8 @@ function stCounterTop(lt, st, o = {}) {
   if (!st.coffeeGone && !o.noCoffee) coffeeMakerP(TOPX.coffee, T + 2, .5, lt);
   if (!o.noBanana) bananaArt(TOPX.banana - 6, T + 1, .95, st.bananaLab);
   if (!o.noCup) cupArt(TOPX.cup + 4, T + 1, 1.2, st.cupLab);
-  juiceCarton(TOPX.carton, T + 1, .62, st.labels ? 2 : 0);
-  laminatorArt(TOPX.lam, T + 2, .72, { run: o.lamRun || 0 });
-  if (st.lam && !o.noFlatHat) flatHatArt(TOPX.lam + 4, T - 26, .5, -1.45, 0);
+  laminatorArt(TOPX.lam, T + 2, .86, { run: o.lamRun || 0 });
+  if (st.lam && !o.noFlatHat) flatHatArt(TOPX.lam + 128, T - 24, .5, -1.45, 0);
 }
 /* the hall to the right of the closet: the handrail, the sanitizer, a resident's door */
 function stHall(lt, st) {
@@ -571,7 +570,8 @@ function stHall(lt, st) {
   ctx.fillStyle = '#e9e2d2'; ctx.fillRect(dx0 - 10, 748, dx1 - dx0 + 20, FL - 748); ctx.strokeStyle = INKC; ctx.lineWidth = 3; ctx.strokeRect(dx0 - 10, 748, dx1 - dx0 + 20, FL - 748);
   ctx.fillStyle = lg(dx0, 0, dx1, 0, [[0, '#b98a5a'], [1, '#9a6e44']]); ctx.fillRect(dx0, 760, dx1 - dx0, FL - 760); ctx.strokeStyle = INKC; ctx.lineWidth = 2.6; ctx.strokeRect(dx0, 760, dx1 - dx0, FL - 760);
   ctx.fillStyle = '#e4e7ee'; rr(dx1 - 40, 1018, 30, 12, 6); ctx.fill(); ink(2);
-  sanitizerP({ x: SAN.x, y: SAN.y, s: SAN.s, pump: 0, level: st.full ? 1 : .15, t: lt });
+  const sb = scrBox(SAN.x, SAN.y, 75 * SAN.s * 1.2, 130 * SAN.s * 1.2), lab = sb.x0 > 46 && sb.x1 < W - 46 && sb.y0 > 46 && !(sb.x0 < 506 && sb.y0 < 250) ? undefined : false;   /* its lettering only when the whole dispenser is in the frame */
+  sanitizerP({ x: SAN.x, y: SAN.y, s: SAN.s, pump: 0, level: st.full ? 1 : .15, t: lt, label: lab });
 }
 /* Brenda's chair beside her closet (empty from shot 8 on) */
 function brendaChair(x, y) {
@@ -612,14 +612,14 @@ function castS(lt, shot) {
     if (id === 't1') { expr = 'happy'; look = [.35, -.5]; head = .12; }
     if (id === 'o1') { expr = lt < W_INIT ? 'happy' : 'shock'; look = lt < W_INIT ? [.8, .1] : [.0, -.95 * lookUp]; yaw = .1; head = .16; }
     if (id === 't2') { expr = 'sad'; look = [.3, -.15]; head = .1 * Math.sin(lt * 2); }
-    if (id === 'o1b') { expr = gasp > .5 ? 'shock' : 'sad'; look = [.8, .2]; yaw = .35; head = .35; }
+    if (id === 'o1b' || id === 'o1c') { expr = gasp > .5 ? 'shock' : 'sad'; look = [.8, .2]; yaw = .35; head = .35; }
     if (id === 'br1b') { expr = 'shock'; look = [.9, -.05]; yaw = .45 * ss(lt, 26.8, 27.1); head = .55 * ss(lt, 26.8, 27.1); }
     if (id === 'o2' || id === 'end') { expr = 'happy'; look = [0, 0]; }
     const lean = ss(lt, 2.98, 3.3) * (1 - ss(lt, 3.85, 4.12));
     const o = A15.tomato({ x: STAND.tom[0] + 20 * lean, y: FL - hopAt(lt - W_EVERY) * .6, s: SCL.tom, t: lt, tomPose: 'fruit', who: 'tom', expr, look, yaw, headYaw: head, plant: true, headset: false,
       arms: { l: touch > 0 ? 'hold' : 'rest', r: (lt < 2.24) ? 'hold' : endLine ? 'hold' : 'rest' }, hold: {}, grip: { l: gripL, r: gripR }, lgFire: fk > 0 ? c01(fk) : (inT1 ? .2 : 0), lgRot: -.6 });
     if (lt < 2.24) o.hold.r = 'fp21p_labelgun';
-    if (endLine) { o.hold.r = 'fp21p_flathat'; o.grip.r = [96, -40]; o.expr = 'happy'; o.lid = .05; }
+    if (endLine) { o.hold.r = 'fp21p_flathat'; o.grip.r = [116, -34]; o.expr = 'happy'; o.lid = .05; }
     o.acc = (o.acc || []).concat(['fp21p_flabel']).concat(hatOn ? ['fp21p_partyhat'] : []); o.flabel = labK; o.hat = { c1: '#ffd23a', c2: '#e8406a', rot: .2, dx: .12, dy: .92, s: .95 }; o.formsN = 0;
     if (lt >= W_INIT && lt < W_INIT + .3) o.squash = .05 * pulseAt(lt, W_INIT, 18, .1);
     C.tom = o; }
@@ -634,27 +634,30 @@ function castS(lt, shot) {
         [W_TIME + .2, toLocal([tgt[2][1][0] + 60, tgt[2][1][1] + 40])], [W_INIT - .2, toLocal([tgt[2][1][0] + 40, tgt[2][1][1] - 10])], [W_INIT, toLocal(tgt[2][1])], [W_INIT + .2, toLocal([tgt[2][1][0] + 62, tgt[2][1][1] - 24])], [3.95, toLocal([tgt[2][1][0] + 112, tgt[2][1][1] + 110])]];
       gl = K(keys, lt); }
     const hatHand = lt >= 5.88 && lt < T_HATIN + .36, feed = lamIn(lt);
-    const gripR = hatHand ? K([[5.88, [96, 10]], [T_HATIN - .05, [150, -10]], [T_HATIN + .34, [190, 66]]], lt) : [92, 44];
+    const gripR = hatHand ? K([[5.88, [96, -20]], [T_HATIN - .05, [146, -40]], [T_HATIN + .34, [150, 40]]], lt) : [92, 44];
     let look = [0, 0], yaw = 0, head = 0, expr = 'onion_cry';
     if (id === 'open') { look = [.6 * Math.sin(lt * 5 + 1), -.1]; head = .2 * Math.sin(lt * 4); }
     if (id === 'o1') { const k = lt < W_INIT - .25 ? 0 : 1; look = k ? [-.9, -.45] : [-.85, .55]; yaw = -.3; head = -.35; }
-    if (id === 'o1b') { look = [.9, .5]; yaw = .3; head = .25; }
+    if (id === 'o1b' || id === 'o1c') { look = [.9, .5]; yaw = .3; head = .25; }
     if (id === 'br1b') { look = [.95, -.05]; yaw = .35 * ss(lt, 26.76, 27.0); head = .6 * ss(lt, 26.76, 27.0); expr = 'shock'; }
-    if (id === 'o2') { look = [0, -.1]; expr = 'onion_cry'; }
+    if (id === 'o2') { look = [0, -.1]; expr = lt >= W_READY - .1 ? 'happy' : 'onion_cry'; }
+    if (id === 'end') { look = [0, 0]; expr = 'happy'; }
     const cheer = (id === 'o2' && lt >= W_READY - .1) || id === 'end';
     const o = A15.onion({ x, y: FL, s: SCL.onion, t: lt, pose: gl || hatHand || cheer ? 'free' : 'clip', who: 'onion', yaw, headYaw: head, look, expr, cry: sp ? .9 : .66, sob: sp ? .25 + .25 * Math.max(0, Math.sin(lt * 9)) : .1, plant: true,
       arms: { l: gl ? 'hold' : cheer ? 'cheer' : 'hold', r: hatHand ? 'hold' : cheer ? 'cheer' : 'rest' }, hold: {}, grip: { l: gl || [-74, 104], r: gripR } });
-    if (gl) { const up = lt >= W_TIME + .2; o.hold.l = 'fp21p_labelgun'; o.lgRot = up ? 0 : .9; o.lgScale = 1.05; o.lgFire = [W_DATE, W_TIME, W_INIT].some(t0 => lt >= t0 && lt < t0 + .12) ? .9 : 0; o.lgTight = up; o.armScale = 1.12 + .3 * ss(lt, W_INIT - .3, W_INIT - .1) * (1 - ss(lt, W_INIT + .3, W_INIT + .6)); }
+    if (gl) { const up = lt >= W_TIME + .2; o.hold.l = 'fp21p_labelgun'; o.lgRot = up ? 0 : .9; o.lgScale = 1.05; o.lgFire = [W_DATE, W_TIME, W_INIT].some(t0 => lt >= t0 && lt < t0 + .12) ? .9 : 0; o.lgTight = up; o.armScale = 1.12 + .3 * ss(lt, W_TIME + .06, W_TIME + .24) * (1 - ss(lt, W_INIT + .3, W_INIT + .6)); }
     else if (!cheer) o.hold.l = 'fp15_tabletclip';
     if (ONION_STEP(lt) > 0 && ONION_STEP(lt) < 1) { o.gait = Math.abs(x - STAND.onion[0]); o.dir = -1; o.stride = 30; }
+    if (id === 'o2' && lt >= W_READY - .1) { const h = lt - (W_READY - .1); o.lift = 92 * Math.abs(Math.sin(h * 5.2)) * Math.exp(-h * 1.1); o.cry = 1; }   /* a hop of joy clears the counter */
+    if (id === 'end') { o.lift = 30 * Math.abs(Math.sin((lt - 30.1) * 6.5)); o.cry = .9; }
     C.onion = o; }
   /* LEMON (the open: carrying a stack of binders across the front), MANGO (the open: mopping at a run), STRAWBERRY (frozen by the fridge with a med cup), BRENDA (on her chair, mid-sandwich) */
   if (id === 'end') C.lemon = A7.lemon({ x: 1150, y: FL, s: SCL.lemon, t: lt, who: 'lemon', expr: 'happy', lid: .1, look: [0, 0], plant: true, noBob: true, acc: ['readers', 'lanyard7'], arms: { l: 'rest', r: 'rest' } });
-  else { const x = lerp(640, 500, ss(lt, 0, 1.0));
-    C.lemon = A7.lemon({ x, y: 1348, s: SCL.lemon * 1.04, t: lt, who: 'lemon', expr: 'panic', lid: .1, look: [-.6, .1], yaw: -.45, headYaw: -.3, gait: (640 - x) * 1.6, dir: -1, stride: 34, vx: -220,
+  else { const x = lerp(596, 526, ss(lt, 0, 1.0));
+    C.lemon = A7.lemon({ x, y: 1348, s: SCL.lemon * 1.04, t: lt, who: 'lemon', expr: 'panic', lid: .1, look: [-.6, .1], yaw: -.45, headYaw: -.3, gait: (596 - x) * 1.8, dir: -1, stride: 34, vx: -160,
       arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp21p_binders' }, grip: { l: [-40, 30], r: [30, 34] }, plant: true }); }
-  { const x = lerp(1400, 1230, ss(lt, 0, 1.0)), sw = Math.sin(lt * 14);
-    C.mango = A7.mango({ x, y: 1392, s: SCL.mango, t: lt, who: 'mango', expr: 'panic', look: [-.5, .3], yaw: -.3, headYaw: -.25, gait: (1400 - x) * 1.3, dir: -1, stride: 34, vx: -260,
+  { const x = lerp(1338, 1200, ss(lt, 0, 1.0)), sw = Math.sin(lt * 14);
+    C.mango = A7.mango({ x, y: 1392, s: SCL.mango, t: lt, who: 'mango', expr: 'panic', look: [-.5, .3], yaw: -.3, headYaw: -.25, gait: (1338 - x) * 1.3, dir: -1, stride: 34, vx: -260,
       arms: { l: 'hold', r: 'hold' }, hold: { l: 'fp21p_mop' }, grip: { l: [-100 + 24 * sw, 60], r: [-10 + 24 * sw, 40] }, mopSwing: sw, plant: true }); }
   { C.straw = A11.straw({ x: STAND.straw[0], y: STAND.straw[1], s: SCL.straw, t: lt, who: 'straw', expr: 'dead', lid: .5, look: [.5, 0], yaw: .25, headYaw: .2, plant: true,
       arms: { l: 'hold', r: 'rest' }, hold: { l: 'fp18_medcup' }, grip: { l: [-104, 36] }, cupScale: 1.2 }); }
@@ -700,7 +703,8 @@ const SH = [
   { id: 't1', s: 1.03, set: 'st', k: 'face', foc: 'tom', z: [2.0, 2.14], up: 150, dx: -40, show: ['tom'] },
   { id: 'o1', s: 2.24, set: 'st', k: 'wide', x: 858, y: 1060, z: [1.42, 1.5], show: ['tom', 'onion'] },
   { id: 't2', s: 4.19, set: 'st', k: 'face', foc: 'tom', z: [2.2, 2.34], up: 130, dx: 20, show: ['tom'] },
-  { id: 'o1b', s: 5.90, set: 'st', k: 'wide', x: 985, y: 1066, z: [1.2, 1.25], show: ['tom', 'onion'] },
+  { id: 'o1b', s: 5.90, set: 'st', k: 'wide', x: 1040, y: 1118, z: [2.2, 2.3], show: ['onion'] },
+  { id: 'o1c', s: 6.45, set: 'st', k: 'wide', x: 912, y: 1078, z: [1.42, 1.47], show: ['tom', 'onion'] },
   ...MCUE.map((c, k) => ({ id: 'm' + (k + 1), cue: c, s: 7.211 + k, set: 'ins', ins: k })),
   { id: 'me1', s: 19.211, set: 'hall', k: 'melon' },
   { id: 'agency', s: 20.36, set: 'hall', k: 'agency' },
@@ -710,7 +714,7 @@ const SH = [
   { id: 'br1a', s: 25.26, set: 'st', k: 'pt', x: 1330, y: 1078, z: [2.08, 2.2], obj: 'closet', show: [] },
   { id: 'br1b', s: 26.72, set: 'st', k: 'wide', x: 862, y: 1070, z: [1.6, 1.7], show: ['tom', 'onion'] },
   { id: 'br1c', s: 27.62, set: 'st', k: 'pt', x: 1348, y: 1196, z: [3.5, 3.7], obj: 'crumb', show: [] },
-  { id: 'o2', s: 28.72, set: 'st', k: 'face', foc: 'onion', z: [2.0, 2.16], up: 140, dx: 0, show: ['onion'] },
+  { id: 'o2', s: 28.72, set: 'st', k: 'face', foc: 'onion', z: [2.2, 2.36], up: 210, dx: 0, show: ['onion'] },
   { id: 'end', s: 30.19, set: 'st', k: 'wide', x: 960, y: 1070, z: [.78, .81], show: ['tom', 'onion', 'lemon'], lineup: true },
 ];
 for (const sh of SH) sh.s = sh.s === 0 ? 0 : TP.snapT(sh.s);
@@ -724,7 +728,7 @@ let FR = null;
 function camS(lt, sh) {
   const C = castS(lt, sh), st = ST(lt), u = c01((lt - sh.s) / Math.max(.1, sh.e - sh.s)), z = lerp(sh.z[0], sh.z[1], easeIO(u));
   let cx = sh.x, cy = sh.y;
-  if (sh.k === 'face') { const o = Object.assign({}, C[sh.foc]); o.y = FL; const [fx, fy] = faceC(o); cx = (sh.foc === 'onion' ? onionX(lt) : fx) - (sh.dx || 0) / z; cy = fy + sh.up / z; }
+  if (sh.k === 'face') { const o = Object.assign({}, C[sh.foc]); o.y = FL; o.lift = 0; const [fx, fy] = faceC(o); cx = (sh.foc === 'onion' ? onionX(lt) : fx) - (sh.dx || 0) / z; cy = fy + sh.up / z; }
   zoomTo(cx, cy, z);
   CAM.x += 2.0 * hnoise(lt, 1.3, 1); CAM.y += 1.5 * hnoise(lt, 1.1, 2); CAM.r += .001 * hnoise(lt, .9, 3);
   if (sh.id === 'open') CAM.shake = 1.2;
@@ -739,11 +743,13 @@ function drawS(lt) {
   roomS(lt, st, { closet: closetO });
   HEROMODE = false;
   const order = sh.show.map(n => [n, C[n]]).filter(([n, o]) => o).sort((a, b) => a[1].y - b[1].y);
-  const behind = order.filter(([n]) => n === 'tom' || n === 'onion'), front = order.filter(([n]) => n !== 'tom' && n !== 'onion');
+  const isBehind = n => n === 'tom' || n === 'onion' || (n === 'lemon' && sh.id === 'end');
+  const behind = order.filter(([n]) => isBehind(n)), front = order.filter(([n]) => !isBehind(n));
   for (const [n, o] of behind) { const f = inFrame(o, 6); if (f.whole || (sh.k === 'face' && n === sh.foc)) drawChar(o); }
   stCounterFront(lt, st);
-  stCounterTop(lt, st, { lamRun: sh.id === 'o1b' ? ss(lt, T_HATIN, T_HATIN + .1) * (1 - ss(lt, 6.9, 7.1)) : 0, noFlatHat: sh.id === 'o1b' && lt < T_HATOUT + .32 });
-  if (sh.id === 'o1b') drawLaminate(lt, C);
+  const lamShot = sh.id === 'o1b' || sh.id === 'o1c';
+  stCounterTop(lt, st, { lamRun: lamShot ? ss(lt, T_HATIN, T_HATIN + .1) * (1 - ss(lt, 6.9, 7.1)) : 0, noFlatHat: lamShot && lt < T_HATOUT + .32 });
+  if (lamShot) drawLaminate(lt, C);
   if (sh.id === 't1' || sh.id === 'open') labelBurst(lt, C.tom);
   for (const [n, o] of front) { const f = inFrame(o, 6); if (f.whole) drawChar(o); }
   if (sh.lineup) drawLineup(lt, st);
@@ -755,14 +761,14 @@ function drawS(lt) {
 }
 /* the hat in Onion's right hand goes into the laminator's slot; the flat, shiny hat slides out of the right side and lies on the counter */
 function drawLaminate(lt, C) {
-  const o = C.onion, feed = lamIn(lt), out = lamOut(lt), slotY = CTR.top + 2 - 40 * .72;
-  if (lt < T_HATIN + .36 && feed < .98) {
+  const o = C.onion, feed = lamIn(lt), out = lamOut(lt), slotY = CTR.top + 2 - 40 * .86;
+  if (lt < T_HATIN + .36 && feed < .98) {                                       /* tip first into the slot: the hat hangs under her hand and disappears below the slot line */
     const [hx, hy] = handAt(o, 'r');
-    ctx.save(); ctx.beginPath(); ctx.rect(hx - 200, slotY - 400, 400, 400); ctx.clip();
-    ctx.translate(hx + 6, hy + 30 + feed * 90); ctx.rotate(.15); partyHatArt(.62, '#ffd23a', '#e8406a'); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(hx - 300, slotY - 500, 600, 500); ctx.clip();
+    ctx.translate(hx + 4, hy - 8); ctx.rotate(PI - .08); partyHatArt(.66, '#ffd23a', '#e8406a'); ctx.restore();
   }
-  if (out > 0) { const x = TOPX.lam + 54 + 70 * out; ctx.save(); ctx.beginPath(); ctx.rect(TOPX.lam + 46, CTR.top - 140, 300, 160); ctx.clip(); flatHatArt(x, CTR.top - 6, .5, -PI / 2, ss(lt, T_HATOUT + .3, T_HATOUT + .62)); ctx.restore();
-    if (lt > T_HATOUT + .3 && lt < T_HATOUT + .9) twinkle(x - 10, CTR.top - 40, 26, lt - T_HATOUT - .3, .6); }
+  if (out > 0) { const x = TOPX.lam + 64 + 64 * out; ctx.save(); ctx.beginPath(); ctx.rect(TOPX.lam + 62, CTR.top - 140, 300, 160); ctx.clip(); flatHatArt(x, CTR.top - 6, .5, -PI / 2, ss(lt, T_HATOUT + .3, T_HATOUT + .62)); ctx.restore();
+    if (lt > T_HATOUT + .3 && lt < T_HATOUT + .9) twinkle(x - 10, CTR.top - 40, 30, lt - T_HATOUT - .3, .6); }
 }
 /* "Label everything!": a burst of labels out of Tomato's gun on "everything" (they flutter down) */
 function labelBurst(lt, o) {
@@ -794,7 +800,7 @@ function gleams(lt, sh) {                                                      /
 }
 /* the end: the terrifyingly clean station; Lemon and Strawberry at attention on the left, Mango by the hall on the right (Tomato and Onion behind the counter); rigid smiles, nobody moves */
 EXT.prop.fp21p_flathat = (side, o, t) => { flatHatArt(0, 0, .62, -.08, ss(t, CUE.sting + .05, CUE.sting + .4)); };
-PROP_BOX.fp21p_flathat = Object.assign([-36, -76, 36, 10], { nearFace: false });
+PROP_BOX.fp21p_flathat = Object.assign([-36, -76, 36, 10], { nearFace: true });
 function drawLineup(lt, st) {
   const still = { noBob: true };
   const S = A11.straw(Object.assign({ x: 470, y: 1338, s: .84, t: lt, who: 'straw', expr: 'dead', lid: .5, look: [0, 0], plant: true, arms: { l: 'rest', r: 'rest' } }, still));
@@ -807,7 +813,12 @@ const PREP = {
   cam(lt) { const sh = shotAt(lt); if (sh.set === 'ins') camIns(lt, sh); else if (sh.set === 'hall') camHall(lt, sh); else camS(lt, sh); },
   draw(lt) { const sh = FR.sh; if (sh.set === 'ins') drawIns(lt); else if (sh.set === 'hall') drawHallShot(lt); else drawS(lt); },
   fx: lt => ({ bloom: .38, vignette: .26, grain: .04, contrast: .1, sat: .12, tint: [['#fff1d8', .05, 'soft-light']] }),
-  blur: lt => 1,
+  blur(lt) {                                                                    /* shutter samples only on the fast, face-free montage moves (the gun, the spray and wipe, the mop, the flip, the drawer), never near a cut */
+    const sh = shotAt(lt); if (sh.set !== 'ins' || nearCut(lt, .05)) return 1;
+    const k = sh.ins, a = lt - MT[k], b = lt - MOFF[k];
+    if ([0, 2, 5, 6, 8].includes(k) && ((a > .04 && a < .4) || (b > .03 && b < .32))) return 3;
+    return 1;
+  },
   over(lt) { const sh = shotAt(lt); if (sh.set === 'ins' && sh.ins === 11) wipeOver(lt, lt - MT[11]); if (sh.id === 'o2') wipeOver(lt, lt - CUE.sparkle2); if (sh.id === 'end') wipeOver(lt, lt - CUE.sting); },
   clock: () => TP.SCN.clock, label: () => TP.SCN.label,
 };
@@ -921,7 +932,7 @@ function ins4(lt, a, b) {
   ctx.fillStyle = lg(0, 0, W, 0, [[0, '#ffffff'], [1, '#dfe4ec']]); ctx.fillRect(-300, -300, W + 600, H + 600);     /* the fridge door */
   ctx.fillStyle = lg(0, 140, 0, 1240, [[0, '#d8ecf8'], [1, '#b8d4e8']]); rr(90, 160, 900, 1100, 30); ctx.fill(); ctx.strokeStyle = 'rgba(40,60,90,.55)'; ctx.lineWidth = 5; ctx.stroke();
   ctx.save(); rr(90, 160, 900, 1100, 30); ctx.clip(); SOFT++; V2.dof(8, () => { for (let i = 0; i < 6; i++) { ctx.fillStyle = ['#f2a33a', '#e8e6de', '#5fa8e8', '#f2f2f2', '#e8406a', '#7ad94a'][i]; rr(140 + i * 140, 980, 90, 150, 16); ctx.fill(); } ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(90, 1130, 900, 14); }); SOFT--; ctx.restore();
-  const safe = SAFE_DEG(), hot = HOT_DEG(), deg = a < 0 ? hot : safe + 2.4 * wob(a, 26, .16) + (hot - safe) * hitK(a, .025);
+  const safe = SAFE_DEG(), hot = HOT_DEG(), deg = a < 0 ? hot : safe + 1.3 * wob(a, 26, .16) + (hot - safe) * hitK(a, .025);
   ctx.save(); ctx.translate(540, 590); thermoP({ x: 0, y: 0, s: 2.05, deg, t: lt, hero: false }); ctx.restore();
   if (a >= 0 && a < .12 && !has21('fridgeThermo')) { const R = 150 * 2.05 - 30 * 2.05; ctx.save(); ctx.translate(540, 590); ctx.strokeStyle = 'rgba(212,32,44,.35)'; ctx.lineWidth = 30; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, 0, R * .7, DEG_A(40), DEG_A(52)); ctx.stroke(); ctx.restore(); }
   const led = a >= 0 && a < .5 ? 1 : .25;                                                                           /* the green LED beside the dial */
@@ -936,7 +947,7 @@ function ins4(lt, a, b) {
   for (const xx of [-140, 100]) { ctx.beginPath(); ctx.moveTo(xx, -84); ctx.lineTo(xx, 114); ctx.stroke(); }
   rows.forEach((r, i) => { const y = -51 + i * 66; TXT(r[0], -250, y, { size: 34, weight: 800, fill: '#2a3550', cid: 'tlog' }); if (r[1]) TXT(r[1], -20, y, { size: 36, font: 'Lucky', weight: 400, fill: '#2a3550', cid: 'tlog' }); if (r[2]) TXT(r[2], 230, y, { size: 36, font: 'Lucky', weight: 400, fill: '#2a3550', cid: 'tlog' }); });
   if (b >= 0) { const w1 = c01(b / .1), w2 = c01((b - .16) / .1), y = -51 + 2 * 66;
-    TXT(String(safe), -20, y, { size: 36, font: 'Lucky', weight: 400, fill: '#1e8e5a', cid: 'tlog', reveal: w1 });
+    TXT(String(Math.round(safe)), -20, y, { size: 36, font: 'Lucky', weight: 400, fill: '#1e8e5a', cid: 'tlog', reveal: w1 });
     if (w2 > 0) TXT('ON', 230, y, { size: 36, font: 'Lucky', weight: 400, fill: '#1e8e5a', cid: 'tlog', reveal: w2 }); }
   ctx.restore();
   if (b >= -.1 && b < .42) { const k = c01((b + .1) / .36), px = lerp(470, 990, k), py = 1150 + 81 + 10 * Math.sin(k * 20) - 8;   /* the pen runs just ahead of the ink, its hand below the row */
@@ -1067,7 +1078,8 @@ function ins10(lt, a, b) {
 function ins11(lt, a, b) {
   ctx.fillStyle = lg(0, 0, 0, H, [[0, '#f6efe1'], [1, '#e6d8bb']]); ctx.fillRect(-300, -300, W + 600, H + 600);
   ctx.fillStyle = lg(0, 1100, 0, H, [[0, '#5f9a96'], [1, '#467a76']]); ctx.fillRect(-300, 1100, W + 600, H); ctx.fillStyle = '#faf6ec'; ctx.fillRect(-300, 1086, W + 600, 20);
-  const cs = 3.0, cx = 470, fy = 1850;
+  const cs = 2.55, cx = 470, fy = 1690;
+  glow(cx, fy - 700, 700, '#fff4e0', .22, .1);                                                                     /* a warm key on the cart: the red stays bright */
   const r = crashCartP({ x: cx, y: fy, s: cs, open: 0, seal: a < 0 ? 0 : 1, tagSwing: .5 * wob(a, 12, .35) + .25 * wob(b, 12, .3), t: lt });
   const [hx, hy] = r.hasp;
   /* READY: a lit chip on the defibrillator's front, under its screen (the kit's defib sits at local x 20..136, y -502..-430) */
@@ -1212,10 +1224,10 @@ function poofs(lt) {                                                            
 }
 /* Melon (the Administrator), Strawberry (the real one, per diem), Lemon, in hall units */
 function melonH(lt, X, Z, o = {}) {
-  const q = V2.at(X, Z), sp = speaking('me1', lt), shrug = lt >= TP.wS('me1', 3) - .1 && lt < TP.le('me1') + .3, jump = ss(lt, CUE.poof[2] - .02, CUE.poof[2] + .12) * (1 - ss(lt, CUE.poof[2] + .4, CUE.poof[2] + .8));
+  const q = V2.at(X, Z), sp = speaking('me1', lt), shrug = lt >= TP.wS('me1', 3) - .1 && lt < TP.le('me1') + .3, jump = ss(lt, CUE.poof[0] - .02, CUE.poof[0] + .12) * (1 - ss(lt, CUE.poof[0] + .5, CUE.poof[0] + .9));   /* the front six pop first, right in front of him */
   const lookAround = sp ? Math.sin((lt - TP.ls('me1')) * 4.2) * .45 : 0;
-  return Object.assign(A9.melon({ x: q.x, y: q.y - 30 * jump * q.s, s: q.s * CSm, t: lt, who: 'melon', expr: lt >= CUE.poof[2] ? 'shock' : sp ? 'sad' : 'neutral', look: [lookAround + (o.lx || 0), 0], yaw: (o.yaw || 0) + lookAround * .3, headYaw: (o.yaw || 0) + lookAround,
-    arms: { l: shrug ? 'shrug' : jump > .2 ? 'flail' : 'rest', r: shrug ? 'shrug' : jump > .2 ? 'flail' : 'rest' }, plant: true, squash: -.04 * jump }), o.extra || {});
+  return Object.assign(A9.melon({ x: q.x, y: q.y - 30 * jump * q.s, s: q.s * CSm, t: lt, who: 'melon', expr: lt >= CUE.poof[0] ? 'shock' : sp ? 'sad' : 'neutral', look: [lookAround + (o.lx || 0), 0], yaw: (o.yaw || 0) + lookAround * .3, headYaw: (o.yaw || 0) + lookAround,
+    arms: { l: shrug ? 'shrug' : jump > .2 ? 'up' : 'rest', r: shrug ? 'shrug' : jump > .2 ? 'up' : 'rest' }, plant: true, squash: -.04 * jump }), o.extra || {});
 }
 function strawH(lt, X, Z, o = {}) {
   const q = V2.at(X, Z), sp = speaking('s1', lt);
@@ -1224,7 +1236,7 @@ function strawH(lt, X, Z, o = {}) {
 function lemonH(lt, X, Z, o = {}) {
   const q = V2.at(X, Z), sp = speaking('l1', lt), one = lt >= W_ONE - .15 && lt < TP.le('l1') + .3;
   return A7.lemon({ x: q.x, y: q.y, s: q.s * CSl, t: lt, who: 'lemon', expr: 'neutral', lid: .48, face: { curve: .02 }, look: o.look || [.7, 0], yaw: o.yaw ?? .45, headYaw: o.yaw ?? .45, plant: true,
-    arms: { l: 'rest', r: one ? 'hold' : 'rest' }, hand: { r: one ? 'point' : 'open' }, grip: { r: [96, -60] } });
+    arms: { l: one ? 'hold' : 'rest', r: 'rest' }, hand: { l: one ? 'point' : 'open' }, grip: { l: [-92, -64] } });
 }
 /* the hall shots: where the speakers stand (X, Z) and the 2D framing on top of the perspective (z = zoom; the frame centre follows the speaker's face) */
 const HPOS = { melon: [0, 1180], strawA: [-226, 1080], melonA: [204, 1080], strawS: [170, 980], lemonL: [-170, 980] };
@@ -1239,7 +1251,7 @@ function camHall(lt, sh) {
   if (sh.k === 'straw') { const [fx, fy] = faceH(strawH(lt, ...HPOS.strawS)); cx = fx - 110; cy = fy + 70; z = lerp(1.28, 1.34, e); }
   if (sh.k === 'lemon') { const [fx, fy] = faceH(lemonH(lt, ...HPOS.lemonL)); cx = fx + 110; cy = fy + 70; z = lerp(1.28, 1.36, e); }
   zoomTo(cx, cy, z); CAM.x += 1.6 * hnoise(lt, 1.3, 4); CAM.y += 1.2 * hnoise(lt, 1.1, 5);
-  if (sh.k === 'agency') CAM.shake = 2.4 * (hitK(lt - CUE.poof[2], .1) + .6 * hitK(lt - CUE.poof[1], .1) + .4 * hitK(lt - CUE.poof[0], .1));
+  if (sh.k === 'agency') CAM.shake = 2.4 * (hitK(lt - CUE.poof[0], .1) + .6 * hitK(lt - CUE.poof[1], .1) + .4 * hitK(lt - CUE.poof[2], .1));
   FR = { sh, C: {} };
 }
 function drawHallShot(lt) {
