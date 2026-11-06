@@ -651,7 +651,7 @@ def scene_reverb(sid, seg, a, hall=True):
 # ---------------------------------------------------------------- place2, patched: voices place their treated version where they are; cues dip under speech
 DUCK_DB = {   # how far a cue is dipped (dB) while a voice speaks, by effect name; anything missing here is not dipped. The hits the picture lands on are never dipped.
     "sniffle": 4, "typing": 6, "step": 7, "clocktick": 2, "gasp": 3, "pachime": 3, "grin": 3, "cupclatter": 4, "cartroll": 5, "penscratch": 4, "shiftbell": 4, "labelpeel": 4,
-    "doorchime": 3, "sparkle": 4, "binderavalanche": 6, "scanhum": 4, "dataticks": 3, "scanon": 3, "hudmark": 2, "badge": 4, "headturn": 4, "paperhand": 5, "chaos": 6, "callbell": 5, "secondhand": 2, "scatter": 4, "crowdmurmur": 6, "offhit": 3,
+    "doorchime": 3, "sparkle": 4, "binderavalanche": 6, "scanhum": 4, "dataticks": 3, "scanon": 3, "hudmark": 2, "badge": 4, "headturn": 4, "paperhand": 5, "cartlock": 3, "chaos": 6, "callbell": 5, "secondhand": 2, "scatter": 4, "crowdmurmur": 6, "offhit": 3,
     "bed_title": 3, "bed_arrive": 4, "bed_prep": 4, "bed_medpass": 5, "bed_closet": 4, "bed_exit": 3, "bed_end": 2,
 }
 NOREV = ("bed_title", "bed_arrive", "bed_prep", "bed_medpass", "bed_closet", "bed_exit", "bed_end", "chaos", "scanhum", "dataticks", "secondhand", "crowdmurmur")
@@ -895,8 +895,8 @@ def _click(seed, f=3200.0, tau=.004, d=.03, q=6.0):
 # ================================================================ THE SPLIT: the divider's position over the medpass (who is squeezed, and how much)
 class Split:
     """Where the divider of the split screen is (screen px of the 1080 px frame, 540 is the middle), 20 Hz, absolute seconds. From build/ep21/split.json ([{t, x}] absolute or scene-local seconds,
-    or [{t, pan}] -1..1) when it exists; else the picture's own schedule (ep21_medpass.js DIV): the middle, except under 'Six.' (s4) where it slides to squeeze the right half for a beat (to 760 px
-    over s4 + 0.04 to + 0.34 s, held, back over the 0.3 s before pe2). gain(side, t): the level of a side, 1 at half the frame, falling as its half shrinks (a half of 320 px is about -10 dB: the squeeze is brief, so it has to read)."""
+    or [{t, pan}] -1..1) when it exists; else the final picture's own schedule (ep21_medpass.js DIV): the middle, except under 'Six.' (s4) where it slides to squeeze the right half for a beat (to
+    760 px over the 0.3 s from the frame of s4 - 0.06 s, held, back over the 0.3 s before the frame of pe2 - 0.06 s: 19.85 to 20.15 and 20.33 to 20.61 scene-local). gain(side, t): the level of a side, 1 at half the frame, falling as its half shrinks (a half of 320 px is about -10 dB: the squeeze is brief, so it has to read)."""
 
     def __init__(self):
         self.ts = self.x = None
@@ -921,10 +921,13 @@ class Split:
         ts = np.arange(a, a + sc["dur"] + .05, .05)
         x = np.full(len(ts), 540.0)
         if s4 and pe2:
-            k0, k1, k2, k3 = s4[0] + .04, s4[0] + .34, pe2[0] - .3, pe2[0] - .02
+            snap = lambda t: round(t * 30) / 30                                       # the picture's snapT: the nearest frame (30 fps, absolute)
+            a, b = snap(s4[0] - .06), snap(pe2[0] - .06)
+            k0, k1, k2, k3 = a, a + .3, b - .3, b - .02
             x = 540.0 + 220.0 * np.clip(np.minimum(_smoothstep((ts - k0) / (k1 - k0)), 1 - _smoothstep((ts - k2) / (k3 - k2))), 0, 1)
+            self.source = (f"the final picture's schedule (ep21_medpass.js DIV: 760 px; out {k0 - sc['start']:.2f} to {k1 - sc['start']:.2f} s, "
+                           f"back {k2 - sc['start']:.2f} to {k3 - sc['start']:.2f} s scene-local; no split.json)")
         self.ts, self.x = ts, x
-        self.source = "the picture's schedule (ep21_medpass.js DIV: the middle; 760 px from s4 + 0.04 s to pe2; no split.json)"
 
     def x_at(self, t):
         if self.ts is None:
@@ -1167,10 +1170,9 @@ def sfx_binderpop():
     return norm6(_edge(x, .0004, .08), .7)
 
 
-def sfx_sniffle():
-    """Onion's sniffle (0.5 s): a wet inhale through the nose, twice (a band of noise that moves up through two nasal formants, 700 then 1500 Hz) and a snort of 'nnk' at the end (a 150 Hz
-    nasal buzz for 40 ms), a few wet crackles. Each call is a little different."""
-    k = _nth("sniffle")
+def _sniff(k):
+    """Onion's sniffle (0.5 s, as Episode 20 left it): a wet inhale through the nose, twice (a band of noise that moves up through two nasal formants, 700 then 1500 Hz) and a snort of 'nnk' at the
+    end (a 150 Hz nasal buzz for 40 ms), a few wet crackles."""
     r = rng6(1880 + k)
     x = np.zeros(_n(.55))
     for j, at in enumerate((0.0, .2 + .03 * r.uniform())):
@@ -1181,7 +1183,50 @@ def sfx_sniffle():
         _place(x, _lp4(osc("saw", 150 + 15 * j, .04), 1200, 2) * np.hanning(_n(.04)) * .35, at + d - .02, 1.0)
     for i in range(9):
         _place(x, _band(1900 + 9 * k + i, .006, 1500, 4500) * expdecay(.006, .002), r.uniform(.02, .36), r.uniform(.1, .3))
-    return norm6(_edge(x, .003, .08), .55)
+    return x
+
+
+def _sob(k, joy=True):
+    """A sob in Onion's voice, closed-mouthed: a catch in the throat (a glottal click), then a voiced 'hnn' (a breathy pulse train through a nasal hum's formants, 280 Hz, 1.1 and 2.3 kHz) with a
+    tremble (7.5 Hz in pitch and level). JOY: high, rising (330 to 440 Hz), quick (0.3 s), a laugh caught in a cry. Sad: falling (390 to 270 Hz), slower and longer (0.42 s)."""
+    d = .3 if joy else .42
+    t = tarr(d)
+    f0 = (330 * (440 / 330) ** (t / d)) if joy else (390 * (270 / 390) ** (t / d))
+    rate = 7.5 if joy else 5.5
+    f = f0 * (1 + .03 * np.sin(2 * np.pi * rate * t))
+    src = osc("saw", f, d) * .7 + noise6(d, 1960 + k) * .25
+    v = _res(src, 280, 3.0) * 1.0 + _res(src, 1100, 4.0) * .5 + _res(src, 2300, 5.0) * .3
+    env = np.interp(t, [0, .03, d * .6, d], [0, 1, .7, 0]) * (1 - .4 * (.5 + .5 * np.sin(2 * np.pi * rate * t + 1)))
+    y = _lp4(v * env, 4500, 2)
+    tt = tarr(.012)
+    y[:len(tt)] += _band(1970 + k, .012, 800, 4000) * np.hanning(len(tt)) * np.max(np.abs(y)) * .6
+    return y
+
+
+def _one_sniff(k):
+    """One wet inhale through the nose (0.2 s): a band of noise that climbs through the nasal formants (850 to 1700 Hz) and the 'nnk' at its end (a 165 Hz nasal buzz for 40 ms)."""
+    d = .17
+    t = tarr(d)
+    x = np.zeros(_n(.22))
+    _place(x, _tv_filter(noise6(d, 1891 + 2 * k), _glide(850, 1700, d), 2.2, "bp") * np.sin(np.pi * np.clip(t / d, 0, 1)) ** 1.5 * .85, 0.0, 1.0)
+    _place(x, _lp4(osc("saw", 165, .04), 1200, 2) * np.hanning(_n(.04)) * .35, d - .02, 1.0)
+    return x
+
+
+def sfx_sniffle():
+    """Onion's sniffles. ARRIVE (both cues, the picture's sobs of joy: 'The State is here!' and 'the best day of my life') and EXIT ('Per regulation!'): a SOB OF JOY ON THE CUE (the voiced 'hnn'
+    rising like a laugh caught in a cry, 0.3 s), then one quick wet sniff where there is room before the next line (not after 'life': Mr. Radish speaks 0.25 s later). CLOSET ('Not Brenda.', under
+    the sad trombone): Episode 20's plain double sniffle."""
+    k, scene, i = _ctx("sniffle")
+    if scene == "closet" or scene is None:
+        return norm6(_edge(_sniff(k), .003, .08), .55)
+    sb = _sob(k, True)
+    out = np.zeros(_n(.6))
+    _place(out, sb / (np.max(np.abs(sb)) + 1e-9), 0.0, .85)
+    if not (scene == "arrive" and i == 1):
+        sn = _one_sniff(k)
+        _place(out, sn / (np.max(np.abs(sn)) + 1e-9), .28, .7)
+    return norm6(_edge(out, .002, .06), .55)
 
 
 def sfx_grin():
@@ -1593,6 +1638,16 @@ def sfx_cartroll():
 def _pan_curve(x, pan):
     th = (np.clip(pan, -1, 1) + 1) * np.pi / 4
     return np.stack([x * np.cos(th), x * np.sin(th)])
+
+
+def sfx_cartlock():
+    """The med cart locked (designed event, the State's half, on 'Always.', 0.25 s): the lock's plunger pushed home (a tight plastic click at 2.4 kHz, a small steel tick at 3.8 kHz) over the
+    cart's hollow body answering (a soft 320 Hz knock). Small and quiet: by the book."""
+    x = np.zeros(_n(.25))
+    tt = tarr(.12)
+    _place(x, _click(3610, 2400, .003) * .8 + _ping(3800, .1, .012, (1.0, 2.2), (1.0, .3), (1.0, .5)) * .25 + np.sin(2 * np.pi * 320 * tt) * np.exp(-tt / .02) * .35, 0.0, 1.0)
+    _place(x, _click(3611, 1900, .002) * .3, .035, 1.0)
+    return norm6(_edge(x, .0003, .05), .4)
 
 
 def sfx_callbell():
@@ -2575,6 +2630,9 @@ def _designed_events(tab, phys):
         a0 = by["medpass"][0]
         for t, p in ((2.7, .8), (6.3, .7), (9.6, .9), (13.4, .75), (16.9, .85), (20.9, .7), (23.9, .9)):
             ev.append({"t": round(a0 + t, 3), "name": "callbell", "vol": .32, "pan": p, "room": "hall"})
+        s7 = _beat_abs("medpass", "s7")
+        if s7:                                                                       # the picture's LOCKT: the frame of s7 + 0.16 s (12.09): she pushes the cart lock in, on the left
+            ev.append({"t": round(round((s7[0] + .16) * 30) / 30, 3), "name": "cartlock", "vol": .3, "pan": -.45, "room": "hall"})
     sc = _beat_abs("closet", "scan")
     if sc:
         ev.append({"t": round(sc[0], 3), "name": "scanhum", "vol": .4, "pan": 0.0, "room": "hall"})
