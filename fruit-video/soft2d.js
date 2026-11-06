@@ -839,6 +839,7 @@ World.prototype._flutter = function (o) {
   for (let p = p0; p < p0 + n; p++) { ax[p] = 0; ay[p] = 0; az[p] = 0; }
   const x = this.x, y = this.y, z = this.z, vx = this.vx, vy = this.vy, vz = this.vz, T = o.tri, dead = o.triDead, A0 = o.triA0, sh = o.share;
   const wx = this.wind[0], wy = this.wind[1], wz = this.wind[2];
+  let pw = 0;
   for (let t = 0; t < o.nt; t++) {
     if (dead[t] !== INF) continue;
     const a = p0 + T[3 * t], b = p0 + T[3 * t + 1], c = p0 + T[3 * t + 2];
@@ -849,10 +850,12 @@ World.prototype._flutter = function (o) {
     const vn = ((vx[a] + vx[b] + vx[c]) / 3 - wx) * nx + ((vy[a] + vy[b] + vy[c]) / 3 - wy) * ny + ((vz[a] + vz[b] + vz[c]) / 3 - wz) * nz;
     if (vn === 0) continue;
     const f = -k * vn * A0[t] / 3;
+    pw += vn * vn * A0[t];
     let q = a; ax[q] += f * nx / sh[q - p0]; ay[q] += f * ny / sh[q - p0]; az[q] += f * nz / sh[q - p0];
     q = b; ax[q] += f * nx / sh[q - p0]; ay[q] += f * ny / sh[q - p0]; az[q] += f * nz / sh[q - p0];
     q = c; ax[q] += f * nx / sh[q - p0]; ay[q] += f * ny / sh[q - p0]; az[q] += f * nz / sh[q - p0];
   }
+  o.airP = pw;   // sum of vn^2 * area: the flap events read its rms
 };
 World.prototype.step = function () {
   if (!this._started) this._prepare();
@@ -932,18 +935,51 @@ World.prototype._stepEvents = function (t) {
           this._push(sq ? 'squeak' : 'slide', o, c, o.hitX[ci] || 0, o.hitY[ci] || 0, Math.min(0.85, 0.15 + 0.6 * speedMag(o.slideV[ci], 60, 1200)), t, { speed: Math.round(o.slideV[ci]) });
         }
       } else o.slideT[ci] = 0;
-      o.hitV[ci] = 0; o.slideV[ci] = 0; o.slideN[ci] = 0; o.contactN[ci] = 0;
     }
     if (o.type === 'cloth') this._clothEvents(o, t);
     else if (o.type === 'rope') this._ropeEvents(o, t);
     else if (o.type === 'balloon') this._balloonEvents(o, t);
+    for (let m = 0; m < cl.length; m++) { const ci = cl[m]; o.hitV[ci] = 0; o.slideV[ci] = 0; o.slideN[ci] = 0; o.contactN[ci] = 0; }
   }
 };
 World.prototype._clearContacts = function () {
   for (const o of this.objects) { o.hitV.fill(0); o.slideV.fill(0); o.slideN.fill(0); o.contactN.fill(0); }
 };
-World.prototype._clothEvents = function () {};
-World.prototype._ropeEvents = function () {};
+/* cloth: 'crinkle' when stiff paper bends fast (the rate of change of its bend constraints), 'flap' from the air drag power (a pad
+ * shaken out, a scrap fluttering down) */
+World.prototype._clothEvents = function (o, t) {
+  const x = this.x, y = this.y, z = this.z, ca = this.ca, cb = this.cb, cr = this.crest, con = this.con, b0 = o.c0 + o.nStruct, nb = o.c1 - b0;
+  if (o.m.crinkle && nb > 0) {
+    const pb = o.prevBend || (o.prevBend = new Float64Array(nb).fill(-1));
+    let sum = 0, best = 0, bx = 0, by = 0, cnt = 0;
+    for (let i = 0; i < nb; i++) {
+      const k = b0 + i; if (!con[k]) continue;
+      const a = ca[k], b = cb[k], dx = x[b] - x[a], dy = y[b] - y[a], dz = z[b] - z[a], d = Math.sqrt(dx * dx + dy * dy + dz * dz) / cr[k];
+      if (pb[i] >= 0) { const dd = d > pb[i] ? d - pb[i] : pb[i] - d; sum += dd; cnt++; if (dd > best) { best = dd; bx = (x[a] + x[b]) / 2; by = (y[a] + y[b]) / 2; } }
+      pb[i] = d;
+    }
+    const rate = cnt ? sum / cnt / this.dt : 0;   // mean fold speed (fraction of length per second)
+    if (rate > 0.25) this._push('crinkle', o, null, bx, by, Math.min(1, 0.2 + 0.8 * speedMag(rate, 0.25, 6)), t, { rate: Math.round(rate * 100) / 100 });
+  }
+  if (o.airP > 0) {
+    const rms = Math.sqrt(o.airP / o.area0);
+    if (rms > 120) { const c = o.p0 + (o.n >> 1); this._push('flap', o, null, x[c], y[c], Math.min(0.9, 0.15 + 0.75 * speedMag(rms, 120, 1500)), t, { speed: Math.round(rms) }); }
+  }
+};
+/* rope: 'stretch' when a strap or ribbon snaps taut (from slack to its full length), 'flap' when a free length whips through the air */
+World.prototype._ropeEvents = function (o, t) {
+  const x = this.x, y = this.y, p0 = o.p0, N = o.N;
+  let L = 0, R = 0, sp = 0;
+  for (let i = 0; i < N; i++) { if (o.segDead[i] !== INF) continue; const a = p0 + i, b = a + 1, dx = x[b] - x[a], dy = y[b] - y[a]; L += Math.sqrt(dx * dx + dy * dy); R += o.segLen; }
+  for (let i = 0; i <= N; i++) { const q = p0 + i; sp += Math.sqrt(this.vx[q] * this.vx[q] + this.vy[q] * this.vy[q]); }
+  sp /= N + 1;
+  const r = R > 0 ? L / R : 0, rate = (r - (o.lastR || r)) / this.dt;
+  o.lastR = r;
+  if (r > 0.995 && o.slackT > 0.15 && rate > 0.05) { const c = p0 + (N >> 1); this._push('stretch', o, null, x[c], y[c], Math.min(1, 0.3 + 0.7 * speedMag(rate, 0.05, 3)), t, { rate: Math.round(rate * 100) / 100 }); o.slackT = 0; }
+  if (r < 0.985) o.slackT = (o.slackT || 0) + this.dt; else if (r > 0.995) o.slackT = 0;
+  let touching = false; for (let m = 0; m < o.cl.length; m++) if (o.contactN[o.cl[m]] > 0) { touching = true; break; }
+  if (!touching && sp > 350) { const c = p0 + (N >> 1); this._push('flap', o, null, x[c], y[c], Math.min(0.85, 0.15 + 0.7 * speedMag(sp, 350, 2500)), t, { speed: Math.round(sp) }); }
+};
 World.prototype._finishEvents = function () {
   const ev = this._raw.filter(function (e) { return e.mag > 0; });
   ev.sort(function (a, b) { return a.t - b.t || a.id - b.id || KINDS.indexOf(a.kind) - KINDS.indexOf(b.kind); });

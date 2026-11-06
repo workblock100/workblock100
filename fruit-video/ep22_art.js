@@ -11,7 +11,14 @@
  *   A22.paperPrint(kind, color, color2) -> (ctx, w, h) => {} (SOFT2D.drawCloth fill).   A22.paperBack, A22.GIFT_COLORS
  *   A22.chux(ctx, o)         the flat blue Chux underpad: { x, y (centre), s, rot, w, h, fold, crumple, t } -> box.   A22.chuxPrint() -> (ctx, w, h) => {}.   A22.chuxBack
  *   A22.tree(ctx, o)         the decorated tree: { x, y (floor), s, h, t, lights, baubles, tinsel, star, skirt, gifts, glow, lit, seed } -> { box, lights:[{ x, y, color, phase, r }], star }.   A22.twinkle(t, phase) -> .3..1
- *   Held props: fp22_sack.  Accessories: fp22_santahat, fp22_santacoat, fp22_beard, fp22_santalegs, fp22_sackback.
+ *   BATCH 2 (props; (ctx, o) with { x, y, s, rot, t, hero, anchor }, standing props anchored at the BOTTOM centre, the rest at the centre; each returns its box):
+ *   A22.gloveBalloon { puff, face, string, side, color } | glove | gloveBox { peek } | tapeRoll { pull, dir, len } | pudding { open, flavor } | candle { lit } | gripSocks | mug { text, hero, steam, id }
+ *   | dentures { open } | dentureCup { open, teeth, label } | nameSlip { unfold, name } | santaHatProp / secretSantaHat { slips, shake, tilt, glow, hatColor } (+ A22.hatPropInfo(o)).
+ *   BATCH 3: A22.hoyer(ctx, { x, y, s, lift | ang, theta, spread, facing, layer 'all'|'back'|'bar'|'front' }) -> { box, hooks[4], tip, pivot, bar, base } (+ A22.hoyerInfo, A22.HOYER = the SANTA sim's geometry)
+ *   | gaitBelt { mode 'coil'|'strap', a, b, sag, w } | stringLights { a, b, sag, n } -> { box, lights } | tinsel(ctx, pts, { width, color, seed, t }) | ribbonCurl { color, len, turns } | bow { r, color }
+ *   | wreath (r 80 at s 1) | stocking { name, color, dir } | A22.sweater(o, g) -> o (fp22_sweater).
+ *   Held props: fp22_sack, fp22_mug, fp22_candle, fp22_pudding, fp22_socks, fp22_dcup, fp22_balloon, fp22_tape, fp22_slip, fp22_hatprop, fp22_glove (options in o.p22).
+ *   Accessories: fp22_santahat, fp22_santacoat, fp22_beard, fp22_santalegs, fp22_sackback, fp22_sweater. Expressions: santa_jolly, santa_stuck.
  */
 (() => {
 if (typeof KINDS === 'undefined' || typeof EXT === 'undefined' || typeof V2 === 'undefined' || typeof V2C === 'undefined') return;

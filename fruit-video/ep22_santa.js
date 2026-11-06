@@ -77,7 +77,7 @@ const CHAIR = { x: 1150, seat: 1204, back: 924, armTop: 1114, hw: 192, iw: 146 }
 const PILE = { x0: 610, x1: 900 };
 const WIN = { x0: 130, x1: 430, y0: 430, y1: 900 };
 const TV = { x0: 1530, x1: 1770, y0: 640, y1: 800 };
-const POS = { pear: { x: 40, s: 1.0 }, cran: { x: 270, s: 1.06 }, tom: { x: 560, s: .9 }, straw: { x: 762, s: .9 }, santa: { x: 1150, s: 1.0 }, onion: { x: 1460, s: .95 }, lemon: { x: 1990, s: .9 } };
+const POS = { pear: { x: 40, s: 1.0 }, cran: { x: 270, s: 1.06 }, tom: { x: 600, s: .9 }, straw: { x: 762, s: .9 }, santa: { x: 1150, s: 1.0 }, onion: { x: 1460, s: .95 }, lemon: { x: 1990, s: .9 } };
 const HOY = { park: 1915, home: 1462, boom: 420, a0: -.24, a1: .36, mastH: 640, bar: 150 };   /* mast x parked / at the chair; boom length; boom angle down / up; the bar's half length */
 const T_SIT = [9.56, 9.86];                               /* he sits down hard after the tug */
 const T_EXIT_ONION = 10.35;                               /* Onion leaves (off right) while we are on Mrs. Cranberry */
@@ -538,6 +538,7 @@ const BRUN = { pts: new Float32Array(160) };
 function beltSim(lt, b) {
   const S = simInit(), st = S && simAt(lt), r = st && st.by[S.meta.belt.id]; if (!r) return false;
   const G = GEO(), B = SIMM().L.BELT, n = r.n, P = r.pts, cin = G.beltWrap(lt).cinch;
+  if (!G.beltWrap(lt).on) return true;
   const front = []; for (let i = 0; i < n; i++) front.push(P[2 * i + 1] > B.BY - 4 || Math.abs(P[2 * i] - B.BX) > B.R0 + 30);
   let i = 0;
   while (i < n) {
@@ -736,7 +737,7 @@ function onionOpts(lt) {
 }
 /* Tomato (Santa hat): claps at the ho ho ho; proud at "I wrapped everything on the counter." (a sweep to the pile at "everything"); steps back for the search */
 function tomOpts(lt) {
-  const s = POS.tom.s, x = lt < 14.2 ? POS.tom.x : lerp(POS.tom.x, 480, ss(lt, 14.2, 14.5)), sp = spk('t1', lt);
+  const s = POS.tom.s, x = lt < 14.2 ? POS.tom.x : lerp(POS.tom.x, 500, ss(lt, 14.2, 14.5)), sp = spk('t1', lt);
   let arms = { l: 'rest', r: 'rest' }, grip = null, hand = null, look = [.6, -.05], yaw = .35, head = .4, expr = 'tom_fruit';
   if (lt >= 1.45 && lt < 2.6) { const c = Math.abs(Math.sin((lt - 1.45) * 13)); arms = { l: 'hold', r: 'hold' }; grip = { l: [-40 - 30 * c, -10], r: [40 + 30 * c, -10] }; hand = { l: 'flat', r: 'flat' }; }
   if (sp) { look = [lt < wS('t1', 2) ? .1 : .7, -.05]; yaw = .15; head = lt < wS('t1', 2) ? 0 : .35; const sw = ss(lt, wS('t1', 2) - .15, wS('t1', 2) + .12); arms = { l: 'hips', r: sw > .02 ? 'hold' : 'hips' }; if (sw > .02) { grip = { r: [lerp(80, 190, sw), lerp(60, 20, sw)] }; hand = { r: 'open' }; } }
@@ -881,13 +882,13 @@ const SH = [
   { id: 'cr1', s: 9.97, k: 'face', foc: 'cran', z: [2.15, 2.25], up: 120, dx: -30, bg: ['pear', 'tom'] },
   { id: 'me3', s: 11.42, k: 'face', foc: 'santa', z: [1.85, 1.92], up: 140, dx: 0 },
   { id: 't1', s: 12.50, k: 'face', foc: 'tom', z: [1.85, 1.95], up: 120, dx: 70, bg: ['cran'] },
-  { id: 'search', s: 14.36, k: 'fix', x: 735, y: 1150, z: [1.58, 1.64] },
+  { id: 'search', s: 14.36, k: 'fix', x: 728, y: 1150, z: [1.58, 1.62] },
   { id: 'cup', s: 16.75, k: 'cup' },
   { id: 's1', s: 17.55, k: 'fix', x: 500, y: 1130, z: [1.28, 1.32] },
   { id: 'cr2', s: 18.63, k: 'face', foc: 'cran', z: [2.2, 2.3], up: 120, dx: 40 },
   { id: 'me4', s: 19.80, k: 'face', foc: 'santa', z: [1.8, 1.88], up: 150, dx: 0 },
   { id: 'l1', s: 20.84, k: 'face', foc: 'lemon', z: [1.95, 2.05], up: 130, dx: 60 },
-  { id: 'hoyer', s: 21.93, k: 'fix', x: 1290, y: 1010, z: [.95, .97] },
+  { id: 'hoyer', s: 21.93, k: 'fix', x: 1300, y: 1010, z: [1.0, 1.02] },
   { id: 'rise', s: 23.93, k: 'rise' },
   { id: 'end', s: 26.15, k: 'end' },
 ];
@@ -901,10 +902,10 @@ function endFrame(lt) {
 }
 function camOf(lt, sh, C) {
   const dur = Math.min(sh.e, SCN.dur) - sh.s, u = c01((lt - sh.s) / dur);
-  if (sh.k === 'open') return { x: K([[.3, 790], [1.42, 1020], [2.43, 1024]], lt), y: K([[.3, 760 + 440 / 3], [1.42, 1000], [2.43, 1004]], lt), z: 1 / K([[.3, 1 / 3], [1.42, 1 / .96], [2.43, 1 / .985]], lt) };
+  if (sh.k === 'open') return { x: K([[.3, 790], [1.42, 1021], [2.43, 1022]], lt), y: K([[.3, 760 + 440 / 3], [1.42, 1000], [2.43, 1004]], lt), z: 1 / K([[.3, 1 / 3], [1.42, 1 / .94], [2.43, 1 / .955]], lt) };
   if (sh.k === 'face') { const o = C[sh.foc]; if (!o) return { x: 540, y: 960, z: 1 }; const z = lerp(sh.z[0], sh.z[1], easeIO(u)), [fx, fy] = faceC(o); return { x: fx - (sh.dx || 0) / z, y: fy + sh.up / z, z }; }
-  if (sh.k === 'cup') { const it = itemAt(3, lt) || { x: HOLDP[0], y: HOLDP[1] }; return { x: 812, y: 1150, z: lerp(2.5, 2.62, easeIO(u)) }; }
-  if (sh.k === 'rise') { const b = bodyAt(lt); return { x: K([[23.93, 1300], [26.15, 1320]], lt), y: K([[23.93, 960], [24.7, 880], [26.15, 870]], lt), z: K([[23.93, 1.2], [26.15, 1.25]], lt) }; }
+  if (sh.k === 'cup') return { x: 800, y: 1176, z: lerp(2.15, 2.28, easeIO(u)) };
+  if (sh.k === 'rise') return { x: K([[23.93, 1396], [26.15, 1404]], lt), y: K([[23.93, 1010], [24.7, 960], [26.15, 950]], lt), z: K([[23.93, 1.14], [26.15, 1.18]], lt) };
   if (sh.k === 'end') { const f = endFrame(27.3), a = { x: f.x + 10, y: f.y - 14, z: f.z * 1.07 }, k = ss(lt, sh.s, 27.3); return { x: lerp(a.x, f.x, k), y: lerp(a.y, f.y, k), z: lerp(a.z, f.z, k) }; }
   return { x: sh.x, y: sh.y, z: lerp(sh.z[0], sh.z[1], easeIO(u)) };
 }
